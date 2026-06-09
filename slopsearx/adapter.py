@@ -78,8 +78,9 @@ class EngineAdapter(ABC):
     env_prefix: str = ""  # e.g. "ENGINE_BRAVE"
     engine_type: str = "api"  # "api" | "scrape" | "structured"
 
-    def __init__(self, config: dict | None = None) -> None:
+    def __init__(self, config: dict | None = None, rate_limiter: "RateLimiter | None" = None) -> None:  # noqa: F821
         self.config = config or {}
+        self.rate_limiter = rate_limiter  # injected by server at startup
 
     @abstractmethod
     async def search(
