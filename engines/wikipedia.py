@@ -22,6 +22,7 @@ class WikipediaAdapter(EngineAdapter):
     display_name = "Wikipedia"
     env_prefix = "ENGINE_WIKIPEDIA"
     engine_type = "api"
+    categories = ["general", "science", "reference"]
 
     async def search(
         self,

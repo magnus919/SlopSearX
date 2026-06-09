@@ -29,6 +29,7 @@ class DuckDuckGoAdapter(ScrapeAdapter):
     display_name = "DuckDuckGo"
     env_prefix = "ENGINE_DDG"
     engine_type = "scrape"
+    categories = ["general", "news"]
 
     async def search(
         self,
