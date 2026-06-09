@@ -12,7 +12,10 @@ from . import (
     google,
     hackernews,
     huggingface,
+    internetarchive,
+    openalex,
     semanticscholar,
+    stackexchange,
     wikipedia,
 )
 
@@ -24,6 +27,9 @@ __all__ = [
     "github",
     "hackernews",
     "huggingface",
+    "internetarchive",
+    "openalex",
     "semanticscholar",
+    "stackexchange",
     "wikipedia",
 ]
