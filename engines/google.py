@@ -1,4 +1,12 @@
-"""Google HTML scrape adapter."""
+"""Google HTML scrape adapter.
+
+⚠️  Legal notice: Google search scraping may be subject to Google's
+Terms of Service. This adapter sends HTTP GET requests to the public
+search page (https://www.google.com/search) and parses the HTML
+response. Use of this adapter may carry Terms of Service risk.
+This adapter is best-effort with no SLA — HTML structure changes,
+reCAPTCHA walls, and rate limiting may break it at any time.
+"""
 
 from __future__ import annotations
 
@@ -63,8 +71,27 @@ class GoogleAdapter(ScrapeAdapter):
                 latency_ms=latency,
             )
 
+    def _is_challenge_page(self, raw_html: str) -> bool:
+        """Detect CAPTCHA/reCAPTCHA or challenge walls in the response."""
+        indicators = [
+            "challenge",
+            "recaptcha",
+            "cf-browser-verification",
+            "unusual traffic",
+            "verify you're not a robot",
+            "g-recaptcha",
+        ]
+        lower = raw_html.lower()
+        return any(ind in lower for ind in indicators)
+
     def _parse_html(self, raw_html: str, query: str, max_results: int) -> list[SearchResult]:
-        """Parse Google HTML search results (organic results only)."""
+        """Parse Google HTML search results (organic results only).
+
+        Detects CAPTCHA walls before attempting to parse.
+        """
+        if self._is_challenge_page(raw_html):
+            return []
+
         results: list[SearchResult] = []
         doc = html.fromstring(raw_html)
 
