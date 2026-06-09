@@ -22,18 +22,22 @@ from slopsearx.adapter import (
     SearchResult,
     discover_engines,
 )
+from slopsearx.cache import SearchCache, _ttl_for_query, cache_key
 from slopsearx.formatter import format_json, format_yaml_markdown
 from slopsearx.merger import (
     PresenceRanker,
     build_meta,
     extract_unresponsive,
 )
+from slopsearx.ratelimit import LocalTokenBucket, RateLimiter
 
 app = FastAPI(title="SlopSearX", version="0.1.0")
 
 # Populated at startup
 _active_engines: dict[str, EngineAdapter] = {}
 _ranker = PresenceRanker()
+_cache: SearchCache | None = None
+_rate_limiter: RateLimiter | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -44,14 +48,23 @@ _ranker = PresenceRanker()
 @app.on_event("startup")
 async def startup() -> None:
     """Discover and warm up all registered engines."""
-    global _active_engines  # noqa: PLW0603
+    global _active_engines, _cache, _rate_limiter  # noqa: PLW0603
 
-    # Import engines package to trigger @register_engine on all adapters
-    # (already imported at module level, but ensure registry is populated)
+    # Initialize cache (gracefully degrades if Valkey unavailable)
+    _cache = SearchCache()
+
+    # Initialize rate limiter (default: local token bucket for dev)
+    _rate_limiter = RateLimiter(LocalTokenBucket())
+
+    await _rate_limiter.warmup()
 
     # Only populate if not already set (allows test fixtures to pre-seed)
     if not _active_engines:
         _active_engines = discover_engines()
+
+    # Inject rate limiter into each engine
+    for engine in _active_engines.values():
+        engine.rate_limiter = _rate_limiter
 
     # Warm up engines concurrently
     warmup_tasks = []
@@ -62,11 +75,14 @@ async def startup() -> None:
 
 @app.on_event("shutdown")
 async def shutdown() -> None:
-    """Gracefully shut down all engines."""
+    """Gracefully shut down all engines, cache, and rate limiter."""
     shutdown_tasks = []
     for name, engine in _active_engines.items():
         shutdown_tasks.append(_shutdown_engine(name, engine))
     await asyncio.gather(*shutdown_tasks, return_exceptions=True)
+
+    if _rate_limiter is not None:
+        await _rate_limiter.shutdown()
 
 
 async def _warmup_engine(name: str, engine: EngineAdapter) -> None:
@@ -198,6 +214,15 @@ async def search(
         "categories": [c.strip() for c in categories.split(",") if c.strip()] or ["general"],
     }
 
+    # Check cache first
+    if _cache is not None and _cache.is_connected:
+        cat_list: list[str] = search_params.get("categories", [])
+        ck = cache_key(q, language, safesearch)
+        cached = await _cache.get(ck)
+        if cached is not None:
+            cached["meta"]["cached"] = True
+            return JSONResponse(status_code=200, content=cached)
+
     # Dispatch to all engines concurrently
     tasks = []
     engine_names = []
@@ -264,7 +289,16 @@ async def search(
     )
 
     status_code = 503 if all_unresponsive else 200
-    return JSONResponse(status_code=status_code, content=response_data)
+    response = JSONResponse(status_code=status_code, content=response_data)
+
+    # Cache the result set (even partial results are cacheable)
+    if _cache is not None and _cache.is_connected and not all_unresponsive:
+        cat_list = search_params.get("categories", [])
+        ck = cache_key(q, language, safesearch)
+        ttl = _ttl_for_query(cat_list)
+        await _cache.set(ck, response_data, ttl)
+
+    return response
 
 
 # ---------------------------------------------------------------------------
