@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: slopsearx-config
+data:
+  config.yaml: |
+    engines:
+      brave:
+        enabled: true
+        base_url: "https://api.search.brave.com/res/v1/web/search"
+        rate_limit: 15
+        timeout_ms: 5000
+        max_results: 10
+        weight: 1.0
+      wikipedia:
+        enabled: true
+        base_url: "https://en.wikipedia.org/w/api.php"
+        rate_limit: 200
+        timeout_ms: 3000
+        max_results: 3
+        weight: 0.9
+      duckduckgo:
+        enabled: false
+        type: scrape
+        timeout_ms: 10000
+        max_results: 10
+        weight: 0.6
+      google:
+        enabled: false
+        type: scrape
+        timeout_ms: 10000
+        max_results: 10
+        weight: 0.4
+    cache:
+      ttl_seconds: 300
+      max_result_sets: 10000
+    ranking:
+      strategy: "presence"

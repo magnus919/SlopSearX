@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slopsearx
+  labels:
+    app: slopsearx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: slopsearx
+  template:
+    metadata:
+      labels:
+        app: slopsearx
+    spec:
+      containers:
+        - name: slopsearx
+          image: slopsearx:0.1.0
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: VALKEY_URL
+              value: redis://valkey:6379/0
+            - name: ENGINE_BRAVE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: slopsearx-secrets
+                  key: brave-api-key
+          volumeMounts:
+            - name: config
+              mountPath: /etc/slopsearx/config.yaml
+              subPath: config.yaml
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: slopsearx-config
