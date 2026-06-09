@@ -128,3 +128,19 @@ class TestInternetArchiveAdapter:
 
         cfg = _DEFAULT_ENGINES["internetarchive"]
         assert cfg.get("enabled") is False
+
+    def test_is_domain_query_detects_domain(self) -> None:
+        """_is_domain_query returns True for domain names."""
+        from engines.internetarchive import _is_domain_query
+
+        assert _is_domain_query("example.com") is True
+        assert _is_domain_query("sub.example.org") is True
+        assert _is_domain_query("my-site.co.uk") is True
+
+    def test_is_domain_query_rejects_regular_text(self) -> None:
+        """_is_domain_query returns False for regular search queries."""
+        from engines.internetarchive import _is_domain_query
+
+        assert _is_domain_query("python async programming") is False
+        assert _is_domain_query("hello world") is False
+        assert _is_domain_query("test") is False
