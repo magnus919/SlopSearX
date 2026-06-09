@@ -4,6 +4,26 @@ Importing this module triggers @register_engine on all adapters,
 populating the global engine registry.
 """
 
-from . import brave, duckduckgo, google, wikipedia
+from . import (
+    arxiv,
+    brave,
+    duckduckgo,
+    github,
+    google,
+    hackernews,
+    huggingface,
+    semanticscholar,
+    wikipedia,
+)
 
-__all__ = ["brave", "duckduckgo", "google", "wikipedia"]
+__all__ = [
+    "arxiv",
+    "brave",
+    "duckduckgo",
+    "google",
+    "github",
+    "hackernews",
+    "huggingface",
+    "semanticscholar",
+    "wikipedia",
+]

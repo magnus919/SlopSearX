@@ -70,6 +70,14 @@ class Config:
 # ---------------------------------------------------------------------------
 
 _DEFAULT_ENGINES: dict[str, dict] = {
+    "arxiv": {
+        "base_url": "http://export.arxiv.org/api/query",
+        "type": "api",
+        "timeout_ms": 10_000,
+        "max_results": 5,
+        "rate_limit": 0.33,  # 1 req per 3 seconds (arXiv ToS)
+        "weight": 0.8,
+    },
     "brave": {
         "base_url": "https://api.search.brave.com/res/v1/web/search",
         "type": "api",
@@ -85,12 +93,44 @@ _DEFAULT_ENGINES: dict[str, dict] = {
         "max_results": 10,
         "weight": 0.6,
     },
+    "github": {
+        "base_url": "https://api.github.com",
+        "type": "api",
+        "timeout_ms": 5_000,
+        "max_results": 5,
+        "rate_limit": 0.5,  # 30 req/min with token
+        "weight": 0.8,
+    },
     "google": {
         "base_url": "https://www.google.com/search",
         "type": "scrape",
         "timeout_ms": 10_000,
         "max_results": 10,
         "weight": 0.5,
+    },
+    "hackernews": {
+        "base_url": "https://hn.algolia.com/api/v1/search",
+        "type": "api",
+        "timeout_ms": 3_000,
+        "max_results": 5,
+        "rate_limit": 10,
+        "weight": 0.7,
+    },
+    "huggingface": {
+        "base_url": "https://huggingface.co/api",
+        "type": "api",
+        "timeout_ms": 5_000,
+        "max_results": 5,
+        "rate_limit": 1,
+        "weight": 0.7,
+    },
+    "semanticscholar": {
+        "base_url": "https://api.semanticscholar.org/graph/v1/paper/search",
+        "type": "api",
+        "timeout_ms": 5_000,
+        "max_results": 5,
+        "rate_limit": 1,  # 1 req/s without key, 10 req/s with
+        "weight": 0.8,
     },
     "wikipedia": {
         "base_url": "https://en.wikipedia.org/w/api.php",

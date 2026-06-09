@@ -23,11 +23,16 @@ Pre-alpha. Spec complete. Active development.
 ## Engines
 
 | Engine | Type | Status |
-|---|---|---|
-| [Brave Search API](https://brave.com/search/api/) | API | Planned |
-| [DuckDuckGo](https://duckduckgo.com/) | Scrape (HTTP + HTML) | Planned |
-| [Google](https://google.com/) | Scrape (HTTP + HTML) | Planned |
-| [Wikipedia](https://www.wikipedia.org/) | Structured API | Planned |
+|--------|------|--------|
+| [arXiv](https://arxiv.org/) | Structured API | Implemented |
+| [Brave Search API](https://brave.com/search/api/) | API | Implemented |
+| [DuckDuckGo](https://duckduckgo.com/) | Scrape (HTTP + HTML) | Implemented |
+| [GitHub](https://github.com/) | API | Implemented |
+| [Google](https://google.com/) | Scrape (HTTP + HTML) | Implemented |
+| [Hacker News](https://news.ycombinator.com/) | Structured API | Implemented |
+| [HuggingFace](https://huggingface.co/) | Structured API | Implemented |
+| [Semantic Scholar](https://www.semanticscholar.org/) | Structured API | Implemented |
+| [Wikipedia](https://www.wikipedia.org/) | Structured API | Implemented |
 
 ## Quick Start
 

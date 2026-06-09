@@ -7,9 +7,14 @@ This document helps AI coding agents understand the project structure, architect
 ```
 slopsearx/
 ├── engines/            # Engine adapter plugins (one file per engine)
+│   ├── arxiv.py
 │   ├── brave.py
 │   ├── duckduckgo.py
+│   ├── github.py
 │   ├── google.py
+│   ├── hackernews.py
+│   ├── huggingface.py
+│   ├── semanticscholar.py
 │   └── wikipedia.py
 ├── slopsearx/          # Core library
 │   ├── adapter.py      # EngineAdapter base class + ScrapeAdapter
