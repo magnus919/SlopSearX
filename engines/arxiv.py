@@ -25,6 +25,7 @@ class ArxivAdapter(EngineAdapter):
     display_name = "arXiv"
     env_prefix = "ENGINE_ARXIV"
     engine_type = "api"
+    categories = ["general", "science", "reference"]
 
     async def search(
         self,
