@@ -77,10 +77,13 @@ class EngineAdapter(ABC):
     display_name: str = ""  # e.g. "Brave Search API"
     env_prefix: str = ""  # e.g. "ENGINE_BRAVE"
     engine_type: str = "api"  # "api" | "scrape" | "structured"
+    categories: list[str] = ["general"]  # SearXNG-compatible category tags
 
     def __init__(self, config: dict | None = None, rate_limiter: "RateLimiter | None" = None) -> None:  # noqa: F821
         self.config = config or {}
         self.rate_limiter = rate_limiter  # injected by server at startup
+        # Merge categories: self-declared default + config override/add/remove
+        self._merge_categories()
 
     @abstractmethod
     async def search(
@@ -115,6 +118,33 @@ class EngineAdapter(ABC):
 
     async def shutdown(self) -> None:
         """Optional lifecycle hook — called at graceful shutdown."""
+
+    def _merge_categories(self) -> None:
+        """Merge self-declared categories with config override/add/remove.
+
+        Config keys:
+            categories: list[str] — full override (replaces self-declared)
+            categories_add: list[str] — append to self-declared
+            categories_remove: list[str] — suppress from self-declared
+        """
+        cat_cfg: dict = self.config.get("categories", {})
+        if isinstance(cat_cfg, list):
+            # Bare list = full override (backward-compat)
+            self.categories = list(cat_cfg)
+            return
+        if not isinstance(cat_cfg, dict):
+            return  # no category config
+        if "override" in cat_cfg:
+            self.categories = list(cat_cfg["override"])
+            return
+        # Add/remove path
+        self.categories = list(type(self).categories)  # copy class attr
+        for cat in cat_cfg.get("add", []):
+            if cat not in self.categories:
+                self.categories.append(cat)
+        for cat in cat_cfg.get("remove", []):
+            if cat in self.categories:
+                self.categories.remove(cat)
 
 
 class ScrapeAdapter(EngineAdapter, ABC):
@@ -201,7 +231,17 @@ def discover_engines(
     engine_configs = engine_configs or {}
     instances: dict[str, EngineAdapter] = {}
     for name, cls in _ENGINE_REGISTRY.items():
-        cfg = engine_configs.get(name, {})
+        cfg = dict(engine_configs.get(name, {}))
         if cfg.get("enabled", True):
+            # Restructure category config for _merge_categories()
+            cat_opts: dict[str, list[str]] = {}
+            if cfg.get("categories"):
+                cat_opts["override"] = cfg.pop("categories")
+            if cfg.get("categories_add"):
+                cat_opts["add"] = cfg.pop("categories_add")
+            if cfg.get("categories_remove"):
+                cat_opts["remove"] = cfg.pop("categories_remove")
+            if cat_opts:
+                cfg["categories"] = cat_opts
             instances[name] = cls(cfg)
     return instances

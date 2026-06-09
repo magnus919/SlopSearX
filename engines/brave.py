@@ -21,6 +21,7 @@ class BraveAdapter(EngineAdapter):
     display_name = "Brave Search API"
     env_prefix = "ENGINE_BRAVE"
     engine_type = "api"
+    categories = ["general", "news", "science", "images"]
 
     async def search(
         self,

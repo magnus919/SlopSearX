@@ -31,6 +31,7 @@ class _MockEngine(EngineAdapter):
     display_name = "Mock Test Engine"
     env_prefix = "ENGINE_MOCKTEST"
     engine_type = "api"
+    categories = ["general", "news", "tech", "science"]
 
     async def search(self, query, params=None):
         if query == "error":

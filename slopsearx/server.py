@@ -159,6 +159,27 @@ async def metrics() -> str:
 
 
 # ---------------------------------------------------------------------------
+# /config
+# ---------------------------------------------------------------------------
+
+
+@app.get("/config")
+async def config() -> dict:
+    """SearXNG-compatible config endpoint.
+
+    Returns available categories and their engines. Built from
+    instantiated engines (respects config overrides).
+    """
+    from collections import defaultdict
+
+    cats: dict[str, list[str]] = defaultdict(list)
+    for name, engine in _active_engines.items():
+        for cat in engine.categories:
+            cats[cat].append(name)
+    return {"categories": dict(cats)}
+
+
+# ---------------------------------------------------------------------------
 # /search
 # ---------------------------------------------------------------------------
 
@@ -202,6 +223,7 @@ async def search(
 
     # Determine which engines to query
     if engines_param.strip():
+        # Explicit engine list wins over category filter
         requested = [e.strip() for e in engines_param.split(",") if e.strip()]
         target_engines = {
             name: eng
@@ -210,6 +232,14 @@ async def search(
         }
     else:
         target_engines = dict(_active_engines)
+        # Category filter (only when engines not explicitly specified)
+        cat_list = [c.strip() for c in categories.split(",") if c.strip()]
+        if cat_list:
+            target_engines = {
+                name: eng
+                for name, eng in target_engines.items()
+                if any(c in eng.categories for c in cat_list)
+            }
 
     if not target_engines:
         # No engines available at all

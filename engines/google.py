@@ -30,6 +30,7 @@ class GoogleAdapter(ScrapeAdapter):
     display_name = "Google Search"
     env_prefix = "ENGINE_GOOGLE"
     engine_type = "scrape"
+    categories = ["general", "news"]
 
     async def search(
         self,
