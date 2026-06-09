@@ -43,9 +43,21 @@ slopsearx/
 
 - `GET /search?q=...&format=json` — SearXNG-compatible JSON
 - `GET /search?q=...&format=yaml` — YAML+Markdown (agent-native)
+- `GET /search?q=...&categories=science` — filter by category
 - `GET /health` — per-engine health check with metrics
+- `GET /metrics` — OpenMetrics for Prometheus scraping
+- `GET /config` — categories→engines mapping for runtime discovery
 
 The JSON response is a superset of SearXNG's output — same fields, plus `meta.*` extensions.
+
+## Category System
+
+Each engine declares its supported categories via a class attribute. Categories use SearXNG taxonomy — any string is valid, with namespace prefixes for sub-categories (`github:code`, `huggingface:datasets`).
+
+- `?categories=science` — filters to engines declaring `science`
+- `?categories=science,news` — OR semantics across requested categories
+- `?engines=brave,wikipedia` — explicit engine list overrides category filter
+- Operators can override/add/remove categories via env vars: `ENGINE_MYENG_CATEGORIES=news`, `ENGINE_MYENG_CATEGORIES_ADD=finance`
 
 ## Engine Adapter Quick Reference
 
@@ -58,11 +70,14 @@ class MyEngine(EngineAdapter):
     display_name = "My Engine API"
     env_prefix = "ENGINE_MYENGINE"
     engine_type = "api"
+    categories = ["general", "science"]  # SearXNG-compatible category tags
 
     async def search(self, query, params=None) -> AdapterResponse:
         """Execute search. Never raise — classify errors in AdapterResponse.status."""
         ...
 ```
+
+**Full adapter reference:** `docs/ENGINE_ADAPTERS.md` — contract rules, data types, lifecycle hooks, sub-categories, built-in adapter table.
 
 ## Commit Conventions
 

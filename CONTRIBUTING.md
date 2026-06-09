@@ -28,6 +28,17 @@ pip install -e ".[dev]"
 - Check lint: `ruff check .`
 - Verify conventional commit format on all commits
 
+## Adding a New Engine Adapter
+
+See `docs/ENGINE_ADAPTERS.md` for the full reference — contract rules, data types, lifecycle hooks, and the built-in adapter table. Quick checklist:
+
+- [ ] One Python file in `engines/` with a `@register_engine` class
+- [ ] `name`, `display_name`, `engine_type`, `categories` set
+- [ ] `async def search()` returns `AdapterResponse` — never raises
+- [ ] Import added to `engines/__init__.py`
+- [ ] Tests added in `tests/test_adapters.py`
+- [ ] Category tags follow SearXNG taxonomy (or use engine-specific namespace prefixes)
+
 ## Code of Conduct
 
 Be excellent to each other. This is a small project — disagreements happen, but keep them technical and constructive.

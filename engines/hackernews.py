@@ -21,6 +21,7 @@ class HackerNewsAdapter(EngineAdapter):
     display_name = "Hacker News"
     env_prefix = "ENGINE_HACKERNEWS"
     engine_type = "api"
+    categories = ["general", "news"]
 
     async def search(
         self,
