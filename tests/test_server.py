@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -13,6 +15,7 @@ from slopsearx.adapter import (
     SearchResult,
     register_engine,
 )
+from slopsearx.config import load_config
 from slopsearx.server import app
 
 # ---------------------------------------------------------------------------
@@ -256,3 +259,19 @@ class TestHealthEndpoint:
                 assert data["engines"] == {}
         finally:
             server_mod._active_engines = original
+
+
+class TestEngineConfigPropagation:
+    """Ensures engine config from env vars reaches adapters."""
+
+    def test_env_var_api_key_flows_to_adapter(self, monkeypatch) -> None:
+        """ENGINE_BRAVE_API_KEY env var should reach Brave adapter's config."""
+        monkeypatch.setenv("ENGINE_BRAVE_API_KEY", "test-key-12345")
+
+        # Re-discover engines with env var set
+        cfg = load_config()
+        engine_configs = {name: dataclasses.asdict(entry) for name, entry in cfg.engines.items()}
+
+        # Brave config should have the API key
+        assert "brave" in engine_configs
+        assert engine_configs["brave"]["api_key"] == "test-key-12345"

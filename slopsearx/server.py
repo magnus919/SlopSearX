@@ -7,6 +7,7 @@ degradation: scrape-engine failures never block the response.
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import time
 import uuid
 from typing import Any
@@ -24,6 +25,7 @@ from slopsearx.adapter import (
     discover_engines,
 )
 from slopsearx.cache import SearchCache, _ttl_for_query, cache_key
+from slopsearx.config import load_config
 from slopsearx.formatter import format_json, format_yaml_markdown
 from slopsearx.merger import (
     PresenceRanker,
@@ -61,7 +63,9 @@ async def startup() -> None:
 
     # Only populate if not already set (allows test fixtures to pre-seed)
     if not _active_engines:
-        _active_engines = discover_engines()
+        cfg = load_config()
+        engine_configs = {name: dataclasses.asdict(entry) for name, entry in cfg.engines.items()}
+        _active_engines = discover_engines(engine_configs)
 
     # Inject rate limiter into each engine
     for engine in _active_engines.values():
