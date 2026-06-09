@@ -15,6 +15,7 @@ from fastapi import FastAPI, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 import engines  # noqa: F401 — triggers @register_engine to populate registry
+from slopsearx import metrics as m
 from slopsearx.adapter import (
     AdapterResponse,
     EngineAdapter,
@@ -141,6 +142,19 @@ async def health() -> dict:
 
 
 # ---------------------------------------------------------------------------
+# /metrics
+# ---------------------------------------------------------------------------
+
+
+@app.get("/metrics")
+async def metrics() -> str:
+    """OpenMetrics endpoint for Prometheus scraping."""
+    from fastapi.responses import PlainTextResponse
+
+    return PlainTextResponse(content=m.render_metrics(), media_type="text/plain; version=0.0.4")
+
+
+# ---------------------------------------------------------------------------
 # /search
 # ---------------------------------------------------------------------------
 
@@ -168,6 +182,9 @@ async def search(
     """
     query_id = _generate_query_id()
     t_start = time.monotonic()
+
+    # Increment request counter
+    m.server_requests.inc({})
 
     # Validate query
     if not q.strip():
@@ -247,6 +264,13 @@ async def search(
             result = raw
         responses[name] = result
         engine_results[name] = result.results
+
+        # Record per-engine metrics
+        m.engine_queries.inc({"engine": name})
+        m.engine_latency.observe({"engine": name}, result.latency_ms / 1000.0)
+        degraded = (EngineStatus.TIMEOUT, EngineStatus.RATE_LIMITED)
+        status_code = 0 if result.status == EngineStatus.OK else (1 if result.status in degraded else 2)
+        m.engine_status.set({"engine": name}, status_code)
 
     # Merge and rank
     ranked = _ranker.rank(engine_results, q, search_params)

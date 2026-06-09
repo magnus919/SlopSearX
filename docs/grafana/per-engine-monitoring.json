@@ -1,0 +1,91 @@
+{
+  "title": "SlopSearX — Per-Engine Monitoring",
+  "uid": "slopsearx-engines",
+  "panels": [
+    {
+      "title": "Engine Query Rate",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "rate(slopsearx_engine_queries_total[1m])",
+          "legendFormat": "{{engine}}"
+        }
+      ]
+    },
+    {
+      "title": "Engine Latency (p50)",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "slopsearx_engine_latency_seconds{quantile=\"0.5\"}",
+          "legendFormat": "{{engine}}"
+        }
+      ]
+    },
+    {
+      "title": "Engine Latency (p99)",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "slopsearx_engine_latency_seconds{quantile=\"0.99\"}",
+          "legendFormat": "{{engine}}"
+        }
+      ]
+    },
+    {
+      "title": "Engine Status",
+      "type": "stat",
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "slopsearx_engine_status",
+          "legendFormat": "{{engine}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"type": "value", "value": "0", "text": "OK"},
+            {"type": "value", "value": "1", "text": "Degraded"},
+            {"type": "value", "value": "2", "text": "Down"}
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "yellow", "value": 1},
+              {"color": "red", "value": 2}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Cache Hit Rate",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "rate(slopsearx_cache_hit_total{type=\"hit\"}[5m]) / rate(slopsearx_cache_hit_total[5m])",
+          "legendFormat": "hit rate"
+        }
+      ]
+    },
+    {
+      "title": "Server Request Rate",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "rate(slopsearx_server_requests_total[1m])",
+          "legendFormat": "requests/sec"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "time": {"from": "now-1h", "to": "now"}
+}
