@@ -1,4 +1,11 @@
-"""DuckDuckGo HTML scrape adapter."""
+"""DuckDuckGo HTML scrape adapter.
+
+⚠️  Legal notice: DuckDuckGo does not provide a public search API.
+This adapter scrapes the HTML search results page (https://html.duckduckgo.com/).
+Use of this adapter may be subject to DuckDuckGo's Terms of Service.
+This adapter is best-effort with no SLA — HTML structure changes,
+CAPTCHA walls, and rate limiting may break it at any time.
+"""
 
 from __future__ import annotations
 
@@ -63,8 +70,32 @@ class DuckDuckGoAdapter(ScrapeAdapter):
                 latency_ms=latency,
             )
 
+    def _is_challenge_page(self, raw_html: str) -> bool:
+        """Detect CAPTCHA or challenge walls in the response HTML.
+
+        Checks for known DDG challenge indicators.
+        """
+        indicators = [
+            "challenge",
+            "verify you're human",
+            "hcaptcha",
+            "cf-browser-verification",
+            "ddg_sl_",
+            "data-challenge",
+        ]
+        lower = raw_html.lower()
+        return any(ind in lower for ind in indicators)
+
     def _parse_html(self, raw_html: str, query: str, max_results: int) -> list[SearchResult]:
-        """Parse DuckDuckGo HTML search results."""
+        """Parse DuckDuckGo HTML search results.
+
+        Detects CAPTCHA walls by checking for known challenge indicators
+        in the response body. Returns empty results with status logged
+        when a challenge is detected.
+        """
+        if self._is_challenge_page(raw_html):
+            return []
+
         results: list[SearchResult] = []
         doc = html.fromstring(raw_html)
 
