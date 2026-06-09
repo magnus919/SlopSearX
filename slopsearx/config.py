@@ -136,6 +136,31 @@ _DEFAULT_ENGINES: dict[str, dict] = {
         "rate_limit": 1,  # 1 req/s without key, 10 req/s with
         "weight": 0.8,
     },
+    "stackexchange": {
+        "base_url": "https://api.stackexchange.com/2.3",
+        "type": "api",
+        "timeout_ms": 5_000,
+        "max_results": 10,
+        "rate_limit": 30,  # 30 req/s with key
+        "weight": 0.9,
+    },
+    "openalex": {
+        "base_url": "https://api.openalex.org",
+        "type": "api",
+        "timeout_ms": 5_000,
+        "max_results": 10,
+        "rate_limit": 10,  # 100K/day polite usage
+        "weight": 0.8,
+    },
+    "internetarchive": {
+        "base_url": "https://archive.org",
+        "type": "api",
+        "timeout_ms": 10_000,
+        "max_results": 10,
+        "rate_limit": 5,  # conservative, IA can be slow
+        "weight": 0.6,
+        "enabled": False,  # opt-in only — not in default search path
+    },
     "wikipedia": {
         "base_url": "https://en.wikipedia.org/w/api.php",
         "type": "api",
