@@ -45,23 +45,16 @@ class EdgarAdapter(EngineAdapter):
         max_results = cfg.get("max_results", 10)
 
         headers = {
-            "User-Agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
-            "Accept": "application/json",
-            "Content-Type": "application/json",
+            "User-Agent": "SlopSearX/0.1.0 (meta search engine; research)",
+            "Accept": "application/json, text/plain, */*",
         }
         start_time = time.monotonic()
 
         try:
-            query_body = {
-                "q": query,
-                "limit": max_results,
-                "offset": 0,
-            }
-
             async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
-                resp = await client.post(
+                resp = await client.get(
                     base_url,
-                    json=query_body,
+                    params={"q": query, "limit": max_results, "offset": 0},
                     headers=headers,
                 )
                 latency = (time.monotonic() - start_time) * 1000

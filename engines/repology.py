@@ -39,17 +39,23 @@ class RepologyAdapter(EngineAdapter):
             return early
 
         cfg = self.config
-        base_url = cfg.get("base_url", "https://repology.org/api/v1")
+        base_url = cfg.get("base_url", "https://repology.org/api/v1/projects/")
         timeout_ms = cfg.get("timeout_ms", 5_000)
         max_results = cfg.get("max_results", 10)
 
-        headers = {"User-Agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"}
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ),
+        }
         start_time = time.monotonic()
 
         try:
             async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
                 resp = await client.get(
-                    f"{base_url}/project/{query}",
+                    base_url,
+                    params={"search": query},
                     headers=headers,
                 )
                 latency = (time.monotonic() - start_time) * 1000
@@ -60,35 +66,33 @@ class RepologyAdapter(EngineAdapter):
                 resp.raise_for_status()
                 data = resp.json()
 
-                # Repology returns a list of package dicts or a dict keyed by repo name
-                packages = data if isinstance(data, list) else [data]
-                packages = packages[:max_results]
-
                 results = []
-                for idx, pkg in enumerate(packages):
-                    name = pkg.get("name", "")
-                    repo = pkg.get("repo", "")
-                    vers = pkg.get("visible_version", "") or pkg.get("version", "")
-                    summary = pkg.get("summary", "") or ""
-                    licenses = pkg.get("licenses", [])
-                    status = pkg.get("status", "")
+                for idx, (project_name, packages) in enumerate(data.items()):
+                    if idx >= max_results:
+                        break
+                    if not packages:
+                        continue
 
-                    content = f"[{repo}] {name}"
-                    if vers:
-                        content += f" {vers}"
+                    pkg = packages[0]
+                    version = pkg.get("version", "")
+                    summary = pkg.get("summary", "") or ""
+                    repos = list({p.get("repo", "") for p in packages})
+                    statuses = list({p.get("status", "") for p in packages})
+
+                    content = f"Repos: {', '.join(repos[:5])}"
                     if summary:
-                        content += f" — {summary}"
-                    if licenses:
-                        content += f" | License: {', '.join(licenses)}"
+                        content = f"{summary} — {content}"
+                    if statuses:
+                        content += f" | Status: {', '.join(statuses)}"
 
                     results.append(
                         SearchResult(
-                            url=f"https://repology.org/project/{name}/",
-                            title=f"{name} — {repo}",
+                            url=f"https://repology.org/project/{project_name}/",
+                            title=f"{project_name} {version}",
                             content=content[:500],
                             engine=self.name,
                             position=idx + 1,
-                            score=1.0 if status == "newest" else 0.5,
+                            score=1.0 if "newest" in statuses else 0.5,
                         ),
                     )
 

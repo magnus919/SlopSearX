@@ -45,41 +45,40 @@ class TestPyPIAdapter:
         return instances["pypi"]
 
     @pytest.fixture
-    def sample_html(self) -> str:
-        return """
-        <html><body>
-        <div class="package-snippet">
-            <h3 class="package-snippet__title">
-                <span class="package-snippet__name">requests</span>
-                <span class="package-snippet__version">2.32.0</span>
-            </h3>
-            <p class="package-snippet__description">HTTP library for Python</p>
-        </div>
-        <div class="package-snippet">
-            <h3 class="package-snippet__title">
-                <span class="package-snippet__name">flask</span>
-                <span class="package-snippet__version">3.1.0</span>
-            </h3>
-            <p class="package-snippet__description">Web framework for Python</p>
-        </div>
-        </body></html>
-        """
+    def pypi_json_response(self) -> dict:
+        return {
+            "info": {
+                "name": "requests",
+                "version": "2.34.2",
+                "summary": "Python HTTP for Humans.",
+            },
+        }
 
-    def test_parse_search_results(self, adapter, sample_html):
-        results = adapter._parse_search_results(sample_html, 10)
-        assert len(results) == 2
-        assert results[0].title == "requests 2.32.0"
-        assert results[1].title == "flask 3.1.0"
-        assert "HTTP library" in results[0].content
-        assert "pypi.org/project/requests" in results[0].url
+    async def test_search_exact_package(self, adapter, pypi_json_response):
+        """Search returns result for exact package name via JSON API."""
+        async with MockHTTP(lambda r: httpx.Response(200, json=pypi_json_response)):
+            result = await adapter.search("requests")
+        assert result.status == EngineStatus.OK
+        assert len(result.results) == 1
+        assert result.results[0].title == "requests 2.34.2"
+        assert "HTTP" in result.results[0].content
 
-    def test_parse_search_respects_max_results(self, adapter, sample_html):
-        results = adapter._parse_search_results(sample_html, 1)
-        assert len(results) == 1
+    async def test_search_not_found_falls_back(self, adapter):
+        """When exact name not found, falls back to simple index search."""
+        calls = []
 
-    def test_parse_search_empty(self, adapter):
-        results = adapter._parse_search_results("<html></html>", 10)
-        assert results == []
+        def handler(r):
+            calls.append(r)
+            if "simple" in str(r.url):
+                return httpx.Response(
+                    200,
+                    content=b"<html><body><a href='/simple/flask/'>flask</a></body></html>",
+                )
+            return httpx.Response(404)
+
+        async with MockHTTP(handler):
+            result = await adapter.search("flask")
+        assert result.status == EngineStatus.OK
 
     def test_adapter_registered(self):
         from slopsearx.adapter import list_engines
@@ -216,29 +215,30 @@ class TestRepologyAdapter:
         return instances["repology"]
 
     @pytest.fixture
-    def sample_response(self) -> list[dict]:
-        return [
-            {
-                "name": "curl",
-                "repo": "homebrew",
-                "visible_version": "8.10.0",
-                "summary": "Command line tool for transferring data with URL syntax",
-                "status": "newest",
-            },
-            {
-                "name": "curl",
-                "repo": "debian",
-                "visible_version": "7.88.1",
-                "summary": "Command line tool for transferring data with URL syntax",
-                "status": "outdated",
-            },
-        ]
+    def sample_response(self) -> dict:
+        return {
+            "curl": [
+                {
+                    "repo": "homebrew",
+                    "version": "8.10.0",
+                    "summary": "Command line tool for transferring data with URL syntax",
+                    "status": "newest",
+                },
+                {
+                    "repo": "debian",
+                    "version": "7.88.1",
+                    "summary": "Command line tool for transferring data with URL syntax",
+                    "status": "outdated",
+                },
+            ],
+        }
 
     async def test_search_returns_results(self, adapter, sample_response):
         async with MockHTTP(lambda r: httpx.Response(200, json=sample_response)):
             result = await adapter.search("curl")
         assert result.status == EngineStatus.OK
         assert len(result.results) >= 1
+        assert "curl" in result.results[0].title
 
     async def test_search_404(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(404)):
@@ -624,77 +624,121 @@ class TestClinicalTrialsAdapter:
 # ---------------------------------------------------------------------------
 
 
-class TestCourtListenerAdapter:
+class TestOyezAdapter:
     @pytest.fixture
     def adapter(self):
-        instances = discover_engines({"courtlistener": {"enabled": True}})
-        return instances["courtlistener"]
+        instances = discover_engines({"oyez": {"enabled": True}})
+        return instances["oyez"]
+
+    @pytest.fixture
+    def sample_response(self) -> list[dict]:
+        return [
+            {"name": "Marbury v. Madison", "term": "1801", "decision_date": "1803-02-24", "href": "/cases/1801/10"},
+            {
+                "name": "Brown v. Board of Education",
+                "term": "1953",
+                "decision_date": "1954-05-17",
+                "href": "/cases/1952/1",
+            },
+        ]
+
+    async def test_search_returns_results(self, adapter, sample_response):
+        async with MockHTTP(lambda r: httpx.Response(200, json=sample_response)):
+            result = await adapter.search("marbury")
+        assert result.status == EngineStatus.OK
+        assert len(result.results) == 2
+        assert "Marbury" in result.results[0].title
+        assert "oyez.org" in result.results[0].url
+
+    def test_adapter_registered(self):
+        from slopsearx.adapter import list_engines
+
+        assert "oyez" in list_engines()
+
+
+# ---------------------------------------------------------------------------
+# RubyGems
+# ---------------------------------------------------------------------------
+
+
+class TestRubyGemsAdapter:
+    @pytest.fixture
+    def adapter(self):
+        instances = discover_engines({"rubygems": {"enabled": True}})
+        return instances["rubygems"]
+
+    @pytest.fixture
+    def sample_response(self) -> list[dict]:
+        return [
+            {
+                "name": "rails",
+                "version": "8.1.3",
+                "info": "Ruby on Rails web framework",
+                "downloads": 50000000,
+                "authors": "David Heinemeier Hansson",
+            },
+            {
+                "name": "rack",
+                "version": "3.1.0",
+                "info": "Ruby web server interface",
+                "downloads": 40000000,
+                "authors": "Christian Neukirchen",
+            },
+        ]
+
+    async def test_search_returns_results(self, adapter, sample_response):
+        async with MockHTTP(lambda r: httpx.Response(200, json=sample_response)):
+            result = await adapter.search("rails")
+        assert result.status == EngineStatus.OK
+        assert len(result.results) == 2
+        assert result.results[0].title == "rails 8.1.3"
+        assert "rubygems.org" in result.results[0].url
+
+    def test_adapter_registered(self):
+        from slopsearx.adapter import list_engines
+
+        assert "rubygems" in list_engines()
+
+
+# ---------------------------------------------------------------------------
+# openFDA
+# ---------------------------------------------------------------------------
+
+
+class TestOpenFDAAdapter:
+    @pytest.fixture
+    def adapter(self):
+        instances = discover_engines({"openfda": {"enabled": True}})
+        return instances["openfda"]
 
     @pytest.fixture
     def sample_response(self) -> dict:
         return {
             "results": [
                 {
-                    "caseName": "Marbury v. Madison",
-                    "court": "scotus",
-                    "court_string": "Supreme Court of the United States",
-                    "dateFiled": "1803-02-24",
-                    "citation": ["5 U.S. 137"],
-                    "absolute_url": "/opinion/12345/marbury-v-madison/",
-                    "plain_text": "It is emphatically the province of the judicial department to say what the law is.",
+                    "openfda": {
+                        "brand_name": ["Aspirin"],
+                        "generic_name": ["Acetylsalicylic Acid"],
+                        "manufacturer_name": ["Bayer"],
+                        "substance_name": ["ASPIRIN"],
+                    },
+                    "purpose": ["Pain reliever"],
+                    "indications_and_usage": ["For relief of headache pain"],
                 },
             ],
         }
 
     async def test_search_returns_results(self, adapter, sample_response):
         async with MockHTTP(lambda r: httpx.Response(200, json=sample_response)):
-            result = await adapter.search("marbury")
+            result = await adapter.search("aspirin")
         assert result.status == EngineStatus.OK
         assert len(result.results) == 1
-        assert "Marbury" in result.results[0].title
+        assert "Aspirin" in result.results[0].title
 
     def test_adapter_registered(self):
         from slopsearx.adapter import list_engines
 
-        assert "courtlistener" in list_engines()
-
-
-# ---------------------------------------------------------------------------
-# USPTO
-# ---------------------------------------------------------------------------
-
-
-class TestUSPTOAdapter:
-    @pytest.fixture
-    def adapter(self):
-        instances = discover_engines({"uspto": {"enabled": True}})
-        return instances["uspto"]
-
-    @pytest.fixture
-    def sample_response(self) -> dict:
-        return {
-            "patents": [
-                {
-                    "patent_id": "12345678",
-                    "patent_title": "System and method for machine learning",
-                    "patent_abstract": "A system for training neural networks using distributed computing.",
-                    "patent_date": "2024-01-15",
-                    "patent_type": "utility",
-                },
-            ],
-        }
-
-    async def test_search_returns_results(self, adapter, sample_response):
-        async with MockHTTP(lambda r: httpx.Response(200, json=sample_response)):
-            result = await adapter.search("machine learning")
-        assert result.status == EngineStatus.OK
-        assert len(result.results) == 1
-        assert "machine learning" in result.results[0].title.lower()
-
-    def test_adapter_registered(self):
-        from slopsearx.adapter import list_engines
-
-        assert "uspto" in list_engines()
+        assert "openfda" in list_engines()
 
 
 # ---------------------------------------------------------------------------
@@ -820,49 +864,6 @@ class TestUniProtAdapter:
         from slopsearx.adapter import list_engines
 
         assert "uniprot" in list_engines()
-
-
-# ---------------------------------------------------------------------------
-# Data.gov
-# ---------------------------------------------------------------------------
-
-
-class TestDataGovAdapter:
-    @pytest.fixture
-    def adapter(self):
-        instances = discover_engines({"data_gov": {"enabled": True}})
-        return instances["data_gov"]
-
-    @pytest.fixture
-    def sample_response(self) -> dict:
-        return {
-            "result": {
-                "results": [
-                    {
-                        "title": "USDA Farmers Market Directory",
-                        "notes": "List of farmers markets across the United States",
-                        "organization": {"title": "Department of Agriculture"},
-                        "metadata_created": "2024-01-01T00:00:00Z",
-                        "name": "farmers-market-directory",
-                        "resources": [{"url": "test"}],
-                        "tags": [{"display_name": "agriculture"}],
-                        "score": 50.0,
-                    },
-                ],
-            },
-        }
-
-    async def test_search_returns_results(self, adapter, sample_response):
-        async with MockHTTP(lambda r: httpx.Response(200, json=sample_response)):
-            result = await adapter.search("farmers market")
-        assert result.status == EngineStatus.OK
-        assert len(result.results) == 1
-        assert "USDA" in result.results[0].title
-
-    def test_adapter_registered(self):
-        from slopsearx.adapter import list_engines
-
-        assert "data_gov" in list_engines()
 
 
 # ---------------------------------------------------------------------------
