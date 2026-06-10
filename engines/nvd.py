@@ -32,7 +32,7 @@ class NVDAdapter(EngineAdapter):
     display_name = "NVD (National Vulnerability Database)"
     env_prefix = "ENGINE_NVD"
     engine_type = "api"
-    categories = ["general", "it", "security"]
+    categories = ["it", "security"]
 
     def __init__(self, config: dict[str, Any] | None = None, rate_limiter: Any = None) -> None:
         super().__init__(config, rate_limiter)

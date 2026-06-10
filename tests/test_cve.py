@@ -162,7 +162,7 @@ class TestCVEAdapter:
         from slopsearx.adapter import list_engines
         cls = list_engines()["cve"]
         cats = cls.categories
-        assert "general" in cats
+        assert "general" not in cats
         assert "it" in cats
         assert "security" in cats
 

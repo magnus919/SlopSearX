@@ -32,7 +32,7 @@ class VulnCheckAdapter(EngineAdapter):
     display_name = "VulnCheck Community"
     env_prefix = "ENGINE_VULNCHECK"
     engine_type = "api"
-    categories = ["general", "security", "threat-intel"]
+    categories = ["security", "threat-intel"]
 
     async def search(
         self,

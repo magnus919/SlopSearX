@@ -32,7 +32,7 @@ class AbuseIPDBAdapter(EngineAdapter):
     display_name = "AbuseIPDB"
     env_prefix = "ENGINE_ABUSEIPDB"
     engine_type = "api"
-    categories = ["general", "security", "threat-intel"]
+    categories = ["security", "threat-intel"]
 
     async def search(
         self,

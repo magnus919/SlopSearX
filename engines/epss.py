@@ -32,7 +32,7 @@ class EPSSAdapter(EngineAdapter):
     display_name = "FIRST EPSS (Exploit Prediction)"
     env_prefix = "ENGINE_EPSS"
     engine_type = "api"
-    categories = ["general", "security", "threat-intel"]
+    categories = ["security", "threat-intel"]
 
     async def search(
         self,

@@ -60,19 +60,16 @@ class TestMitreAttackAdapter:
         assert len(result.results) == 1
         assert "Cobalt Strike" in result.results[0].title
 
-    async def test_keyword_search_html(self, adapter):
-        html = """
-        <html><body>
-        <div class="search-result"><a href="/techniques/T1059/">Command and Scripting Interpreter</a></div>
-        <div class="search-result"><p>Adversaries may abuse command interpreters.</p></div>
-        <div class="search-result"><a href="/software/S0154/">Cobalt Strike</a></div>
-        <div class="search-result"><p>Commercial adversary simulation software.</p></div>
-        </body></html>
+    async def test_keyword_search_returns_empty(self, adapter):
+        """MITRE ATT&CK only supports direct ID lookups (T/G/S patterns).
+
+        Free-text search is not supported by the upstream service, so
+        non-ID queries should return empty results gracefully.
         """
-        async with MockHTTP(lambda r: httpx.Response(200, content=html.encode())):
+        async with MockHTTP(lambda r: httpx.Response(200, content=b"")):
             result = await adapter.search("command execution")
         assert result.status == EngineStatus.OK
-        assert len(result.results) >= 1
+        assert len(result.results) == 0
 
     async def test_search_rate_limited(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(429)):

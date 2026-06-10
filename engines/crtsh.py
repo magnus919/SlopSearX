@@ -29,7 +29,7 @@ class CrtShAdapter(EngineAdapter):
     display_name = "CRT.sh (Certificate Transparency)"
     env_prefix = "ENGINE_CRTSH"
     engine_type = "api"
-    categories = ["general", "it", "security"]
+    categories = ["it", "security"]
 
     async def search(
         self,

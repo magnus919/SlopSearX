@@ -35,7 +35,7 @@ class OTXAdapter(EngineAdapter):
     display_name = "AlienVault OTX"
     env_prefix = "ENGINE_OTX"
     engine_type = "api"
-    categories = ["general", "security", "threat-intel"]
+    categories = ["security", "threat-intel"]
 
     async def search(
         self,

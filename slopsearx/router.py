@@ -59,7 +59,7 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
             "pip",
             "cargo",
         ],
-        "engines": ["brave", "github", "stackexchange", "wikipedia"],
+        "engines": ["brave", "github", "stackexchange", "duckduckgo", "wikipedia"],
     },
     {
         "name": "science",
@@ -78,7 +78,7 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
             "mathematics",
             "statistics",
         ],
-        "engines": ["brave", "arxiv", "semanticscholar", "openalex", "wikipedia"],
+        "engines": ["brave", "arxiv", "semanticscholar", "openalex", "duckduckgo", "wikipedia"],
     },
     {
         "name": "news",
@@ -104,7 +104,7 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
             "discussion",
             "forum",
         ],
-        "engines": ["brave", "hackernews", "reddit"],
+        "engines": ["brave", "hackernews", "reddit", "duckduckgo"],
     },
     {
         "name": "reference",
@@ -119,7 +119,7 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
             "manual",
             "definition",
         ],
-        "engines": ["brave", "wikipedia", "stackexchange"],
+        "engines": ["brave", "wikipedia", "stackexchange", "duckduckgo"],
     },
     {
         "name": "historical",
@@ -132,7 +132,7 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
             "vintage",
             "retro",
         ],
-        "engines": ["brave", "wikipedia", "internetarchive"],
+        "engines": ["brave", "wikipedia", "internetarchive", "duckduckgo"],
     },
 ]
 

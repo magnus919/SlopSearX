@@ -29,7 +29,7 @@ class IntelXAdapter(EngineAdapter):
     display_name = "Intelligence X (IntelX)"
     env_prefix = "ENGINE_INTELX"
     engine_type = "api"
-    categories = ["general", "security", "threat-intel"]
+    categories = ["security", "threat-intel"]
 
     async def search(
         self,

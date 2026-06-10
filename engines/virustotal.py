@@ -33,7 +33,7 @@ class VirusTotalAdapter(EngineAdapter):
     display_name = "VirusTotal"
     env_prefix = "ENGINE_VIRUSTOTAL"
     engine_type = "api"
-    categories = ["general", "security", "malware"]
+    categories = ["security", "malware"]
 
     async def search(
         self,

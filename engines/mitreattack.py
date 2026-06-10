@@ -34,7 +34,7 @@ class MitreAttackAdapter(EngineAdapter):
     display_name = "MITRE ATT&CK"
     env_prefix = "ENGINE_MITREATTACK"
     engine_type = "api"
-    categories = ["general", "security", "reference"]
+    categories = ["security", "reference"]
 
     async def search(
         self,
@@ -47,7 +47,6 @@ class MitreAttackAdapter(EngineAdapter):
         cfg = self.config
         base_url = cfg.get("base_url", "https://attack.mitre.org")
         timeout_ms = cfg.get("timeout_ms", 10_000)
-        max_results = cfg.get("max_results", 10)
 
         # Check for ATT&CK ID patterns
         technique = _TECHNIQUE_PATTERN.search(query)
@@ -102,17 +101,10 @@ class MitreAttackAdapter(EngineAdapter):
                     results = self._parse_software_page(resp.text, software.group(1).upper())
                     return AdapterResponse(results=results, status=EngineStatus.OK, latency_ms=latency)
 
-                # Keyword search via the site search
-                resp = await client.get(
-                    f"{base_url}/search",
-                    headers=headers,
-                    params={"q": query},
-                )
+                # No ATT&CK ID pattern found — MITRE ATT&CK only supports
+                # direct ID lookups (T/G/S patterns), not free-text search.
                 latency = (time.monotonic() - start_time) * 1000
-                resp.raise_for_status()
-
-                results = self._parse_search_page(resp.text, query, max_results)
-                return AdapterResponse(results=results, status=EngineStatus.OK, latency_ms=latency)
+                return AdapterResponse(results=[], status=EngineStatus.OK, latency_ms=latency)
 
         except httpx.TimeoutException:
             latency = (time.monotonic() - start_time) * 1000
@@ -207,40 +199,4 @@ class MitreAttackAdapter(EngineAdapter):
             ),
         ]
 
-    def _parse_search_page(self, html_text: str, query: str, max_results: int) -> list[SearchResult]:
-        """Parse the ATT&CK search results page."""
-        if not html_text or "captcha" in html_text.lower():
-            return []
-        tree = html.fromstring(html_text)
-        results: list[SearchResult] = []
 
-        # Search result items
-        items = tree.cssselect(".search-result, .result-item, .list-group-item, li.search-result")
-        if not items:
-            # Try alt selectors
-            items = tree.cssselect("article, .card")
-
-        for item in items[:max_results]:
-            title_el = item.cssselect("a, h2, h3, h4")
-            desc_el = item.cssselect("p, .description, .summary")
-
-            title = title_el[0].text_content().strip() if title_el else ""
-            link = title_el[0].get("href", "") if title_el else ""
-            description = desc_el[0].text_content().strip()[:300] if desc_el else ""
-
-            if not title:
-                continue
-
-            full_url = f"https://attack.mitre.org{link}" if link.startswith("/") else link
-
-            results.append(
-                SearchResult(
-                    url=full_url or f"https://attack.mitre.org/search?q={query}",
-                    title=title,
-                    content=description or f"ATT&CK search result for '{query}'",
-                    engine=self.name,
-                    position=len(results) + 1,
-                ),
-            )
-
-        return results
