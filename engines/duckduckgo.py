@@ -47,19 +47,33 @@ class DuckDuckGoAdapter(ScrapeAdapter):
 
         data = {"q": query}
         headers = self.request_headers
+        proxy = self._get_proxy()
+        client_kwargs: dict[str, Any] = {
+            "timeout": timeout_ms / 1000.0,
+            "follow_redirects": True,
+        }
+        if proxy:
+            client_kwargs["proxies"] = proxy
 
         start_time = time.monotonic()
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0, follow_redirects=True) as client:
+            async with httpx.AsyncClient(**client_kwargs) as client:
                 resp = await client.post(base_url, data=data, headers=headers)
                 latency = (time.monotonic() - start_time) * 1000
 
                 if resp.status_code == 429:
+                    self._report_proxy_failure(proxy)
                     return AdapterResponse(results=[], status=EngineStatus.RATE_LIMITED, latency_ms=latency)
                 if resp.status_code in (403, 503):
+                    self._report_proxy_failure(proxy)
                     return AdapterResponse(results=[], status=EngineStatus.BLOCKED, latency_ms=latency)
                 resp.raise_for_status()
 
+                if self._is_challenge_page(resp.text):
+                    self._report_proxy_failure(proxy)
+                    return AdapterResponse(results=[], status=EngineStatus.OK, latency_ms=latency)
+
+                self._report_proxy_success(proxy)
                 results = self._parse_html(resp.text, query, max_results)
                 return AdapterResponse(results=results, status=EngineStatus.OK, latency_ms=latency)
 

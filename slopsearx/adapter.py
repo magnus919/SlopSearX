@@ -170,9 +170,18 @@ class ScrapeAdapter(EngineAdapter, ABC):
 
     Scrape adapters send HTTP GET/POST requests with stealth headers
     and parse HTML responses — no headless browser required.
+
+    Supports optional proxy rotation via ``proxy_pool`` or
+    ``scrape_proxy_url`` config keys.
     """
 
     engine_type = "scrape"
+
+    def __init__(self, config: dict[str, Any] | None = None, rate_limiter: Any = None) -> None:
+        super().__init__(config, rate_limiter)
+        from slopsearx.proxypool import ProxyPool
+
+        self._proxy_pool = ProxyPool.from_config(self.config)
 
     # Sensible defaults; individual engines can override.
     @property
@@ -190,6 +199,26 @@ class ScrapeAdapter(EngineAdapter, ABC):
     def timeout_ms(self) -> int:
         val: int = self.config.get("timeout_ms", 10_000)
         return val
+
+    def _get_proxy(self) -> dict[str, str] | None:
+        """Return an httpx-compatible proxy dict, or ``None``.
+
+        Delegates to :class:`slopsearx.proxypool.ProxyPool` if
+        the engine has proxy configuration.
+        """
+        if self._proxy_pool is None:
+            return None
+        return self._proxy_pool.get_proxy()
+
+    def _report_proxy_success(self, proxy: dict[str, str] | None) -> None:
+        """Report a successful request through the given proxy."""
+        if self._proxy_pool is not None:
+            self._proxy_pool.report_success(proxy)
+
+    def _report_proxy_failure(self, proxy: dict[str, str] | None) -> None:
+        """Report a failed request (CAPTCHA, 429, 403) through the given proxy."""
+        if self._proxy_pool is not None:
+            self._proxy_pool.report_failure(proxy)
 
     async def health(self) -> EngineStatus:
         """Probe: can we reach the engine's homepage?"""
