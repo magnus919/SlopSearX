@@ -34,6 +34,7 @@ from slopsearx.merger import (
 )
 from slopsearx.ratelimit import LocalTokenBucket, RateLimiter
 from slopsearx.router import QueryRouter
+from slopsearx.stats import EngineStatsTracker
 from slopsearx.suggest import SuggestionService
 
 app = FastAPI(title="SlopSearX", version="0.1.0")
@@ -45,6 +46,7 @@ _cache: SearchCache | None = None
 _rate_limiter: RateLimiter | None = None
 _router: QueryRouter | None = None
 _suggestion_service: SuggestionService | None = None
+_stats_tracker: EngineStatsTracker | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -91,6 +93,10 @@ async def startup() -> None:
     brave_api_key = (load_config().engines.get("brave").api_key  # type: ignore[union-attr]
                      or "")
     _suggestion_service = SuggestionService(brave_api_key=brave_api_key, cache=_cache)
+
+    # Initialize quality stats tracker
+    global _stats_tracker  # noqa: PLW0603
+    _stats_tracker = EngineStatsTracker(cache=_cache)
 
 
 @app.on_event("shutdown")
@@ -327,6 +333,20 @@ async def search(
         degraded = (EngineStatus.TIMEOUT, EngineStatus.RATE_LIMITED)
         status_code = 0 if result.status == EngineStatus.OK else (1 if result.status in degraded else 2)
         m.engine_status.set({"engine": name}, status_code)
+
+        # Record per-engine quality telemetry in Valkey
+        if _stats_tracker is not None:
+            avg_score = (
+                sum(r.score for r in result.results) / len(result.results)
+                if result.results else 0.0
+            )
+            _stats_tracker.record_query(
+                engine=name,
+                result_count=len(result.results),
+                latency_ms=result.latency_ms,
+                status=result.status,
+                avg_score=avg_score,
+            )
 
     # Merge and rank
     ranked = _ranker.rank(engine_results, q, search_params)
