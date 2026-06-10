@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from typing import Any
 
 import httpx
 
@@ -26,14 +27,14 @@ class HackerNewsAdapter(EngineAdapter):
     async def search(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         cfg = self.config
         base_url = cfg.get("base_url", "https://hn.algolia.com/api/v1/search")
         timeout_ms = cfg.get("timeout_ms", 3_000)
         max_results = cfg.get("max_results", 5)
 
-        params_dict: dict = {
+        params_dict: dict[str, Any] = {
             "query": query,
             "hitsPerPage": max_results,
             "tags": "story",  # Only stories, not comments
@@ -64,7 +65,7 @@ class HackerNewsAdapter(EngineAdapter):
                 results=[], status=EngineStatus.ERROR, error_message=str(exc), latency_ms=latency,
             )
 
-    def _parse_hits(self, hits: list[dict]) -> list[SearchResult]:
+    def _parse_hits(self, hits: list[dict[str, Any]]) -> list[SearchResult]:
         """Parse HN Algolia hits into SearchResult list."""
         results: list[SearchResult] = []
 

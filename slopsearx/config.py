@@ -73,7 +73,7 @@ class Config:
 # Defaults
 # ---------------------------------------------------------------------------
 
-_DEFAULT_ENGINES: dict[str, dict] = {
+_DEFAULT_ENGINES: dict[str, dict[str, Any]] = {
     "arxiv": {
         "base_url": "http://export.arxiv.org/api/query",
         "type": "api",
@@ -161,6 +161,14 @@ _DEFAULT_ENGINES: dict[str, dict] = {
         "weight": 0.6,
         "enabled": False,  # opt-in only — not in default search path
     },
+    "reddit": {
+        "base_url": "https://www.reddit.com",
+        "type": "api",
+        "timeout_ms": 5_000,
+        "max_results": 10,
+        "rate_limit": 1,  # conservative: 1 req/s (~60 req/min)
+        "weight": 0.7,
+    },
     "wikipedia": {
         "base_url": "https://en.wikipedia.org/w/api.php",
         "type": "api",
@@ -206,7 +214,7 @@ def _load_env_overrides() -> dict[str, Any]:
     return overrides
 
 
-def _dict_to_config(data: dict) -> Config:
+def _dict_to_config(data: dict[str, Any]) -> Config:
     """Convert a nested dict to a Config dataclass."""
     engines = {}
     for name, eng_data in data.get("engines", {}).items():
@@ -266,7 +274,7 @@ def _coerce_type(value: str, target_type: type) -> Any:
 
 def _merge_engine_configs(
     file_config: dict[str, EngineEntry] | None,
-    defaults: dict[str, dict],
+    defaults: dict[str, dict[str, Any]],
 ) -> dict[str, EngineEntry]:
     """Merge file-based engine config over defaults."""
     result: dict[str, EngineEntry] = {}
@@ -311,7 +319,7 @@ def load_config(
 
     # 2. Layer: config file
     path = Path(config_path) if config_path else Path(CONFIG_FILE_PATH)
-    file_data: dict = {}
+    file_data: dict[str, Any] = {}
     if path.exists():
         with open(path) as f:
             file_data = yaml.safe_load(f) or {}

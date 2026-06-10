@@ -7,6 +7,7 @@ API docs: https://api.stackexchange.com/docs/search
 from __future__ import annotations
 
 import urllib.parse
+from typing import Any
 
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult, register_engine
 
@@ -30,7 +31,7 @@ class StackExchangeAdapter(EngineAdapter):
     async def search(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         import httpx
 

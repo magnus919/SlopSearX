@@ -27,6 +27,9 @@ dev = [
     "pytest-asyncio>=0.24.0",
     "ruff>=0.9.0",
     "cssselect>=1.2",
+    "mypy>=1.13",
+    "pytest-cov>=6.0",
+    "pip-tools>=7.4",
 ]
 
 [tool.setuptools.packages.find]
@@ -42,6 +45,28 @@ select = ["E", "F", "I", "N", "W"]
 [tool.ruff.format]
 quote-style = "double"
 
+[tool.mypy]
+strict = true
+python_version = "3.12"
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+pretty = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = ["valkey", "yaml", "lxml"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+addopts = "--cov=slopsearx --cov=engines --cov-report=term-missing --cov-fail-under=70"
+
+[tool.coverage.run]
+source = ["slopsearx", "engines"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 70

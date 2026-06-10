@@ -125,7 +125,7 @@ class ValkeySlidingWindow(RateLimitStrategy):
             window_start = int(time.monotonic() / self._window)
             key = f"ratelimit:{engine}:{window_start}"
 
-            count = self._client.incrby(key, cost)
+            count: int = self._client.incrby(key, cost)
             if count == cost:
                 # First increment in this window — set expiry
                 self._client.expire(key, int(self._window * 2))

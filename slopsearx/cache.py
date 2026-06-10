@@ -10,7 +10,7 @@ import hashlib
 import json
 import logging
 import os
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class SearchCache:
             self._client = None
             logger.warning("SearchCache: Valkey unavailable, caching disabled: %s", e)
 
-    async def get(self, key: str) -> dict | None:
+    async def get(self, key: str) -> dict[str, Any] | None:
         """Retrieve cached result set by key. Returns None on miss or error."""
         if not self._connected or self._client is None:
             return None
@@ -71,12 +71,12 @@ class SearchCache:
             data = self._client.get(key)
             if data is None:
                 return None
-            return json.loads(data)
+            return cast("dict[str, Any]", json.loads(data))
         except Exception as e:
             logger.debug("Cache get error: %s", e)
             return None
 
-    async def set(self, key: str, value: dict, ttl: int = 300) -> None:
+    async def set(self, key: str, value: dict[str, Any], ttl: int = 300) -> None:
         """Store result set in cache with TTL."""
         if not self._connected or self._client is None:
             return

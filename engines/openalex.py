@@ -7,6 +7,7 @@ API docs: https://docs.openalex.org/api-entities/works/search-works
 from __future__ import annotations
 
 import urllib.parse
+from typing import Any
 
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult, register_engine
 
@@ -24,7 +25,7 @@ class OpenAlexAdapter(EngineAdapter):
     async def search(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         import httpx
 
@@ -72,7 +73,7 @@ class OpenAlexAdapter(EngineAdapter):
         return AdapterResponse(results=results, status=EngineStatus.OK)
 
 
-def _reconstruct_abstract(inverted: dict | None) -> str:
+def _reconstruct_abstract(inverted: dict[str, Any] | None) -> str:
     """Reconstruct abstract text from OpenAlex inverted index.
 
     Format: {"word": [positions], ...} → "word word word ..."

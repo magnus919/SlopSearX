@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import time
+from typing import Any
 
 import httpx
 
@@ -27,7 +28,7 @@ class WikipediaAdapter(EngineAdapter):
     async def search(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         cfg = self.config
         base_url = cfg.get("base_url", "https://en.wikipedia.org/w/api.php")
@@ -81,10 +82,10 @@ class WikipediaAdapter(EngineAdapter):
         base_url: str,
         query: str,
         limit: int,
-        headers: dict,
+        headers: dict[str, str],
     ) -> list[str]:
         """Stage 1: fetch quick title suggestions via opensearch."""
-        params = {
+        params: dict[str, str | int] = {
             "action": "opensearch",
             "search": query,
             "limit": limit,
@@ -105,13 +106,13 @@ class WikipediaAdapter(EngineAdapter):
         client: httpx.AsyncClient,
         base_url: str,
         titles: list[str],
-        headers: dict,
+        headers: dict[str, str],
     ) -> list[SearchResult]:
         """Stage 2: fetch extracts and thumbnails for resolved page titles."""
         if not titles:
             return []
 
-        params = {
+        params: dict[str, str] = {
             "action": "query",
             "titles": "|".join(titles),
             "prop": "extracts|pageimages",

@@ -14,7 +14,7 @@ from __future__ import annotations
 import enum
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 # ---------------------------------------------------------------------------
 # Data types
@@ -79,7 +79,7 @@ class EngineAdapter(ABC):
     engine_type: str = "api"  # "api" | "scrape" | "structured"
     categories: list[str] = ["general"]  # SearXNG-compatible category tags
 
-    def __init__(self, config: dict | None = None, rate_limiter: "RateLimiter | None" = None) -> None:  # noqa: F821
+    def __init__(self, config: dict[str, Any] | None = None, rate_limiter: Any = None) -> None:
         self.config = config or {}
         self.rate_limiter = rate_limiter  # injected by server at startup
         # Merge categories: self-declared default + config override/add/remove
@@ -89,7 +89,7 @@ class EngineAdapter(ABC):
     async def search(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         """Execute a search against this engine.
 
@@ -127,7 +127,7 @@ class EngineAdapter(ABC):
             categories_add: list[str] — append to self-declared
             categories_remove: list[str] — suppress from self-declared
         """
-        cat_cfg: dict = self.config.get("categories", {})
+        cat_cfg: dict[str, Any] = self.config.get("categories", {})
         if isinstance(cat_cfg, list):
             # Bare list = full override (backward-compat)
             self.categories = list(cat_cfg)
@@ -170,7 +170,8 @@ class ScrapeAdapter(EngineAdapter, ABC):
 
     @property
     def timeout_ms(self) -> int:
-        return self.config.get("timeout_ms", 10_000)
+        val: int = self.config.get("timeout_ms", 10_000)
+        return val
 
     async def health(self) -> EngineStatus:
         """Probe: can we reach the engine's homepage?"""
@@ -217,7 +218,7 @@ def list_engines() -> dict[str, type[EngineAdapter]]:
 
 
 def discover_engines(
-    engine_configs: dict[str, dict] | None = None,
+    engine_configs: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, EngineAdapter]:
     """Instantiate all registered adapters with their per-engine config.
 

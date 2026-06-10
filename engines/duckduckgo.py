@@ -10,6 +10,7 @@ CAPTCHA walls, and rate limiting may break it at any time.
 from __future__ import annotations
 
 import time
+from typing import Any
 
 import httpx
 from lxml import html
@@ -34,7 +35,7 @@ class DuckDuckGoAdapter(ScrapeAdapter):
     async def search(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         cfg = self.config
         base_url = cfg.get("base_url", "https://html.duckduckgo.com/html/")

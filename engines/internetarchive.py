@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 import urllib.parse
+from typing import Any
 
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult, register_engine
 
@@ -35,7 +36,7 @@ class InternetArchiveAdapter(EngineAdapter):
     async def search(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
 
         if _is_domain_query(query):
@@ -46,7 +47,7 @@ class InternetArchiveAdapter(EngineAdapter):
     async def _search_wayback(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         """Search Wayback Machine CDX API for domain snapshots."""
         import httpx
@@ -103,7 +104,7 @@ class InternetArchiveAdapter(EngineAdapter):
     async def _search_archive(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         """Search general Internet Archive catalog."""
         import httpx
