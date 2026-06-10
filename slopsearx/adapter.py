@@ -85,6 +85,24 @@ class EngineAdapter(ABC):
         # Merge categories: self-declared default + config override/add/remove
         self._merge_categories()
 
+    async def _check_rate_limit(self) -> AdapterResponse | None:
+        """Check rate limiter before dispatching a search request.
+
+        Returns an ``AdapterResponse`` with ``RATE_LIMITED`` status if
+        the rate limiter denies the request, or ``None`` if allowed.
+        Safe to call when ``self.rate_limiter`` is ``None`` (e.g. tests).
+        """
+        if self.rate_limiter is None:
+            return None
+        allowed = await self.rate_limiter.acquire(self.name)
+        if not allowed:
+            return AdapterResponse(
+                results=[],
+                status=EngineStatus.RATE_LIMITED,
+                error_message="rate limited",
+            )
+        return None
+
     @abstractmethod
     async def search(
         self,

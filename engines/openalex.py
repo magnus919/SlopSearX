@@ -29,6 +29,9 @@ class OpenAlexAdapter(EngineAdapter):
     ) -> AdapterResponse:
         import httpx
 
+        if (early := await self._check_rate_limit()):
+            return early
+
         cfg = self.config
         timeout_ms = cfg.get("timeout_ms", 5_000)
         max_results = cfg.get("max_results", 10)

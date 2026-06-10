@@ -29,6 +29,9 @@ class SemanticScholarAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
+        if (early := await self._check_rate_limit()):
+            return early
+
         cfg = self.config
         api_key = cfg.get("api_key") or ""
         base_url = cfg.get("base_url", "https://api.semanticscholar.org/graph/v1/paper/search")
