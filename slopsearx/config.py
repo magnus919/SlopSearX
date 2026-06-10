@@ -202,6 +202,54 @@ _DEFAULT_ENGINES: dict[str, dict[str, Any]] = {
         "rate_limit": 5,  # no API key needed, but be conservative
         "weight": 0.7,
     },
+    "crtsh": {
+        "base_url": "https://crt.sh",
+        "type": "api",
+        "timeout_ms": 10_000,
+        "max_results": 10,
+        "rate_limit": 1,  # free API, be respectful
+        "weight": 0.6,
+    },
+    "epss": {
+        "base_url": "https://api.first.org/data/v1/epss",
+        "type": "api",
+        "timeout_ms": 10_000,
+        "max_results": 5,
+        "rate_limit": 5,
+        "weight": 0.5,
+    },
+    "urlhaus": {
+        "base_url": "https://urlhaus-api.abuse.ch",
+        "type": "api",
+        "timeout_ms": 10_000,
+        "max_results": 10,
+        "rate_limit": 1,
+        "weight": 0.5,
+    },
+    "greynoise": {
+        "base_url": "https://api.greynoise.io",
+        "type": "api",
+        "timeout_ms": 10_000,
+        "max_results": 5,
+        "rate_limit": 1,
+        "weight": 0.6,
+    },
+    "exploitdb": {
+        "base_url": "https://www.exploit-db.com",
+        "type": "scrape",
+        "timeout_ms": 10_000,
+        "max_results": 10,
+        "rate_limit": 0.5,  # scrape-based, be gentle
+        "weight": 0.6,
+    },
+    "mitreattack": {
+        "base_url": "https://attack.mitre.org",
+        "type": "api",
+        "timeout_ms": 10_000,
+        "max_results": 10,
+        "rate_limit": 1,
+        "weight": 0.7,
+    },
 }
 
 _DEFAULT_CACHE = {"ttl_seconds": 300, "max_result_sets": 10_000, "revalidate_on_hit": False}
