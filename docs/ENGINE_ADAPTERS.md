@@ -118,6 +118,8 @@ from engines import brave, wikipedia, duckduckgo, google, ...
 
 Adding a new engine file + one import line in `__init__.py` is all that's needed.
 
+**Keep README.md in sync.** The Engines table in `README.md` must reflect every registered adapter. Add a row when adding an engine, remove the row when removing one.
+
 ## Engine-Specific Sub-Categories
 
 Engines can declare namespace-prefixed sub-categories for fine-grained routing:

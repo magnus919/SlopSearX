@@ -39,6 +39,9 @@ See `docs/ENGINE_ADAPTERS.md` for the full reference — contract rules, data ty
 - [ ] Import added to `engines/__init__.py`
 - [ ] Tests added in `tests/test_adapters.py`
 - [ ] Category tags follow SearXNG taxonomy (or use engine-specific namespace prefixes)
+- [ ] **README.md Engines table updated** (name, type, auth, categories)
+
+**Removing an engine:** Remove its file from `engines/`, its import from `engines/__init__.py`, and its row from the README.md Engines table.
 
 ## Code of Conduct
 
