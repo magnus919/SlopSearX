@@ -6,16 +6,24 @@ This document helps AI coding agents understand the project structure, architect
 
 ```
 slopsearx/
-├── engines/            # Engine adapter plugins (one file per engine)
-│   ├── arxiv.py
-│   ├── brave.py
-│   ├── duckduckgo.py
-│   ├── github.py
-│   ├── google.py
-│   ├── hackernews.py
-│   ├── huggingface.py
-│   ├── semanticscholar.py
-│   └── wikipedia.py
+├── engines/            # Engine adapter plugins (one file per engine, 48 total)
+│   ├── arxiv.py           brave.py           crates.py
+│   ├── censys.py          clinicaltrials.py  courtlistener.py (removed)
+│   ├── crtsh.py           cve.py             dehashed.py
+│   ├── dockerhub.py       duckduckgo.py      edgar.py
+│   ├── epss.py            exploitdb.py       fred.py
+│   ├── github.py          google.py          greynoise.py
+│   ├── hackernews.py      hibp.py            huggingface.py
+│   ├── intelx.py          internetarchive.py mitreattack.py
+│   ├── musicbrainz.py     nominatim.py       npm.py
+│   ├── nvd.py             openalex.py        openfda.py
+│   ├── openlibrary.py     otx.py             oyez.py
+│   ├── pubchem.py         pubmed.py          pypi.py
+│   ├── reddit.py          repology.py        rubygems.py
+│   ├── semanticscholar.py shodan.py          stackexchange.py
+│   ├── tmdb.py            uniprot.py         urlhaus.py
+│   ├── virustotal.py      vulncheck.py       wikipedia.py
+│   └── abuseipdb.py
 ├── slopsearx/          # Core library
 │   ├── adapter.py      # EngineAdapter base class + ScrapeAdapter
 │   ├── merger.py       # Fan-out, deduplication, ranking

@@ -135,19 +135,99 @@ Engines can declare namespace-prefixed sub-categories for fine-grained routing:
 
 Sub-categories appear in `/config` output alongside base categories and are selected with `?categories=github:code`.
 
-## Built-In Adapters
+## Built-In Adapters (48)
+
+### General / Web
+
+| Adapter | File | Type | Categories | Auth |
+|---|---|---|---|---|
+| Brave Search | `engines/brave.py` | api | general, news, science, images | `ENGINE_BRAVE_API_KEY` |
+| DuckDuckGo | `engines/duckduckgo.py` | scrape | general, news | None |
+| Google | `engines/google.py` | scrape | general, news | None |
+| Hacker News | `engines/hackernews.py` | api | general, news | None |
+| Reddit | `engines/reddit.py` | api | general, social, reddit:subreddit | None |
+| Wikipedia | `engines/wikipedia.py` | api | general, science, reference | None |
+
+### Developer / Package Registries
+
+| Adapter | File | Type | Categories | Auth |
+|---|---|---|---|---|
+| Crates.io | `engines/crates.py` | api | general, it, reference, packages | None |
+| Docker Hub | `engines/dockerhub.py` | api | general, it, reference, packages | None |
+| GitHub | `engines/github.py` | api | general, reference, github:code, github:issues, github:prs | `GITHUB_TOKEN` |
+| npm | `engines/npm.py` | api | general, it, reference, packages | None |
+| PyPI | `engines/pypi.py` | api | general, it, reference, packages | None |
+| Repology | `engines/repology.py` | api | general, it, reference, packages | None |
+| RubyGems | `engines/rubygems.py` | api | general, it, reference, packages | None |
+| Stack Exchange | `engines/stackexchange.py` | api | general, reference, science, stackexchange:code, stackexchange:serverfault | Optional app key |
+
+### Science & Research
 
 | Adapter | File | Type | Categories | Auth |
 |---|---|---|---|---|
 | arXiv | `engines/arxiv.py` | api | general, science, reference | None |
-| Brave Search | `engines/brave.py` | api | general, news, science, images | `ENGINE_BRAVE_API_KEY` |
-| DuckDuckGo | `engines/duckduckgo.py` | scrape | general, news | None |
-| GitHub | `engines/github.py` | api | general, reference, github:code/issues/prs | `GITHUB_TOKEN` |
-| Google | `engines/google.py` | scrape | general, news | None |
-| Hacker News | `engines/hackernews.py` | api | general, news | None |
-| HuggingFace | `engines/huggingface.py` | api | general, science, hf:datasets/papers | `HF_TOKEN` (optional) |
-| Reddit | `engines/reddit.py` | api | general, social, reddit:subreddit | None |
-| Semantic Scholar | `engines/semanticscholar.py` | api | general, science, reference | None (optional key) |
-| Wikipedia | `engines/wikipedia.py` | api | general, science, reference | None |
+| HuggingFace | `engines/huggingface.py` | api | general, science, huggingface:datasets, huggingface:papers | `HF_TOKEN` (optional) |
+| Internet Archive | `engines/internetarchive.py` | api | reference, web:archive, historical | None |
+| OpenAlex | `engines/openalex.py` | api | general, science, reference | None |
+| Open Library | `engines/openlibrary.py` | api | general, books, reference | None |
+| Semantic Scholar | `engines/semanticscholar.py` | api | general, science, reference | Optional API key |
+| UniProt | `engines/uniprot.py` | api | general, science, reference, biology, medical | None |
+
+### Medical / Health
+
+| Adapter | File | Type | Categories | Auth |
+|---|---|---|---|---|
+| ClinicalTrials.gov | `engines/clinicaltrials.py` | api | general, medical, health, science | None |
+| openFDA | `engines/openfda.py` | api | general, medical, health, science, government | None |
+| PubChem | `engines/pubchem.py` | api | general, science, reference, chemistry, medical | None |
+| PubMed | `engines/pubmed.py` | api | general, science, reference, medical, health | None |
+
+### Security / Threat Intelligence
+
+| Adapter | File | Type | Categories | Auth |
+|---|---|---|---|---|
+| AbuseIPDB | `engines/abuseipdb.py` | api | security, threat-intel | `ENGINE_ABUSEIPDB_API_KEY` |
+| AlienVault OTX | `engines/otx.py` | api | security, threat-intel | `ENGINE_OTX_API_KEY` |
+| Censys | `engines/censys.py` | api | it, security | `ENGINE_CENSYS_API_KEY` + `_API_SECRET` |
+| CRT.sh | `engines/crtsh.py` | api | it, security | None |
+| CVE Program (MITRE) | `engines/cve.py` | api | it, security | None |
+| DeHashed | `engines/dehashed.py` | api | security, threat-intel | `ENGINE_DEHASHED_API_KEY` |
+| Exploit-DB | `engines/exploitdb.py` | scrape | security, exploit | None |
+| FIRST EPSS | `engines/epss.py` | api | security, threat-intel | None |
+| GreyNoise | `engines/greynoise.py` | api | security, threat-intel | `ENGINE_GREYNOISE_API_KEY` (optional) |
+| Have I Been Pwned | `engines/hibp.py` | api | security, reference | `ENGINE_HIBP_API_KEY` |
+| IntelX | `engines/intelx.py` | api | security, threat-intel | `ENGINE_INTELX_API_KEY` |
+| MITRE ATT&CK | `engines/mitreattack.py` | api | security, reference | None |
+| NVD (NIST) | `engines/nvd.py` | api | it, security | `ENGINE_NVD_API_KEY` (optional) |
+| Shodan | `engines/shodan.py` | api | it, security | `ENGINE_SHODAN_API_KEY` |
+| URLhaus | `engines/urlhaus.py` | api | security, threat-intel | None |
+| VirusTotal | `engines/virustotal.py` | api | security, malware | `ENGINE_VIRUSTOTAL_API_KEY` |
+| VulnCheck | `engines/vulncheck.py` | api | security, threat-intel | `ENGINE_VULNCHECK_API_KEY` |
+
+### Finance / Economics
+
+| Adapter | File | Type | Categories | Auth |
+|---|---|---|---|---|
+| FRED | `engines/fred.py` | api | general, finance, reference, economics | `ENGINE_FRED_API_KEY` |
+| SEC EDGAR | `engines/edgar.py` | api | general, finance, reference | None |
+
+### Media & Entertainment
+
+| Adapter | File | Type | Categories | Auth |
+|---|---|---|---|---|
+| MusicBrainz | `engines/musicbrainz.py` | api | general, music, reference | None |
+| TMDB | `engines/tmdb.py` | api | general, movies, entertainment | `ENGINE_TMDB_API_KEY` |
+
+### Geography / GIS
+
+| Adapter | File | Type | Categories | Auth |
+|---|---|---|---|---|
+| Nominatim (OSM) | `engines/nominatim.py` | api | general, geography, reference | None |
+
+### Legal
+
+| Adapter | File | Type | Categories | Auth |
+|---|---|---|---|---|
+| Oyez (SCOTUS) | `engines/oyez.py` | api | general, reference, legal | None |
 
 See `slopsearx/adapter.py` for the base classes (`EngineAdapter`, `ScrapeAdapter`) and the registry functions (`register_engine`, `discover_engines`).

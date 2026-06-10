@@ -31,22 +31,100 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 | `GET /metrics` | OpenMetrics for Prometheus scraping |
 | `GET /config` | Categories→engines mapping for runtime discovery |
 
-## Engines
+## Engines (48)
+
+### General / Web
+
+| Engine | Type | Auth | Categories |
+|---|---|---|---|
+| [Brave Search](https://brave.com/search/api/) | API | `ENGINE_BRAVE_API_KEY` | general, news, science, images |
+| [DuckDuckGo](https://duckduckgo.com/) | Scrape | None | general, news |
+| [Google](https://google.com/) | Scrape | None | general, news |
+| [Hacker News](https://news.ycombinator.com/) | API | None | general, news |
+| [Reddit](https://reddit.com/) | API | None | general, social, reddit:subreddit |
+| [Wikipedia](https://www.wikipedia.org/) | API | None | general, science, reference |
+
+### Developer / Package Registries
+
+| Engine | Type | Auth | Categories |
+|---|---|---|---|
+| [Crates.io](https://crates.io/) | API | None | general, it, reference, packages |
+| [Docker Hub](https://hub.docker.com/) | API | None | general, it, reference, packages |
+| [GitHub](https://github.com/) | API | `GITHUB_TOKEN` | general, reference, github:code, github:issues, github:prs |
+| [npm](https://www.npmjs.com/) | API | None | general, it, reference, packages |
+| [PyPI](https://pypi.org/) | API | None | general, it, reference, packages |
+| [Repology](https://repology.org/) | API | None | general, it, reference, packages |
+| [RubyGems](https://rubygems.org/) | API | None | general, it, reference, packages |
+| [Stack Exchange](https://stackexchange.com/) | API | Optional | general, reference, science, stackexchange:code, stackexchange:serverfault |
+
+### Science & Research
 
 | Engine | Type | Auth | Categories |
 |---|---|---|---|
 | [arXiv](https://arxiv.org/) | API | None | general, science, reference |
-| [Brave Search](https://brave.com/search/api/) | API | API key | general, news, science, images |
-| [DuckDuckGo](https://duckduckgo.com/) | Scrape | None | general, news |
-| [GitHub](https://github.com/) | API | Token | general, reference, github:code/issues/prs |
-| [Google](https://google.com/) | Scrape | None | general, news |
-| [Hacker News](https://news.ycombinator.com/) | API | None | general, news |
-| [HuggingFace](https://huggingface.co/) | API | Optional | general, science, hf:datasets/papers |
-| [Internet Archive](https://archive.org/) | API | None | reference, web:archive, historical |
+| [HuggingFace](https://huggingface.co/) | API | `HF_TOKEN` (optional) | general, science, huggingface:datasets, huggingface:papers |
 | [OpenAlex](https://openalex.org/) | API | None | general, science, reference |
+| [Open Library](https://openlibrary.org/) | API | None | general, books, reference |
 | [Semantic Scholar](https://www.semanticscholar.org/) | API | Optional | general, science, reference |
-| [Stack Exchange](https://stackexchange.com/) | API | Optional | general, reference, science, stackexchange:code/serverfault |
-| [Wikipedia](https://www.wikipedia.org/) | API | None | general, science, reference |
+| [UniProt](https://www.uniprot.org/) | API | None | general, science, reference, biology, medical |
+| [Internet Archive](https://archive.org/) | API | None | reference, web:archive, historical |
+
+### Medical / Health
+
+| Engine | Type | Auth | Categories |
+|---|---|---|---|
+| [ClinicalTrials.gov](https://clinicaltrials.gov/) | API | None | general, medical, health, science |
+| [openFDA](https://open.fda.gov/) | API | None | general, medical, health, science, government |
+| [PubChem](https://pubchem.ncbi.nlm.nih.gov/) | API | None | general, science, reference, chemistry, medical |
+| [PubMed](https://pubmed.ncbi.nlm.nih.gov/) | API | None | general, science, reference, medical, health |
+
+### Security / Threat Intelligence
+
+| Engine | Type | Auth | Categories |
+|---|---|---|---|
+| [AbuseIPDB](https://www.abuseipdb.com/) | API | `ENGINE_ABUSEIPDB_API_KEY` | security, threat-intel |
+| [AlienVault OTX](https://otx.alienvault.com/) | API | `ENGINE_OTX_API_KEY` | security, threat-intel |
+| [Censys](https://censys.io/) | API | `ENGINE_CENSYS_API_KEY` + `_API_SECRET` | it, security |
+| [CRT.sh](https://crt.sh/) | API | None | it, security |
+| [CVE Program (MITRE)](https://cve.mitre.org/) | API | None | it, security |
+| [DeHashed](https://dehashed.com/) | API | `ENGINE_DEHASHED_API_KEY` | security, threat-intel |
+| [Exploit-DB](https://www.exploit-db.com/) | Scrape | None | security, exploit |
+| [FIRST EPSS](https://www.first.org/epss/) | API | None | security, threat-intel |
+| [GreyNoise](https://www.greynoise.io/) | API | `ENGINE_GREYNOISE_API_KEY` (optional) | security, threat-intel |
+| [Have I Been Pwned](https://haveibeenpwned.com/) | API | `ENGINE_HIBP_API_KEY` | security, reference |
+| [IntelX](https://intelx.io/) | API | `ENGINE_INTELX_API_KEY` | security, threat-intel |
+| [MITRE ATT&CK](https://attack.mitre.org/) | API | None | security, reference |
+| [NVD (NIST)](https://nvd.nist.gov/) | API | `ENGINE_NVD_API_KEY` (optional) | it, security |
+| [Shodan](https://www.shodan.io/) | API | `ENGINE_SHODAN_API_KEY` | it, security |
+| [URLhaus](https://urlhaus.abuse.ch/) | API | None | security, threat-intel |
+| [VirusTotal](https://www.virustotal.com/) | API | `ENGINE_VIRUSTOTAL_API_KEY` | security, malware |
+| [VulnCheck](https://vulncheck.com/) | API | `ENGINE_VULNCHECK_API_KEY` | security, threat-intel |
+
+### Finance / Economics
+
+| Engine | Type | Auth | Categories |
+|---|---|---|---|
+| [FRED](https://fred.stlouisfed.org/) | API | `ENGINE_FRED_API_KEY` | general, finance, reference, economics |
+| [SEC EDGAR](https://www.sec.gov/edgar/) | API | None | general, finance, reference |
+
+### Media & Entertainment
+
+| Engine | Type | Auth | Categories |
+|---|---|---|---|
+| [MusicBrainz](https://musicbrainz.org/) | API | None | general, music, reference |
+| [TMDB](https://www.themoviedb.org/) | API | `ENGINE_TMDB_API_KEY` | general, movies, entertainment |
+
+### Geography / GIS
+
+| Engine | Type | Auth | Categories |
+|---|---|---|---|
+| [Nominatim (OSM)](https://nominatim.openstreetmap.org/) | API | None | general, geography, reference |
+
+### Legal
+
+| Engine | Type | Auth | Categories |
+|---|---|---|---|
+| [Oyez (SCOTUS)](https://www.oyez.org/) | API | None | general, reference, legal |
 
 **Adding a new engine:** See [`docs/ENGINE_ADAPTERS.md`](docs/ENGINE_ADAPTERS.md) for the full adapter reference — contract rules, data types, lifecycle hooks, and the category system.
 
