@@ -72,7 +72,16 @@ class BraveAdapter(EngineAdapter):
                 data = resp.json()
                 web_results = (data.get("web", {}) if isinstance(data.get("web"), dict) else {}).get("results", [])
                 results = self._parse_results(web_results, query)
-                return AdapterResponse(results=results, status=EngineStatus.OK, latency_ms=latency)
+
+                # Extract answer-box content from Brave's mixed/answer sections
+                answers = self._parse_answers(data)
+
+                return AdapterResponse(
+                    results=results,
+                    status=EngineStatus.OK,
+                    latency_ms=latency,
+                    answers=answers,
+                )
 
         except httpx.TimeoutException:
             latency = (time.monotonic() - start_time) * 1000
@@ -85,6 +94,47 @@ class BraveAdapter(EngineAdapter):
                 error_message=str(exc),
                 latency_ms=latency,
             )
+
+    def _parse_answers(self, data: dict[str, Any]) -> list[dict[str, Any]]:
+        """Extract answer-box style results from Brave response.
+
+        Brave's ``infobox`` and ``mixed`` sections can contain
+        answer-type content (summaries, entity descriptions) that
+        map to the SearXNG ``answers`` field.
+        """
+        answers: list[dict[str, Any]] = []
+
+        # Check infobox (entity/summary answers)
+        infobox = data.get("infobox")
+        if isinstance(infobox, dict):
+            infobox_results = infobox.get("results", [])
+            if isinstance(infobox_results, list):
+                for item in infobox_results:
+                    if isinstance(item, dict):
+                        desc = item.get("description", "") or ""
+                        if desc:
+                            answers.append({
+                                "url": item.get("url", ""),
+                                "title": item.get("title", ""),
+                                "content": desc[:500],
+                            })
+
+        # Check mixed section for inline answers
+        mixed = data.get("mixed")
+        if isinstance(mixed, dict):
+            for entry in mixed.get("main", []):
+                if isinstance(entry, dict) and entry.get("type") == "answer":
+                    ans_data = entry.get("data", {})
+                    if isinstance(ans_data, dict):
+                        desc = ans_data.get("description", "") or ""
+                        if desc:
+                            answers.append({
+                                "url": ans_data.get("url", ""),
+                                "title": ans_data.get("title", ""),
+                                "content": desc[:500],
+                            })
+
+        return answers
 
     def _parse_results(self, raw: list[dict[str, Any]], query: str) -> list[SearchResult]:
         results: list[SearchResult] = []

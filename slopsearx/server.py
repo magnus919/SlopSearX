@@ -364,6 +364,18 @@ async def search(
     # Build suggestions from engine suggest APIs
     suggestions = await _generate_suggestions(q)
 
+    # Aggregate answers, corrections, and infoboxes from all engine responses
+    all_answers: list[dict[str, Any]] = []
+    all_corrections: list[str] = []
+    all_infoboxes: list[dict[str, Any]] = []
+    for resp in responses.values():
+        if resp.answers:
+            all_answers.extend(resp.answers)
+        if resp.corrections:
+            all_corrections.extend(resp.corrections)
+        if resp.infoboxes:
+            all_infoboxes.extend(resp.infoboxes)
+
     if format == "yaml":
         engine_count = len(target_engines)
         responsive_count = sum(
@@ -383,6 +395,9 @@ async def search(
     response_data = format_json(
         results=ranked,
         query=q,
+        answers=all_answers,
+        corrections=all_corrections,
+        infoboxes=all_infoboxes,
         suggestions=suggestions,
         unresponsive_engines=unresponsive,
         meta=meta,

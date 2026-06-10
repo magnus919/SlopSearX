@@ -76,7 +76,7 @@ def format_json(
     query: str,
     *,
     answers: list[dict[str, Any]] | None = None,
-    corrections: list[dict[str, Any]] | None = None,
+    corrections: list[str] | None = None,
     infoboxes: list[dict[str, Any]] | None = None,
     suggestions: list[str] | None = None,
     unresponsive_engines: list[list[str]] | None = None,
