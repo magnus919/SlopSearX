@@ -40,6 +40,9 @@ class RedditAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
+        if (early := await self._check_rate_limit()):
+            return early
+
         cfg = self.config
         base_url = cfg.get("base_url", "https://www.reddit.com")
         timeout_ms = cfg.get("timeout_ms", 5_000)

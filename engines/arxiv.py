@@ -33,6 +33,9 @@ class ArxivAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
+        if (early := await self._check_rate_limit()):
+            return early
+
         cfg = self.config
         base_url = cfg.get("base_url", "http://export.arxiv.org/api/query")
         timeout_ms = cfg.get("timeout_ms", 10_000)

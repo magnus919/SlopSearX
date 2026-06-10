@@ -30,6 +30,9 @@ class WikipediaAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
+        if (early := await self._check_rate_limit()):
+            return early
+
         cfg = self.config
         base_url = cfg.get("base_url", "https://en.wikipedia.org/w/api.php")
         timeout_ms = cfg.get("timeout_ms", 3_000)

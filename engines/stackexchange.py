@@ -35,6 +35,9 @@ class StackExchangeAdapter(EngineAdapter):
     ) -> AdapterResponse:
         import httpx
 
+        if (early := await self._check_rate_limit()):
+            return early
+
         cfg = self.config
         api_key = cfg.get("api_key", "")
         timeout_ms = cfg.get("timeout_ms", 5_000)
