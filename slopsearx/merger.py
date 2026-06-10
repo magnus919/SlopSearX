@@ -32,7 +32,7 @@ class Ranker(ABC):
         self,
         engine_results: dict[str, list[SearchResult]],
         query: str,
-        params: Optional[dict] = None,
+        params: dict[str, Any] | None = None,
     ) -> list[SearchResult]:
         """Rank and deduplicate results from multiple engines.
 
@@ -71,7 +71,7 @@ class PresenceRanker(Ranker):
         self,
         engine_results: dict[str, list[SearchResult]],
         query: str,
-        params: Optional[dict] = None,
+        params: dict[str, Any] | None = None,
     ) -> list[SearchResult]:
         if not engine_results:
             return []

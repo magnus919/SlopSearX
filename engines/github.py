@@ -27,7 +27,7 @@ class GitHubAdapter(EngineAdapter):
     async def search(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         cfg = self.config
         token = cfg.get("api_key") or ""
@@ -92,7 +92,7 @@ class GitHubAdapter(EngineAdapter):
                 results=[], status=EngineStatus.ERROR, error_message=str(exc), latency_ms=latency,
             )
 
-    def _parse_items(self, items: list[dict], query: str, endpoint: str) -> list[SearchResult]:
+    def _parse_items(self, items: list[dict[str, Any]], query: str, endpoint: str) -> list[SearchResult]:
         """Parse GitHub API search results into SearchResult list."""
         results: list[SearchResult] = []
 

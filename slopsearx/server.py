@@ -110,7 +110,7 @@ async def _shutdown_engine(name: str, engine: EngineAdapter) -> None:
 
 
 @app.get("/health")
-async def health() -> dict:
+async def health() -> dict[str, Any]:
     """Health check with per-engine status.
 
     Returns 200 even if some engines are unhealthy — engine status
@@ -151,9 +151,8 @@ async def health() -> dict:
 
 
 @app.get("/metrics")
-async def metrics() -> str:
+async def metrics() -> PlainTextResponse:
     """OpenMetrics endpoint for Prometheus scraping."""
-    from fastapi.responses import PlainTextResponse
 
     return PlainTextResponse(content=m.render_metrics(), media_type="text/plain; version=0.0.4")
 
@@ -164,7 +163,7 @@ async def metrics() -> str:
 
 
 @app.get("/config")
-async def config() -> dict:
+async def config() -> dict[str, Any]:
     """SearXNG-compatible config endpoint.
 
     Returns available categories and their engines. Built from
@@ -267,7 +266,6 @@ async def search(
 
     # Check cache first
     if _cache is not None and _cache.is_connected:
-        cat_list: list[str] = search_params.get("categories", [])
         ck = cache_key(q, language, safesearch)
         cached = await _cache.get(ck)
         if cached is not None:
@@ -368,7 +366,7 @@ async def _dispatch_engine(
     name: str,
     engine: EngineAdapter,
     query: str,
-    params: dict,
+    params: dict[str, Any],
     timeout_s: float = 3.0,
 ) -> AdapterResponse:
     """Dispatch a query to one engine with a timeout.

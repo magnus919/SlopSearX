@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from typing import Any
 
 import httpx
 
@@ -26,7 +27,7 @@ class BraveAdapter(EngineAdapter):
     async def search(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         cfg = self.config
         api_key = cfg.get("api_key") or ""
@@ -47,7 +48,7 @@ class BraveAdapter(EngineAdapter):
             "X-Subscription-Token": api_key,
         }
 
-        params_dict: dict = {
+        params_dict: dict[str, Any] = {
             "q": query,
             "count": max_results,
             "safesearch": "off",
@@ -82,7 +83,7 @@ class BraveAdapter(EngineAdapter):
                 latency_ms=latency,
             )
 
-    def _parse_results(self, raw: list[dict], query: str) -> list[SearchResult]:
+    def _parse_results(self, raw: list[dict[str, Any]], query: str) -> list[SearchResult]:
         results: list[SearchResult] = []
         for i, item in enumerate(raw):
             results.append(

@@ -75,14 +75,14 @@ def format_json(
     results: list[SearchResult],
     query: str,
     *,
-    answers: list[dict] | None = None,
-    corrections: list[dict] | None = None,
-    infoboxes: list[dict] | None = None,
+    answers: list[dict[str, Any]] | None = None,
+    corrections: list[dict[str, Any]] | None = None,
+    infoboxes: list[dict[str, Any]] | None = None,
     suggestions: list[str] | None = None,
     unresponsive_engines: list[list[str]] | None = None,
     meta: dict[str, Any] | None = None,
     number_of_results: int | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """Format results as a SearXNG-compatible JSON response.
 
     Args:
@@ -230,7 +230,7 @@ def format_yaml_markdown(
 # ---------------------------------------------------------------------------
 
 
-def format_yaml(results: list[dict], query: str, **meta: Any) -> str:
+def format_yaml(results: list[dict[str, Any]], query: str, **meta: Any) -> str:
     """Format results as YAML+Markdown (legacy stub wrapper).
 
     Prefer ``format_yaml_markdown`` for production use — this exists

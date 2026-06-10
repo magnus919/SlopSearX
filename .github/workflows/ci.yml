@@ -29,5 +29,8 @@ jobs:
       - name: Lint with ruff
         run: ruff check .
 
-      - name: Test with pytest
-        run: pytest -v
+      - name: Type check with mypy
+        run: mypy slopsearx/ engines/
+
+      - name: Test with pytest and coverage
+        run: pytest -v --cov=slopsearx --cov=engines --cov-report=term-missing --cov-fail-under=70

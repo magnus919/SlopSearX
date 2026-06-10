@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import time
 import xml.etree.ElementTree as ET
+from typing import Any
 
 import httpx
 
@@ -30,7 +31,7 @@ class ArxivAdapter(EngineAdapter):
     async def search(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         cfg = self.config
         base_url = cfg.get("base_url", "http://export.arxiv.org/api/query")
@@ -39,7 +40,7 @@ class ArxivAdapter(EngineAdapter):
 
         # arXiv ToS: max 1 request per 3 seconds — enforced here
         search_query = f"all:{query}"
-        url_params: dict = {
+        url_params: dict[str, Any] = {
             "search_query": search_query,
             "start": 0,
             "max_results": max_results,

@@ -129,6 +129,7 @@ Engines can declare namespace-prefixed sub-categories for fine-grained routing:
 | | `github:prs` | PRs only (alias) |
 | HuggingFace | `huggingface:datasets` | Dataset search |
 | | `huggingface:papers` | Paper search |
+| Reddit | `reddit:subreddit` | Subreddit-scoped search (`params["subreddit"]`) |
 
 Sub-categories appear in `/config` output alongside base categories and are selected with `?categories=github:code`.
 
@@ -143,6 +144,7 @@ Sub-categories appear in `/config` output alongside base categories and are sele
 | Google | `engines/google.py` | scrape | general, news | None |
 | Hacker News | `engines/hackernews.py` | api | general, news | None |
 | HuggingFace | `engines/huggingface.py` | api | general, science, hf:datasets/papers | `HF_TOKEN` (optional) |
+| Reddit | `engines/reddit.py` | api | general, social, reddit:subreddit | None |
 | Semantic Scholar | `engines/semanticscholar.py` | api | general, science, reference | None (optional key) |
 | Wikipedia | `engines/wikipedia.py` | api | general, science, reference | None |
 

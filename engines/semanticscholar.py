@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from typing import Any
 
 import httpx
 
@@ -26,7 +27,7 @@ class SemanticScholarAdapter(EngineAdapter):
     async def search(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         cfg = self.config
         api_key = cfg.get("api_key") or ""
@@ -35,7 +36,7 @@ class SemanticScholarAdapter(EngineAdapter):
         max_results = cfg.get("max_results", 5)
 
         fields = "title,url,abstract,citationCount,publicationDate,externalIds,authors"
-        params_dict: dict = {
+        params_dict: dict[str, Any] = {
             "query": query,
             "limit": max_results,
             "fields": fields,
@@ -71,7 +72,7 @@ class SemanticScholarAdapter(EngineAdapter):
                 results=[], status=EngineStatus.ERROR, error_message=str(exc), latency_ms=latency,
             )
 
-    def _parse_papers(self, papers: list[dict]) -> list[SearchResult]:
+    def _parse_papers(self, papers: list[dict[str, Any]]) -> list[SearchResult]:
         """Parse Semantic Scholar paper results into SearchResult list."""
         results: list[SearchResult] = []
 

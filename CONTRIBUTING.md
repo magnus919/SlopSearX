@@ -24,8 +24,9 @@ pip install -e ".[dev]"
 
 ## Before Submitting a PR
 
-- Run tests: `pytest`
+- Run tests with coverage: `pytest --cov=slopsearx --cov=engines --cov-report=term-missing`
 - Check lint: `ruff check .`
+- Type check: `mypy slopsearx/ engines/`
 - Verify conventional commit format on all commits
 
 ## Adding a New Engine Adapter

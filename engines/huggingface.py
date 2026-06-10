@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from typing import Any
 
 import httpx
 
@@ -26,7 +27,7 @@ class HuggingFaceAdapter(EngineAdapter):
     async def search(
         self,
         query: str,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         cfg = self.config
         token = cfg.get("api_key") or ""
@@ -44,7 +45,7 @@ class HuggingFaceAdapter(EngineAdapter):
             # Default: models
             endpoint = f"{base_url}/models"
 
-        params_dict: dict = {
+        params_dict: dict[str, Any] = {
             "search": query,
             "limit": max_results,
         }
@@ -78,7 +79,7 @@ class HuggingFaceAdapter(EngineAdapter):
                 results=[], status=EngineStatus.ERROR, error_message=str(exc), latency_ms=latency,
             )
 
-    def _parse_items(self, items: list[dict], endpoint: str) -> list[SearchResult]:
+    def _parse_items(self, items: list[dict[str, Any]], endpoint: str) -> list[SearchResult]:
         """Parse HF API results into SearchResult list."""
         results: list[SearchResult] = []
 
