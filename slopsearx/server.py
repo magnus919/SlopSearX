@@ -272,6 +272,24 @@ async def search(
                     for name, eng in _active_engines.items()
                     if name in routed
                 }
+            else:
+                # No topic matched — use curated default search engines
+                # (excludes security-only engines that fail on general queries)
+                _default_search_engines = {
+                    "duckduckgo", "google", "wikipedia", "stackexchange",
+                    "hackernews", "arxiv", "openalex", "semanticscholar",
+                    "reddit", "github", "huggingface", "internetarchive",
+                    "openlibrary", "pubmed", "pubchem",
+                }
+                target_engines = {
+                    name: eng
+                    for name, eng in _active_engines.items()
+                    if name in _default_search_engines
+                }
+                # If none of the default engines are active (e.g. in tests),
+                # fall back to all active engines to avoid unnecessary 503s
+                if not target_engines:
+                    target_engines = dict(_active_engines)
 
     if not target_engines:
         # No engines available at all

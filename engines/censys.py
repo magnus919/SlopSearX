@@ -29,7 +29,7 @@ class CensysAdapter(EngineAdapter):
     display_name = "Censys"
     env_prefix = "ENGINE_CENSYS"
     engine_type = "api"
-    categories = ["general", "it", "security"]
+    categories = ["it", "security"]
 
     async def search(
         self,

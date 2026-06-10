@@ -29,7 +29,7 @@ class DeHashedAdapter(EngineAdapter):
     display_name = "DeHashed"
     env_prefix = "ENGINE_DEHASHED"
     engine_type = "api"
-    categories = ["general", "security", "threat-intel"]
+    categories = ["security", "threat-intel"]
 
     async def search(
         self,

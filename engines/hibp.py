@@ -32,7 +32,7 @@ class HIBPAdapter(EngineAdapter):
     display_name = "Have I Been Pwned"
     env_prefix = "ENGINE_HIBP"
     engine_type = "api"
-    categories = ["general", "security", "reference"]
+    categories = ["security", "reference"]
 
     async def search(
         self,

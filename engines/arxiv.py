@@ -37,7 +37,7 @@ class ArxivAdapter(EngineAdapter):
             return early
 
         cfg = self.config
-        base_url = cfg.get("base_url", "http://export.arxiv.org/api/query")
+        base_url = cfg.get("base_url", "https://export.arxiv.org/api/query")
         timeout_ms = cfg.get("timeout_ms", 10_000)
         max_results = cfg.get("max_results", 5)
 

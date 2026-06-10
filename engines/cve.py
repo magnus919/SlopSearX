@@ -35,7 +35,7 @@ class CVEAdapter(EngineAdapter):
     display_name = "CVE Program (MITRE)"
     env_prefix = "ENGINE_CVE"
     engine_type = "api"
-    categories = ["general", "it", "security"]
+    categories = ["it", "security"]
 
     async def search(
         self,

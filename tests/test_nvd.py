@@ -265,7 +265,7 @@ class TestNVDAdapter:
         from slopsearx.adapter import list_engines
         cls = list_engines()["nvd"]
         cats = cls.categories
-        assert "general" in cats
+        assert "general" not in cats
         assert "it" in cats
         assert "security" in cats
 

@@ -32,7 +32,7 @@ class GreyNoiseAdapter(EngineAdapter):
     display_name = "GreyNoise"
     env_prefix = "ENGINE_GREYNOISE"
     engine_type = "api"
-    categories = ["general", "security", "threat-intel"]
+    categories = ["security", "threat-intel"]
 
     def __init__(self, config: dict[str, Any] | None = None, rate_limiter: Any = None) -> None:
         super().__init__(config, rate_limiter)

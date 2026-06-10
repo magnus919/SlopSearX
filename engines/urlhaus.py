@@ -23,6 +23,10 @@ from slopsearx.adapter import (
 
 _URL_PATTERN = re.compile(r"https?://[^\s]+", re.IGNORECASE)
 _IP_PATTERN = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
+_HOSTNAME_PATTERN = re.compile(
+    r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?"
+    r"(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$",
+)
 
 
 @register_engine
@@ -33,7 +37,7 @@ class URLhausAdapter(EngineAdapter):
     display_name = "URLhaus (abuse.ch)"
     env_prefix = "ENGINE_URLHAUS"
     engine_type = "api"
-    categories = ["general", "security", "threat-intel"]
+    categories = ["security", "threat-intel"]
 
     async def search(
         self,
@@ -68,9 +72,13 @@ class URLhausAdapter(EngineAdapter):
                     endpoint = f"{base_url}/v1/host/"
                     payload = {"host": ip_match.group(0)}
                 else:
-                    # Treat as hostname
+                    # Treat as hostname — must pass validation
+                    first_word = query.strip().split()[0]
+                    if not _HOSTNAME_PATTERN.match(first_word):
+                        latency = (time.monotonic() - start_time) * 1000
+                        return AdapterResponse(results=[], status=EngineStatus.OK, latency_ms=latency)
                     endpoint = f"{base_url}/v1/host/"
-                    payload = {"host": query.strip().split()[0]}
+                    payload = {"host": first_word}
 
                 resp = await client.post(endpoint, data=payload)
                 latency = (time.monotonic() - start_time) * 1000

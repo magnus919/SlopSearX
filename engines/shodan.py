@@ -29,7 +29,7 @@ class ShodanAdapter(EngineAdapter):
     display_name = "Shodan"
     env_prefix = "ENGINE_SHODAN"
     engine_type = "api"
-    categories = ["general", "it", "security"]
+    categories = ["it", "security"]
 
     async def search(
         self,
