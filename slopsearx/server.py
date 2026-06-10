@@ -34,6 +34,7 @@ from slopsearx.merger import (
 )
 from slopsearx.ratelimit import LocalTokenBucket, RateLimiter
 from slopsearx.router import QueryRouter
+from slopsearx.suggest import SuggestionService
 
 app = FastAPI(title="SlopSearX", version="0.1.0")
 
@@ -43,6 +44,7 @@ _ranker = PresenceRanker()
 _cache: SearchCache | None = None
 _rate_limiter: RateLimiter | None = None
 _router: QueryRouter | None = None
+_suggestion_service: SuggestionService | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -83,6 +85,12 @@ async def startup() -> None:
     global _router  # noqa: PLW0603
     router_cfg = dataclasses.asdict(load_config().routing)
     _router = QueryRouter(routing_config=router_cfg)
+
+    # Initialize suggestion service
+    global _suggestion_service  # noqa: PLW0603
+    brave_api_key = (load_config().engines.get("brave").api_key  # type: ignore[union-attr]
+                     or "")
+    _suggestion_service = SuggestionService(brave_api_key=brave_api_key, cache=_cache)
 
 
 @app.on_event("shutdown")
@@ -333,8 +341,8 @@ async def search(
         resp.status != EngineStatus.OK for resp in responses.values()
     )
 
-    # Build suggestions from query (simple approach: strip and split)
-    suggestions = _generate_suggestions(q)
+    # Build suggestions from engine suggest APIs
+    suggestions = await _generate_suggestions(q)
 
     if format == "yaml":
         engine_count = len(target_engines)
@@ -416,11 +424,13 @@ def _generate_query_id() -> str:
     return f"ssx-{uuid.uuid4().hex[:8]}"
 
 
-def _generate_suggestions(query: str) -> list[str]:
-    """Generate simple query suggestions.
+async def _generate_suggestions(query: str) -> list[str]:
+    """Fetch search suggestions from engine suggest APIs.
 
-    This is a minimal stub — no external suggestion API is called.
-    Real suggestion generation would use a search engine's suggest API
-    or NLP model.
+    Uses the SuggestionService (Brave Suggest API primary, DDG fallback).
+    Results are cached in Valkey for 30 minutes.
+    Returns empty list on failure (graceful degradation).
     """
-    return []
+    if _suggestion_service is None:
+        return []
+    return await _suggestion_service.fetch(query)
