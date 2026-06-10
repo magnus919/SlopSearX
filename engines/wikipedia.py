@@ -52,10 +52,19 @@ class WikipediaAdapter(EngineAdapter):
                         latency_ms=(time.monotonic() - start_time) * 1000,
                     )
 
-                # Stage 2: query extracts and page images for each title
-                results = await self._rich_query(client, base_url, titles, headers)
+                # Check for "Did you mean" corrections from opensearch
+                corrections = self._check_corrections(query, titles)
+
+                # Stage 2: query extracts, page images, and pageprops for each title
+                results, infoboxes = await self._rich_query(client, base_url, titles, headers)
                 latency = (time.monotonic() - start_time) * 1000
-                return AdapterResponse(results=results, status=EngineStatus.OK, latency_ms=latency)
+                return AdapterResponse(
+                    results=results,
+                    status=EngineStatus.OK,
+                    latency_ms=latency,
+                    corrections=corrections,
+                    infoboxes=infoboxes,
+                )
 
         except httpx.TimeoutException:
             latency = (time.monotonic() - start_time) * 1000
@@ -110,15 +119,19 @@ class WikipediaAdapter(EngineAdapter):
         base_url: str,
         titles: list[str],
         headers: dict[str, str],
-    ) -> list[SearchResult]:
-        """Stage 2: fetch extracts and thumbnails for resolved page titles."""
+    ) -> tuple[list[SearchResult], list[dict[str, Any]]]:
+        """Stage 2: fetch extracts, thumbnails, and pageprops for resolved titles.
+
+        Returns:
+            Tuple of (search_results, infoboxes).
+        """
         if not titles:
-            return []
+            return [], []
 
         params: dict[str, str] = {
             "action": "query",
             "titles": "|".join(titles),
-            "prop": "extracts|pageimages",
+            "prop": "extracts|pageimages|pageprops",
             "exintro": "1",
             "explaintext": "1",
             "pithumbsize": "300",
@@ -131,6 +144,7 @@ class WikipediaAdapter(EngineAdapter):
 
         pages = data.get("query", {}).get("pages", {})
         results: list[SearchResult] = []
+        infoboxes: list[dict[str, Any]] = []
         for idx, (page_id, page) in enumerate(pages.items()):
             if page_id == "-1":
                 continue  # missing page
@@ -159,4 +173,32 @@ class WikipediaAdapter(EngineAdapter):
                 ),
             )
 
-        return results
+            # Build infobox from pageprops
+            pageprops = page.get("pageprops") or {}
+            if isinstance(pageprops, dict) and pageprops.get("wikibase-shortdesc"):
+                infoboxes.append({
+                    "id": f"wiki:{title.replace(' ', '_')}",
+                    "title": title,
+                    "content": pageprops.get("wikibase-shortdesc", ""),
+                    "img_src": thumbnail or "",
+                    "url": page_url,
+                    "urls": [{"title": "Wikipedia", "url": page_url}],
+                })
+
+        return results, infoboxes
+
+
+    @staticmethod
+    def _check_corrections(query: str, titles: list[str]) -> list[str]:
+        """Detect redirect-based corrections from opensearch.
+
+        If the first returned title differs from the query, surface
+        it as a "Did you mean" correction.
+        """
+        if not titles:
+            return []
+        first = titles[0].lower().strip()
+        q = query.lower().strip()
+        if first != q and q not in first and first not in q:
+            return [titles[0]]
+        return []
