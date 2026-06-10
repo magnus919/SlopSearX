@@ -33,6 +33,7 @@ from slopsearx.merger import (
     extract_unresponsive,
 )
 from slopsearx.ratelimit import LocalTokenBucket, RateLimiter
+from slopsearx.router import QueryRouter
 
 app = FastAPI(title="SlopSearX", version="0.1.0")
 
@@ -41,6 +42,7 @@ _active_engines: dict[str, EngineAdapter] = {}
 _ranker = PresenceRanker()
 _cache: SearchCache | None = None
 _rate_limiter: RateLimiter | None = None
+_router: QueryRouter | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -76,6 +78,11 @@ async def startup() -> None:
     for name, engine in _active_engines.items():
         warmup_tasks.append(_warmup_engine(name, engine))
     await asyncio.gather(*warmup_tasks, return_exceptions=True)
+
+    # Initialize query router
+    global _router  # noqa: PLW0603
+    router_cfg = dataclasses.asdict(load_config().routing)
+    _router = QueryRouter(routing_config=router_cfg)
 
 
 @app.on_event("shutdown")
@@ -239,6 +246,15 @@ async def search(
                 for name, eng in target_engines.items()
                 if any(c in eng.categories for c in cat_list)
             }
+        elif _router is not None:
+            # No category filter — try query-based routing
+            routed = _router.route(q)
+            if routed is not None:
+                target_engines = {
+                    name: eng
+                    for name, eng in _active_engines.items()
+                    if name in routed
+                }
 
     if not target_engines:
         # No engines available at all

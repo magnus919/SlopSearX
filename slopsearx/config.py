@@ -34,6 +34,13 @@ class RankingConfig:
 
 
 @dataclass
+class RoutingConfig:
+    enabled: bool = True
+    topics: Optional[dict[str, Any]] = None
+    fallback: Optional[list[str]] = None
+
+
+@dataclass
 class EngineEntry:
     enabled: bool = True
     base_url: str = ""
@@ -63,6 +70,7 @@ class Config:
     engines: dict[str, EngineEntry] = field(default_factory=dict)
     cache: CacheConfig = field(default_factory=CacheConfig)
     ranking: RankingConfig = field(default_factory=RankingConfig)
+    routing: RoutingConfig = field(default_factory=RoutingConfig)
 
     # Global settings
     default_engines: list[str] = field(default_factory=lambda: ["brave", "wikipedia"])
@@ -228,10 +236,18 @@ def _dict_to_config(data: dict[str, Any]) -> Config:
     ranking_data = data.get("ranking", {})
     ranking = RankingConfig(**{**ranking_data, **{k: v for k, v in _DEFAULT_RANKING.items() if k not in ranking_data}})
 
+    routing_data = data.get("routing", {})
+    routing = RoutingConfig(
+        enabled=routing_data.get("enabled", True),
+        topics=routing_data.get("topics"),
+        fallback=routing_data.get("fallback"),
+    )
+
     return Config(
         engines=engines or {name: EngineEntry(**cfg) for name, cfg in _DEFAULT_ENGINES.items()},
         cache=cache,
         ranking=ranking,
+        routing=routing,
         default_engines=data.get("default_engines", ["brave", "wikipedia"]),
         log_level=data.get("log_level", "INFO"),
     )
@@ -341,6 +357,14 @@ def load_config(
         if "ranking" in file_data:
             for k, v in file_data["ranking"].items():
                 setattr(config.ranking, k, v)
+        if "routing" in file_data:
+            rd = file_data["routing"]
+            if "enabled" in rd:
+                config.routing.enabled = rd["enabled"]
+            if "topics" in rd:
+                config.routing.topics = rd["topics"]
+            if "fallback" in rd:
+                config.routing.fallback = rd["fallback"]
         config.default_engines = file_data.get("default_engines", config.default_engines)
         config.log_level = file_data.get("log_level", config.log_level)
 
