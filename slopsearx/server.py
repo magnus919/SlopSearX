@@ -68,8 +68,8 @@ async def startup() -> None:
     await _rate_limiter.warmup()
 
     # Only populate if not already set (allows test fixtures to pre-seed)
+    cfg = load_config()
     if not _active_engines:
-        cfg = load_config()
         engine_configs = {name: dataclasses.asdict(entry) for name, entry in cfg.engines.items()}
         _active_engines = discover_engines(engine_configs)
 
@@ -85,14 +85,17 @@ async def startup() -> None:
 
     # Initialize query router
     global _router  # noqa: PLW0603
-    router_cfg = dataclasses.asdict(load_config().routing)
+    router_cfg = dataclasses.asdict(cfg.routing)
     _router = QueryRouter(routing_config=router_cfg)
 
-    # Initialize suggestion service
+    # Initialize suggestion service (opt-in: defaults to off to avoid extra Brave Suggest API calls)
     global _suggestion_service  # noqa: PLW0603
-    brave_api_key = (load_config().engines.get("brave").api_key  # type: ignore[union-attr]
-                     or "")
-    _suggestion_service = SuggestionService(brave_api_key=brave_api_key, cache=_cache)
+    _suggestion_service = None
+    if cfg.enable_suggestions:
+        brave_api_key = (cfg.engines.get("brave").api_key  # type: ignore[union-attr]
+                         or "")
+        if brave_api_key:
+            _suggestion_service = SuggestionService(brave_api_key=brave_api_key, cache=_cache)
 
     # Initialize quality stats tracker
     global _stats_tracker  # noqa: PLW0603
@@ -309,6 +312,9 @@ async def search(
         tasks.append(_dispatch_engine(name, engine, q, search_params))
         engine_names.append(name)
 
+    # Fire suggestion fetch concurrently with engine dispatch (background)
+    suggestions_task = asyncio.ensure_future(_generate_suggestions(q))
+
     dispatch_results = await asyncio.gather(*tasks, return_exceptions=True)
 
     # Collect results and metadata
@@ -361,8 +367,8 @@ async def search(
         resp.status != EngineStatus.OK for resp in responses.values()
     )
 
-    # Build suggestions from engine suggest APIs
-    suggestions = await _generate_suggestions(q)
+    # Build suggestions from engine suggest APIs (already running in background)
+    suggestions = await suggestions_task
 
     # Aggregate answers, corrections, and infoboxes from all engine responses
     all_answers: list[dict[str, Any]] = []

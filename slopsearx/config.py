@@ -75,6 +75,7 @@ class Config:
     # Global settings
     default_engines: list[str] = field(default_factory=lambda: ["brave", "wikipedia"])
     log_level: str = "INFO"
+    enable_suggestions: bool = False  # Brave Suggest API calls; opt-in to avoid extra API cost
 
 
 # ---------------------------------------------------------------------------
@@ -248,6 +249,7 @@ def _dict_to_config(data: dict[str, Any]) -> Config:
         cache=cache,
         ranking=ranking,
         routing=routing,
+        enable_suggestions=data.get("enable_suggestions", False),
         default_engines=data.get("default_engines", ["brave", "wikipedia"]),
         log_level=data.get("log_level", "INFO"),
     )
@@ -367,6 +369,7 @@ def load_config(
                 config.routing.fallback = rd["fallback"]
         config.default_engines = file_data.get("default_engines", config.default_engines)
         config.log_level = file_data.get("log_level", config.log_level)
+        config.enable_suggestions = file_data.get("enable_suggestions", config.enable_suggestions)
 
     # 3. Layer: env vars
     overrides = _load_env_overrides()
