@@ -186,6 +186,22 @@ _DEFAULT_ENGINES: dict[str, dict[str, Any]] = {
         "rate_limit": 200,
         "weight": 0.9,
     },
+    "nvd": {
+        "base_url": "https://services.nvd.nist.gov/rest/json/cves/2.0",
+        "type": "api",
+        "timeout_ms": 10_000,
+        "max_results": 10,
+        "rate_limit": 0.17,  # ~5 req/30s without API key — adapter dynamically uses higher
+        "weight": 0.7,
+    },
+    "cve": {
+        "base_url": "https://cveawg.mitre.org/api",
+        "type": "api",
+        "timeout_ms": 10_000,
+        "max_results": 5,
+        "rate_limit": 5,  # no API key needed, but be conservative
+        "weight": 0.7,
+    },
 }
 
 _DEFAULT_CACHE = {"ttl_seconds": 300, "max_result_sets": 10_000, "revalidate_on_hit": False}
