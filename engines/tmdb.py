@@ -17,6 +17,7 @@ from slopsearx.adapter import (
     EngineStatus,
     SearchResult,
     register_engine,
+    sanitize_url,
 )
 
 
@@ -45,6 +46,7 @@ class TMDBAdapter(EngineAdapter):
             from os import environ
 
             api_key = environ.get("ENGINE_TMDB_API_KEY", "")
+        api_key = (api_key or "").strip()
         if not api_key:
             return AdapterResponse(
                 results=[],
@@ -61,7 +63,8 @@ class TMDBAdapter(EngineAdapter):
             async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
                 resp = await client.get(
                     base_url,
-                    params={"api_key": api_key, "query": query, "page": 1},
+                    params={"query": query, "page": 1},
+                    headers={"Authorization": f"Bearer {api_key}"},
                 )
                 latency = (time.monotonic() - start_time) * 1000
                 resp.raise_for_status()
@@ -123,7 +126,7 @@ class TMDBAdapter(EngineAdapter):
             return AdapterResponse(
                 results=[],
                 status=EngineStatus.ERROR,
-                error_message=str(exc),
+                error_message=sanitize_url(str(exc)),
                 latency_ms=latency,
             )
         except Exception as exc:  # noqa: BLE001
@@ -131,6 +134,6 @@ class TMDBAdapter(EngineAdapter):
             return AdapterResponse(
                 results=[],
                 status=EngineStatus.ERROR,
-                error_message=str(exc),
+                error_message=sanitize_url(str(exc)),
                 latency_ms=latency,
             )

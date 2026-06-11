@@ -37,7 +37,7 @@ class NVDAdapter(EngineAdapter):
 
     def __init__(self, config: dict[str, Any] | None = None, rate_limiter: Any = None) -> None:
         super().__init__(config, rate_limiter)
-        self._has_api_key = bool(self.config.get("api_key"))
+        self._has_api_key = bool((self.config.get("api_key") or "").strip())
 
     async def search(
         self,
@@ -48,7 +48,7 @@ class NVDAdapter(EngineAdapter):
             return early
 
         cfg = self.config
-        api_key = cfg.get("api_key") or ""
+        api_key = (cfg.get("api_key") or "").strip()
         base_url = cfg.get("base_url", "https://services.nvd.nist.gov/rest/json/cves/2.0")
         timeout_ms = cfg.get("timeout_ms", 10_000)
         max_results = cfg.get("max_results", 10)
@@ -66,14 +66,15 @@ class NVDAdapter(EngineAdapter):
             if max_results:
                 params_dict["resultsPerPage"] = min(max_results, 100)
 
-        # Add API key if available (reduces rate limiting)
+        # Build headers with API key if available (reduces rate limiting)
+        request_headers: dict[str, str] = {}
         if api_key:
-            params_dict["apiKey"] = api_key
+            request_headers["apiKey"] = api_key
 
         start_time = time.monotonic()
         try:
             async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
-                resp = await client.get(base_url, params=params_dict)
+                resp = await client.get(base_url, params=params_dict, headers=request_headers)
                 latency = (time.monotonic() - start_time) * 1000
 
                 if resp.status_code == 429:

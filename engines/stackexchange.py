@@ -39,7 +39,7 @@ class StackExchangeAdapter(EngineAdapter):
             return early
 
         cfg = self.config
-        api_key = cfg.get("api_key", "")
+        api_key = (cfg.get("api_key", "") or "").strip()
         timeout_ms = cfg.get("timeout_ms", 5_000)
         max_results = cfg.get("max_results", 10)
 
@@ -54,12 +54,13 @@ class StackExchangeAdapter(EngineAdapter):
             f"&site={site}"
             f"&pagesize={max_results}"
         )
+        request_headers: dict[str, str] = {}
         if api_key:
-            url += f"&key={api_key}"
+            request_headers["X-API-Key"] = api_key
 
         try:
             async with httpx.AsyncClient(timeout=timeout_ms / 1000) as client:
-                resp = await client.get(url)
+                resp = await client.get(url, headers=request_headers)
                 if resp.status_code == 400:
                     return AdapterResponse(
                         results=[],

@@ -73,6 +73,37 @@ class TestShodanAdapter:
         assert result.error_message is not None
         assert "test-shodan-key-67890" not in result.error_message
 
+    async def test_uses_bearer_auth_header(self):
+        """Shodan sends API key as Authorization: Bearer header, not query param."""
+        captured_headers = {}
+        captured_params = {}
+
+        def _handler(r):
+            captured_headers.update(dict(r.headers))
+            captured_params.update(dict(r.url.params))
+            return httpx.Response(200, json={"matches": []})
+
+        instances = discover_engines({"shodan": {"enabled": True, "api_key": "shodan-bearer-test"}})
+        async with MockHTTP(_handler):
+            await instances["shodan"].search("test")
+
+        assert captured_headers.get("authorization") == "Bearer shodan-bearer-test"
+        assert "key" not in captured_params
+
+    async def test_empty_key_treated_as_not_configured(self):
+        """Empty-string API key results in 'not configured' error, not a request."""
+        instances = discover_engines({"shodan": {"enabled": True, "api_key": ""}})
+        result = await instances["shodan"].search("test")
+        assert result.status == EngineStatus.ERROR
+        assert "API key not configured" in (result.error_message or "")
+
+    async def test_whitespace_key_treated_as_not_configured(self):
+        """Whitespace-only API key treated as absent."""
+        instances = discover_engines({"shodan": {"enabled": True, "api_key": "   "}})
+        result = await instances["shodan"].search("test")
+        assert result.status == EngineStatus.ERROR
+        assert "API key not configured" in (result.error_message or "")
+
     def test_adapter_registered(self):
         from slopsearx.adapter import list_engines
 

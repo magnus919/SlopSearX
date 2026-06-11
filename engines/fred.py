@@ -2,6 +2,10 @@
 
 Free API. Requires ENGINE_FRED_API_KEY env var (free tier available at fred.stlouisfed.org).
 Docs: https://fred.stlouisfed.org/docs/api/fred/
+
+NOTE: FRED API only supports query-param authentication (api_key=XXX).
+The api_key query param is unavoidable for upstream requests, but error
+messages are sanitized to prevent key leakage.
 """
 
 from __future__ import annotations
@@ -17,6 +21,7 @@ from slopsearx.adapter import (
     EngineStatus,
     SearchResult,
     register_engine,
+    sanitize_url,
 )
 
 
@@ -45,6 +50,7 @@ class FredAdapter(EngineAdapter):
             from os import environ
 
             api_key = environ.get("ENGINE_FRED_API_KEY", "")
+        api_key = (api_key or "").strip()
         if not api_key:
             return AdapterResponse(
                 results=[],
@@ -121,7 +127,7 @@ class FredAdapter(EngineAdapter):
             return AdapterResponse(
                 results=[],
                 status=EngineStatus.ERROR,
-                error_message=str(exc),
+                error_message=sanitize_url(str(exc)),
                 latency_ms=latency,
             )
         except Exception as exc:  # noqa: BLE001
@@ -129,6 +135,6 @@ class FredAdapter(EngineAdapter):
             return AdapterResponse(
                 results=[],
                 status=EngineStatus.ERROR,
-                error_message=str(exc),
+                error_message=sanitize_url(str(exc)),
                 latency_ms=latency,
             )

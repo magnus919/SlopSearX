@@ -155,3 +155,50 @@ class TestStackExchangeAdapterSearch:
         assert result.status == EngineStatus.ERROR
         assert result.error_message is not None
         assert "test-se-key-secret" not in result.error_message
+
+    async def test_uses_x_api_key_header(self):
+        """StackExchange sends API key as X-API-Key header, not query param."""
+        captured_headers = {}
+        captured_url = ""
+
+        def _handler(r):
+            nonlocal captured_url
+            captured_headers.update(dict(r.headers))
+            captured_url = str(r.url)
+            return httpx.Response(200, json={"items": []})
+
+        instances = discover_engines({"stackexchange": {"enabled": True, "api_key": "se-header-test"}})
+        async with MockHTTP(_handler):
+            await instances["stackexchange"].search("test")
+
+        assert captured_headers.get("x-api-key") == "se-header-test"
+        assert "key=se-header-test" not in captured_url
+        assert "&key=" not in captured_url
+
+    async def test_empty_key_still_works_free_tier(self):
+        """Empty API key works for free tier — no header sent, no crash."""
+        captured_headers = {}
+
+        def _handler(r):
+            captured_headers.update(dict(r.headers))
+            return httpx.Response(200, json={"items": []})
+
+        instances = discover_engines({"stackexchange": {"enabled": True, "api_key": ""}})
+        async with MockHTTP(_handler):
+            result = await instances["stackexchange"].search("test")
+        assert result.status == EngineStatus.OK
+        assert "x-api-key" not in captured_headers
+
+    async def test_whitespace_key_treated_as_no_key(self):
+        """Whitespace-only key treated as absent — no header sent."""
+        captured_headers = {}
+
+        def _handler(r):
+            captured_headers.update(dict(r.headers))
+            return httpx.Response(200, json={"items": []})
+
+        instances = discover_engines({"stackexchange": {"enabled": True, "api_key": "   "}})
+        async with MockHTTP(_handler):
+            result = await instances["stackexchange"].search("test")
+        assert result.status == EngineStatus.OK
+        assert "x-api-key" not in captured_headers

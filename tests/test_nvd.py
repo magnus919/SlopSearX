@@ -241,11 +241,14 @@ class TestNVDAdapter:
         # The API key must not appear in the error
         assert "test-nvd-key-12345" not in result.error_message
 
-    async def test_search_sends_api_key_when_configured(self, adapter_with_key):
+    async def test_search_sends_api_key_as_header_when_configured(self, adapter_with_key):
+        """NVD sends API key as apiKey HTTP header, not query param."""
+        captured_headers = {}
         captured_params = {}
 
         def _handler(r):
-            captured_params["apiKey"] = r.url.params.get("apiKey", "")
+            captured_headers.update(dict(r.headers))
+            captured_params.update(dict(r.url.params))
             return httpx.Response(
                 200,
                 json={
@@ -259,13 +262,16 @@ class TestNVDAdapter:
 
         async with MockHTTP(_handler):
             await adapter_with_key.search("test")
-        assert captured_params.get("apiKey") == "test-nvd-key"
+        assert captured_headers.get("apikey") == "test-nvd-key"
+        assert captured_params.get("apiKey", "") == ""
 
     async def test_search_no_api_key_by_default(self, adapter):
+        captured_headers = {}
         captured_params = {}
 
         def _handler(r):
-            captured_params["apiKey"] = r.url.params.get("apiKey", "")
+            captured_headers.update(dict(r.headers))
+            captured_params.update(dict(r.url.params))
             return httpx.Response(
                 200,
                 json={
@@ -279,7 +285,33 @@ class TestNVDAdapter:
 
         async with MockHTTP(_handler):
             await adapter.search("test")
-        assert captured_params.get("apiKey") == ""
+        assert captured_params.get("apiKey", "") == ""
+        assert "apikey" not in captured_headers
+
+    async def test_whitespace_key_treated_as_no_key(self):
+        """Whitespace-only key treated as absent — no header sent."""
+        instances = discover_engines({"nvd": {"enabled": True, "api_key": "   "}})
+        adapter = instances["nvd"]
+        assert adapter._has_api_key is False
+
+        captured_headers = {}
+
+        def _handler(r):
+            captured_headers.update(dict(r.headers))
+            return httpx.Response(
+                200,
+                json={
+                    "vulnerabilities": [],
+                    "totalResults": 0,
+                    "format": "NVD_CVE",
+                    "version": "2.0",
+                    "timestamp": "2026-01-01T00:00:00.000",
+                },
+            )
+
+        async with MockHTTP(_handler):
+            await adapter.search("test")
+        assert "apikey" not in captured_headers
 
     def test_adapter_registered(self):
         from slopsearx.adapter import list_engines

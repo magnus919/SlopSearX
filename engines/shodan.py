@@ -41,7 +41,7 @@ class ShodanAdapter(EngineAdapter):
             return early
 
         cfg = self.config
-        api_key = cfg.get("api_key") or ""
+        api_key = (cfg.get("api_key") or "").strip()
         base_url = cfg.get("base_url", "https://api.shodan.io")
         timeout_ms = cfg.get("timeout_ms", 10_000)
         max_results = cfg.get("max_results", 10)
@@ -57,7 +57,8 @@ class ShodanAdapter(EngineAdapter):
             async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
                 resp = await client.get(
                     f"{base_url}/shodan/host/search",
-                    params={"key": api_key, "query": query, "limit": max_results},
+                    params={"query": query, "limit": max_results},
+                    headers={"Authorization": f"Bearer {api_key}"},
                 )
                 latency = (time.monotonic() - start_time) * 1000
 
