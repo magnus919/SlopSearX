@@ -23,6 +23,7 @@ from slopsearx.adapter import (
     EngineStatus,
     SearchResult,
     discover_engines,
+    sanitize_url,
 )
 from slopsearx.cache import SearchCache, _ttl_for_query, cache_key
 from slopsearx.config import load_config
@@ -479,7 +480,7 @@ async def _dispatch_engine(
         return AdapterResponse(
             results=[],
             status=EngineStatus.ERROR,
-            error_message=str(exc),
+            error_message=sanitize_url(str(exc)),
         )
 
 

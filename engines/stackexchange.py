@@ -9,7 +9,7 @@ from __future__ import annotations
 import urllib.parse
 from typing import Any
 
-from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult, register_engine
+from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult, register_engine, sanitize_url
 
 
 @register_engine
@@ -68,11 +68,17 @@ class StackExchangeAdapter(EngineAdapter):
                     )
                 resp.raise_for_status()
                 data = resp.json()
+        except httpx.HTTPStatusError as exc:
+            return AdapterResponse(
+                results=[],
+                status=EngineStatus.ERROR,
+                error_message=sanitize_url(str(exc)),
+            )
         except Exception as exc:
             return AdapterResponse(
                 results=[],
                 status=EngineStatus.ERROR,
-                error_message=str(exc),
+                error_message=sanitize_url(str(exc)),
             )
 
         items = data.get("items", [])

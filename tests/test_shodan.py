@@ -49,6 +49,30 @@ class TestShodanAdapter:
             result = await adapter.search("test")
         assert result.status == EngineStatus.RATE_LIMITED
 
+    async def test_search_http_status_error_sanitized(self):
+        """HTTPStatusError (500) must not leak API key in error_message."""
+        instances = discover_engines({"shodan": {"enabled": True, "api_key": "test-shodan-key-67890"}})
+        adapter = instances["shodan"]
+
+        async with MockHTTP(lambda r: httpx.Response(500)):
+            result = await adapter.search("test")
+        assert result.status == EngineStatus.ERROR
+        assert result.error_message is not None
+        assert "test-shodan-key-67890" not in result.error_message
+
+    async def test_search_broad_exception_sanitized(self):
+        """Broad handler sanitizes error_message when exception contains a URL."""
+        instances = discover_engines({"shodan": {"enabled": True, "api_key": "test-shodan-key-67890"}})
+        adapter = instances["shodan"]
+
+        async with MockHTTP(lambda r: (_ for _ in ()).throw(RuntimeError(
+            "https://api.shodan.io/shodan/host/search?key=test-shodan-key-67890&query=test&limit=10"
+        ))):
+            result = await adapter.search("test")
+        assert result.status == EngineStatus.ERROR
+        assert result.error_message is not None
+        assert "test-shodan-key-67890" not in result.error_message
+
     def test_adapter_registered(self):
         from slopsearx.adapter import list_engines
 

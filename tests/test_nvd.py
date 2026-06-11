@@ -217,6 +217,30 @@ class TestNVDAdapter:
         assert result.status == EngineStatus.TIMEOUT
         assert result.results == []
 
+    async def test_search_http_status_error_sanitized(self):
+        """HTTPStatusError (500) must not leak API key in error_message."""
+        instances = discover_engines({"nvd": {"enabled": True, "api_key": "test-nvd-key-12345"}})
+        adapter = instances["nvd"]
+
+        async with MockHTTP(lambda r: httpx.Response(500)):
+            result = await adapter.search("test")
+        assert result.status == EngineStatus.ERROR
+        assert result.error_message is not None
+        assert "test-nvd-key-12345" not in result.error_message
+
+    async def test_search_broad_exception_sanitized(self):
+        """Non-JSON response caught by broad handler produces sanitized error_message."""
+        instances = discover_engines({"nvd": {"enabled": True, "api_key": "test-nvd-key-12345"}})
+        adapter = instances["nvd"]
+
+        # 200 OK with non-JSON body — resp.json() will raise JSONDecodeError
+        async with MockHTTP(lambda r: httpx.Response(200, content=b"<html>not json</html>")):
+            result = await adapter.search("test")
+        assert result.status == EngineStatus.ERROR
+        assert result.error_message is not None
+        # The API key must not appear in the error
+        assert "test-nvd-key-12345" not in result.error_message
+
     async def test_search_sends_api_key_when_configured(self, adapter_with_key):
         captured_params = {}
 

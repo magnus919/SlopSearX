@@ -19,6 +19,7 @@ from slopsearx.adapter import (
     EngineStatus,
     SearchResult,
     register_engine,
+    sanitize_url,
 )
 
 _CVE_ID_PATTERN = re.compile(r"CVE-\d{4}-\d{4,}", re.IGNORECASE)
@@ -93,10 +94,17 @@ class NVDAdapter(EngineAdapter):
         except httpx.TimeoutException:
             latency = (time.monotonic() - start_time) * 1000
             return AdapterResponse(results=[], status=EngineStatus.TIMEOUT, latency_ms=latency)
+        except httpx.HTTPStatusError as exc:
+            latency = (time.monotonic() - start_time) * 1000
+            return AdapterResponse(
+                results=[], status=EngineStatus.ERROR,
+                error_message=sanitize_url(str(exc)), latency_ms=latency,
+            )
         except Exception as exc:  # noqa: BLE001
             latency = (time.monotonic() - start_time) * 1000
             return AdapterResponse(
-                results=[], status=EngineStatus.ERROR, error_message=str(exc), latency_ms=latency,
+                results=[], status=EngineStatus.ERROR, error_message=sanitize_url(str(exc)),
+                latency_ms=latency,
             )
 
     def _parse_vulnerabilities(

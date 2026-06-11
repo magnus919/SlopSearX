@@ -58,6 +58,12 @@ class _MockEngine(EngineAdapter):
                 status=EngineStatus.RATE_LIMITED,
                 error_message="too many requests",
             )
+        if query == "leak_exception":
+            # Raise an exception with an embedded URL to test server-level sanitization
+            raise RuntimeError(
+                "Client error '403 Forbidden' for url "
+                "'https://api.example.com/search?key=secret-key-12345&q=test'"
+            )
 
         # Normal response
         return AdapterResponse(
@@ -203,6 +209,22 @@ class TestSearchEndpoint:
         response = client.get("/search", params={"q": "test", "engines": "nonexistent"})
 
         assert response.status_code == 503
+
+    def test_dispatch_engine_sanitizes_error_message(self, client: TestClient) -> None:
+        """VAL-M1-013: _dispatch_engine broad except handler sanitizes error messages.
+
+        When an adapter raises an exception with a URL containing an API key,
+        the server-level handler must sanitize it before returning to the client.
+        """
+        response = client.get("/search", params={"q": "leak_exception"})
+
+        assert response.status_code == 503  # all engines unresponsive
+        data = response.json()
+        assert len(data["unresponsive_engines"]) == 1
+        error_msg = data["unresponsive_engines"][0][1]
+        assert "secret-key-12345" not in error_msg, (
+            f"API key found in unresponsive_engines error: {error_msg}"
+        )
 
     def test_query_params_preserved(self, client: TestClient) -> None:
         """Query parameters are accepted without error."""
