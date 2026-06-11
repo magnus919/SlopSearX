@@ -29,7 +29,7 @@ class EdgarAdapter(EngineAdapter):
     display_name = "SEC EDGAR"
     env_prefix = "ENGINE_EDGAR"
     engine_type = "api"
-    categories = ["general", "finance", "reference"]
+    categories = ["finance", "reference"]
 
     async def search(
         self,

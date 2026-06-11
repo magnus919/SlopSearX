@@ -28,7 +28,7 @@ class NominatimAdapter(EngineAdapter):
     display_name = "Nominatim (OSM)"
     env_prefix = "ENGINE_NOMINATIM"
     engine_type = "api"
-    categories = ["general", "geography", "reference"]
+    categories = ["geography", "reference"]
 
     async def search(
         self,

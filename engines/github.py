@@ -22,7 +22,7 @@ class GitHubAdapter(EngineAdapter):
     display_name = "GitHub"
     env_prefix = "ENGINE_GITHUB"
     engine_type = "api"
-    categories = ["general", "reference", "github:code", "github:issues", "github:prs"]
+    categories = ["reference", "github:code", "github:issues", "github:prs"]
 
     async def search(
         self,

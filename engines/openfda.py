@@ -22,7 +22,7 @@ class OpenFDAAdapter(EngineAdapter):
     display_name = "openFDA"
     env_prefix = "ENGINE_OPENFDA"
     engine_type = "api"
-    categories = ["general", "medical", "health", "science", "government"]
+    categories = ["medical", "health", "science", "government"]
 
     async def search(
         self,

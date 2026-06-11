@@ -22,7 +22,7 @@ class RubyGemsAdapter(EngineAdapter):
     display_name = "RubyGems"
     env_prefix = "ENGINE_RUBYGEMS"
     engine_type = "api"
-    categories = ["general", "it", "reference", "packages"]
+    categories = ["it", "reference", "packages"]
 
     async def search(
         self,

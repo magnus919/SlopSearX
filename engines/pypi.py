@@ -22,7 +22,7 @@ class PyPIAdapter(EngineAdapter):
     display_name = "PyPI"
     env_prefix = "ENGINE_PYPI"
     engine_type = "api"
-    categories = ["general", "it", "reference", "packages"]
+    categories = ["it", "reference", "packages"]
 
     async def search(
         self,

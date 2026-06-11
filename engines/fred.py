@@ -33,7 +33,7 @@ class FredAdapter(EngineAdapter):
     display_name = "FRED"
     env_prefix = "ENGINE_FRED"
     engine_type = "api"
-    categories = ["general", "finance", "reference", "economics"]
+    categories = ["finance", "reference", "economics"]
 
     async def search(
         self,

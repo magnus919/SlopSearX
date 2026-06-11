@@ -22,7 +22,7 @@ class HuggingFaceAdapter(EngineAdapter):
     display_name = "HuggingFace"
     env_prefix = "ENGINE_HUGGINGFACE"
     engine_type = "api"
-    categories = ["general", "science", "huggingface:datasets", "huggingface:papers"]
+    categories = ["science", "huggingface:datasets", "huggingface:papers"]
 
     async def search(
         self,

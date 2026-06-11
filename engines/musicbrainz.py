@@ -28,7 +28,7 @@ class MusicBrainzAdapter(EngineAdapter):
     display_name = "MusicBrainz"
     env_prefix = "ENGINE_MUSICBRAINZ"
     engine_type = "api"
-    categories = ["general", "music", "reference"]
+    categories = ["music", "reference"]
 
     async def search(
         self,

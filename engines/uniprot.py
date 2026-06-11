@@ -28,7 +28,7 @@ class UniProtAdapter(EngineAdapter):
     display_name = "UniProt"
     env_prefix = "ENGINE_UNIPROT"
     engine_type = "api"
-    categories = ["general", "science", "reference", "biology", "medical"]
+    categories = ["science", "reference", "biology", "medical"]
 
     async def search(
         self,

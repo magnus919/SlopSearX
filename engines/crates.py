@@ -28,7 +28,7 @@ class CratesAdapter(EngineAdapter):
     display_name = "crates.io"
     env_prefix = "ENGINE_CRATES"
     engine_type = "api"
-    categories = ["general", "it", "reference", "packages"]
+    categories = ["it", "reference", "packages"]
 
     async def search(
         self,

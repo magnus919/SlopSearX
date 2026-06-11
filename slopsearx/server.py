@@ -358,11 +358,14 @@ async def search(
                     if name in routed
                 }
             else:
-                # No topic matched — use all active engines, split into tiers.
-                # Tier 1 (broad, general-purpose) results rank above all
-                # Tier 2 (specialised) results, keeping top results clean
-                # while still surfacing domain-specific content below.
-                target_engines = dict(_active_engines)
+                # No topic matched — restrict to Tier 1 (broad, general-purpose)
+                # engines only. Specialty engines require an explicit category
+                # or topic match to avoid polluting unscoped results.
+                target_engines = {
+                    name: eng
+                    for name, eng in _active_engines.items()
+                    if name in _TIER1_ENGINES
+                }
 
     if not target_engines:
         # No engines available at all

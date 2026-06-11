@@ -28,7 +28,7 @@ class DockerHubAdapter(EngineAdapter):
     display_name = "Docker Hub"
     env_prefix = "ENGINE_DOCKERHUB"
     engine_type = "api"
-    categories = ["general", "it", "reference", "packages"]
+    categories = ["it", "reference", "packages"]
 
     async def search(
         self,

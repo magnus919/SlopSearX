@@ -29,7 +29,7 @@ class TMDBAdapter(EngineAdapter):
     display_name = "TMDB"
     env_prefix = "ENGINE_TMDB"
     engine_type = "api"
-    categories = ["general", "movies", "entertainment"]
+    categories = ["movies", "entertainment"]
 
     async def search(
         self,

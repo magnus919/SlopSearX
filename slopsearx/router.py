@@ -136,7 +136,7 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
     },
 ]
 
-_DEFAULT_FALLBACK = ["brave", "wikipedia"]
+_DEFAULT_FALLBACK = ["brave", "duckduckgo", "wikipedia", "stackexchange", "reddit"]
 
 
 class QueryRouter:

@@ -29,7 +29,7 @@ class PubChemAdapter(EngineAdapter):
     display_name = "PubChem"
     env_prefix = "ENGINE_PUBCHEM"
     engine_type = "api"
-    categories = ["general", "science", "reference", "chemistry", "medical"]
+    categories = ["science", "reference", "chemistry", "medical"]
 
     async def search(
         self,

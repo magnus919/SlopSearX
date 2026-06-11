@@ -28,7 +28,7 @@ class ClinicalTrialsAdapter(EngineAdapter):
     display_name = "ClinicalTrials.gov"
     env_prefix = "ENGINE_CLINICALTRIALS"
     engine_type = "api"
-    categories = ["general", "medical", "health", "science"]
+    categories = ["medical", "health", "science"]
 
     async def search(
         self,

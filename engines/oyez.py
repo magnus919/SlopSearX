@@ -22,7 +22,7 @@ class OyezAdapter(EngineAdapter):
     display_name = "Oyez (SCOTUS)"
     env_prefix = "ENGINE_OYEZ"
     engine_type = "api"
-    categories = ["general", "reference", "legal"]
+    categories = ["reference", "legal"]
 
     async def search(
         self,

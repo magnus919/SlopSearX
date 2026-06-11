@@ -22,7 +22,7 @@ class SemanticScholarAdapter(EngineAdapter):
     display_name = "Semantic Scholar"
     env_prefix = "ENGINE_SEMANTICSCHOLAR"
     engine_type = "api"
-    categories = ["general", "science", "reference"]
+    categories = ["science", "reference"]
 
     async def search(
         self,

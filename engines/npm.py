@@ -28,7 +28,7 @@ class NpmAdapter(EngineAdapter):
     display_name = "npm"
     env_prefix = "ENGINE_NPM"
     engine_type = "api"
-    categories = ["general", "it", "reference", "packages"]
+    categories = ["it", "reference", "packages"]
 
     async def search(
         self,

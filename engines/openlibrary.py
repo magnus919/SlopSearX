@@ -28,7 +28,7 @@ class OpenLibraryAdapter(EngineAdapter):
     display_name = "Open Library"
     env_prefix = "ENGINE_OPENLIBRARY"
     engine_type = "api"
-    categories = ["general", "books", "reference"]
+    categories = ["books", "reference"]
 
     async def search(
         self,

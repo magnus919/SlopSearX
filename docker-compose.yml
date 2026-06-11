@@ -1,24 +1,20 @@
 # SlopSearX — drop-in replacement for SearXNG in GroktoCrawl stack
-# Usage: docker compose up -d
-# Exposes port 8080 (same as SearXNG for drop-in compatibility)
+# Runs on the groktocrawl stack's network so agent-svc can reach it.
+# No host port — internal-only for the stack.
 
 services:
   slopsearx:
     build: .
     image: slopsearx:0.1.0
     ports:
-      - "8080:8080"
+      - "8080"
+    env_file:
+      - ../.env
     environment:
       - VALKEY_URL=redis://valkey:6379/0
-      - ENGINE_BRAVE_API_KEY=${ENGINE_BRAVE_API_KEY:-}
-    volumes:
-      - ./config.yaml:/etc/slopsearx/config.yaml:ro
-    depends_on:
-      - valkey
     restart: unless-stopped
 
-  valkey:
-    image: valkey/valkey:8-alpine
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
+networks:
+  default:
+    name: groktocrawl_default
+    external: true

@@ -20,7 +20,7 @@ class OpenAlexAdapter(EngineAdapter):
     display_name = "OpenAlex"
     env_prefix = "ENGINE_OPENALEX"
     engine_type = "api"
-    categories = ["general", "science", "reference"]
+    categories = ["science", "reference"]
 
     async def search(
         self,

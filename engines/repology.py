@@ -28,7 +28,7 @@ class RepologyAdapter(EngineAdapter):
     display_name = "Repology"
     env_prefix = "ENGINE_REPOLOGY"
     engine_type = "api"
-    categories = ["general", "it", "reference", "packages"]
+    categories = ["it", "reference", "packages"]
 
     async def search(
         self,

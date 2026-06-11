@@ -28,7 +28,7 @@ class PubMedAdapter(EngineAdapter):
     display_name = "PubMed"
     env_prefix = "ENGINE_PUBMED"
     engine_type = "api"
-    categories = ["general", "science", "reference", "medical", "health"]
+    categories = ["science", "reference", "medical", "health"]
 
     async def search(
         self,
