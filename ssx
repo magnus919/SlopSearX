@@ -1,0 +1,267 @@
+#!/usr/bin/env python3
+"""ssx — SlopSearX CLI for AI agents.
+
+Agent-friendly wrapper around the SlopSearX meta search API.
+Supports search, engine listing, health checks, and config discovery.
+Outputs YAML by default (agent-native) with optional JSON for programmatic use.
+
+Usage:
+    ssx search <query> [--categories CAT] [--engines ENG] [--json]
+    ssx engines [--json]
+    ssx health [--json]
+    ssx config [--json]
+    ssx --help
+
+Environment:
+    SSX_HOST           SlopSearX server host (default: localhost)
+    SSX_PORT           SlopSearX server port (default: 8080)
+    SSX_FORMAT         Output format: yaml (default) or json
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+import json as _json
+from typing import Any
+from urllib.request import urlopen, Request
+from urllib.parse import urlencode, quote
+
+
+DEFAULT_HOST = "localhost"
+DEFAULT_PORT = 8080
+
+
+# ---------------------------------------------------------------------------
+# HTTP helpers
+# ---------------------------------------------------------------------------
+
+
+def _api_url(path: str, query_params: dict[str, Any] | None = None) -> str:
+    host = os.environ.get("SSX_HOST", DEFAULT_HOST)
+    port = os.environ.get("SSX_PORT", str(DEFAULT_PORT))
+    base = f"http://{host}:{port}"
+    url = f"{base}{path}"
+    if query_params:
+        url += "?" + urlencode(query_params, doseq=True)
+    return url
+
+
+def _fetch(url: str, accept: str = "application/json") -> str:
+    req = Request(url, headers={"Accept": accept})
+    with urlopen(req, timeout=15) as resp:
+        return resp.read().decode("utf-8")
+
+
+def _fetch_json(url: str) -> dict[str, Any]:
+    raw = _fetch(url, "application/json")
+    return _json.loads(raw)
+
+
+def _fetch_yaml(url: str) -> str:
+    return _fetch(url, "text/vnd.yaml+markdown")
+
+
+# ---------------------------------------------------------------------------
+# Commands
+# ---------------------------------------------------------------------------
+
+
+def cmd_search(args: argparse.Namespace) -> None:
+    """Execute a search query."""
+    query = " ".join(args.query)
+    if not query.strip():
+        print("error: query is required", file=sys.stderr)
+        sys.exit(1)
+
+    params: dict[str, Any] = {"q": query}
+
+    if args.categories:
+        params["categories"] = args.categories
+    if args.engines:
+        params["engines"] = args.engines
+    if args.language:
+        params["language"] = args.language
+    if args.time_range:
+        params["time_range"] = args.time_range
+    if args.pageno:
+        params["pageno"] = args.pageno
+
+    use_json = args.json or os.environ.get("SSX_FORMAT", "").lower() == "json"
+
+    if use_json:
+        params["format"] = "json"
+        url = _api_url("/search", params)
+        data = _fetch_json(url)
+        print(_json.dumps(data, indent=2))
+    else:
+        params["format"] = "yaml"
+        url = _api_url("/search", params)
+        output = _fetch_yaml(url)
+        print(output)
+
+
+def cmd_engines(args: argparse.Namespace) -> None:
+    """List all engines with their status."""
+    use_json = args.json or os.environ.get("SSX_FORMAT", "").lower() == "json"
+
+    # Fetch health for per-engine status
+    health_url = _api_url("/health")
+    config_url = _api_url("/config")
+
+    try:
+        health_data = _fetch_json(health_url)
+        config_data = _fetch_json(config_url)
+    except Exception as e:
+        print(f"error: cannot reach SlopSearX — {e}", file=sys.stderr)
+        sys.exit(1)
+
+    engines_health = health_data.get("engines", {})
+    categories_map = config_data.get("categories", {})
+
+    # Build reverse mapping: engine -> categories
+    engine_cats: dict[str, list[str]] = {}
+    for cat, eng_list in categories_map.items():
+        for eng in eng_list:
+            engine_cats.setdefault(eng, []).append(cat)
+
+    if use_json:
+        engines_info: dict[str, dict[str, Any]] = {}
+        for eng_name, status_info in sorted(engines_health.items()):
+            engines_info[eng_name] = {
+                "status": status_info.get("status", "unknown"),
+                "categories": sorted(engine_cats.get(eng_name, [])),
+            }
+        print(_json.dumps(engines_info, indent=2))
+    else:
+        # YAML-like output
+        lines: list[str] = []
+        lines.append("---")
+        lines.append(f"server_status: {health_data.get('status', 'unknown')}")
+        lines.append(f"engine_count: {len(engines_health)}")
+        lines.append("engines:")
+        for eng_name in sorted(engines_health.keys()):
+            status_info = engines_health.get(eng_name, {})
+            status = status_info.get("status", "unknown")
+            cats = ", ".join(sorted(engine_cats.get(eng_name, [])))
+            lines.append(f"  - name: {eng_name}")
+            lines.append(f"    status: {status}")
+            lines.append(f"    categories: [{cats}]")
+        print("\n".join(lines))
+
+
+def cmd_health(args: argparse.Namespace) -> None:
+    """Check server and engine health."""
+    use_json = args.json or os.environ.get("SSX_FORMAT", "").lower() == "json"
+
+    url = _api_url("/health")
+    try:
+        data = _fetch_json(url)
+    except Exception as e:
+        print(f"error: cannot reach SlopSearX — {e}", file=sys.stderr)
+        sys.exit(1)
+
+    if use_json:
+        print(_json.dumps(data, indent=2))
+    else:
+        status = data.get("status", "unknown")
+        engines = data.get("engines", {})
+        ok_count = sum(1 for e in engines.values() if e.get("status") == "ok")
+        total = len(engines)
+        lines: list[str] = []
+        lines.append("---")
+        lines.append(f"server_status: {status}")
+        lines.append(f"engines_ok: {ok_count}/{total}")
+        lines.append("engine_status:")
+        for eng_name in sorted(engines.keys()):
+            e = engines[eng_name]
+            lines.append(f"  {eng_name}: {e.get('status', 'unknown')}")
+        print("\n".join(lines))
+
+
+def cmd_config(args: argparse.Namespace) -> None:
+    """Show engine-to-categories mapping."""
+    use_json = args.json or os.environ.get("SSX_FORMAT", "").lower() == "json"
+
+    url = _api_url("/config")
+    try:
+        data = _fetch_json(url)
+    except Exception as e:
+        print(f"error: cannot reach SlopSearX — {e}", file=sys.stderr)
+        sys.exit(1)
+
+    if use_json:
+        print(_json.dumps(data, indent=2))
+    else:
+        categories = data.get("categories", {})
+        lines: list[str] = []
+        lines.append("---")
+        lines.append(f"category_count: {len(categories)}")
+        lines.append("categories:")
+        for cat_name in sorted(categories.keys()):
+            engs = sorted(categories[cat_name])
+            lines.append(f"  {cat_name}:")
+            for eng in engs:
+                lines.append(f"    - {eng}")
+        # Also show which engines support which categories
+        lines.append("")
+        lines.append("## Engine Category Reference")
+        lines.append("")
+        lines.append("Each engine can be queried with `?engines=<name>` or reached")
+        lines.append("via any of its assigned categories with `?categories=<cat>`.")
+        print("\n".join(lines))
+
+
+# ---------------------------------------------------------------------------
+# CLI entry point
+# ---------------------------------------------------------------------------
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        prog="ssx",
+        description="SlopSearX CLI — AI-agent-native meta search client",
+        epilog=(
+            "Environment: SSX_HOST, SSX_PORT, SSX_FORMAT (yaml|json). "
+            "See SKILL.md for full reference."
+        ),
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    # search
+    search_p = sub.add_parser("search", help="Execute a search query")
+    search_p.add_argument("query", nargs="+", help="Search query string")
+    search_p.add_argument("--categories", "-c", help="Comma-separated category filter")
+    search_p.add_argument("--engines", "-e", help="Comma-separated engine filter")
+    search_p.add_argument("--language", "-l", default="en", help="Language code (default: en)")
+    search_p.add_argument("--time-range", help="Time range: day, month, year")
+    search_p.add_argument("--pageno", type=int, default=1, help="Page number (default: 1)")
+    search_p.add_argument("--json", action="store_true", help="Output JSON instead of YAML")
+
+    # engines
+    eng_p = sub.add_parser("engines", help="List engines with status")
+    eng_p.add_argument("--json", action="store_true", help="Output JSON")
+
+    # health
+    health_p = sub.add_parser("health", help="Check server and engine health")
+    health_p.add_argument("--json", action="store_true", help="Output JSON")
+
+    # config
+    config_p = sub.add_parser("config", help="Show engine-to-categories mapping")
+    config_p.add_argument("--json", action="store_true", help="Output JSON")
+
+    args = parser.parse_args()
+
+    commands = {
+        "search": cmd_search,
+        "engines": cmd_engines,
+        "health": cmd_health,
+        "config": cmd_config,
+    }
+
+    commands[args.command](args)
+
+
+if __name__ == "__main__":
+    main()

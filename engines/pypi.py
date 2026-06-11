@@ -118,7 +118,7 @@ class PyPIAdapter(EngineAdapter):
                     if len(matched) >= max_results:
                         break
 
-                results = []
+                results: list[SearchResult] = []
                 for name in matched:
                     try:
                         r = await client.get(f"{base_url}/pypi/{name}/json", headers=headers)
