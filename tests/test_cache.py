@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import inspect
+
+import pytest
+
 from slopsearx.cache import SearchCache, _ttl_for_query, cache_key
 
 
@@ -67,7 +71,39 @@ class TestSearchCacheDisconnected:
         cache = SearchCache(valkey_url="")
         await cache.clear()
 
-    def test_env_var_empty(self, monkeypatch) -> None:
+    def test_env_var_empty(self, monkeypatch: "pytest.MonkeyPatch") -> None:
         monkeypatch.setenv("VALKEY_URL", "")
         cache = SearchCache()
         assert not cache.is_connected
+
+    async def test_connect_empty_url_noop(self) -> None:
+        """Connect with empty URL does nothing."""
+        cache = SearchCache(valkey_url="")
+        await cache.connect()
+        assert not cache.is_connected
+        assert cache._client is None
+
+    async def test_close_noop_when_not_connected(self) -> None:
+        """Close is a no-op when not connected."""
+        cache = SearchCache(valkey_url="")
+        await cache.close()
+        assert cache._client is None
+
+
+class TestCacheAsyncConformance:
+    """M3-006: All I/O methods are async def."""
+
+    def test_connect_is_async(self) -> None:
+        assert inspect.iscoroutinefunction(SearchCache.connect)
+
+    def test_get_is_async(self) -> None:
+        assert inspect.iscoroutinefunction(SearchCache.get)
+
+    def test_set_is_async(self) -> None:
+        assert inspect.iscoroutinefunction(SearchCache.set)
+
+    def test_clear_is_async(self) -> None:
+        assert inspect.iscoroutinefunction(SearchCache.clear)
+
+    def test_close_is_async(self) -> None:
+        assert inspect.iscoroutinefunction(SearchCache.close)
