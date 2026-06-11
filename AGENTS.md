@@ -59,6 +59,17 @@ slopsearx/
 
 The JSON response is a superset of SearXNG's output — same fields, plus `meta.*` extensions.
 
+## Two-Tier Engine System
+
+Unscoped searches (no `categories` or `engines` param, no topic match) use all active engines split into two tiers:
+
+- **Tier 1** — Broad, general-purpose engines (`brave`, `duckduckgo`, `google`, `wikipedia`, `stackexchange`, `reddit`). These form the primary result set, ranking above all Tier 2 results.
+- **Tier 2** — All other engines (specialised: science, packages, security, finance, media, etc.). Results are ranked below Tier 1, keeping top results focused on broadly relevant content while still surfacing domain-specific results.
+
+Each `SearchResult` carries a `tier` field (1 or 2) exposed in both JSON and YAML+Markdown outputs. The `PresenceRanker` sorts by `(tier, -score)`, and when deduplicating by URL, the higher-priority tier (lower number) is preserved.
+
+All new engines are Tier 2 by default. See `CONTRIBUTING.md` for tier governance rules.
+
 ## Category System
 
 Each engine declares its supported categories via a class attribute. Categories use SearXNG taxonomy — any string is valid, with namespace prefixes for sub-categories (`github:code`, `huggingface:datasets`).

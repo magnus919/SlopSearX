@@ -35,6 +35,7 @@ def _result_to_searxng(result: SearchResult) -> dict[str, Any]:
         "category": result.category,
         "publishedDate": result.published_date,
         "pubdate": _iso_to_epoch(result.published_date),
+        "tier": result.tier,
         "length": None,
         "thumbnail": result.thumbnail,
         "img_src": result.img_src,
@@ -182,6 +183,7 @@ def format_yaml_markdown(
             "score": r.score,
             "position": r.position,
             "published": r.published_date,
+            "tier": r.tier,
         }
         for r in results
     ]

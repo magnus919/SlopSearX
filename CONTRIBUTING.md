@@ -40,8 +40,20 @@ See `docs/ENGINE_ADAPTERS.md` for the full reference — contract rules, data ty
 - [ ] Tests added in `tests/test_adapters.py`
 - [ ] Category tags follow SearXNG taxonomy (or use engine-specific namespace prefixes)
 - [ ] **README.md Engines table updated** (name, type, auth, categories)
+- [ ] Tier classification correct — see "Engine Tier Governance" below
 
 **Removing an engine:** Remove its file from `engines/`, its import from `engines/__init__.py`, and its row from the README.md Engines table.
+
+### Engine Tier Governance
+
+SlopSearX uses a two-tier engine system to keep unscoped search results clean while retaining breadth:
+
+- **Tier 1** — Broad, general-purpose engines that return relevant results on any query. These form the primary result set in unscoped searches. Tier 1 engines are curated aggressively to minimise noise.
+- **Tier 2** — All specialised engines (science, packages, security, finance, media, etc.). Their results are surfaced below Tier 1 in unscoped searches, keeping top results focused without losing domain-specific coverage.
+
+**All new engines are Tier 2 by default.** An engine may only be classified as Tier 1 with prior approval from the project maintainers. The bar for Tier 1 is high: the engine must return broadly relevant results across the long tail of everyday queries, not just within its domain.
+
+Current Tier 1 engines are defined in `_TIER1_ENGINES` in `slopsearx/server.py`. This set changes rarely.
 
 ## Code of Conduct
 

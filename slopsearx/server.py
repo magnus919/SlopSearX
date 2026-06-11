@@ -39,6 +39,19 @@ from slopsearx.suggest import SuggestionService
 
 app = FastAPI(title="SlopSearX", version="0.1.0")
 
+# ---------------------------------------------------------------------------
+# Two-tier engine classification
+# ---------------------------------------------------------------------------
+# Tier 1: broad, general-purpose engines that return relevant results on
+# any query. Used as the primary result set in unscoped searches.
+# Tier 2: specialised engines (science, packages, security, etc.) whose
+# results are surfaced below Tier 1 in unscoped searches.
+# All new engines default to Tier 2 unless approved by maintainers.
+_TIER1_ENGINES: set[str] = {
+    "brave", "duckduckgo", "google", "wikipedia", "stackexchange", "reddit",
+}
+
+
 # Populated at startup
 _active_engines: dict[str, EngineAdapter] = {}
 _ranker = PresenceRanker()
@@ -273,23 +286,11 @@ async def search(
                     if name in routed
                 }
             else:
-                # No topic matched — use curated default search engines
-                # (excludes security-only engines that fail on general queries)
-                _default_search_engines = {
-                    "duckduckgo", "google", "wikipedia", "stackexchange",
-                    "hackernews", "arxiv", "openalex", "semanticscholar",
-                    "reddit", "github", "huggingface", "internetarchive",
-                    "openlibrary", "pubmed", "pubchem",
-                }
-                target_engines = {
-                    name: eng
-                    for name, eng in _active_engines.items()
-                    if name in _default_search_engines
-                }
-                # If none of the default engines are active (e.g. in tests),
-                # fall back to all active engines to avoid unnecessary 503s
-                if not target_engines:
-                    target_engines = dict(_active_engines)
+                # No topic matched — use all active engines, split into tiers.
+                # Tier 1 (broad, general-purpose) results rank above all
+                # Tier 2 (specialised) results, keeping top results clean
+                # while still surfacing domain-specific content below.
+                target_engines = dict(_active_engines)
 
     if not target_engines:
         # No engines available at all
@@ -350,6 +351,10 @@ async def search(
             result = raw
         responses[name] = result
         engine_results[name] = result.results
+        # Annotate each result with its tier for unscoped searches
+        tier = 1 if name in _TIER1_ENGINES else 2
+        for sr in result.results:
+            sr.tier = tier
 
         # Record per-engine metrics
         m.engine_queries.inc({"engine": name})

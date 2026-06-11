@@ -98,6 +98,8 @@ class PresenceRanker(Ranker):
                     existing.engines.add(engine_name)
                     # Presence-weighted: boost score by engine count
                     existing.score = 1.0 * len(existing.engines)
+                    # Preserve the higher-priority tier (lower number)
+                    existing.tier = min(existing.tier, result.tier)
                 elif budget_ok:
                     result.engines = {engine_name}
                     result.engine = engine_name
@@ -105,7 +107,8 @@ class PresenceRanker(Ranker):
                     seen[norm_url] = result
                 # else: skipped due to per-engine budget
 
-        ranked = sorted(seen.values(), key=lambda r: r.score, reverse=True)
+        # Sort by tier first (1 before 2), then by score descending
+        ranked = sorted(seen.values(), key=lambda r: (r.tier, -r.score))
 
         for i, r in enumerate(ranked):
             r.position = i + 1

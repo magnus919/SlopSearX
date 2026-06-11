@@ -36,6 +36,7 @@ class SearchResult:
     published_date: Optional[str] = None  # ISO 8601
     thumbnail: Optional[str] = None
     img_src: Optional[str] = None
+    tier: int = 1  # 1 = primary (broad), 2 = secondary (specialized)
 
 
 class EngineStatus(enum.Enum):
