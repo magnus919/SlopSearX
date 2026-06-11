@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 """ssx — SlopSearX CLI for AI agents.
 
 Agent-friendly wrapper around the SlopSearX meta search API.
@@ -13,8 +13,7 @@ Usage:
     ssx --help
 
 Environment:
-    SSX_HOST           SlopSearX server host (default: localhost)
-    SSX_PORT           SlopSearX server port (default: 8080)
+    SSX_URL            SlopSearX server URL (default: http://localhost:8080)
     SSX_FORMAT         Output format: yaml (default) or json
 """
 
@@ -29,8 +28,7 @@ from urllib.request import urlopen, Request
 from urllib.parse import urlencode, quote
 
 
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 8080
+DEFAULT_URL = "http://localhost:8080"
 
 
 # ---------------------------------------------------------------------------
@@ -39,10 +37,8 @@ DEFAULT_PORT = 8080
 
 
 def _api_url(path: str, query_params: dict[str, Any] | None = None) -> str:
-    host = os.environ.get("SSX_HOST", DEFAULT_HOST)
-    port = os.environ.get("SSX_PORT", str(DEFAULT_PORT))
-    base = f"http://{host}:{port}"
-    url = f"{base}{path}"
+    base = os.environ.get("SSX_URL", DEFAULT_URL)
+    url = f"{base.rstrip('/')}{path}"
     if query_params:
         url += "?" + urlencode(query_params, doseq=True)
     return url
@@ -223,7 +219,7 @@ def main() -> None:
         prog="ssx",
         description="SlopSearX CLI — AI-agent-native meta search client",
         epilog=(
-            "Environment: SSX_HOST, SSX_PORT, SSX_FORMAT (yaml|json). "
+            "Environment: SSX_URL, SSX_FORMAT (yaml|json). "
             "See SKILL.md for full reference."
         ),
     )
