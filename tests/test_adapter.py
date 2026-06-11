@@ -170,3 +170,83 @@ class TestEngineAdapter:
 
         inst = _CfgEngine({"api_key": "secret"})
         assert inst.config["api_key"] == "secret"
+
+
+# ---------------------------------------------------------------------------
+# sanitize_url helper tests
+# ---------------------------------------------------------------------------
+
+
+class TestSanitizeUrl:
+    """sanitize_url helper function contract."""
+
+    def test_strips_api_key_param(self) -> None:
+        """sanitize_url removes api_key query param while preserving other params."""
+        from slopsearx.adapter import sanitize_url
+
+        result = sanitize_url("https://api.example.com/search?q=test&api_key=secret")
+        assert result == "https://api.example.com/search?q=test"
+
+    def test_strips_key_param(self) -> None:
+        """sanitize_url removes key query param."""
+        from slopsearx.adapter import sanitize_url
+
+        result = sanitize_url("https://api.example.com/search?key=secret&q=test")
+        assert result == "https://api.example.com/search?q=test"
+
+    def test_strips_apikey_param(self) -> None:
+        """sanitize_url removes apiKey query param."""
+        from slopsearx.adapter import sanitize_url
+
+        result = sanitize_url("https://api.example.com/search?apiKey=secret")
+        assert result == "https://api.example.com/search"
+
+    def test_strips_token_and_access_token(self) -> None:
+        """sanitize_url removes both token and access_token params."""
+        from slopsearx.adapter import sanitize_url
+
+        result = sanitize_url("https://api.example.com/search?token=abc&access_token=xyz")
+        assert result == "https://api.example.com/search"
+
+    def test_preserves_safe_params(self) -> None:
+        """sanitize_url preserves non-sensitive params unchanged."""
+        from slopsearx.adapter import sanitize_url
+
+        result = sanitize_url("https://api.example.com/search?q=test")
+        assert result == "https://api.example.com/search?q=test"
+
+    def test_handles_no_query_string(self) -> None:
+        """sanitize_url returns URL unchanged when there is no query string."""
+        from slopsearx.adapter import sanitize_url
+
+        result = sanitize_url("https://api.example.com/search")
+        assert result == "https://api.example.com/search"
+
+    def test_handles_malformed_url_gracefully(self) -> None:
+        """sanitize_url returns original string for malformed URLs."""
+        from slopsearx.adapter import sanitize_url
+
+        result = sanitize_url("not a valid url")
+        assert result == "not a valid url"
+
+    def test_importable_from_adapter(self) -> None:
+        """sanitize_url is importable from slopsearx.adapter."""
+        from slopsearx.adapter import sanitize_url  # noqa: F401
+
+        assert callable(sanitize_url)
+
+    def test_strips_repeated_params(self) -> None:
+        """sanitize_url removes multiple sensitive params, preserving safe ones."""
+        from slopsearx.adapter import sanitize_url
+
+        result = sanitize_url(
+            "https://api.example.com/search?api_key=sk-1234&key=abc123&q=test&page=2"
+        )
+        assert result == "https://api.example.com/search?q=test&page=2"
+
+    def test_empty_query_string(self) -> None:
+        """sanitize_url handles URLs with empty query string."""
+        from slopsearx.adapter import sanitize_url
+
+        result = sanitize_url("https://api.example.com/search?")
+        assert result == "https://api.example.com/search"

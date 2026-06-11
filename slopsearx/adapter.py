@@ -15,6 +15,57 @@ import enum
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Optional
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+_SENSITIVE_QUERY_PARAMS: set[str] = {
+    "api_key",
+    "key",
+    "apiKey",
+    "token",
+    "access_token",
+}
+
+
+def sanitize_url(url: str) -> str:
+    """Strip known sensitive query parameters from a URL.
+
+    Removes query parameters listed in ``_SENSITIVE_QUERY_PARAMS``
+    (``api_key``, ``key``, ``apiKey``, ``token``, ``access_token``)
+    from **url** to prevent credential leakage in error messages and
+    logs.
+
+    Args:
+        url: The URL to sanitize.
+
+    Returns:
+        The sanitized URL with sensitive parameters removed, or the
+        original string if parsing fails.
+    """
+    try:
+        parsed = urlparse(url)
+        if not parsed.query:
+            # Nothing to remove — return URL as-is (no trailing ?).
+            return url.rstrip("?")
+        query_params = parse_qs(parsed.query, keep_blank_values=True)
+        # Remove only the sensitive keys
+        for key in _SENSITIVE_QUERY_PARAMS:
+            query_params.pop(key, None)
+        if not query_params:
+            # All params were sensitive — drop the query entirely
+            new_query = ""
+        else:
+            new_query = urlencode(query_params, doseq=True)
+        sanitized = urlunparse(parsed._replace(query=new_query))
+        return sanitized
+    except Exception:  # noqa: BLE001
+        # Malformed URL — return original string unmodified
+        return url
+
 
 # ---------------------------------------------------------------------------
 # Data types
