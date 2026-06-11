@@ -48,7 +48,7 @@ class EngineStatsTracker:
         today = time.strftime("%Y-%m-%d")
         return f"engine_stats:{engine}:{today}"
 
-    def record_query(
+    async def record_query(
         self,
         engine: str,
         result_count: int,
@@ -58,8 +58,8 @@ class EngineStatsTracker:
     ) -> None:
         """Record a single query's results for an engine.
 
-        This is a synchronous fire-and-forget call. The actual Valkey
-        writes happen in a non-awaited coroutine to avoid blocking
+        This is an async fire-and-forget call. The actual Valkey
+        writes happen via an awaited async pipeline to avoid blocking
         the request path.
 
         Args:
@@ -88,6 +88,6 @@ class EngineStatsTracker:
             pipe.hincrby(key, "total_score", int(avg_score * 1000))
             # Set TTL to 90 days so old keys auto-expire
             pipe.expire(key, 7_776_000)  # 90 days
-            pipe.execute()
+            await pipe.execute()
         except Exception as exc:
             logger.debug("Stats write error for %s: %s", engine, exc)

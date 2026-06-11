@@ -45,17 +45,18 @@ class SearchCache:
         self._url = valkey_url or os.environ.get("VALKEY_URL", "")
         self._client: Any = None
         self._connected = False
-        if self._url:
-            self._connect()
 
-    def _connect(self) -> None:
-        """Establish Valkey connection if not already connected."""
+    async def connect(self) -> None:
+        """Establish async Valkey connection."""
         if self._client is not None:
             return
+        if not self._url:
+            return
         try:
-            import valkey
-            self._client = valkey.Valkey.from_url(self._url)
-            self._client.ping()
+            import valkey.asyncio
+
+            self._client = valkey.asyncio.Valkey.from_url(self._url)
+            await self._client.ping()
             self._connected = True
             logger.info("SearchCache connected to Valkey")
         except Exception as e:
@@ -63,12 +64,22 @@ class SearchCache:
             self._client = None
             logger.warning("SearchCache: Valkey unavailable, caching disabled: %s", e)
 
+    async def close(self) -> None:
+        """Close the Valkey connection."""
+        if self._client is not None:
+            try:
+                await self._client.close()
+            except Exception:
+                pass
+            self._client = None
+            self._connected = False
+
     async def get(self, key: str) -> dict[str, Any] | None:
         """Retrieve cached result set by key. Returns None on miss or error."""
         if not self._connected or self._client is None:
             return None
         try:
-            data = self._client.get(key)
+            data = await self._client.get(key)
             if data is None:
                 return None
             return cast("dict[str, Any]", json.loads(data))
@@ -82,7 +93,7 @@ class SearchCache:
             return
         try:
             serialized = json.dumps(value, default=str)
-            self._client.setex(key, ttl, serialized)
+            await self._client.setex(key, ttl, serialized)
         except Exception as e:
             logger.debug("Cache set error: %s", e)
 
@@ -91,7 +102,7 @@ class SearchCache:
         if not self._connected or self._client is None:
             return
         try:
-            self._client.flushdb()
+            await self._client.flushdb()
         except Exception as e:
             logger.debug("Cache clear error: %s", e)
 

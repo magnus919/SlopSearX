@@ -96,16 +96,18 @@ class ValkeySlidingWindow(RateLimitStrategy):
         self._window = window_seconds
         self._client: Any = None
         self._connected = False
-        if self._url:
-            self._connect()
 
-    def _connect(self) -> None:
-        """Establish Valkey connection."""
+    async def _connect(self) -> None:
+        """Establish async Valkey connection."""
+        if self._client is not None:
+            return
+        if not self._url:
+            return
         try:
-            import valkey
+            import valkey.asyncio
 
-            self._client = valkey.Valkey.from_url(self._url)
-            self._client.ping()
+            self._client = valkey.asyncio.Valkey.from_url(self._url)
+            await self._client.ping()
             self._connected = True
             logger.info("ValkeySlidingWindow connected to Valkey")
         except Exception as e:
@@ -125,10 +127,10 @@ class ValkeySlidingWindow(RateLimitStrategy):
             window_start = int(time.monotonic() / self._window)
             key = f"ratelimit:{engine}:{window_start}"
 
-            count: int = self._client.incrby(key, cost)
+            count: int = await self._client.incrby(key, cost)
             if count == cost:
                 # First increment in this window — set expiry
-                self._client.expire(key, int(self._window * 2))
+                await self._client.expire(key, int(self._window * 2))
 
             # Check against configured rate for this engine
             # Default: self._default_rate requests per window
@@ -139,15 +141,16 @@ class ValkeySlidingWindow(RateLimitStrategy):
 
     async def warmup(self) -> None:
         if self._url and not self._connected:
-            self._connect()
+            await self._connect()
 
     async def shutdown(self) -> None:
         if self._client:
             try:
-                self._client.close()
+                await self._client.close()
             except Exception:
                 pass
             self._client = None
+            self._connected = False
 
 
 # --- External sidecar (advanced deployments) ---

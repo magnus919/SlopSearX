@@ -75,6 +75,7 @@ async def startup() -> None:
 
     # Initialize cache (gracefully degrades if Valkey unavailable)
     _cache = SearchCache()
+    await _cache.connect()
 
     # Initialize rate limiter (default: local token bucket for dev)
     _rate_limiter = RateLimiter(LocalTokenBucket())
@@ -126,6 +127,9 @@ async def shutdown() -> None:
 
     if _rate_limiter is not None:
         await _rate_limiter.shutdown()
+
+    if _cache is not None:
+        await _cache.close()
 
 
 async def _warmup_engine(name: str, engine: EngineAdapter) -> None:
@@ -364,18 +368,20 @@ async def search(
         status_code = 0 if result.status == EngineStatus.OK else (1 if result.status in degraded else 2)
         m.engine_status.set({"engine": name}, status_code)
 
-        # Record per-engine quality telemetry in Valkey
+        # Record per-engine quality telemetry in Valkey (non-blocking)
         if _stats_tracker is not None:
             avg_score = (
                 sum(r.score for r in result.results) / len(result.results)
                 if result.results else 0.0
             )
-            _stats_tracker.record_query(
-                engine=name,
-                result_count=len(result.results),
-                latency_ms=result.latency_ms,
-                status=result.status,
-                avg_score=avg_score,
+            asyncio.create_task(
+                _stats_tracker.record_query(
+                    engine=name,
+                    result_count=len(result.results),
+                    latency_ms=result.latency_ms,
+                    status=result.status,
+                    avg_score=avg_score,
+                )
             )
 
     # Merge and rank
