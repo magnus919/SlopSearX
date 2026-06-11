@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import os
 import time
 import uuid
 from typing import Any
@@ -33,7 +34,12 @@ from slopsearx.merger import (
     build_meta,
     extract_unresponsive,
 )
-from slopsearx.ratelimit import LocalTokenBucket, RateLimiter
+from slopsearx.ratelimit import (
+    LocalTokenBucket,
+    RateLimiter,
+    RateLimitStrategy,
+    ValkeySlidingWindow,
+)
 from slopsearx.router import QueryRouter
 from slopsearx.stats import EngineStatsTracker
 from slopsearx.suggest import SuggestionService
@@ -62,6 +68,10 @@ _router: QueryRouter | None = None
 _suggestion_service: SuggestionService | None = None
 _stats_tracker: EngineStatsTracker | None = None
 
+# Concurrency and per-client rate limiting
+_engine_semaphore: asyncio.Semaphore | None = None
+_client_rate_window: RateLimitStrategy | None = None
+
 
 # ---------------------------------------------------------------------------
 # Lifecycle
@@ -72,6 +82,7 @@ _stats_tracker: EngineStatsTracker | None = None
 async def startup() -> None:
     """Discover and warm up all registered engines."""
     global _active_engines, _cache, _rate_limiter  # noqa: PLW0603
+    global _engine_semaphore, _client_rate_window  # noqa: PLW0603
 
     # Initialize cache (gracefully degrades if Valkey unavailable)
     _cache = SearchCache()
@@ -81,6 +92,26 @@ async def startup() -> None:
     _rate_limiter = RateLimiter(LocalTokenBucket())
 
     await _rate_limiter.warmup()
+
+    # Initialize global engine dispatch semaphore
+    max_conc_str = os.environ.get("MAX_CONCURRENT_ENGINES", "10")
+    try:
+        max_conc = int(max_conc_str)
+    except (ValueError, TypeError):
+        max_conc = 10  # non-numeric defaults to 10
+    if max_conc < 1:
+        max_conc = 1  # zero/negative defaults to 1
+    _engine_semaphore = asyncio.Semaphore(max_conc)
+
+    # Initialize per-client rate limiter
+    per_client_rate = float(os.environ.get("PER_CLIENT_REQUESTS", "30"))
+    per_client_window = float(os.environ.get("PER_CLIENT_WINDOW_SECONDS", "60"))
+    _client_rate_window = ValkeySlidingWindow(
+        valkey_url=os.environ.get("VALKEY_URL", ""),
+        default_rate=per_client_rate,
+        window_seconds=per_client_window,
+    )
+    await _client_rate_window.warmup()
 
     # Only populate if not already set (allows test fixtures to pre-seed)
     cfg = load_config()
@@ -127,6 +158,9 @@ async def shutdown() -> None:
 
     if _rate_limiter is not None:
         await _rate_limiter.shutdown()
+
+    if _client_rate_window is not None:
+        await _client_rate_window.shutdown()
 
     if _cache is not None:
         await _cache.close()
@@ -321,6 +355,19 @@ async def search(
         "categories": [c.strip() for c in categories.split(",") if c.strip()] or ["general"],
     }
 
+    # Per-client rate limiting — checked before semaphore acquisition
+    if _client_rate_window is not None:
+        client_ip = request.client.host if request.client else "unknown"
+        allowed = await _client_rate_window.acquire(client_ip, cost=1)
+        if not allowed:
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": "rate_limited",
+                    "message": "Too many requests. Please slow down.",
+                },
+            )
+
     # Check cache first
     if _cache is not None and _cache.is_connected:
         ck = cache_key(q, language, safesearch)
@@ -329,11 +376,11 @@ async def search(
             cached["meta"]["cached"] = True
             return JSONResponse(status_code=200, content=cached)
 
-    # Dispatch to all engines concurrently
+    # Dispatch to all engines concurrently (bounded by semaphore)
     tasks = []
     engine_names = []
     for name, engine in target_engines.items():
-        tasks.append(_dispatch_engine(name, engine, q, search_params))
+        tasks.append(_dispatch_with_semaphore(name, engine, q, search_params))
         engine_names.append(name)
 
     # Fire suggestion fetch concurrently with engine dispatch (background)
@@ -488,6 +535,27 @@ async def _dispatch_engine(
             status=EngineStatus.ERROR,
             error_message=sanitize_url(str(exc)),
         )
+
+
+async def _dispatch_with_semaphore(
+    name: str,
+    engine: EngineAdapter,
+    query: str,
+    params: dict[str, Any],
+    timeout_s: float = 3.0,
+) -> AdapterResponse:
+    """Dispatch engine query, bounded by the global semaphore.
+
+    Acquires a semaphore slot before dispatching to the engine.
+    The ``async with`` block ensures the slot is released even
+    when the underlying dispatch raises an exception or times out.
+    If no semaphore has been configured (startup not yet complete),
+    dispatches directly with no bound.
+    """
+    if _engine_semaphore is not None:
+        async with _engine_semaphore:
+            return await _dispatch_engine(name, engine, query, params, timeout_s)
+    return await _dispatch_engine(name, engine, query, params, timeout_s)
 
 
 def _generate_query_id() -> str:
