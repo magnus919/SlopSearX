@@ -252,7 +252,9 @@ For **Python async web scraping**, the top results cover:
 | `200` | Normal response, zero results is valid | Standard response with empty `results` array |
 | `400` | Missing or empty `q` parameter | `{"error": "query_required", "message": "The 'q' parameter is required"}` |
 | `503` | All engines unresponsive | `{"error": "all_engines_unavailable", "meta": {...}, "results": []}` |
-| `429` | Client-side rate limit (optional) | `{"error": "rate_limited", "retry_after": 30}` |
+| `429` | Per-client or engine-level rate limit exceeded | `{"error": "rate_limited", "retry_after": 30}` |
+
+The 429 response is returned when a client IP exceeds its per-client request allowance (`PER_CLIENT_REQUESTS` / `PER_CLIENT_WINDOW_SECONDS`) or when all requested engines are rate-limited. When `FAIL_CLOSED` is enabled and Valkey is unreachable, rate-limit checks deny requests by default rather than allowing them through.
 
 The system never returns 500 for a valid request. An empty result set with all engines in `unresponsive_engines` is a valid 200 response — distinguishable from a service failure by the consumer.
 
@@ -538,6 +540,11 @@ Each adapter declares an `env_prefix` (e.g., `ENGINE_BRAVE_`, `ENGINE_DDG_`).
 | `SEARCH_LOG_LEVEL` | Log level |
 | `SEARCH_DEFAULT_ENGINES` | Comma-separated list of default engines |
 | `VALKEY_URL` | Valkey connection string |
+| `MAX_CONCURRENT_ENGINES` | Concurrency — Max simultaneous outbound HTTP connections per search (default: 10) |
+| `PER_CLIENT_REQUESTS` | Rate limit — Allowed search requests per client IP per window (default: 30) |
+| `PER_CLIENT_WINDOW_SECONDS` | Rate limit — Sliding window duration for per-client rate limiting (default: 60) |
+| `FAIL_CLOSED` | Toggle — When Valkey is unreachable, deny rate-limit checks instead of allowing all (default: false) |
+| `FAIL_CLOSED_GRACE_SECONDS` | Rate limit — Seconds before falling back to in-process rate limiter when Valkey is down (default: 30) |
 
 Env var values **override** config file values for the same key. This is how secrets are injected without putting them in the config file.
 
@@ -663,6 +670,22 @@ When an adapter is rate-limited or blocked:
 4. Over 3 consecutive failures, the engine is deactivated until a health check passes
 
 This prevents a single rate-limited engine from hanging the entire query and allows automatic recovery when the rate limit resets.
+
+### 8.3 Per-Client Rate Limiting
+
+In addition to per-engine rate limits, the server enforces a **per-client request budget** keyed on `request.client.host` using the same `ValkeySlidingWindow` strategy:
+
+```
+ratelimit:client:{client_ip}:{window_start}  INCR + EXPIRE
+```
+
+When a client exceeds `PER_CLIENT_REQUESTS` within `PER_CLIENT_WINDOW_SECONDS`, the server returns HTTP 429 with `{"error": "rate_limited", "retry_after": N}`. This prevents a single noisy client from starving other tenants and provides a uniform throttle regardless of which engines are requested.
+
+**Fail-closed behavior** (`FAIL_CLOSED`): When Valkey is unreachable, the default (`false`) allows requests through (fail-open) to avoid blocking legitimate traffic during transient Valkey outages. When set to `true`, rate-limit checks deny all requests until Valkey recovers — appropriate for security-sensitive deployments where unbounded traffic is riskier than downtime. After `FAIL_CLOSED_GRACE_SECONDS` of Valkey unavailability, the system falls back to an in-process `LocalTokenBucket` rate limiter so that service can continue with approximate enforcement.
+
+### 8.4 Engine Dispatch Concurrency
+
+The engine dispatch layer uses a semaphore (`MAX_CONCURRENT_ENGINES`, default 10) to cap the number of simultaneous outbound HTTP connections per search request. This prevents resource exhaustion when many engines are active and ensures predictable memory and file-descriptor usage under load. Engines beyond the concurrency cap are queued and dispatched as earlier requests complete.
 
 ---
 
