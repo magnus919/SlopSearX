@@ -104,12 +104,31 @@ async def startup() -> None:
     _engine_semaphore = asyncio.Semaphore(max_conc)
 
     # Initialize per-client rate limiter
-    per_client_rate = float(os.environ.get("PER_CLIENT_REQUESTS", "30"))
-    per_client_window = float(os.environ.get("PER_CLIENT_WINDOW_SECONDS", "60"))
+    try:
+        per_client_rate = float(os.environ.get("PER_CLIENT_REQUESTS", "30"))
+    except (ValueError, TypeError):
+        per_client_rate = 30.0
+    try:
+        per_client_window = float(os.environ.get("PER_CLIENT_WINDOW_SECONDS", "60"))
+    except (ValueError, TypeError):
+        per_client_window = 60.0
+
+    # Parse FAIL_CLOSED env var (only 'true'/'1'/'yes' enable fail-closed)
+    fail_closed_raw = os.environ.get("FAIL_CLOSED", "false")
+    _fail_closed = fail_closed_raw.strip().lower() in ("true", "1", "yes")
+
+    # Parse FAIL_CLOSED_GRACE_SECONDS env var
+    try:
+        _fail_closed_grace = float(os.environ.get("FAIL_CLOSED_GRACE_SECONDS", "30"))
+    except (ValueError, TypeError):
+        _fail_closed_grace = 30.0
+
     _client_rate_window = ValkeySlidingWindow(
         valkey_url=os.environ.get("VALKEY_URL", ""),
         default_rate=per_client_rate,
         window_seconds=per_client_window,
+        fail_closed=_fail_closed,
+        fail_closed_grace_seconds=_fail_closed_grace,
     )
     await _client_rate_window.warmup()
 
@@ -187,7 +206,7 @@ async def _shutdown_engine(name: str, engine: EngineAdapter) -> None:
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
-    """Health check with per-engine status.
+    """Health check with per-engine status and Valkey connectivity.
 
     Returns 200 even if some engines are unhealthy — engine status
     is reported in the response body.
@@ -214,9 +233,23 @@ async def health() -> dict[str, Any]:
             engine_statuses[name] = {"status": status.value}
 
     all_ok = all(e["status"] == "ok" for e in engine_statuses.values())
+
+    # Check Valkey connectivity for rate limiting
+    valkey_connected: bool = False
+    valkey_device = _client_rate_window
+    if valkey_device is not None and isinstance(valkey_device, ValkeySlidingWindow):
+        valkey_connected = valkey_device._connected
+
+    # Degrade status if Valkey is unreachable and fail-closed is enabled
+    overall_status = "ok" if all_ok else "degraded"
+    if not valkey_connected and isinstance(valkey_device, ValkeySlidingWindow):
+        if valkey_device._fail_closed:
+            overall_status = "degraded"
+
     return {
-        "status": "ok" if all_ok else "degraded",
+        "status": overall_status,
         "version": "0.1.0",
+        "valkey_connected": valkey_connected,
         "engines": engine_statuses,
     }
 

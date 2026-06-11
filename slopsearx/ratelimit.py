@@ -83,6 +83,16 @@ class ValkeySlidingWindow(RateLimitStrategy):
 
     Correct for all replica counts. Centralized rate-limit state
     in Valkey means replicas share the same counter.
+
+    Parameters
+    ----------
+    fail_closed:
+        If True, Valkey unavailability causes ``acquire()`` to return
+        ``False`` (deny) instead of ``True`` (allow / fail-open).
+    fail_closed_grace_seconds:
+        Number of seconds of continuous Valkey unavailability before
+        falling back to a ``LocalTokenBucket`` in-process fallback.
+        Only applies when ``fail_closed=True``.
     """
 
     def __init__(
@@ -90,12 +100,18 @@ class ValkeySlidingWindow(RateLimitStrategy):
         valkey_url: str = "",
         default_rate: float = 10.0,
         window_seconds: float = 1.0,
+        fail_closed: bool = False,
+        fail_closed_grace_seconds: float = 30.0,
     ) -> None:
         self._url = valkey_url or os.environ.get("VALKEY_URL", "")
         self._default_rate = default_rate
         self._window = window_seconds
+        self._fail_closed = fail_closed
+        self._fail_closed_grace_seconds = fail_closed_grace_seconds
         self._client: Any = None
         self._connected = False
+        self._disconnected_at: float | None = None
+        self._local_fallback: LocalTokenBucket | None = None
 
     async def _connect(self) -> None:
         """Establish async Valkey connection."""
@@ -109,19 +125,67 @@ class ValkeySlidingWindow(RateLimitStrategy):
             self._client = valkey.asyncio.Valkey.from_url(self._url)
             await self._client.ping()
             self._connected = True
+            self._disconnected_at = None
+            self._local_fallback = None
             logger.info("ValkeySlidingWindow connected to Valkey")
         except Exception as e:
             self._connected = False
             self._client = None
+            if self._fail_closed and self._disconnected_at is None:
+                self._disconnected_at = time.monotonic()
             logger.warning(
                 "ValkeySlidingWindow: Valkey unavailable, rate limiting disabled: %s",
                 e,
             )
 
+    async def _try_reconnect(self) -> bool:
+        """Attempt to reconnect to Valkey. Returns True if successful."""
+        if self._client is not None:
+            return True
+        if not self._url:
+            return False
+        try:
+            import valkey.asyncio
+
+            self._client = valkey.asyncio.Valkey.from_url(self._url)
+            await self._client.ping()
+            self._connected = True
+            self._disconnected_at = None
+            self._local_fallback = None
+            logger.info("ValkeySlidingWindow reconnected to Valkey")
+            return True
+        except Exception:
+            self._connected = False
+            self._client = None
+            return False
+
     async def acquire(self, engine: str, cost: int = 1) -> bool:
         if not self._connected or self._client is None:
-            # Valkey unavailable — allow request (fail open for availability)
-            return True
+            # Try to reconnect (handles Valkey recovery / flap)
+            if self._url:
+                await self._try_reconnect()
+
+            if self._connected:
+                # Reconnected — proceed with normal Valkey acquire below
+                pass
+            elif self._fail_closed:
+                # Mark disconnected_at if first time seeing the outage
+                if self._disconnected_at is None:
+                    self._disconnected_at = time.monotonic()
+                elapsed = time.monotonic() - self._disconnected_at
+                if elapsed >= self._fail_closed_grace_seconds:
+                    # Fall back to in-process token bucket
+                    if self._local_fallback is None:
+                        self._local_fallback = LocalTokenBucket(
+                            max_rate=self._default_rate,
+                            burst=self._default_rate * 2,
+                        )
+                    return await self._local_fallback.acquire(engine, cost)
+                # Still in grace period — deny
+                return False
+            else:
+                # fail_open — allow request
+                return True
 
         try:
             window_start = int(time.monotonic() / self._window)
@@ -137,6 +201,21 @@ class ValkeySlidingWindow(RateLimitStrategy):
             return count <= self._default_rate
         except Exception as e:
             logger.debug("Rate limit check error for %s: %s", engine, e)
+            # Mark disconnected
+            self._connected = False
+            self._client = None
+            if self._fail_closed:
+                if self._disconnected_at is None:
+                    self._disconnected_at = time.monotonic()
+                elapsed = time.monotonic() - self._disconnected_at
+                if elapsed >= self._fail_closed_grace_seconds:
+                    if self._local_fallback is None:
+                        self._local_fallback = LocalTokenBucket(
+                            max_rate=self._default_rate,
+                            burst=self._default_rate * 2,
+                        )
+                    return await self._local_fallback.acquire(engine, cost)
+                return False
             return True  # fail open
 
     async def warmup(self) -> None:
