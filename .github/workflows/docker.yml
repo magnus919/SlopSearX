@@ -1,0 +1,96 @@
+name: Docker
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to ghcr.io
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract semver parts
+        id: semver
+        shell: bash
+        run: |
+          REF="${{ github.ref_name }}"
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VER="${REF#v}"
+            MAJOR="${VER%%.*}"
+            MINOR="${VER#*.}"
+            MINOR="${MINOR%.*}"
+            PATCH="${VER##*.}"
+            echo "version=$VER" >> $GITHUB_OUTPUT
+            echo "major=$MAJOR" >> $GITHUB_OUTPUT
+            echo "minor=$MINOR" >> $GITHUB_OUTPUT
+            echo "patch=$PATCH" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate Docker tags
+        id: tags
+        shell: bash
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          TAGS=""
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            TAGS="$IMAGE:latest,$IMAGE:unstable"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VER="${{ steps.semver.outputs.version }}"
+            MAJOR="${{ steps.semver.outputs.major }}"
+            MINOR="${{ steps.semver.outputs.minor }}"
+            PATCH="${{ steps.semver.outputs.patch }}"
+            TAGS="$IMAGE:stable,$IMAGE:$MAJOR,$IMAGE:$MAJOR.$MINOR,$IMAGE:$MAJOR.$MINOR.$PATCH"
+          fi
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - name: Generate OCI labels
+        id: labels
+        shell: bash
+        run: |
+          LABELS="org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}"
+          LABELS="$LABELS,org.opencontainers.image.revision=${{ github.sha }}"
+          if [[ "${{ steps.semver.outputs.version }}" != "" ]]; then
+            LABELS="$LABELS,org.opencontainers.image.version=${{ steps.semver.outputs.version }}"
+            LABELS="$LABELS,org.opencontainers.image.version.major=${{ steps.semver.outputs.major }}"
+            LABELS="$LABELS,org.opencontainers.image.version.minor=${{ steps.semver.outputs.minor }}"
+            LABELS="$LABELS,org.opencontainers.image.version.patch=${{ steps.semver.outputs.patch }}"
+          fi
+          echo "labels=$LABELS" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: ${{ steps.labels.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

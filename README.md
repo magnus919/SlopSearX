@@ -3,6 +3,7 @@
 **Cloud-native, stateless, AI-agent-first meta search engine.** Drop-in SearXNG replacement for the GroktoCrawl stack.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Docker](https://github.com/magnus919/SlopSearX/actions/workflows/docker.yml/badge.svg)](https://github.com/magnus919/SlopSearX/actions/workflows/docker.yml)
 
 ---
 
@@ -130,9 +131,17 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 
 ## Quick Start
 
+Pre-built Docker images are available from GitHub Container Registry. Builds run automatically on every push to `main` (`latest`, `unstable`) and on version tags (`stable`, `X`, `X.Y`, `X.Y.Z`).
+
 ```bash
-# Coming soon
-docker run -p 8080:8080 slopsearx/slopsearx:latest
+# Pull and run with Valkey for caching and rate limiting
+docker run -d --name valkey valkey/valkey:8-alpine
+docker run -d --name slopsearx -p 8080:8080 \
+  -e VALKEY_URL=redis://valkey:6379/0 \
+  --link valkey \
+  ghcr.io/magnus919/slopsearx:latest
+
+# Try it
 curl 'http://localhost:8080/search?q=hello+world&format=json'
 ```
 
