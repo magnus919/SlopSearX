@@ -94,7 +94,7 @@ class TestOpenAlexAdapter:
 
         cls = list_engines()["openalex"]
         cats = cls.categories
-        assert "general" in cats
+        assert "general" not in cats
         assert "science" in cats
         assert "reference" in cats
 

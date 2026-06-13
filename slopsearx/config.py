@@ -285,15 +285,6 @@ _DEFAULT_RANKING = {"strategy": "presence"}
 # ---------------------------------------------------------------------------
 
 
-def _engine_name_to_env_prefix(name: str) -> str:
-    """Convert engine name to environment variable prefix.
-
-    >>> _engine_name_to_env_prefix("duckduckgo")
-    'ENGINE_DUCKDUCKGO_'
-    """
-    return f"ENGINE_{name.upper()}_"
-
-
 def _load_env_overrides() -> dict[str, Any]:
     """Read all ``SEARCH_*`` and ``ENGINE_*`` env vars and return a flat dict."""
     overrides: dict[str, Any] = {}

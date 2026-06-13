@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends libxml2 libxslt
 
 # Python deps
 COPY pyproject.toml .
-RUN pip install --no-cache-dir -e ".[dev]" && pip uninstall -y pytest ruff cssselect
+RUN pip install --no-cache-dir -e .
 
 # Application code
 COPY slopsearx/ slopsearx/

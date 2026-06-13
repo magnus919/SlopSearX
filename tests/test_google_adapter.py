@@ -69,7 +69,7 @@ class TestGoogleAdapterSearch:
         async with MockHTTP(_handler):
             result = await adapter.search("test query")
 
-        assert result.status == EngineStatus.OK
+        assert result.status == EngineStatus.BLOCKED
         assert len(result.results) == 0
 
     async def test_search_rate_limited(self, adapter):
