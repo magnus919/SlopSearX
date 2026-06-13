@@ -72,7 +72,7 @@ class GoogleAdapter(ScrapeAdapter):
 
                 if self._is_challenge_page(resp.text):
                     self._report_proxy_failure(proxy)
-                    return AdapterResponse(results=[], status=EngineStatus.OK, latency_ms=latency)
+                    return AdapterResponse(results=[], status=EngineStatus.BLOCKED, latency_ms=latency)
 
                 self._report_proxy_success(proxy)
                 results = self._parse_html(resp.text, query, max_results)

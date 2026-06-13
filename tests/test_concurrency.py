@@ -138,6 +138,8 @@ def client() -> Generator[TestClient, None, None]:
 
     with TestClient(app) as tc:
         server_mod._active_engines = {engine.name: engine}
+        # Disable query router so mock engines aren't filtered to Tier 1
+        server_mod._router = None
         yield tc
 
     server_mod._active_engines = original_engines

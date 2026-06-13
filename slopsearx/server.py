@@ -11,7 +11,8 @@ import dataclasses
 import os
 import time
 import uuid
-from typing import Any
+from contextlib import asynccontextmanager
+from typing import Any, AsyncIterator
 
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -43,8 +44,6 @@ from slopsearx.ratelimit import (
 from slopsearx.router import QueryRouter
 from slopsearx.stats import EngineStatsTracker
 from slopsearx.suggest import SuggestionService
-
-app = FastAPI(title="SlopSearX", version="0.1.0")
 
 # ---------------------------------------------------------------------------
 # Two-tier engine classification
@@ -78,8 +77,7 @@ _client_rate_window: RateLimitStrategy | None = None
 # ---------------------------------------------------------------------------
 
 
-@app.on_event("startup")
-async def startup() -> None:
+async def _startup() -> None:
     """Discover and warm up all registered engines."""
     global _active_engines, _cache, _rate_limiter  # noqa: PLW0603
     global _engine_semaphore, _client_rate_window  # noqa: PLW0603
@@ -167,8 +165,7 @@ async def startup() -> None:
     _stats_tracker = EngineStatsTracker(cache=_cache)
 
 
-@app.on_event("shutdown")
-async def shutdown() -> None:
+async def _shutdown() -> None:
     """Gracefully shut down all engines, cache, and rate limiter."""
     shutdown_tasks = []
     for name, engine in _active_engines.items():
@@ -183,6 +180,16 @@ async def shutdown() -> None:
 
     if _cache is not None:
         await _cache.close()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Application lifespan — startup and shutdown."""
+    await _startup()
+    yield
+    await _shutdown()
+
+app = FastAPI(title="SlopSearX", version="0.1.0", lifespan=lifespan)
 
 
 async def _warmup_engine(name: str, engine: EngineAdapter) -> None:
@@ -361,11 +368,15 @@ async def search(
                 # No topic matched — restrict to Tier 1 (broad, general-purpose)
                 # engines only. Specialty engines require an explicit category
                 # or topic match to avoid polluting unscoped results.
-                target_engines = {
+                tier1 = {
                     name: eng
                     for name, eng in _active_engines.items()
                     if name in _TIER1_ENGINES
                 }
+                # Fall back to all engines if no Tier 1 engines are active,
+                # so the server returns results (even from specialty engines)
+                # rather than a hard 503 error with no engines available.
+                target_engines = tier1 if tier1 else dict(_active_engines)
 
     if not target_engines:
         # No engines available at all

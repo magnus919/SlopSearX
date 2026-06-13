@@ -188,7 +188,7 @@ class TestDuckDuckGoAdapter:
             return httpx.Response(200, content=b'<html><body>hcaptcha challenge</body></html>')
         async with MockHTTP(_handler):
             result = await adapter.search("test")
-        assert result.status == EngineStatus.OK  # no error, just empty
+        assert result.status == EngineStatus.BLOCKED  # CAPTCHA detected
         assert len(result.results) == 0
 
 
@@ -606,7 +606,8 @@ class TestSemanticScholarAdapter:
         assert "arXiv: 2306.12345" in result.results[0].content
 
     async def test_search_sends_api_key_when_configured(self):
-        instances = discover_engines({"semanticscholar": {"enabled": True, "api_key": "s2-fake-key"}})
+        test_key = "***********"
+        instances = discover_engines({"semanticscholar": {"enabled": True, "api_key": test_key}})
         adapter = instances["semanticscholar"]
 
         header_checks = {}
@@ -617,7 +618,7 @@ class TestSemanticScholarAdapter:
 
         async with MockHTTP(_handler):
             await adapter.search("test")
-        assert header_checks.get("api_key") == "s2-fake-key"
+        assert header_checks.get("api_key") == test_key
 
     async def test_search_empty(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(200, json={"data": []})):
