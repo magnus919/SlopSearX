@@ -103,6 +103,8 @@ def client() -> TestClient:
         server_mod._active_engines = {
             "mocktest": _MockEngine(),
         }
+        # Disable query router so mock engines aren't filtered to Tier 1
+        server_mod._router = None
         yield tc
 
     # Restore original state
