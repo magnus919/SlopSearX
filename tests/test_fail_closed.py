@@ -524,6 +524,7 @@ class TestSemaphoreFailClosedInteraction:
         test_engines: dict[str, EngineAdapter] = {engine.name: engine}
         server_mod._active_engines = test_engines
         server_mod._engine_semaphore = asyncio.Semaphore(5)
+        server_mod._router = None
 
         denier = _AlwaysDenyRateLimiter()
         server_mod._client_rate_window = denier
@@ -555,6 +556,7 @@ class TestSemaphoreFailClosedInteraction:
         test_engines: dict[str, EngineAdapter] = {engine.name: engine}
         server_mod._active_engines = test_engines
         server_mod._engine_semaphore = asyncio.Semaphore(3)
+        server_mod._router = None
         initial_value = server_mod._engine_semaphore._value
 
         denier = _AlwaysDenyRateLimiter()
@@ -677,6 +679,8 @@ def client() -> Generator[TestClient, None, None]:
 
     with TestClient(app) as tc:
         server_mod._active_engines = {engine.name: engine}
+        # Disable query router so mock engines aren't filtered to Tier 1
+        server_mod._router = None
         yield tc
 
     server_mod._active_engines = original_engines
