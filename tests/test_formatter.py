@@ -160,6 +160,36 @@ class TestFormatJson:
 
         assert response["meta"] == meta
 
+    def test_engines_array_from_meta(self) -> None:
+        """SearXNG-compatible engines array built from meta.engine_status."""
+        meta = {
+            "engine_status": {
+                "brave": {"results": 10, "latency_ms": 340.0, "status": "ok"},
+                "duckduckgo": {"results": 0, "latency_ms": 0.0, "status": "error"},
+            },
+        }
+
+        response = format_json(results=[], query="test", meta=meta)
+
+        assert "engines" in response
+        assert response["engines"] == [
+            {"engine": "brave", "results": 10},
+            {"engine": "duckduckgo", "results": 0},
+        ]
+        # Each entry has exactly engine and results keys
+        for entry in response["engines"]:
+            assert set(entry.keys()) == {"engine", "results"}
+
+    def test_engines_array_omitted_without_meta(self) -> None:
+        """engines key is absent when meta is None or lacks engine_status."""
+        # No meta at all
+        response = format_json(results=[], query="test")
+        assert "engines" not in response
+
+        # Meta without engine_status
+        response = format_json(results=[], query="test", meta={"version": "1.0"})
+        assert "engines" not in response
+
     def test_suggestions(self) -> None:
         """Query suggestions are included."""
         suggestions = ["better query", "alternative search"]
