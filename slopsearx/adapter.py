@@ -201,12 +201,25 @@ class EngineAdapter(ABC):
         """
 
     async def health(self) -> EngineStatus:
-        """Lightweight probe — default sends a single-pager health check."""
-        try:
-            result = await self.search("healthcheck", {"pageno": 1})
-            return result.status
-        except Exception:  # noqa: BLE001
-            return EngineStatus.ERROR
+        """Lightweight probe — does NOT hit external APIs.
+
+        Returns OK if the engine is configured (has an API key if one
+        is needed).  Actual endpoint health is verified at search time
+        via the circuit breaker.  Every engine that gets a successful
+        response is healthy; engines that time out or error out
+        increment their failure counter and eventually trip the
+        circuit breaker — no separate health-check API call needed.
+        """
+        # If the engine requires an API key, check it's configured
+        api_key = self.config.get("api_key")
+        if api_key is None or api_key == "":
+            # Only flag as error if the engine type actually needs a key
+            env_prefix = getattr(self, "env_prefix", None)
+            if env_prefix:
+                key_var = f"{env_prefix}_API_KEY"
+                if key_var in self.config or self.config.get("api_key_required", False):
+                    return EngineStatus.ERROR
+        return EngineStatus.OK
 
     async def warmup(self) -> None:
         """Optional lifecycle hook — called at startup."""

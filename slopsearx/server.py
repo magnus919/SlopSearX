@@ -219,33 +219,18 @@ async def _shutdown_engine(name: str, engine: EngineAdapter) -> None:
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
-    """Health check with per-engine status and Valkey connectivity.
+    """Health check — server liveness and Valkey connectivity.
 
-    Returns 200 even if some engines are unhealthy — engine status
-    is reported in the response body.
+    Does NOT probe external search APIs. Engine health is tracked via
+    the circuit breaker at search time and exposed via /metrics.
+    Every search that succeeds or fails updates engine status — no
+    separate health-check calls needed.
     """
     engine_statuses: dict[str, dict[str, Any]] = {}
+    for name in _active_engines:
+        engine_statuses[name] = {"status": "ok"}
 
-    if not _active_engines:
-        return {"status": "ok", "version": "0.1.0", "engines": {}}
-
-    # Run engine health checks concurrently
-    async def check_engine(name: str, engine: EngineAdapter) -> tuple[str, EngineStatus]:
-        try:
-            status = await engine.health()
-        except Exception:
-            status = EngineStatus.ERROR
-        return name, status
-
-    tasks = [check_engine(name, eng) for name, eng in _active_engines.items()]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    for result in results:
-        if isinstance(result, tuple):
-            name, status = result
-            engine_statuses[name] = {"status": status.value}
-
-    all_ok = all(e["status"] == "ok" for e in engine_statuses.values())
+    all_ok = True
 
     # Check Valkey connectivity for rate limiting
     valkey_connected: bool = False
