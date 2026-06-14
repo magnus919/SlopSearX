@@ -102,18 +102,27 @@ def format_json(
     """
     search_results = [_result_to_searxng(r) for r in results]
 
-    response: dict[str, Any] = {
-        "query": query,
-        "results": search_results,
-        "number_of_results": (
-            number_of_results if number_of_results is not None else len(search_results)
-        ),
-        "answers": answers or [],
-        "corrections": corrections or [],
-        "infoboxes": infoboxes or [],
-        "suggestions": suggestions or [],
-        "unresponsive_engines": unresponsive_engines or [],
-    }
+    # Build response sequentially so engines sits between results and
+    # number_of_results in the output dict (SearXNG-compatible ordering).
+    response: dict[str, Any] = {}
+    response["query"] = query
+    response["results"] = search_results
+
+    # engines array — SearXNG-compatible top-level field
+    if meta and "engine_status" in meta:
+        response["engines"] = [
+            {"engine": name, "results": info.get("results", 0)}
+            for name, info in meta["engine_status"].items()
+        ]
+
+    response["number_of_results"] = (
+        number_of_results if number_of_results is not None else len(search_results)
+    )
+    response["answers"] = answers or []
+    response["corrections"] = corrections or []
+    response["infoboxes"] = infoboxes or []
+    response["suggestions"] = suggestions or []
+    response["unresponsive_engines"] = unresponsive_engines or []
 
     # meta is injected at the top level (not nested) to extend
     # the SearXNG response without breaking existing consumers.
