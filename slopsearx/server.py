@@ -27,6 +27,7 @@ from slopsearx.adapter import (
     discover_engines,
     sanitize_url,
 )
+from slopsearx.audit import QueryAuditLogger
 from slopsearx.cache import SearchCache, _ttl_for_query, cache_key
 from slopsearx.config import load_config
 from slopsearx.formatter import format_json, format_yaml_markdown
@@ -66,6 +67,7 @@ _rate_limiter: RateLimiter | None = None
 _router: QueryRouter | None = None
 _suggestion_service: SuggestionService | None = None
 _stats_tracker: EngineStatsTracker | None = None
+_audit_logger: QueryAuditLogger | None = None
 
 # Concurrency and per-client rate limiting
 _engine_semaphore: asyncio.Semaphore | None = None
@@ -163,6 +165,10 @@ async def _startup() -> None:
     # Initialize quality stats tracker
     global _stats_tracker  # noqa: PLW0603
     _stats_tracker = EngineStatsTracker(cache=_cache)
+
+    # Initialize query audit logger
+    global _audit_logger  # noqa: PLW0603
+    _audit_logger = QueryAuditLogger(cache=_cache)
 
 
 async def _shutdown() -> None:
@@ -420,13 +426,43 @@ async def search(
         ck = cache_key(q, language, safesearch)
         cached = await _cache.get(ck)
         if cached is not None:
+            # Negative cache hit — return 503 without dispatching
+            if cached.get("_error"):
+                return JSONResponse(
+                    status_code=503,
+                    content={
+                        "error": "service_unavailable",
+                        "message": "Temporarily unavailable (cached error)",
+                        "meta": {"cached": True, "query_id": query_id},
+                    },
+                )
             cached["meta"]["cached"] = True
             return JSONResponse(status_code=200, content=cached)
+
+    # Check answer cache (broader key, independent of language/safesearch)
+    if _cache is not None and _cache.is_connected:
+        answer_cached = await _cache.get_answer(q)
+        if answer_cached is not None:
+            if answer_cached.get("_error"):
+                return JSONResponse(
+                    status_code=503,
+                    content={
+                        "error": "service_unavailable",
+                        "message": "Temporarily unavailable (cached error)",
+                        "meta": {"cached": True, "query_id": query_id},
+                    },
+                )
+            answer_cached["meta"]["cached"] = True
+            return JSONResponse(status_code=200, content=answer_cached)
 
     # Dispatch to all engines concurrently (bounded by semaphore)
     tasks = []
     engine_names = []
+    circuit_open_names: list[str] = []
     for name, engine in target_engines.items():
+        if not engine.circuit_allowed():
+            circuit_open_names.append(name)
+            continue
         tasks.append(_dispatch_with_semaphore(name, engine, q, search_params))
         engine_names.append(name)
 
@@ -448,8 +484,17 @@ async def search(
             )
         else:
             result = raw
+
+        # Update circuit breaker state
+        engine = target_engines[name]
+        if result.status in (EngineStatus.ERROR, EngineStatus.TIMEOUT):
+            engine.record_failure()
+        else:
+            engine.record_success()
+
         responses[name] = result
         engine_results[name] = result.results
+
         # Annotate each result with its tier for unscoped searches
         tier = 1 if name in _TIER1_ENGINES else 2
         for sr in result.results:
@@ -477,6 +522,14 @@ async def search(
                     avg_score=avg_score,
                 )
             )
+
+    # Add circuit-open engines as unresponsive (no metrics — they were never dispatched)
+    for name in circuit_open_names:
+        responses[name] = AdapterResponse(
+            results=[],
+            status=EngineStatus.ERROR,
+            error_message="circuit open",
+        )
 
     # Merge and rank
     ranked = _ranker.rank(engine_results, q, search_params)
@@ -542,6 +595,21 @@ async def search(
         ck = cache_key(q, language, safesearch)
         ttl = _ttl_for_query(cat_list)
         await _cache.set(ck, response_data, ttl)
+        # Also cache in answer cache (broader key, skip for time-sensitive queries)
+        if not time_range:
+            await _cache.set_answer(q, response_data)
+
+    # Record audit trail (fire-and-forget)
+    if _audit_logger is not None:
+        client_ip = request.client.host if request.client else "unknown"
+        asyncio.create_task(
+            _audit_logger.record_query(
+                query=q,
+                client_ip=client_ip,
+                engine_results=responses,
+                latency_ms=elapsed_ms,
+            )
+        )
 
     return response
 

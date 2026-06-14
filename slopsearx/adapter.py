@@ -12,6 +12,8 @@ returned in AdapterResponse.status.
 from __future__ import annotations
 
 import enum
+import os
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Optional
@@ -135,11 +137,30 @@ class EngineAdapter(ABC):
     engine_type: str = "api"  # "api" | "scrape" | "structured"
     categories: list[str] = ["general"]  # SearXNG-compatible category tags
 
+    # Circuit-breaker defaults (can be overridden per-instance via config or env vars)
+    CIRCUIT_BREAKER_THRESHOLD: int = 5  # consecutive errors before circuit opens
+    CIRCUIT_BREAKER_TIMEOUT: int = 300  # seconds circuit stays open
+
     def __init__(self, config: dict[str, Any] | None = None, rate_limiter: Any = None) -> None:
         self.config = config or {}
         self.rate_limiter = rate_limiter  # injected by server at startup
         # Merge categories: self-declared default + config override/add/remove
         self._merge_categories()
+
+        # Circuit breaker state
+        self.consecutive_errors: int = 0
+        self.circuit_open_until: float = 0.0
+        # Resolve threshold/timeout from env (fall back to class defaults)
+        try:
+            env_threshold = os.environ.get("ENGINE_CIRCUIT_THRESHOLD", str(self.CIRCUIT_BREAKER_THRESHOLD))
+            self._circuit_threshold: int = int(env_threshold)
+        except (ValueError, TypeError):
+            self._circuit_threshold = self.CIRCUIT_BREAKER_THRESHOLD
+        try:
+            env_timeout = os.environ.get("ENGINE_CIRCUIT_TIMEOUT", str(self.CIRCUIT_BREAKER_TIMEOUT))
+            self._circuit_timeout: int = int(env_timeout)
+        except (ValueError, TypeError):
+            self._circuit_timeout = self.CIRCUIT_BREAKER_TIMEOUT
 
     async def _check_rate_limit(self) -> AdapterResponse | None:
         """Check rate limiter before dispatching a search request.
@@ -219,6 +240,38 @@ class EngineAdapter(ABC):
         for cat in cat_cfg.get("remove", []):
             if cat in self.categories:
                 self.categories.remove(cat)
+
+    # ------------------------------------------------------------------
+    # Circuit breaker
+    # ------------------------------------------------------------------
+
+    def circuit_allowed(self) -> bool:
+        """Check whether the circuit breaker allows dispatching a query.
+
+        Returns ``True`` if the circuit is closed (not tripped) or a
+        half-open probe is due. Returns ``False`` if the circuit is
+        open — the caller should skip this engine.
+        """
+        if self.circuit_open_until <= 0.0:
+            return True  # closed
+        if time.time() >= self.circuit_open_until:
+            return True  # half-open probe due
+        return False  # still open
+
+    def record_success(self) -> None:
+        """Record a successful response, resetting the circuit breaker."""
+        self.consecutive_errors = 0
+        self.circuit_open_until = 0.0
+
+    def record_failure(self) -> None:
+        """Record a failed response, potentially opening the circuit.
+
+        If ``consecutive_errors`` reaches the threshold the circuit
+        opens and remains open for ``circuit_timeout`` seconds.
+        """
+        self.consecutive_errors += 1
+        if self.consecutive_errors >= self._circuit_threshold:
+            self.circuit_open_until = time.time() + self._circuit_timeout
 
 
 class ScrapeAdapter(EngineAdapter, ABC):

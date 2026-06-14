@@ -55,7 +55,7 @@ pretty = true
 show_error_codes = true
 
 [[tool.mypy.overrides]]
-module = ["valkey", "yaml", "lxml"]
+module = ["valkey", "valkey.*", "yaml", "lxml"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
