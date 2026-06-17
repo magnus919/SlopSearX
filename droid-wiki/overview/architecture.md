@@ -26,59 +26,72 @@ When a client sends `GET /search?q=...`, the following happens inside one replic
 sequenceDiagram
     participant C as Client
     participant S as Server (FastAPI)
+    participant RL as Client RL
     participant CACHE as Valkey Cache
     participant QR as QueryRouter
-    participant SUGGEST as SuggestionService
-    participant STATS as EngineStatsTracker
+    participant CB as Circuit Breaker
+    participant SM as Semaphore
     participant E1 as Engine 1 (Brave)
     participant E2 as Engine 2 (Wikipedia)
-    participant E3 as Engine 3 (DDG)
-    participant PROXY as ProxyPool
+    participant STATS as Stats Tracker
+    participant AUDIT as Audit Logger
     participant R as Ranker
     participant F as Formatter
 
     C->>S: GET /search?q=python
-    S->>CACHE: Check cache key
+    S->>RL: Check per-client rate limit
+    alt Rate limited
+        RL-->>S: Deny
+        S-->>C: 429
+    end
+    S->>CACHE: Check search cache
     alt Cache HIT
         CACHE-->>S: Cached response
         S-->>C: 200 (cached)
-    else Cache MISS
-        S->>QR: route(query, categories)
-        QR-->>S: matched engines list
-        par Background tasks
-            S->>SUGGEST: suggest(query)
-            SUGGEST-->>S: suggestion list
-        and Engine dispatch
-            S->>E1: BraveAdapter.search(q)
-            S->>E2: WikipediaAdapter.search(q)
-            S->>E3: DuckDuckGoAdapter.search(q)
-            alt Scrape engine needs proxy
-                E3->>PROXY: get_proxy()
-                PROXY-->>E3: proxy URL
+    else Search cache MISS
+        S->>CACHE: Check answer cache
+        alt Answer cache HIT
+            CACHE-->>S: Cached response
+            S-->>C: 200 (cached)
+        else Cache MISS
+            S->>QR: route(query, categories)
+            QR-->>S: matched engines list
+            par Engine dispatch
+                S->>CB: circuit_allowed() per engine
+                CB-->>S: allow / deny
+                S->>SM: acquire semaphore slot
+                S->>E1: BraveAdapter.search(q)
+                S->>E2: WikipediaAdapter.search(q)
+                E1-->>S: AdapterResponse (10 results)
+                E2-->>S: AdapterResponse (3 results)
+                S->>CB: record_success / record_failure
             end
-            E1-->>S: AdapterResponse (10 results)
-            E2-->>S: AdapterResponse (3 results)
-            E3-->>S: AdapterResponse (0 results, BLOCKED)
             S->>STATS: record(engine, status, latency)
+            S->>R: rank(engine_results)
+            R-->>S: ranked SearchResult list
+            S->>F: format(results)
+            S->>CACHE: store in cache
+            S->>AUDIT: record query (fire-and-forget)
+            S-->>C: 200 (fresh)
         end
-        S->>R: rank(engine_results)
-        R-->>S: ranked SearchResult list
-        S->>F: format(results)
-        S->>CACHE: store in cache
-        S-->>C: 200 (fresh)
     end
 ```
 
 ### Step by step
 
 1. **Query normalization** — the raw query string is normalized into a tuple of `(query, language, pageno, categories, safesearch)`
-2. **Cache lookup** — Valkey is checked with a SHA-256 key derived from the normalized tuple. A cache hit returns immediately (~2ms)
-3. **Query routing** — on cache miss, the QueryRouter analyzes the query and selects only relevant engines based on topic matching and category filters
-4. **Concurrent dispatch + suggestions** — matched engines run concurrently via `asyncio.gather()` alongside the SuggestionService background task. Each engine adapter call has a 3-second timeout. Scrape adapters may request a proxy from the ProxyPool before issuing HTTP requests
-5. **Result collection** — each adapter returns an `AdapterResponse` with results and a status. Engines that error out return classified errors, not exceptions. The EngineStatsTracker records per-engine success/failure metrics in Valkey after each dispatch
-6. **Merging and ranking** — the `PresenceRanker` normalizes URLs (strips tracking params), deduplicates by normalized URL, and scores results by how many engines returned them
-7. **Caching** — the merged result set is stored in Valkey with category-aware TTL
-8. **Formatting** — the response is serialized as JSON (SearXNG-compatible) or YAML+Markdown
+2. **Per-client rate limiting** — the client IP is checked against its request budget. Exceeded budgets return HTTP 429 before any engine work
+3. **Search cache lookup** — Valkey is checked with a SHA-256 key derived from the normalized tuple. A cache hit returns immediately
+4. **Answer cache lookup** — if the search cache misses, the broader answer-level cache is checked (query only, no language/safesearch)
+5. **Negative cache check** — if either cached entry has an `_error` sentinel, HTTP 503 is returned without dispatching
+6. **Query routing** — the QueryRouter analyzes the query and selects relevant engines based on topic matching and category filters. Unscoped queries without topic matches are restricted to Tier 1 (broad) engines
+7. **Circuit breaker check** — each target engine's circuit breaker is checked. Open circuits skip dispatch
+8. **Concurrent dispatch** — allowed engines run concurrently via `asyncio.gather()`, bounded by a semaphore (`MAX_CONCURRENT_ENGINES`, default 10). Each engine has a 3-second timeout
+9. **Result collection** — each adapter returns an `AdapterResponse` with results and a status. Circuit breaker state is updated (record_success/record_failure). The EngineStatsTracker records per-engine quality telemetry
+10. **Merging and ranking** — the `PresenceRanker` normalizes URLs, deduplicates by normalized URL, and scores results by how many engines returned them
+11. **Caching** — the merged result set is stored in both the search cache and answer cache
+12. **Audit trail** — the query is recorded in a Valkey stream with dispatch statistics (fire-and-forget)
+13. **Formatting** — the response is serialized as JSON (SearXNG-compatible) or YAML+Markdown
 
 ## Engine tiers
 
@@ -93,17 +106,18 @@ A CAPTCHA block or IP ban on a scrape engine never blocks the response. The fail
 
 | Subsystem | `slopsearx/` file | Purpose |
 |---|---|---|
-| Adapter interface | `adapter.py` | Base classes `EngineAdapter` and `ScrapeAdapter`, `@register_engine` decorator, engine registry |
+| Adapter interface | `adapter.py` | Base classes `EngineAdapter` and `ScrapeAdapter`, `@register_engine` decorator, engine registry, circuit breaker, URL sanitization |
 | Merging and ranking | `merger.py` | `PresenceRanker`, URL normalization, deduplication, metadata helpers |
 | Configuration | `config.py` | Three-layer config (defaults + YAML file + env vars), `Config` dataclass |
-| Caching | `cache.py` | Valkey-backed response cache with category-aware TTL |
-| Rate limiting | `ratelimit.py` | Distributed rate limiting with Valkey sliding window, backpressure propagation |
+| Caching | `cache.py` | Valkey-backed two-level response cache (search + answer), negative caching, query normalization |
+| Rate limiting | `ratelimit.py` | Distributed rate limiting with Valkey sliding window, fail-closed mode with local fallback, backpressure propagation |
 | Metrics | `metrics.py` | OpenMetrics-compatible counters, gauges, and histograms (stdlib only) |
-| Server | `server.py` | FastAPI application, `/search`, `/health`, `/metrics`, `/config` endpoints |
+| Server | `server.py` | FastAPI application, `/search`, `/health`, `/metrics`, `/config` endpoints, per-client rate limiting, semaphore-bounded concurrency |
 | Formatters | `formatter.py` | SearXNG JSON formatter and YAML+Markdown agent-native formatter |
 | QueryRouter | `router.py` | Topic-based query routing that dispatches to relevant engines only |
 | EngineStatsTracker | `stats.py` | Per-engine quality telemetry stored in Valkey (success/failure counts, latency) |
 | SuggestionService | `suggest.py` | Background search query suggestions from engine suggest APIs |
+| Query audit trail | `audit.py` | Durable audit log of every search query in Valkey streams |
 | ProxyPool | `proxypool.py` | Configurable proxy rotation infrastructure for scrape-based adapters |
 
 ## Language breakdown
@@ -112,7 +126,7 @@ The project is 100% Python 3.12+ with supporting YAML, JSON, and Markdown config
 
 | Language | Files | Lines |
 |---|---|---|
-| Python | ~100 | 15,654 |
+| Python | ~100 | ~15,654 |
 | YAML | 8 | ~230 |
 | Markdown | 40 | ~3,600 |
 | JSON | 2 | ~145 |

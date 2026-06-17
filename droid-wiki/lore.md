@@ -1,6 +1,6 @@
 # Lore
 
-SlopSearX was created on June 8-10 2026 by Magnus Hedemark. The project reached 50 commits across three days.
+SlopSearX was created on June 8-15 2026 by Magnus Hedemark. The project reached 76 commits across eight days.
 
 ## Eras
 
@@ -30,29 +30,38 @@ The project grew from ~12 engines to 48, adding several major categories of adap
 
 **17 security / threat-intel engines:** Shodan, Censys, VirusTotal, Have I Been Pwned, AlienVault OTX, AbuseIPDB, VulnCheck, IntelX, DeHashed, CRT.sh, URLhaus, FIRST EPSS, GreyNoise, Exploit-DB, MITRE ATT&CK, CVE Program, NVD.
 
-**19 profession-specific engines:**
-- Developer registries: PyPI, npm, crates.io, RubyGems, Repology, Docker Hub.
-- Media & entertainment: MusicBrainz, Open Library, TMDB.
-- Medical & health: PubMed, PubChem, ClinicalTrials.gov.
-- Legal: Oyez.
-- Finance: SEC EDGAR, FRED.
-- Geography: Nominatim (OpenStreetMap).
-- Government: openFDA.
-- Biology: UniProt.
+**19 profession-specific engines:** Developer registries (PyPI, npm, crates.io, RubyGems, Repology, Docker Hub), media (MusicBrainz, Open Library, TMDB), medical (PubMed, PubChem, ClinicalTrials.gov), legal (Oyez), finance (SEC EDGAR, FRED), geography (Nominatim), government (openFDA), biology (UniProt).
 
-**Four new core subsystems:**
-- **QueryRouter** (`slopsearx/router.py`) — topic-based query routing that dispatches to relevant engines only, reducing unnecessary API calls and improving latency.
-- **ProxyPool** (`slopsearx/proxypool.py`) — configurable proxy rotation infrastructure for scrape-based adapters, helping evade IP bans and CAPTCHA walls.
-- **SuggestionService** (`slopsearx/suggest.py`) — background task that fetches search suggestions from engine suggest APIs, populating the SearXNG `suggestions` response field.
-- **EngineStatsTracker** (`slopsearx/stats.py`) — per-engine quality telemetry stored in Valkey, supporting adaptive engine selection and observability.
+**Four new core subsystems:** QueryRouter, ProxyPool, SuggestionService, EngineStatsTracker.
 
-**Replacement of broken upstream adapters:** Three adapters were swapped out — CourtListener (unreliable legal database), USPTO (API changes), and Data.gov (inconsistent availability) — replaced with working alternatives Oyez (SCOTUS rulings), RubyGems (package registry), and openFDA (government health data).
+### Hardening (Jun 10-14 2026)
 
-Total commit count reached ~50 across all eras.
+After the rapid expansion to 48 engines, development shifted to reliability and operational hardening. Key additions:
+
+**Reliability features:**
+
+- **Circuit breaker** on every engine adapter (`slopsearx/adapter.py`). After 5 consecutive errors, the circuit opens for 5 minutes, preventing wasted dispatch to failing engines. Half-open probes allow automatic recovery.
+- **Fail-closed rate limiting** (`slopsearx/ratelimit.py`). When Valkey is unreachable and `FAIL_CLOSED=true`, rate-limit checks deny requests during a configurable grace period, then fall back to an in-process token bucket. Default is fail-open for availability.
+- **Per-client rate limiting.** Client IP-based rate limits using the same Valkey sliding window strategy, preventing noisy tenants from starving others. Configurable via `PER_CLIENT_REQUESTS` and `PER_CLIENT_WINDOW_SECONDS`.
+- **Engine dispatch semaphore.** Capped concurrent outbound HTTP connections per search request (`MAX_CONCURRENT_ENGINES`, default 10), preventing resource exhaustion under load.
+
+**Observability:**
+
+- **Query audit trail** (`slopsearx/audit.py`). Every search query recorded in a daily Valkey stream with dispatch statistics, client IP, and latency. Capped at ~10K entries per day, 90-day retention.
+- **Two-level caching** (`slopsearx/cache.py`). Added answer-level cache (broad key, query only) alongside the existing precise search cache (query + language + safesearch).
+- **Negative caching.** Failed queries get a short-lived (60s) cache entry that returns HTTP 503 on subsequent requests, preventing thundering-herd retries.
+
+**Developer experience:**
+
+- **SSX CLI** (`ssx`). Agent-friendly CLI wrapping all API endpoints with YAML+Markdown default output and JSON mode for programmatic use.
+- **URL sanitization** (`slopsearx/adapter.py`). Strips sensitive query parameters from error messages to prevent credential leakage in logs.
+- **SKILL.md.** Comprehensive usage documentation covering all 48 engines, their categories, API configuration, and the CLI.
+- **48 engine reference files.** Individual reference documents for every engine in `references/`, covering authentication, endpoints, rate limits, and data formats.
+- **Expanded test suite.** Concurrency tests (686 lines), fail-closed tests (686 lines), cache integration tests, and per-adapter tests for Google, Stack Exchange, TMDB, OpenAlex, Shodan, FRED, and Internet Archive.
 
 ## Longest-standing features
 
-All core features (adapter interface, merger, config, server, formatter, caching, rate limiting, metrics) date from the initial commit.
+All core features (adapter interface, merger, config, server, formatter, caching, rate limiting, metrics) date from the initial commit on June 8.
 
 ## Deprecated features
 
@@ -64,4 +73,5 @@ None. The architecture has remained stable since the initial commit, with new su
 
 ## Growth trajectory
 
-The project grew from 0 to 15,654 lines of Python in three days. Started with 7 engines and a complete core in the initial commit. Expanded to 12 engines on day 2, then to 48 engines with 4 new core subsystems and full test coverage on day 3.
+The project grew from 0 to 19,073 lines of Python in eight days (Jun 8-15). Started with 7 engines and a complete core in the initial commit. Expanded to 12 engines on day 2, 48 engines with 4 new core subsystems on day 3, and then spent days 4-8 on reliability hardening, observability, and developer tooling.
+

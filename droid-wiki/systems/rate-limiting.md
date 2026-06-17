@@ -4,7 +4,7 @@ Active contributors: Magnus Hedemark
 
 ## Purpose
 
-Distributed rate limiting with backpressure propagation. Three strategies: `LocalTokenBucket` for development, `ValkeySlidingWindow` for production at 50+ replicas, and `ExternalSidecar` for advanced deployments.
+Multi-layer rate limiting with backpressure propagation. Three strategies (`LocalTokenBucket`, `ValkeySlidingWindow`, `ExternalSidecar`) serve per-engine rate limiting, while a separate per-client rate limiter protects the server from noisy tenants. Fail-closed mode with graceful fallback prevents unbounded traffic during Valkey outages.
 
 ## Key abstractions
 
@@ -12,7 +12,7 @@ Distributed rate limiting with backpressure propagation. Three strategies: `Loca
 |---|---|---|
 | `RateLimitStrategy` | `slopsearx/ratelimit.py` | Abstract strategy interface. Subclasses implement `acquire(engine, cost)` which returns `True` if the request is allowed. Also provides optional `warmup()` and `shutdown()` lifecycle hooks. |
 | `LocalTokenBucket` | `slopsearx/ratelimit.py` | In-memory token bucket using `time.monotonic()` for refill timing. Suitable for development with 1-3 replicas. Not suitable for 50+ replicas because each replica maintains independent state. |
-| `ValkeySlidingWindow` | `slopsearx/ratelimit.py` | Distributed sliding window using Valkey `INCR` and `EXPIRE`. Correct for all replica counts. Centralized rate-limit state in Valkey means all replicas share the same counter. |
+| `ValkeySlidingWindow` | `slopsearx/ratelimit.py` | Distributed sliding window using Valkey `INCR` and `EXPIRE`. Correct for all replica counts. Supports fail-closed mode with local fallback after a grace period. |
 | `ExternalSidecar` | `slopsearx/ratelimit.py` | Delegates rate limiting to a dedicated external service. Currently a stub that always allows. Intended for advanced deployments where rate limiting is managed by a separate infrastructure component. |
 | `RateLimiter` | `slopsearx/ratelimit.py` | Backpressure wrapper around a strategy. Adds 30-second cooldown after rate-limit denial and 3-strike deactivation of engines. |
 | `_EngineState` | `slopsearx/ratelimit.py` | Per-engine backpressure tracking dataclass. Fields: `consecutive_failures`, `cooldown_until`, `deactivated`. |
@@ -25,41 +25,36 @@ Every adapter calls `self.rate_limiter.acquire(engine_name)` before sending a re
 
 ### LocalTokenBucket
 
-For development, the local token bucket maintains per-engine token counts in memory:
-
-```python
-async def acquire(self, engine: str, cost: int = 1) -> bool:
-    now = time.monotonic()
-    tokens = self._tokens.get(engine, self.burst)
-    last = self._last_refill.get(engine, now)
-
-    elapsed = now - last
-    tokens = min(self.burst, tokens + elapsed * self.max_rate)
-    self._last_refill[engine] = now
-
-    if tokens >= cost:
-        self._tokens[engine] = tokens - cost
-        return True
-    self._tokens[engine] = tokens
-    return False
-```
-
-Each replica maintains its own token count. At 50+ replicas, the effective rate would be 50x the configured rate, which could trigger upstream rate limits.
+For development, the local token bucket maintains per-engine token counts in memory. Each replica maintains its own token count. At 50+ replicas, the effective rate would be 50x the configured rate.
 
 ### ValkeySlidingWindow
 
 For production, the Valkey sliding window uses a shared counter:
 
-```python
-window_start = int(time.monotonic() / self._window)
-key = f"ratelimit:{engine}:{window_start}"
-count = self._client.incrby(key, cost)
-if count == cost:
-    self._client.expire(key, int(self._window * 2))
-return count <= self._default_rate
+```
+ratelimit:{engine}:{window_start}  →  INCR + EXPIRE
 ```
 
-The rate limit key format is `ratelimit:{engine}:{window_start}` where `window_start` is the current time divided by the window duration. Each replica atomically increments the counter. If the result exceeds the per-window limit, the request is denied. The `EXPIRE` ensures keys are cleaned up after two window durations.
+All replicas atomically increment the same counter. If the result exceeds the configured per-window rate, the request is denied. Keys expire after two window durations.
+
+### Per-client rate limiting
+
+The server also enforces a per-client request budget using a separate `ValkeySlidingWindow` instance keyed on `request.client.host`:
+
+```
+ratelimit:client:{client_ip}:{window_start}  →  INCR + EXPIRE
+```
+
+Configurable via `PER_CLIENT_REQUESTS` (default 30 requests) and `PER_CLIENT_WINDOW_SECONDS` (default 60 seconds). When a client exceeds its budget, the server returns HTTP 429 before any engine dispatch occurs.
+
+### Fail-closed behavior
+
+The `ValkeySlidingWindow` supports a fail-closed mode (`FAIL_CLOSED=true`) for security-sensitive deployments:
+
+- **Default (fail-open):** When Valkey is unreachable, all requests are allowed through. This prioritizes availability over strict enforcement.
+- **Fail-closed:** When Valkey is unreachable, all requests are denied during a configurable grace period (`FAIL_CLOSED_GRACE_SECONDS`, default 30s). After the grace period expires, the system falls back to an in-process `LocalTokenBucket` with the same configured rate so service can continue with approximate enforcement.
+
+This progression (deny → local fallback) prevents unbounded traffic during transient Valkey outages while avoiding permanent denial of service during extended outages.
 
 ### Backpressure
 
@@ -69,23 +64,20 @@ The `RateLimiter` wraps a strategy and adds backpressure behavior:
 2. **3-strike deactivation:** If an engine receives three consecutive rate-limit denials, it is deactivated. Deactivated engines are skipped entirely until a health check passes and `reactivate()` is called.
 3. **Automatic recovery:** On a successful `acquire()` call, the consecutive failure counter resets to zero, and the cooldown is lifted.
 
-Deactivated engines can be monitored via the `deactivated_engines` property.
-
-### Fail-open behavior
-
-If Valkey is unavailable, `ValkeySlidingWindow` returns `True` (allow) for all requests. This prioritizes search availability over strict rate-limit enforcement. A warning is logged when the Valkey connection fails.
-
 ## Integration points
 
-- **Server startup:** `startup()` in `server.py` creates a `RateLimiter` with `LocalTokenBucket` strategy and calls `warmup()`. The rate limiter is injected into each engine adapter instance via `engine.rate_limiter = _rate_limiter`.
-- **Adapter calls:** Each adapter calls `self.rate_limiter.acquire(self.name)` before sending HTTP requests.
-- **Health checks:** After a deactivated engine passes a health check, the server calls `_rate_limiter.reactivate(engine_name)`.
-- **Shutdown:** The server calls `_rate_limiter.shutdown()` during graceful shutdown.
+- **Server startup:** `startup()` in `server.py` creates two rate limiters: a `RateLimiter` with `LocalTokenBucket` for per-engine backpressure (injected into each adapter), and a `ValkeySlidingWindow` for per-client rate limiting (checked in the search handler before dispatch)
+- **Adapter calls:** Each adapter calls `self.rate_limiter.acquire(self.name)` before sending HTTP requests
+- **Health checks:** After a deactivated engine passes a health check, the server calls `_rate_limiter.reactivate(engine_name)`
+- **Fail-closed recovery:** `ValkeySlidingWindow` attempts reconnection on each `acquire()` call and clears the disconnected state on success
+- **Shutdown:** The server calls `_rate_limiter.shutdown()` and `_client_rate_window.shutdown()` during graceful shutdown
 
 ## Entry points for modification
 
-- Changing the production strategy: modify server startup to use `ValkeySlidingWindow` instead of `LocalTokenBucket`
+- Changing the production strategy: modify server startup to use `ValkeySlidingWindow` instead of `LocalTokenBucket` for per-engine limiting
 - Adjusting backpressure parameters: modify cooldown duration or strike count in `RateLimiter.acquire()`
+- Changing per-client limits: set `PER_CLIENT_REQUESTS` and `PER_CLIENT_WINDOW_SECONDS` env vars
+- Enabling fail-closed: set `FAIL_CLOSED=true` and optionally `FAIL_CLOSED_GRACE_SECONDS`
 - Adding a new strategy: subclass `RateLimitStrategy` and implement `acquire()`
 
 ## Key source files

@@ -10,9 +10,10 @@ The adapter interface is the primary architectural invariant of SlopSearX. Every
 
 | Type | File | Description |
 |---|---|---|
-| `EngineAdapter` | `slopsearx/adapter.py` | Abstract base class for all engine adapters. Subclasses override `search()`. Provides `_merge_categories()` for category override/add/remove, `_check_rate_limit()` for rate limiting, and sensible defaults for `health()`, `warmup()`, and `shutdown()`. The rate limiter is injected at construction time via `__init__(self, config, rate_limiter)`. |
-| `ScrapeAdapter` | `slopsearx/adapter.py` | Base class for HTML-scrape engines. Subclasses of `EngineAdapter` that send HTTP requests with stealth headers and parse HTML responses. No headless browser required. Integrates with `ProxyPool` via `_proxy_pool` instance, `_get_proxy()`, `_report_proxy_success()`, and `_report_proxy_failure()` methods for proxy rotation. |
-| `SearchResult` | `slopsearx/adapter.py` | Internal normalized result dataclass. Decoupled from wire format. Contains fields for URL, title, content, engine metadata, score, category, published date, and media references. |
+| `sanitize_url` | `slopsearx/adapter.py` | Strips sensitive query parameters (`api_key`, `key`, `apiKey`, `token`, `access_token`) from URLs to prevent credential leakage in error messages and logs. |
+| `EngineAdapter` | `slopsearx/adapter.py` | Abstract base class for all engine adapters. Subclasses override `search()`. Provides `_merge_categories()` for category override/add/remove, `_check_rate_limit()` for rate limiting, circuit breaker state tracking (`circuit_allowed()`, `record_failure()`, `record_success()`), and sensible defaults for `health()`, `warmup()`, and `shutdown()`. The rate limiter is injected at construction time. |
+| `ScrapeAdapter` | `slopsearx/adapter.py` | Base class for HTML-scrape engines. Subclasses of `EngineAdapter` that send HTTP requests with stealth headers and parse HTML responses. No headless browser required. Integrates with `ProxyPool` for proxy rotation. |
+| `SearchResult` | `slopsearx/adapter.py` | Internal normalized result dataclass. Decoupled from wire format. Contains fields for URL, title, content, engine metadata, score, category, published date, media references, and `tier` (1 = primary/broad, 2 = secondary/specialized). |
 | `AdapterResponse` | `slopsearx/adapter.py` | Canonical return type for every adapter's `search()` method. Contains a list of `SearchResult`, an `EngineStatus`, optional error message, measured latency, and SearXNG extended fields (`answers`, `corrections`, `infoboxes`). |
 | `EngineStatus` | `slopsearx/adapter.py` | Standardized error classification enum. Members: `OK`, `RATE_LIMITED`, `BLOCKED`, `ERROR`, `TIMEOUT`. The orchestrator uses these to decide per-engine result inclusion and backpressure. |
 | `register_engine` | `slopsearx/adapter.py` | Decorator that registers an adapter class in the global `_ENGINE_REGISTRY` dict. Enforces that the class subclasses `EngineAdapter` and has a non-empty `name` attribute. |
@@ -81,6 +82,22 @@ class EngineAdapter(ABC):
 ```
 
 The `_check_rate_limit()` method provides a safe guard — it returns an `AdapterResponse` with `RATE_LIMITED` status if the rate limiter denies the request, or `None` if allowed. It is safe to call even when `self.rate_limiter` is `None` (e.g., tests).
+
+### Circuit breaker
+
+Each `EngineAdapter` has a built-in circuit breaker that prevents dispatching to repeatedly failing engines:
+
+- **Threshold:** After `CIRCUIT_BREAKER_THRESHOLD` consecutive errors (default 5), the circuit opens
+- **Timeout:** The circuit stays open for `CIRCUIT_BREAKER_TIMEOUT` seconds (default 300)
+- **Half-open probe:** When the timeout expires, the circuit enters half-open state and the next request is allowed as a probe. If it succeeds, the circuit closes. If it fails, the circuit re-opens for another full timeout period.
+
+Both threshold and timeout are configurable per-engine via env vars (`ENGINE_CIRCUIT_THRESHOLD`, `ENGINE_CIRCUIT_TIMEOUT`) or class attributes.
+
+The server checks `engine.circuit_allowed()` before dispatching to any engine. Engines with open circuits are added to `unresponsive_engines` with the reason `"circuit open"` and never dispatched. The circuit breaker is driven by the server calling `engine.record_failure()` and `engine.record_success()` after each dispatch result.
+
+### URL sanitization
+
+The `sanitize_url()` helper strips known sensitive query parameters (`api_key`, `key`, `apiKey`, `token`, `access_token`) from URLs. This prevents credential leakage in error messages and logs when failed API calls include authentication parameters in the URL. The function is called in the dispatch error handler before the error message is stored.
 
 ### The six adapter contract rules
 
