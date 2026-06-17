@@ -19,6 +19,7 @@ dependencies = [
     "pyyaml>=6.0",
     "uvicorn[standard]>=0.34.0",
     "valkey>=6.0.0",
+    "structlog>=24.0",
 ]
 
 [project.optional-dependencies]
@@ -35,7 +36,6 @@ dev = [
     "vulture>=2.11",
     "import-linter>=2.3",
     "deptry>=0.21",
-    "structlog>=24.0",
 ]
 
 [tool.setuptools.packages.find]
