@@ -132,6 +132,7 @@ class MyEngine(EngineAdapter):
 
 - Conventional Commits: `feat:`, `fix:`, `docs:`, `chore:`, `ci:`, `refactor:`
 - DCO sign-off required on every commit (`git commit -s`)
+- Run `pre-commit run --all-files` before pushing to catch lint, type, and dead-code issues locally
 - One feature or fix per PR
 
 ## Design Documents

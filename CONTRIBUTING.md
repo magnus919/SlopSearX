@@ -22,12 +22,25 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
+## Feature Flags
+
+New behavior that could disrupt existing users must ship behind a feature flag (default `false`). This lets operators enable the feature when ready and merge to main immediately — no long-lived feature branches.
+
+```python
+# In your code:
+if config.feature_flags.is_enabled("my_new_feature"):
+    # new behavior here
+```
+
+Add the flag to `config.yaml` (disabled) and document it in your PR description. See `AGENTS.md` for the full feature flag reference.
+
 ## Before Submitting a PR
 
+- Run pre-commit hooks: `pre-commit run --all-files`
 - Run tests with coverage: `pytest --cov=slopsearx --cov=engines --cov-report=term-missing`
-- Check lint: `ruff check .`
 - Type check: `mypy slopsearx/ engines/`
 - Verify conventional commit format on all commits
+- If this is an agent-authored PR, mention `@droid` in a PR comment to request automated review
 
 ## Adding a New Engine Adapter
 
