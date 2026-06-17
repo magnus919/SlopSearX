@@ -4,7 +4,7 @@ Active contributors: Magnus Hedemark
 
 ## Purpose
 
-Two complementary observability subsystems: (1) OpenMetrics instrumentation with per-engine counters, latency histograms, and status gauges exposed via `/metrics` for Prometheus scraping, and (2) per-engine quality telemetry stored in Valkey for operator dashboards. All metrics use stdlib-only code with no `prometheus-client` dependency.
+Three observability subsystems: (1) OpenMetrics instrumentation with per-engine counters, latency histograms, and status gauges exposed via `/metrics` for Prometheus scraping; (2) per-engine quality telemetry stored in Valkey for operator dashboards; (3) query audit trail stored in Valkey streams for operational analysis and debugging.
 
 ## Key abstractions
 
@@ -19,7 +19,8 @@ Two complementary observability subsystems: (1) OpenMetrics instrumentation with
 | `cache_hits` | `slopsearx/metrics.py` | Cache hit and miss counter. Label: `type`. Incremented as `type="hit"` or `type="miss"`. |
 | `server_requests` | `slopsearx/metrics.py` | Total request counter. No labels. Tracks every request to the search endpoint. |
 | `render_metrics` | `slopsearx/metrics.py` | Renders all metric instances into standard OpenMetrics text format. Called by the `/metrics` endpoint. |
-| `EngineStatsTracker` | `slopsearx/stats.py` | Per-engine quality telemetry system. Stores daily aggregated stats in Valkey keyed by `engine_stats:{engine}:{YYYY-MM-DD}`. Not exposed via `/metrics` — designed for operator dashboards to read directly from Valkey. |
+| `EngineStatsTracker` | `slopsearx/stats.py` | Per-engine quality telemetry system. Stores daily aggregated stats in Valkey keyed by `engine_stats:{engine}:{YYYY-MM-DD}`. Not exposed via `/metrics`. |
+| `QueryAuditLogger` | `slopsearx/audit.py` | Durable query audit trail. Records every search query in a daily Valkey stream (`query_audit:{YYYY-MM-DD}`) with dispatch statistics, client IP, and latency. |
 
 ## How it works
 
@@ -105,6 +106,18 @@ The repository includes a Grafana dashboard at `docs/grafana/per-engine-monitori
 - Engine status indicator (state timeline, from `slopsearx_engine_status`)
 - Cache hit rate (time series, from `slopsearx_cache_hit_total`)
 - Server request rate (time series, from `slopsearx_server_requests_total`)
+
+### Query audit trail
+
+The `QueryAuditLogger` at `slopsearx/audit.py` records every search query in a daily Valkey stream for operational analysis. Each entry captures:
+
+- The raw query string and client IP
+- Which engines were dispatched and their outcomes (ok, error, timeout counts)
+- Total results returned and overall request latency
+
+Streams are capped at ~10,000 entries and auto-expire after 90 days. This provides durable visibility into query patterns, engine health trends, and capacity planning data without relying on short-lived metrics scrapes.
+
+For full details, see [Audit trail](../systems/audit-trail.md).
 
 ## Integration points
 
