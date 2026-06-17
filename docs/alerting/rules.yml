@@ -1,0 +1,79 @@
+# Prometheus Alertmanager rules for SlopSearX.
+#
+# These rules consume metrics exposed by the /metrics endpoint and fire
+# alerts when service health degrades.  Integrate with Alertmanager to
+# route notifications to Slack, email, or PagerDuty.
+#
+# Usage with docker-compose:
+#   Add prometheus + alertmanager services referencing this file.
+# Usage with k8s:
+#   Apply as a PrometheusRule custom resource.
+
+groups:
+  - name: slopsearx
+    rules:
+
+      # --- Availability ---
+
+      - alert: SlopSearxDown
+        expr: up{job="slopsearx"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SlopSearX instance {{ $labels.instance }} is down"
+          description: "The /health endpoint has been unreachable for 1 minute."
+
+      # --- Engine health ---
+
+      - alert: EngineDegraded
+        expr: slopsearx_engine_status > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Engine {{ $labels.engine }} is degraded (value {{ $value }})"
+          description: "Engine status gauge is non-zero. Value 1=degraded, 2=down."
+
+      - alert: HighErrorRatio
+        expr: rate(slopsearx_engine_queries_total[5m]) > 0 and rate(slopsearx_engine_queries_total[5m]) / (rate(slopsearx_engine_queries_total[5m]) + rate(slopsearx_engine_queries_total[5m] offset 5m)) > 0.25
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High query growth on {{ $labels.engine }}"
+          description: "Query rate increased >25% in 5 minutes. Check for traffic anomaly."
+
+      # --- Latency ---
+
+      - alert: HighLatency
+        expr: slopsearx_engine_latency_seconds{quantile="0.95"} > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 latency > 5s on {{ $labels.engine }}"
+          description: "Engine is responding slowly. Consider increasing rate limits or adding proxies."
+
+      # --- Rate limiting ---
+
+      - alert: RateLimitSaturation
+        expr: rate(slopsearx_server_requests_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "High request rate"
+          description: "Server handling > 100 req/s. Verify rate limiter capacity."
+
+      # --- Server errors ---
+
+      - alert: ServerErrorSpike
+        expr: rate(slopsearx_server_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Server error rate > 0.1/s"
+          description: "Overall error rate across all engines is elevated. Check /health."
+

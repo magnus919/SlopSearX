@@ -36,3 +36,37 @@ Incident response procedures for SlopSearX operators.
 1. SlopSearX is stateless except for Valkey — restarting any replica is safe
 2. Valkey data is ephemeral (cache keys have TTLs, audit stream auto-truncates)
 3. For persistent disk issues, reduce Valkey maxmemory or trim audit retention
+
+## Alerting
+
+Prometheus Alertmanager rules are defined in `docs/alerting/rules.yml`.
+These rules cover:
+
+- **Availability**: instance down detection
+- **Engine health**: degraded engines, high error rates
+- **Latency**: P95 latency exceeding thresholds
+- **Rate limiting**: client throttling alerts
+- **Cache**: cache miss ratio monitoring
+- **Server errors**: overall error rate tracking
+
+See `docs/grafana/per-engine-monitoring.json` for the companion Grafana
+dashboard that surfaces these metrics visually.
+
+## Error Tracking (Sentry)
+
+Set `SENTRY_DSN` to enable automatic error reporting via Sentry (self-hosted
+or SaaS).  When configured, all unhandled exceptions in engine dispatch are
+captured with full stack traces, request metadata, and breadcrumbs.
+
+### Sentry → GitHub Integration
+
+When using self-hosted Sentry, enable the GitHub integration to auto-create
+issues from error events:
+
+1. In Sentry: Settings → Integrations → GitHub → Add Installation
+2. Select the `magnus919/SlopSearX` repository
+3. Configure issue creation rules (e.g., create issue on new unresolved error)
+4. Errors will automatically appear as GitHub issues with stack traces and context
+
+This closes the loop from production error → tracked issue → code fix.
+
