@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import os
+import re
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -31,6 +32,7 @@ from slopsearx.audit import QueryAuditLogger
 from slopsearx.cache import SearchCache, _ttl_for_query, cache_key
 from slopsearx.config import load_config
 from slopsearx.formatter import format_json, format_yaml_markdown
+from slopsearx.logging import capture_exception, setup_logging
 from slopsearx.merger import (
     PresenceRanker,
     build_meta,
@@ -87,6 +89,7 @@ _client_rate_window: RateLimitStrategy | None = None
 
 async def _startup() -> None:
     """Discover and warm up all registered engines."""
+    setup_logging()
     global _active_engines, _cache, _rate_limiter  # noqa: PLW0603
     global _engine_semaphore, _client_rate_window  # noqa: PLW0603
 
@@ -326,6 +329,9 @@ async def search(
 
     # Increment request counter
     m.server_requests.inc({})
+    m.server_requests_by_format.inc({"format": _safe_metric_label(format)})
+    for cat in (c.strip() for c in categories.split(",") if c.strip()):
+        m.server_requests_by_category.inc({"category": _safe_metric_label(cat)})
 
     # Validate query
     if not q.strip():
@@ -619,6 +625,8 @@ async def _dispatch_engine(
             latency_ms=timeout_s * 1000,
         )
     except Exception as exc:
+        capture_exception(exc)
+        m.server_errors_total.inc({"type": "internal"})
         return AdapterResponse(
             results=[],
             status=EngineStatus.ERROR,
@@ -645,6 +653,24 @@ async def _dispatch_with_semaphore(
         async with _engine_semaphore:
             return await _dispatch_engine(name, engine, query, params, timeout_s)
     return await _dispatch_engine(name, engine, query, params, timeout_s)
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+_MAX_METRIC_LABEL_LEN = 100
+_METRIC_LABEL_SAFE = re.compile(r"[^a-zA-Z0-9_./-]")
+
+
+def _safe_metric_label(value: str) -> str:
+    """Sanitize a user-supplied string for use as a Prometheus label value.
+
+    Truncates to 100 chars and replaces unsafe characters with underscores
+    to prevent OpenMetrics format corruption and cardinality explosion.
+    """
+    safe = _METRIC_LABEL_SAFE.sub("_", value)[:_MAX_METRIC_LABEL_LEN]
+    return safe or "unknown"
 
 
 def _generate_query_id() -> str:

@@ -147,6 +147,24 @@ server_requests = Counter(
     "Total search requests handled",
 )
 
+# Product analytics: per-category and per-format request counts.
+# Enables operators to understand *what* is being searched and in
+# which format, without collecting any user-identifiable data.
+server_requests_by_category = Counter(
+    "slopsearx_server_requests_by_category_total",
+    "Search requests per category",
+)
+
+server_requests_by_format = Counter(
+    "slopsearx_server_requests_by_format_total",
+    "Search requests per output format",
+)
+
+server_errors_total = Counter(
+    "slopsearx_server_errors_total",
+    "Server errors by type (timeout, circuit_open, rate_limited, internal)",
+)
+
 
 # --- Render all metrics ---
 
@@ -159,5 +177,8 @@ def render_metrics() -> str:
         engine_status.render(),
         cache_hits.render(),
         server_requests.render(),
+        server_requests_by_category.render(),
+        server_requests_by_format.render(),
+        server_errors_total.render(),
     ]
     return "".join(parts)
