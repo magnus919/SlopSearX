@@ -14,6 +14,28 @@ jobs:
       - name: Detect duplicate code with jscpd
         run: npx jscpd --min-tokens 50 --min-lines 5 --threshold 0 slopsearx/ engines/ 2>&1 || true
 
+  analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Large file detection
+        run: |
+          echo "Checking for files over 200KB..."
+          find . -name '*.py' -size +200k | sed 's/^/WARNING: /' | tee /tmp/large_files.txt
+          if [ -s /tmp/large_files.txt ]; then
+            echo "Large Python files detected (over 200KB). Consider splitting."
+          fi
+      - name: TODO/FIXME scan
+        run: |
+          echo "Scanning for TODO/FIXME/HACK markers..."
+          rg -n 'TODO|FIXME|HACK' slopsearx/ engines/ || echo "No markers found."
+      - name: Validate AGENTS.md dev setup
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          python -c "import slopsearx; print('Import OK')"
+          pytest --collect-only -q
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -51,5 +73,15 @@ jobs:
       - name: Architecture check with import-linter
         run: lint-imports
 
+      - name: Unused dependency check with deptry
+        run: deptry . --per-rule-ignores "DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry,DEP003=starlette"
+
       - name: Test with pytest and coverage
-        run: pytest -v --cov=slopsearx --cov=engines --cov-report=term-missing --cov-fail-under=70
+        run: pytest -v --durations=10 --cov=slopsearx --cov=engines --cov-report=term-missing --cov-report=html --cov-fail-under=70
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: coverage-report-${{ matrix.python-version }}
+          path: htmlcov/
