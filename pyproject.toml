@@ -34,6 +34,8 @@ dev = [
     "radon>=6.0",
     "vulture>=2.11",
     "import-linter>=2.3",
+    "deptry>=0.21",
+    "structlog>=24.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -80,6 +82,9 @@ paths = ["slopsearx", "engines"]
 min_confidence = 65
 ignore_decorators = ["@register_engine"]
 ignore_names = ["engine_type", "categories", "fallback"]
+
+[tool.deptry]
+extend_exclude = ["tests", "engines"]
 
 [tool.importlinter]
 root_package = "slopsearx"

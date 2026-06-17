@@ -36,6 +36,7 @@ from slopsearx.merger import (
     build_meta,
     extract_unresponsive,
 )
+from slopsearx.middleware import RequestIDMiddleware
 from slopsearx.ratelimit import (
     LocalTokenBucket,
     RateLimiter,
@@ -204,6 +205,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="SlopSearX", version="0.1.0", lifespan=lifespan)
+app.add_middleware(RequestIDMiddleware)
 
 
 async def _warmup_engine(name: str, engine: EngineAdapter) -> None:
