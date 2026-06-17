@@ -1,79 +1,79 @@
 # Patterns and conventions
 
+Active contributors: Magnus Hedemark
+
+## Code style
+
+- **Python 3.12+** — use modern Python features (match/case, type hints, `str | None`)
+- **Type hints** — all public APIs are fully typed (`mypy --strict`)
+- **No exceptions** — adapters never raise; all errors classified in `AdapterResponse.status`
+- **Async/await** — all I/O is async (httpx, Valkey)
+
 ## Architecture rules
 
-These rules are enforced by convention and reviewed in PRs:
+### Adapter contract (primary invariant)
 
-1. **The adapter interface is the primary invariant.** Every engine is one file, registered via `@register_engine`. Adding an engine requires zero changes to the orchestrator.
-2. **Adapters never raise exceptions.** All errors are classified and returned in `AdapterResponse.status`. The orchestrator never sees an unhandled exception from any adapter.
-3. **Internal schema is decoupled from wire format.** The `SearchResult` dataclass is the internal model. SearXNG JSON is one output formatter among many.
-4. **Valkey is the only shared state.** No local volumes, no persistent DB, no per-replica state beyond what Valkey provides.
-5. **Scrape engines use HTTP + HTML parsing.** No headless browsers. DDG and Google adapters use httpx + lxml for HTML parsing.
+1. One file per engine, `@register_engine` decorator
+2. Adapters never raise exceptions — errors classified as `EngineStatus`
+3. No adapter cross-talk — no shared state, no calling other adapters
+4. Rate limiting owned by the adapter class — `self.rate_limiter.acquire()`
+5. Internal schema decoupled from wire format — `SearchResult` is canonical
 
-## Coding style
+### System boundaries
 
-- Python 3.12+ with `from __future__ import annotations` in all files
-- Line length: 120 characters
-- Quote style: double quotes (`"`)
-- 100% type annotated (no `Any` except for config passthrough)
-- Ruff lint rules: `E`, `F`, `I`, `N`, `W`
+- **Valkey is the only shared state** — no local volumes, no persistent DB, no per-replica state
+- **Graceful degradation** — failing sub-components never block the response
+- **Stateless at application layer** — every replica is interchangeable
+- **Plugin architecture** — adding engines requires zero orchestrator changes
 
-Conventions are enforced by ruff and configured in `pyproject.toml`.
+## Feature flags
 
-## Error handling pattern
-
-All adapters follow the same error classification pattern:
+All new behavior-adjacent code is gated behind a feature flag (default `false`):
 
 ```python
-async def search(self, query: str, params=None) -> AdapterResponse:
-    start_time = time.monotonic()
-    try:
-        async with httpx.AsyncClient(...) as client:
-            resp = await client.get(...)
-            latency = (time.monotonic() - start_time) * 1000
-
-            if resp.status_code == 429:
-                return AdapterResponse(results=[], status=EngineStatus.RATE_LIMITED, latency_ms=latency)
-            if resp.status_code in (403, 503):
-                return AdapterResponse(results=[], status=EngineStatus.BLOCKED, latency_ms=latency)
-            resp.raise_for_status()
-            # ... parse results
-            return AdapterResponse(results=results, status=EngineStatus.OK, latency_ms=latency)
-
-    except httpx.TimeoutException:
-        return AdapterResponse(results=[], status=EngineStatus.TIMEOUT, latency_ms=latency)
-    except Exception as exc:
-        return AdapterResponse(results=[], status=EngineStatus.ERROR, error_message=str(exc), latency_ms=latency)
+if config.feature_flags.is_enabled("ai_dispatch"):
+    # new behavior
 ```
 
-Key details:
-- Always measure latency from request start, not from try/except entry
-- Classify HTTP 429 as `RATE_LIMITED`, 403/503 as `BLOCKED`
-- Wrap `httpx.TimeoutException` separately from generic `Exception`
-- `latency_ms` is set on every return path (including error paths)
-- Rate-limiting calls go through `self.rate_limiter.acquire(engine_name)` before each request
+Flags are snake_case, set via `config.yaml` → `features:` block or `FEATURE_<NAME>` env vars.
 
-## Category system
+## Conventional commits
 
-Each engine declares its categories as a class attribute:
-
-```python
-class MyEngine(EngineAdapter):
-    categories = ["general", "science", "github:code"]
+```
+feat:    new feature
+fix:     bug fix
+docs:    documentation
+chore:   maintenance (deps, config)
+ci:      CI/CD changes
+refactor: restructuring without behavior change
 ```
 
-Categories use SearXNG taxonomy. Sub-categories use namespace prefixes (`github:code`, `huggingface:datasets`). Operators can override categories via config or env vars without modifying code.
+DCO sign-off required: `git commit -s`.
 
-## Testing patterns
+## Import layering
 
-- Use `asyncio_mode = "auto"` - no manual async fixture setup needed
-- Mock adapters for server tests via `@register_engine` + `_MockEngine` class
-- Config tests use `monkeypatch.setenv()` for env var testing
-- Metric tests verify the rendered OpenMetrics string format
+Enforced by `import-linter`:
 
-## Import conventions
+```
+slopsearx.server         (top)
+slopsearx.router
+slopsearx.merger
+slopsearx.formatter
+slopsearx.suggest
+slopsearx.stats
+slopsearx.audit
+slopsearx.cache
+slopsearx.config
+slopsearx.ratelimit
+slopsearx.proxypool
+slopsearx.adapter         (bottom)
+```
 
-- `slopsearx.adapter` is the primary shared module
-- Engine files import from `slopsearx.adapter` only
-- Core modules (`merger.py`, `formatter.py`, etc.) import from `slopsearx.adapter`
-- Application code uses relative imports within the package
+Exception: `slopsearx.adapter → slopsearx.proxypool` (allowed for ScrapeAdapter's ProxyPool integration).
+
+## Naming conventions
+
+- **Engine env vars:** `ENGINE_{NAME}_{SETTING}` (e.g., `ENGINE_BRAVE_API_KEY`)
+- **Feature flags:** `FEATURE_{NAME}` env vars, `snake_case` in config
+- **Metric names:** `slopsearx_{subsystem}_{metric}_unit` (e.g., `slopsearx_engine_queries_total`)
+- **Valkey keys:** `{namespace}:{identifier}:{scope}` (e.g., `ratelimit:brave:12345`, `search:sha256hex`)

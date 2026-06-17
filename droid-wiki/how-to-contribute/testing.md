@@ -1,81 +1,70 @@
 # Testing
 
-## Test framework
+Active contributors: Magnus Hedemark
 
-SlopSearX uses **pytest** with `asyncio_mode = "auto"` for async test support.
+## Test structure
+
+```
+tests/
+├── test_adapters.py       # Engine adapter tests (~3,000 lines)
+├── test_server.py         # Server and API tests
+├── test_cache.py          # Cache integration tests
+├── test_ratelimit.py      # Rate limiting tests (including fail-closed)
+├── test_concurrency.py    # Concurrency and semaphore tests (686 lines)
+├── test_categories.py     # Category routing tests
+├── test_feature_flags.py  # Feature flag tests
+├── test_integration.py    # End-to-end integration tests
+└── ...
+```
+
+~6,100 lines across 37 test files.
 
 ## Running tests
 
 ```bash
-# Run all tests
-pytest
+# Full suite with coverage
+pytest --cov=slopsearx --cov=engines --cov-report=term-missing
 
-# Verbose output
-pytest -v
+# Specific test file
+pytest tests/test_adapters.py -v
 
-# Run specific test file
-pytest tests/test_merger.py
+# Specific test
+pytest tests/test_server.py::test_search_json -v
 
-# Run specific test class
-pytest tests/test_merger.py::TestPresenceRanker
-
-# Run with coverage
-pytest --cov=slopsearx --cov=engines
+# With coverage threshold
+pytest  # --cov-fail-under=70 is set in pyproject.toml
 ```
 
-## Test structure
+## Coverage targets
 
-Tests mirror the source structure. Each core module has a corresponding test file:
+- Minimum coverage: 70% (enforced by pytest-cov)
+- Source paths: `slopsearx/` and `engines/`
+- Ignored: `tests/` directory
 
-| Test file | What it covers |
-|---|---|
-| `tests/test_adapter.py` | `EngineAdapter` base class, `@register_engine`, `discover_engines()`, `SearchResult` |
-| `tests/test_adapters.py` | Individual engine adapter behavior (12 engine files) |
-| `tests/test_merger.py` | `PresenceRanker`, deduplication, metadata helpers |
-| `tests/test_server.py` | FastAPI endpoints (`/search`, `/health`) with mock engine |
-| `tests/test_formatter.py` | JSON and YAML+Markdown output formatters |
-| `tests/test_config.py` | Three-layer config loading, env var overrides |
-| `tests/test_cache.py` | Valkey cache key generation, TTL logic |
-| `tests/test_ratelimit.py` | Rate limiter strategies (local token bucket, Valkey sliding window) |
-| `tests/test_metrics.py` | OpenMetrics rendering |
-| `tests/test_categories.py` | Category routing and filtering |
-| `tests/test_tier1_adapters.py` | Tier 1 engine adapter behavior |
+## Test configuration
 
-## CI pipeline
+In `pyproject.toml`:
 
-The CI runs on every push/PR to `main` (`.github/workflows/ci.yml`):
-
-1. Install dependencies with `pip install -e ".[dev]"`
-2. Lint with `ruff check .`
-3. Test with `pytest -v` on Python 3.12 and 3.13
+```toml
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "--cov=slopsearx --cov=engines --cov-report=term-missing --cov-fail-under=70"
+```
 
 ## Writing tests
 
-### Adapter testing pattern
+- **Adapter tests:** Verify `search()` returns `AdapterResponse`, never raises. Test error classification (status codes, timeouts, malformed responses)
+- **Server tests:** Test the full request lifecycle. Use FastAPI `TestClient` with async support via `pytest-asyncio`
+- **Cache tests:** Test cache hit/miss, negative caching, graceful degradation
+- **Rate limit tests:** Test local token bucket, Valkey sliding window, fail-closed fallback behavior
+- **Concurrency tests:** Test semaphore-bounded dispatch, timeout handling
+- **Integration tests:** End-to-end with actual engine dispatch (may skip when Valkey unavailable)
 
-Mock engine adapters use `AdapterResponse` directly to simulate engine behavior without real HTTP calls:
+## Key dependencies
 
-```python
-from slopsearx.adapter import AdapterResponse, EngineStatus, SearchResult
-
-response = AdapterResponse(
-    results=[SearchResult(url="https://example.com", title="Test", content="...", engine="mock")],
-    status=EngineStatus.OK,
-    latency_ms=42.0,
-)
-```
-
-### Server testing pattern
-
-Server tests use FastAPI's `TestClient` with a registered `_MockEngine` that returns controlled responses for different query strings (`"error"`, `"timeout_sim"`, `"blocked"`, `"rate_limited"`, or normal results).
-
-### Config testing pattern
-
-Config tests use `monkeypatch.setenv()` to set `ENGINE_*` env vars before calling `load_config()`:
-
-```python
-def test_env_var_api_key_flows_to_adapter(monkeypatch):
-    monkeypatch.setenv("ENGINE_BRAVE_API_KEY", "test-key-12345")
-    cfg = load_config()
-    assert cfg.engines["brave"].api_key == "test-key-12345"
-```
+| Tool | Purpose |
+|---|---|
+| pytest | Test framework |
+| pytest-asyncio | Async test support (auto mode) |
+| pytest-cov | Coverage reporting |

@@ -4,74 +4,140 @@ Active contributors: Magnus Hedemark
 
 ## Purpose
 
-Maps the internal `SearchResult` dataclass to two output formats: SearXNG-compatible JSON and agent-native YAML+Markdown. The formatter module lives in `slopsearx/formatter.py` and is the last step in the search pipeline, after results have been collected, deduplicated, and ranked.
+Map the internal `SearchResult` dataclass to two output formats: SearXNG-compatible JSON (programmatic consumption) and YAML+Markdown (AI agent consumption). The internal schema is decoupled from the wire format — formatters are a translation layer.
 
 ## Key abstractions
 
-- **`format_json()`** (`slopsearx/formatter.py`) — produces a SearXNG-compatible JSON response dict. Accepts the ranked result list plus optional metadata (answers, corrections, infoboxes, suggestions, unresponsive engines, meta extensions).
-- **`format_yaml_markdown()`** (`slopsearx/formatter.py`) — produces a YAML document with structured data, followed by `---`, then a Markdown `## Results Summary` section with readable prose. Designed for AI agent consumption.
-- **`_result_to_searxng()`** (`slopsearx/formatter.py`) — maps a single `SearchResult` to a 23-field SearXNG dict. All 23 SearXNG MainResult fields are present; null fields are preserved as `None` for JSON serialization.
-- **`_iso_to_epoch()`** (`slopsearx/formatter.py`) — converts an ISO 8601 datetime string to Unix epoch seconds, or returns `None` if the input is empty or unparseable.
+| Type | File | Description |
+|---|---|---|
+| `format_json()` | `slopsearx/formatter.py` | Produces SearXNG-compatible JSON response |
+| `format_yaml_markdown()` | `slopsearx/formatter.py` | Produces YAML document with embedded Markdown section |
+| `_result_to_searxng()` | `slopsearx/formatter.py` | Maps a single `SearchResult` to all 23 SearXNG fields |
+| `_iso_to_epoch()` | `slopsearx/formatter.py` | Converts ISO 8601 datetime to Unix epoch for SearXNG `pubdate` field |
 
-## How it works
+## JSON output (format=json)
 
-### JSON formatter
-
-The JSON formatter (`format_json()`) produces a response that is a superset of SearXNG's output. The same fields are present, plus `meta.*` extensions at the top level.
-
-The `AdapterResponse` now includes three extended fields that are aggregated from all engine responses: `answers` (list of dicts with answer content), `corrections` (list of suggested query correction strings), and `infoboxes` (list of structured info box dicts). These are passed through to the JSON response and populated when adapters return them.
-
-Response structure:
+Default output format. Maintains backward compatibility with all 23 SearXNG `MainResult` fields:
 
 ```json
 {
-  "query": "search query",
-  "results": [...],
+  "query": "python async web scraping",
+  "results": [
+    {
+      "url": "https://example.com/guide",
+      "title": "Async Web Scraping with Python",
+      "content": "A comprehensive guide...",
+      "engine": "brave",
+      "engines": ["brave"],
+      "score": 0.92,
+      "positions": [1],
+      "category": "general",
+      "publishedDate": "2025-11-15T00:00:00Z",
+      "pubdate": 1763251200,
+      "tier": 1,
+      "length": null,
+      "thumbnail": null,
+      "img_src": null,
+      "iframe_src": null,
+      "audio_src": null,
+      "views": null,
+      "author": null,
+      "metadata": null,
+      "template": "default.html",
+      "parsed_url": null,
+      "open_group": false,
+      "close_group": false,
+      "priority": ""
+    }
+  ],
+  "engines": [{"engine": "brave", "results": 10}],
   "number_of_results": 10,
   "answers": [],
   "corrections": [],
   "infoboxes": [],
-  "suggestions": [],
-  "unresponsive_engines": [],
+  "suggestions": ["python aiohttp", "async web scraping tutorial"],
+  "unresponsive_engines": [["duckduckgo", "CAPTCHA wall detected"]],
   "meta": {
-    "response_time_ms": 1234,
+    "response_time_ms": 1420,
     "cached": false,
-    "query_id": "abc123",
+    "query_id": "ssx-abc12345",
     "engine_status": {
-      "brave": {"status": "ok", "latency_ms": 320},
-      "duckduckgo": {"status": "blocked", "latency_ms": 0}
+      "brave": {"results": 10, "latency_ms": 340.0, "status": "ok"},
+      "wikipedia": {"results": 2, "latency_ms": 89.0, "status": "ok"}
     }
   }
 }
 ```
 
-Each result in the `results` array includes all 23 SearXNG `MainResult` fields:
+**Extensions beyond SearXNG:**
 
+| Field | Description |
+|---|---|
+| `tier` | Engine tier (1 or 2) per result |
+| `meta.*` | Server-side metadata: response time, cache status, query ID, per-engine status |
+
+## YAML+Markdown output (format=yaml)
+
+Designed for AI agent consumption where structured data + readable prose is more useful than raw JSON:
+
+```yaml
+query: python async web scraping
+meta:
+  response_time_ms: 1420
+  cached: false
+  query_id: ssx-abc12345
+  engine_count: 4
+  responsive: 3
+results:
+  - url: https://example.com/guide
+    title: Async Web Scraping with Python
+    engine: brave
+    engines: [brave]
+    content: |
+      A comprehensive guide to building async web scrapers...
+    score: 0.92
+    position: 1
+    published: 2025-11-15T00:00:00Z
+    tier: 1
+---
+## Results Summary
+
+**3 engines responded** of 4 active. 10 results returned in 1.4s.
+
+For **python async web scraping**, the top results cover:
+- Building async web scrapers with aiohttp and asyncio
+- Rate limiting and concurrent page processing
+- Best practices for production scraping pipelines
+
+> DuckDuckGo (CAPTCHA wall detected). Results from Brave API and Wikipedia.
 ```
-url, title, content, engine, engines, score, positions, category,
-publishedDate, pubdate, length, thumbnail, img_src, iframe_src,
-audio_src, views, author, metadata, template, parsed_url,
-open_group, close_group, priority
-```
 
-### YAML+Markdown formatter
+The response is a single string with two sections separated by `---`:
+1. **YAML header** — structured results with all SearchResult fields
+2. **Markdown body** — human-readable prose summary with top result snippets and engine status
 
-The YAML+Markdown formatter (`format_yaml_markdown()`) produces a two-part response:
+## How they map
 
-1. **YAML header** — structured data with query, meta (response time, cached, query_id, engine health), and an array of results with url, title, engine, content, score, position, and publication date.
-2. **Markdown body** — a `## Results Summary` section with a human-readable summary: number of engines that responded, total results, elapsed time, and the top 5 result snippets.
+Both formatters consume the same ranked `SearchResult` list from the `PresenceRanker`. The formatter is selected based on the `format` query parameter:
 
-The response is selected by the `format` query parameter (`format=json` is default, `format=yaml` triggers the YAML+Markdown formatter).
+- `format=json` → `format_json()`
+- `format=yaml` → `format_yaml_markdown()`
 
-### Legacy stub
+The `Accept` header is also respected (`text/vnd.yaml+markdown`).
 
-A backward-compatible `format_yaml()` wrapper converts legacy dict-based results to `SearchResult` objects and delegates to `format_yaml_markdown()`.
+## Integration points
+
+- **Server search handler:** Formatter called after ranking, before caching
+- **Response:** Formatter output returned directly as `JSONResponse` or `PlainTextResponse`
+
+## Entry points
+
+- Add a field to JSON: modify `_result_to_searxng()`
+- Add a field to YAML: modify the `results` list comp in `format_yaml_markdown()`
+- Change Markdown summary: modify the Markdown body builder in `format_yaml_markdown()`
 
 ## Key source files
 
-- `slopsearx/formatter.py` — all formatter logic
-
-## See also
-
-- [Search result types](../primitives/search-result.md) — the `SearchResult` dataclass that formatters consume
-- [System architecture](../overview/architecture.md) — where formatting fits in the request flow
+| File | Description |
+|---|---|
+| `slopsearx/formatter.py` | Both formatters and SearXNG field mapping |

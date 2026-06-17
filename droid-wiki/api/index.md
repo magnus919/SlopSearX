@@ -1,101 +1,107 @@
 # API reference
 
-SlopSearX exposes a REST API over HTTP compatible with the SearXNG query interface.
+SlopSearX implements the SearXNG API contract with extensions for agent-native consumers.
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/search` | Execute a search across enabled engines |
+| `GET` | `/health` | Server liveness and Valkey connectivity check |
+| `GET` | `/metrics` | OpenMetrics for Prometheus scraping |
+| `GET` | `/config` | Categories-to-engines mapping for runtime discovery |
 
 ## GET /search
 
-Main search endpoint. Returns search results in the requested format.
+Execute a search across all enabled engines.
 
-### Parameters
+### Query parameters
 
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| `q` | string | Yes | Search query |
-| `format` | string | No | Response format: `json` (default) or `yaml` |
-| `categories` | string | No | Comma-separated category filter (e.g. `science`, `news`, `general`) |
-| `engines` | string | No | Comma-separated engine list overrides category filter |
-| `language` | string | No | Language code (e.g. `en`, `de`, `fr`) |
-| `pageno` | integer | No | Page number (default: 1) |
-| `time_range` | string | No | Time range filter (e.g. `day`, `week`, `month`, `year`) |
-| `safesearch` | integer | No | Safe search level: 0 (off), 1 (moderate), 2 (strict) |
+| Parameter | Default | Description |
+|---|---|---|
+| `q` | (required) | Search query string |
+| `format` | `json` | Response format: `json` or `yaml` |
+| `categories` | (none) | Comma-separated category filter |
+| `engines` | (all active) | Comma-separated engine filter |
+| `language` | `en` | Language code |
+| `pageno` | `1` | Page number (1-based) |
+| `time_range` | (none) | Time filter: `day`, `month`, `year` |
+| `safesearch` | `0` | SafeSearch: `0` (off), `1` (moderate), `2` (strict) |
 
-### Response (JSON format)
+### Responses
 
-Returns a SearXNG-compatible JSON object with 23 standard fields plus `meta.*` extensions. Key response fields:
+**200 OK** — Results found (even if empty):
 
-- `query` - Original search query
-- `results` - Array of result objects with title, url, content, engine, etc.
-- `infoboxes` - Array of infobox objects for entity-style results
-- `suggestions` - Array of suggested queries
-- `answers` - Array of direct answer strings
-- `engines` - Array of engine names queried
-- `page` - Current page number
-- `meta` - Extension object with timing, cache status, and per-engine stats
-
-### Example
-
-```
-GET /search?q=quantum+computing&format=json&categories=science
-
-Response: 200 OK
+```json
 {
-  "query": "quantum computing",
+  "query": "python",
   "results": [...],
-  "infoboxes": [],
-  "suggestions": ["quantum computing for beginners", ...],
+  "engines": [{"engine": "brave", "results": 10}],
+  "number_of_results": 10,
   "answers": [],
-  "engines": ["arxiv", "semanticscholar"],
-  "page": 1,
+  "corrections": [],
+  "infoboxes": [],
+  "suggestions": ["python tutorial", "python documentation"],
+  "unresponsive_engines": [["duckduckgo", "CAPTCHA wall detected"]],
   "meta": {
-    "elapsed_ms": 342,
-    "cache_hit": false,
-    "engine_stats": {
-      "arxiv": {"status": "ok", "elapsed_ms": 210, "results": 5},
-      "semanticscholar": {"status": "ok", "elapsed_ms": 132, "results": 8}
-    }
+    "response_time_ms": 1420,
+    "cached": false,
+    "query_id": "ssx-abc12345",
+    "engine_status": {...}
   }
+}
+```
+
+**400 Bad Request** — Missing or empty `q`:
+
+```json
+{"error": "query_required", "message": "The 'q' parameter is required."}
+```
+
+**429 Too Many Requests** — Per-client rate limit exceeded:
+
+```json
+{"error": "rate_limited", "message": "Too many requests. Please slow down."}
+```
+
+**503 Service Unavailable** — All engines unresponsive:
+
+```json
+{
+  "error": "all_engines_unavailable",
+  "meta": {...},
+  "results": []
 }
 ```
 
 ## GET /health
 
-Per-engine health check endpoint.
-
-### Response
-
 ```json
 {
   "status": "ok",
   "version": "0.1.0",
+  "valkey_connected": true,
   "engines": {
-    "brave": {"status": "ok", "last_check": "2026-06-09T12:00:00Z"},
-    "wikipedia": {"status": "error", "error": "rate_limited", "last_check": "2026-06-09T12:00:00Z"},
-    "duckduckgo": {"status": "ok", "last_check": "2026-06-09T12:00:00Z"}
+    "brave": {"status": "ok"},
+    "wikipedia": {"status": "ok"}
   }
 }
 ```
 
+Status values: `"ok"` or `"degraded"` (when Valkey is unreachable with fail-closed enabled).
+
 ## GET /metrics
 
-OpenMetrics endpoint for Prometheus scraping. Exposes request counts, latency histograms, cache hit ratios, and per-engine result counts in plain-text Prometheus exposition format.
+Returns OpenMetrics text format for Prometheus scraping. Content-Type: `text/plain; version=0.0.4`.
 
 ## GET /config
-
-Categories-to-engines mapping for runtime discovery.
-
-### Response
 
 ```json
 {
   "categories": {
-    "general": ["brave", "duckduckgo", "google"],
-    "science": ["arxiv", "semanticscholar"],
-    "news": ["brave", "hackernews"],
-    "code": ["github", "stackexchange"]
-  },
-  "engines": {
-    "brave": {"display_name": "Brave Search", "categories": ["general", "news"]},
-    "arxiv": {"display_name": "arXiv", "categories": ["science"]}
+    "general": ["brave", "duckduckgo", "google", "wikipedia"],
+    "science": ["arxiv", "brave", "huggingface"],
+    "security": ["shodan", "censys", "virustotal"]
   }
 }
 ```

@@ -1,30 +1,53 @@
 # Glossary
 
-| Term | Definition |
-|---|---|
-| **Adapter** | A Python class that wraps a single search engine's API or scrape interface. Each adapter lives in one file in `engines/` and is registered via `@register_engine`. |
-| **AdapterResponse** | The canonical return type for every adapter's `search()` method. Contains a list of `SearchResult`, a status enum, optional error message, and measured latency. |
-| **Backpressure** | A feedback mechanism where the rate limiter signals upstream clients (or the orchestrator) to slow down when the system approaches capacity limits. Implemented via Valkey sliding window counters. |
-| **Category routing** | Filtering of engines by SearXNG-compatible category tags. Clients can pass `?categories=science,news` to restrict results to engines declaring those categories. |
-| **EngineAdapter** | Abstract base class for API-based engines (Brave, Wikipedia, etc.) |
-| **EngineStatsTracker** | Subsystem in `slopsearx/stats.py` that records per-engine quality telemetry (success/failure counts, latency histograms) in Valkey after each dispatch. Enables adaptive engine selection and observability. |
-| **PresenceRanker** | V1 ranking strategy that boosts results appearing in multiple engines. Provides breadth at the cost of precision. |
-| **ProxyPool** | Subsystem in `slopsearx/proxypool.py` that manages a configurable list of proxy URLs for scrape-based adapters. Provides round-robin proxy rotation to evade IP bans and CAPTCHA walls. |
-| **QueryRouter** | Subsystem in `slopsearx/router.py` that analyzes incoming queries and selects only relevant engines based on topic matching, category filters, and explicit engine selections. Reduces unnecessary dispatch to irrelevant engines. |
-| **Ranker** | Pluggable interface for ranking strategies. V1 ships with `PresenceRanker`; V2 plans include `WeightedFusionRanker` with per-engine trust scores. |
-| **ScrapeAdapter** | Abstract base class for HTML-scrape engines (DuckDuckGo, Google). Sends HTTP requests with stealth headers and parses HTML with lxml. |
-| **Scrape engine** | An engine that sends HTTP GET/POST requests to a search engine's HTML page and parses the response. No headless browser required. |
-| **SearchResult** | Internal normalized result dataclass decoupled from any output format. Contains url, title, content, engine, score, position, and metadata. |
-| **SearXNG** | The open-source meta search engine that SlopSearX is designed to replace. SlopSearX preserves the SearXNG JSON response contract for backward compatibility. |
-| **Security engines** | Engines focused on vulnerability research, threat intelligence, and security scanning. Examples: Shodan, Censys, VirusTotal, NVD, Exploit-DB. |
-| **SuggestionService** | Subsystem in `slopsearx/suggest.py` that runs as a background task during search queries, fetching suggestions from engine suggest APIs to populate the `suggestions` response field. |
-| **Threat-intel engines** | A subset of security engines specializing in threat intelligence data: IP reputation (AbuseIPDB, GreyNoise), credential leaks (HIBP, DeHashed), dark web intelligence (IntelX), and exploit data (Exploit-DB, VulnCheck). |
-| **Tier 1 engines** | Reliable API-based engines (Brave, Wikipedia) that form the reliability backbone |
-| **Tier 2 engines** | Best-effort scrape-based engines (DuckDuckGo, Google) with no SLA |
-| **Topic-based routing** | The QueryRouter's strategy for matching query content to engine categories using keyword heuristics, reducing the set of dispatched engines to those likely to return relevant results. |
-| **Valkey** | Redis-compatible in-memory data store used for caching, distributed rate limiting, and engine quality statistics. |
-| **Valkey sliding window** | A distributed rate limiting algorithm that uses Valkey sorted sets to track request timestamps within a moving time window. Correct across 50+ replicas. |
-| **GroktoCrawl** | The larger AI agent stack that SlopSearX integrates into, replacing its SearXNG component |
-| **OpenMetrics** | The standard format for exposing metrics (Prometheus text format). SlopSearX's `/metrics` endpoint emits OpenMetrics without the prometheus-client library. |
-| **ConfigMap** | Kubernetes resource for mounting configuration files. The optional `config.yaml` is typically provided via ConfigMap. |
-| **HPA** | Horizontal Pod Autoscaler — Kubernetes resource that automatically scales replicas based on CPU utilization. |
+## Core concepts
+
+**Adapter** — A single engine integration. One Python file in `engines/`, decorated with `@register_engine`. Must subclass `EngineAdapter` and implement `search()`.
+
+**AdapterResponse** — Canonical return type from every adapter's `search()` method. Contains results list, status enum, error message, and latency.
+
+**Agent-native** — Output format designed for AI agent consumption. YAML+Markdown provides structured data with readable prose.
+
+**Answer cache** — Broader cache level keyed on query only (no language/safesearch). Returns the same response for any variant of the same query string.
+
+**Backpressure** — Mechanism that temporarily stops dispatching to rate-limited or failing engines. Includes 30s cooldown after rate-limit denial and 3-strike deactivation.
+
+**Category** — SearXNG-compatible tag that determines which `?categories=` queries include an engine. Supports namespace prefixes (`github:code`, `huggingface:datasets`).
+
+**Circuit breaker** — Per-engine protection that opens after N consecutive errors (default 5) and stays open for T seconds (default 300). Half-open probes allow automatic recovery.
+
+**Engine type** — Classification of adapter implementation: `"api"` (structured JSON API), `"scrape"` (HTTP + HTML parsing), `"structured"` (e.g., Wikipedia).
+
+**EngineStatus** — Enum classifying adapter outcomes: `OK`, `RATE_LIMITED`, `BLOCKED`, `ERROR`, `TIMEOUT`.
+
+**Fail-closed** — When `FAIL_CLOSED=true`, Valkey unavailability causes rate-limit checks to deny requests during a grace period, then fall back to an in-process token bucket. Default is fail-open (allow).
+
+**Feature flags** — Safe-by-default boolean toggles that gate new behavior. Set in `config.yaml` under `features:` or via `FEATURE_<NAME>` env vars.
+
+**Graceful degradation** — Design principle: a failing sub-component (scrape engine, cache, rate limiter) never blocks the overall response. The system returns HTTP 200 with whatever results are available.
+
+**OpenMetrics** — Prometheus-compatible metrics format exposed at `/metrics`. stdlib-only implementation, no prometheus-client dependency.
+
+**PresenceRanker** — V1 ranking strategy: wider-is-better. Results appearing in multiple engine feeds score higher. Documented quality ceiling.
+
+**QueryRouter** — Topic-based query classifier. First-match-wins keyword matching against configurable topic signatures. No ML, no remote API.
+
+**Registry** — `_ENGINE_REGISTRY` dict populated by `@register_engine` decorators at import time. Maps engine name → adapter class.
+
+**ScrapeAdapter** — Base class for HTML-scrape engines (DDG, Google). Uses HTTP GET/POST with stealth headers + HTML parsing. No headless browser. Integrates with ProxyPool for rotation.
+
+**SearchResult** — Internal normalized result dataclass. Decoupled from SearXNG wire format. Contains URL, title, content, engine metadata, score, tier, and media references.
+
+**Semaphore** — Asyncio primitive that caps concurrent outbound HTTP connections per search request (`MAX_CONCURRENT_ENGINES`, default 10).
+
+**Tier 1 / Tier 2** — Two-tier engine classification. Tier 1 (broad, general-purpose) forms the primary result set in unscoped searches. Tier 2 (specialized) surfaces below Tier 1.
+
+**Valkey** — Redis-compatible in-memory data store. The only shared state in the system. Used for caching, rate limiting, engine stats, and audit trails.
+
+**X-Request-ID** — UUIDv4 trace ID attached to every request/response. Preserves incoming IDs for distributed tracing. Stored in `request.state.request_id`.
+
+## Output formats
+
+**JSON (format=json)** — Default output. SearXNG-compatible with all 23 fields preserved plus `meta.*` extensions. Designed for programmatic consumption.
+
+**YAML+Markdown (format=yaml)** — Agent-native output. YAML document with structured results + Markdown summary section with human-readable prose.

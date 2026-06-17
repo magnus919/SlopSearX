@@ -1,97 +1,172 @@
 # Data models reference
 
-## SearchResult
+Internal data types used throughout SlopSearX.
 
-The internal model for a single search result.
+## Core types
 
-| Field | Type | Description |
-|---|---|---|
-| `title` | str | Result title |
-| `url` | str | Result URL |
-| `content` | str | Snippet or abstract text |
-| `engine` | str | Name of the engine that produced this result |
-| `score` | float | Relevance score (higher is better) |
-| `category` | str | Result category tag |
-| `published_date` | datetime or None | Publication date if available |
-| `source` | str | Source name for display |
-| `img_src` | str or None | Source image URL |
-| `thumbnail` | str or None | Thumbnail image URL |
-| `template` | str or None | SearXNG template name for rendering |
+### SearchResult
 
-## AdapterResponse
+```python
+@dataclass
+class SearchResult:
+    url: str                          # Full URL
+    title: str                        # Page title
+    content: str                      # Snippet or description
+    engine: str                       # Primary engine name
+    engines: set[str]                 # All engines returning this URL
+    score: float = 0.0                # Relevance score
+    position: int = 0                 # 1-based rank position
+    category: str = "general"         # SearXNG category
+    published_date: str | None = None # ISO 8601
+    thumbnail: str | None = None      # Thumbnail URL
+    img_src: str | None = None        # Full image URL
+    tier: int = 1                     # 1=primary, 2=specialized
+```
 
-Return type from every engine adapter's `search()` method.
+### AdapterResponse
 
-| Field | Type | Description |
-|---|---|---|
-| `status` | EngineStatus | Status classification |
-| `results` | list[SearchResult] | Search results from this engine |
-| `error` | str or None | Error message if status indicates failure |
-| `elapsed_ms` | float | Wall-clock time spent in the adapter |
-| `answers` | list[dict] | Direct answer content from engines (default `[]`) |
-| `corrections` | list[str] | Suggested query corrections (default `[]`) |
-| `infoboxes` | list[dict] | Structured info box metadata (default `[]`) |
+```python
+@dataclass
+class AdapterResponse:
+    results: list[SearchResult]                      # Search results
+    status: EngineStatus                             # Outcome classification
+    error_message: str | None = None                  # Error details
+    latency_ms: float = 0.0                           # Request latency
+    answers: list[dict] = field(default_factory=list) # Answer boxes
+    corrections: list[str] = field(default_factory=list)  # Spelling corrections
+    infoboxes: list[dict] = field(default_factory=list)   # Info boxes
+```
 
-The three extended fields (`answers`, `corrections`, `infoboxes`) are aggregated from all engine responses and included in the JSON output. They default to empty lists and are populated only by adapters that support them.
+### EngineStatus
 
-## EngineStatus
+```python
+class EngineStatus(enum.Enum):
+    OK = "ok"                   # Success
+    RATE_LIMITED = "rate_limited"  # Rate limited by engine
+    BLOCKED = "blocked"         # CAPTCHA or IP ban
+    ERROR = "error"             # General error
+    TIMEOUT = "timeout"         # Request timed out
+```
 
-Enumeration of possible adapter response statuses.
+## Config types
 
-| Value | Description |
+### Config
+
+```python
+@dataclass
+class Config:
+    engines: dict[str, EngineEntry]
+    cache: CacheConfig
+    ranking: RankingConfig
+    routing: RoutingConfig
+    feature_flags: FeatureFlags
+    default_engines: list[str]
+    log_level: str
+    enable_suggestions: bool
+```
+
+### EngineEntry
+
+```python
+@dataclass
+class EngineEntry:
+    enabled: bool = True
+    base_url: str = ""
+    type: str = "api"
+    timeout_ms: int = 5000
+    max_results: int = 10
+    rate_limit: float | None = None
+    weight: float = 1.0
+    api_key: str | None = None
+    categories: list[str] | None = None
+    categories_add: list[str] | None = None
+    categories_remove: list[str] | None = None
+    proxy_pool: str | None = None
+    scrape_proxy_url: str | None = None
+```
+
+### CacheConfig
+
+```python
+@dataclass
+class CacheConfig:
+    ttl_seconds: int = 300
+    max_result_sets: int = 10000
+    revalidate_on_hit: bool = False
+```
+
+### RankingConfig
+
+```python
+@dataclass
+class RankingConfig:
+    strategy: str = "presence"
+```
+
+### RoutingConfig
+
+```python
+@dataclass
+class RoutingConfig:
+    enabled: bool = True
+    topics: dict | None = None
+    fallback: list[str] | None = None
+```
+
+### FeatureFlags
+
+```python
+@dataclass
+class FeatureFlags:
+    flags: dict[str, bool] = field(default_factory=dict)
+
+    def is_enabled(self, name: str) -> bool:
+        return self.flags.get(name, False)
+```
+
+## Rate limiting types
+
+### _EngineState
+
+```python
+@dataclass
+class _EngineState:
+    consecutive_failures: int = 0
+    cooldown_until: float = 0.0
+    deactivated: bool = False
+```
+
+## Audit stream schema
+
+```
+query_audit:{YYYY-MM-DD} → Stream
+  query               "search query text"
+  client_ip           "10.0.0.1"
+  timestamp           "2026-06-14T12:34:56.789Z"
+  engines             "brave,wikipedia"
+  engines_ok          2
+  engines_error       1
+  engines_timeout     0
+  total_results       15
+  latency_ms          1234.5
+```
+
+## Engine stats schema
+
+```
+engine_stats:{engine}:{YYYY-MM-DD} → Hash
+  queries            15230
+  results_returned   142301
+  errors             234
+  rate_limited       45
+  total_latency_ms   640920
+  total_score        11103
+```
+
+## Key source files
+
+| File | Description |
 |---|---|
-| `ok` | Search completed successfully |
-| `rate_limited` | Engine returned rate limit response |
-| `blocked` | Engine blocked the request (403, CAPTCHA, IP ban) |
-| `error` | Unclassified error |
-| `timeout` | Request timed out |
-
-The `BLOCKED` status is used for CAPTCHA walls, IP bans, and HTTP 403/503 responses from scrape engines. All five values (OK, RATE_LIMITED, BLOCKED, ERROR, TIMEOUT) are defined.
-
-## Config
-
-Top-level configuration dataclass.
-
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `cache` | CacheConfig | default | Cache settings |
-| `ranking` | RankingConfig | default | Ranking settings |
-| `default_engines` | list[str] | all engines | Engines to query by default |
-| `valkey_url` | str | `valkey://localhost:6379` | Valkey connection string |
-| `log_level` | str | `INFO` | Logging verbosity |
-
-## CacheConfig
-
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `ttl_seconds` | int | `300` | Time-to-live for cached responses |
-| `max_result_sets` | int | `10_000` | Maximum number of cached result sets |
-| `revalidate_on_hit` | bool | `False` | Revalidate cached entries on cache hit |
-
-## RankingConfig
-
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `max_results_per_engine` | int | `10` | Max results to keep from each engine |
-| `total_max_results` | int | `50` | Max results in the final merged response |
-| `strategy` | str | `presence` | Ranking strategy (`presence`, `weighted_fusion`, or `learning_to_rank`) |
-
-## RoutingConfig
-
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `enabled` | bool | `True` | Whether topic routing is enabled |
-| `topics` | dict or None | `None` | Topic-to-engine mapping configuration |
-| `fallback` | list[str] or None | `None` | Fallback engines when routing yields no matches |
-
-## EngineEntry
-
-Configuration entry for a single engine.
-
-| Field | Type | Description |
-|---|---|---|
-| `name` | str | Engine identifier matching the adapter class |
-| `display_name` | str | Human-readable engine name |
-| `categories` | list[str] | Category tags this engine supports |
-| `api_key` | str or None | Optional API key |
-| `enabled` | bool | Whether this engine is active |
+| `slopsearx/adapter.py` | SearchResult, AdapterResponse, EngineStatus |
+| `slopsearx/config.py` | Config, EngineEntry, CacheConfig, RankingConfig, FeatureFlags |
+| `slopsearx/ratelimit.py` | _EngineState |

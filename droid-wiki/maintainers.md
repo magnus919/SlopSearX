@@ -1,13 +1,25 @@
 # Maintainers
 
-SlopSearX is a solo project by Magnus Hedemark.
+## Current maintainers
 
-## Ownership
-
-| Subsystem | Recent contributors | Last activity |
+| Name | GitHub | Role |
 |---|---|---|
-| Core (slopsearx/) | Magnus Hedemark | Jun 9 2026 |
-| Engines (engines/) | Magnus Hedemark | Jun 9 2026 |
-| Tests (tests/) | Magnus Hedemark | Jun 9 2026 |
-| Deployment (k8s/, Dockerfile) | Magnus Hedemark | Jun 9 2026 |
-| Documentation | Magnus Hedemark | Jun 9 2026 |
+| Magnus Hedemark | [@magnus919](https://github.com/magnus919) | Project creator and lead maintainer |
+
+## Maintainer responsibilities
+
+- Review and merge pull requests
+- Triage issues
+- Manage releases
+- Keep the adapter registry healthy (review new engines, deprecate broken ones)
+- Curate Tier 1 engine classification
+- Maintain documentation accuracy
+
+## Contact
+
+- **Issues:** [GitHub Issues](https://github.com/magnus919/SlopSearX/issues)
+- **Pull requests:** [GitHub PRs](https://github.com/magnus919/SlopSearX/pulls)
+
+## License
+
+MIT — see [LICENSE](../../LICENSE).

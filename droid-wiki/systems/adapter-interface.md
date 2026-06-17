@@ -4,130 +4,94 @@ Active contributors: Magnus Hedemark
 
 ## Purpose
 
-The adapter interface is the primary architectural invariant of SlopSearX. Every search engine is exactly one file, registered via `@register_engine`. Adding a new engine requires zero changes to the orchestrator. The adapter contract is the boundary across which all engine-specific complexity is localized.
+The adapter interface is the primary architectural invariant of SlopSearX. Every search engine is exactly one file, registered via `@register_engine`. Adding a new engine requires zero changes to the orchestrator.
 
 ## Key abstractions
 
 | Type | File | Description |
 |---|---|---|
-| `sanitize_url` | `slopsearx/adapter.py` | Strips sensitive query parameters (`api_key`, `key`, `apiKey`, `token`, `access_token`) from URLs to prevent credential leakage in error messages and logs. |
-| `EngineAdapter` | `slopsearx/adapter.py` | Abstract base class for all engine adapters. Subclasses override `search()`. Provides `_merge_categories()` for category override/add/remove, `_check_rate_limit()` for rate limiting, circuit breaker state tracking (`circuit_allowed()`, `record_failure()`, `record_success()`), and sensible defaults for `health()`, `warmup()`, and `shutdown()`. The rate limiter is injected at construction time. |
-| `ScrapeAdapter` | `slopsearx/adapter.py` | Base class for HTML-scrape engines. Subclasses of `EngineAdapter` that send HTTP requests with stealth headers and parse HTML responses. No headless browser required. Integrates with `ProxyPool` for proxy rotation. |
-| `SearchResult` | `slopsearx/adapter.py` | Internal normalized result dataclass. Decoupled from wire format. Contains fields for URL, title, content, engine metadata, score, category, published date, media references, and `tier` (1 = primary/broad, 2 = secondary/specialized). |
-| `AdapterResponse` | `slopsearx/adapter.py` | Canonical return type for every adapter's `search()` method. Contains a list of `SearchResult`, an `EngineStatus`, optional error message, measured latency, and SearXNG extended fields (`answers`, `corrections`, `infoboxes`). |
-| `EngineStatus` | `slopsearx/adapter.py` | Standardized error classification enum. Members: `OK`, `RATE_LIMITED`, `BLOCKED`, `ERROR`, `TIMEOUT`. The orchestrator uses these to decide per-engine result inclusion and backpressure. |
-| `register_engine` | `slopsearx/adapter.py` | Decorator that registers an adapter class in the global `_ENGINE_REGISTRY` dict. Enforces that the class subclasses `EngineAdapter` and has a non-empty `name` attribute. |
-| `discover_engines` | `slopsearx/adapter.py` | Instantiates all registered adapters with their per-engine config. Respects the `enabled` flag. Merges category overrides from config before instantiation. |
+| `sanitize_url` | `slopsearx/adapter.py` | Strips sensitive query parameters (`api_key`, `key`, `apiKey`, `token`, `access_token`) from URLs to prevent credential leakage in error messages and logs |
+| `EngineAdapter` | `slopsearx/adapter.py` | Abstract base class for all engine adapters. Provides `_merge_categories()`, `_check_rate_limit()`, circuit breaker state tracking, and sensible defaults for `health()`, `warmup()`, `shutdown()` |
+| `ScrapeAdapter` | `slopsearx/adapter.py` | Base class for HTML-scrape engines. Subclasses of `EngineAdapter` that send HTTP requests with stealth headers and parse HTML. Integrates with `ProxyPool` |
+| `SearchResult` | `slopsearx/adapter.py` | Internal normalized result dataclass. Decoupled from wire format. Contains URL, title, content, engine metadata, score, category, published date, media refs, and `tier` (1 or 2) |
+| `AdapterResponse` | `slopsearx/adapter.py` | Canonical return type. Contains results list, `EngineStatus`, optional error message, latency, and SearXNG extended fields (`answers`, `corrections`, `infoboxes`) |
+| `EngineStatus` | `slopsearx/adapter.py` | Error classification enum: `OK`, `RATE_LIMITED`, `BLOCKED`, `ERROR`, `TIMEOUT` |
+| `register_engine` | `slopsearx/adapter.py` | Decorator registering adapter class in `_ENGINE_REGISTRY`. Validates subclass + non-empty name at import time |
+| `discover_engines` | `slopsearx/adapter.py` | Instantiates all registered adapters with per-engine config. Respects `enabled` flag. Merges category overrides |
 
 ## How it works
 
 ### The decorator pattern
 
-When a Python file in the `engines/` directory is imported, any class decorated with `@register_engine` is added to the `_ENGINE_REGISTRY` dict, keyed by its `name` attribute:
-
 ```python
-_ENGINE_REGISTRY: dict[str, type[EngineAdapter]] = {}
+@register_engine
+class BraveAdapter(EngineAdapter):
+    name = "brave"
+    display_name = "Brave Search API"
+    env_prefix = "ENGINE_BRAVE"
+    engine_type = "api"
+    categories = ["general", "news", "science", "images"]
 
-def register_engine(cls: type[EngineAdapter]) -> type[EngineAdapter]:
-    assert issubclass(cls, EngineAdapter), f"{cls.__name__} must subclass EngineAdapter"
-    assert cls.name, f"{cls.__name__} must set a non-empty class-level 'name'"
-    _ENGINE_REGISTRY[cls.name] = cls
-    return cls
+    async def search(self, query, params=None) -> AdapterResponse:
+        ...
 ```
 
-The decorator validates at registration time that the class subclasses `EngineAdapter` and has a non-empty name. This catches misconfigured adapters at import time rather than at runtime.
+The decorator validates at registration time that the class subclasses `EngineAdapter` and has a non-empty `name` attribute.
 
 ### Engine discovery
 
-`discover_engines()` iterates the registry and creates instances:
-
-```python
-def discover_engines(engine_configs: dict[str, dict] | None = None) -> dict[str, EngineAdapter]:
-```
-
-For each registered class, it looks up per-engine config, checks the `enabled` flag, restructures category config for the `_merge_categories()` method, and calls the constructor. Only enabled engines are instantiated.
+`discover_engines()` iterates the registry, looks up per-engine config, checks the `enabled` flag, restructures category config for `_merge_categories()`, and calls the constructor. Only enabled engines are instantiated.
 
 ### Category merging
 
-The `_merge_categories()` instance method on `EngineAdapter` merges self-declared categories with config overrides. It supports three modes:
+The `_merge_categories()` method supports three modes:
+- **Full override:** a bare list or `{"override": [...]}` replaces self-declared categories
+- **Add:** `{"add": [...]}` appends to self-declared
+- **Remove:** `{"remove": [...]}` suppresses from self-declared
 
-- A bare list in config acts as a full override (backward compatible)
-- A dict with `override` replaces categories entirely
-- A dict with `add` appends to self-declared categories
-- A dict with `remove` suppresses categories from self-declared
-
-The merge logic is invoked at construction time inside `__init__()`, ensuring categories are resolved before any search request is dispatched.
-
-### Proxy pool integration (ScrapeAdapter)
-
-`ScrapeAdapter` subclasses automatically get proxy rotation support via the `ProxyPool` class:
-
-- `_proxy_pool`: A `ProxyPool` instance created from the engine's config via `ProxyPool.from_config()`
-- `_get_proxy()`: Returns an httpx-compatible proxy dict (`{"all://": "..."}`) or `None` if no proxy is configured
-- `_report_proxy_success(proxy)`: Resets the failure count for a proxy after a successful request
-- `_report_proxy_failure(proxy)`: Marks a proxy for cooloff after a CAPTCHA, 429, or 403 response; cooloff escalates after 3 consecutive failures
-
-Proxy configuration is either a static list (`proxy_pool`) or a dynamic endpoint URL (`scrape_proxy_url`), set via the engine's config.
-
-### Rate limiter injection
-
-At server startup, the `RateLimiter` is injected into every adapter instance:
-
-```python
-class EngineAdapter(ABC):
-    def __init__(self, config: dict | None = None, rate_limiter: Any = None) -> None:
-        self.config = config or {}
-        self.rate_limiter = rate_limiter  # injected by server at startup
-        self._merge_categories()
-```
-
-The `_check_rate_limit()` method provides a safe guard — it returns an `AdapterResponse` with `RATE_LIMITED` status if the rate limiter denies the request, or `None` if allowed. It is safe to call even when `self.rate_limiter` is `None` (e.g., tests).
+Operators can override via config.yaml or env vars (`ENGINE_MYENG_CATEGORIES`, `_ADD`, `_REMOVE`).
 
 ### Circuit breaker
 
-Each `EngineAdapter` has a built-in circuit breaker that prevents dispatching to repeatedly failing engines:
+Each engine has a built-in circuit breaker:
 
-- **Threshold:** After `CIRCUIT_BREAKER_THRESHOLD` consecutive errors (default 5), the circuit opens
-- **Timeout:** The circuit stays open for `CIRCUIT_BREAKER_TIMEOUT` seconds (default 300)
-- **Half-open probe:** When the timeout expires, the circuit enters half-open state and the next request is allowed as a probe. If it succeeds, the circuit closes. If it fails, the circuit re-opens for another full timeout period.
+- **Threshold:** 5 consecutive errors (configurable via `ENGINE_CIRCUIT_THRESHOLD`)
+- **Timeout:** 300 seconds (configurable via `ENGINE_CIRCUIT_TIMEOUT`)
+- **Half-open probes:** When timeout expires, the next request probes. Success closes the circuit; failure re-opens for another full timeout
 
-Both threshold and timeout are configurable per-engine via env vars (`ENGINE_CIRCUIT_THRESHOLD`, `ENGINE_CIRCUIT_TIMEOUT`) or class attributes.
-
-The server checks `engine.circuit_allowed()` before dispatching to any engine. Engines with open circuits are added to `unresponsive_engines` with the reason `"circuit open"` and never dispatched. The circuit breaker is driven by the server calling `engine.record_failure()` and `engine.record_success()` after each dispatch result.
+The server checks `engine.circuit_allowed()` before dispatching. Open circuits skip dispatch entirely.
 
 ### URL sanitization
 
-The `sanitize_url()` helper strips known sensitive query parameters (`api_key`, `key`, `apiKey`, `token`, `access_token`) from URLs. This prevents credential leakage in error messages and logs when failed API calls include authentication parameters in the URL. The function is called in the dispatch error handler before the error message is stored.
+`sanitize_url()` strips known sensitive query parameters from URLs to prevent credential leakage in error messages. Called in the dispatch error handler before the error message is stored.
 
-### The six adapter contract rules
+## The six adapter contract rules
 
-From `spec.md`:
-
-1. **Every adapter is exactly one file.** Adding an engine means adding one Python file with a `@register_engine` decorated class. No config file changes, no orchestrator modifications.
-2. **Adapters never raise exceptions.** All error states are classified and returned in `AdapterResponse.status`. The orchestrator never sees an unhandled exception from any adapter.
-3. **Adapters own their error classification.** An HTTP 429, a CAPTCHA wall, a DOM change that produces garbage each is classified as transient or permanent.
-4. **Adapters own their timeout budget.** The orchestrator sets a global deadline per request; the adapter manages its internal timeouts within that budget.
-5. **Adapters own their rate limiting.** Each adapter calls `self.rate_limiter.acquire()` before sending a request. The rate limiter is injected at construction time and is safe to use from `_check_rate_limit()`.
-6. **No adapter cross-talk.** Adapters do not share state, do not call each other, and cannot depend on another adapter's results.
+1. **Every adapter is exactly one file** — add one Python file, zero orchestrator changes
+2. **Adapters never raise exceptions** — all errors classified and returned in `AdapterResponse.status`
+3. **Error classification** — adapters classify HTTP 429, CAPTCHA, DOM changes as transient/permanent
+4. **Timeout budget** — adapters manage internal timeouts within the orchestrator's global deadline
+5. **Rate limiting** — adapters call `self.rate_limiter.acquire()` before sending requests; rate limiter injected at construction
+6. **No adapter cross-talk** — adapters don't share state, call each other, or depend on other results
 
 ## Integration points
 
-- **Registry population:** The `_ENGINE_REGISTRY` is populated when `engines/__init__.py` imports each engine module. The server imports `engines` (via `import engines` at module level in `server.py`) to trigger all `@register_engine` decorators before startup.
-- **Server startup:** The `startup()` event handler in `server.py` calls `discover_engines()`, injects the rate limiter into each engine via the constructor, and warms up all engines concurrently.
-- **Per-request dispatch:** Each incoming search request calls `_dispatch_engine()` per target engine, which calls the adapter's `search()` method.
-- **Lifecycle hooks:** The server calls `warmup()` on startup and `shutdown()` on graceful shutdown for every engine.
-- **Proxy rotation:** `ScrapeAdapter` subclasses automatically get proxy rotation via `ProxyPool`, configured through `proxy_pool` (static list) or `scrape_proxy_url` (dynamic endpoint) config keys.
+- **Registry population:** `engines/__init__.py` imports trigger `@register_engine`
+- **Server startup:** `discover_engines()` + rate limiter injection + concurrent warmup
+- **Per-request dispatch:** `_dispatch_engine()` → `adapter.search()`
+- **Lifecycle hooks:** `warmup()` at startup, `shutdown()` at graceful shutdown
 
-## Entry points for modification
+## Entry points
 
-- Adding a new engine: create a new file in `engines/` with a `@register_engine` decorated class, add one import line to `engines/__init__.py`
-- Modifying the adapter contract: change base classes or data types in `slopsearx/adapter.py`
-- Changing discovery behavior: modify `discover_engines()` or `_merge_categories()`
+- Add a new engine: create file in `engines/`, add import to `__init__.py`
+- Modify adapter contract: change base classes or data types in `adapter.py`
+- Change discovery: modify `discover_engines()` or `_merge_categories()`
 
 ## Key source files
 
 | File | Description |
 |---|---|
-| `slopsearx/adapter.py` | Base classes (`EngineAdapter`, `ScrapeAdapter`), data types (`SearchResult`, `AdapterResponse`, `EngineStatus`), registry and discovery functions |
-| `engines/__init__.py` | Imports all engine modules, triggering `@register_engine` decoration |
-| `docs/ENGINE_ADAPTERS.md` | Full adapter reference with contract rules, data types, lifecycle hooks, sub-categories, and built-in adapter table |
+| `slopsearx/adapter.py` | Base classes, data types, registry, discovery |
+| `engines/__init__.py` | Imports all engine modules |
+| `engines/*.py` | Individual engine adapters |
+| `docs/ENGINE_ADAPTERS.md` | Full adapter reference |

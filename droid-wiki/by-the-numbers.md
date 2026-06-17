@@ -1,86 +1,114 @@
 # By the numbers
 
-Data collected on 2026-06-15.
+## Codebase size
 
-## Size
+| Metric | Count |
+|---|---|
+| Core library modules (`slopsearx/`) | 15 |
+| Engine adapters (`engines/`) | 48 |
+| Test files (`tests/`) | 37 |
+| Lines of Python | ~19,000 |
+| Lines of Markdown documentation | ~3,600 |
+| Lines of YAML config | ~230 |
 
-| Category | Files | Lines |
+## Engine breakdown
+
+| Domain | Engines |
+|---|---|
+| General / Web | 6 (Brave, DuckDuckGo, Google, Hacker News, Reddit, Wikipedia) |
+| Developer / Packages | 8 (Crates.io, Docker Hub, GitHub, npm, PyPI, Repology, RubyGems, Stack Exchange) |
+| Science & Research | 7 (arXiv, HuggingFace, Internet Archive, OpenAlex, Open Library, Semantic Scholar, UniProt) |
+| Medical / Health | 4 (ClinicalTrials.gov, openFDA, PubChem, PubMed) |
+| Security / Threat Intel | 17 (AbuseIPDB, AlienVault OTX, Censys, CRT.sh, CVE, DeHashed, EPSS, Exploit-DB, GreyNoise, HIBP, IntelX, MITRE ATT&CK, NVD, Shodan, URLhaus, VirusTotal, VulnCheck) |
+| Finance / Economics | 2 (FRED, SEC EDGAR) |
+| Media & Entertainment | 2 (MusicBrainz, TMDB) |
+| Geography / GIS | 1 (Nominatim) |
+| Legal | 1 (Oyez) |
+| **Total** | **48** |
+
+## Engine types
+
+| Type | Count | Examples |
 |---|---|---|
-| slopsearx/ (core) | 14 | 3,510 |
-| engines/ | 49 | 6,708 |
-| tests/ | 43 | 8,844 |
-| **Total Python** | **107** | **19,073** |
-| Markdown | 58 | 3,126 |
-| YAML / Docker | 12 | ~350 |
-| JSON | 2 | ~145 |
-| Dockerfile | 1 | ~35 |
+| API | 45 | Brave, Wikipedia, GitHub, arXiv, Shodan |
+| Scrape | 3 | DuckDuckGo, Google, Exploit-DB |
 
-## Language breakdown
+## API endpoints
 
-```mermaid
-xychart-beta
-    title "Lines of code by language"
-    x-axis ["Python", "Markdown", "YAML", "JSON", "Dockerfile"]
-    y-axis "Lines" 0 --> 20000
-    bar [19073, 3126, 350, 145, 35]
-```
+| Endpoint | Purpose |
+|---|---|
+| `GET /search` | Execute search (JSON or YAML+Markdown) |
+| `GET /health` | Server liveness and Valkey connectivity |
+| `GET /metrics` | OpenMetrics for Prometheus scraping |
+| `GET /config` | Categories-to-engines mapping |
 
-Python accounts for all functional source code. Markdown documents engines, architecture, and the wiki. YAML configures CI/CD and Kubernetes deployments. JSON stores configuration files. The Dockerfile defines the container image.
+## Observability
 
-## Activity
+| Metric | Type | Labels |
+|---|---|---|
+| `slopsearx_engine_queries_total` | Counter | `engine` |
+| `slopsearx_engine_latency_seconds` | Histogram | `engine`, `quantile` (0.5, 0.9, 0.99) |
+| `slopsearx_engine_status` | Gauge | `engine` (0=ok, 1=degraded, 2=down) |
+| `slopsearx_cache_hit_total` | Counter | `type` (hit/miss) |
+| `slopsearx_server_requests_total` | Counter | (no labels) |
+| `slopsearx_server_requests_by_category_total` | Counter | `category` |
+| `slopsearx_server_requests_by_format_total` | Counter | `format` |
+| `slopsearx_server_errors_total` | Counter | `type` (timeout, circuit_open, rate_limited, internal) |
+
+## Alertmanager rules
+
+| Alert | Severity | Condition |
+|---|---|---|
+| SlopSearxDown | critical | `/health` unreachable for 1m |
+| EngineDegraded | warning | Engine status > 0 for 5m |
+| HighErrorRatio | warning | Query growth > 25% in 5m |
+| HighLatency | warning | P95 latency > 5s for 5m |
+| RateLimitSaturation | info | Request rate > 100/s for 5m |
+| ServerErrorSpike | warning | Error rate > 0.1/s for 5m |
+
+## CI/CD
+
+| Workflow | Trigger | Jobs |
+|---|---|---|
+| `ci.yml` | Push / PR | Lint (ruff), Test (pytest on 3.12 + 3.13) |
+| `docker.yml` | Push to main / tag | Build Docker image, push to ghcr.io |
+| `droid.yml` | Push to main | Factory Droid tagging |
+| `droid-review.yml` | PR open / sync | Factory Droid code review |
+| `droid-wiki-refresh.yml` | Push to main | Wiki refresh via Factory Droid |
+| `release-please.yml` | Push to main | Automated release PR management |
+
+## Dev tooling
+
+| Tool | Purpose |
+|---|---|
+| ruff | Linting and formatting |
+| mypy | Static type checking |
+| pytest + pytest-asyncio + pytest-cov | Testing with coverage |
+| pre-commit | Git hooks for ruff formatting/linting |
+| deptry | Dependency analysis |
+| radon | Cyclomatic complexity |
+| vulture | Dead code detection |
+| import-linter | Architecture layer enforcement |
+| jscpd | Copy-paste detection (config in `.jscpd.json`) |
+
+## Valkey keyspace
+
+| Key pattern | Purpose | TTL |
+|---|---|---|
+| `search:{sha256}` | Precise search cache | 3600s (general) / 300s (news) |
+| `answer:{sha256}` | Broad answer cache | 3600s |
+| `suggest:{sha256}` | Suggestion cache | 1800s |
+| `ratelimit:{engine}:{window}` | Per-engine rate limit counter | 2× window |
+| `ratelimit:client:{ip}:{window}` | Per-client rate limit counter | 2× window |
+| `engine_stats:{engine}:{date}` | Daily quality telemetry | 90 days |
+| `query_audit:{date}` | Daily audit stream | 90 days, max 10K entries |
+
+## Deployment
 
 | Metric | Value |
 |---|---|
-| Total commits | 76 |
-| Commit period | Jun 8-15 2026 |
-| Bot co-authored commits | 28 (37%) |
-| Contributors (human) | 2 |
-
-All 76 commits were made in June 2026. The project was scaffolded on June 8 and has seen continuous development since.
-
-## Churn hotspots (last 90 days)
-
-| File | Changes |
-|---|---|
-| `slopsearx/server.py` | 21 |
-| `slopsearx/config.py` | 11 |
-| `slopsearx/adapter.py` | 10 |
-| `engines/__init__.py` | 9 |
-| `pyproject.toml` | 7 |
-| `engines/google.py` | 7 |
-| `engines/duckduckgo.py` | 7 |
-| `tests/test_server.py` | 6 |
-| `slopsearx/formatter.py` | 6 |
-
-## Complexity
-
-Largest files by line count:
-
-| File | Lines |
-|---|---|
-| tests/test_new_engines.py | 913 |
-| tests/test_adapters.py | 700 |
-| slopsearx/server.py | 690 |
-| tests/test_fail_closed.py | 686 |
-| tests/test_concurrency.py | 686 |
-| slopsearx/config.py | 457 |
-| slopsearx/adapter.py | 404 |
-| tests/test_nvd.py | 403 |
-| tests/test_formatter.py | 383 |
-
-## Engine coverage
-
-| Domain | Engine count |
-|---|---|
-| General / Web | 6 |
-| Developer / Package Registries | 8 |
-| Science & Research | 7 |
-| Medical / Health | 4 |
-| Security / Threat Intelligence | 17 |
-| Finance / Economics | 2 |
-| Media & Entertainment | 2 |
-| Geography / GIS | 1 |
-| Legal | 1 |
-| **Total** | **48** |
-
-Bot co-authorship (37%) is a lower bound on AI-assisted work. Inline AI tools like Copilot leave no trace in git history, so the actual AI contribution rate is likely higher.
+| Docker image size | ~200MB |
+| Cold start time | <2s |
+| Default replicas | 3 (K8s) |
+| Max replicas | 100 (HPA) |
+| Port | 8080 |

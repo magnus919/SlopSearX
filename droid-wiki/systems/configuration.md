@@ -4,144 +4,95 @@ Active contributors: Magnus Hedemark
 
 ## Purpose
 
-Three-layer configuration model: built-in defaults, optional YAML config file, environment variable overrides. Env vars always win.
+Three-layer configuration model: built-in defaults → optional YAML file → environment variable overrides. Env vars always win for the same key.
 
 ## Key abstractions
 
 | Type | File | Description |
 |---|---|---|
-| `Config` | `slopsearx/config.py` | Top-level configuration dataclass. Contains `engines` (dict of `EngineEntry`), `cache` (`CacheConfig`), `ranking` (`RankingConfig`), `routing` (`RoutingConfig`), `default_engines`, `enable_suggestions`, and `log_level`. |
-| `CacheConfig` | `slopsearx/config.py` | Cache subsystem configuration: `ttl_seconds` (default 300), `max_result_sets` (default 10000), `revalidate_on_hit` (default False). |
-| `RankingConfig` | `slopsearx/config.py` | Ranking strategy selector: `strategy` (default `"presence"`, with `"weighted_fusion"` and `"learning_to_rank"` as future options). |
-| `RoutingConfig` | `slopsearx/config.py` | Query routing configuration: `enabled` (default True), `topics` (dict of topic signatures), `fallback` (list of fallback engines). |
-| `EngineEntry` | `slopsearx/config.py` | Per-engine configuration dataclass. Covers `enabled`, `base_url`, `type`, `timeout_ms`, `max_results`, `rate_limit`, `weight`, `api_key`, category overrides (`categories`, `categories_add`, `categories_remove`), and scrape-specific proxy fields (`proxy_pool`, `scrape_proxy_url`). |
-| `load_config` | `slopsearx/config.py` | Public function that loads and layers all config sources. Returns a fully resolved `Config` dataclass. |
-| `_load_env_overrides` | `slopsearx/config.py` | Reads all `ENGINE_*` and `SEARCH_*` environment variables and returns a flat dict of overrides. |
-| `_DEFAULT_ENGINES` | `slopsearx/config.py` | Hardcoded default config dicts for all 24 engines, including base URLs, timeouts, rate limits, result caps, and weight values. |
+| `Config` | `slopsearx/config.py` | Top-level configuration dataclass: engines, cache, ranking, routing, feature flags, globals |
+| `EngineEntry` | `slopsearx/config.py` | Per-engine config: enabled, base_url, type, timeout, rate limit, weight, API key, categories |
+| `CacheConfig` | `slopsearx/config.py` | Cache settings: TTL, max result sets, revalidate |
+| `RankingConfig` | `slopsearx/config.py` | Ranking strategy: presence / weighted_fusion / learning_to_rank |
+| `RoutingConfig` | `slopsearx/config.py` | Query routing: enabled flag, topic mappings, fallback engines |
+| `FeatureFlags` | `slopsearx/config.py` | Boolean feature toggles: defaults → YAML → env vars. Unknown flags return `False` |
+| `load_config()` | `slopsearx/config.py` | Public API: loads all three layers and returns a resolved `Config` object |
 
-## How it works
+## Configuration layers
 
-### Loading priority
+### Layer 1: Built-in defaults
 
-Configuration is loaded in three layers. Each layer overrides the previous one:
+Hardcoded in `_DEFAULT_ENGINES` dict in `config.py`. Contains production-ready defaults for all 48 engines: base URLs, rate limits, timeouts, weights. Also defaults for cache and ranking.
 
-```
-1. Built-in defaults (hardcoded in _DEFAULT_ENGINES)
-2. YAML config file (optional, at /etc/slopsearx/config.yaml by default)
-3. Env var overrides (ENGINE_* and SEARCH_* vars always win)
-```
+### Layer 2: YAML config file
 
-### Step-by-step loading
-
-`load_config()` executes these steps in order:
-
-1. **Start with built-in defaults.** Creates a `Config` object with `EngineEntry` instances populated from `_DEFAULT_ENGINES`, a default `CacheConfig`, and a default `RankingConfig`.
-2. **Layer the config file.** If a YAML file exists at the specified path, it is loaded with `yaml.safe_load()`. Engine configs from the file are merged over defaults: existing engines get their fields overridden on a per-key basis, and new engines are added. Cache and ranking configs are also overridden from the file.
-3. **Layer environment variables.** `_load_env_overrides()` scans all environment variables starting with `ENGINE_` or `SEARCH_` and builds a flat override dict. These overrides are applied to the resolved `Config` object with `_apply_env_overrides()`.
-
-### Environment variable naming convention
-
-Env vars use two namespaces:
-
-- `ENGINE_<NAME>_<SETTING>` for per-engine settings. Example: `ENGINE_BRAVE_API_KEY`, `ENGINE_DUCKDUCKGO_CATEGORIES_ADD`
-- `SEARCH_<SETTING>` for global settings. Example: `SEARCH_CACHE_TTL_SECONDS`, `SEARCH_LOG_LEVEL`, `SEARCH_DEFAULT_ENGINES`
-
-The `_load_env_overrides()` function parses these into a flat dict with dotted keys:
-
-```
-ENGINE_BRAVE_API_KEY       →  engines.brave.api_key
-ENGINE_DUCKDUCKGO_ENABLED  →  engines.duckduckgo.enabled
-SEARCH_CACHE_TTL_SECONDS   →  search_cache_ttl_seconds
-```
-
-### Config file format
-
-The config file is optional YAML at `/etc/slopsearx/config.yaml`:
+Optional file at `/etc/slopsearx/config.yaml` (mounted via K8s ConfigMap or Docker volume). Overrides defaults. Example:
 
 ```yaml
 engines:
   brave:
-    enabled: true
-    timeout_ms: 5000
-    max_results: 10
+    rate_limit: 20
+    max_results: 15
   duckduckgo:
     enabled: true
-    timeout_ms: 10000
-    max_results: 10
-    proxy_pool: "residential"
-
+    proxy_pool: ["http://proxy1:8080", "http://proxy2:8080"]
 cache:
-  ttl_seconds: 300
-  max_result_sets: 10000
-
+  ttl_seconds: 600
 ranking:
-  strategy: "presence"
-
+  strategy: presence
 routing:
   enabled: true
-  topics:
-    code:
-      keywords: [python, javascript, rust, golang, react]
-      engines: [brave, github, stackexchange, wikipedia]
-    science:
-      keywords: [quantum, physics, biology, paper, doi]
-      engines: [brave, arxiv, semanticscholar, openalex, wikipedia]
-  fallback: [brave, wikipedia]
-
-default_engines:
-  - brave
-  - wikipedia
-  - duckduckgo
-
-log_level: "INFO"
-enable_suggestions: true
+features:
+  ai_dispatch: false
+  experimental_ranking: false
 ```
 
-### Why the hybrid model
+### Layer 3: Environment variables
 
-At 50+ replicas with 10+ engines, env-var-only configuration has two hard limits:
+**Engine-level:** `ENGINE_{NAME}_{SETTING}` maps to `engines.{name}.{setting}`. Example: `ENGINE_BRAVE_API_KEY=abc123`, `ENGINE_DDG_TIMEOUT_MS=15000`.
 
-1. **Kubernetes pod spec limit of ~32768 bytes** for all environment variables combined. Ten engines with ten config params each using namespace-prefixed names easily exceeds this.
-2. **Operational friction.** Changing an engine's timeout or rate limit requires a full rollout with env-var-only. A mounted ConfigMap can be hot-reloaded by the application.
+**Global:** `SEARCH_CACHE_TTL_SECONDS`, `SEARCH_LOG_LEVEL`, `SEARCH_DEFAULT_ENGINES`, `VALKEY_URL`, `MAX_CONCURRENT_ENGINES`, `PER_CLIENT_REQUESTS`, `PER_CLIENT_WINDOW_SECONDS`, `FAIL_CLOSED`, `FAIL_CLOSED_GRACE_SECONDS`.
 
-The hybrid model preserves the core stateless property: the file is read once at startup and never written to by the application. Replicas remain interchangeable.
+**Feature flags:** `FEATURE_{NAME}=true|false|1|0|yes`. Example: `FEATURE_AI_DISPATCH=true`.
 
-### Per-engine category overrides
+## Feature flags
 
-The `EngineEntry` dataclass supports three category override mechanisms:
+Safe-by-default boolean toggles for gating new behavior:
 
-- `categories`: a list that fully replaces the engine's self-declared categories
-- `categories_add`: a list appended to the engine's self-declared categories
-- `categories_remove`: a list suppressed from the engine's self-declared categories
+```python
+if config.feature_flags.is_enabled("ai_dispatch"):
+    # new behavior here
+```
 
-These can be set via config file or env vars. When set via env vars, the values are comma-separated strings that get coerced to lists.
+Configured via:
+- `config.yaml` → `features: { ai_dispatch: true }`
+- Env vars → `FEATURE_AI_DISPATCH=true`
+- Unknown flags → `False` (safe by default)
 
-### Scrape engine proxy fields
+## Engine category override
 
-Scrape-based engines (DuckDuckGo, Google) support two proxy configuration options on `EngineEntry`:
+Operators can reclassify engine categories without modifying adapter code:
 
-- `proxy_pool`: Name or list of proxy URLs for round-robin rotation. Typically set to a static pool or a service name.
-- `scrape_proxy_url`: A dynamic proxy endpoint URL. When set, the proxy pool uses this single endpoint instead of local rotation.
+```yaml
+engines:
+  myengine:
+    categories:
+      override: ["general", "news"]  # replace entirely
+      add: ["finance"]               # append
+      remove: ["images"]             # suppress
+```
 
-These are consumed by `ProxyPool` which integrates with `ScrapeAdapter` at construction time.
+Env var equivalents: `ENGINE_MYENG_CATEGORIES=general,news`, `ENGINE_MYENG_CATEGORIES_ADD=finance`, `ENGINE_MYENG_CATEGORIES_REMOVE=images`.
 
-## Integration points
+## Entry points
 
-- **Server startup:** `startup()` in `server.py` calls `load_config()`, then converts `EngineEntry` dataclasses to dicts for `discover_engines()`. The config also drives `QueryRouter` initialization, `SuggestionService` opt-in (`enable_suggestions`), and `EngineStatsTracker` setup.
-- **Per-engine config:** Each engine's adapter instance receives its config dict as `self.config`
-- **Cache config:** `SearchCache` TTL values are derived from the loaded config
-- **Routing config:** `QueryRouter` reads the `routing` section from config to build topic-signature mappings for query-based engine selection
-- **Suggestion opt-in:** The `enable_suggestions` flag controls whether `SuggestionService` (Brave Suggest API) is initialized at startup
-- **Env var injection:** API keys are read from env vars at config loading time, never stored in the config file
-
-## Entry points for modification
-
-- Adding a new config parameter: add a field to the relevant dataclass (`Config`, `EngineEntry`, `CacheConfig`, `RankingConfig`)
-- Adding a new engine default: add an entry to `_DEFAULT_ENGINES`
-- Changing env var parsing: modify `_load_env_overrides()` or `_apply_env_overrides()`
+- Add a config option: add field to `Config`/`EngineEntry` dataclass, add default in `_DEFAULT_ENGINES`, support env override in `_load_env_overrides()`
+- Add a feature flag: document in `config.yaml` features section, gate code with `config.feature_flags.is_enabled()`
+- Change defaults: modify `_DEFAULT_ENGINES` dict
 
 ## Key source files
 
 | File | Description |
 |---|---|
-| `slopsearx/config.py` | All config loading logic, dataclasses, env var parsing, and engine defaults |
+| `slopsearx/config.py` | Three-layer config model, defaults, loaders, feature flags |
+| `config.yaml` | Optional operator config file |
