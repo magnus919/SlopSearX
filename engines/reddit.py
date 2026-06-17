@@ -40,7 +40,7 @@ class RedditAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         cfg = self.config
@@ -155,9 +155,7 @@ class RedditAdapter(EngineAdapter):
             # ISO 8601 from epoch
             published = None
             if created_utc:
-                published = time.strftime(
-                    "%Y-%m-%dT%H:%M:%SZ", time.gmtime(int(created_utc))
-                )
+                published = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(int(created_utc)))
 
             # Thumbnail
             thumbnail = data.get("thumbnail", "")

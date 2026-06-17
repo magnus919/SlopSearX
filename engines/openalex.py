@@ -29,7 +29,7 @@ class OpenAlexAdapter(EngineAdapter):
     ) -> AdapterResponse:
         import httpx
 
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         cfg = self.config
@@ -37,12 +37,7 @@ class OpenAlexAdapter(EngineAdapter):
         max_results = cfg.get("max_results", 10)
         base_url = cfg.get("base_url", "https://api.openalex.org")
 
-        url = (
-            f"{base_url}/works"
-            f"?search={urllib.parse.quote(query)}"
-            f"&sort=cited_by_count:desc"
-            f"&per_page={max_results}"
-        )
+        url = f"{base_url}/works?search={urllib.parse.quote(query)}&sort=cited_by_count:desc&per_page={max_results}"
 
         try:
             async with httpx.AsyncClient(timeout=timeout_ms / 1000) as client:

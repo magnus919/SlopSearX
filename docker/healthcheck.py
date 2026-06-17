@@ -1,4 +1,5 @@
 """Health check script for Docker HEALTHCHECK."""
+
 import sys
 import urllib.request
 

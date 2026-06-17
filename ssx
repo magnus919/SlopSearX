@@ -20,13 +20,12 @@ Environment:
 from __future__ import annotations
 
 import argparse
+import json as _json
 import os
 import sys
-import json as _json
 from typing import Any
-from urllib.request import urlopen, Request
-from urllib.parse import urlencode, quote
-
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 DEFAULT_URL = "http://localhost:8080"
 
@@ -218,10 +217,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         prog="ssx",
         description="SlopSearX CLI — AI-agent-native meta search client",
-        epilog=(
-            "Environment: SSX_URL, SSX_FORMAT (yaml|json). "
-            "See SKILL.md for full reference."
-        ),
+        epilog=("Environment: SSX_URL, SSX_FORMAT (yaml|json). See SKILL.md for full reference."),
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

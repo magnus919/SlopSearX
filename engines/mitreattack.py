@@ -41,7 +41,7 @@ class MitreAttackAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         cfg = self.config
@@ -112,7 +112,10 @@ class MitreAttackAdapter(EngineAdapter):
         except Exception as exc:  # noqa: BLE001
             latency = (time.monotonic() - start_time) * 1000
             return AdapterResponse(
-                results=[], status=EngineStatus.ERROR, error_message=str(exc), latency_ms=latency,
+                results=[],
+                status=EngineStatus.ERROR,
+                error_message=str(exc),
+                latency_ms=latency,
             )
 
     def _parse_technique_page(self, html_text: str, technique_id: str) -> list[SearchResult]:
@@ -198,5 +201,3 @@ class MitreAttackAdapter(EngineAdapter):
                 position=1,
             ),
         ]
-
-

@@ -31,4 +31,5 @@ class TestIntelXAdapter:
 
     def test_adapter_registered(self):
         from slopsearx.adapter import list_engines
+
         assert "intelx" in list_engines()

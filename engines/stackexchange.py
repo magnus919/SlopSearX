@@ -35,7 +35,7 @@ class StackExchangeAdapter(EngineAdapter):
     ) -> AdapterResponse:
         import httpx
 
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         cfg = self.config

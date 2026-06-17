@@ -65,9 +65,11 @@ class TestShodanAdapter:
         instances = discover_engines({"shodan": {"enabled": True, "api_key": "test-shodan-key-67890"}})
         adapter = instances["shodan"]
 
-        async with MockHTTP(lambda r: (_ for _ in ()).throw(RuntimeError(
-            "https://api.shodan.io/shodan/host/search?key=test-shodan-key-67890&query=test&limit=10"
-        ))):
+        async with MockHTTP(
+            lambda r: (_ for _ in ()).throw(
+                RuntimeError("https://api.shodan.io/shodan/host/search?key=test-shodan-key-67890&query=test&limit=10")
+            )
+        ):
             result = await adapter.search("test")
         assert result.status == EngineStatus.ERROR
         assert result.error_message is not None

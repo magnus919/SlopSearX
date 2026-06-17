@@ -156,10 +156,7 @@ class TestEngineBudget:
     def test_budget_limits_results(self) -> None:
         """Per-engine budget caps results from that engine."""
         ranker = PresenceRanker(per_engine_budget={"brave": 2})
-        results = [
-            self._make_result(f"https://brave-only-{i}.com", f"B{i}", "brave")
-            for i in range(5)
-        ]
+        results = [self._make_result(f"https://brave-only-{i}.com", f"B{i}", "brave") for i in range(5)]
         ranked = ranker.rank({"brave": results}, "test")
 
         assert len(ranked) == 2
@@ -167,10 +164,7 @@ class TestEngineBudget:
     def test_budget_zero_means_no_limit(self) -> None:
         """Budget of 0 (or not set) means no limit."""
         ranker = PresenceRanker(per_engine_budget={})
-        results = [
-            self._make_result(f"https://a-{i}.com", f"A{i}", "brave")
-            for i in range(10)
-        ]
+        results = [self._make_result(f"https://a-{i}.com", f"A{i}", "brave") for i in range(10)]
         ranked = ranker.rank({"brave": results}, "test")
 
         assert len(ranked) == 10
@@ -206,8 +200,7 @@ class TestBuildEngineStatus:
 
     def _make_response(self, count: int, status: EngineStatus, latency: float = 100.0) -> AdapterResponse:
         results = [
-            SearchResult(url=f"https://x{i}.com", title=f"X{i}", content="", engine="test")
-            for i in range(count)
+            SearchResult(url=f"https://x{i}.com", title=f"X{i}", content="", engine="test") for i in range(count)
         ]
         return AdapterResponse(results=results, status=status, latency_ms=latency)
 
@@ -278,8 +271,7 @@ class TestBuildMeta:
 
     def _make_response(self, count: int, status: EngineStatus, latency: float = 100.0) -> AdapterResponse:
         results = [
-            SearchResult(url=f"https://x{i}.com", title=f"X{i}", content="", engine="test")
-            for i in range(count)
+            SearchResult(url=f"https://x{i}.com", title=f"X{i}", content="", engine="test") for i in range(count)
         ]
         return AdapterResponse(results=results, status=status, latency_ms=latency)
 

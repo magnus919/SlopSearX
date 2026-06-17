@@ -76,7 +76,6 @@ class TestAdapterResponse:
 
 
 class TestEngineRegistry:
-
     def test_register_valid_adapter(self) -> None:
         """A valid adapter should be registered and discoverable."""
         engines = list_engines()
@@ -154,6 +153,7 @@ class TestEngineAdapter:
                 return AdapterResponse(results=[], status=EngineStatus.OK)
 
         import slopsearx.adapter as _adapter
+
         assert _HealthyEngine.name in _adapter._ENGINE_REGISTRY
 
     def test_adapter_config_passthrough(self) -> None:
@@ -239,9 +239,7 @@ class TestSanitizeUrl:
         """sanitize_url removes multiple sensitive params, preserving safe ones."""
         from slopsearx.adapter import sanitize_url
 
-        result = sanitize_url(
-            "https://api.example.com/search?api_key=sk-1234&key=abc123&q=test&page=2"
-        )
+        result = sanitize_url("https://api.example.com/search?api_key=sk-1234&key=abc123&q=test&page=2")
         assert result == "https://api.example.com/search?q=test&page=2"
 
     def test_empty_query_string(self) -> None:

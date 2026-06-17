@@ -36,7 +36,7 @@ class CensysAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         cfg = self.config
@@ -48,10 +48,10 @@ class CensysAdapter(EngineAdapter):
 
         if not api_id or not api_secret:
             return AdapterResponse(
-                results=[], status=EngineStatus.ERROR,
+                results=[],
+                status=EngineStatus.ERROR,
                 error_message=(
-                    "Censys API credentials not configured"
-                    " (set ENGINE_CENSYS_API_KEY and ENGINE_CENSYS_API_SECRET)"
+                    "Censys API credentials not configured (set ENGINE_CENSYS_API_KEY and ENGINE_CENSYS_API_SECRET)"
                 ),
             )
 
@@ -86,7 +86,10 @@ class CensysAdapter(EngineAdapter):
         except Exception as exc:  # noqa: BLE001
             latency = (time.monotonic() - start_time) * 1000
             return AdapterResponse(
-                results=[], status=EngineStatus.ERROR, error_message=str(exc), latency_ms=latency,
+                results=[],
+                status=EngineStatus.ERROR,
+                error_message=str(exc),
+                latency_ms=latency,
             )
 
     def _parse_hits(self, hits: list[dict[str, Any]]) -> list[SearchResult]:
@@ -99,10 +102,13 @@ class CensysAdapter(EngineAdapter):
             country = location.get("country", "")
             city = location.get("city", "")
 
-            service_str = ", ".join(
-                f"{s.get('service_name', '')}:{s.get('port', '')}" for s in services[:5]
-                if s.get('service_name')
-            ) if services else ""
+            service_str = (
+                ", ".join(
+                    f"{s.get('service_name', '')}:{s.get('port', '')}" for s in services[:5] if s.get("service_name")
+                )
+                if services
+                else ""
+            )
 
             content_parts = []
             if service_str:

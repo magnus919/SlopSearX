@@ -111,13 +111,10 @@ def format_json(
     # engines array — SearXNG-compatible top-level field
     if meta and "engine_status" in meta:
         response["engines"] = [
-            {"engine": name, "results": info.get("results", 0)}
-            for name, info in meta["engine_status"].items()
+            {"engine": name, "results": info.get("results", 0)} for name, info in meta["engine_status"].items()
         ]
 
-    response["number_of_results"] = (
-        number_of_results if number_of_results is not None else len(search_results)
-    )
+    response["number_of_results"] = number_of_results if number_of_results is not None else len(search_results)
     response["answers"] = answers or []
     response["corrections"] = corrections or []
     response["infoboxes"] = infoboxes or []
@@ -177,9 +174,7 @@ def format_yaml_markdown(
         # Count responsive engines from engine_status
         if "engine_status" in meta:
             yaml_section["meta"]["engine_count"] = len(meta["engine_status"])
-            ok_count = sum(
-                1 for s in meta["engine_status"].values() if s.get("status") == "ok"
-            )
+            ok_count = sum(1 for s in meta["engine_status"].values() if s.get("status") == "ok")
             yaml_section["meta"]["responsive"] = ok_count
 
     yaml_section["results"] = [
@@ -201,9 +196,7 @@ def format_yaml_markdown(
     total_engines = engine_count or (len(meta["engine_status"]) if meta and "engine_status" in meta else 0)
     ok_engines = responsive_count
     if ok_engines is None and meta and "engine_status" in meta:
-        ok_engines = sum(
-            1 for s in meta["engine_status"].values() if s.get("status") == "ok"
-        )
+        ok_engines = sum(1 for s in meta["engine_status"].values() if s.get("status") == "ok")
 
     elapsed = meta.get("response_time_ms", 0) if meta else 0
 

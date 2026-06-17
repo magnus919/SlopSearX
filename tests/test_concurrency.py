@@ -52,9 +52,7 @@ class _SlowMockEngine(EngineAdapter):
         super().__init__()
         self.delay = delay
 
-    async def search(
-        self, query: str, params: dict[str, Any] | None = None
-    ) -> AdapterResponse:
+    async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
         if self.delay > 0:
             await asyncio.sleep(self.delay)
         return AdapterResponse(
@@ -80,9 +78,7 @@ class _ErrorMockEngine(EngineAdapter):
     engine_type = "api"
     categories = ["general"]
 
-    async def search(
-        self, query: str, params: dict[str, Any] | None = None
-    ) -> AdapterResponse:
+    async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
         raise RuntimeError("simulated engine crash")
 
 
@@ -312,9 +308,7 @@ class TestSemaphoreBounds:
                 # total time should be at least 0.36s (sequential).
                 # With semaphore=3, it would be ~0.12s (parallel).
                 # Allow some overhead but ensure it's sequential-bounded.
-                assert elapsed >= 0.30, (
-                    f"Expected sequential dispatch time >= 0.30s, got {elapsed:.3f}s"
-                )
+                assert elapsed >= 0.30, f"Expected sequential dispatch time >= 0.30s, got {elapsed:.3f}s"
         finally:
             server_mod._active_engines = original_engines
             server_mod._engine_semaphore = original_semaphore
@@ -517,9 +511,7 @@ class TestConcurrentRequestsShareSemaphore:
                 assert all(r.status_code == 200 for r in results)
                 # With semaphore=1, 3 engines per request × 2 requests = 6 serial dispatches
                 # Each takes 0.1s, so total should be >= 0.5s
-                assert elapsed >= 0.4, (
-                    f"Expected sequential dispatch time >= 0.4s, got {elapsed:.3f}s"
-                )
+                assert elapsed >= 0.4, f"Expected sequential dispatch time >= 0.4s, got {elapsed:.3f}s"
         finally:
             server_mod._active_engines = original_engines
             server_mod._engine_semaphore = original_semaphore
@@ -553,9 +545,7 @@ class TestRateLimiterUsesClientIP:
             async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
                 r = await ac.get("/search", params={"q": "test"})
                 assert r.status_code == 200
-                assert "10.0.0.42" in tracker.keys, (
-                    f"Expected '10.0.0.42' in {tracker.keys}"
-                )
+                assert "10.0.0.42" in tracker.keys, f"Expected '10.0.0.42' in {tracker.keys}"
         finally:
             server_mod._active_engines = original_engines
             server_mod._client_rate_window = original_window
@@ -604,9 +594,7 @@ class TestNoEnginesNoSemaphore:
         initial_value = server_mod._engine_semaphore._value
 
         try:
-            response = client.get(
-                "/search", params={"q": "test", "engines": "nonexistent"}
-            )
+            response = client.get("/search", params={"q": "test", "engines": "nonexistent"})
             assert response.status_code == 503
 
             assert server_mod._engine_semaphore is not None
@@ -644,9 +632,7 @@ class TestIPv6RateLimiting:
                 r = await ac.get("/search", params={"q": "test"})
                 assert r.status_code == 200, f"Expected 200 for IPv6, got {r.status_code}"
 
-                assert "::1" in tracker.keys, (
-                    f"Expected '::1' in {tracker.keys}"
-                )
+                assert "::1" in tracker.keys, f"Expected '::1' in {tracker.keys}"
         finally:
             server_mod._active_engines = original_engines
             server_mod._client_rate_window = original_window
@@ -678,9 +664,7 @@ class TestIPv6RateLimiting:
                     await client_v4.get("/search", params={"q": "test"})
 
                 r_v6 = await client_v6.get("/search", params={"q": "test"})
-                assert r_v6.status_code == 200, (
-                    f"Expected 200 for IPv6, got {r_v6.status_code}"
-                )
+                assert r_v6.status_code == 200, f"Expected 200 for IPv6, got {r_v6.status_code}"
         finally:
             server_mod._active_engines = original_engines
             server_mod._client_rate_window = original_window

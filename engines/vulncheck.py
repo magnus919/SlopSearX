@@ -39,7 +39,7 @@ class VulnCheckAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         cfg = self.config
@@ -49,7 +49,8 @@ class VulnCheckAdapter(EngineAdapter):
 
         if not api_key:
             return AdapterResponse(
-                results=[], status=EngineStatus.ERROR,
+                results=[],
+                status=EngineStatus.ERROR,
                 error_message="VulnCheck API key not configured (set ENGINE_VULNCHECK_API_KEY)",
             )
 
@@ -85,7 +86,10 @@ class VulnCheckAdapter(EngineAdapter):
         except Exception as exc:  # noqa: BLE001
             latency = (time.monotonic() - start_time) * 1000
             return AdapterResponse(
-                results=[], status=EngineStatus.ERROR, error_message=str(exc), latency_ms=latency,
+                results=[],
+                status=EngineStatus.ERROR,
+                error_message=str(exc),
+                latency_ms=latency,
             )
 
     def _parse_cve(self, data: dict[str, Any], cve_id: str) -> list[SearchResult]:

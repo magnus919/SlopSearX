@@ -1,0 +1,52 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: debug-statements
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=500]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.17
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/jendrikseipp/vulture
+    rev: v2.14
+    hooks:
+      - id: vulture
+
+  - repo: local
+    hooks:
+      - id: import-linter
+        name: import-linter
+        entry: .venv/bin/lint-imports
+        language: script
+        pass_filenames: false
+        files: ^slopsearx/.*\.py$
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        args: [--strict, --ignore-missing-imports]
+        additional_dependencies:
+          - fastapi>=0.115.0
+          - httpx>=0.28.0
+          - lxml>=5.3.0
+          - pyyaml>=6.0
+          - valkey>=6.0.0
+          - pytest>=8.0
+          - pytest-asyncio>=0.24.0
+          - types-pyyaml>=6.0
+        files: ^(slopsearx/|engines/)

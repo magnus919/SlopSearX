@@ -187,9 +187,7 @@ class TestCategoryFiltering:
 
             async def search(self, query, params=None):
                 return AdapterResponse(
-                    results=[
-                        SearchResult(url="https://a.com", title="A", content="", engine="catonly")
-                    ],
+                    results=[SearchResult(url="https://a.com", title="A", content="", engine="catonly")],
                     status=EngineStatus.OK,
                 )
 

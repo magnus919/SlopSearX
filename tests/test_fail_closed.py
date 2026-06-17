@@ -44,6 +44,7 @@ from slopsearx.server import app
 # Helper: Parse FAIL_CLOSED env var the same way server.py will
 # ---------------------------------------------------------------------------
 
+
 def _parse_fail_closed(value: str | None) -> bool:
     """Parse FAIL_CLOSED env var: only 'true'/'1'/'yes' (case-insensitive) enable."""
     if value is None:
@@ -491,9 +492,7 @@ class _FastMockEngine(EngineAdapter):
     engine_type = "api"
     categories = ["general"]
 
-    async def search(
-        self, query: str, params: dict[str, Any] | None = None
-    ) -> AdapterResponse:
+    async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
         return AdapterResponse(
             results=[
                 SearchResult(
@@ -534,9 +533,7 @@ class TestSemaphoreFailClosedInteraction:
             async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
                 initial_slots = server_mod._engine_semaphore._value
                 response = await ac.get("/search", params={"q": "test"})
-                assert response.status_code == 429, (
-                    f"Expected 429, got {response.status_code}: {response.text[:200]}"
-                )
+                assert response.status_code == 429, f"Expected 429, got {response.status_code}: {response.text[:200]}"
                 assert server_mod._engine_semaphore._value == initial_slots
         finally:
             server_mod._active_engines = original_engines

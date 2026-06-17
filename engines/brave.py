@@ -29,7 +29,7 @@ class BraveAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         cfg = self.config
@@ -113,11 +113,13 @@ class BraveAdapter(EngineAdapter):
                     if isinstance(item, dict):
                         desc = item.get("description", "") or ""
                         if desc:
-                            answers.append({
-                                "url": item.get("url", ""),
-                                "title": item.get("title", ""),
-                                "content": desc[:500],
-                            })
+                            answers.append(
+                                {
+                                    "url": item.get("url", ""),
+                                    "title": item.get("title", ""),
+                                    "content": desc[:500],
+                                }
+                            )
 
         # Check mixed section for inline answers
         mixed = data.get("mixed")
@@ -128,11 +130,13 @@ class BraveAdapter(EngineAdapter):
                     if isinstance(ans_data, dict):
                         desc = ans_data.get("description", "") or ""
                         if desc:
-                            answers.append({
-                                "url": ans_data.get("url", ""),
-                                "title": ans_data.get("title", ""),
-                                "content": desc[:500],
-                            })
+                            answers.append(
+                                {
+                                    "url": ans_data.get("url", ""),
+                                    "title": ans_data.get("title", ""),
+                                    "content": desc[:500],
+                                }
+                            )
 
         return answers
 

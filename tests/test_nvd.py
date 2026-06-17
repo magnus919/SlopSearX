@@ -45,16 +45,16 @@ class TestNVDAdapter:
                             {
                                 "lang": "en",
                                 "value": (
-                    "A critical buffer overflow vulnerability in Example Software"
-                    " allows remote attackers to execute arbitrary code via a crafted request."
-                ),
+                                    "A critical buffer overflow vulnerability in Example Software"
+                                    " allows remote attackers to execute arbitrary code via a crafted request."
+                                ),
                             },
                             {
                                 "lang": "es",
                                 "value": (
-                    "Una vulnerabilidad de desbordamiento de búfer crítica en Example Software"
-                    " permite a atacantes remotos ejecutar código arbitrario."
-                ),
+                                    "Una vulnerabilidad de desbordamiento de búfer crítica en Example Software"
+                                    " permite a atacantes remotos ejecutar código arbitrario."
+                                ),
                             },
                         ],
                         "metrics": {
@@ -106,9 +106,9 @@ class TestNVDAdapter:
                             {
                                 "lang": "en",
                                 "value": (
-                    "An information disclosure vulnerability in Example Core"
-                    " allows local users to access sensitive log data."
-                ),
+                                    "An information disclosure vulnerability in Example Core"
+                                    " allows local users to access sensitive log data."
+                                ),
                             },
                         ],
                         "metrics": {
@@ -315,10 +315,12 @@ class TestNVDAdapter:
 
     def test_adapter_registered(self):
         from slopsearx.adapter import list_engines
+
         assert "nvd" in list_engines()
 
     def test_adapter_categories(self):
         from slopsearx.adapter import list_engines
+
         cls = list_engines()["nvd"]
         cats = cls.categories
         assert "general" not in cats

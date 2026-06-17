@@ -36,7 +36,7 @@ class IntelXAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         cfg = self.config
@@ -47,7 +47,8 @@ class IntelXAdapter(EngineAdapter):
 
         if not api_key:
             return AdapterResponse(
-                results=[], status=EngineStatus.ERROR,
+                results=[],
+                status=EngineStatus.ERROR,
                 error_message="IntelX API key not configured (set ENGINE_INTELX_API_KEY)",
             )
 
@@ -86,6 +87,7 @@ class IntelXAdapter(EngineAdapter):
 
                 # Phase 2: fetch results (with a brief delay for the search to complete)
                 import asyncio
+
                 await asyncio.sleep(2)
 
                 result_resp = await client.get(
@@ -100,7 +102,9 @@ class IntelXAdapter(EngineAdapter):
                 records = (
                     result_data.get("records", [])
                     if isinstance(result_data, dict)
-                    else result_data if isinstance(result_data, list) else []
+                    else result_data
+                    if isinstance(result_data, list)
+                    else []
                 )
                 records_list = records if isinstance(records, list) else []
 
@@ -113,7 +117,10 @@ class IntelXAdapter(EngineAdapter):
         except Exception as exc:  # noqa: BLE001
             latency = (time.monotonic() - start_time) * 1000
             return AdapterResponse(
-                results=[], status=EngineStatus.ERROR, error_message=str(exc), latency_ms=latency,
+                results=[],
+                status=EngineStatus.ERROR,
+                error_message=str(exc),
+                latency_ms=latency,
             )
 
     def _parse_records(self, records: list[dict[str, Any]]) -> list[SearchResult]:

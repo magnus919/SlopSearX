@@ -102,6 +102,7 @@ class TestSearchCacheSetGet:
         assert result is not None
         # Should expire after 1s
         import asyncio
+
         await asyncio.sleep(1.5)
         result = await cache.get(key)
         assert result is None
