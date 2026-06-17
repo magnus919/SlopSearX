@@ -57,8 +57,10 @@ class TestURLhausAdapter:
 
     def test_adapter_registered(self):
         from slopsearx.adapter import list_engines
+
         assert "urlhaus" in list_engines()
 
     def test_adapter_categories(self):
         from slopsearx.adapter import list_engines
+
         assert "threat-intel" in list_engines()["urlhaus"].categories

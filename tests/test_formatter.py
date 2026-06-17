@@ -214,7 +214,8 @@ class TestFormatJson:
     def test_published_date_iso_to_epoch(self) -> None:
         """ISO date is correctly converted to Unix epoch."""
         result = _make_result(
-            "https://example.com", "Test",
+            "https://example.com",
+            "Test",
             published_date="2024-01-01T00:00:00Z",
         )
         response = format_json(results=[result], query="test")
@@ -349,9 +350,7 @@ class TestFormatYamlMarkdown:
             "engine_status": {"brave": {"results": 1, "latency_ms": 100, "status": "ok"}},
         }
 
-        output = format_yaml_markdown(
-            [result], "test", meta=meta, engine_count=1, responsive_count=1
-        )
+        output = format_yaml_markdown([result], "test", meta=meta, engine_count=1, responsive_count=1)
 
         # The markdown should contain a snippet <= ~120 chars
         assert long_content[:120] in output

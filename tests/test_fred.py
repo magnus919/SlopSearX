@@ -102,9 +102,13 @@ class TestFREDAdapterSearch:
         instances = discover_engines({"fred": {"enabled": True, "api_key": "fred-secret-12345"}})
         adapter = instances["fred"]
 
-        async with MockHTTP(lambda r: (_ for _ in ()).throw(RuntimeError(
-            "https://api.stlouisfed.org/fred/series/search?api_key=fred-secret-12345&file_type=json&search_text=test&limit=10"
-        ))):
+        async with MockHTTP(
+            lambda r: (_ for _ in ()).throw(
+                RuntimeError(
+                    "https://api.stlouisfed.org/fred/series/search?api_key=fred-secret-12345&file_type=json&search_text=test&limit=10"
+                )
+            )
+        ):
             result = await adapter.search("test")
         assert result.status == EngineStatus.ERROR
         assert result.error_message is not None

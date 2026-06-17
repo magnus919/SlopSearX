@@ -30,6 +30,10 @@ dev = [
     "mypy>=1.13",
     "pytest-cov>=6.0",
     "pip-tools>=7.4",
+    "pre-commit>=4.0",
+    "radon>=6.0",
+    "vulture>=2.11",
+    "import-linter>=2.3",
 ]
 
 [tool.setuptools.packages.find]
@@ -70,3 +74,34 @@ omit = ["tests/*"]
 [tool.coverage.report]
 show_missing = true
 fail_under = 70
+
+[tool.vulture]
+paths = ["slopsearx", "engines"]
+min_confidence = 65
+ignore_decorators = ["@register_engine"]
+ignore_names = ["engine_type", "categories", "fallback"]
+
+[tool.importlinter]
+root_package = "slopsearx"
+
+[[tool.importlinter.contracts]]
+id = "architecture-layers"
+name = "Architecture layering: app < infrastructure < domain"
+type = "layers"
+layers = [
+    "slopsearx.server",
+    "slopsearx.router",
+    "slopsearx.merger",
+    "slopsearx.formatter",
+    "slopsearx.suggest",
+    "slopsearx.stats",
+    "slopsearx.audit",
+    "slopsearx.cache",
+    "slopsearx.config",
+    "slopsearx.ratelimit",
+    "slopsearx.proxypool",
+    "slopsearx.adapter",
+]
+ignore_imports = [
+    "slopsearx.adapter -> slopsearx.proxypool",
+]

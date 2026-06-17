@@ -102,10 +102,7 @@ class SuggestionService:
                 # or a flat list of strings depending on API version
                 results = data.get("results", []) if isinstance(data, dict) else data
                 if isinstance(results, list):
-                    return [
-                        item["q"] if isinstance(item, dict) and "q" in item else str(item)
-                        for item in results
-                    ]
+                    return [item["q"] if isinstance(item, dict) and "q" in item else str(item) for item in results]
                 return []
 
         except Exception as exc:

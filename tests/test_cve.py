@@ -37,17 +37,17 @@ class TestCVEAdapter:
                         {
                             "lang": "en",
                             "value": (
-                        "A buffer overflow vulnerability in Example Software allows remote"
-                        " attackers to execute arbitrary code via a crafted request."
-                        " This is the authoritative MITRE CVE description."
-                    ),
+                                "A buffer overflow vulnerability in Example Software allows remote"
+                                " attackers to execute arbitrary code via a crafted request."
+                                " This is the authoritative MITRE CVE description."
+                            ),
                         },
                         {
                             "lang": "es",
                             "value": (
-                        "Una vulnerabilidad de desbordamiento de búfer en Example Software"
-                        " permite a atacantes remotos ejecutar código arbitrario."
-                    ),
+                                "Una vulnerabilidad de desbordamiento de búfer en Example Software"
+                                " permite a atacantes remotos ejecutar código arbitrario."
+                            ),
                         },
                     ],
                     "metrics": [
@@ -139,16 +139,19 @@ class TestCVEAdapter:
 
         def _handler(r):
             captured_headers["Authorization"] = r.headers.get("Authorization", "")
-            return httpx.Response(200, json={
-                "dataType": "CVE_RECORD",
-                "dataVersion": "5.2",
-                "cveId": "CVE-2024-12345",
-                "containers": {
-                    "cna": {
-                        "descriptions": [{"lang": "en", "value": "Test description."}],
+            return httpx.Response(
+                200,
+                json={
+                    "dataType": "CVE_RECORD",
+                    "dataVersion": "5.2",
+                    "cveId": "CVE-2024-12345",
+                    "containers": {
+                        "cna": {
+                            "descriptions": [{"lang": "en", "value": "Test description."}],
+                        },
                     },
                 },
-            })
+            )
 
         async with MockHTTP(_handler):
             await adapter.search("CVE-2024-12345")
@@ -156,10 +159,12 @@ class TestCVEAdapter:
 
     def test_adapter_registered(self):
         from slopsearx.adapter import list_engines
+
         assert "cve" in list_engines()
 
     def test_adapter_categories(self):
         from slopsearx.adapter import list_engines
+
         cls = list_engines()["cve"]
         cats = cls.categories
         assert "general" not in cats

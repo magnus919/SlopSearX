@@ -314,11 +314,7 @@ class RateLimiter:
     @property
     def deactivated_engines(self) -> set[str]:
         """Set of engine names currently deactivated."""
-        return {
-            name
-            for name, state in self._states.items()
-            if state.deactivated
-        }
+        return {name for name, state in self._states.items() if state.deactivated}
 
     async def warmup(self) -> None:
         await self._strategy.warmup()

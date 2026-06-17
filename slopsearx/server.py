@@ -55,7 +55,12 @@ from slopsearx.suggest import SuggestionService
 # results are surfaced below Tier 1 in unscoped searches.
 # All new engines default to Tier 2 unless approved by maintainers.
 _TIER1_ENGINES: set[str] = {
-    "brave", "duckduckgo", "google", "wikipedia", "stackexchange", "reddit",
+    "brave",
+    "duckduckgo",
+    "google",
+    "wikipedia",
+    "stackexchange",
+    "reddit",
 }
 
 
@@ -157,8 +162,10 @@ async def _startup() -> None:
     global _suggestion_service  # noqa: PLW0603
     _suggestion_service = None
     if cfg.enable_suggestions:
-        brave_api_key = (cfg.engines.get("brave").api_key  # type: ignore[union-attr]
-                         or "")
+        brave_api_key = (
+            cfg.engines.get("brave").api_key  # type: ignore[union-attr]
+            or ""
+        )
         if brave_api_key:
             _suggestion_service = SuggestionService(brave_api_key=brave_api_key, cache=_cache)
 
@@ -194,6 +201,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await _startup()
     yield
     await _shutdown()
+
 
 app = FastAPI(title="SlopSearX", version="0.1.0", lifespan=lifespan)
 
@@ -331,39 +339,25 @@ async def search(
     if engines_param.strip():
         # Explicit engine list wins over category filter
         requested = [e.strip() for e in engines_param.split(",") if e.strip()]
-        target_engines = {
-            name: eng
-            for name, eng in _active_engines.items()
-            if name in requested
-        }
+        target_engines = {name: eng for name, eng in _active_engines.items() if name in requested}
     else:
         target_engines = dict(_active_engines)
         # Category filter (only when engines not explicitly specified)
         cat_list = [c.strip() for c in categories.split(",") if c.strip()]
         if cat_list:
             target_engines = {
-                name: eng
-                for name, eng in target_engines.items()
-                if any(c in eng.categories for c in cat_list)
+                name: eng for name, eng in target_engines.items() if any(c in eng.categories for c in cat_list)
             }
         elif _router is not None:
             # No category filter — try query-based routing
             routed = _router.route(q)
             if routed is not None:
-                target_engines = {
-                    name: eng
-                    for name, eng in _active_engines.items()
-                    if name in routed
-                }
+                target_engines = {name: eng for name, eng in _active_engines.items() if name in routed}
             else:
                 # No topic matched — restrict to Tier 1 (broad, general-purpose)
                 # engines only. Specialty engines require an explicit category
                 # or topic match to avoid polluting unscoped results.
-                tier1 = {
-                    name: eng
-                    for name, eng in _active_engines.items()
-                    if name in _TIER1_ENGINES
-                }
+                tier1 = {name: eng for name, eng in _active_engines.items() if name in _TIER1_ENGINES}
                 # Fall back to all engines if no Tier 1 engines are active,
                 # so the server returns results (even from specialty engines)
                 # rather than a hard 503 error with no engines available.
@@ -494,10 +488,7 @@ async def search(
 
         # Record per-engine quality telemetry in Valkey (non-blocking)
         if _stats_tracker is not None:
-            avg_score = (
-                sum(r.score for r in result.results) / len(result.results)
-                if result.results else 0.0
-            )
+            avg_score = sum(r.score for r in result.results) / len(result.results) if result.results else 0.0
             asyncio.create_task(
                 _stats_tracker.record_query(
                     engine=name,
@@ -525,9 +516,7 @@ async def search(
     meta = build_meta(responses, elapsed_ms, query_id)
 
     # Check if ALL engines are unresponsive
-    all_unresponsive = all(
-        resp.status != EngineStatus.OK for resp in responses.values()
-    )
+    all_unresponsive = all(resp.status != EngineStatus.OK for resp in responses.values())
 
     # Build suggestions from engine suggest APIs (already running in background)
     suggestions = await suggestions_task
@@ -546,9 +535,7 @@ async def search(
 
     if format == "yaml":
         engine_count = len(target_engines)
-        responsive_count = sum(
-            1 for resp in responses.values() if resp.status == EngineStatus.OK
-        )
+        responsive_count = sum(1 for resp in responses.values() if resp.status == EngineStatus.OK)
         yaml_output = format_yaml_markdown(
             ranked,
             q,

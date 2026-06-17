@@ -112,9 +112,11 @@ class TestTMDBAdapterSearch:
         instances = discover_engines({"tmdb": {"enabled": True, "api_key": "tmdb-secret-key-999"}})
         adapter = instances["tmdb"]
 
-        async with MockHTTP(lambda r: (_ for _ in ()).throw(RuntimeError(
-            "https://api.themoviedb.org/3/search/multi?api_key=tmdb-secret-key-999&query=test&page=1"
-        ))):
+        async with MockHTTP(
+            lambda r: (_ for _ in ()).throw(
+                RuntimeError("https://api.themoviedb.org/3/search/multi?api_key=tmdb-secret-key-999&query=test&page=1")
+            )
+        ):
             result = await adapter.search("test")
         assert result.status == EngineStatus.ERROR
         assert result.error_message is not None

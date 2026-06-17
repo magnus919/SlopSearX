@@ -77,14 +77,16 @@ class TestOpenAlexAdapterSearch:
     async def test_search_doi_fallback_to_id(self, adapter):
         """Results without DOI use OpenAlex ID as URL."""
         resp = {
-            "results": [{
-                "id": "https://openalex.org/W456",
-                "title": "No DOI Work",
-                "doi": None,
-                "cited_by_count": 0,
-                "publication_date": None,
-                "abstract_inverted_index": None,
-            }]
+            "results": [
+                {
+                    "id": "https://openalex.org/W456",
+                    "title": "No DOI Work",
+                    "doi": None,
+                    "cited_by_count": 0,
+                    "publication_date": None,
+                    "abstract_inverted_index": None,
+                }
+            ]
         }
 
         def _handler(r):

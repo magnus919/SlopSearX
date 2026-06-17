@@ -30,7 +30,7 @@ class WikipediaAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         cfg = self.config
@@ -176,17 +176,18 @@ class WikipediaAdapter(EngineAdapter):
             # Build infobox from pageprops
             pageprops = page.get("pageprops") or {}
             if isinstance(pageprops, dict) and pageprops.get("wikibase-shortdesc"):
-                infoboxes.append({
-                    "id": f"wiki:{title.replace(' ', '_')}",
-                    "title": title,
-                    "content": pageprops.get("wikibase-shortdesc", ""),
-                    "img_src": thumbnail or "",
-                    "url": page_url,
-                    "urls": [{"title": "Wikipedia", "url": page_url}],
-                })
+                infoboxes.append(
+                    {
+                        "id": f"wiki:{title.replace(' ', '_')}",
+                        "title": title,
+                        "content": pageprops.get("wikibase-shortdesc", ""),
+                        "img_src": thumbnail or "",
+                        "url": page_url,
+                        "urls": [{"title": "Wikipedia", "url": page_url}],
+                    }
+                )
 
         return results, infoboxes
-
 
     @staticmethod
     def _check_corrections(query: str, titles: list[str]) -> list[str]:

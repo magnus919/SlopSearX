@@ -37,7 +37,7 @@ class ShodanAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         cfg = self.config
@@ -48,7 +48,8 @@ class ShodanAdapter(EngineAdapter):
 
         if not api_key:
             return AdapterResponse(
-                results=[], status=EngineStatus.ERROR,
+                results=[],
+                status=EngineStatus.ERROR,
                 error_message="Shodan API key not configured (set ENGINE_SHODAN_API_KEY)",
             )
 
@@ -78,13 +79,17 @@ class ShodanAdapter(EngineAdapter):
         except httpx.HTTPStatusError as exc:
             latency = (time.monotonic() - start_time) * 1000
             return AdapterResponse(
-                results=[], status=EngineStatus.ERROR,
-                error_message=sanitize_url(str(exc)), latency_ms=latency,
+                results=[],
+                status=EngineStatus.ERROR,
+                error_message=sanitize_url(str(exc)),
+                latency_ms=latency,
             )
         except Exception as exc:  # noqa: BLE001
             latency = (time.monotonic() - start_time) * 1000
             return AdapterResponse(
-                results=[], status=EngineStatus.ERROR, error_message=sanitize_url(str(exc)),
+                results=[],
+                status=EngineStatus.ERROR,
+                error_message=sanitize_url(str(exc)),
                 latency_ms=latency,
             )
 

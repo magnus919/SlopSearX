@@ -7,6 +7,13 @@ on:
     branches: [main]
 
 jobs:
+  duplicate-detection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Detect duplicate code with jscpd
+        run: npx jscpd --min-tokens 50 --min-lines 5 --threshold 0 slopsearx/ engines/ 2>&1 || true
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -31,6 +38,18 @@ jobs:
 
       - name: Type check with mypy
         run: mypy slopsearx/ engines/
+
+      - name: Complexity analysis with radon
+        run: radon cc slopsearx/ engines/ --total-average
+
+      - name: Maintainability index with radon
+        run: radon mi slopsearx/ engines/
+
+      - name: Dead code check with vulture
+        run: vulture slopsearx/ engines/
+
+      - name: Architecture check with import-linter
+        run: lint-imports
 
       - name: Test with pytest and coverage
         run: pytest -v --cov=slopsearx --cov=engines --cov-report=term-missing --cov-fail-under=70

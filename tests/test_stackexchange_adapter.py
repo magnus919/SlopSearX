@@ -103,6 +103,7 @@ class TestStackExchangeAdapterSearch:
 
     async def test_search_rate_limited(self, adapter):
         """400 from SE indicates rate limited."""
+
         def _handler(r):
             return httpx.Response(400)
 
@@ -148,9 +149,13 @@ class TestStackExchangeAdapterSearch:
         instances = discover_engines({"stackexchange": {"enabled": True, "api_key": "test-se-key-secret"}})
         adapter = instances["stackexchange"]
 
-        async with MockHTTP(lambda r: (_ for _ in ()).throw(RuntimeError(
-            "https://api.stackexchange.com/2.3/search?order=desc&sort=relevance&intitle=test&site=stackoverflow&pagesize=10&key=test-se-key-secret"
-        ))):
+        async with MockHTTP(
+            lambda r: (_ for _ in ()).throw(
+                RuntimeError(
+                    "https://api.stackexchange.com/2.3/search?order=desc&sort=relevance&intitle=test&site=stackoverflow&pagesize=10&key=test-se-key-secret"
+                )
+            )
+        ):
             result = await adapter.search("test")
         assert result.status == EngineStatus.ERROR
         assert result.error_message is not None

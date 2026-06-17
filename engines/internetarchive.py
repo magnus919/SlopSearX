@@ -50,7 +50,7 @@ class InternetArchiveAdapter(EngineAdapter):
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         """Search Wayback Machine CDX API for domain snapshots."""
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         import httpx
@@ -110,7 +110,7 @@ class InternetArchiveAdapter(EngineAdapter):
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
         """Search general Internet Archive catalog."""
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         import httpx
@@ -120,12 +120,7 @@ class InternetArchiveAdapter(EngineAdapter):
         max_results = cfg.get("max_results", 10)
         base_url = cfg.get("base_url", "https://archive.org")
 
-        url = (
-            f"{base_url}/advancedsearch.php"
-            f"?q={urllib.parse.quote(query)}"
-            f"&output=json"
-            f"&rows={max_results}"
-        )
+        url = f"{base_url}/advancedsearch.php?q={urllib.parse.quote(query)}&output=json&rows={max_results}"
 
         try:
             async with httpx.AsyncClient(timeout=timeout_ms / 1000) as client:

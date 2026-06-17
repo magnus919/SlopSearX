@@ -73,6 +73,7 @@ class TestBraveAdapter:
     async def test_search_returns_results(self, adapter, sample_response):
         def _handler(r):
             return httpx.Response(200, json=sample_response)
+
         async with MockHTTP(_handler):
             result = await adapter.search("test query")
         assert result.status == EngineStatus.OK
@@ -173,6 +174,7 @@ class TestDuckDuckGoAdapter:
                 b'<div class="result__a"><span class="result__url">https://x.com</span></div>'
                 b'<div class="result__snippet">content</div></div></body></html>',
             )
+
         async with MockHTTP(_handler):
             result = await adapter.search("test")
         assert result.status == EngineStatus.OK
@@ -185,7 +187,8 @@ class TestDuckDuckGoAdapter:
 
     async def test_search_captcha_blocked(self, adapter):
         def _handler(r):
-            return httpx.Response(200, content=b'<html><body>hcaptcha challenge</body></html>')
+            return httpx.Response(200, content=b"<html><body>hcaptcha challenge</body></html>")
+
         async with MockHTTP(_handler):
             result = await adapter.search("test")
         assert result.status == EngineStatus.BLOCKED  # CAPTCHA detected
@@ -323,8 +326,10 @@ class TestWikipediaAdapter:
 
     async def test_search_opensearch_only_no_results(self, adapter):
         """When opensearch returns no titles, return empty results."""
+
         def _handler(r):
             return httpx.Response(200, json=["test query", [], [], []])
+
         async with MockHTTP(_handler):
             result = await adapter.search("test query")
         assert result.status == EngineStatus.OK

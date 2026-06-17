@@ -42,7 +42,7 @@ class CVEAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         cfg = self.config
@@ -65,15 +65,21 @@ class CVEAdapter(EngineAdapter):
 
                 if resp.status_code == 429:
                     return AdapterResponse(
-                        results=[], status=EngineStatus.RATE_LIMITED, latency_ms=latency,
+                        results=[],
+                        status=EngineStatus.RATE_LIMITED,
+                        latency_ms=latency,
                     )
                 if resp.status_code == 403:
                     return AdapterResponse(
-                        results=[], status=EngineStatus.BLOCKED, latency_ms=latency,
+                        results=[],
+                        status=EngineStatus.BLOCKED,
+                        latency_ms=latency,
                     )
                 if resp.status_code == 404:
                     return AdapterResponse(
-                        results=[], status=EngineStatus.OK, latency_ms=latency,
+                        results=[],
+                        status=EngineStatus.OK,
+                        latency_ms=latency,
                     )
                 resp.raise_for_status()
 
@@ -87,7 +93,10 @@ class CVEAdapter(EngineAdapter):
         except Exception as exc:  # noqa: BLE001
             latency = (time.monotonic() - start_time) * 1000
             return AdapterResponse(
-                results=[], status=EngineStatus.ERROR, error_message=str(exc), latency_ms=latency,
+                results=[],
+                status=EngineStatus.ERROR,
+                error_message=str(exc),
+                latency_ms=latency,
             )
 
     def _parse_cve_record(self, data: dict[str, Any], cve_id: str) -> list[SearchResult]:

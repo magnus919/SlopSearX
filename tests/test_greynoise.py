@@ -55,17 +55,21 @@ class TestGreyNoiseAdapter:
     async def test_with_api_key(self):
         adapter = discover_engines({"greynoise": {"enabled": True, "api_key": "test-key"}})["greynoise"]
         headers = {}
+
         def _handler(r):
             headers["key"] = r.headers.get("key", "")
             return httpx.Response(200, json={"ip": "8.8.8.8", "noise": False, "riot": False})
+
         async with MockHTTP(_handler):
             await adapter.search("8.8.8.8")
         assert headers.get("key") == "test-key"
 
     def test_adapter_registered(self):
         from slopsearx.adapter import list_engines
+
         assert "greynoise" in list_engines()
 
     def test_adapter_categories(self):
         from slopsearx.adapter import list_engines
+
         assert "threat-intel" in list_engines()["greynoise"].categories

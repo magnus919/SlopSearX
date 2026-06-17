@@ -29,7 +29,7 @@ class OpenFDAAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
-        if (early := await self._check_rate_limit()):
+        if early := await self._check_rate_limit():
             return early
 
         cfg = self.config
@@ -72,7 +72,7 @@ class OpenFDAAdapter(EngineAdapter):
                         content_parts.append(indications[:120])
                     content = " — ".join(content_parts) if content_parts else "FDA drug labeling information"
 
-                    url_suffix = f"?query={query}" if not brand_name else f"#{brand_name.lower().replace(' ','-')}"
+                    url_suffix = f"?query={query}" if not brand_name else f"#{brand_name.lower().replace(' ', '-')}"
 
                     results.append(
                         SearchResult(

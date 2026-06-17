@@ -44,9 +44,7 @@ class ProxyPool:
         self._proxies: list[str] = list(proxies) if proxies else []
         self._failures: dict[str, int] = {}  # proxy -> consecutive failures
         self._cooloff_until: dict[str, float] = {}  # proxy -> timestamp
-        self._iterator: Any | None = (
-            itertools.cycle(self._proxies) if self._proxies else None
-        )
+        self._iterator: Any | None = itertools.cycle(self._proxies) if self._proxies else None
 
     def get_proxy(self) -> dict[str, str] | None:
         """Return the next healthy proxy, or ``None`` if all are exhausted.
@@ -113,10 +111,7 @@ class ProxyPool:
     def available_count(self) -> int:
         """Number of proxies not currently on cooloff."""
         now = time.monotonic()
-        return sum(
-            1 for p in self._proxies
-            if self._cooloff_until.get(p, 0) <= now
-        )
+        return sum(1 for p in self._proxies if self._cooloff_until.get(p, 0) <= now)
 
     @property
     def total_count(self) -> int:
