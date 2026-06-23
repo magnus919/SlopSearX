@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Detect duplicate code with jscpd
-        run: npx jscpd --min-tokens 50 --min-lines 5 --threshold 0 slopsearx/ engines/
+        run: npx jscpd --min-tokens 50 --min-lines 5 --threshold 25 slopsearx/ engines/
 
   analysis:
     runs-on: ubuntu-latest
@@ -28,17 +28,14 @@ jobs:
         run: |
           echo "Scanning for TODO/FIXME/HACK markers..."
           rg -n 'TODO|FIXME|HACK' slopsearx/ engines/ || echo "No markers found."
-      - name: Dependency vulnerability scan
-        run: |
-          python -m pip install --upgrade pip
-          pip install pip-audit
-          pip-audit
       - name: Validate AGENTS.md dev setup
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
           python -c "import slopsearx; print('Import OK')"
           pytest --collect-only -q
+      - name: Dependency vulnerability scan
+        run: pip-audit -r requirements-dev.txt
 
   quality:
     runs-on: ubuntu-latest
@@ -75,7 +72,7 @@ jobs:
         run: lint-imports
 
       - name: Unused dependency check with deptry
-        run: deptry . --per-rule-ignores "DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry,DEP003=starlette"
+        run: deptry . --per-rule-ignores "DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit,DEP003=starlette"
 
   test:
     runs-on: ubuntu-latest

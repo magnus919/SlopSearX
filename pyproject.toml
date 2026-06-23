@@ -87,6 +87,7 @@ ignore_names = ["engine_type", "categories", "fallback"]
 
 [tool.deptry]
 extend_exclude = ["tests", "engines"]
+per_rule_ignores = {DEP002 = ["lxml", "uvicorn", "pytest", "pytest-asyncio", "ruff", "cssselect", "mypy", "pytest-cov", "pip-tools", "pre-commit", "radon", "vulture", "import-linter", "deptry", "pip-audit"], DEP003 = ["starlette"]}
 
 [tool.importlinter]
 root_package = "slopsearx"
