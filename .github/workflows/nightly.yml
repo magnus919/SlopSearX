@@ -98,7 +98,7 @@ jobs:
         run: pytest -v --durations=10 --cov=slopsearx --cov=engines --cov-report=term-missing --cov-report=html --cov-fail-under=80
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage-report-${{ matrix.python-version }}
