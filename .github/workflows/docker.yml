@@ -46,3 +46,20 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Prune untagged versions
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          echo "Pruning untagged versions of slopsearx"
+          gh api \
+            --method GET \
+            "/users/magnus919/packages/container/slopsearx/versions?per_page=100" \
+            --jq '.[] | select(.metadata.container.tags == null or .metadata.container.tags == []) | .id' \
+            | while read version_id; do
+              echo "  Deleting version $version_id"
+              gh api --method DELETE \
+                "/users/magnus919/packages/container/slopsearx/versions/$version_id" --silent
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
