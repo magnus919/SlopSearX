@@ -21,6 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
       - name: Log in to ghcr.io
         uses: docker/login-action@v4
         with:
@@ -39,13 +42,44 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=,suffix=,format=short
 
-      - name: Build and push
+      - name: Build and load image
         uses: docker/build-push-action@v7
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
+          load: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Get primary image tag
+        id: tag
+        run: echo "ref=$(echo '${{ steps.meta.outputs.tags }}' | head -n1)" >> $GITHUB_OUTPUT
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.tag.outputs.ref }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+      - name: Smoke test container
+        run: |
+          docker run -d --name slopsearx-smoke -p 8080:8080 ${{ steps.tag.outputs.ref }}
+          sleep 3
+          curl -f --retry 5 --retry-delay 2 http://localhost:8080/health
+          docker stop slopsearx-smoke
+          docker rm slopsearx-smoke
+
+      - name: Push to registry
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "${{ steps.meta.outputs.tags }}" | while read -r tag; do
+            docker push "$tag"
+          done
 
       - name: Prune untagged versions
         if: github.event_name != 'pull_request'
