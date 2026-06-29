@@ -145,6 +145,10 @@ async def _startup() -> None:
     cfg = load_config()
     if not _active_engines:
         engine_configs = {name: dataclasses.asdict(entry) for name, entry in cfg.engines.items()}
+        # Inject feature flags so adapters can check them at runtime
+        brave_routing = cfg.feature_flags.is_enabled("brave_category_routing")
+        for ecfg in engine_configs.values():
+            ecfg["_feature_brave_category_routing"] = brave_routing
         _active_engines = discover_engines(engine_configs)
 
     # Inject rate limiter into each engine

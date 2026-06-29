@@ -108,6 +108,141 @@ class TestBraveAdapter:
         assert result.status == EngineStatus.ERROR
         assert "API key not configured" in (result.error_message or "")
 
+    # ------------------------------------------------------------------
+    # Category routing
+    # ------------------------------------------------------------------
+
+    @pytest.fixture
+    def sample_web_response(self) -> dict:
+        return {
+            "web": {
+                "results": [
+                    {"url": "https://example.com/web1", "title": "Web Result", "description": "A web page"},
+                ],
+            },
+        }
+
+    @pytest.fixture
+    def sample_image_response(self) -> dict:
+        return {
+            "results": [
+                {
+                    "title": "Raspberry Pi photo",
+                    "page_url": "https://example.com/pi.jpg",
+                    "thumbnail": {"src": "https://example.com/pi_thumb.jpg"},
+                    "description": "A photo of a Raspberry Pi",
+                },
+            ],
+        }
+
+    @pytest.fixture
+    def sample_news_response(self) -> dict:
+        return {
+            "results": [
+                {
+                    "url": "https://example.com/news1",
+                    "title": "Breaking News",
+                    "description": "Something happened",
+                },
+            ],
+        }
+
+    async def test_category_routing_images(self, adapter, sample_image_response):
+        """categories=["images"] routes to /images/search and parses image format."""
+        captured_url: list[str] = []
+
+        def _handler(r):
+            captured_url.append(str(r.url))
+            return httpx.Response(200, json=sample_image_response)
+
+        async with MockHTTP(_handler):
+            result = await adapter.search("raspberry pi", params={"categories": ["images"]})
+        assert result.status == EngineStatus.OK
+        assert len(result.results) == 1
+        assert result.results[0].url == "https://example.com/pi.jpg"
+        assert result.results[0].img_src == "https://example.com/pi_thumb.jpg"
+        assert result.results[0].thumbnail == "https://example.com/pi_thumb.jpg"
+        assert "/images/" in captured_url[0]
+
+    async def test_category_routing_news(self, adapter, sample_news_response):
+        """categories=["news"] routes to /news/search and parses top-level results."""
+        captured_url: list[str] = []
+
+        def _handler(r):
+            captured_url.append(str(r.url))
+            return httpx.Response(200, json=sample_news_response)
+
+        async with MockHTTP(_handler):
+            result = await adapter.search("breaking", params={"categories": ["news"]})
+        assert result.status == EngineStatus.OK
+        assert len(result.results) == 1
+        assert result.results[0].url == "https://example.com/news1"
+        assert result.results[0].title == "Breaking News"
+        assert "/news/" in captured_url[0]
+
+    async def test_category_routing_videos(self, adapter, sample_news_response):
+        """categories=["videos"] routes to /videos/search."""
+        captured_url: list[str] = []
+
+        def _handler(r):
+            captured_url.append(str(r.url))
+            return httpx.Response(200, json=sample_news_response)
+
+        async with MockHTTP(_handler):
+            result = await adapter.search("tutorial", params={"categories": ["videos"]})
+        assert result.status == EngineStatus.OK
+        assert "/videos/" in captured_url[0]
+
+    async def test_category_routing_web_fallback(self, adapter, sample_web_response):
+        """Unknown categories fall back to /web/search."""
+        captured_url: list[str] = []
+
+        def _handler(r):
+            captured_url.append(str(r.url))
+            return httpx.Response(200, json=sample_web_response)
+
+        async with MockHTTP(_handler):
+            result = await adapter.search("science stuff", params={"categories": ["science"]})
+        assert result.status == EngineStatus.OK
+        assert "/web/" in captured_url[0]
+
+    async def test_category_routing_disabled_by_flag(self, sample_web_response):
+        """Feature flag disabled → always uses /web/search, even for images."""
+        instances = discover_engines(
+            {
+                "brave": {
+                    "enabled": True,
+                    "api_key": "test-key",
+                    "_feature_brave_category_routing": False,
+                }
+            }
+        )
+        adapter = instances["brave"]
+        captured_url: list[str] = []
+
+        def _handler(r):
+            captured_url.append(str(r.url))
+            return httpx.Response(200, json=sample_web_response)
+
+        async with MockHTTP(_handler):
+            result = await adapter.search("images query", params={"categories": ["images"]})
+        assert result.status == EngineStatus.OK
+        assert "/web/" in captured_url[0]
+        assert "/images/" not in captured_url[0]
+
+    async def test_category_routing_no_params(self, adapter, sample_web_response):
+        """No params at all → defaults to /web/search."""
+        captured_url: list[str] = []
+
+        def _handler(r):
+            captured_url.append(str(r.url))
+            return httpx.Response(200, json=sample_web_response)
+
+        async with MockHTTP(_handler):
+            result = await adapter.search("test")
+        assert result.status == EngineStatus.OK
+        assert "/web/" in captured_url[0]
+
 
 # ---------------------------------------------------------------------------
 # DuckDuckGo adapter
