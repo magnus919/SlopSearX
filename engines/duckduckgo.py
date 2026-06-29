@@ -10,6 +10,7 @@ CAPTCHA walls, and rate limiting may break it at any time.
 from __future__ import annotations
 
 import time
+import urllib.parse
 from typing import Any
 
 import httpx
@@ -30,7 +31,7 @@ class DuckDuckGoAdapter(ScrapeAdapter):
     display_name = "DuckDuckGo"
     env_prefix = "ENGINE_DDG"
     engine_type = "scrape"
-    categories = ["general", "news"]
+    categories = ["general", "news", "images"]
 
     async def search(
         self,
@@ -45,7 +46,13 @@ class DuckDuckGoAdapter(ScrapeAdapter):
         timeout_ms = cfg.get("timeout_ms", 10_000)
         max_results = cfg.get("max_results", 10)
 
-        data = {"q": query}
+        # Determine if this is an image search
+        categories = (params or {}).get("categories", [])
+        is_image_search = "images" in categories
+
+        data: dict[str, str] = {"q": query}
+        if is_image_search:
+            data["iar"] = "images"
         headers = self.request_headers
         proxy = self._get_proxy()
         client_kwargs: dict[str, Any] = {
@@ -74,7 +81,10 @@ class DuckDuckGoAdapter(ScrapeAdapter):
                     return AdapterResponse(results=[], status=EngineStatus.BLOCKED, latency_ms=latency)
 
                 self._report_proxy_success(proxy)
-                results = self._parse_html(resp.text, query, max_results)
+                if is_image_search:
+                    results = self._parse_image_html(resp.text, query, max_results)
+                else:
+                    results = self._parse_html(resp.text, query, max_results)
                 return AdapterResponse(results=results, status=EngineStatus.OK, latency_ms=latency)
 
         except httpx.TimeoutException:
@@ -150,5 +160,71 @@ class DuckDuckGoAdapter(ScrapeAdapter):
                     position=i + 1,
                 ),
             )
+
+        return results
+
+    def _parse_image_html(self, raw_html: str, query: str, max_results: int) -> list[SearchResult]:
+        """Parse DuckDuckGo HTML image search results.
+
+        DDG image results appear as .tile--img or .result--image elements.
+        Each tile contains a thumbnail image, source page link, and metadata.
+        """
+        if self._is_challenge_page(raw_html):
+            return []
+
+        results: list[SearchResult] = []
+        doc = html.fromstring(raw_html)
+
+        # Try modern tile-based image results first, fall back to result-based
+        tiles = doc.cssselect(".tile--img, .result--image, .tile, .image-result")
+        for i, node in enumerate(tiles):
+            if len(results) >= max_results:
+                break
+
+            # Thumbnail URL from <img> tag
+            img_el = node.cssselect("img")
+            img_src = ""
+            if img_el:
+                img_src = img_el[0].get("src", "") or img_el[0].get("data-src", "")
+
+            # Source page URL from <a> tag
+            link_el = node.cssselect("a")
+            url = ""
+            if link_el:
+                url = link_el[0].get("href", "")
+
+            # Title from alt text or title attribute
+            title = ""
+            if img_el:
+                title = img_el[0].get("alt", "") or img_el[0].get("title", "")
+            if not title and link_el:
+                title = link_el[0].text_content().strip()
+
+            # Content / description
+            desc_el = node.cssselect(".tile__caption, .result__content, .caption")
+            content = desc_el[0].text_content().strip() if desc_el else ""
+
+            # Strip DDG redirect from URL
+            if "//duckduckgo.com/l/" in url:
+                parsed = urllib.parse.urlparse(url)
+                qs = urllib.parse.parse_qs(parsed.query)
+                url = qs.get("uddg", [""])[0] or url
+
+            # Clean up relative URLs for thumbnails
+            if img_src and img_src.startswith("//"):
+                img_src = "https:" + img_src
+
+            if url:
+                results.append(
+                    SearchResult(
+                        url=url,
+                        title=title or query,
+                        content=content,
+                        img_src=img_src or None,
+                        engine=self.name,
+                        category="images",
+                        position=i + 1,
+                    ),
+                )
 
         return results
