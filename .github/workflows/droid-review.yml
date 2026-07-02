@@ -54,3 +54,4 @@ jobs:
           automatic_review: true
           review_depth: ${{ needs.assess-depth.outputs.depth }}
           automatic_security_review: ${{ needs.assess-depth.outputs.security }}
+          allowed_bots: "dependabot"
