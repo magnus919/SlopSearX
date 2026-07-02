@@ -13,6 +13,13 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    ignore:
+      # mando is constrained by radon (>=0.6,<0.8). No newer radon exists.
+      # Dependabot keeps opening unmergeable PRs bumping mando past 0.7.x.
+      - dependency-name: "mando"
+      # pydantic-core is hard-pinned by pydantic itself (==2.46.4 at pydantic 2.13.4).
+      # Bumping pydantic-core alone is impossible; pydantic must bump first upstream.
+      - dependency-name: "pydantic-core"
 
   - package-ecosystem: "github-actions"
     directory: "/"
