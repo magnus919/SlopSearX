@@ -134,6 +134,29 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
         ],
         "engines": ["brave", "wikipedia", "internetarchive", "duckduckgo"],
     },
+    {
+        "name": "jobs",
+        "keywords": [
+            "hiring",
+            "jobs at",
+            "careers",
+            "openings",
+            "senior ",
+            "staff ",
+            "principal ",
+            "site:boards.greenhouse.io",
+            "site:jobs.ashbyhq.com",
+            "site:jobs.lever.co",
+            "site:linkedin.com/jobs",
+            "apply for",
+            "recruiter",
+            "job posting",
+            "full-time",
+            "ats",
+            "workday",
+        ],
+        "engines": ["brave", "duckduckgo", "greenhouse", "ashby", "lever"],
+    },
 ]
 
 _DEFAULT_FALLBACK = ["brave", "duckduckgo", "wikipedia", "stackexchange", "reddit"]
