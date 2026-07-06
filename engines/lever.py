@@ -79,7 +79,6 @@ class LeverAdapter(EngineAdapter):
 
                     location = categories.get("location", "")
                     commitment = categories.get("commitment", "")
-                    team = categories.get("team", "")
 
                     created_at_ms = posting.get("createdAt")
                     published_date = None

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import ANY, patch
+from unittest.mock import patch
 
 import httpx
 import pytest
@@ -11,7 +11,6 @@ import engines  # noqa: F401 — trigger @register_engine
 from slopsearx.adapter import EngineStatus, discover_engines
 from slopsearx.jobs_utils import extract_company
 from slopsearx.router import QueryRouter
-
 
 # ---------------------------------------------------------------------------
 # Helper: mock HTTP transport (replicated from test_adapters.py)

@@ -10,7 +10,6 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-
 _TRIGGER_WORDS = [" at ", " for ", " @ "]
 _NON_ALPHANUM = re.compile(r"[^a-z0-9-]")
 
