@@ -291,6 +291,30 @@ _DEFAULT_ENGINES: dict[str, dict[str, Any]] = {
         "rate_limit": 1,
         "weight": 0.5,
     },
+    "greenhouse": {
+        "base_url": "https://boards-api.greenhouse.io/v1/boards",
+        "type": "api",
+        "timeout_ms": 5_000,
+        "max_results": 10,
+        "rate_limit": 1,
+        "weight": 0.5,
+    },
+    "ashby": {
+        "base_url": "https://jobs.ashbyhq.com",
+        "type": "api",
+        "timeout_ms": 5_000,
+        "max_results": 10,
+        "rate_limit": 1,
+        "weight": 0.5,
+    },
+    "lever": {
+        "base_url": "https://api.lever.co/v0/postings",
+        "type": "api",
+        "timeout_ms": 5_000,
+        "max_results": 10,
+        "rate_limit": 1,
+        "weight": 0.5,
+    },
 }
 
 _DEFAULT_CACHE = {"ttl_seconds": 300, "max_result_sets": 10_000, "revalidate_on_hit": False}
