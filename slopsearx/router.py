@@ -152,7 +152,6 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
             "recruiter",
             "job posting",
             "full-time",
-            "ats",
             "workday",
         ],
         "engines": ["brave", "duckduckgo", "greenhouse", "ashby", "lever"],

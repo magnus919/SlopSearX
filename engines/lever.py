@@ -79,6 +79,7 @@ class LeverAdapter(EngineAdapter):
 
                     location = categories.get("location", "")
                     commitment = categories.get("commitment", "")
+                    team = categories.get("team", "")
 
                     created_at_ms = posting.get("createdAt")
                     published_date = None
@@ -92,6 +93,8 @@ class LeverAdapter(EngineAdapter):
                         content_parts.append(location)
                     if commitment:
                         content_parts.append(commitment)
+                    if team:
+                        content_parts.append(team)
 
                     results.append(
                         SearchResult(

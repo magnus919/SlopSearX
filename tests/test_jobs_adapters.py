@@ -76,6 +76,12 @@ class TestCompanyExtraction:
         assert slug == "hello-world-inc"
         assert name == "Hello! World Inc."
 
+    def test_extract_empty_slug_returns_none(self):
+        """All-symbol company like 'at !!!' should produce empty slug → None."""
+        slug, name = extract_company("Engineer at !!!")
+        assert slug is None
+        assert name is None
+
     def test_extract_trigger_in_url(self):
         slug, name = extract_company("site:jobs.lever.co at Stripe")
         assert slug == "stripe"

@@ -46,6 +46,8 @@ def extract_company(query: str) -> tuple[Optional[str], Optional[str]]:
         candidate = query[best_idx + best_trigger_len :].strip()
         if candidate:
             slug = _to_slug(candidate)
+            if not slug:
+                return (None, None)
             return (slug, candidate)
         return (None, None)
 
