@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import time
 from typing import Any
 from urllib.parse import urlparse, urlunparse
@@ -72,6 +73,12 @@ class BraveAdapter(EngineAdapter):
         search_params = params or {}
         cfg = self.config
         api_key = cfg.get("api_key") or ""
+        # Fallback: load API key from environment variable if not in config
+        if not api_key and self.env_prefix:
+            env_key = os.environ.get(f"{self.env_prefix}_API_KEY", "")
+            if env_key:
+                cfg["api_key"] = env_key
+                api_key = env_key
         base_url = cfg.get("base_url", "https://api.search.brave.com/res/v1/web/search")
         timeout_ms = cfg.get("timeout_ms", 5_000)
         max_results = cfg.get("max_results", 10)
