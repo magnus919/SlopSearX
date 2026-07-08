@@ -62,6 +62,15 @@ class BraveAdapter(EngineAdapter):
     engine_type = "api"
     categories = ["general", "news", "science", "images"]
 
+    def __init__(self, config: dict | None = None, **kwargs):
+        cfg = config or {}
+        # Load API key from environment if not in config
+        if not cfg.get("api_key") and self.env_prefix:
+            env_key = os.environ.get(f"{self.env_prefix}_API_KEY", "")
+            if env_key:
+                cfg["api_key"] = env_key
+        super().__init__(cfg, **kwargs)
+
     async def search(
         self,
         query: str,
