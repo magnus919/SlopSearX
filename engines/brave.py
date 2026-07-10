@@ -62,7 +62,7 @@ class BraveAdapter(EngineAdapter):
     engine_type = "api"
     categories = ["general", "news", "science", "images"]
 
-    def __init__(self, config: dict | None = None, **kwargs):
+    def __init__(self, config: dict[str, Any] | None = None, **kwargs: Any) -> None:
         cfg = config or {}
         # Load API key from environment if not in config
         if not cfg.get("api_key") and self.env_prefix:
