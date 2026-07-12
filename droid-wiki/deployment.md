@@ -120,7 +120,6 @@ Update `SEARXNG_URL` in agent-svc to point to `slopsearx:8080`. The response for
 | `PER_CLIENT_REQUESTS` | 30 | Client request budget per window |
 | `PER_CLIENT_WINDOW_SECONDS` | 60 | Sliding window for client rate limiting |
 | `FAIL_CLOSED` | false | Deny requests when Valkey unreachable |
-| `FAIL_CLOSED_GRACE_SECONDS` | 30 | Grace period before local fallback |
 | `SEARCH_CACHE_TTL_SECONDS` | 3600 | Cache TTL (seconds) |
 | `SEARCH_LOG_LEVEL` | INFO | Log level |
 | `FEATURE_<NAME>` | false | Feature flag override |

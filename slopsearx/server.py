@@ -159,18 +159,11 @@ async def _startup() -> None:
     fail_closed_raw = os.environ.get("FAIL_CLOSED", "false")
     _fail_closed = fail_closed_raw.strip().lower() in ("true", "1", "yes")
 
-    # Parse FAIL_CLOSED_GRACE_SECONDS env var
-    try:
-        _fail_closed_grace = float(os.environ.get("FAIL_CLOSED_GRACE_SECONDS", "30"))
-    except (ValueError, TypeError):
-        _fail_closed_grace = 30.0
-
     _client_rate_window = ValkeySlidingWindow(
         valkey_url=os.environ.get("VALKEY_URL", ""),
         default_rate=per_client_rate,
         window_seconds=per_client_window,
         fail_closed=_fail_closed,
-        fail_closed_grace_seconds=_fail_closed_grace,
     )
     await _client_rate_window.warmup()
 

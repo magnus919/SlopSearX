@@ -99,6 +99,5 @@ import-linter                 # architecture layer checks
 | `PER_CLIENT_REQUESTS` | 30 | Allowed requests per client IP per window |
 | `PER_CLIENT_WINDOW_SECONDS` | 60 | Sliding window for per-client rate limiting |
 | `FAIL_CLOSED` | false | Deny requests when Valkey is unreachable |
-| `FAIL_CLOSED_GRACE_SECONDS` | 30 | Grace period before local rate limiter fallback |
 | `SEARCH_CACHE_TTL_SECONDS` | 3600 | Cache TTL in seconds |
 | `FEATURE_<NAME>` | false | Feature flag overrides |
