@@ -79,35 +79,6 @@ Each engine declares its supported categories via a class attribute. Categories 
 - `?engines=brave,wikipedia` — explicit engine list overrides category filter
 - Operators can override categories via env vars: `ENGINE_MYENG_CATEGORIES=news`
 
-## Feature Flags
-
-SlopSearX uses a layered feature flag system (defaults → YAML → env vars). All flags are **disabled by default** (safe-by-default). When shipping agent-authored changes that modify behavior, wrap new code paths behind a feature flag so operators can opt in when ready.
-
-**Defining a flag in `config.yaml`:**
-```yaml
-features:
-  ai_dispatch: false   # disabled until operator enables
-```
-
-**Checking a flag in code:**
-```python
-if config.feature_flags.is_enabled("ai_dispatch"):
-    # new agent-authored behavior here
-```
-
-**Overriding via env var (highest priority):**
-```bash
-# Enable: FEATURE_AI_DISPATCH=true
-# Disable: FEATURE_AI_DISPATCH=false
-# Any of true/True/TRUE/1/yes/YES work for enable
-```
-
-**Rules for agents:**
-- Always gate new feature-adjacent code behind a feature flag (default `false`)
-- Name flags with `snake_case` descriptive names (e.g., `experimental_ranking`, `lazy_engine_init`)
-- Document the flag in your PR description so operators know what it controls
-- Unknown flags return `False` — no need to pre-register flags
-
 ## Engine Adapter Quick Reference
 
 ```python

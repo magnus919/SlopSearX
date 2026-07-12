@@ -36,7 +36,7 @@ sequenceDiagram
     participant E2 as Engine 2 (Wikipedia)
     participant STATS as Stats Tracker
     participant AUDIT as Audit Logger
-    participant R as Ranker
+    participant R as Ranking
     participant F as Formatter
 
     C->>MW: GET /search?q=python

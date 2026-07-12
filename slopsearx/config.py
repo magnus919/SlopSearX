@@ -41,22 +41,6 @@ class RoutingConfig:
 
 
 @dataclass
-class FeatureFlags:
-    """Feature flag container with safe-by-default semantics.
-
-    Flags can be set via ``config.yaml`` (``features:`` block) or
-    overridden by environment variables (``FEATURE_<NAME>=true|false|1|0``).
-    Unknown flags return ``False``.
-    """
-
-    flags: dict[str, bool] = field(default_factory=dict)
-
-    def is_enabled(self, name: str) -> bool:
-        """Check whether a feature flag is enabled.  Unknown flags return ``False``."""
-        return self.flags.get(name, False)
-
-
-@dataclass
 class EngineEntry:
     enabled: bool = True
     base_url: str = ""
@@ -84,7 +68,6 @@ class Config:
     cache: CacheConfig = field(default_factory=CacheConfig)
     ranking: RankingConfig = field(default_factory=RankingConfig)
     routing: RoutingConfig = field(default_factory=RoutingConfig)
-    feature_flags: FeatureFlags = field(default_factory=FeatureFlags)
 
     # Global settings
     default_engines: list[str] = field(default_factory=lambda: ["brave", "wikipedia"])
@@ -487,20 +470,8 @@ def load_config(
         config.log_level = file_data.get("log_level", config.log_level)
         config.enable_suggestions = file_data.get("enable_suggestions", config.enable_suggestions)
 
-        # Feature flags from config file
-        file_features = file_data.get("features", {})
-        if isinstance(file_features, dict):
-            for flag_name, flag_value in file_features.items():
-                config.feature_flags.flags[flag_name] = bool(flag_value)
-
     # 3. Layer: env vars
     overrides = _load_env_overrides()
     config = _apply_env_overrides(config, overrides)
-
-    # Feature flag env-var overrides (FEATURE_<NAME>=true|false|1|0)
-    for key, value in os.environ.items():
-        if key.startswith("FEATURE_"):
-            flag_name = key[len("FEATURE_") :].lower()
-            config.feature_flags.flags[flag_name] = value.lower() in ("true", "1", "yes")
 
     return config
