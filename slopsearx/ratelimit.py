@@ -1,9 +1,8 @@
 """Distributed rate limiting backed by Valkey.
 
-Pluggable strategy interface with three implementations:
+Pluggable strategy interface with two implementations:
 - LocalTokenBucket: in-memory, correct for 1-3 replicas
 - ValkeySlidingWindow: distributed, correct for any replica count
-- ExternalSidecar: delegates to dedicated rate-limit service
 
 Backpressure: rate-limited engines get 30s cooldown.
 3 consecutive failures -> engine deactivated until health check passes.
@@ -230,25 +229,6 @@ class ValkeySlidingWindow(RateLimitStrategy):
                 pass
             self._client = None
             self._connected = False
-
-
-# --- External sidecar (advanced deployments) ---
-
-
-class ExternalSidecar(RateLimitStrategy):
-    """Delegates to a dedicated rate-limit service.
-
-    For advanced use cases where rate limiting is managed by
-    a separate infrastructure component (e.g., global API key
-    budget across multiple services).
-    """
-
-    def __init__(self, sidecar_url: str = "") -> None:
-        self._url = sidecar_url
-
-    async def acquire(self, engine: str, cost: int = 1) -> bool:
-        # Stub: not implemented, always allows
-        return True
 
 
 # --- Backpressure wrapper ---
