@@ -4,13 +4,12 @@ Active contributors: Magnus Hedemark
 
 ## Purpose
 
-Merges raw results from multiple engines into a ranked, deduplicated list. Uses a pluggable `Ranker` interface so ranking strategy can be swapped without architecture changes.
+Merges raw results from multiple engines into a ranked, deduplicated list using presence-weighted ranking.
 
 ## Key abstractions
 
 | Type | File | Description |
 |---|---|---|
-| `Ranker` | `slopsearx/merger.py` | Abstract base class for pluggable ranking. `rank()` takes engine results, returns ranked list |
 | `PresenceRanker` | `slopsearx/merger.py` | V1: presence-weighted ranking. Results from more engines score higher |
 | `merge_results()` | `slopsearx/merger.py` | Convenience wrapper for backward compatibility |
 | `build_meta()` | `slopsearx/merger.py` | Builds `meta.*` extension field with response_time_ms, cached, query_id, engine_status |
@@ -37,7 +36,7 @@ V1 ranking is not better than any individual engine's ranking. It provides bread
 Planned for when traffic generates click-through data:
 - Per-engine trust scores from Valkey
 - Reciprocal Rank Fusion (RRF) with per-engine weight multipliers
-- The `Ranker` interface already supports this — V2 is an implementation change, not an architecture change
+- Extract a shared interface only if a second ranking strategy is implemented
 
 ## Integration points
 
@@ -46,11 +45,11 @@ Planned for when traffic generates click-through data:
 
 ## Entry points
 
-- Change ranking: implement new `Ranker` subclass, swap in server startup
+- Change ranking: add the new strategy and extract a shared interface if it needs one
 - Add per-engine budget: pass `per_engine_budget` dict to `PresenceRanker` constructor
 
 ## Key source files
 
 | File | Description |
 |---|---|
-| `slopsearx/merger.py` | Ranker interface, PresenceRanker, URL normalization, metadata helpers |
+| `slopsearx/merger.py` | PresenceRanker, URL normalization, metadata helpers |
