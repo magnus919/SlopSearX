@@ -50,10 +50,7 @@ class EngineEntry:
     rate_limit: Optional[float] = None  # requests per second
     weight: float = 1.0
     api_key: Optional[str] = None
-    # category support
     categories: Optional[list[str]] = None  # full override
-    categories_add: Optional[list[str]] = None  # append
-    categories_remove: Optional[list[str]] = None  # suppress
     # scrape-specific fields
     proxy_pool: Optional[str] = None
     scrape_proxy_url: Optional[str] = None
@@ -367,8 +364,7 @@ def _apply_env_overrides(config: Config, overrides: dict[str, str]) -> Config:
                 engine_name = parts[1]
                 setting = ".".join(parts[2:])
                 if engine_name in config.engines:
-                    # List coercion for categories fields
-                    if setting in ("categories", "categories_add", "categories_remove"):
+                    if setting == "categories":
                         typed_value = [c.strip() for c in value.split(",") if c.strip()] if value else []
                     else:
                         typed_value = _coerce_type(value, type(getattr(config.engines[engine_name], setting, str)))

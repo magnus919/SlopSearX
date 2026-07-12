@@ -110,7 +110,6 @@ export ENGINE_SHODAN_API_KEY="your_key"
 
 # Category overrides
 export ENGINE_BRAVE_CATEGORIES="general,news,science"
-export ENGINE_WIKIPEDIA_CATEGORIES_ADD="education"
 ```
 
 A mounted YAML config file at `/etc/slopsearx/config.yaml` provides per-engine tuning.

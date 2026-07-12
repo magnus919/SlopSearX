@@ -77,7 +77,7 @@ Each engine declares its supported categories via a class attribute. Categories 
 - `?categories=science` — filters to engines declaring `science`
 - `?categories=science,news` — OR semantics across requested categories
 - `?engines=brave,wikipedia` — explicit engine list overrides category filter
-- Operators can override/add/remove categories via env vars: `ENGINE_MYENG_CATEGORIES=news`, `ENGINE_MYENG_CATEGORIES_ADD=finance`
+- Operators can override categories via env vars: `ENGINE_MYENG_CATEGORIES=news`
 
 ## Engine Adapter Quick Reference
 
