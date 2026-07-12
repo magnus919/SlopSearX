@@ -14,7 +14,7 @@ import re
 import time
 import uuid
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator
+from typing import Any, AsyncIterator, Awaitable, Callable
 
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -84,6 +84,34 @@ logger = logging.getLogger(__name__)
 # Concurrency and per-client rate limiting
 _engine_semaphore: asyncio.Semaphore | None = None
 _client_rate_window: RateLimitStrategy | None = None
+
+
+async def _check_cache(
+    cache: SearchCache | None,
+    cache_fn: Callable[[SearchCache], Awaitable[dict[str, Any] | None]],
+    query_id: str,
+) -> JSONResponse | None:
+    """Return a response for a connected cache hit, if one exists."""
+    if cache is None or not cache.is_connected:
+        return None
+
+    cached = await cache_fn(cache)
+    if cached is None:
+        return None
+
+    # Negative cache hit — return 503 without dispatching.
+    if cached.get("_error"):
+        return JSONResponse(
+            status_code=503,
+            content={
+                "error": "service_unavailable",
+                "message": "Temporarily unavailable (cached error)",
+                "meta": {"cached": True, "query_id": query_id},
+            },
+        )
+
+    cached["meta"]["cached"] = True
+    return JSONResponse(status_code=200, content=cached)
 
 
 # ---------------------------------------------------------------------------
@@ -422,39 +450,23 @@ async def search(
                 },
             )
 
-    # Check cache first
-    if _cache is not None and _cache.is_connected:
-        ck = cache_key(q, language, safesearch)
-        cached = await _cache.get(ck)
-        if cached is not None:
-            # Negative cache hit — return 503 without dispatching
-            if cached.get("_error"):
-                return JSONResponse(
-                    status_code=503,
-                    content={
-                        "error": "service_unavailable",
-                        "message": "Temporarily unavailable (cached error)",
-                        "meta": {"cached": True, "query_id": query_id},
-                    },
-                )
-            cached["meta"]["cached"] = True
-            return JSONResponse(status_code=200, content=cached)
+    # Check search cache first.
+    cached_response = await _check_cache(
+        _cache,
+        lambda cache: cache.get(cache_key(q, language, safesearch)),
+        query_id,
+    )
+    if cached_response is not None:
+        return cached_response
 
     # Check answer cache (broader key, independent of language/safesearch)
-    if _cache is not None and _cache.is_connected:
-        answer_cached = await _cache.get_answer(q)
-        if answer_cached is not None:
-            if answer_cached.get("_error"):
-                return JSONResponse(
-                    status_code=503,
-                    content={
-                        "error": "service_unavailable",
-                        "message": "Temporarily unavailable (cached error)",
-                        "meta": {"cached": True, "query_id": query_id},
-                    },
-                )
-            answer_cached["meta"]["cached"] = True
-            return JSONResponse(status_code=200, content=answer_cached)
+    answer_cached_response = await _check_cache(
+        _cache,
+        lambda cache: cache.get_answer(q),
+        query_id,
+    )
+    if answer_cached_response is not None:
+        return answer_cached_response
 
     # Dispatch to all engines concurrently (bounded by semaphore)
     tasks = []
