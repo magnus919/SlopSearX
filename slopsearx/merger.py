@@ -2,53 +2,20 @@
 
 V1: Presence-weighted ranking (honest baseline).
 V2 (future): Weighted-fusion with per-engine trust scores.
-
-Design principle: The Ranker interface is pluggable from V1 so ranking
-strategy can be swapped without architecture changes.
 """
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from typing import Any, Optional
 
 from slopsearx.adapter import AdapterResponse, EngineStatus, SearchResult
 
 # ---------------------------------------------------------------------------
-# Ranker interface
+# Presence-weighted ranking
 # ---------------------------------------------------------------------------
 
 
-class Ranker(ABC):
-    """Pluggable ranking strategy.
-
-    The Ranker receives raw engine results and produces a ranked,
-    deduplicated list. Subclasses implement the ranking algorithm;
-    the orchestrator (server) owns fan-out and metadata collection.
-    """
-
-    @abstractmethod
-    def rank(
-        self,
-        engine_results: dict[str, list[SearchResult]],
-        query: str,
-        params: dict[str, Any] | None = None,
-    ) -> list[SearchResult]:
-        """Rank and deduplicate results from multiple engines.
-
-        Args:
-            engine_results: Engine name → list of SearchResult.
-            query: Original search query (for context-aware scoring).
-            params: Normalisation hints (language, safesearch, etc.).
-
-        Returns:
-            Ranked, deduplicated list of SearchResult with score
-            and position fields populated.
-        """
-        ...
-
-
-class PresenceRanker(Ranker):
+class PresenceRanker:
     """V1: Presence-weighted ranking.
 
     Strategy:
@@ -127,22 +94,19 @@ def merge_results(
 ) -> list[SearchResult]:
     """Merge and deduplicate results from multiple engines.
 
-    Convenience wrapper around the Ranker interface. Use the Ranker
-    classes directly for production code; this function exists for
-    backward compatibility with the M1 stub.
+    Convenience wrapper around presence-weighted ranking. This function
+    exists for backward compatibility with the M1 stub.
 
     Args:
         engine_results: Engine name → list of SearchResult.
-        strategy: Ranking strategy identifier.
+        strategy: Deprecated ranking strategy identifier. Presence ranking
+            is the only supported strategy.
 
     Returns:
         Ranked, deduplicated list of SearchResult.
     """
-    rankers: dict[str, Ranker] = {
-        "presence": PresenceRanker(),
-    }
-    ranker = rankers.get(strategy, PresenceRanker())
-    return ranker.rank(engine_results, "")
+    del strategy
+    return PresenceRanker().rank(engine_results, "")
 
 
 # ---------------------------------------------------------------------------

@@ -1,41 +1,15 @@
-"""Tests for result merger, Ranker interface, and metadata helpers."""
+"""Tests for result merger, ranking, and metadata helpers."""
 
 from __future__ import annotations
-
-import pytest
 
 from slopsearx.adapter import AdapterResponse, EngineStatus, SearchResult
 from slopsearx.merger import (
     PresenceRanker,
-    Ranker,
     build_engine_status,
     build_meta,
     extract_unresponsive,
     merge_results,
 )
-
-# ---------------------------------------------------------------------------
-# Ranker interface contract
-# ---------------------------------------------------------------------------
-
-
-class TestRankerInterface:
-    """Ranker ABC contract."""
-
-    def test_ranker_is_abstract(self) -> None:
-        """Ranker cannot be instantiated directly — abstract."""
-        with pytest.raises(TypeError):
-            Ranker()  # type: ignore[abstract]
-
-    def test_presence_ranker_is_ranker(self) -> None:
-        """PresenceRanker is a valid Ranker subclass."""
-        assert issubclass(PresenceRanker, Ranker)
-
-    def test_presence_ranker_instantiable(self) -> None:
-        """PresenceRanker can be instantiated."""
-        ranker = PresenceRanker()
-        assert isinstance(ranker, Ranker)
-
 
 # ---------------------------------------------------------------------------
 # PresenceRanker — ranking behavior

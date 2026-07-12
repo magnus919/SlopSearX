@@ -50,7 +50,7 @@ The multi-agent council debate (captured in spec.md Appendix) resolved seven arc
 | Env-var-only config vs hybrid | Hybrid: env vars for secrets, mounted config for engine tuning |
 | Distributed rate limiting vs per-replica | Valkey-backed sliding window required from day one |
 | SearXNG contract as internal schema vs wire-only | Internal Result dataclass, SearXNG JSON is one output formatter |
-| Weighted fusion in V1 vs V2 | Presence-weighted in V1, pluggable Ranker interface |
+| Weighted fusion in V1 vs V2 | Presence-weighted in V1; extract an interface when a second strategy exists |
 | Wikipedia pre-dispatch vs concurrent | All engines concurrent |
 | Brave as primary vs equal-weight engines | Brave API backbone, scrape engines as optional multipliers |
 
