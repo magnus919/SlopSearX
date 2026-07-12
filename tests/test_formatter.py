@@ -7,7 +7,6 @@ import yaml
 from slopsearx.adapter import SearchResult
 from slopsearx.formatter import (
     format_json,
-    format_yaml,
     format_yaml_markdown,
 )
 
@@ -354,29 +353,3 @@ class TestFormatYamlMarkdown:
 
         # The markdown should contain a snippet <= ~120 chars
         assert long_content[:120] in output
-
-
-# ---------------------------------------------------------------------------
-# Backward-compat format_yaml stub
-# ---------------------------------------------------------------------------
-
-
-class TestFormatYamlStub:
-    """Legacy format_yaml() wrapper."""
-
-    def test_dict_to_search_result(self) -> None:
-        """Dict results are converted to SearchResult and formatted."""
-        output = format_yaml(
-            results=[
-                {"url": "https://a.com", "title": "A", "content": "test content", "engine": "brave"},
-            ],
-            query="test",
-            response_time_ms=100,
-            engine_count=4,
-            responsive_count=2,
-        )
-
-        # Should be valid YAML+Markdown
-        assert "test" in output
-        parts = output.split("---\n", 1)
-        assert len(parts) == 2

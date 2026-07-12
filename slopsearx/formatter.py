@@ -227,33 +227,3 @@ def format_yaml_markdown(
     # Combine: YAML header + separator + Markdown body
     yaml_str = yaml.dump(yaml_section, allow_unicode=True, default_flow_style=False, sort_keys=False)
     return f"{yaml_str}---\n{markdown_body}"
-
-
-# ---------------------------------------------------------------------------
-# Backward-compat stub wrapper
-# ---------------------------------------------------------------------------
-
-
-def format_yaml(results: list[dict[str, Any]], query: str, **meta: Any) -> str:
-    """Format results as YAML+Markdown (legacy stub wrapper).
-
-    Prefer ``format_yaml_markdown`` for production use — this exists
-    for backward compatibility with the M1 stub signature.
-    """
-    # Convert dict results to SearchResult for the real formatter
-    search_results = [
-        SearchResult(
-            url=r.get("url", ""),
-            title=r.get("title", ""),
-            content=r.get("content", ""),
-            engine=r.get("engine", ""),
-        )
-        for r in results
-    ]
-    return format_yaml_markdown(
-        search_results,
-        query,
-        meta={"response_time_ms": meta.get("response_time_ms", 0)},
-        engine_count=meta.get("engine_count", 0),
-        responsive_count=meta.get("responsive_count", 0),
-    )
