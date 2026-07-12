@@ -77,12 +77,11 @@ Operators can reclassify engine categories without modifying adapter code:
 engines:
   myengine:
     categories:
-      override: ["general", "news"]  # replace entirely
-      add: ["finance"]               # append
-      remove: ["images"]             # suppress
+      - general
+      - news
 ```
 
-Env var equivalents: `ENGINE_MYENG_CATEGORIES=general,news`, `ENGINE_MYENG_CATEGORIES_ADD=finance`, `ENGINE_MYENG_CATEGORIES_REMOVE=images`.
+Env var equivalent: `ENGINE_MYENG_CATEGORIES=general,news`.
 
 ## Entry points
 

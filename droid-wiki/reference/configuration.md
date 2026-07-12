@@ -70,8 +70,6 @@ enable_suggestions: false
 | `ENGINE_{NAME}_TIMEOUT_MS` | `ENGINE_DDG_TIMEOUT_MS=15000` | Per-engine timeout |
 | `ENGINE_{NAME}_RATE_LIMIT` | `ENGINE_BRAVE_RATE_LIMIT=20` | Per-engine rate limit (req/s) |
 | `ENGINE_{NAME}_CATEGORIES` | `ENGINE_MYENG_CATEGORIES=general,news` | Category override |
-| `ENGINE_{NAME}_CATEGORIES_ADD` | `ENGINE_MYENG_CATEGORIES_ADD=finance` | Append categories |
-| `ENGINE_{NAME}_CATEGORIES_REMOVE` | `ENGINE_MYENG_CATEGORIES_REMOVE=images` | Remove categories |
 | `ENGINE_{NAME}_PROXY_POOL` | `ENGINE_DDG_PROXY_POOL=http://p1:8080,http://p2:8080` | Proxy list |
 
 ### Global config

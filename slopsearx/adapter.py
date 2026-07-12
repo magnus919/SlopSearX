@@ -144,7 +144,7 @@ class EngineAdapter(ABC):
     def __init__(self, config: dict[str, Any] | None = None, rate_limiter: Any = None) -> None:
         self.config = config or {}
         self.rate_limiter = rate_limiter  # injected by server at startup
-        # Merge categories: self-declared default + config override/add/remove
+        # Use the adapter's declared categories unless config replaces them.
         self._merge_categories()
 
         # Circuit breaker state
@@ -228,31 +228,9 @@ class EngineAdapter(ABC):
         """Optional lifecycle hook — called at graceful shutdown."""
 
     def _merge_categories(self) -> None:
-        """Merge self-declared categories with config override/add/remove.
-
-        Config keys:
-            categories: list[str] — full override (replaces self-declared)
-            categories_add: list[str] — append to self-declared
-            categories_remove: list[str] — suppress from self-declared
-        """
-        cat_cfg: dict[str, Any] = self.config.get("categories", {})
-        if isinstance(cat_cfg, list):
-            # Bare list = full override (backward-compat)
-            self.categories = list(cat_cfg)
-            return
-        if not isinstance(cat_cfg, dict):
-            return  # no category config
-        if "override" in cat_cfg:
-            self.categories = list(cat_cfg["override"])
-            return
-        # Add/remove path
-        self.categories = list(type(self).categories)  # copy class attr
-        for cat in cat_cfg.get("add", []):
-            if cat not in self.categories:
-                self.categories.append(cat)
-        for cat in cat_cfg.get("remove", []):
-            if cat in self.categories:
-                self.categories.remove(cat)
+        """Apply an optional category override to this adapter instance."""
+        override = self.config.get("categories")
+        self.categories = list(override) if override else list(type(self).categories)
 
     # ------------------------------------------------------------------
     # Circuit breaker
@@ -402,15 +380,5 @@ def discover_engines(
     for name, cls in _ENGINE_REGISTRY.items():
         cfg = dict(engine_configs.get(name, {}))
         if cfg.get("enabled", True):
-            # Restructure category config for _merge_categories()
-            cat_opts: dict[str, list[str]] = {}
-            if cfg.get("categories"):
-                cat_opts["override"] = cfg.pop("categories")
-            if cfg.get("categories_add"):
-                cat_opts["add"] = cfg.pop("categories_add")
-            if cfg.get("categories_remove"):
-                cat_opts["remove"] = cfg.pop("categories_remove")
-            if cat_opts:
-                cfg["categories"] = cat_opts
             instances[name] = cls(cfg)
     return instances

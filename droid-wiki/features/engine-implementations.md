@@ -97,8 +97,6 @@ Engines declare SearXNG-compatible categories with optional namespace-prefixed s
 Operators can override categories without modifying code via config.yaml or env vars:
 ```bash
 ENGINE_MYENG_CATEGORIES=general,news
-ENGINE_MYENG_CATEGORIES_ADD=finance
-ENGINE_MYENG_CATEGORIES_REMOVE=images
 ```
 
 ## Key source files

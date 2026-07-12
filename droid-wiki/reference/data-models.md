@@ -79,8 +79,6 @@ class EngineEntry:
     weight: float = 1.0
     api_key: str | None = None
     categories: list[str] | None = None
-    categories_add: list[str] | None = None
-    categories_remove: list[str] | None = None
     proxy_pool: str | None = None
     scrape_proxy_url: str | None = None
 ```
