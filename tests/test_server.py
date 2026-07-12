@@ -16,7 +16,7 @@ from slopsearx.adapter import (
     register_engine,
 )
 from slopsearx.config import load_config
-from slopsearx.server import app
+from slopsearx.server import _check_cache, app
 
 # ---------------------------------------------------------------------------
 # Test engine — mock adapter for controlled test scenarios
@@ -121,6 +121,71 @@ def client() -> TestClient:
     # Restore original state
     server_mod._active_engines = original_engines
     server_mod._empty_scrape_diagnostics_enabled = original_empty_scrape_diagnostics
+
+
+# ---------------------------------------------------------------------------
+# Cache hit handling
+# ---------------------------------------------------------------------------
+
+
+class TestCheckCache:
+    """Shared cache-hit response handling."""
+
+    async def test_returns_none_when_cache_is_disconnected(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        import slopsearx.server as server_mod
+
+        cache = type("Cache", (), {"is_connected": False})()
+        monkeypatch.setattr(server_mod, "_cache", cache)
+
+        response = await _check_cache(cache, lambda _: _unexpected_cache_read(), "ssx-test")
+
+        assert response is None
+
+    async def test_returns_none_on_cache_miss(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        import slopsearx.server as server_mod
+
+        cache = type("Cache", (), {"is_connected": True})()
+        monkeypatch.setattr(server_mod, "_cache", cache)
+
+        response = await _check_cache(cache, lambda _: _cache_result(None), "ssx-test")
+
+        assert response is None
+
+    async def test_marks_successful_cache_hit(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        import slopsearx.server as server_mod
+
+        cache = type("Cache", (), {"is_connected": True})()
+        monkeypatch.setattr(server_mod, "_cache", cache)
+        cached: dict[str, object] = {"meta": {"cached": False}, "results": []}
+
+        response = await _check_cache(cache, lambda _: _cache_result(cached), "ssx-test")
+
+        assert response is not None
+        assert response.status_code == 200
+        assert cached == {"meta": {"cached": True}, "results": []}
+
+    async def test_returns_cached_error_response(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        import slopsearx.server as server_mod
+
+        cache = type("Cache", (), {"is_connected": True})()
+        monkeypatch.setattr(server_mod, "_cache", cache)
+
+        response = await _check_cache(cache, lambda _: _cache_result({"_error": True}), "ssx-test")
+
+        assert response is not None
+        assert response.status_code == 503
+        assert response.body == (
+            b'{"error":"service_unavailable","message":"Temporarily unavailable '
+            b'(cached error)","meta":{"cached":true,"query_id":"ssx-test"}}'
+        )
+
+
+async def _cache_result(value: dict[str, object] | None) -> dict[str, object] | None:
+    return value
+
+
+async def _unexpected_cache_read() -> None:
+    raise AssertionError("disconnected cache must not be read")
 
 
 # ---------------------------------------------------------------------------
