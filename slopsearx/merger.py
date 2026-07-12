@@ -188,11 +188,28 @@ def extract_unresponsive(
     return unresponsive
 
 
+def extract_empty_scrape_engines(
+    responses: dict[str, AdapterResponse],
+    scrape_engine_names: set[str],
+) -> list[list[str]]:
+    """Report successful scrape responses that contained no parsed results.
+
+    This is diagnostic-only: an empty result set can be legitimate, so it does
+    not alter the engine status or circuit-breaker behavior.
+    """
+    return [
+        [name, "successful scrape returned no results"]
+        for name, response in responses.items()
+        if name in scrape_engine_names and response.status == EngineStatus.OK and not response.results
+    ]
+
+
 def build_meta(
     responses: dict[str, AdapterResponse],
     elapsed_ms: float,
     query_id: str,
     cached: bool = False,
+    empty_engines: list[list[str]] | None = None,
 ) -> dict[str, Any]:
     """Build the meta.* extension field.
 
@@ -205,12 +222,15 @@ def build_meta(
     Returns:
         Meta dict with response_time_ms, cached, query_id, engine_status.
     """
-    return {
+    meta = {
         "response_time_ms": round(elapsed_ms),
         "cached": cached,
         "query_id": query_id,
         "engine_status": build_engine_status(responses, elapsed_ms),
     }
+    if empty_engines:
+        meta["empty_engines"] = empty_engines
+    return meta
 
 
 # ---------------------------------------------------------------------------

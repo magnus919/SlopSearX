@@ -10,6 +10,7 @@ from slopsearx.merger import (
     Ranker,
     build_engine_status,
     build_meta,
+    extract_empty_scrape_engines,
     extract_unresponsive,
     merge_results,
 )
@@ -266,6 +267,28 @@ class TestExtractUnresponsive:
         assert len(unresponsive) == 2
 
 
+class TestExtractEmptyScrapeEngines:
+    """Opt-in diagnostics for anomalous successful scrape responses."""
+
+    def test_only_successful_empty_scrape_engines_are_reported(self) -> None:
+        responses = {
+            "google": AdapterResponse(results=[], status=EngineStatus.OK),
+            "duckduckgo": AdapterResponse(results=[], status=EngineStatus.BLOCKED),
+            "brave": AdapterResponse(results=[], status=EngineStatus.OK),
+            "wikipedia": AdapterResponse(
+                results=[SearchResult(url="https://example.com", title="Result", content="", engine="wikipedia")],
+                status=EngineStatus.OK,
+            ),
+        }
+
+        assert extract_empty_scrape_engines(responses, {"google", "duckduckgo"}) == [
+            [
+                "google",
+                "successful scrape returned no results",
+            ]
+        ]
+
+
 class TestBuildMeta:
     """build_meta() extension field."""
 
@@ -294,6 +317,16 @@ class TestBuildMeta:
         meta = build_meta(responses, 0, "ssx-test", cached=True)
 
         assert meta["cached"] is True
+
+    def test_empty_engines_are_included_when_supplied(self) -> None:
+        meta = build_meta(
+            {},
+            0,
+            "ssx-test",
+            empty_engines=[["google", "successful scrape returned no results"]],
+        )
+
+        assert meta["empty_engines"] == [["google", "successful scrape returned no results"]]
 
 
 # ---------------------------------------------------------------------------

@@ -80,6 +80,17 @@ class _MockEngine(EngineAdapter):
         )
 
 
+class _EmptyScrapeEngine(EngineAdapter):
+    """Successful scrape response with no parsed results."""
+
+    name = "emptyscrape"
+    engine_type = "scrape"
+    categories = ["general"]
+
+    async def search(self, query, params=None):
+        return AdapterResponse(results=[], status=EngineStatus.OK)
+
+
 # ---------------------------------------------------------------------------
 # Test fixture: server with mock engines enabled
 # ---------------------------------------------------------------------------
@@ -96,6 +107,7 @@ def client() -> TestClient:
 
     # Save original state
     original_engines = dict(server_mod._active_engines)
+    original_empty_scrape_diagnostics = server_mod._empty_scrape_diagnostics_enabled
 
     with TestClient(app) as tc:
         # Set mock engine AFTER startup runs (which calls discover_engines)
@@ -108,6 +120,7 @@ def client() -> TestClient:
 
     # Restore original state
     server_mod._active_engines = original_engines
+    server_mod._empty_scrape_diagnostics_enabled = original_empty_scrape_diagnostics
 
 
 # ---------------------------------------------------------------------------
@@ -196,6 +209,26 @@ class TestSearchEndpoint:
         assert "engine_status" in meta
         assert meta["query_id"].startswith("ssx-")
         assert isinstance(meta["cached"], bool)
+
+    def test_empty_scrape_diagnostic_is_opt_in(self, client: TestClient) -> None:
+        """An empty scrape is visible without being marked unresponsive."""
+        import slopsearx.server as server_mod
+
+        server_mod._active_engines = {"emptyscrape": _EmptyScrapeEngine()}
+        server_mod._empty_scrape_diagnostics_enabled = False
+
+        disabled_response = client.get("/search", params={"q": "diagnostic-disabled"})
+
+        assert "empty_engines" not in disabled_response.json()["meta"]
+
+        server_mod._empty_scrape_diagnostics_enabled = True
+
+        response = client.get("/search", params={"q": "diagnostic-enabled"})
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["unresponsive_engines"] == []
+        assert data["meta"]["empty_engines"] == [["emptyscrape", "successful scrape returned no results"]]
 
     def test_engines_filter(self, client: TestClient) -> None:
         """engines parameter filters which engines to use."""
