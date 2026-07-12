@@ -455,22 +455,14 @@ When production traffic generates click-through data, V2 adds:
    - Result position stability (engines whose top-N results change less between queries have higher trust)
    - Latency correlation (slow engines that return high-quality results vs fast engines that return noise)
 2. **Weighted fusion** using Reciprocal Rank Fusion (RRF) with per-engine weight multipliers
-3. **Pluggable Ranker interface** designed from V1 so the ranking strategy can be swapped without architecture changes:
+3. **Presence-weighted ranking** is implemented directly for V1:
 
 ```python
-class Ranker(ABC):
-    @abstractmethod
-    def rank(self, results: dict[str, list[SearchResult]], query: str) -> list[SearchResult]:
-        ...
-
-class PresenceRanker(Ranker):
+class PresenceRanker:
     """V1: presence-weighted, document quality ceiling."""
-
-class WeightedFusionRanker(Ranker):
-    """V2: RRF with per-engine trust scores from Valkey."""
 ```
 
-The Ranker interface is a V1 deliverable even if the WeightedFusion implementation ships in V2. This ensures the deployment can upgrade ranking without code changes.
+If a second ranking strategy is implemented in a later version, extract a shared interface then.
 
 ---
 
@@ -943,7 +935,7 @@ The `SEARXNG_URL` env var in GroktoCrawl's agent-svc points to `slopsearx:8080` 
 | Env-var-only config vs hybrid | Split 2-3 for hybrid | **Hybrid** — env vars for secrets/toggles, mounted config for engine tuning |
 | Distributed rate limiting vs per-replica | All agreed on distributed | **Valkey-backed sliding window**, required from day one |
 | SearXNG contract as internal schema vs wire-only | All agreed on wire-only | **Internal Result dataclass**, SearXNG JSON is one output formatter |
-| Weighted fusion in V1 vs V2 | Split 2-3 for V2 | **Presence-weighted in V1**, pluggable Ranker interface, weighted fusion deferred to V2 |
+| Weighted fusion in V1 vs V2 | Split 2-3 for V2 | **Presence-weighted in V1**; extract an interface when a second strategy exists |
 | Wikipedia pre-dispatch vs concurrent | All agreed on concurrent | **All engines concurrent**, no query classification needed |
 | Brave as primary vs equal-weight engines | All agreed on primary | **Brave API backbone**, scrape engines as optional quality multipliers |
 

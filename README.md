@@ -131,6 +131,22 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 
 ## Quick Start
 
+### VPN and proxy deployments
+
+Google and DuckDuckGo are best-effort HTML-scrape adapters. VPN, proxy, and
+datacenter IPs can receive consent, challenge, or block pages; configure a
+Brave API key (`ENGINE_BRAVE_API_KEY`) for a reliable API-backed web-search
+source. A Brave key supplements the other active Tier-1 engines; it does not
+disable them.
+
+To surface successful scrape responses that parse to zero results, enable the
+opt-in diagnostic flag. These entries appear in `meta.empty_engines`; they are
+warnings rather than failures because a search can legitimately have no matches.
+
+```bash
+FEATURE_EMPTY_SCRAPE_DIAGNOSTICS=true
+```
+
 Pre-built Docker images are available from GitHub Container Registry. Builds run automatically on every push to `main` (`latest`, `unstable`) and on version tags (`stable`, `X`, `X.Y`, `X.Y.Z`).
 
 ```bash
