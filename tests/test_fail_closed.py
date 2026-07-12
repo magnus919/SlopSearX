@@ -3,12 +3,8 @@
 Covers validation assertions:
   VAL-M5-001  fail_closed=False preserves fail-open behavior
   VAL-M5-002  fail_closed=True blocks during Valkey outage
-  VAL-M5-003  fail_closed=True + grace period → LocalTokenBucket fallback
-  VAL-M5-004  FAIL_CLOSED env var controls fail_closed parameter
-  VAL-M5-005  FAIL_CLOSED_GRACE_SECONDS env var controls grace period
-  VAL-M5-006  Valkey recovery restores normal operation
-  VAL-M5-007  Valkey flap resets grace-period timer
-  VAL-M5-008  Invalid FAIL_CLOSED values handled safely
+  VAL-M5-003  Valkey recovery restores normal operation
+  VAL-M5-004  Invalid FAIL_CLOSED values handled safely
   VAL-CROSS-001  Semaphore + fail-closed interaction (429 before semaphore)
   VAL-CROSS-003  Full /search flow with all fixes applied
   VAL-CROSS-005  /health reflects Valkey connectivity degraded
@@ -18,9 +14,8 @@ from __future__ import annotations
 
 import asyncio
 import os
-import time
 from typing import Any, Generator
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
@@ -33,11 +28,7 @@ from slopsearx.adapter import (
     EngineStatus,
     SearchResult,
 )
-from slopsearx.ratelimit import (
-    LocalTokenBucket,
-    RateLimitStrategy,
-    ValkeySlidingWindow,
-)
+from slopsearx.ratelimit import RateLimitStrategy, ValkeySlidingWindow
 from slopsearx.server import app
 
 # ---------------------------------------------------------------------------
@@ -96,72 +87,14 @@ class TestFailClosedBlocks:
         for _ in range(5):
             assert await window.acquire("brave") is False
 
+    async def test_reconnect_failure_denies_immediately(self) -> None:
+        """A failed reconnect does not enter a grace period or local fallback."""
+        window = ValkeySlidingWindow(valkey_url="redis://mock:6379", fail_closed=True)
 
-# ---------------------------------------------------------------------------
-# VAL-M5-003: fail_closed=True + grace period → LocalTokenBucket fallback
-# ---------------------------------------------------------------------------
+        with patch.object(window, "_try_reconnect", new=AsyncMock(return_value=False)) as reconnect:
+            assert await window.acquire("brave") is False
 
-
-class TestGracePeriodFallback:
-    """After grace period, LocalTokenBucket fallback engages."""
-
-    async def test_grace_period_blocks_before_fallback(self) -> None:
-        """Before grace period expires, acquire returns False (deny)."""
-        window = ValkeySlidingWindow(
-            valkey_url="",
-            fail_closed=True,
-            fail_closed_grace_seconds=30.0,
-        )
-        # Simulate recently disconnected
-        window._disconnected_at = time.monotonic() - 5.0  # 5s ago < 30s grace
-        assert await window.acquire("brave") is False
-
-    async def test_fallback_after_grace_period(self) -> None:
-        """After grace period, LocalTokenBucket fallback allows limited traffic."""
-        window = ValkeySlidingWindow(
-            valkey_url="",
-            fail_closed=True,
-            fail_closed_grace_seconds=30.0,
-        )
-        # Simulate grace period expired
-        window._disconnected_at = time.monotonic() - 31.0  # 31s ago > 30s grace
-        result = await window.acquire("brave")
-        # Should engage LocalTokenBucket fallback which allows (burst capacity)
-        assert result is True
-
-    async def test_fallback_rate_limits(self) -> None:
-        """LocalTokenBucket fallback rate-limits after burst exhausted."""
-        window = ValkeySlidingWindow(
-            valkey_url="",
-            fail_closed=True,
-            fail_closed_grace_seconds=0.0,  # immediate fallback
-        )
-        window._disconnected_at = time.monotonic()
-        # First acquire should allow (burst)
-        assert await window.acquire("brave") is True
-        # Actually with default_rate=10.0 and burst=20.0, we need a lot more
-        # Let's use a window with a very small default_rate
-        window2 = ValkeySlidingWindow(
-            valkey_url="",
-            fail_closed=True,
-            fail_closed_grace_seconds=0.0,
-            default_rate=0.0,  # 0 rate
-        )
-        window2._disconnected_at = time.monotonic()
-        # Even with 0 rate, LocalTokenBucket burst=0.0 means no tokens
-        assert await window2.acquire("brave") is False
-
-    async def test_fallback_uses_local_token_bucket(self) -> None:
-        """After grace period, fallback is a LocalTokenBucket instance."""
-        window = ValkeySlidingWindow(
-            valkey_url="",
-            fail_closed=True,
-            fail_closed_grace_seconds=0.0,
-        )
-        window._disconnected_at = time.monotonic()
-        await window.acquire("brave")  # triggers fallback creation
-        assert window._local_fallback is not None
-        assert isinstance(window._local_fallback, LocalTokenBucket)
+        reconnect.assert_awaited_once()
 
 
 # ---------------------------------------------------------------------------
@@ -203,49 +136,22 @@ class TestFailClosedEnvVarParsing:
 
 
 # ---------------------------------------------------------------------------
-# VAL-M5-005: FAIL_CLOSED_GRACE_SECONDS env var controls grace period
-# ---------------------------------------------------------------------------
-
-
-class TestGraceSecondsEnvVar:
-    """FAIL_CLOSED_GRACE_SECONDS env var controls grace period."""
-
-    def test_defaults_to_30(self) -> None:
-        """Unset FAIL_CLOSED_GRACE_SECONDS defaults to 30."""
-        window = ValkeySlidingWindow(valkey_url="", fail_closed=True)
-        assert window._fail_closed_grace_seconds == 30.0
-
-    def test_env_var_sets_value(self) -> None:
-        """FAIL_CLOSED_GRACE_SECONDS=60 sets grace period to 60."""
-        window = ValkeySlidingWindow(
-            valkey_url="",
-            fail_closed=True,
-            fail_closed_grace_seconds=60.0,
-        )
-        assert window._fail_closed_grace_seconds == 60.0
-
-
-# ---------------------------------------------------------------------------
-# VAL-M5-006: Valkey recovery restores normal operation
+# VAL-M5-003: Valkey recovery restores normal operation
 # ---------------------------------------------------------------------------
 
 
 class TestValkeyRecovery:
     """After Valkey comes back, Valkey-based rate limiting resumes."""
 
-    async def test_reconnect_clears_disconnected_state(self) -> None:
-        """Reconnecting clears _disconnected_at and _local_fallback."""
+    async def test_reconnected_window_uses_valkey(self) -> None:
+        """A reconnected window resumes Valkey-based rate limiting."""
         mock_client = AsyncMock()
         mock_client.ping = AsyncMock()
         mock_client.incrby = AsyncMock(return_value=1)
         mock_client.expire = AsyncMock()
         mock_client.close = AsyncMock()
 
-        window = ValkeySlidingWindow(
-            valkey_url="redis://mock:6379",
-            fail_closed=True,
-            fail_closed_grace_seconds=30.0,
-        )
+        window = ValkeySlidingWindow(valkey_url="redis://mock:6379", fail_closed=True)
         window._client = mock_client
         window._connected = True
 
@@ -253,85 +159,9 @@ class TestValkeyRecovery:
         result = await window.acquire("brave")
         assert result is True
         assert window._connected is True
-        # No disconnected state because we didn't go through disconnect
-        assert window._disconnected_at is None
 
 
-# ---------------------------------------------------------------------------
-# VAL-M5-007: Valkey flap resets grace-period timer
-# ---------------------------------------------------------------------------
-
-
-class TestValkeyFlapResetsGrace:
-    """Brief Valkey recovery resets the grace-period counter."""
-
-    async def test_reconnect_resets_disconnected_at(self) -> None:
-        """When Valkey reconnects, _disconnected_at is reset to None."""
-        mock_client = AsyncMock()
-        mock_client.ping = AsyncMock()
-        mock_client.incrby = AsyncMock(return_value=1)
-        mock_client.expire = AsyncMock()
-
-        window = ValkeySlidingWindow(
-            valkey_url="redis://mock:6379",
-            fail_closed=True,
-            fail_closed_grace_seconds=30.0,
-        )
-        window._client = mock_client
-        window._connected = True
-
-        # Mark as disconnected first
-        window._connected = False
-        window._client = None
-        window._disconnected_at = time.monotonic() - 5.0
-
-        # Reconnect
-        window._client = mock_client
-        window._connected = True
-        window._disconnected_at = None
-        window._local_fallback = None
-
-        # Now disconnected again - should start fresh
-        window._connected = False
-        window._client = None
-        window._disconnected_at = time.monotonic() - 2.0
-
-        # Should be in grace period (2s < 30s), so deny
-        assert await window.acquire("brave") is False
-
-    async def test_flap_full_grace_after_reconnect(self) -> None:
-        """After flap, full grace period elapses before fallback."""
-        window = ValkeySlidingWindow(
-            valkey_url="",
-            fail_closed=True,
-            fail_closed_grace_seconds=30.0,
-        )
-        # Start fresh disconnected
-        window._disconnected_at = time.monotonic() - 1.0  # 1s ago
-
-        # After 1s → deny (still in grace)
-        assert await window.acquire("brave") is False
-
-        # Simulate reconnect (flap)
-        window._connected = True
-        window._disconnected_at = None
-        window._local_fallback = None
-
-        # Go down again - new grace period starts
-        window._connected = False
-        window._disconnected_at = time.monotonic() - 1.0  # Only 1s since new outage
-
-        # Still in new grace period → deny
-        assert await window.acquire("brave") is False
-
-        # Set disconnected_at to past grace
-        window._disconnected_at = time.monotonic() - 31.0  # Past 30s grace
-        result = await window.acquire("brave")
-        assert result is True  # Now fallback allows
-
-
-# ---------------------------------------------------------------------------
-# VAL-M5-008: Invalid FAIL_CLOSED values handled safely
+# VAL-M5-004: Invalid FAIL_CLOSED values handled safely
 # ---------------------------------------------------------------------------
 
 
@@ -373,18 +203,13 @@ class TestValkeyExceptionBehavior:
         mock_client.incrby = AsyncMock(side_effect=RuntimeError("Valkey down"))
         mock_client.ping = AsyncMock()
 
-        window = ValkeySlidingWindow(
-            valkey_url="redis://mock:6379",
-            fail_closed=True,
-            fail_closed_grace_seconds=30.0,
-        )
+        window = ValkeySlidingWindow(valkey_url="redis://mock:6379", fail_closed=True)
         window._client = mock_client
         window._connected = True
 
         result = await window.acquire("brave")
         assert result is False
         assert window._connected is False
-        assert window._disconnected_at is not None
 
     async def test_exception_with_fail_open_returns_true(self) -> None:
         """With fail_closed=False and Valkey raises, acquire returns True."""
@@ -401,24 +226,6 @@ class TestValkeyExceptionBehavior:
 
         result = await window.acquire("brave")
         assert result is True
-
-    async def test_grace_period_exception_no_disconnected_at(self) -> None:
-        """Exception on first acquire sets disconnected_at."""
-        mock_client = AsyncMock()
-        mock_client.incrby = AsyncMock(side_effect=RuntimeError("Valkey down"))
-
-        window = ValkeySlidingWindow(
-            valkey_url="redis://mock:6379",
-            fail_closed=True,
-            fail_closed_grace_seconds=30.0,
-        )
-        window._client = mock_client
-        window._connected = True
-        assert window._disconnected_at is None
-
-        await window.acquire("brave")
-
-        assert window._disconnected_at is not None
 
 
 # ---------------------------------------------------------------------------
@@ -454,15 +261,6 @@ class TestServerFailClosedWiring:
         raw = os.environ.get("FAIL_CLOSED", "false")
         fail_closed = raw.strip().lower() in ("true", "1", "yes")
         assert fail_closed is False  # default
-
-    def test_fail_closed_grace_env_var_used(self) -> None:
-        """Server startup code correctly reads FAIL_CLOSED_GRACE_SECONDS."""
-        raw = os.environ.get("FAIL_CLOSED_GRACE_SECONDS", "30")
-        try:
-            grace = float(raw)
-        except (ValueError, TypeError):
-            grace = 30.0
-        assert grace == 30.0
 
 
 # ---------------------------------------------------------------------------

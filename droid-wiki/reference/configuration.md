@@ -82,7 +82,6 @@ enable_suggestions: false
 | `PER_CLIENT_REQUESTS` | 30 | Per-client rate limit |
 | `PER_CLIENT_WINDOW_SECONDS` | 60 | Rate limit window |
 | `FAIL_CLOSED` | false | Deny on Valkey failure |
-| `FAIL_CLOSED_GRACE_SECONDS` | 30 | Grace before local fallback |
 | `SEARCH_CACHE_TTL_SECONDS` | 3600 | Cache TTL |
 | `SEARCH_CACHE_NEGATIVE_TTL_SECONDS` | 60 | Negative cache TTL |
 | `SEARCH_LOG_LEVEL` | INFO | Log level |
