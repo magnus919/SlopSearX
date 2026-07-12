@@ -327,7 +327,7 @@ _DEFAULT_RANKING = {"strategy": "presence"}
 
 
 def _load_env_overrides() -> dict[str, Any]:
-    """Read all ``SEARCH_*`` and ``ENGINE_*`` env vars and return a flat dict."""
+    """Read supported environment overrides and return a flat dict."""
     overrides: dict[str, Any] = {}
     for key, value in os.environ.items():
         if key.startswith("SEARCH_"):
@@ -340,6 +340,9 @@ def _load_env_overrides() -> dict[str, Any]:
             engine_name = parts[1].lower()
             setting = parts[2].lower()
             overrides[f"engines.{engine_name}.{setting}"] = value
+        elif key.startswith("FEATURE_"):
+            flag_name = key[len("FEATURE_") :].lower()
+            overrides[f"features.{flag_name}"] = value
     return overrides
 
 
@@ -396,6 +399,9 @@ def _apply_env_overrides(config: Config, overrides: dict[str, str]) -> Config:
             config.log_level = value.upper()
         elif key == "search_default_engines":
             config.default_engines = [e.strip() for e in value.split(",")]
+        elif key.startswith("features."):
+            flag_name = key.removeprefix("features.")
+            config.feature_flags.flags[flag_name] = _coerce_type(value, bool)
     return config
 
 
@@ -500,11 +506,5 @@ def load_config(
     # 3. Layer: env vars
     overrides = _load_env_overrides()
     config = _apply_env_overrides(config, overrides)
-
-    # Feature flag env-var overrides (FEATURE_<NAME>=true|false|1|0)
-    for key, value in os.environ.items():
-        if key.startswith("FEATURE_"):
-            flag_name = key[len("FEATURE_") :].lower()
-            config.feature_flags.flags[flag_name] = value.lower() in ("true", "1", "yes")
 
     return config

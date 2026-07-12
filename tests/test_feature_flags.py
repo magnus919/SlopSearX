@@ -7,8 +7,9 @@ import tempfile
 from pathlib import Path
 
 import yaml
+from pytest import MonkeyPatch
 
-from slopsearx.config import FeatureFlags, load_config
+from slopsearx.config import FeatureFlags, _load_env_overrides, load_config
 
 
 class TestFeatureFlagsDataclass:
@@ -58,6 +59,13 @@ class TestFeatureFlagsFromYaml:
 
 
 class TestFeatureFlagsFromEnv:
+    def test_feature_env_vars_are_collected_as_overrides(self, monkeypatch: MonkeyPatch) -> None:
+        monkeypatch.setenv("FEATURE_AI_DISPATCH", "true")
+
+        overrides = _load_env_overrides()
+
+        assert overrides["features.ai_dispatch"] == "true"
+
     def test_env_overrides_yaml(self) -> None:
         yaml_content: dict[str, object] = {
             "features": {"ai_dispatch": False},
