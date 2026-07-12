@@ -143,9 +143,8 @@ To surface successful scrape responses that parse to zero results, enable the
 opt-in diagnostic flag. These entries appear in `meta.empty_engines`; they are
 warnings rather than failures because a search can legitimately have no matches.
 
-```yaml
-features:
-  empty_scrape_diagnostics: true
+```bash
+FEATURE_EMPTY_SCRAPE_DIAGNOSTICS=true
 ```
 
 Pre-built Docker images are available from GitHub Container Registry. Builds run automatically on every push to `main` (`latest`, `unstable`) and on version tags (`stable`, `X`, `X.Y`, `X.Y.Z`).

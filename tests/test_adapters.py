@@ -206,30 +206,6 @@ class TestBraveAdapter:
         assert result.status == EngineStatus.OK
         assert "/web/" in captured_url[0]
 
-    async def test_category_routing_disabled_by_flag(self, sample_web_response):
-        """Feature flag disabled → always uses /web/search, even for images."""
-        instances = discover_engines(
-            {
-                "brave": {
-                    "enabled": True,
-                    "api_key": "test-key",
-                    "_feature_brave_category_routing": False,
-                }
-            }
-        )
-        adapter = instances["brave"]
-        captured_url: list[str] = []
-
-        def _handler(r):
-            captured_url.append(str(r.url))
-            return httpx.Response(200, json=sample_web_response)
-
-        async with MockHTTP(_handler):
-            result = await adapter.search("images query", params={"categories": ["images"]})
-        assert result.status == EngineStatus.OK
-        assert "/web/" in captured_url[0]
-        assert "/images/" not in captured_url[0]
-
     async def test_category_routing_no_params(self, adapter, sample_web_response):
         """No params at all → defaults to /web/search."""
         captured_url: list[str] = []

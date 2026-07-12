@@ -148,11 +148,15 @@ async def _startup() -> None:
 
     # Only populate if not already set (allows test fixtures to pre-seed)
     cfg = load_config()
-    _empty_scrape_diagnostics_enabled = cfg.feature_flags.is_enabled("empty_scrape_diagnostics")
+    _empty_scrape_diagnostics_enabled = os.environ.get("FEATURE_EMPTY_SCRAPE_DIAGNOSTICS", "").lower() in (
+        "true",
+        "1",
+    )
     if not _active_engines:
         engine_configs = {name: dataclasses.asdict(entry) for name, entry in cfg.engines.items()}
-        # Inject feature flags so adapters can check them at runtime
-        brave_routing = cfg.feature_flags.is_enabled("brave_category_routing")
+        # Opt in to Brave category-specific endpoints.  The default retains
+        # the established web endpoint behavior.
+        brave_routing = os.environ.get("FEATURE_BRAVE_CATEGORY_ROUTING", "").lower() in ("true", "1")
         for ecfg in engine_configs.values():
             ecfg["_feature_brave_category_routing"] = brave_routing
         _active_engines = discover_engines(engine_configs)
