@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import logging
 import os
 import re
 import time
@@ -36,6 +37,7 @@ from slopsearx.logging import capture_exception, setup_logging
 from slopsearx.merger import (
     PresenceRanker,
     build_meta,
+    extract_empty_scrape_engines,
     extract_unresponsive,
 )
 from slopsearx.middleware import RequestIDMiddleware
@@ -76,6 +78,8 @@ _router: QueryRouter | None = None
 _suggestion_service: SuggestionService | None = None
 _stats_tracker: EngineStatsTracker | None = None
 _audit_logger: QueryAuditLogger | None = None
+_empty_scrape_diagnostics_enabled = False
+logger = logging.getLogger(__name__)
 
 # Concurrency and per-client rate limiting
 _engine_semaphore: asyncio.Semaphore | None = None
@@ -92,6 +96,7 @@ async def _startup() -> None:
     setup_logging()
     global _active_engines, _cache, _rate_limiter  # noqa: PLW0603
     global _engine_semaphore, _client_rate_window  # noqa: PLW0603
+    global _empty_scrape_diagnostics_enabled  # noqa: PLW0603
 
     # Initialize cache (gracefully degrades if Valkey unavailable)
     _cache = SearchCache()
@@ -143,6 +148,7 @@ async def _startup() -> None:
 
     # Only populate if not already set (allows test fixtures to pre-seed)
     cfg = load_config()
+    _empty_scrape_diagnostics_enabled = cfg.feature_flags.is_enabled("empty_scrape_diagnostics")
     if not _active_engines:
         engine_configs = {name: dataclasses.asdict(entry) for name, entry in cfg.engines.items()}
         # Inject feature flags so adapters can check them at runtime
@@ -525,7 +531,13 @@ async def search(
     # Metadata
     elapsed_ms = (time.monotonic() - t_start) * 1000
     unresponsive = extract_unresponsive(responses)
-    meta = build_meta(responses, elapsed_ms, query_id)
+    empty_engines: list[list[str]] = []
+    if _empty_scrape_diagnostics_enabled:
+        scrape_engine_names = {name for name, engine in target_engines.items() if engine.engine_type == "scrape"}
+        empty_engines = extract_empty_scrape_engines(responses, scrape_engine_names)
+        for name, reason in empty_engines:
+            logger.warning("Empty scrape diagnostic: engine=%s query_id=%s reason=%s", name, query_id, reason)
+    meta = build_meta(responses, elapsed_ms, query_id, empty_engines=empty_engines)
 
     # Check if ALL engines are unresponsive
     all_unresponsive = all(resp.status != EngineStatus.OK for resp in responses.values())
