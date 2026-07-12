@@ -2,53 +2,20 @@
 
 V1: Presence-weighted ranking (honest baseline).
 V2 (future): Weighted-fusion with per-engine trust scores.
-
-Design principle: The Ranker interface is pluggable from V1 so ranking
-strategy can be swapped without architecture changes.
 """
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from typing import Any, Optional
 
 from slopsearx.adapter import AdapterResponse, EngineStatus, SearchResult
 
 # ---------------------------------------------------------------------------
-# Ranker interface
+# Presence-weighted ranking
 # ---------------------------------------------------------------------------
 
 
-class Ranker(ABC):
-    """Pluggable ranking strategy.
-
-    The Ranker receives raw engine results and produces a ranked,
-    deduplicated list. Subclasses implement the ranking algorithm;
-    the orchestrator (server) owns fan-out and metadata collection.
-    """
-
-    @abstractmethod
-    def rank(
-        self,
-        engine_results: dict[str, list[SearchResult]],
-        query: str,
-        params: dict[str, Any] | None = None,
-    ) -> list[SearchResult]:
-        """Rank and deduplicate results from multiple engines.
-
-        Args:
-            engine_results: Engine name → list of SearchResult.
-            query: Original search query (for context-aware scoring).
-            params: Normalisation hints (language, safesearch, etc.).
-
-        Returns:
-            Ranked, deduplicated list of SearchResult with score
-            and position fields populated.
-        """
-        ...
-
-
-class PresenceRanker(Ranker):
+class PresenceRanker:
     """V1: Presence-weighted ranking.
 
     Strategy:
@@ -127,22 +94,19 @@ def merge_results(
 ) -> list[SearchResult]:
     """Merge and deduplicate results from multiple engines.
 
-    Convenience wrapper around the Ranker interface. Use the Ranker
-    classes directly for production code; this function exists for
-    backward compatibility with the M1 stub.
+    Convenience wrapper around presence-weighted ranking. This function
+    exists for backward compatibility with the M1 stub.
 
     Args:
         engine_results: Engine name → list of SearchResult.
-        strategy: Ranking strategy identifier.
+        strategy: Deprecated ranking strategy identifier. Presence ranking
+            is the only supported strategy.
 
     Returns:
         Ranked, deduplicated list of SearchResult.
     """
-    rankers: dict[str, Ranker] = {
-        "presence": PresenceRanker(),
-    }
-    ranker = rankers.get(strategy, PresenceRanker())
-    return ranker.rank(engine_results, "")
+    del strategy
+    return PresenceRanker().rank(engine_results, "")
 
 
 # ---------------------------------------------------------------------------
@@ -188,11 +152,28 @@ def extract_unresponsive(
     return unresponsive
 
 
+def extract_empty_scrape_engines(
+    responses: dict[str, AdapterResponse],
+    scrape_engine_names: set[str],
+) -> list[list[str]]:
+    """Report successful scrape responses that contained no parsed results.
+
+    This is diagnostic-only: an empty result set can be legitimate, so it does
+    not alter the engine status or circuit-breaker behavior.
+    """
+    return [
+        [name, "successful scrape returned no results"]
+        for name, response in responses.items()
+        if name in scrape_engine_names and response.status == EngineStatus.OK and not response.results
+    ]
+
+
 def build_meta(
     responses: dict[str, AdapterResponse],
     elapsed_ms: float,
     query_id: str,
     cached: bool = False,
+    empty_engines: list[list[str]] | None = None,
 ) -> dict[str, Any]:
     """Build the meta.* extension field.
 
@@ -205,12 +186,15 @@ def build_meta(
     Returns:
         Meta dict with response_time_ms, cached, query_id, engine_status.
     """
-    return {
+    meta = {
         "response_time_ms": round(elapsed_ms),
         "cached": cached,
         "query_id": query_id,
         "engine_status": build_engine_status(responses, elapsed_ms),
     }
+    if empty_engines:
+        meta["empty_engines"] = empty_engines
+    return meta
 
 
 # ---------------------------------------------------------------------------

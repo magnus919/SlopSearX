@@ -1,41 +1,16 @@
-"""Tests for result merger, Ranker interface, and metadata helpers."""
+"""Tests for result merger, ranking, and metadata helpers."""
 
 from __future__ import annotations
-
-import pytest
 
 from slopsearx.adapter import AdapterResponse, EngineStatus, SearchResult
 from slopsearx.merger import (
     PresenceRanker,
-    Ranker,
     build_engine_status,
     build_meta,
+    extract_empty_scrape_engines,
     extract_unresponsive,
     merge_results,
 )
-
-# ---------------------------------------------------------------------------
-# Ranker interface contract
-# ---------------------------------------------------------------------------
-
-
-class TestRankerInterface:
-    """Ranker ABC contract."""
-
-    def test_ranker_is_abstract(self) -> None:
-        """Ranker cannot be instantiated directly — abstract."""
-        with pytest.raises(TypeError):
-            Ranker()  # type: ignore[abstract]
-
-    def test_presence_ranker_is_ranker(self) -> None:
-        """PresenceRanker is a valid Ranker subclass."""
-        assert issubclass(PresenceRanker, Ranker)
-
-    def test_presence_ranker_instantiable(self) -> None:
-        """PresenceRanker can be instantiated."""
-        ranker = PresenceRanker()
-        assert isinstance(ranker, Ranker)
-
 
 # ---------------------------------------------------------------------------
 # PresenceRanker — ranking behavior
@@ -266,6 +241,28 @@ class TestExtractUnresponsive:
         assert len(unresponsive) == 2
 
 
+class TestExtractEmptyScrapeEngines:
+    """Opt-in diagnostics for anomalous successful scrape responses."""
+
+    def test_only_successful_empty_scrape_engines_are_reported(self) -> None:
+        responses = {
+            "google": AdapterResponse(results=[], status=EngineStatus.OK),
+            "duckduckgo": AdapterResponse(results=[], status=EngineStatus.BLOCKED),
+            "brave": AdapterResponse(results=[], status=EngineStatus.OK),
+            "wikipedia": AdapterResponse(
+                results=[SearchResult(url="https://example.com", title="Result", content="", engine="wikipedia")],
+                status=EngineStatus.OK,
+            ),
+        }
+
+        assert extract_empty_scrape_engines(responses, {"google", "duckduckgo"}) == [
+            [
+                "google",
+                "successful scrape returned no results",
+            ]
+        ]
+
+
 class TestBuildMeta:
     """build_meta() extension field."""
 
@@ -294,6 +291,16 @@ class TestBuildMeta:
         meta = build_meta(responses, 0, "ssx-test", cached=True)
 
         assert meta["cached"] is True
+
+    def test_empty_engines_are_included_when_supplied(self) -> None:
+        meta = build_meta(
+            {},
+            0,
+            "ssx-test",
+            empty_engines=[["google", "successful scrape returned no results"]],
+        )
+
+        assert meta["empty_engines"] == [["google", "successful scrape returned no results"]]
 
 
 # ---------------------------------------------------------------------------

@@ -43,8 +43,8 @@ class TestAdapterCategories:
         engine = _TestEngine()
         assert engine.categories == ["news", "science"]
 
-    def test_config_override_categories(self) -> None:
-        """Config categories override self-declared."""
+    def test_config_categories_override_self_declared(self) -> None:
+        """Config categories replace self-declared categories."""
 
         class _TestEngine(EngineAdapter):
             name = "testcat3"
@@ -53,47 +53,8 @@ class TestAdapterCategories:
             async def search(self, query, params=None):
                 return AdapterResponse(results=[], status=EngineStatus.OK)
 
-        engine = _TestEngine({"categories": {"override": ["news", "finance"]}})
+        engine = _TestEngine({"categories": ["news", "finance"]})
         assert engine.categories == ["news", "finance"]
-
-    def test_config_add_categories(self) -> None:
-        """Config categories_add appends to self-declared."""
-
-        class _TestEngine(EngineAdapter):
-            name = "testcat4"
-            categories = ["general"]
-
-            async def search(self, query, params=None):
-                return AdapterResponse(results=[], status=EngineStatus.OK)
-
-        engine = _TestEngine({"categories": {"add": ["news", "finance"]}})
-        assert engine.categories == ["general", "news", "finance"]
-
-    def test_config_remove_categories(self) -> None:
-        """Config categories_remove suppresses from self-declared."""
-
-        class _TestEngine(EngineAdapter):
-            name = "testcat5"
-            categories = ["general", "news", "images"]
-
-            async def search(self, query, params=None):
-                return AdapterResponse(results=[], status=EngineStatus.OK)
-
-        engine = _TestEngine({"categories": {"remove": ["images"]}})
-        assert engine.categories == ["general", "news"]
-
-    def test_config_list_is_override(self) -> None:
-        """Bare list in config['categories'] = full override (backward-compat)."""
-
-        class _TestEngine(EngineAdapter):
-            name = "testcat6"
-            categories = ["general", "science"]
-
-            async def search(self, query, params=None):
-                return AdapterResponse(results=[], status=EngineStatus.OK)
-
-        engine = _TestEngine({"categories": ["news"]})
-        assert engine.categories == ["news"]
 
 
 class TestConfigEndpoint:

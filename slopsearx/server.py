@@ -8,12 +8,13 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import logging
 import os
 import re
 import time
 import uuid
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator
+from typing import Any, AsyncIterator, Awaitable, Callable
 
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -36,6 +37,7 @@ from slopsearx.logging import capture_exception, setup_logging
 from slopsearx.merger import (
     PresenceRanker,
     build_meta,
+    extract_empty_scrape_engines,
     extract_unresponsive,
 )
 from slopsearx.middleware import RequestIDMiddleware
@@ -76,10 +78,40 @@ _router: QueryRouter | None = None
 _suggestion_service: SuggestionService | None = None
 _stats_tracker: EngineStatsTracker | None = None
 _audit_logger: QueryAuditLogger | None = None
+_empty_scrape_diagnostics_enabled = False
+logger = logging.getLogger(__name__)
 
 # Concurrency and per-client rate limiting
 _engine_semaphore: asyncio.Semaphore | None = None
 _client_rate_window: RateLimitStrategy | None = None
+
+
+async def _check_cache(
+    cache: SearchCache | None,
+    cache_fn: Callable[[SearchCache], Awaitable[dict[str, Any] | None]],
+    query_id: str,
+) -> JSONResponse | None:
+    """Return a response for a connected cache hit, if one exists."""
+    if cache is None or not cache.is_connected:
+        return None
+
+    cached = await cache_fn(cache)
+    if cached is None:
+        return None
+
+    # Negative cache hit — return 503 without dispatching.
+    if cached.get("_error"):
+        return JSONResponse(
+            status_code=503,
+            content={
+                "error": "service_unavailable",
+                "message": "Temporarily unavailable (cached error)",
+                "meta": {"cached": True, "query_id": query_id},
+            },
+        )
+
+    cached["meta"]["cached"] = True
+    return JSONResponse(status_code=200, content=cached)
 
 
 # ---------------------------------------------------------------------------
@@ -92,6 +124,7 @@ async def _startup() -> None:
     setup_logging()
     global _active_engines, _cache, _rate_limiter  # noqa: PLW0603
     global _engine_semaphore, _client_rate_window  # noqa: PLW0603
+    global _empty_scrape_diagnostics_enabled  # noqa: PLW0603
 
     # Initialize cache (gracefully degrades if Valkey unavailable)
     _cache = SearchCache()
@@ -126,27 +159,25 @@ async def _startup() -> None:
     fail_closed_raw = os.environ.get("FAIL_CLOSED", "false")
     _fail_closed = fail_closed_raw.strip().lower() in ("true", "1", "yes")
 
-    # Parse FAIL_CLOSED_GRACE_SECONDS env var
-    try:
-        _fail_closed_grace = float(os.environ.get("FAIL_CLOSED_GRACE_SECONDS", "30"))
-    except (ValueError, TypeError):
-        _fail_closed_grace = 30.0
-
     _client_rate_window = ValkeySlidingWindow(
         valkey_url=os.environ.get("VALKEY_URL", ""),
         default_rate=per_client_rate,
         window_seconds=per_client_window,
         fail_closed=_fail_closed,
-        fail_closed_grace_seconds=_fail_closed_grace,
     )
     await _client_rate_window.warmup()
 
     # Only populate if not already set (allows test fixtures to pre-seed)
     cfg = load_config()
+    _empty_scrape_diagnostics_enabled = os.environ.get("FEATURE_EMPTY_SCRAPE_DIAGNOSTICS", "").lower() in (
+        "true",
+        "1",
+    )
     if not _active_engines:
         engine_configs = {name: dataclasses.asdict(entry) for name, entry in cfg.engines.items()}
-        # Inject feature flags so adapters can check them at runtime
-        brave_routing = cfg.feature_flags.is_enabled("brave_category_routing")
+        # Opt in to Brave category-specific endpoints.  The default retains
+        # the established web endpoint behavior.
+        brave_routing = os.environ.get("FEATURE_BRAVE_CATEGORY_ROUTING", "").lower() in ("true", "1")
         for ecfg in engine_configs.values():
             ecfg["_feature_brave_category_routing"] = brave_routing
         _active_engines = discover_engines(engine_configs)
@@ -412,39 +443,23 @@ async def search(
                 },
             )
 
-    # Check cache first
-    if _cache is not None and _cache.is_connected:
-        ck = cache_key(q, language, safesearch)
-        cached = await _cache.get(ck)
-        if cached is not None:
-            # Negative cache hit — return 503 without dispatching
-            if cached.get("_error"):
-                return JSONResponse(
-                    status_code=503,
-                    content={
-                        "error": "service_unavailable",
-                        "message": "Temporarily unavailable (cached error)",
-                        "meta": {"cached": True, "query_id": query_id},
-                    },
-                )
-            cached["meta"]["cached"] = True
-            return JSONResponse(status_code=200, content=cached)
+    # Check search cache first.
+    cached_response = await _check_cache(
+        _cache,
+        lambda cache: cache.get(cache_key(q, language, safesearch)),
+        query_id,
+    )
+    if cached_response is not None:
+        return cached_response
 
     # Check answer cache (broader key, independent of language/safesearch)
-    if _cache is not None and _cache.is_connected:
-        answer_cached = await _cache.get_answer(q)
-        if answer_cached is not None:
-            if answer_cached.get("_error"):
-                return JSONResponse(
-                    status_code=503,
-                    content={
-                        "error": "service_unavailable",
-                        "message": "Temporarily unavailable (cached error)",
-                        "meta": {"cached": True, "query_id": query_id},
-                    },
-                )
-            answer_cached["meta"]["cached"] = True
-            return JSONResponse(status_code=200, content=answer_cached)
+    answer_cached_response = await _check_cache(
+        _cache,
+        lambda cache: cache.get_answer(q),
+        query_id,
+    )
+    if answer_cached_response is not None:
+        return answer_cached_response
 
     # Dispatch to all engines concurrently (bounded by semaphore)
     tasks = []
@@ -525,7 +540,13 @@ async def search(
     # Metadata
     elapsed_ms = (time.monotonic() - t_start) * 1000
     unresponsive = extract_unresponsive(responses)
-    meta = build_meta(responses, elapsed_ms, query_id)
+    empty_engines: list[list[str]] = []
+    if _empty_scrape_diagnostics_enabled:
+        scrape_engine_names = {name for name, engine in target_engines.items() if engine.engine_type == "scrape"}
+        empty_engines = extract_empty_scrape_engines(responses, scrape_engine_names)
+        for name, reason in empty_engines:
+            logger.warning("Empty scrape diagnostic: engine=%s query_id=%s reason=%s", name, query_id, reason)
+    meta = build_meta(responses, elapsed_ms, query_id, empty_engines=empty_engines)
 
     # Check if ALL engines are unresponsive
     all_unresponsive = all(resp.status != EngineStatus.OK for resp in responses.values())

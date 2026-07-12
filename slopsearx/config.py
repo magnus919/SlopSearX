@@ -41,22 +41,6 @@ class RoutingConfig:
 
 
 @dataclass
-class FeatureFlags:
-    """Feature flag container with safe-by-default semantics.
-
-    Flags can be set via ``config.yaml`` (``features:`` block) or
-    overridden by environment variables (``FEATURE_<NAME>=true|false|1|0``).
-    Unknown flags return ``False``.
-    """
-
-    flags: dict[str, bool] = field(default_factory=dict)
-
-    def is_enabled(self, name: str) -> bool:
-        """Check whether a feature flag is enabled.  Unknown flags return ``False``."""
-        return self.flags.get(name, False)
-
-
-@dataclass
 class EngineEntry:
     enabled: bool = True
     base_url: str = ""
@@ -66,10 +50,7 @@ class EngineEntry:
     rate_limit: Optional[float] = None  # requests per second
     weight: float = 1.0
     api_key: Optional[str] = None
-    # category support
     categories: Optional[list[str]] = None  # full override
-    categories_add: Optional[list[str]] = None  # append
-    categories_remove: Optional[list[str]] = None  # suppress
     # scrape-specific fields
     proxy_pool: Optional[str] = None
     scrape_proxy_url: Optional[str] = None
@@ -87,7 +68,6 @@ class Config:
     cache: CacheConfig = field(default_factory=CacheConfig)
     ranking: RankingConfig = field(default_factory=RankingConfig)
     routing: RoutingConfig = field(default_factory=RoutingConfig)
-    feature_flags: FeatureFlags = field(default_factory=FeatureFlags)
 
     # Global settings
     default_engines: list[str] = field(default_factory=lambda: ["brave", "wikipedia"])
@@ -327,7 +307,7 @@ _DEFAULT_RANKING = {"strategy": "presence"}
 
 
 def _load_env_overrides() -> dict[str, Any]:
-    """Read supported environment overrides and return a flat dict."""
+    """Read all ``SEARCH_*`` and ``ENGINE_*`` env vars and return a flat dict."""
     overrides: dict[str, Any] = {}
     for key, value in os.environ.items():
         if key.startswith("SEARCH_"):
@@ -340,9 +320,6 @@ def _load_env_overrides() -> dict[str, Any]:
             engine_name = parts[1].lower()
             setting = parts[2].lower()
             overrides[f"engines.{engine_name}.{setting}"] = value
-        elif key.startswith("FEATURE_"):
-            flag_name = key[len("FEATURE_") :].lower()
-            overrides[f"features.{flag_name}"] = value
     return overrides
 
 
@@ -387,8 +364,7 @@ def _apply_env_overrides(config: Config, overrides: dict[str, str]) -> Config:
                 engine_name = parts[1]
                 setting = ".".join(parts[2:])
                 if engine_name in config.engines:
-                    # List coercion for categories fields
-                    if setting in ("categories", "categories_add", "categories_remove"):
+                    if setting == "categories":
                         typed_value = [c.strip() for c in value.split(",") if c.strip()] if value else []
                     else:
                         typed_value = _coerce_type(value, type(getattr(config.engines[engine_name], setting, str)))
@@ -399,9 +375,6 @@ def _apply_env_overrides(config: Config, overrides: dict[str, str]) -> Config:
             config.log_level = value.upper()
         elif key == "search_default_engines":
             config.default_engines = [e.strip() for e in value.split(",")]
-        elif key.startswith("features."):
-            flag_name = key.removeprefix("features.")
-            config.feature_flags.flags[flag_name] = _coerce_type(value, bool)
     return config
 
 
@@ -496,12 +469,6 @@ def load_config(
         config.default_engines = file_data.get("default_engines", config.default_engines)
         config.log_level = file_data.get("log_level", config.log_level)
         config.enable_suggestions = file_data.get("enable_suggestions", config.enable_suggestions)
-
-        # Feature flags from config file
-        file_features = file_data.get("features", {})
-        if isinstance(file_features, dict):
-            for flag_name, flag_value in file_features.items():
-                config.feature_flags.flags[flag_name] = bool(flag_value)
 
     # 3. Layer: env vars
     overrides = _load_env_overrides()

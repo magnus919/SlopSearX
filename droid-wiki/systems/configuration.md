@@ -51,7 +51,7 @@ features:
 
 **Engine-level:** `ENGINE_{NAME}_{SETTING}` maps to `engines.{name}.{setting}`. Example: `ENGINE_BRAVE_API_KEY=abc123`, `ENGINE_DDG_TIMEOUT_MS=15000`.
 
-**Global:** `SEARCH_CACHE_TTL_SECONDS`, `SEARCH_LOG_LEVEL`, `SEARCH_DEFAULT_ENGINES`, `VALKEY_URL`, `MAX_CONCURRENT_ENGINES`, `PER_CLIENT_REQUESTS`, `PER_CLIENT_WINDOW_SECONDS`, `FAIL_CLOSED`, `FAIL_CLOSED_GRACE_SECONDS`.
+**Global:** `SEARCH_CACHE_TTL_SECONDS`, `SEARCH_LOG_LEVEL`, `SEARCH_DEFAULT_ENGINES`, `VALKEY_URL`, `MAX_CONCURRENT_ENGINES`, `PER_CLIENT_REQUESTS`, `PER_CLIENT_WINDOW_SECONDS`, `FAIL_CLOSED`.
 
 **Feature flags:** `FEATURE_{NAME}=true|false|1|0|yes`. Example: `FEATURE_AI_DISPATCH=true`.
 
@@ -77,12 +77,11 @@ Operators can reclassify engine categories without modifying adapter code:
 engines:
   myengine:
     categories:
-      override: ["general", "news"]  # replace entirely
-      add: ["finance"]               # append
-      remove: ["images"]             # suppress
+      - general
+      - news
 ```
 
-Env var equivalents: `ENGINE_MYENG_CATEGORIES=general,news`, `ENGINE_MYENG_CATEGORIES_ADD=finance`, `ENGINE_MYENG_CATEGORIES_REMOVE=images`.
+Env var equivalent: `ENGINE_MYENG_CATEGORIES=general,news`.
 
 ## Entry points
 

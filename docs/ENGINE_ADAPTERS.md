@@ -44,24 +44,21 @@ class MyEngine(EngineAdapter):
 
 ### Category Reclassification
 
-Operators can override, extend, or suppress categories without modifying adapter code:
+Operators can override categories without modifying adapter code:
 
 ```yaml
 # config.yaml
 engines:
   myengine:
     categories:
-      override: ["general", "news", "finance"]  # replace entirely
-      # or:
-      add: ["legal"]       # append to self-declared
-      remove: ["images"]   # suppress from self-declared
+      - general
+      - news
+      - finance
 ```
 
 Env var equivalents:
 ```bash
 ENGINE_MYENG_CATEGORIES=general,news
-ENGINE_MYENG_CATEGORIES_ADD=legal
-ENGINE_MYENG_CATEGORIES_REMOVE=images
 ```
 
 ## Data Types

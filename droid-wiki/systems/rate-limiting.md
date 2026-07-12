@@ -39,9 +39,7 @@ Each replica atomically increments the shared counter. Exceeding the per-window 
 
 ### Fail-closed mode
 
-When `FAIL_CLOSED=true` and Valkey is unreachable:
-1. During **grace period** (`FAIL_CLOSED_GRACE_SECONDS`, default 30s): deny all requests
-2. After grace period: fall back to in-process `LocalTokenBucket` with configured rate
+When `FAIL_CLOSED=true` and Valkey is unreachable, deny all requests until Valkey recovers.
 
 When `FAIL_CLOSED=false` (default): allow all requests during Valkey outage (fail-open).
 
@@ -58,7 +56,7 @@ The `RateLimiter` wrapper adds:
 - **Adapter search:** `await engine.rate_limiter.acquire(engine_name)` via `_check_rate_limit()`
 - **Server search handler:** `await _client_rate_window.acquire(client_ip)` before dispatch
 - **Server health:** Valkey connectivity check uses `_client_rate_window._connected`
-- **Config:** Fail-closed behavior configured via `FAIL_CLOSED`, `FAIL_CLOSED_GRACE_SECONDS` env vars
+- **Config:** Fail-closed behavior configured via `FAIL_CLOSED`
 
 ## Entry points
 
