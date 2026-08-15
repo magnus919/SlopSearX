@@ -170,12 +170,13 @@ slopsearx-mcp --remote http://<slopsearx-host>:8000/mcp --oauth
 MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.com slopsearx-mcp
 ```
 
-- 13 tools: `slopsearx_search`, `slopsearx_search_targeted`,
+- 15 tools: `slopsearx_search`, `slopsearx_search_targeted`,
   `slopsearx_search_jobs`, `slopsearx_search_security`,
   `slopsearx_search_science`, `slopsearx_list_capabilities`,
   `slopsearx_explain_search_scope`, `slopsearx_get_service_status`,
   `slopsearx_read_results`, `slopsearx_read_result`,
-  `slopsearx_start_research`, `slopsearx_get_job`, `slopsearx_cancel_job`
+  `slopsearx_start_research`, `slopsearx_get_job`, `slopsearx_cancel_job`,
+  `slopsearx_retry_research`, `slopsearx_extend_research`
 - Resources: `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`
 - Specialist tools (jobs, security, science, research) are disabled until

@@ -13,12 +13,14 @@ import time
 from typing import Any
 
 from slopsearx.adapter import SearchResult
-from slopsearx.capabilities import INTENT_PROFILES
+from slopsearx.capabilities import INTENT_PROFILES, resolve_intent
 from slopsearx.mcp.state import McpState, get_state
 from slopsearx.ratelimit import ValkeySlidingWindow
 from slopsearx.research import (
     ResearchJob,
+    ResearchQuery,
     generate_job_id,
+    is_retryable_query,
     plan_research_queries,
     summarize_coverage,
 )
@@ -1266,7 +1268,15 @@ async def slopsearx_start_research(
     state.runner.enqueue(job.job_id)
 
     result = _job_summary(job)
-    result["note"] = "job queued; in-flight engine calls are not interrupted by cancellation"
+    if not state.job_store.available:
+        result["degraded"] = True
+        result["ephemeral"] = True
+        result["note"] = (
+            "job store unavailable — this job is process-local and non-durable; "
+            "idempotency was not checked or persisted (VAL-RESEARCH-003)"
+        )
+    else:
+        result["note"] = "job queued; in-flight engine calls are not interrupted by cancellation"
     return result
 
 
@@ -1290,11 +1300,12 @@ def _resolve_deadline(state: McpState, deadline: str | None) -> float | dict[str
 async def slopsearx_get_job(job_id: str) -> dict[str, Any]:
     """Return research job state, progress, and per-query cursors."""
     state = get_state()
+    if not state.job_store.available:
+        return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
     job = await state.job_store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
     result = _job_summary(job)
-    result["deadline"] = _deadline_iso(job.deadline)
     result["created_at"] = _dt.datetime.fromtimestamp(job.created_at, tz=_dt.timezone.utc).isoformat()
     result["note"] = "completed queries are immutable; their cursors remain readable"
     return result
@@ -1307,6 +1318,8 @@ async def slopsearx_cancel_job(job_id: str) -> dict[str, Any]:
     their evidence stays readable.
     """
     state = get_state()
+    if not state.job_store.available:
+        return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
     job = await state.job_store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
@@ -1329,6 +1342,134 @@ async def slopsearx_cancel_job(job_id: str) -> dict[str, Any]:
     }
 
 
+async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
+    """Re-run only failed/empty subqueries of a research job.
+
+    Successful subqueries are never re-executed; their snapshot cursors
+    remain byte-for-byte unchanged. Each retried subquery is linked to the
+    same job under a NEW attempt/cursor; the original failed/empty attempt's
+    evidence stays readable. Returns a structured ``no_retryable_work``
+    error when the job has no failed/empty work (VAL-RESEARCH-008/016/021).
+    """
+    state = get_state()
+    if not state.policy.tool_enabled("research"):
+        return _error(
+            "tool_disabled", "slopsearx_retry_research requires the research grant (MCP_GRANT_RESEARCH=1)"
+        )
+    if not state.job_store.available:
+        return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
+    job = await state.job_store.load(job_id)
+    if job is None:
+        return _error("invalid_job_id", "unknown job id", field="job_id")
+
+    retryable = [query for query in job.queries if is_retryable_query(query)]
+    if not retryable:
+        return _error(
+            "no_retryable_work",
+            "job has no failed or empty subqueries to retry",
+            job_id=job.job_id,
+            state=job.state,
+            field="job_id",
+        )
+
+    job = await state.runner.retry(job_id)
+    if job is None:
+        return _error("invalid_job_id", "unknown job id", field="job_id")
+
+    result = _job_summary(job)
+    result["retried"] = [query.index for query in retryable]
+    result["note"] = (
+        "retried only failed/empty subqueries; each gained a new linked attempt, "
+        "and successful evidence was preserved unchanged"
+    )
+    return result
+
+
+async def slopsearx_extend_research(
+    job_id: str,
+    query: str,
+    intent: str = "web",
+    engines: list[str] | None = None,
+) -> dict[str, Any]:
+    """Append and execute one bounded follow-up query to a research job.
+
+    Appends a new subquery only while the job has remaining query budget
+    (under ``job_max_queries``) and its deadline has not passed. The
+    follow-up is validated and routed through the same sensitive-engine /
+    specialist-grant gate as a normal subquery (VAL-RESEARCH-009/015/020).
+    """
+    state = get_state()
+    if not state.policy.tool_enabled("research"):
+        return _error(
+            "tool_disabled", "slopsearx_extend_research requires the research grant (MCP_GRANT_RESEARCH=1)"
+        )
+    if not state.job_store.available:
+        return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
+    job = await state.job_store.load(job_id)
+    if job is None:
+        return _error("invalid_job_id", "unknown job id", field="job_id")
+
+    error = _validate_query(query, state)
+    if error:
+        return error
+    if intent not in INTENT_PROFILES:
+        return _error(
+            "invalid_input",
+            f"unknown intent '{intent}'",
+            field="intent",
+            valid_alternatives=sorted(INTENT_PROFILES),
+        )
+    required_grant = INTENT_GRANTS.get(intent)
+    if required_grant is not None and not state.policy.tool_enabled(required_grant):
+        return _error(
+            "tool_disabled",
+            f"intent '{intent}' requires the {required_grant} grant ({GRANT_ENV[required_grant]}=1)",
+            field="intent",
+            grant=GRANT_ENV[required_grant],
+        )
+
+    # Resolve the follow-up engine scope through the shared policy gate.
+    if engines:
+        policy_error = _enforce_policy(state, list(engines), field="engines")
+        if policy_error:
+            return policy_error
+        resolved_engines = list(engines)
+    else:
+        resolved_engines, _ = resolve_intent(intent, state.catalog)
+        resolved_engines = resolved_engines[: state.policy.job_max_engines_per_query]
+        sensitive = [
+            name
+            for name in resolved_engines
+            if name in state.policy.sensitive_engines and not state.policy.targeted_sensitive_allowed
+        ]
+        if sensitive:
+            resolved_engines = [name for name in resolved_engines if name not in state.policy.sensitive_engines]
+
+    # Budget + deadline guards (VAL-RESEARCH-015): reject without corrupting.
+    if len(job.queries) >= state.policy.job_max_queries:
+        return _error(
+            "job_budget_exceeded",
+            f"job is at its query budget of {state.policy.job_max_queries} subqueries",
+            field="query",
+        )
+    if time.time() >= job.deadline:
+        return _error("deadline_exceeded", "job deadline has passed; cannot extend", field="query")
+
+    new_query = ResearchQuery(
+        index=len(job.queries),
+        query=query.strip(),
+        intent=intent,
+        engines=resolved_engines,
+    )
+    job.queries.append(new_query)
+    await state.job_store.save(job)
+
+    job = await state.runner.run_pending(job)
+    result = _job_summary(job)
+    result["note"] = "follow-up query appended and executed; prior completed evidence was preserved"
+    return result
+
+
 def _job_summary(job: ResearchJob) -> dict[str, Any]:
     """Compact job view for tool responses.
 
@@ -1344,16 +1485,29 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
         "question": job.question,
         "strategy": job.strategy,
         "progress": {"completed": completed, "total": total},
+        "deadline": _deadline_iso(job.deadline) if job.deadline else None,
+        "idempotency_key": job.idempotency_key,
         "queries": [
             {
                 "index": query.index,
                 "query": query.query,
                 "intent": query.intent,
+                "engines": query.engines,
                 "state": query.state,
                 "result_count": query.result_count,
                 "query_id": query.query_id,
                 "cursor": query.cursor,
                 "error": query.error,
+                "attempts": [
+                    {
+                        "cursor": attempt.cursor,
+                        "query_id": attempt.query_id,
+                        "result_count": attempt.result_count,
+                        "error": attempt.error,
+                        "state": attempt.state,
+                    }
+                    for attempt in query.attempts
+                ],
                 "engine_coverage": [
                     {
                         "engine": cov.engine,

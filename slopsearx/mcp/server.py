@@ -215,6 +215,8 @@ def create_server(
     mcp.tool()(_instrumented(_tools.slopsearx_start_research))
     mcp.tool()(_instrumented(_tools.slopsearx_get_job))
     mcp.tool()(_instrumented(_tools.slopsearx_cancel_job))
+    mcp.tool()(_instrumented(_tools.slopsearx_retry_research))
+    mcp.tool()(_instrumented(_tools.slopsearx_extend_research))
 
     # --- resources ------------------------------------------------------
     mcp.resource(

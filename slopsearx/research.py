@@ -97,6 +97,25 @@ class CoverageSummary:
 
 
 @dataclass
+class ResearchQueryAttempt:
+    """One execution attempt of a research subquery.
+
+    Research evidence is immutable once written: each attempt records its
+    own snapshot cursor, ``query_id``, ``result_count``, ``error``, state,
+    and per-engine coverage. Retrying a failed/empty subquery appends a
+    NEW attempt and never overwrites an earlier one (VAL-RESEARCH-021).
+    """
+
+    cursor: str | None = None
+    query_id: str | None = None
+    result_count: int = 0
+    error: str | None = None
+    state: str = "done"
+    attempted_at: float = field(default_factory=time.time)
+    engine_coverage: list[EngineCoverage] = field(default_factory=list)
+
+
+@dataclass
 class ResearchQuery:
     """One planned search within a research job."""
 
@@ -111,6 +130,10 @@ class ResearchQuery:
     cursor: str | None = None
     error: str | None = None
     engine_coverage: list[EngineCoverage] = field(default_factory=list)
+    # Every execution attempt of this subquery, oldest first. The first
+    # attempt's cursor is preserved even after a retry overwrites the
+    # query's *current* cursor (VAL-RESEARCH-008/021).
+    attempts: list[ResearchQueryAttempt] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -178,6 +201,33 @@ def summarize_coverage(coverage: list[EngineCoverage]) -> CoverageSummary:
         failed=counts["failed"],
         unavailable=counts["unavailable"],
         not_selected=not_selected,
+    )
+
+
+def is_retryable_query(query: ResearchQuery) -> bool:
+    """Whether a subquery should be re-run by ``retry_research``.
+
+    Retry targets only work classified **failed** or **empty**
+    (``done`` + ``result_count == 0`` + no ``error``), never successful
+    queries (VAL-RESEARCH-008/016). Empty is distinguished from failed
+    exactly as in VAL-RESEARCH-007.
+    """
+    if query.state == "failed":
+        return True
+    if query.state == "done" and query.result_count == 0 and not query.error:
+        return True
+    return False
+
+
+def _attempt_from_query(query: ResearchQuery) -> ResearchQueryAttempt:
+    """Snapshot the query's current fields as one immutable attempt."""
+    return ResearchQueryAttempt(
+        cursor=query.cursor,
+        query_id=query.query_id,
+        result_count=query.result_count,
+        error=query.error,
+        state=query.state,
+        engine_coverage=list(query.engine_coverage),
     )
 
 
@@ -411,6 +461,69 @@ class ResearchJobRunner:
         """Queue a job for execution."""
         self._queue.put_nowait(job_id)
 
+    async def run_pending(self, job: ResearchJob) -> ResearchJob:
+        """Execute any pending/running subqueries, then finalize the job.
+
+        Used by the normal runner loop and by retry/extend so completed
+        evidence is preserved and the job's terminal state is recomputed
+        consistently (VAL-RESEARCH-008/009/011). Returns the final job.
+        """
+        completed = 0
+        for query in job.queries:
+            if query.state in ("done", "failed", "cancelled"):
+                if query.state == "done":
+                    completed += 1
+                continue
+            if job.cancel_requested:
+                query.state = "cancelled"
+                continue
+            if time.time() >= job.deadline:
+                break
+            await self._execute_query(job, query)
+            if query.state == "done":
+                completed += 1
+
+        # Reload to observe any cancellation/deadline that landed mid-run.
+        job = await self._jobs.load(job.job_id) or job
+        if job.cancel_requested:
+            for query in job.queries:
+                if query.state in ("pending", "running"):
+                    query.state = "cancelled"
+            job.state = "cancelled"
+        elif time.time() >= job.deadline:
+            for query in job.queries:
+                if query.state in ("pending", "running"):
+                    query.state = "cancelled"
+            job.state = "partial" if completed else "failed"
+        elif all(query.state == "done" for query in job.queries):
+            job.state = "succeeded"
+        elif any(query.state == "done" for query in job.queries):
+            job.state = "partial"
+        else:
+            job.state = "failed"
+        await self._jobs.save(job)
+        return job
+
+    async def retry(self, job_id: str) -> ResearchJob | None:
+        """Re-run only failed/empty subqueries (VAL-RESEARCH-008).
+
+        Successful subqueries are never re-executed and their snapshot
+        cursors are byte-for-byte unchanged. Each retried subquery gets a
+        NEW linked attempt appended; the original attempt's cursor remains
+        readable. Returns the updated job, or ``None`` for an unknown id.
+        """
+        job = await self._jobs.load(job_id)
+        if job is None:
+            return None
+        retryable = [query for query in job.queries if is_retryable_query(query)]
+        if not retryable:
+            return job
+        job.state = "running"
+        for query in retryable:
+            query.state = "pending"
+        await self._jobs.save(job)
+        return await self.run_pending(job)
+
     def _build_query_coverage(self, query: ResearchQuery, response: Any) -> list[EngineCoverage]:
         """Derive per-engine coverage for a completed subquery (VAL-RESEARCH-004).
 
@@ -476,79 +589,56 @@ class ResearchJobRunner:
 
         job.state = "running"
         await self._jobs.save(job)
+        await self.run_pending(job)
 
-        completed = 0
-        for query in job.queries:
-            if job.cancel_requested:
-                query.state = "cancelled"
-                continue
-            if time.time() >= job.deadline:
-                break
+    async def _execute_query(self, job: ResearchJob, query: ResearchQuery) -> None:
+        """Run one subquery and persist its immutable evidence + attempt.
 
-            query.state = "running"
+        Reused by the normal runner loop and by retry, so a retried query
+        is executed exactly like the original and appends a new attempt.
+        """
+        query.state = "running"
+        await self._jobs.save(job)
+        request = SearchRequest(
+            query=query.query,
+            engines=query.engines or None,
+            time_range=query.time_range,
+            include={"results", "engine_status"},
+            client_identifier=f"mcp-job:{job.job_id}",
+        )
+        try:
+            response = await self._service.search(request)
+        except (QueryValidationError, RateLimitExceededError) as exc:
+            query.state = "failed"
+            query.error = str(exc)
+            query.attempts.append(_attempt_from_query(query))
             await self._jobs.save(job)
-            request = SearchRequest(
-                query=query.query,
-                engines=query.engines or None,
-                time_range=query.time_range,
-                include={"results", "engine_status"},
-                client_identifier=f"mcp-job:{job.job_id}",
-            )
-            try:
-                response = await self._service.search(request)
-            except (QueryValidationError, RateLimitExceededError) as exc:
-                query.state = "failed"
-                query.error = str(exc)
-                await self._jobs.save(job)
-                continue
-
-            query.query_id = response.query_id
-            query.result_count = len(response.results)
-            query.cursor = await self._snapshots.create(
-                response.query,
-                response.query_id,
-                response.results,
-                response.scope,
-            )
-            # Persist per-engine coverage and the disjoint bucket summary.
-            query.engine_coverage = self._build_query_coverage(query, response)
-            coverage_summary = summarize_coverage(query.engine_coverage)
-            # Subquery state distinguishes successful/empty/failed
-            # (VAL-RESEARCH-007): empty is done+result_count==0+no error and
-            # is never conflated with failed; a mix of empty and failed
-            # engines (no results) is classified failed, never clean empty.
-            if response.all_unresponsive:
-                query.state = "failed"
-                query.error = "no engines responded"
-            elif coverage_summary.failed > 0 and query.result_count == 0:
-                query.state = "failed"
-                query.error = "some engines failed and none returned results"
-            else:
-                query.state = "done"
-                completed += 1
-            await self._jobs.save(job)
-
-        # Reload to observe any cancellation that landed mid-run.
-        job = await self._jobs.load(job_id)
-        if job is None:
             return
 
-        if job.cancel_requested:
-            for query in job.queries:
-                if query.state in ("pending", "running"):
-                    query.state = "cancelled"
-            job.state = "cancelled"
-        elif time.time() >= job.deadline:
-            for query in job.queries:
-                if query.state in ("pending", "running"):
-                    query.state = "cancelled"
-            job.state = "partial" if completed else "failed"
-        elif all(query.state == "done" for query in job.queries):
-            job.state = "succeeded"
-        elif any(query.state == "done" for query in job.queries):
-            job.state = "partial"
+        query.query_id = response.query_id
+        query.result_count = len(response.results)
+        query.cursor = await self._snapshots.create(
+            response.query,
+            response.query_id,
+            response.results,
+            response.scope,
+        )
+        # Persist per-engine coverage and the disjoint bucket summary.
+        query.engine_coverage = self._build_query_coverage(query, response)
+        coverage_summary = summarize_coverage(query.engine_coverage)
+        # Subquery state distinguishes successful/empty/failed
+        # (VAL-RESEARCH-007): empty is done+result_count==0+no error and
+        # is never conflated with failed; a mix of empty and failed
+        # engines (no results) is classified failed, never clean empty.
+        if response.all_unresponsive:
+            query.state = "failed"
+            query.error = "no engines responded"
+        elif coverage_summary.failed > 0 and query.result_count == 0:
+            query.state = "failed"
+            query.error = "some engines failed and none returned results"
         else:
-            job.state = "failed"
+            query.state = "done"
+        query.attempts.append(_attempt_from_query(query))
         await self._jobs.save(job)
 
 
@@ -562,6 +652,18 @@ def _job_to_payload(job: ResearchJob) -> dict[str, Any]:
 
 
 def _job_from_payload(payload: dict[str, Any]) -> ResearchJob:
+    def _coverage(items: Any) -> list[EngineCoverage]:
+        return [
+            EngineCoverage(
+                engine=str(cov.get("engine", "")),
+                bucket=str(cov.get("bucket", "not-selected")),
+                status=cov.get("status"),
+                result_count=int(cov.get("result_count", 0)),
+                failure_class=cov.get("failure_class"),
+            )
+            for cov in (items or [])
+        ]
+
     queries = [
         ResearchQuery(
             index=int(item.get("index", 0)),
@@ -574,15 +676,18 @@ def _job_from_payload(payload: dict[str, Any]) -> ResearchJob:
             result_count=int(item.get("result_count", 0)),
             cursor=item.get("cursor"),
             error=item.get("error"),
-            engine_coverage=[
-                EngineCoverage(
-                    engine=str(cov.get("engine", "")),
-                    bucket=str(cov.get("bucket", "not-selected")),
-                    status=cov.get("status"),
-                    result_count=int(cov.get("result_count", 0)),
-                    failure_class=cov.get("failure_class"),
+            engine_coverage=_coverage(item.get("engine_coverage")),
+            attempts=[
+                ResearchQueryAttempt(
+                    cursor=attempt.get("cursor"),
+                    query_id=attempt.get("query_id"),
+                    result_count=int(attempt.get("result_count", 0)),
+                    error=attempt.get("error"),
+                    state=str(attempt.get("state", "done")),
+                    attempted_at=float(attempt.get("attempted_at", 0.0)),
+                    engine_coverage=_coverage(attempt.get("engine_coverage")),
                 )
-                for cov in (item.get("engine_coverage") or [])
+                for attempt in (item.get("attempts") or [])
             ],
         )
         for item in (payload.get("queries") or [])

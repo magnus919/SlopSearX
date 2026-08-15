@@ -284,7 +284,7 @@ class TestOAuthOverHTTP:
                     async with ClientSession(read, write) as session:
                         await session.initialize()
                         tools = await session.list_tools()
-                        assert len(tools.tools) == 13
+                        assert len(tools.tools) == 15
 
             # Revocation invalidates the token (the SDK's revocation request
             # model requires the client_secret field; public clients send "")
@@ -328,4 +328,4 @@ class TestOAuthOverHTTP:
         server = create_server(host="127.0.0.1", port=port, oauth=settings, oauth_provider=provider)
         async with create_connected_server_and_client_session(server) as client:
             tools = await client.list_tools()
-            assert len(tools.tools) == 13
+            assert len(tools.tools) == 15
