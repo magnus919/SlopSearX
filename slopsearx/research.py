@@ -198,9 +198,11 @@ def plan_research_queries(
 ) -> tuple[list[ResearchQuery], list[str]]:
     """Build the ordered query list for a strategy.
 
-    Returns ``(queries, warnings)``. Sensitive engines are dropped
-    unless the security grant is enabled. Budgets are applied here so
-    the runner never exceeds operator limits.
+    Returns ``(queries, warnings)``. Sensitive engines are dropped unless
+    the sensitive-engine grant (``MCP_TARGETED_SENSITIVE_ALLOWED``) is
+    enabled, and any such exclusion is reported as an explicit policy
+    warning — never silently dropped. Budgets are applied here so the
+    runner never exceeds operator limits.
     """
     if strategy not in STRATEGIES:
         return [], [f"unknown strategy '{strategy}'; valid strategies: {', '.join(STRATEGIES)}"]
@@ -232,12 +234,17 @@ def plan_research_queries(
 
     queries: list[ResearchQuery] = []
     warnings: list[str] = []
-    security_granted = policy.tool_enabled("security")
+    sensitive_allowed = policy.targeted_sensitive_allowed
     for intent, text, time_range in plans[strategy]:
         engines, intent_warnings = resolve_intent(intent, catalog)
         warnings.extend(intent_warnings)
-        if not security_granted:
+        excluded = [name for name in engines if name in policy.sensitive_engines and not sensitive_allowed]
+        if excluded:
             engines = [name for name in engines if name not in policy.sensitive_engines]
+            warnings.append(
+                "sensitive engines excluded by policy (no MCP_TARGETED_SENSITIVE_ALLOWED grant): "
+                + ", ".join(sorted(excluded))
+            )
         engines = engines[:max_engines_per_query]
         queries.append(
             ResearchQuery(

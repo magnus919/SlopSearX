@@ -37,6 +37,25 @@ VALID_SAFESEARCH = ("off", "moderate", "strict")
 VALID_FRESHNESS = ("prefer_cache", "prefer_fresh", "no_preference")
 VALID_STRATEGIES = ("triangulate", "broad", "fresh", "counterevidence")
 
+# The sensitive-engine grant. This is the SINGLE grant that permits a
+# sensitive engine to be dispatched on any path (schema pin); the
+# specialist grants never grant sensitive access by themselves.
+SENSITIVE_GRANT = "MCP_TARGETED_SENSITIVE_ALLOWED"
+
+# Intent → required specialist grant. Generic search reaches these
+# intents through the shared policy gate, so a disabled specialist grant
+# also blocks the corresponding intent (VAL-SPEC-017/018).
+GRANT_ENV = {
+    "jobs": "MCP_GRANT_JOBS",
+    "security": "MCP_GRANT_SECURITY",
+    "science": "MCP_GRANT_SCIENCE",
+}
+INTENT_GRANTS: dict[str, str] = {
+    "jobs": "jobs",
+    "security": "security",
+    "science": "science",
+}
+
 # No adapter consumes the safesearch parameter (Brave hardcodes it off),
 # so strict SafeSearch can never be honestly enforced — fail closed.
 SAFESEARCH_UNENFORCED_NOTE = (
@@ -135,15 +154,34 @@ def _validate_engines(state: McpState, engines: list[str]) -> dict[str, Any] | N
     return None
 
 
-def _sensitive_check(state: McpState, engines: list[str]) -> dict[str, Any] | None:
-    """Reject sensitive engines in targeted search unless granted."""
+def _enforce_policy(
+    state: McpState,
+    engines: list[str],
+    *,
+    field: str = "engines",
+) -> dict[str, Any] | None:
+    """One shared, fail-closed policy gate: engine validation + sensitive block.
+
+    Every search-capable path (generic, targeted, jobs, security,
+    science) and the scope-preview tool reach this before any engine
+    dispatch. Returns an error envelope or ``None`` to proceed.
+
+    A mixed sensitive + non-sensitive list fails closed atomically: the
+    whole request is rejected, naming the sensitive engines in the
+    structured ``error.engines`` field.
+    """
+    error = _validate_engines(state, engines)
+    if error:
+        return error
     sensitive = [name for name in engines if name in state.policy.sensitive_engines]
     if sensitive and not state.policy.targeted_sensitive_allowed:
         return _error(
             "tool_disabled",
-            "explicit selection of sensitive engines requires an operator grant (MCP_TARGETED_SENSITIVE_ALLOWED=1)",
-            field="engines",
+            "sensitive engines are unreachable without the sensitive-engine grant "
+            f"({SENSITIVE_GRANT}=1): {', '.join(sorted(sensitive))}",
+            field=field,
             engines=sensitive,
+            grant=SENSITIVE_GRANT,
         )
     return None
 
@@ -354,6 +392,13 @@ async def slopsearx_search(
     if isinstance(resolved_categories, dict):  # error envelope
         return resolved_categories
 
+    # Shared policy gate: sensitive engines (and specialist intents) are
+    # fail-closed on the generic explicit-engine/profile path too.
+    if resolved_engines is not None:
+        policy_error = _enforce_policy(state, resolved_engines, field="engines")
+        if policy_error:
+            return policy_error
+
     include_set = set(include) if include is not None else {"results", "engine_status"}
     max_results = _bounded_max_results(state, max_results)
 
@@ -408,12 +453,14 @@ def _resolve_scope(
     profile = INTENT_PROFILES.get(intent)
     if profile is None:
         return _error("invalid_input", f"unknown intent '{intent}'", field="intent"), None, intent, []
-    if profile.sensitive and not state.policy.tool_enabled("security"):
+    required_grant = INTENT_GRANTS.get(intent)
+    if required_grant is not None and not state.policy.tool_enabled(required_grant):
         return (
             _error(
                 "tool_disabled",
-                f"intent '{intent}' requires the security grant (MCP_GRANT_SECURITY=1)",
+                f"intent '{intent}' requires the {required_grant} grant ({GRANT_ENV[required_grant]}=1)",
                 field="intent",
+                grant=GRANT_ENV[required_grant],
             ),
             None,
             intent,
@@ -457,10 +504,7 @@ async def slopsearx_search_targeted(
     error = _validate_query(query, state)
     if error:
         return error
-    error = _validate_engines(state, engines)
-    if error:
-        return error
-    error = _sensitive_check(state, engines)
+    error = _enforce_policy(state, engines, field="engines")
     if error:
         return error
     if safesearch not in VALID_SAFESEARCH:
@@ -519,10 +563,7 @@ async def slopsearx_search_jobs(
         return _error("invalid_input", "company is required", field="company")
 
     sources = list(sources) if sources else list(JOBS_ADAPTERS)
-    error = _validate_engines(state, sources)
-    if error:
-        return error
-    error = _sensitive_check(state, sources)
+    error = _enforce_policy(state, sources, field="sources")
     if error:
         return error
 
@@ -590,12 +631,16 @@ async def slopsearx_search_security(
                 selected.append(name)
 
     if engines:
-        error = _validate_engines(state, engines)
-        if error:
-            return error
         selected = list(engines)
     else:
         selected = [name for name in selected if name in state.catalog.known_names()]
+
+    # Shared policy gate: a sensitive engine reached via explicit engines
+    # OR an evidence-type profile is blocked unless the sensitive grant is set.
+    policy_field = "engines" if engines else "evidence_types"
+    policy_error = _enforce_policy(state, selected, field=policy_field)
+    if policy_error:
+        return policy_error
 
     request = SearchRequest(
         query=query,
@@ -655,12 +700,16 @@ async def slopsearx_search_science(
                 selected.append(name)
 
     if engines:
-        error = _validate_engines(state, engines)
-        if error:
-            return error
         selected = list(engines)
     else:
         selected = [name for name in selected if name in state.catalog.known_names()]
+
+    # Shared policy gate: a sensitive engine reached via explicit engines
+    # OR a source-type profile is blocked unless the sensitive grant is set.
+    policy_field = "engines" if engines else "source_types"
+    policy_error = _enforce_policy(state, selected, field=policy_field)
+    if policy_error:
+        return policy_error
 
     warnings = [SCIENCE_LIMITATION_NOTE, f"resolved source_types: {', '.join(source_types)}"]
     if date_from or date_to:
@@ -750,6 +799,13 @@ async def slopsearx_explain_search_scope(
     )
     if isinstance(resolved_categories, dict):
         return resolved_categories
+
+    # Scope preview must match execution: sensitive engines and specialist
+    # intents are fail-closed here exactly as they are on the search path.
+    if resolved_engines is not None:
+        policy_error = _enforce_policy(state, resolved_engines, field="engines")
+        if policy_error:
+            return policy_error
 
     resolver = ScopeResolver(
         active_engines=state.ctx.active_engines,
