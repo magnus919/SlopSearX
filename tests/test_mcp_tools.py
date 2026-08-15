@@ -197,6 +197,38 @@ class TestSearchTool:
 
         assert len(result["results"]) == 4
 
+    async def test_include_engine_status_drives_engine_outcomes(self, state: McpState) -> None:
+        """VAL-CORRECT-015 — engine_outcomes presence is driven by the current request's include."""
+        # Warm the cache WITHOUT engine_status, then read WITH it.
+        without = await t.slopsearx_search("hello", include=["results"])
+        assert without["engine_outcomes"] == []
+
+        with_status = await t.slopsearx_search("hello", include=["results", "engine_status"])
+        assert with_status["meta"]["cached"] is True
+        assert with_status["engine_outcomes"] != []
+
+        # Reverse population order: warm WITH engine_status, read WITHOUT.
+        with_status2 = await t.slopsearx_search("world", include=["results", "engine_status"])
+        assert with_status2["engine_outcomes"] != []
+        without2 = await t.slopsearx_search("world", include=["results"])
+        assert without2["meta"]["cached"] is True
+        assert without2["engine_outcomes"] == []
+
+    async def test_max_results_return_own_count_no_stale_slice(self, state: McpState) -> None:
+        """VAL-CORRECT-016 — each request's result count respects its own max_results."""
+        small = await t.slopsearx_search("hello", max_results=2)
+        assert len(small["results"]) == 2
+
+        big = await t.slopsearx_search("hello", max_results=100)
+        assert big["meta"]["cached"] is True
+        assert len(big["results"]) == 9  # full captured fixture set, never capped at 2
+
+        big2 = await t.slopsearx_search("world", max_results=100)
+        assert len(big2["results"]) == 9
+        small2 = await t.slopsearx_search("world", max_results=2)
+        assert small2["meta"]["cached"] is True
+        assert len(small2["results"]) == 2
+
 
 # ---------------------------------------------------------------------------
 # slopsearx_search_targeted

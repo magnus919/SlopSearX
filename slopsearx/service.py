@@ -516,9 +516,12 @@ class SearchService:
             tasks.append(asyncio.create_task(self._dispatch_with_semaphore(name, engine, request.query, search_params)))
             engine_names.append(name)
 
-        # Fire suggestion fetch concurrently with engine dispatch
+        # Fire suggestion fetch concurrently with engine dispatch. Suggestions
+        # are always fetched so the cached canonical response is complete; the
+        # requested include view is derived at read time (the cache key omits
+        # include/max_results/freshness, so the cache must hold the full form).
         suggestions_task: asyncio.Task[list[str]] | None = None
-        if "suggestions" in request.include and self._ctx.suggestion_service is not None:
+        if self._ctx.suggestion_service is not None:
             suggestions_task = asyncio.create_task(self._generate_suggestions(request.query))
 
         dispatch_results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -582,9 +585,11 @@ class SearchService:
 
         elapsed_ms = (time.monotonic() - t_start) * 1000
 
-        # Empty-scrape diagnostics (opt-in feature flag, plus MCP opt-in)
+        # Empty-scrape diagnostics (opt-in feature flag). Computed whenever the
+        # flag is enabled so the cached canonical response is complete; the
+        # include view is derived at read time.
         empty_engines: list[list[str]] = []
-        if self._ctx.empty_scrape_diagnostics_enabled and "diagnostics" in request.include:
+        if self._ctx.empty_scrape_diagnostics_enabled:
             scrape_engine_names = {name for name, engine in target.items() if engine.engine_type == "scrape"}
             empty_engines = extract_empty_scrape_engines(responses, scrape_engine_names)
             for name, reason in empty_engines:
@@ -607,16 +612,15 @@ class SearchService:
             if resp.infoboxes:
                 all_infoboxes.extend(resp.infoboxes)
 
-        # Presentation bound: never re-rank or renumber, just slice
-        results = ranked
-        if request.max_results is not None and request.max_results > 0:
-            results = ranked[: request.max_results]
-
-        response = SearchResponse(
+        # Build the canonical full response: every include-able field present
+        # and results unsliced. This is the form written to the cache, so a
+        # cache entry is independent of the populating request's
+        # include/max_results/freshness.
+        canonical = SearchResponse(
             query=request.query,
-            results=results,
+            results=ranked,
             scope=scope,
-            engine_outcomes=self._outcomes(responses, include_status="engine_status" in request.include),
+            engine_outcomes=self._outcomes(responses, include_status=True),
             suggestions=suggestions,
             answers=all_answers,
             corrections=all_corrections,
@@ -625,10 +629,13 @@ class SearchService:
             response_time_ms=round(elapsed_ms),
             partial=not all_unresponsive and non_ok > 0,
             all_unresponsive=all_unresponsive,
-            empty_engines=empty_engines if "diagnostics" in request.include else [],
+            empty_engines=empty_engines,
         )
 
-        await self._write_cache(request, response, all_unresponsive)
+        await self._write_cache(request, canonical, all_unresponsive)
+
+        # Derive the requested include-filtered + max_results-sliced view.
+        response = self._view_for_request(request, canonical)
 
         # Record audit trail (fire-and-forget)
         if self._ctx.audit_logger is not None:
@@ -673,7 +680,10 @@ class SearchService:
         m.cache_hits.inc({"type": "hit"})
         response = search_response_from_payload(payload)
         response.cached = True
-        return response
+        # The stored entry is the canonical full response; derive the view
+        # requested by THIS request (include filtering + max_results slicing)
+        # so a cache hit never leaks fields from the populating request.
+        return self._view_for_request(request, response)
 
     async def _write_cache(self, request: SearchRequest, response: SearchResponse, all_unresponsive: bool) -> None:
         """Persist a fresh response under the fully scoped cache key."""
@@ -765,6 +775,26 @@ class SearchService:
             )
             for name, resp in responses.items()
         ]
+
+    @staticmethod
+    def _view_for_request(request: SearchRequest, response: SearchResponse) -> SearchResponse:
+        """Derive the requested view from a canonical full response.
+
+        Include filtering (``engine_outcomes``/``suggestions``/``empty_engines``)
+        and the ``max_results`` presentation bound depend only on the current
+        request. Applying them here — on both the fresh and the cache-hit path —
+        guarantees a cached response never returns a representation inconsistent
+        with the current request's requested fields or detail level.
+        """
+        if "engine_status" not in request.include:
+            response.engine_outcomes = []
+        if "suggestions" not in request.include:
+            response.suggestions = []
+        if "diagnostics" not in request.include:
+            response.empty_engines = []
+        if request.max_results is not None and request.max_results > 0:
+            response.results = response.results[: request.max_results]
+        return response
 
 
 # ---------------------------------------------------------------------------

@@ -556,6 +556,52 @@ class TestCache:
         assert r1.cached is False and r2.cached is False
         assert len(cache._data) == 2
 
+    async def test_cache_include_filtering_is_request_scoped(self) -> None:
+        """VAL-CORRECT-009 — include filtering depends only on the current request."""
+        cache = _FakeCache()
+        service = _service(engines={"okeng": _OkEngine(count=2)}, cache=cache)
+
+        # Populate the cache with a request that omits engine_status.
+        without = await service.search(_req(include={"results"}))
+        assert without.cached is False
+        assert without.engine_outcomes == []
+
+        # A request that requests engine_status hits the cache and must still
+        # receive engine_outcomes — the cached canonical response is complete.
+        with_status = await service.search(_req(include={"results", "engine_status"}))
+        assert with_status.cached is True
+        assert len(with_status.engine_outcomes) == 1
+
+        # Reverse population order: warm with engine_status, read without.
+        with_status2 = await service.search(_req(query="other query", include={"results", "engine_status"}))
+        assert with_status2.cached is False
+        assert len(with_status2.engine_outcomes) == 1
+        without2 = await service.search(_req(query="other query", include={"results"}))
+        assert without2.cached is True
+        assert without2.engine_outcomes == []
+
+    async def test_cache_max_results_slicing_is_per_request(self) -> None:
+        """VAL-CORRECT-011 — max_results slicing is applied per request."""
+        cache = _FakeCache()
+        service = _service(engines={"okeng": _OkEngine(count=5)}, cache=cache)
+
+        # Warm with a large max_results, then read with a smaller one.
+        big = await service.search(_req(max_results=10))
+        assert big.cached is False
+        assert len(big.results) == 5
+        small = await service.search(_req(max_results=3))
+        assert small.cached is True
+        assert len(small.results) == 3
+
+        # Warm with a small max_results, then read with a larger one — the
+        # cached unsliced set must serve the full requested count, never a
+        # stale smaller slice.
+        small2 = await service.search(_req(query="warm small", max_results=3))
+        assert len(small2.results) == 3
+        big2 = await service.search(_req(query="warm small", max_results=10))
+        assert big2.cached is True
+        assert len(big2.results) == 5
+
 
 # ---------------------------------------------------------------------------
 # Cache key scoping
