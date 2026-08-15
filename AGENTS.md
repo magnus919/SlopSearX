@@ -26,14 +26,22 @@ slopsearx/
 │   └── abuseipdb.py
 ├── slopsearx/          # Core library
 │   ├── adapter.py      # EngineAdapter base class + ScrapeAdapter
+│   ├── service.py      # Normalized search pipeline (SearchService, ScopeResolver, AppContext)
+│   ├── capabilities.py # Runtime capability catalog, intent profiles, MCP policy
+│   ├── snapshot.py     # Opaque search snapshots for cursor pagination
+│   ├── research.py     # Async research jobs (Valkey-backed)
+│   ├── mcp/            # MCP server (FastMCP): tools, resources, prompts, auth,
+│   │                   #   remote gateway mode (gateway.py), OAuth 2.1 server
+│   │                   #   (oauth.py), and the gateway's OAuth client flow (oauth_client.py)
 │   ├── merger.py       # Fan-out, deduplication, ranking
 │   ├── config.py       # Layered config (env + file + defaults)
 │   ├── ratelimit.py    # Distributed rate limiting (Valkey)
 │   ├── cache.py        # Response cache
 │   ├── formatter.py    # SearXNG JSON + YAML+Markdown formatters
-│   └── server.py       # HTTP API (uvicorn/FastAPI)
+│   └── server.py       # HTTP API (uvicorn/FastAPI) — thin adapter over service.py
 ├── spec.md             # Full architectural specification
 ├── tests/
+├── docs/MCP_SERVER.md  # MCP server install/config/usage docs (users + agents)
 ├── CONTRIBUTING.md
 ├── AGENTS.md
 └── README.md

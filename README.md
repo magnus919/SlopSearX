@@ -32,14 +32,19 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 | `GET /metrics` | OpenMetrics for Prometheus scraping |
 | `GET /config` | Categories→engines mapping for runtime discovery |
 
-## Engines (48)
+## Engines (51)
+
+The table below is maintained to match the live adapter registry (51 registered
+adapters as of this writing). The MCP server's `slopsearx_list_capabilities`
+tool and the `slopsearx://capabilities` resource are generated from that same
+registry at runtime — treat them as authoritative.
 
 ### General / Web
 
 | Engine | Type | Auth | Categories |
 |---|---|---|---|
 | [Brave Search](https://brave.com/search/api/) | API | `ENGINE_BRAVE_API_KEY` | general, news, science, images |
-| [DuckDuckGo](https://duckduckgo.com/) | Scrape | None | general, news |
+| [DuckDuckGo](https://duckduckgo.com/) | Scrape | None | general, news, images |
 | [Google](https://google.com/) | Scrape | None | general, news |
 | [Hacker News](https://news.ycombinator.com/) | API | None | general, news |
 | [Reddit](https://reddit.com/) | API | None | general, social, reddit:subreddit |
@@ -49,35 +54,35 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 
 | Engine | Type | Auth | Categories |
 |---|---|---|---|
-| [Crates.io](https://crates.io/) | API | None | general, it, reference, packages |
-| [Docker Hub](https://hub.docker.com/) | API | None | general, it, reference, packages |
-| [GitHub](https://github.com/) | API | `GITHUB_TOKEN` | general, reference, github:code, github:issues, github:prs |
-| [npm](https://www.npmjs.com/) | API | None | general, it, reference, packages |
-| [PyPI](https://pypi.org/) | API | None | general, it, reference, packages |
-| [Repology](https://repology.org/) | API | None | general, it, reference, packages |
-| [RubyGems](https://rubygems.org/) | API | None | general, it, reference, packages |
+| [Crates.io](https://crates.io/) | API | None | it, reference, packages |
+| [Docker Hub](https://hub.docker.com/) | API | None | it, reference, packages |
+| [GitHub](https://github.com/) | API | `GITHUB_TOKEN` | reference, github:code, github:issues, github:prs |
+| [npm](https://www.npmjs.com/) | API | None | it, reference, packages |
+| [PyPI](https://pypi.org/) | API | None | it, reference, packages |
+| [Repology](https://repology.org/) | API | None | it, reference, packages |
+| [RubyGems](https://rubygems.org/) | API | None | it, reference, packages |
 | [Stack Exchange](https://stackexchange.com/) | API | Optional | general, reference, science, stackexchange:code, stackexchange:serverfault |
 
 ### Science & Research
 
 | Engine | Type | Auth | Categories |
 |---|---|---|---|
-| [arXiv](https://arxiv.org/) | API | None | general, science, reference |
-| [HuggingFace](https://huggingface.co/) | API | `HF_TOKEN` (optional) | general, science, huggingface:datasets, huggingface:papers |
-| [OpenAlex](https://openalex.org/) | API | None | general, science, reference |
-| [Open Library](https://openlibrary.org/) | API | None | general, books, reference |
-| [Semantic Scholar](https://www.semanticscholar.org/) | API | Optional | general, science, reference |
-| [UniProt](https://www.uniprot.org/) | API | None | general, science, reference, biology, medical |
+| [arXiv](https://arxiv.org/) | API | None | science, reference |
+| [HuggingFace](https://huggingface.co/) | API | `HF_TOKEN` (optional) | science, huggingface:datasets, huggingface:papers |
+| [OpenAlex](https://openalex.org/) | API | None | science, reference |
+| [Open Library](https://openlibrary.org/) | API | None | books, reference |
+| [Semantic Scholar](https://www.semanticscholar.org/) | API | Optional | science, reference |
+| [UniProt](https://www.uniprot.org/) | API | None | science, reference, biology, medical |
 | [Internet Archive](https://archive.org/) | API | None | reference, web:archive, historical |
 
 ### Medical / Health
 
 | Engine | Type | Auth | Categories |
 |---|---|---|---|
-| [ClinicalTrials.gov](https://clinicaltrials.gov/) | API | None | general, medical, health, science |
-| [openFDA](https://open.fda.gov/) | API | None | general, medical, health, science, government |
-| [PubChem](https://pubchem.ncbi.nlm.nih.gov/) | API | None | general, science, reference, chemistry, medical |
-| [PubMed](https://pubmed.ncbi.nlm.nih.gov/) | API | None | general, science, reference, medical, health |
+| [ClinicalTrials.gov](https://clinicaltrials.gov/) | API | None | medical, health, science |
+| [openFDA](https://open.fda.gov/) | API | None | medical, health, science, government |
+| [PubChem](https://pubchem.ncbi.nlm.nih.gov/) | API | None | science, reference, chemistry, medical |
+| [PubMed](https://pubmed.ncbi.nlm.nih.gov/) | API | None | science, reference, medical, health |
 
 ### Security / Threat Intelligence
 
@@ -105,29 +110,86 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 
 | Engine | Type | Auth | Categories |
 |---|---|---|---|
-| [FRED](https://fred.stlouisfed.org/) | API | `ENGINE_FRED_API_KEY` | general, finance, reference, economics |
-| [SEC EDGAR](https://www.sec.gov/edgar/) | API | None | general, finance, reference |
+| [FRED](https://fred.stlouisfed.org/) | API | `ENGINE_FRED_API_KEY` | finance, reference, economics |
+| [SEC EDGAR](https://www.sec.gov/edgar/) | API | None | finance, reference |
 
 ### Media & Entertainment
 
 | Engine | Type | Auth | Categories |
 |---|---|---|---|
-| [MusicBrainz](https://musicbrainz.org/) | API | None | general, music, reference |
-| [TMDB](https://www.themoviedb.org/) | API | `ENGINE_TMDB_API_KEY` | general, movies, entertainment |
+| [MusicBrainz](https://musicbrainz.org/) | API | None | music, reference |
+| [TMDB](https://www.themoviedb.org/) | API | `ENGINE_TMDB_API_KEY` | movies, entertainment |
 
 ### Geography / GIS
 
 | Engine | Type | Auth | Categories |
 |---|---|---|---|
-| [Nominatim (OSM)](https://nominatim.openstreetmap.org/) | API | None | general, geography, reference |
+| [Nominatim (OSM)](https://nominatim.openstreetmap.org/) | API | None | geography, reference |
 
 ### Legal
 
 | Engine | Type | Auth | Categories |
 |---|---|---|---|
-| [Oyez (SCOTUS)](https://www.oyez.org/) | API | None | general, reference, legal |
+| [Oyez (SCOTUS)](https://www.oyez.org/) | API | None | reference, legal |
+
+### Jobs / ATS
+
+| Engine | Type | Auth | Categories |
+|---|---|---|---|
+| [Ashby](https://www.ashbyhq.com/) | API | None | jobs |
+| [Greenhouse](https://www.greenhouse.io/) | API | None | jobs |
+| [Lever](https://www.lever.co/) | API | None | jobs |
 
 **Adding a new engine:** See [`docs/ENGINE_ADAPTERS.md`](docs/ENGINE_ADAPTERS.md) for the full adapter reference — contract rules, data types, lifecycle hooks, and the category system.
+
+## MCP Server (agents)
+
+SlopSearX ships a Model Context Protocol server for AI agents. It exposes
+intent-level search (no URL strings), capability discovery, scope
+explanation, snapshot-based pagination, and asynchronous research jobs —
+built on the same pipeline as the HTTP API.
+
+```bash
+# Install (already included in the package dependencies)
+pip install -e ".[dev]"
+
+# Run over stdio (default transport)
+slopsearx-mcp            # or: python -m slopsearx.mcp
+
+# Run over HTTP for remote clients (e.g. Hermes Agent on another host)
+MCP_TRANSPORT=http MCP_HOST=0.0.0.0 MCP_AUTH_TOKEN=change-me slopsearx-mcp
+
+# Remote gateway: stdio MCP server that proxies to a remote SlopSearX server
+slopsearx-mcp --remote http://<slopsearx-host>:8000/mcp   # token: MCP_REMOTE_TOKEN=…
+
+# Gateway against an OAuth-mode remote: --oauth runs the standard MCP OAuth
+# flow (loopback callback; tokens persisted for reuse)
+slopsearx-mcp --remote http://<slopsearx-host>:8000/mcp --oauth
+
+# OAuth 2.1 mode (required by OAuth-only clients, e.g. Claude Web connectors)
+MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.com slopsearx-mcp
+```
+
+- 13 tools: `slopsearx_search`, `slopsearx_search_targeted`,
+  `slopsearx_search_jobs`, `slopsearx_search_security`,
+  `slopsearx_search_science`, `slopsearx_list_capabilities`,
+  `slopsearx_explain_search_scope`, `slopsearx_get_service_status`,
+  `slopsearx_read_results`, `slopsearx_read_result`,
+  `slopsearx_start_research`, `slopsearx_get_job`, `slopsearx_cancel_job`
+- Resources: `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
+  `slopsearx://routing-profiles`, `slopsearx://health/summary`
+- Specialist tools (jobs, security, science, research) are disabled until
+  the operator grants them (`MCP_GRANT_JOBS=1`, `MCP_GRANT_SECURITY=1`,
+  `MCP_GRANT_SCIENCE=1`, `MCP_GRANT_RESEARCH=1`).
+- Sensitive engines (`hibp`, `dehashed`) are unreachable from generic
+  routing and are rejected by `slopsearx_search_targeted` unless the
+  operator sets `MCP_TARGETED_SENSITIVE_ALLOWED=1` (deliberate policy
+  boundary).
+
+Full installation, configuration, client setup (Claude Desktop, Cursor,
+**Hermes Agent** — see "Hermes Agent (Nous Research)" in the guide — and
+generic MCP clients), and agent usage guidance:
+**[docs/MCP_SERVER.md](docs/MCP_SERVER.md)**.
 
 ## Quick Start
 

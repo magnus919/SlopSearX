@@ -194,14 +194,45 @@ class QueryRouter:
         topics_cfg = cfg.get("topics")
         if topics_cfg is not None:
             if isinstance(topics_cfg, dict):
-                # Named-topic format from config.yaml
+                # Named-topic format from config.yaml — inject the key as
+                # the topic name so match_topic() can report it.
                 self.topics = []
                 for _name, t in topics_cfg.items():
                     if isinstance(t, dict) and "keywords" in t and "engines" in t:
-                        self.topics.append(t)
+                        topic = dict(t)
+                        topic.setdefault("name", _name)
+                        self.topics.append(topic)
             elif isinstance(topics_cfg, list):
                 # Ordered-list format
                 self.topics = [t for t in topics_cfg if isinstance(t, dict)]
+
+    def match_topic(self, query: str) -> str | None:
+        """Return the name of the first topic matching the query.
+
+        Uses the same first-match-wins keyword scan as :meth:`route`,
+        so the reported topic always agrees with the routed engine set.
+
+        Args:
+            query: The raw search query.
+
+        Returns:
+            The matching topic name, or ``None`` if no topic matches
+            (or routing is disabled).
+        """
+        if not self.enabled:
+            return None
+
+        query_lower = query.lower().strip()
+
+        for topic in self.topics:
+            keywords = topic.get("keywords", [])
+            engines = topic.get("engines", [])
+            if not engines:
+                continue
+            for kw in keywords:
+                if kw in query_lower:
+                    return str(topic.get("name") or "")
+        return None
 
     def route(
         self,

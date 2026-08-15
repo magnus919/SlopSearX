@@ -5,3 +5,14 @@ ranking:
   strategy: presence
 routing:
   enabled: true
+
+# MCP server policy (see docs/MCP_SERVER.md for the full reference).
+# Specialist tools are disabled until granted here or via MCP_* env vars.
+# mcp:
+#   enabled_tools:
+#     jobs: false
+#     security: false
+#     science: false
+#     research: false
+#   max_results: 50
+#   auth_token: ""
