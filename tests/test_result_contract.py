@@ -9,6 +9,7 @@ expanded record reveals full content, media, provenance, a
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 import pytest
@@ -318,6 +319,60 @@ class TestRecords:
 
 # ---------------------------------------------------------------------------
 # Snapshot-absolute indexing (VAL-EXPAND-001/017, VAL-CROSS-003)
+# ---------------------------------------------------------------------------
+
+
+class TestSnapshotNegativeLifecycle:
+    async def test_store_unavailable_read_results(self, state: McpState) -> None:
+        """VAL-EXPAND-019 — store-unavailable read_results returns store_unavailable."""
+        result = await t.slopsearx_search("hello")
+        cursor = result["meta"]["cursor"]
+        assert cursor is not None
+
+        state.snapshots._store = _FakeStore(connected=False)
+        resp = await t.slopsearx_read_results(cursor, page=1)
+
+        assert resp["error"]["code"] == "store_unavailable"
+
+    async def test_store_unavailable_read_result(self, state: McpState) -> None:
+        """VAL-EXPAND-019 — store-unavailable read_result returns store_unavailable."""
+        result = await t.slopsearx_search("hello")
+        rid = result["results"][0]["result_id"]
+
+        state.snapshots._store = _FakeStore(connected=False)
+        resp = await t.slopsearx_read_result(rid)
+
+        assert resp["error"]["code"] == "store_unavailable"
+
+    async def test_expired_handle_read_results(self, state: McpState) -> None:
+        """VAL-EXPAND-015 — expired cursor yields expired_handle with expires_at."""
+        result = await t.slopsearx_search("hello")
+        cursor = result["meta"]["cursor"]
+        assert cursor is not None
+
+        payload = state.snapshots._store._data[f"mcp:snapshot:default:{cursor}"]
+        payload["expires_at"] = time.time() - 1
+        resp = await t.slopsearx_read_results(cursor, page=1)
+
+        assert resp["error"]["code"] == "expired_handle"
+        assert resp["error"]["handle"] == cursor
+        assert resp["error"]["expires_at"]  # ISO timestamp present
+
+    async def test_expired_handle_read_result(self, state: McpState) -> None:
+        """VAL-EXPAND-015 — expired result_id yields expired_handle with metadata."""
+        result = await t.slopsearx_search("hello")
+        rid = result["results"][0]["result_id"]
+        cursor = rid.split(":", 1)[0]
+
+        payload = state.snapshots._store._data[f"mcp:snapshot:default:{cursor}"]
+        payload["expires_at"] = time.time() - 1
+        resp = await t.slopsearx_read_result(rid)
+
+        assert resp["error"]["code"] == "expired_handle"
+        assert resp["error"]["handle"] == rid
+        assert resp["error"]["expires_at"]
+
+
 # ---------------------------------------------------------------------------
 
 

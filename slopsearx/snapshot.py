@@ -47,6 +47,27 @@ class SearchSnapshot:
     total: int
     tenant: str
     created_at: float = field(default_factory=time.time)
+    expires_at: float | None = None
+
+
+@dataclass
+class SnapshotRead:
+    """Outcome of a snapshot read, distinguishing the lifecycle states.
+
+    Exactly one terminal state is signaled:
+
+    - ``unavailable`` — the backing store is unreachable (callers should
+      surface ``store_unavailable``, not ``invalid_cursor``/``expired_handle``).
+    - ``expired`` — the snapshot is present but past its ``expires_at``
+      (callers should surface ``expired_handle`` with ``expires_at``).
+    - ``snapshot is None`` with neither flag — the handle is unknown/missing
+      (callers should surface ``invalid_cursor``/``invalid_result_id``).
+    """
+
+    snapshot: SearchSnapshot | None = None
+    unavailable: bool = False
+    expired: bool = False
+    expires_at: float | None = None
 
 
 class SnapshotStore:
@@ -86,6 +107,7 @@ class SnapshotStore:
         if store is None or not store.is_connected:
             return None
         snapshot_id = f"snap-{uuid.uuid4().hex[:12]}"
+        created_at = time.time()
         payload: dict[str, Any] = {
             "snapshot_id": snapshot_id,
             "query": query,
@@ -94,25 +116,40 @@ class SnapshotStore:
             "scope": dataclasses.asdict(scope),
             "total": len(results),
             "tenant": self._tenant,
-            "created_at": time.time(),
+            "created_at": created_at,
+            "expires_at": created_at + self._ttl,
         }
         await store.set(self._key(snapshot_id), payload, self._ttl)
         return snapshot_id
 
-    async def get(self, snapshot_id: str) -> SearchSnapshot | None:
-        """Read a snapshot by opaque ID, or None if missing/unavailable."""
+    async def read(self, snapshot_id: str) -> SnapshotRead:
+        """Read a snapshot, distinguishing expiry and store unavailability.
+
+        Returns a :class:`SnapshotRead` describing the lifecycle state so
+        callers can surface the correct structured error:
+        ``store_unavailable`` (store unreachable), ``expired_handle``
+        (present but past ``expires_at``), or ``invalid_cursor`` (unknown).
+        """
         store = self._store
-        if store is None or not store.is_connected or not snapshot_id:
-            return None
+        if store is None or not store.is_connected:
+            return SnapshotRead(unavailable=True)
+        if not snapshot_id:
+            return SnapshotRead()
         payload = await store.get(self._key(snapshot_id))
         if payload is None:
-            return None
+            return SnapshotRead()
         snapshot = _snapshot_from_payload(payload)
         if snapshot.tenant != self._tenant:
             # Tenant mismatch — treat as missing (defense in depth; the
             # key is already tenant-scoped).
-            return None
-        return snapshot
+            return SnapshotRead()
+        if snapshot.expires_at is not None and time.time() > snapshot.expires_at:
+            return SnapshotRead(expired=True, expires_at=snapshot.expires_at)
+        return SnapshotRead(snapshot=snapshot)
+
+    async def get(self, snapshot_id: str) -> SearchSnapshot | None:
+        """Read a snapshot by opaque ID, or None if missing/unavailable/expired."""
+        return (await self.read(snapshot_id)).snapshot
 
     def result_id(self, snapshot_id: str, index: int) -> str:
         """Build the stable server-issued ID for one snapshot result."""
@@ -122,6 +159,9 @@ class SnapshotStore:
 def _snapshot_from_payload(payload: dict[str, Any]) -> SearchSnapshot:
     """Rehydrate a SearchSnapshot from a serialized payload."""
     scope = payload.get("scope") or {}
+    created_at = float(payload.get("created_at", 0.0))
+    expires_raw = payload.get("expires_at")
+    expires_at = float(expires_raw) if expires_raw is not None else None
     return SearchSnapshot(
         snapshot_id=str(payload.get("snapshot_id", "")),
         query=str(payload.get("query", "")),
@@ -136,5 +176,6 @@ def _snapshot_from_payload(payload: dict[str, Any]) -> SearchSnapshot:
         ),
         total=int(payload.get("total", 0)),
         tenant=str(payload.get("tenant", "")),
-        created_at=float(payload.get("created_at", 0.0)),
+        created_at=created_at,
+        expires_at=expires_at,
     )

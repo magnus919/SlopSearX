@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from slopsearx.adapter import SearchResult
@@ -120,6 +121,46 @@ class TestSnapshotStore:
         assert snapshot is not None
         assert snapshot.results[0].engines == {"brave", "wikipedia"}
         assert snapshot.results[1].engines == {"brave"}
+
+    async def test_expires_at_persisted_in_payload(self) -> None:
+        store = _FakeStore()
+        snapshots = SnapshotStore(store, ttl_seconds=120)
+        snapshot_id = await snapshots.create("q", "ssx-1", _results(1), ScopeDecision())
+
+        payload = store._data[f"mcp:snapshot:default:{snapshot_id}"]
+        assert "expires_at" in payload
+        assert payload["expires_at"] > time.time()
+
+    async def test_read_distinguishes_expired(self) -> None:
+        store = _FakeStore()
+        snapshots = SnapshotStore(store, ttl_seconds=120)
+        snapshot_id = await snapshots.create("q", "ssx-1", _results(1), ScopeDecision())
+
+        # Deterministically expire the captured snapshot.
+        store._data[f"mcp:snapshot:default:{snapshot_id}"]["expires_at"] = time.time() - 1
+        read = await snapshots.read(snapshot_id)
+
+        assert read.expired is True
+        assert read.snapshot is None
+        assert read.expires_at is not None
+        # get() collapses the expired handle to None for backward compatibility.
+        assert await snapshots.get(snapshot_id) is None
+
+    async def test_read_distinguishes_unavailable(self) -> None:
+        store = _FakeStore(connected=False)
+        snapshots = SnapshotStore(store)
+        read = await snapshots.read("snap-anything")
+
+        assert read.unavailable is True
+        assert read.snapshot is None
+
+    async def test_read_distinguishes_missing(self) -> None:
+        snapshots = SnapshotStore(_FakeStore())
+        read = await snapshots.read("snap-nope")
+
+        assert read.snapshot is None
+        assert read.expired is False
+        assert read.unavailable is False
 
     async def test_snapshot_legacy_stringified_set_rehydrates(self) -> None:
         store = _FakeStore()

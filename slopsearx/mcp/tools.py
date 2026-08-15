@@ -430,7 +430,7 @@ def _envelope(
         "results": [
             _result_to_dict(
                 result,
-                result_id=(f"{cursor}:{index}" if cursor else None),
+                result_id=(state.snapshots.result_id(cursor, index) if cursor else None),
             )
             for index, result in enumerate(response.results)
         ],
@@ -511,6 +511,13 @@ async def _run_search(
 
 def _deadline_iso(deadline: float) -> str:
     return _dt.datetime.fromtimestamp(deadline, tz=_dt.timezone.utc).isoformat()
+
+
+def _expires_iso(expires_at: float | None) -> str | None:
+    """Render a snapshot expiry epoch as an ISO 8601 UTC timestamp."""
+    if expires_at is None:
+        return None
+    return _dt.datetime.fromtimestamp(expires_at, tz=_dt.timezone.utc).isoformat()
 
 
 # ---------------------------------------------------------------------------
@@ -1104,9 +1111,20 @@ async def slopsearx_read_results(
         return _error("invalid_input", "page must be >= 1", field="page")
 
     page_size = _bounded_max_results(state, max_results)
-    snapshot = await state.snapshots.get(cursor)
+    lookup = await state.snapshots.read(cursor)
+    if lookup.unavailable:
+        return _error("store_unavailable", "snapshot store is unavailable", field="cursor")
+    if lookup.expired:
+        return _error(
+            "expired_handle",
+            "snapshot has expired",
+            handle=cursor,
+            expires_at=_expires_iso(lookup.expires_at),
+            field="cursor",
+        )
+    snapshot = lookup.snapshot
     if snapshot is None:
-        return _error("invalid_cursor", "unknown or expired cursor", field="cursor")
+        return _error("invalid_cursor", "unknown cursor", field="cursor")
 
     start = (page - 1) * page_size
     end = start + page_size
@@ -1116,7 +1134,7 @@ async def slopsearx_read_results(
         "cursor": cursor,
         "page": page,
         "results": [
-            _result_to_dict(result, result_id=f"{cursor}:{start + index}")
+            _result_to_dict(result, result_id=state.snapshots.result_id(cursor, start + index))
             for index, result in enumerate(page_results)
         ],
         "meta": {
@@ -1146,7 +1164,18 @@ async def slopsearx_read_result(result_id: str) -> dict[str, Any]:
     if index < 0:
         return _error("invalid_result_id", "result index out of range", field="result_id")
 
-    snapshot = await state.snapshots.get(snapshot_id)
+    lookup = await state.snapshots.read(snapshot_id)
+    if lookup.unavailable:
+        return _error("store_unavailable", "snapshot store is unavailable", field="result_id")
+    if lookup.expired:
+        return _error(
+            "expired_handle",
+            "snapshot has expired",
+            handle=result_id,
+            expires_at=_expires_iso(lookup.expires_at),
+            field="result_id",
+        )
+    snapshot = lookup.snapshot
     if snapshot is None:
         return _error("invalid_cursor", "unknown or expired snapshot", field="result_id")
     if index >= len(snapshot.results):
