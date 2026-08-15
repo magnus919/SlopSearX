@@ -669,3 +669,182 @@ class TestPayloadRoundTrip:
         rebuilt = engine_outcome_from_dict(payload["engine_outcomes"][0])
         assert rebuilt.status == "rate_limited"
         assert rebuilt.latency_ms is None
+
+    # ------------------------------------------------------------------
+    # JSON-safe serialization (VAL-CORRECT-001/004/005/006/007/008)
+    # ------------------------------------------------------------------
+
+    def test_engines_serialized_as_sorted_list_not_set_repr(self) -> None:
+        result = SearchResult(
+            url="https://x.com",
+            title="X",
+            content="y",
+            engine="github",
+            engines={"github", "arxiv", "wikipedia"},
+        )
+        response = SearchResponse(query="", results=[result], scope=ScopeDecision(), engine_outcomes=[])
+
+        payload = search_response_to_payload(response)
+
+        stored = payload["results"][0]["engines"]
+        assert stored == ["arxiv", "github", "wikipedia"]
+        assert isinstance(stored, list)
+
+    def test_cache_round_trip_preserves_engine_set_exactly(self) -> None:
+        original_set = {"github", "arxiv", "wikipedia"}
+        result = SearchResult(url="https://x.com", title="X", content="y", engine="github", engines=set(original_set))
+        response = SearchResponse(query="", results=[result], scope=ScopeDecision(), engine_outcomes=[])
+
+        payload = search_response_to_payload(response)
+        rebuilt = search_result_from_dict(payload["results"][0])
+
+        assert rebuilt.engines == original_set
+        assert sorted(rebuilt.engines) == sorted(original_set)
+
+    def test_engines_count_preserved_after_round_trip(self) -> None:
+        for count in (1, 2, 0):
+            engines = {f"eng{i}" for i in range(count)}
+            result = SearchResult(url="https://x.com", title="X", content="y", engine="eng0", engines=engines)
+            response = SearchResponse(query="", results=[result], scope=ScopeDecision(), engine_outcomes=[])
+            payload = search_response_to_payload(response)
+            rebuilt = search_result_from_dict(payload["results"][0])
+            assert len(rebuilt.engines) == count
+
+    def test_optional_fields_round_trip_without_coercion(self) -> None:
+        result = SearchResult(
+            url="https://x.com",
+            title="X",
+            content="y",
+            engine="eng",
+            engines={"eng"},
+            score=4.5,
+            position=7,
+            category="science",
+            published_date="2026-03-01",
+            thumbnail="https://x.com/thumb.png",
+            img_src="https://x.com/img.png",
+            tier=2,
+        )
+        response = SearchResponse(query="", results=[result], scope=ScopeDecision(), engine_outcomes=[])
+
+        payload = search_response_to_payload(response)
+        rebuilt = search_result_from_dict(payload["results"][0])
+
+        assert rebuilt.score == 4.5 and isinstance(rebuilt.score, float)
+        assert rebuilt.position == 7 and isinstance(rebuilt.position, int)
+        assert rebuilt.category == "science"
+        assert rebuilt.published_date == "2026-03-01"
+        assert rebuilt.thumbnail == "https://x.com/thumb.png"
+        assert rebuilt.img_src == "https://x.com/img.png"
+        assert rebuilt.tier == 2 and isinstance(rebuilt.tier, int)
+
+    def test_optional_fields_none_stays_none(self) -> None:
+        result = SearchResult(
+            url="https://x.com",
+            title="X",
+            content="y",
+            engine="eng",
+            engines={"eng"},
+            published_date=None,
+            thumbnail=None,
+            img_src=None,
+        )
+        response = SearchResponse(query="", results=[result], scope=ScopeDecision(), engine_outcomes=[])
+        payload = search_response_to_payload(response)
+
+        rebuilt = search_result_from_dict(payload["results"][0])
+
+        assert rebuilt.published_date is None
+        assert rebuilt.thumbnail is None
+        assert rebuilt.img_src is None
+
+    def test_empty_collections_round_trip_as_empty(self) -> None:
+        response = SearchResponse(
+            query="q",
+            results=[],
+            scope=ScopeDecision(),
+            engine_outcomes=[],
+            suggestions=[],
+            answers=[],
+            corrections=[],
+            infoboxes=[],
+            empty_engines=[],
+        )
+
+        payload = search_response_to_payload(response)
+        rebuilt = search_response_from_payload(payload)
+
+        assert rebuilt.results == []
+        assert rebuilt.engine_outcomes == []
+        assert rebuilt.suggestions == []
+        assert rebuilt.answers == []
+        assert rebuilt.corrections == []
+        assert rebuilt.infoboxes == []
+        assert rebuilt.empty_engines == []
+
+    def test_nested_structured_metadata_round_trips(self) -> None:
+        answer = {"text": "The answer", "engines": ["wikipedia"], "meta": {"score": 0.9}}
+        correction = "did you mean foo"
+        infobox = {"title": "Info", "attributes": {"k": "v"}, "urls": ["https://a.com"]}
+        outcome = EngineOutcome(engine="wikipedia", status="ok", result_count=1, latency_ms=1.5, message="fine")
+        response = SearchResponse(
+            query="q",
+            results=[
+                SearchResult(
+                    url="https://x.com",
+                    title="X",
+                    content="y",
+                    engine="wikipedia",
+                    engines={"wikipedia"},
+                )
+            ],
+            scope=ScopeDecision(),
+            engine_outcomes=[outcome],
+            suggestions=["s"],
+            answers=[answer],
+            corrections=[correction],
+            infoboxes=[infobox],
+        )
+
+        payload = search_response_to_payload(response)
+        rebuilt = search_response_from_payload(payload)
+
+        assert rebuilt.answers == [answer]
+        assert rebuilt.corrections == [correction]
+        assert rebuilt.infoboxes == [infobox]
+        assert rebuilt.engine_outcomes[0].latency_ms == 1.5
+
+    def test_legacy_stringified_set_rehydrates(self) -> None:
+        data: dict[str, Any] = {
+            "url": "https://x.com",
+            "title": "X",
+            "content": "y",
+            "engine": "arxiv",
+            "engines": "{'arxiv', 'github'}",
+            "score": 1.0,
+            "position": 1,
+            "category": "science",
+            "tier": 2,
+        }
+
+        rebuilt = search_result_from_dict(data)
+
+        assert rebuilt.engines == {"arxiv", "github"}
+        assert "a" not in rebuilt.engines  # not the set of single characters
+
+    def test_legacy_single_engine_string_rehydrates(self) -> None:
+        data: dict[str, Any] = {
+            "url": "https://x.com",
+            "title": "X",
+            "content": "y",
+            "engine": "brave",
+            "engines": "{'brave'}",
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "tier": 1,
+        }
+
+        rebuilt = search_result_from_dict(data)
+
+        assert rebuilt.engines == {"brave"}

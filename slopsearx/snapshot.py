@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from slopsearx.adapter import SearchResult
-from slopsearx.service import ScopeDecision, search_result_from_dict
+from slopsearx.service import ScopeDecision, search_result_from_dict, search_result_to_dict
 
 SNAPSHOT_KEY_PREFIX = "mcp:snapshot"
 
@@ -90,7 +90,7 @@ class SnapshotStore:
             "snapshot_id": snapshot_id,
             "query": query,
             "query_id": query_id,
-            "results": [dataclasses.asdict(result) for result in results],
+            "results": [search_result_to_dict(result) for result in results],
             "scope": dataclasses.asdict(scope),
             "total": len(results),
             "tenant": self._tenant,

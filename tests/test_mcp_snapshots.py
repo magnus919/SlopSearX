@@ -101,3 +101,54 @@ class TestSnapshotStore:
         assert snapshot is not None
         assert snapshot.total == 0
         assert snapshot.results == []
+
+    async def test_engines_stored_as_sorted_list_in_payload(self) -> None:
+        store = _FakeStore()
+        snapshots = SnapshotStore(store)
+        await snapshots.create("q", "ssx-1", _results(), ScopeDecision())
+        (payload,) = store._data.values()
+        assert payload["results"][0]["engines"] == ["brave", "wikipedia"]
+        assert isinstance(payload["results"][0]["engines"], list)
+
+    async def test_engines_round_trip_through_snapshot_exactly(self) -> None:
+        store = _FakeStore()
+        snapshots = SnapshotStore(store)
+        snapshot_id = await snapshots.create("q", "ssx-1", _results(), ScopeDecision())
+
+        snapshot = await snapshots.get(snapshot_id)
+
+        assert snapshot is not None
+        assert snapshot.results[0].engines == {"brave", "wikipedia"}
+        assert snapshot.results[1].engines == {"brave"}
+
+    async def test_snapshot_legacy_stringified_set_rehydrates(self) -> None:
+        store = _FakeStore()
+        store._data["mcp:snapshot:default:snap-legacy"] = {
+            "snapshot_id": "snap-legacy",
+            "query": "q",
+            "query_id": "ssx-1",
+            "results": [
+                {
+                    "url": "https://example.com/0",
+                    "title": "Title 0",
+                    "content": "Content 0.",
+                    "engine": "brave",
+                    "engines": "{'brave', 'wikipedia'}",
+                    "score": 2.0,
+                    "position": 1,
+                    "category": "general",
+                    "published_date": "2026-01-01",
+                    "tier": 1,
+                }
+            ],
+            "scope": {},
+            "total": 1,
+            "tenant": "default",
+            "created_at": 0.0,
+        }
+        snapshots = SnapshotStore(store)
+
+        snapshot = await snapshots.get("snap-legacy")
+
+        assert snapshot is not None
+        assert snapshot.results[0].engines == {"brave", "wikipedia"}

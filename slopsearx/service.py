@@ -820,9 +820,21 @@ def unresponsive_from_outcomes(outcomes: list[EngineOutcome]) -> list[list[str]]
 # ---------------------------------------------------------------------------
 
 
+def search_result_to_dict(result: SearchResult) -> dict[str, Any]:
+    """Serialize a :class:`SearchResult` to a JSON-safe dict.
+
+    ``engines`` (a ``set[str]``) is canonicalized to a sorted list so the
+    value survives ``json.dumps`` without being stringified to its repr.
+    """
+    data = dataclasses.asdict(result)
+    data["engines"] = sorted(result.engines)
+    return data
+
+
 def search_response_to_payload(response: SearchResponse) -> dict[str, Any]:
     """Serialize a :class:`SearchResponse` for the Valkey cache (JSON-safe)."""
     payload = dataclasses.asdict(response)
+    payload["results"] = [search_result_to_dict(result) for result in response.results]
     payload["cached"] = False
     return payload
 
@@ -860,21 +872,48 @@ def search_response_from_payload(payload: dict[str, Any]) -> SearchResponse:
     )
 
 
+def _rehydrate_engines(value: Any) -> set[str]:
+    """Coerce a serialized ``engines`` value back into a ``set[str]``.
+
+    Accepts a JSON list of engine names (the canonical form) and, for
+    backward compatibility, the legacy stringified-set repr such as
+    ``"{'arxiv', 'github'}"`` — never iterating the string's characters.
+    """
+    if value is None:
+        return set()
+    if isinstance(value, str):
+        text = value.strip()
+        if text.startswith("{") and text.endswith("}"):
+            inner = text[1:-1]
+            return set(
+                part.strip().strip("'\"") for part in inner.split(",") if part.strip()
+            )
+        # A single engine name written as a bare string.
+        return set(text.split())
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return {str(item) for item in value}
+    return set()
+
+
 def search_result_from_dict(data: dict[str, Any]) -> SearchResult:
     """Rehydrate a :class:`SearchResult` from a serialized dict."""
+    raw_category = data.get("category")
+    raw_score = data.get("score")
+    raw_position = data.get("position")
+    raw_tier = data.get("tier")
     return SearchResult(
         url=str(data.get("url", "")),
         title=str(data.get("title", "")),
         content=str(data.get("content", "")),
         engine=str(data.get("engine", "")),
-        engines=set(str(item) for item in (data.get("engines") or [])),
-        score=float(data.get("score", 0.0)),
-        position=int(data.get("position", 0)),
-        category=str(data.get("category", "general")),
+        engines=_rehydrate_engines(data.get("engines")),
+        score=float(raw_score) if raw_score is not None else 0.0,
+        position=int(raw_position) if raw_position is not None else 0,
+        category=raw_category if raw_category is not None else "general",
         published_date=data.get("published_date"),
         thumbnail=data.get("thumbnail"),
         img_src=data.get("img_src"),
-        tier=int(data.get("tier", 2)),
+        tier=int(raw_tier) if raw_tier is not None else 1,
     )
 
 
