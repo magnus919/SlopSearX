@@ -395,19 +395,30 @@ def _envelope(
     warnings: list[str],
     cursor: str | None,
     include_suggestions: bool,
+    total: int,
     enforcement: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Build the standard search envelope from a SearchResponse."""
+    """Build the standard search envelope from a SearchResponse.
+
+    Surfaces every piece of evidence the service produced — answers,
+    corrections, infoboxes, suggestions, per-engine outcomes, empty engines,
+    excluded engines, aggregate count, and pagination signal — so no
+    available evidence is silently discarded (envelope recovery).
+    """
+    excluded_engines = [{"engine": e.engine, "reason": e.reason} for e in response.scope.excluded_engines]
+    scope = {
+        "requested_intent": requested_intent,
+        "resolved_categories": response.scope.resolved_categories,
+        "selected_engines": response.scope.selected_engines,
+        "routing_reason": response.scope.routing_rule,
+        "excluded_engines": excluded_engines,
+    }
     if response.all_unresponsive:
         return _error(
             "all_engines_failed",
             "every selected engine failed to respond",
             query_id=response.query_id,
-            scope={
-                "requested_intent": requested_intent,
-                "selected_engines": response.scope.selected_engines,
-                "routing_reason": response.scope.routing_rule,
-            },
+            scope=scope,
             engine_outcomes=[
                 {"engine": o.engine, "status": o.status, "result_count": o.result_count, "message": o.message}
                 for o in response.engine_outcomes
@@ -423,12 +434,11 @@ def _envelope(
             )
             for index, result in enumerate(response.results)
         ],
-        "scope": {
-            "requested_intent": requested_intent,
-            "resolved_categories": response.scope.resolved_categories,
-            "selected_engines": response.scope.selected_engines,
-            "routing_reason": response.scope.routing_rule,
-        },
+        "scope": scope,
+        "answers": response.answers,
+        "corrections": response.corrections,
+        "infoboxes": response.infoboxes,
+        "empty_engines": [{"engine": entry[0], "reason": entry[1]} for entry in response.empty_engines],
         "enforcement": enforcement or {},
         "engine_outcomes": [
             {
@@ -443,11 +453,14 @@ def _envelope(
         "meta": {
             "query_id": response.query_id,
             "cached": response.cached,
+            "cached_error": response.cached_error,
             "response_time_ms": response.response_time_ms,
             "partial": response.partial,
             "ranking": RANKING_EXPLANATION,
             "cursor": cursor,
             "suggestions": response.suggestions if include_suggestions else [],
+            "total": total,
+            "has_more": total > len(response.results),
         },
         "warnings": warnings + response.scope.warnings,
     }
@@ -476,7 +489,9 @@ async def _run_search(
         return _error("rate_limited", "too many requests; please retry later")
 
     # Capture the full ranked set as an immutable snapshot for pagination,
-    # then present the bounded page.
+    # then present the bounded page. ``total`` is the aggregate captured
+    # count (meta.total), independent of the max_results page bound.
+    total = len(response.results)
     cursor = await state.snapshots.create(response.query, response.query_id, response.results, response.scope)
     if cursor is None:
         warnings = warnings + ["snapshot store unavailable — pagination cursor not created"]
@@ -489,6 +504,7 @@ async def _run_search(
         warnings=warnings,
         cursor=cursor,
         include_suggestions=include_suggestions,
+        total=total,
         enforcement=enforcement,
     )
 

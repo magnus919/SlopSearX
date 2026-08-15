@@ -17,7 +17,7 @@ from slopsearx.config import load_config
 from slopsearx.mcp import tools as t
 from slopsearx.mcp.state import McpState, set_state
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
-from slopsearx.service import SearchService
+from slopsearx.service import EngineExclusion, EngineOutcome, ScopeDecision, SearchResponse, SearchService
 from slopsearx.snapshot import SnapshotStore
 
 
@@ -229,6 +229,155 @@ class TestSearchTool:
         assert small2["meta"]["cached"] is True
         assert len(small2["results"]) == 2
 
+    async def test_meta_total_and_has_more(self, state: McpState) -> None:
+        """VAL-SEARCH-021 — meta.total is the full captured count; has_more reflects pagination."""
+        bounded = await t.slopsearx_search("hello", max_results=2)
+        assert bounded["meta"]["total"] == 9  # full fixture set (3 engines x 3, no URL overlap)
+        assert bounded["meta"]["has_more"] is True
+
+        full = await t.slopsearx_search("world", max_results=100)
+        assert full["meta"]["total"] == 9
+        assert full["meta"]["has_more"] is False
+
+    async def test_empty_results_are_success_not_error(self, state: McpState) -> None:
+        """VAL-SEARCH-014 — all engines ok but zero results is a success envelope with a cursor."""
+        state.ctx.active_engines = _make_engines(["wikipedia"], count=0)
+        result = await t.slopsearx_search("hello")
+
+        assert "error" not in result
+        assert result["results"] == []
+        assert result["meta"]["cursor"] is not None
+        assert result["meta"]["total"] == 0
+        assert result["meta"]["has_more"] is False
+        assert "empty_engines" in result
+
+    async def test_scope_surfaces_excluded_engines(self, state: McpState) -> None:
+        """VAL-SEARCH-009 — scope.excluded_engines is a machine-readable list with reasons."""
+        state.ctx.active_engines = _make_engines(["wikipedia", "brave", "duckduckgo", "hibp"])
+        result = await t.slopsearx_search("hello")
+        assert "excluded_engines" in result["scope"]
+        assert isinstance(result["scope"]["excluded_engines"], list)
+
+    async def test_all_unresponsive_error_exposes_scope_and_outcomes(self, state: McpState) -> None:
+        """VAL-SEARCH-015 — all-engines-failed error still exposes scope + per-engine outcomes."""
+        state.ctx.active_engines = _make_engines(["wikipedia"], status=EngineStatus.ERROR)
+        result = await t.slopsearx_search("hello")
+
+        assert result["error"]["code"] == "all_engines_failed"
+        assert "results" not in result
+        assert result["error"]["scope"]["selected_engines"] == ["wikipedia"]
+        assert result["error"]["scope"]["routing_reason"]
+        assert result["error"]["engine_outcomes"][0]["engine"] == "wikipedia"
+        assert result["error"]["engine_outcomes"][0]["status"] == "error"
+
+
+# ---------------------------------------------------------------------------
+# slopsearx_search_targeted
+# ---------------------------------------------------------------------------
+
+
+class TestEnvelopeEvidence:
+    """Envelope recovery: answers/corrections/infoboxes/empty_engines/cached_error are surfaced.
+
+    Covers VAL-SEARCH-007, the empty-engines recovery precondition, and the
+    honest meta.cached_error signal. Verified at the envelope boundary with a
+    populated SearchResponse so the surface behavior is pinned regardless of
+    how the service populates the fields.
+    """
+
+    def _env(
+        self,
+        state: McpState,
+        *,
+        results: list[Any] | None = None,
+        answers: list[dict[str, Any]] | None = None,
+        corrections: list[str] | None = None,
+        infoboxes: list[dict[str, Any]] | None = None,
+        empty_engines: list[list[str]] | None = None,
+        cached_error: bool = False,
+        total: int = 0,
+        cursor: str | None = "snap-x",
+    ) -> dict[str, Any]:
+        resp = SearchResponse(
+            query="q",
+            results=results or [],
+            scope=ScopeDecision(selected_engines=["wikipedia"], routing_rule="explicit engine"),
+            engine_outcomes=[EngineOutcome(engine="wikipedia", status="ok", result_count=0)],
+            answers=answers or [],
+            corrections=corrections or [],
+            infoboxes=infoboxes or [],
+            query_id="ssx-test",
+            cached_error=cached_error,
+            empty_engines=empty_engines or [],
+        )
+        return t._envelope(
+            state,
+            resp,
+            requested_intent="auto",
+            warnings=[],
+            cursor=cursor,
+            include_suggestions=False,
+            total=total,
+        )
+
+    async def test_answers_corrections_infoboxes_surfaced(self, state: McpState) -> None:
+        """VAL-SEARCH-007 — answers/corrections/infoboxes surface as typed fields verbatim."""
+        env = self._env(
+            state,
+            answers=[{"answer": "42", "url": "https://x.example"}],
+            corrections=["did you mean y"],
+            infoboxes=[{"title": "info", "url": "https://i.example"}],
+        )
+        assert env["answers"] == [{"answer": "42", "url": "https://x.example"}]
+        assert env["corrections"] == ["did you mean y"]
+        assert env["infoboxes"] == [{"title": "info", "url": "https://i.example"}]
+
+    async def test_answers_corrections_infoboxes_empty_when_absent(self, state: McpState) -> None:
+        """VAL-SEARCH-007 — absent answers/corrections/infoboxes yield empty typed lists, never missing keys."""
+        env = self._env(state)
+        assert env["answers"] == []
+        assert env["corrections"] == []
+        assert env["infoboxes"] == []
+
+    async def test_empty_engines_surfaced_machine_readable(self, state: McpState) -> None:
+        """empty_engines from the response is surfaced as {engine, reason} objects, not dropped."""
+        env = self._env(state, empty_engines=[["emptyscrape", "successful scrape returned no results"]])
+        assert env["empty_engines"] == [{"engine": "emptyscrape", "reason": "successful scrape returned no results"}]
+
+    async def test_empty_engines_empty_list_when_none(self, state: McpState) -> None:
+        """empty_engines is always an empty list when the response carries none."""
+        env = self._env(state)
+        assert env["empty_engines"] == []
+
+    async def test_meta_cached_error_surfaced(self, state: McpState) -> None:
+        """cached_error is surfaced in meta honestly."""
+        env = self._env(state, cached_error=True)
+        assert env["meta"]["cached_error"] is True
+        clean = self._env(state)
+        assert clean["meta"]["cached_error"] is False
+
+    async def test_meta_total_surfaced(self, state: McpState) -> None:
+        """meta.total reports the aggregate captured count."""
+        env = self._env(state, total=7)
+        assert env["meta"]["total"] == 7
+
+    async def test_scope_surfaces_excluded_engines_with_reasons(self, state: McpState) -> None:
+        """VAL-SEARCH-009 — scope.excluded_engines carries engine + reason entries."""
+        resp = SearchResponse(
+            query="q",
+            results=[],
+            scope=ScopeDecision(
+                selected_engines=["brave"],
+                routing_rule="all active engines",
+                excluded_engines=[EngineExclusion(engine="hibp", reason="sensitive engine excluded")],
+            ),
+            engine_outcomes=[EngineOutcome(engine="brave", status="ok", result_count=0)],
+        )
+        env = t._envelope(
+            state, resp, requested_intent="auto", warnings=[], cursor=None, include_suggestions=False, total=0
+        )
+        assert env["scope"]["excluded_engines"] == [{"engine": "hibp", "reason": "sensitive engine excluded"}]
+
 
 # ---------------------------------------------------------------------------
 # slopsearx_search_targeted
@@ -330,6 +479,27 @@ class TestSpecialistGrants:
     async def test_security_intent_requires_grant_in_search(self, state: McpState) -> None:
         result = await t.slopsearx_search("log4j", intent="security")
         assert result["error"]["code"] == "tool_disabled"
+
+    async def test_envelope_shape_consistent_across_search_tools(self, state: McpState) -> None:
+        """VAL-SPEC-015 / VAL-TARGET-011 — specialist and targeted envelopes share the ordinary-search shape."""
+        ordinary = await t.slopsearx_search("hello")
+        ordinary_keys = set(ordinary)
+
+        targeted = await t.slopsearx_search_targeted("hello", engines=["wikipedia"])
+        assert set(targeted) == ordinary_keys
+
+        state.policy.enabled_tools["jobs"] = True
+        state.ctx.active_engines = _make_engines(["greenhouse", "ashby", "lever", "brave"])
+        jobs = await t.slopsearx_search_jobs("Anthropic")
+        assert set(jobs) == ordinary_keys
+        # Specialist coverage fields match ordinary search.
+        for env in (targeted, jobs):
+            assert "engine_outcomes" in env
+            assert "partial" in env["meta"]
+            assert "scope" in env and "selected_engines" in env["scope"]
+            assert "answers" in env and "corrections" in env and "infoboxes" in env
+            assert "empty_engines" in env
+            assert "total" in env["meta"] and "has_more" in env["meta"]
 
 
 # ---------------------------------------------------------------------------
