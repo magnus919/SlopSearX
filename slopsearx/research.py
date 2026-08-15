@@ -21,6 +21,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
+from slopsearx.adapter import EngineStatus
 from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, resolve_intent
 from slopsearx.service import (
     QueryValidationError,
@@ -40,10 +41,59 @@ JOB_STATES = frozenset({"queued", "running", "partial", "succeeded", "failed", "
 QUERY_STATES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 STRATEGIES = ("triangulate", "broad", "fresh", "counterevidence")
 
+# Disjoint per-engine coverage buckets (schema pins). Every source is
+# classified into exactly one of these; ``attempted`` aggregates all but
+# ``not-selected``.
+COVERAGE_BUCKETS: tuple[str, ...] = ("successful", "empty", "failed", "unavailable", "not-selected")
+
+# Stable, machine-readable failure-class tokens. Status-derived tokens
+# (``ok``/``rate_limited``/``blocked``/``error``/``timeout``) come from
+# ``EngineStatus``; ``auth_required`` is the single derived token coming
+# from a credential check, never from ``AdapterResponse.status``.
+FAILURE_CLASS_TOKENS: tuple[str, ...] = ("ok", "rate_limited", "blocked", "error", "timeout", "auth_required")
+
 
 # ---------------------------------------------------------------------------
 # Model
 # ---------------------------------------------------------------------------
+
+
+@dataclass
+class EngineCoverage:
+    """Per-engine coverage for one research subquery (VAL-RESEARCH-004).
+
+    ``bucket`` is exactly one of the disjoint :data:`COVERAGE_BUCKETS`;
+    ``failure_class`` is a stable token drawn from
+    :data:`FAILURE_CLASS_TOKENS` (``None`` for ``not-selected`` sources).
+    ``status`` is the ``EngineStatus`` token (``None`` when not attempted).
+    """
+
+    engine: str
+    bucket: str
+    status: str | None = None
+    result_count: int = 0
+    failure_class: str | None = None
+
+
+@dataclass
+class CoverageSummary:
+    """Aggregated per-query/job coverage counts (VAL-RESEARCH-005).
+
+    ``attempted`` is an aggregate count equal to
+    ``successful + empty + failed + unavailable``; ``not_selected`` covers
+    engines the strategy/plan did not include. Buckets are disjoint: a
+    source is counted in exactly one bucket.
+    """
+
+    attempted: int = 0
+    successful: int = 0
+    empty: int = 0
+    failed: int = 0
+    unavailable: int = 0
+    not_selected: int = 0
+
+    def as_dict(self) -> dict[str, int]:
+        return dataclasses.asdict(self)
 
 
 @dataclass
@@ -60,6 +110,75 @@ class ResearchQuery:
     result_count: int = 0
     cursor: str | None = None
     error: str | None = None
+    engine_coverage: list[EngineCoverage] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Coverage classification (pinned join)
+# ---------------------------------------------------------------------------
+
+
+def status_token(status: EngineStatus | str | None) -> str | None:
+    """Normalize an ``EngineStatus`` enum or token string to its stable token."""
+    if status is None:
+        return None
+    if isinstance(status, EngineStatus):
+        return status.value
+    return str(status)
+
+
+def classify_coverage(
+    *,
+    engine: str,
+    dispatched: bool,
+    status: EngineStatus | str | None = None,
+    result_count: int = 0,
+    credential_missing: bool = False,
+) -> EngineCoverage:
+    """Pinned outcome -> (bucket, failure_class) join (VAL-RESEARCH-019).
+
+    The mapping is fixed and deterministic:
+
+    - ``ok`` + results > 0          -> ``successful`` / ``ok``
+    - ``ok`` + results == 0         -> ``empty``      / ``ok``
+    - ``rate_limited|blocked|error|timeout`` -> ``failed`` / same token
+    - credential missing            -> ``unavailable`` / ``auth_required``
+    - not dispatched (scope-excluded) -> ``not-selected`` / ``None``
+
+    ``auth_required`` is derived from the credential check (never from
+    ``AdapterResponse.status``), so it takes precedence over any status.
+    """
+    if not dispatched:
+        return EngineCoverage(engine=engine, bucket="not-selected", result_count=0, failure_class=None)
+    if credential_missing:
+        return EngineCoverage(
+            engine=engine,
+            bucket="unavailable",
+            status=status_token(status),
+            result_count=result_count,
+            failure_class="auth_required",
+        )
+    token = status_token(status) or "error"
+    if token == "ok":
+        bucket = "successful" if result_count > 0 else "empty"
+        return EngineCoverage(engine=engine, bucket=bucket, status=token, result_count=result_count, failure_class="ok")
+    return EngineCoverage(engine=engine, bucket="failed", status=token, result_count=result_count, failure_class=token)
+
+
+def summarize_coverage(coverage: list[EngineCoverage]) -> CoverageSummary:
+    """Aggregate engine coverage into the disjoint per-query/job summary."""
+    counts = {bucket: 0 for bucket in COVERAGE_BUCKETS}
+    for entry in coverage:
+        counts[entry.bucket] += 1
+    not_selected = counts["not-selected"]
+    return CoverageSummary(
+        attempted=len(coverage) - not_selected,
+        successful=counts["successful"],
+        empty=counts["empty"],
+        failed=counts["failed"],
+        unavailable=counts["unavailable"],
+        not_selected=not_selected,
+    )
 
 
 @dataclass
@@ -292,6 +411,36 @@ class ResearchJobRunner:
         """Queue a job for execution."""
         self._queue.put_nowait(job_id)
 
+    def _build_query_coverage(self, query: ResearchQuery, response: Any) -> list[EngineCoverage]:
+        """Derive per-engine coverage for a completed subquery (VAL-RESEARCH-004).
+
+        Engines actually dispatched appear in ``response.engine_outcomes``;
+        engines the scope deliberately excluded are ``not-selected``; any
+        planned engine not otherwise accounted for is ``not-selected``.
+        Credential state comes from the capability catalog: an engine that
+        requires credentials and has none configured is ``unavailable`` with
+        the derived ``auth_required`` failure class.
+        """
+        coverage: dict[str, EngineCoverage] = {}
+        for outcome in response.engine_outcomes:
+            cap = self._catalog.get(outcome.engine)
+            credential_missing = bool(cap is not None and cap.auth_class == "required" and not cap.auth_configured)
+            coverage[outcome.engine] = classify_coverage(
+                engine=outcome.engine,
+                dispatched=True,
+                status=outcome.status,
+                result_count=outcome.result_count,
+                credential_missing=credential_missing,
+            )
+        for exclusion in response.scope.excluded_engines:
+            coverage[exclusion.engine] = classify_coverage(engine=exclusion.engine, dispatched=False)
+        for name in query.engines:
+            if name not in coverage:
+                coverage[name] = classify_coverage(engine=name, dispatched=False)
+        # Deterministic order: planned engines first, then any extra excluded.
+        ordered = list(dict.fromkeys(list(query.engines) + [e.engine for e in response.scope.excluded_engines]))
+        return [coverage[name] for name in ordered if name in coverage]
+
     async def run_forever(self) -> None:
         """Process queued jobs until cancelled."""
         while True:
@@ -361,9 +510,19 @@ class ResearchJobRunner:
                 response.results,
                 response.scope,
             )
+            # Persist per-engine coverage and the disjoint bucket summary.
+            query.engine_coverage = self._build_query_coverage(query, response)
+            coverage_summary = summarize_coverage(query.engine_coverage)
+            # Subquery state distinguishes successful/empty/failed
+            # (VAL-RESEARCH-007): empty is done+result_count==0+no error and
+            # is never conflated with failed; a mix of empty and failed
+            # engines (no results) is classified failed, never clean empty.
             if response.all_unresponsive:
                 query.state = "failed"
                 query.error = "no engines responded"
+            elif coverage_summary.failed > 0 and query.result_count == 0:
+                query.state = "failed"
+                query.error = "some engines failed and none returned results"
             else:
                 query.state = "done"
                 completed += 1
@@ -415,6 +574,16 @@ def _job_from_payload(payload: dict[str, Any]) -> ResearchJob:
             result_count=int(item.get("result_count", 0)),
             cursor=item.get("cursor"),
             error=item.get("error"),
+            engine_coverage=[
+                EngineCoverage(
+                    engine=str(cov.get("engine", "")),
+                    bucket=str(cov.get("bucket", "not-selected")),
+                    status=cov.get("status"),
+                    result_count=int(cov.get("result_count", 0)),
+                    failure_class=cov.get("failure_class"),
+                )
+                for cov in (item.get("engine_coverage") or [])
+            ],
         )
         for item in (payload.get("queries") or [])
     ]

@@ -20,6 +20,7 @@ from slopsearx.research import (
     ResearchJob,
     generate_job_id,
     plan_research_queries,
+    summarize_coverage,
 )
 from slopsearx.service import (
     QueryValidationError,
@@ -1329,8 +1330,14 @@ async def slopsearx_cancel_job(job_id: str) -> dict[str, Any]:
 
 
 def _job_summary(job: ResearchJob) -> dict[str, Any]:
-    """Compact job view for tool responses."""
+    """Compact job view for tool responses.
+
+    Exposes per-query state plus per-engine coverage (each entry carrying
+    ``{engine, bucket, status, result_count, failure_class}``) and the
+    disjoint coverage summary per query and at the job level.
+    """
     completed, total = job.progress
+    job_coverage = summarize_coverage([entry for query in job.queries for entry in query.engine_coverage])
     return {
         "job_id": job.job_id,
         "state": job.state,
@@ -1347,8 +1354,20 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
                 "query_id": query.query_id,
                 "cursor": query.cursor,
                 "error": query.error,
+                "engine_coverage": [
+                    {
+                        "engine": cov.engine,
+                        "bucket": cov.bucket,
+                        "status": cov.status,
+                        "result_count": cov.result_count,
+                        "failure_class": cov.failure_class,
+                    }
+                    for cov in query.engine_coverage
+                ],
+                "coverage": summarize_coverage(query.engine_coverage).as_dict(),
             }
             for query in job.queries
         ],
+        "coverage": job_coverage.as_dict(),
         "warnings": job.warnings,
     }
