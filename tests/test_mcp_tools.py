@@ -407,6 +407,124 @@ class TestSnapshotReads:
 
 
 # ---------------------------------------------------------------------------
+# Uniform structured input validation
+# ---------------------------------------------------------------------------
+
+
+class TestInputValidation:
+    """Uniform, structured input validation across all search tools.
+
+    Covers VAL-SEARCH-011/012/013/019/020, VAL-TARGET-002/003/007, and
+    VAL-SPEC-007/008: empty/over-long queries, unknown intents, unknown and
+    disabled explicit engines, empty engine lists, and unknown evidence /
+    source types — all rejected with the pinned error code + field before
+    any engine dispatch.
+    """
+
+    async def test_empty_and_whitespace_query_rejected(self, state: McpState) -> None:
+        """VAL-SEARCH-011 — empty/whitespace query returns invalid_input on 'query', no dispatch."""
+        for q in ("", "   ", "\t\n"):
+            result = await t.slopsearx_search(q)
+            assert result["error"]["code"] == "invalid_input"
+            assert result["error"]["field"] == "query"
+            assert "results" not in result
+            assert "meta" not in result
+
+    async def test_overlong_query_rejected_with_max(self, state: McpState) -> None:
+        """VAL-SEARCH-012 — query over max_query_length returns invalid_input with the configured maximum."""
+        state.policy.max_query_length = 20
+        result = await t.slopsearx_search("x" * 21)
+
+        assert result["error"]["code"] == "invalid_input"
+        assert result["error"]["field"] == "query"
+        assert result["error"]["max_length"] == 20
+        assert "results" not in result
+
+    async def test_unknown_intent_rejected_with_alternatives(self, state: McpState) -> None:
+        """VAL-SEARCH-013 — unknown intent returns invalid_input on 'intent' with valid alternatives."""
+        result = await t.slopsearx_search("hello", intent="does_not_exist")
+
+        assert result["error"]["code"] == "invalid_input"
+        assert result["error"]["field"] == "intent"
+        assert result["error"]["valid_alternatives"]
+        assert "results" not in result
+
+    async def test_generic_search_unknown_engine_rejected(self, state: McpState) -> None:
+        """VAL-SEARCH-019 — generic search with unknown engine returns invalid_scope, no dispatch."""
+        result = await t.slopsearx_search("hello", engines=["no_such_engine"])
+
+        assert result["error"]["code"] == "invalid_scope"
+        assert result["error"]["field"] == "engines"
+        assert "no_such_engine" in result["error"]["message"]
+        assert result["error"]["valid_alternatives"]
+        assert "results" not in result
+        assert "meta" not in result
+
+    async def test_generic_search_disabled_engine_rejected(self, state: McpState) -> None:
+        """VAL-SEARCH-020 — generic search with a known-but-disabled engine returns invalid_scope."""
+        # internetarchive is registered but disabled by default config.
+        result = await t.slopsearx_search("hello", engines=["internetarchive"])
+
+        assert result["error"]["code"] == "invalid_scope"
+        assert result["error"]["field"] == "engines"
+        assert "inactive" in result["error"]["message"].lower()
+        assert result["error"]["valid_alternatives"]
+        assert "internetarchive" not in result["error"]["valid_alternatives"]
+        assert "results" not in result
+
+    async def test_targeted_unknown_engine_rejected(self, state: McpState) -> None:
+        """VAL-TARGET-002 — targeted search with unknown engine returns invalid_scope with alternatives."""
+        result = await t.slopsearx_search_targeted("hello", engines=["definitely_not_an_engine"])
+
+        assert result["error"]["code"] == "invalid_scope"
+        assert result["error"]["field"] == "engines"
+        assert "definitely_not_an_engine" in result["error"]["message"]
+        assert result["error"]["valid_alternatives"]
+        assert "results" not in result
+
+    async def test_targeted_disabled_engine_rejected(self, state: McpState) -> None:
+        """VAL-TARGET-003 — targeted search with a disabled engine returns invalid_scope as inactive."""
+        result = await t.slopsearx_search_targeted("hello", engines=["internetarchive"])
+
+        assert result["error"]["code"] == "invalid_scope"
+        assert result["error"]["field"] == "engines"
+        assert "inactive" in result["error"]["message"].lower()
+        assert result["error"]["valid_alternatives"]
+        assert "internetarchive" not in result["error"]["valid_alternatives"]
+        assert "results" not in result
+
+    async def test_targeted_empty_engine_list_rejected(self, state: McpState) -> None:
+        """VAL-TARGET-007 — targeted search with an empty engine list returns invalid_input, no routing."""
+        result = await t.slopsearx_search_targeted("hello", engines=[])
+
+        assert result["error"]["code"] == "invalid_input"
+        assert result["error"]["field"] == "engines"
+        assert "results" not in result
+
+    async def test_security_unknown_evidence_type_rejected(self, state: McpState) -> None:
+        """VAL-SPEC-007 — security search with unknown evidence_type returns invalid_input + alternatives."""
+        state.policy.enabled_tools["security"] = True
+        result = await t.slopsearx_search_security("log4j", evidence_types=["does_not_exist"])
+
+        assert result["error"]["code"] == "invalid_input"
+        assert result["error"]["field"] == "evidence_types"
+        assert result["error"]["valid_alternatives"]
+        assert "does_not_exist" in result["error"]["message"]
+        assert "results" not in result
+
+    async def test_science_unknown_source_type_rejected(self, state: McpState) -> None:
+        """VAL-SPEC-008 — science search with unknown source_type returns invalid_input + alternatives."""
+        state.policy.enabled_tools["science"] = True
+        result = await t.slopsearx_search_science("transformers", source_types=["not_a_source"])
+
+        assert result["error"]["code"] == "invalid_input"
+        assert result["error"]["field"] == "source_types"
+        assert result["error"]["valid_alternatives"]
+        assert "not_a_source" in result["error"]["message"]
+        assert "results" not in result
+
+
+# ---------------------------------------------------------------------------
 # FastMCP integration
 # ---------------------------------------------------------------------------
 
