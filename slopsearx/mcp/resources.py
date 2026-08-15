@@ -23,11 +23,23 @@ def render_capabilities() -> str:
         lines.append(f"- type: {cap.engine_type}")
         lines.append(f"- categories: {', '.join(cap.categories)}")
         lines.append(f"- auth class: {cap.auth_class}" + (", credentials configured" if cap.auth_configured else ""))
+        lines.append(f"- sensitive: {cap.sensitive}")
+        lines.append(f"- supported filters: {_render_supported_filters(cap.supported_filters)}")
+        lines.append(f"- supported result types: {', '.join(cap.supported_result_types)}")
+        lines.append(f"- failure classes: {', '.join(cap.failure_classes)}")
+        lines.append(f"- cost class: {cap.cost_class or 'unknown'}")
+        lines.append(f"- last known status: {cap.last_known_status}")
         lines.append(f"- scope hints: {', '.join(cap.scope_hints)}")
         if cap.caveats:
             lines.append(f"- caveats: {'; '.join(cap.caveats)}")
         lines.append("")
     return "\n".join(lines)
+
+
+def _render_supported_filters(supported: dict[str, bool]) -> str:
+    """Render supported_filters as 'language, time_range' (only the supported)."""
+    supported_keys = [key for key, value in supported.items() if value]
+    return ", ".join(supported_keys) if supported_keys else "none"
 
 
 def render_engine_capability(engine: str) -> str:
@@ -46,6 +58,12 @@ def render_engine_capability(engine: str) -> str:
         f"- type: {cap.engine_type}",
         f"- categories: {', '.join(cap.categories)}",
         f"- auth class: {cap.auth_class}" + (", credentials configured" if cap.auth_configured else ""),
+        f"- sensitive: {cap.sensitive}",
+        f"- supported filters: {_render_supported_filters(cap.supported_filters)}",
+        f"- supported result types: {', '.join(cap.supported_result_types)}",
+        f"- failure classes: {', '.join(cap.failure_classes)}",
+        f"- cost class: {cap.cost_class or 'unknown'}",
+        f"- last known status: {cap.last_known_status}",
         f"- scope hints: {', '.join(cap.scope_hints)}",
     ]
     if cap.caveats:

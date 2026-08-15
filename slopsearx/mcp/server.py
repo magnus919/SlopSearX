@@ -109,6 +109,7 @@ async def _lifespan(
         config=cfg,
         adapters=ctx.active_engines,
         required_key_engines=policy.required_key_engines,
+        sensitive_engines=policy.sensitive_engines,
     )
     for problem in validate_intent_profiles(catalog) + policy.validate(catalog):
         logger.warning("MCP startup problem: %s", problem)

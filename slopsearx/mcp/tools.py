@@ -477,12 +477,19 @@ async def _run_search(
     include_suggestions: bool,
     max_results: int | None = None,
     enforcement: dict[str, Any] | None = None,
+    core_filters: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Execute one search through the service and build the envelope.
 
     The full ranked set is captured as an immutable snapshot (for
     pagination); ``max_results`` is a presentation bound applied to the
     returned page only.
+
+    When ``enforcement`` is not supplied and ``core_filters`` is, the
+    filter-enforcement report is resolved against the **dispatched/executed
+    scope** (``response.scope.selected_engines``), never against all active
+    engines. This keeps the report consistent with the engine set that
+    actually ran once per-engine ``supported_filters`` are declared.
     """
     try:
         response = await state.service.search(request)
@@ -490,6 +497,9 @@ async def _run_search(
         return _error("invalid_input", str(exc), field="query")
     except RateLimitExceededError:
         return _error("rate_limited", "too many requests; please retry later")
+
+    if enforcement is None and core_filters is not None:
+        enforcement = _core_filter_enforcement(state, response.scope.selected_engines, **core_filters)
 
     # Capture the full ranked set as an immutable snapshot for pagination,
     # then present the bounded page. ``total`` is the aggregate captured
@@ -613,14 +623,10 @@ async def slopsearx_search(
     if isinstance(safesearch_check, list):
         warnings = warnings + safesearch_check
 
-    # Structured filter-enforcement report. When engines are resolved
-    # explicitly we use them; for auto/category routing we conservatively
-    # report against the active engines (no adapter supports these filters).
-    enforcement_engines = resolved_engines if resolved_engines is not None else sorted(state.ctx.active_engines)
-    enforcement = _core_filter_enforcement(
-        state, enforcement_engines, language=language, time_range=time_range, safesearch=safesearch
-    )
-
+    # Structured filter-enforcement report is resolved inside ``_run_search``
+    # against the dispatched/executed scope (response.scope.selected_engines),
+    # not against all active engines, so it stays consistent with the engine
+    # set that actually ran.
     return await _run_search(
         state,
         request,
@@ -628,7 +634,7 @@ async def slopsearx_search(
         warnings,
         include_suggestions="suggestions" in include_set,
         max_results=max_results,
-        enforcement=enforcement,
+        core_filters={"language": language, "time_range": time_range, "safesearch": safesearch},
     )
 
 
@@ -731,9 +737,6 @@ async def slopsearx_search_targeted(
     warnings = _filter_warnings(state, language, time_range)
     if isinstance(safesearch_check, list):
         warnings = warnings + safesearch_check
-    enforcement = _core_filter_enforcement(
-        state, engines, language=language, time_range=time_range, safesearch=safesearch
-    )
     return await _run_search(
         state,
         request,
@@ -741,7 +744,7 @@ async def slopsearx_search_targeted(
         warnings,
         include_suggestions=False,
         max_results=_bounded_max_results(state, max_results),
-        enforcement=enforcement,
+        core_filters={"language": language, "time_range": time_range, "safesearch": safesearch},
     )
 
 
@@ -1002,6 +1005,13 @@ async def slopsearx_list_capabilities(
             "categories": cap.categories,
             "subcategories": cap.subcategories,
             "enabled": cap.enabled,
+            "sensitive": cap.sensitive,
+            "supported_filters": cap.supported_filters,
+            "supported_result_types": cap.supported_result_types,
+            "failure_classes": cap.failure_classes,
+            "cost_class": cap.cost_class or None,
+            "last_known_status": cap.last_known_status,
+            "last_known_status_at": cap.last_known_status_at,
             "scope_hints": cap.scope_hints,
             "caveats": cap.caveats,
         }
@@ -1055,6 +1065,10 @@ async def slopsearx_explain_search_scope(
     return {
         "selected_engines": decision.selected_engines,
         "excluded_engines": [{"engine": e.engine, "reason": e.reason} for e in decision.excluded_engines],
+        "routing_reason": decision.routing_rule,
+        # Backward-compatible alias so preview and executed scope agree on
+        # the routing_reason field (schema pin) while older consumers that
+        # read routing_rule keep working.
         "routing_rule": decision.routing_rule,
         "matched_topic": decision.matched_topic,
         "requested_intent": requested_intent,

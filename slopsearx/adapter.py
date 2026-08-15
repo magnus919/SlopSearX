@@ -32,6 +32,22 @@ _SENSITIVE_QUERY_PARAMS: set[str] = {
     "access_token",
 }
 
+# Declarative capability vocabulary (design §4.6, capability-catalog feature).
+# These are the canonical, closed sets the live capability catalog and the
+# filter-enforcement report derive from. Adapters declare membership; the
+# catalog normalizes and fills stable defaults so every entry is complete.
+SUPPORTED_FILTER_KEYS: tuple[str, ...] = ("language", "time_range", "safesearch", "pagination")
+SUPPORTED_RESULT_TYPES: tuple[str, ...] = ("text", "answers", "corrections", "infoboxes", "media", "structured")
+FAILURE_CLASS_TOKENS: tuple[str, ...] = (
+    "ok",
+    "rate_limited",
+    "blocked",
+    "error",
+    "timeout",
+    "auth_required",
+    "unavailable",
+)
+
 
 def sanitize_url(url: str) -> str:
     """Strip known sensitive query parameters from a URL.
@@ -136,6 +152,24 @@ class EngineAdapter(ABC):
     env_prefix: str = ""  # e.g. "ENGINE_BRAVE"
     engine_type: str = "api"  # "api" | "scrape" | "structured"
     categories: list[str] = ["general"]  # SearXNG-compatible category tags
+
+    # -- Declarative capability metadata (design §4.6) --------------------
+    # These feed the live capability catalog and the filter-enforcement
+    # report. Subclasses override them; the catalog provides stable
+    # registry-derived defaults so an entry is always complete and honest
+    # even when an adapter does not declare anything.
+    sensitive: bool = False  # reaching this engine requires the sensitive-engine grant
+    supported_filters: dict[str, bool] = {}  # keys from SUPPORTED_FILTER_KEYS
+    supported_result_types: tuple[str, ...] = ("text",)  # subset of SUPPORTED_RESULT_TYPES
+    failure_classes: tuple[str, ...] = (
+        "rate_limited",
+        "blocked",
+        "error",
+        "timeout",
+        "auth_required",
+        "unavailable",
+    )  # subset of FAILURE_CLASS_TOKENS
+    cost_class: str = ""  # coarse operator-configured hint; "" = unknown (omitted)
 
     # Circuit-breaker defaults (can be overridden per-instance via config or env vars)
     CIRCUIT_BREAKER_THRESHOLD: int = 5  # consecutive errors before circuit opens
