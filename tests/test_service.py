@@ -421,7 +421,7 @@ class TestDispatch:
         outcome = response.engine_outcomes[0]
         assert outcome.status == "error"
         assert "secret" not in (outcome.message or "")
-        assert "api.example.com" in (outcome.message or "")
+        assert outcome.message == "Client error '403 Forbidden' for url 'https://api.example.com/search?q=x%27"
 
     async def test_circuit_open_engine_reported_as_error(self) -> None:
         engine = _CircuitOpenEngine()
