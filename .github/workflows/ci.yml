@@ -73,7 +73,7 @@ jobs:
         run: lint-imports
 
       - name: Unused dependency check with deptry
-        run: deptry . --per-rule-ignores "DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit,DEP003=starlette"
+        run: deptry . --per-rule-ignores "DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|fastmcp,DEP003=starlette"
 
   test:
     runs-on: ubuntu-latest

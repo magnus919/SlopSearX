@@ -1,5 +1,37 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+* add MCP server (`slopsearx-mcp`): 13 intent-level tools, capability
+  discovery, scope explanation, snapshot pagination, research jobs, and
+  bearer-token HTTP transport — see `docs/MCP_SERVER.md`
+* add remote gateway mode (`slopsearx-mcp --remote <url>`): a stdio MCP
+  server that proxies tools, resources, and prompts to a remote SlopSearX
+  MCP server over streamable HTTP, so the agent host needs no server wiring
+* add MCP OAuth 2.1 authorization-server mode (dynamic client registration,
+  PKCE, revocation) so OAuth-requiring clients such as Claude Web
+  connectors can connect; static bearer-token auth remains an alternative
+* add the matching OAuth 2.1 *client* flow to the gateway
+  (`slopsearx-mcp --remote <url> --oauth`): loopback-callback
+  authorization, PKCE, and token persistence in a 0600 file so later runs
+  reuse tokens without re-authorizing; `--oauth`/`--token` are mutually
+  exclusive
+* extract shared `SearchService`/`ScopeResolver` pipeline used by both the
+  HTTP API and the MCP server
+* scope cache keys to include categories, engines, page, and time range so
+  cached responses can never cross search scopes
+* add runtime capability catalog (`slopsearx/capabilities.py`) generated
+  from the live engine registry, with intent profiles and an operator
+  policy model for MCP grants, bounds, and sensitive engines
+
+### Documentation
+
+* add end-user and agent install/configuration guide for the MCP server
+  (`docs/MCP_SERVER.md`); reconcile the README engine table with the live
+  51-adapter registry
+
 ## [0.2.0](https://github.com/magnus919/SlopSearX/compare/v0.1.1...v0.2.0) (2026-07-02)
 
 

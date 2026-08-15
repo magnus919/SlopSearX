@@ -1,0 +1,688 @@
+# SlopSearX MCP Server
+
+The Model Context Protocol (MCP) server exposes SlopSearX to AI agents as
+intent-level tools. Agents can search across 51 engines without knowing URL
+query strings, discover what can be searched, preview routing before spending
+rate limits, page through stable result snapshots, and run bounded
+multi-query research jobs.
+
+The MCP server runs the **same pipeline** as the HTTP API
+(`slopsearx.service.SearchService`): identical scope resolution, ranking,
+deduplication, caching, and failure semantics. The HTTP API remains the
+SearXNG compatibility boundary; MCP is a second, agent-native surface.
+
+- **Tools (13):** intent search, targeted search, jobs, security, science,
+  capability listing, scope explanation, service status, snapshot reads,
+  research jobs (start/get/cancel).
+- **Resources:** `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
+  `slopsearx://routing-profiles`, `slopsearx://health/summary`.
+- **Prompts (4):** repeatable agent workflows that compose the tools.
+
+---
+
+## 1. Requirements
+
+| Requirement | Notes |
+|---|---|
+| Python ≥ 3.12 | Same as the rest of SlopSearX |
+| `slopsearx` installed | MCP support ships with the package (`fastmcp` dependency) |
+| Valkey (recommended) | Caching, rate limiting, snapshots, and research jobs persist here. Without Valkey the server still runs and searches work, but pagination cursors and research jobs are unavailable |
+| Engine API keys | Same `ENGINE_*_API_KEY` environment variables the HTTP service uses (e.g. `ENGINE_BRAVE_API_KEY`) |
+
+## 2. Installation
+
+```bash
+pip install -e ".[dev]"      # or: pip install slopsearx
+```
+
+Verify the server starts and lists its tools:
+
+```bash
+slopsearx-mcp --help 2>&1 | head -5   # no --help flag; use the client checks below
+```
+
+## 3. Configuration
+
+Configuration is layered: defaults → `config.yaml` `mcp:` section → `MCP_*`
+environment variables (env always wins). There is **no MCP-specific config
+file**; the `mcp:` section lives in the same `config.yaml` the HTTP service
+uses (`/etc/slopsearx/config.yaml` or the repo-root `config.yaml`).
+
+### 3.1 `config.yaml`
+
+```yaml
+mcp:
+  # Specialist tool grants — all disabled by default (secure default).
+  enabled_tools:
+    jobs: false
+    security: false
+    science: false
+    research: false
+  # Engines that generic routing must never reach accidentally. Only an
+  # explicit engines list (with the targeted grant) or the security tool
+  # (with its grant) can query them.
+  sensitive_engines: [hibp, dehashed]
+  # Engines whose adapters fail closed without credentials.
+  required_key_engines: [abuseipdb, brave, censys, dehashed, fred, hibp,
+                         intelx, otx, shodan, tmdb, virustotal, vulncheck]
+  # Bounds
+  max_query_length: 500
+  max_results: 50
+  snapshot_ttl_seconds: 3600        # pagination cursors expire after 1h
+  job_max_queries: 20
+  job_max_engines_per_query: 10
+  job_max_results: 500
+  job_default_deadline_seconds: 600
+  # Auth (HTTP transport only). Empty = authentication disabled; stdio is
+  # trusted by its process-launch boundary.
+  auth_token: ""
+  # Policy boundary (deliberate): allow slopsearx_search_targeted to reach
+  # sensitive engines (hibp, dehashed). Default false — agents get
+  # tool_disabled until the operator opts in.
+  targeted_sensitive_allowed: false
+  # OAuth 2.1 mode — the alternative to auth_token, required by OAuth-only
+  # clients such as Claude Web / ChatGPT connectors. When enabled, the
+  # server speaks standard MCP OAuth with dynamic client registration
+  # (PKCE + RFC 7591); auth_token is then ignored on the HTTP transport.
+  # issuer_url must be externally reachable by the client's browser.
+  oauth:
+    enabled: false
+    issuer_url: "https://mcp.example.com"
+    # service_documentation_url: "https://example.com/docs"
+    access_token_ttl_seconds: 3600
+    refresh_token_ttl_seconds: 2592000
+```
+
+### 3.2 Environment variables
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `MCP_TRANSPORT` | `stdio` | `stdio` or `http` |
+| `MCP_HOST` / `MCP_PORT` | `127.0.0.1` / `8000` | HTTP transport bind address |
+| `MCP_AUTH_TOKEN` | empty | Bearer token required by the HTTP transport (static-token mode) |
+| `MCP_OAUTH_ENABLED` | unset (false) | `1`/`true` enables OAuth 2.1 mode (alternative to the static token) |
+| `MCP_OAUTH_ISSUER_URL` | empty | externally reachable server URL — required when OAuth is enabled |
+| `MCP_OAUTH_SERVICE_DOCUMENTATION_URL` | empty | advertised docs URL in OAuth metadata |
+| `MCP_OAUTH_ACCESS_TOKEN_TTL_SECONDS` | `3600` | access-token lifetime |
+| `MCP_OAUTH_REFRESH_TOKEN_TTL_SECONDS` | `2592000` | refresh-token lifetime (30 days) |
+| `MCP_GRANT_JOBS` | unset (false) | `1`/`true` enables `slopsearx_search_jobs` |
+| `MCP_GRANT_SECURITY` | unset (false) | enables `slopsearx_search_security` and `intent=security` |
+| `MCP_GRANT_SCIENCE` | unset (false) | enables `slopsearx_search_science` |
+| `MCP_GRANT_RESEARCH` | unset (false) | enables research jobs |
+| `MCP_TARGETED_SENSITIVE_ALLOWED` | unset (false) | lets `slopsearx_search_targeted` query sensitive engines (`hibp`, `dehashed`); otherwise they are rejected with `tool_disabled` |
+| `MCP_MAX_QUERY_LENGTH` | `500` | max query characters |
+| `MCP_MAX_RESULTS` | `50` | presentation bound on result pages |
+| `MCP_SNAPSHOT_TTL_SECONDS` | `3600` | cursor TTL |
+| `MCP_JOB_MAX_QUERIES` | `20` | per-job query budget |
+| `MCP_JOB_MAX_ENGINES_PER_QUERY` | `10` | per-query engine budget |
+| `MCP_JOB_MAX_RESULTS` | `500` | job result budget |
+| `MCP_JOB_DEFAULT_DEADLINE_SECONDS` | `600` | default job deadline |
+| `MCP_SENSITIVE_ENGINES` | `hibp,dehashed` | comma-separated override |
+| `MCP_LOG_LEVEL` | `info` | uvicorn log level for HTTP transport |
+| `MCP_REMOTE_URL` | empty | gateway mode: remote server URL (`--remote`) |
+| `MCP_REMOTE_TOKEN` | empty | gateway client credential for a static-token remote (`--token`) |
+| `MCP_REMOTE_OAUTH` | false | gateway connects via the OAuth client flow (`--oauth`) |
+| `MCP_REMOTE_OAUTH_CALLBACK_PORT` | `8765` | gateway loopback redirect port (`--oauth-callback-port`) |
+| `MCP_REMOTE_OAUTH_NO_BROWSER` | false | gateway prints the authorize URL instead of opening a browser (`--oauth-no-browser`) |
+| `MCP_REMOTE_TOKEN_FILE` | empty | gateway token file path override (`--oauth-token-file`); defaults to `~/.config/slopsearx/oauth/<hash>.json` |
+
+Engine credentials, Valkey URL, and the HTTP service settings (`VALKEY_URL`,
+`MAX_CONCURRENT_ENGINES`, `PER_CLIENT_REQUESTS`, `FAIL_CLOSED`, …) are shared
+with the HTTP service and configure the same runtime.
+
+## 4. Running
+
+### 4.1 stdio (default — recommended for local agents)
+
+```bash
+slopsearx-mcp
+# or
+python -m slopsearx.mcp
+```
+
+The server speaks MCP over stdin/stdout. Point your MCP client at it (see
+§5). No auth: the launch boundary (whoever can spawn the process) is the
+trust boundary.
+
+### 4.2 HTTP (streamable)
+
+Local-only (default bind):
+
+```bash
+export MCP_TRANSPORT=http
+export MCP_AUTH_TOKEN=$(openssl rand -hex 24)   # strongly recommended
+slopsearx-mcp
+# → streamable HTTP on 127.0.0.1:8000, endpoint path /mcp
+```
+
+Remote clients (SlopSearX on a different host than the MCP client):
+
+```bash
+export MCP_TRANSPORT=http
+export MCP_HOST=0.0.0.0          # bind all interfaces so remote hosts can connect
+export MCP_PORT=8000
+export MCP_AUTH_TOKEN=$(openssl rand -hex 24)
+slopsearx-mcp
+# → http://<this-host>:8000/mcp
+```
+
+With a token set, every request must carry
+`Authorization: Bearer <token>`; requests without it get `401`. The token
+is the only boundary between the network and your engine credentials —
+when exposing the port beyond loopback, terminate TLS in front of the
+server (reverse proxy) so the token is not sent in plaintext, and restrict
+the port with a firewall to the expected clients where possible.
+
+### 4.3 Deployment options — the server host is your choice
+
+The MCP server is an ordinary SlopSearX process. Deploy it on the
+SlopSearX host however you run the rest of the service; the MCP client
+never cares, because it only needs the URL and token from §4.2.
+
+- **Native install** (shown in §4.1/§4.2): `pip install slopsearx`, then
+  run `slopsearx-mcp` or `python -m slopsearx.mcp`. Wrap it in a venv,
+  a systemd unit, or your process supervisor of choice.
+- **Docker**: the server runs in the same image as the HTTP service. For
+  remote clients, publish the port and bind all interfaces inside the
+  container:
+
+  ```bash
+  docker run -d --name slopsearx-mcp -e VALKEY_URL=redis://valkey:6379/0 \
+    -e MCP_TRANSPORT=http -e MCP_HOST=0.0.0.0 -e MCP_AUTH_TOKEN=change-me \
+    -p 8000:8000 \
+    ghcr.io/magnus919/slopsearx:latest slopsearx-mcp
+  # → http://<docker-host>:8000/mcp
+  ```
+
+The client-side MCP configuration (§4.2, §5) is identical regardless of
+which deployment you pick — it never depends on how the server host runs
+the process.
+
+### 4.4 Remote gateway (agent-host CLI)
+
+When the agent and the SlopSearX server are on different hosts, run
+`slopsearx-mcp` **on the agent's host** as a stdio gateway that holds a
+streamable-HTTP connection to the remote server:
+
+```text
+agent (Hermes) ──stdio──▶ slopsearx-mcp --remote …   (agent host)
+                              │ streamable HTTP + Bearer token
+                              ▼
+                    slopsearx-mcp (serve mode)        (SlopSearX host)
+```
+
+```bash
+# On the SlopSearX host (see §4.2):
+MCP_TRANSPORT=http MCP_HOST=0.0.0.0 MCP_AUTH_TOKEN=<token> slopsearx-mcp
+
+# On the agent's host (spawned by the MCP client over stdio):
+slopsearx-mcp --remote http://<slopsearx-host>:8000/mcp --token <token>
+# or: MCP_REMOTE_URL=… MCP_REMOTE_TOKEN=… slopsearx-mcp
+```
+
+The gateway re-exposes the remote server's tools, resources, and prompts
+(registered from its live capability list), so the agent sees the exact
+same surface as connecting directly. The agent host needs only this
+package — no Valkey, no engine API keys, no search wiring. If the remote
+server is unreachable or the credentials are wrong, the gateway fails at
+startup with a clear message.
+
+**Gateway authentication** matches the remote's mode:
+
+- **Static token** (remote runs in default serve mode): pass
+  `--token <token>` or `MCP_REMOTE_TOKEN` (prefer the env var so the token
+  does not appear in process listings). The token is a client credential
+  for the gateway process only.
+- **OAuth 2.1** (remote runs in OAuth mode, §4.5): pass `--oauth`:
+
+  ```bash
+  slopsearx-mcp --remote http://<slopsearx-host>:8000/mcp --oauth
+  # optional flags:
+  #   --oauth-callback-port 8765   loopback port for the redirect (default 8765)
+  #   --oauth-no-browser           print the authorize URL instead of opening a browser (headless hosts)
+  #   --oauth-token-file FILE      persist tokens here (default: ~/.config/slopsearx/oauth/<hash>.json)
+  ```
+
+  The gateway runs the standard MCP OAuth flow from the **agent's host**:
+  dynamic client registration (RFC 7591, public client + PKCE), then a
+  local loopback callback on `http://127.0.0.1:<port>/callback` that
+  receives the browser redirect. The authorize URL is printed to
+  **stderr** (stdout carries the MCP protocol) and a browser is opened
+  unless `--oauth-no-browser` is set. Tokens are persisted in a 0600 JSON
+  file, so later runs reuse them without re-authorizing.
+  `--oauth` and `--token` are mutually exclusive; the same flow is
+  available via `MCP_REMOTE_OAUTH`, `MCP_REMOTE_OAUTH_CALLBACK_PORT`,
+  `MCP_REMOTE_OAUTH_NO_BROWSER`, and `MCP_REMOTE_TOKEN_FILE` (§3.2).
+
+### 4.5 OAuth 2.1 mode (Claude Web / ChatGPT connectors)
+
+Remote MCP servers that OAuth-only clients connect to (Claude Web
+connectors, ChatGPT plugins, and Plaud-style connectors generally) require
+standard MCP OAuth 2.1 instead of a static bearer token. Enable it:
+
+```bash
+MCP_TRANSPORT=http MCP_HOST=0.0.0.0 \
+MCP_OAUTH_ENABLED=1 \
+MCP_OAUTH_ISSUER_URL=https://mcp.example.com \
+slopsearx-mcp
+```
+
+- `issuer_url` must be the URL the client's browser can reach (the
+  authorization redirects there); terminate TLS in front of the server for
+  anything beyond loopback.
+- The server then exposes the standard endpoints:
+  `/.well-known/oauth-authorization-server`, `/authorize`, `/token`,
+  `/register` (dynamic client registration, RFC 7591), and `/revoke`, and
+  protects `/mcp` with OAuth-issued bearer tokens.
+- SlopSearX has no user accounts, so authorization is **auto-approved** for
+  registered clients (PKCE + redirect-uri checks are enforced by the MCP
+  SDK) — possession of a registered client is the equivalent of possessing
+  the static token. Treat the network boundary accordingly.
+- OAuth state (clients, codes, tokens) lives in Valkey when available, so
+  tokens survive across replicas.
+- OAuth mode and `auth_token` are mutually exclusive: when OAuth is
+  enabled, the static token is ignored on the HTTP transport.
+
+## 5. Client setup
+
+### Claude (Desktop, Web, and mobile)
+
+Claude Desktop and Claude mobile accept a local stdio server —
+`claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "slopsearx": {
+      "command": "/path/to/slopsearx/.venv/bin/slopsearx-mcp"
+    }
+  }
+}
+```
+
+Claude **Web** (and web-based connectors) require OAuth for remote MCP
+servers — connect to a server running in OAuth mode (§4.5) via
+Customize → Connectors → add server with the metadata URL
+(`https://mcp.example.com/.well-known/oauth-authorization-server`); the
+connector runs the standard authorize flow in your browser.
+
+### Cursor
+
+Settings → MCP → Add new MCP server:
+
+```
+Command: /path/to/slopsearx/.venv/bin/slopsearx-mcp
+Transport: stdio
+```
+
+### Hermes Agent (Nous Research)
+
+Hermes reads MCP servers from `~/.hermes/config.yaml` under `mcp_servers`
+(see the [Hermes MCP docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp)).
+SlopSearX typically runs on a **separate host** from Hermes. Two remote
+setups work; the stdio gateway (option A) is the recommended one because
+Hermes only ever talks stdio to a local process.
+
+In both cases, the server side is identical — **1. Run the MCP server on
+the SlopSearX host** (see §4.2; deploy it however you run SlopSearX —
+native or Docker, §4.3):
+
+```bash
+MCP_TRANSPORT=http \
+MCP_HOST=0.0.0.0 \                 # bind all interfaces so the remote host can connect
+MCP_PORT=8000 \
+MCP_AUTH_TOKEN=<strong-random-token> \
+slopsearx-mcp
+```
+
+- **Server-side settings stay on the server.** `VALKEY_URL`, engine API
+  keys (`ENGINE_*_API_KEY`), MCP grants (`MCP_GRANT_*`), and bounds are
+  read by the server process from its own environment (or `config.yaml`)
+  on the SlopSearX host — exactly like the HTTP service. Hermes never
+  sees or needs any of them.
+- The token is the only boundary between the network and your engine
+  credentials. Terminate TLS in front of the server (reverse proxy) so
+  the bearer token is not sent in plaintext, and restrict the port with
+  a firewall to Hermes' host if possible.
+
+#### Option A (recommended): stdio gateway on the Hermes host
+
+Run `slopsearx-mcp` on the Hermes host as a gateway that connects to the
+remote server (§4.4). Hermes spawns it over stdio; the agent host needs
+only the package — no Valkey, no engine keys.
+
+`~/.hermes/config.yaml`:
+
+```yaml
+mcp_servers:
+  slopsearx:
+    command: "/path/to/slopsearx/.venv/bin/slopsearx-mcp"
+    args: ["--remote", "http://<slopsearx-host>:8000/mcp"]
+    env:
+      MCP_REMOTE_TOKEN: "<same-token-as-the-server>"   # or use a launcher wrapper
+```
+
+If the remote server runs in **OAuth mode** (§4.5), drop the token and let
+the gateway run the OAuth client flow instead:
+
+```yaml
+mcp_servers:
+  slopsearx:
+    command: "/path/to/slopsearx/.venv/bin/slopsearx-mcp"
+    args: ["--remote", "http://<slopsearx-host>:8000/mcp", "--oauth"]
+    env:
+      MCP_REMOTE_OAUTH_NO_BROWSER: "true"   # headless hosts: print the authorize URL
+```
+
+- The token is the gateway's client credential; keep it out of process
+  listings by using `MCP_REMOTE_TOKEN` (env) rather than `--token`, and
+  out of `config.yaml` if you prefer by launching via a wrapper script
+  or `${env:MCP_REMOTE_TOKEN}` from `~/.hermes/.env`.
+- In OAuth mode the first connection prints the authorize URL to the
+  gateway's stderr (visible in Hermes' gateway logs) and opens a browser
+  on the Hermes host; afterwards tokens persist in the gateway's token
+  file and later runs skip re-authorization.
+- The gateway registers the remote server's tools at startup; if the
+  server is unreachable or the credentials are wrong, the gateway fails
+  with a clear message and Hermes reports the connection error.
+
+#### Option B: direct HTTP
+
+Hermes connects straight to the remote MCP server (§4.2):
+
+```yaml
+mcp_servers:
+  slopsearx:
+    url: "http://<slopsearx-host>:8000/mcp"
+    headers:
+      Authorization: "Bearer <same-token-as-the-server>"
+```
+
+- The MCP endpoint is `/mcp` (e.g. `http://10.0.0.5:8000/mcp`).
+- **Static-token mode** (shown above): send the bearer token in
+  `headers`. **OAuth mode** (§4.5): omit the header and set `auth: oauth`
+  on the server entry — Hermes runs the standard MCP OAuth flow against
+  the server.
+- If Hermes' preflight content-type probe fails against a proxied
+  endpoint, add `skip_preflight: true` to the server entry.
+
+**Verify (either option):** start Hermes, then reload MCP config with
+`/reload-mcp` after any edit. Tools register as
+`mcp__slopsearx__slopsearx_search`, `mcp__slopsearx__slopsearx_read_results`,
+etc. (Hermes prefixes server tools with `mcp__<server>__`); resources and
+prompts auto-register as `mcp__slopsearx__read_resource` / `...__get_prompt`
+when supported.
+
+#### Local stdio (only when SlopSearX runs on the same host as Hermes)
+
+Use this instead when both run on one machine:
+
+```yaml
+# ~/.hermes/config.yaml
+mcp_servers:
+  slopsearx:
+    command: "/path/to/slopsearx/.venv/bin/slopsearx-mcp"
+    args: []
+```
+
+- Use the **absolute path** to the `slopsearx-mcp` executable in your
+  SlopSearX virtualenv; don't rely on PATH from Hermes' shell.
+- Server-side settings still stay on the server: configure them where
+  the process is launched (shell env, a wrapper script, systemd, or
+  Docker), not in Hermes' config. Example wrapper:
+
+  ```bash
+  #!/usr/bin/env bash
+  # /usr/local/bin/slopsearx-mcp-launch
+  export VALKEY_URL="redis://127.0.0.1:6379/0"   # server-side infrastructure
+  export ENGINE_BRAVE_API_KEY="..."              # engine credentials
+  export MCP_GRANT_JOBS="1"                      # opt-in specialist grants
+  exec /path/to/slopsearx/.venv/bin/slopsearx-mcp
+  ```
+
+  Point `command` at the wrapper. Without Valkey the server still runs
+  but degrades gracefully (no cache, rate-limit enforcement, snapshots,
+  or research jobs — see §10).
+- **Optional passthrough:** if you prefer to keep server settings in the
+  Hermes block anyway, the `env:` map is passed through to the server
+  subprocess as its environment (`${VAR}` is resolved from
+  `~/.hermes/.env`). Treat that as server configuration living in the
+  Hermes file — not as something Hermes needs to know.
+
+#### Narrow the surface with tool filters
+
+Only register the tools you want Hermes to see (original tool names;
+globs allowed — see the
+[Hermes config reference](https://hermes-agent.nousresearch.com/docs/reference/mcp-config-reference)).
+This works with both option A (gateway) and option B (direct HTTP):
+
+```yaml
+mcp_servers:
+  slopsearx:
+    # Option A (gateway): command + args
+    command: "/path/to/slopsearx/.venv/bin/slopsearx-mcp"
+    args: ["--remote", "http://<slopsearx-host>:8000/mcp"]
+    env:
+      MCP_REMOTE_TOKEN: "<same-token-as-the-server>"
+    # Option B (direct HTTP): url + headers instead of command/args/env
+    # url: "http://<slopsearx-host>:8000/mcp"
+    # headers:
+    #   Authorization: "Bearer <same-token-as-the-server>"
+    tools:
+      include:
+        - slopsearx_search
+        - slopsearx_search_targeted
+        - slopsearx_list_capabilities
+        - slopsearx_explain_search_scope
+        - slopsearx_read_results
+        - slopsearx_read_result
+```
+
+### Generic MCP client (MCP Inspector, custom)
+
+```bash
+npx @modelcontextprotocol/inspector -- /path/to/slopsearx/.venv/bin/slopsearx-mcp
+```
+
+## 6. Tools
+
+All tools return JSON. A search tool returns an envelope with `results`,
+`scope` (what was selected and why), `engine_outcomes` (which sources
+answered and which failed), and `meta` (query id, cache status, partial
+flag, rank explanation, pagination cursor, warnings).
+
+### 6.1 `slopsearx_search`
+
+Intent-based search — the primary entry point.
+
+| Parameter | Type | Notes |
+|---|---|---|
+| `query` | string, required | ≤ `max_query_length` chars |
+| `intent` | string | `auto` (default), `web`, `news`, `science`, `reference`, `code`, `social`, `historical`, `jobs`, `security`, `medical`, `finance`, `packages`, `media`, `legal`, `geography` |
+| `categories` | string[] | OR filter; overridden by `engines` |
+| `engines` | string[] | explicit override; must be known engines |
+| `language` | string | `en` default — **not enforced by adapters** (warning returned) |
+| `time_range` | string | `day`/`month`/`year` — **not enforced by adapters** (warning returned) |
+| `safesearch` | string | `off` (default), `moderate`, `strict`. **Strict fails closed**: no adapter enforces it |
+| `max_results` | int | presentation bound, capped at `MCP_MAX_RESULTS` |
+| `include` | string[] | subset of `results`, `suggestions`, `engine_status`, `diagnostics` |
+| `freshness` | string | `no_preference` (default), `prefer_cache`, `prefer_fresh` |
+
+### 6.2 `slopsearx_search_targeted`
+
+Deliberate, auditable selection of named engines. Unknown or inactive
+engines are rejected with a list of valid alternatives.
+
+> **Sensitive engines are gated by an operator grant.** The engines in
+> `mcp.sensitive_engines` (default: `hibp`, `dehashed`) are **never**
+> reachable through generic routing, categories, or intent profiles — that
+> is deliberate. If you name one in `slopsearx_search_targeted` without the
+> operator having set `MCP_TARGETED_SENSITIVE_ALLOWED=1` (or
+> `targeted_sensitive_allowed: true`), the tool returns `tool_disabled`
+> listing the rejected engines. This is a policy boundary, not a bug: the
+> operator must explicitly opt in before an agent can query breach and
+> credential-exposure sources through this tool. The security tool
+> (`slopsearx_search_security`) uses its own grant (`MCP_GRANT_SECURITY`)
+> for its evidence profiles, which include the same sensitive engines.
+
+### 6.3 `slopsearx_search_jobs` (grant: `MCP_GRANT_JOBS`)
+
+Company-first ATS search. `company` is required; `keywords`, `location`,
+`employment_type`, and `sources` (default `greenhouse,ashby,lever`) are
+supported. The tool builds the internal `"… at <company>"` query the ATS
+adapters understand. Current adapters return title, URL, and location/salary
+where available — **no full job descriptions and no cross-ATS global
+search** (stated in the response warnings).
+
+### 6.4 `slopsearx_search_security` (grant: `MCP_GRANT_SECURITY`)
+
+Threat-intelligence search. `evidence_types` (`vulnerability`, `exposure`,
+`reputation`, `malware`, `threat_intel`, `exploit`) resolve to engine
+profiles; `engines` overrides. Results are **search findings, not a
+complete security assessment** — absence from the selected engines does not
+mean absence of a vulnerability.
+
+### 6.5 `slopsearx_search_science` (grant: `MCP_GRANT_SCIENCE`)
+
+Research search. `source_types` (`papers`, `scholarly_index`, `biomedical`,
+`chemistry`, `datasets`, `general_reference`) resolve to engine profiles.
+Provenance and coverage are reported, but peer-review status and study
+quality are never inferred from search results.
+
+### 6.6 `slopsearx_list_capabilities`
+
+Generated from the live registry — never from prose. Filters: `family`,
+`category`, `include_disabled`, `include_auth_requirements` (auth class and
+whether credentials are configured; **never the key values**).
+
+### 6.7 `slopsearx_explain_search_scope`
+
+Dry-run routing preview: which engines would run, which were excluded and
+why, the routing rule, and the matched topic. Executes nothing and spends
+no rate limits — call it before dispatching a costly search.
+
+### 6.8 `slopsearx_get_service_status`
+
+Liveness, Valkey connectivity (and fail-closed state), engine inventory,
+snapshot/job store availability. `/health` does **not** probe external
+APIs — engine health is observed passively through search outcomes.
+
+### 6.9 `slopsearx_read_results` / 6.10 `slopsearx_read_result`
+
+Stable pagination over a captured snapshot. `cursor` comes from a previous
+search's `meta.cursor`; `read_results(cursor, page, max_results)` pages the
+captured evidence and never re-runs the query. `read_result(result_id)`
+expands one server-issued ID (`<cursor>:<index>`) with provenance and rank
+explanation. Arbitrary URLs are rejected — the server is not an SSRF page
+fetcher.
+
+### 6.11–6.13 Research jobs (grant: `MCP_GRANT_RESEARCH`)
+
+- `slopsearx_start_research(question, strategy, max_queries, max_engines_per_query, deadline, idempotency_key)` — strategies:
+  - `triangulate` — same question across independent source families
+  - `broad` — several source families
+  - `fresh` — recent material (`time_range` day/month)
+  - `counterevidence` — limitations, criticism, counterexamples
+  Returns a job handle immediately.
+- `slopsearx_get_job(job_id)` — state (`queued`, `running`, `partial`,
+  `succeeded`, `failed`, `cancelled`, `expired`), per-query progress,
+  query ids, and snapshot cursors for completed evidence.
+- `slopsearx_cancel_job(job_id)` — best-effort: stops undispatched
+  queries; in-flight upstream calls complete and their evidence stays
+  readable.
+
+Jobs are idempotent (caller-supplied `idempotency_key`), budget-bounded,
+and expire after 24h. Stale `running` jobs from a dead process are marked
+`expired` at startup.
+
+## 7. Resources and prompts
+
+Read resources instead of guessing: `slopsearx://capabilities`,
+`slopsearx://capabilities/{engine}`, `slopsearx://routing-profiles`,
+`slopsearx://health/summary`.
+
+Four prompts are bundled for repeatable workflows: `research_with_source_coverage`,
+`investigate_vulnerability`, `find_company_jobs`, `compare_package_or_project`.
+
+## 8. Agent usage guide
+
+- **Prefer intent over explicit engines.** `intent=auto` uses query-topic
+  routing with a tier-1 fallback. Preview it with `slopsearx_explain_search_scope`.
+- **Check `engine_outcomes`.** Partial results are normal — some sources
+  block, time out, or rate-limit. Absence from a source is not proof of
+  absence of the thing searched.
+- **Treat results as leads, not facts.** SlopSearX returns titles, URLs, and
+  snippets. It never fetches or verifies page bodies. The `score` is a
+  cross-engine presence signal (`tier_then_cross_engine_presence`), not
+  relevance confidence.
+- **Paginate with cursors.** `meta.cursor` → `slopsearx_read_results`.
+  Pages come from captured evidence; the query never re-runs.
+- **Do not invent engines.** Read `slopsearx://capabilities` for the live
+  set. Unknown engine names are rejected with alternatives.
+- **Respect filter honesty.** `language`, `time_range`, and `safesearch`
+  are not enforced by any adapter. Strict SafeSearch is refused rather than
+  silently claimed. Use `safesearch=moderate` at most, and treat the
+  warnings as authoritative.
+- **Specialist workflows need grants.** Jobs, security, science, and
+  research tools return a clear `tool_disabled` error until the operator
+  grants them — do not work around it.
+- **Sensitive engines are off-limits by default.** `hibp` and `dehashed`
+  are rejected by `slopsearx_search_targeted` unless the operator set
+  `MCP_TARGETED_SENSITIVE_ALLOWED=1`. A `tool_disabled` error naming those
+  engines means the operator has not opted in — do not try alternate
+  spellings or workarounds; report the grant requirement instead.
+
+## 9. Safety boundaries
+
+- **Sensitive engines (`hibp`, `dehashed`) require explicit operator
+  grants.** They are unreachable from generic, category, and intent
+  routing. `slopsearx_search_targeted` rejects them unless
+  `MCP_TARGETED_SENSITIVE_ALLOWED=1`; `slopsearx_search_security` can
+  include them only under its own `MCP_GRANT_SECURITY`. Operators should
+  treat granting either as authorizing queries against breach and
+  credential-exposure data.
+- API keys are never exposed: the catalog reports only `auth.class` and
+  `auth.configured`.
+- `read_results`/`read_result` accept only server-issued cursors/IDs —
+  never caller-supplied URLs.
+- Queries, engine fan-out, result pages, and job budgets are bounded.
+- **OAuth mode trusts the network boundary.** Authorization is
+  auto-approved for dynamically registered clients (no user accounts on
+  SlopSearX), so any client that can complete registration + PKCE gets
+  tokens — the same exposure as a published static token. Expose OAuth
+  mode only behind TLS and access controls, and treat the issuer URL as
+  public.
+- Audits of MCP searches use the tenant identifier (`mcp:<tenant>`) rather
+  than a client IP; raw queries are still retained per the shared audit
+  policy (90 days in Valkey).
+
+## 10. Operations
+
+- **Valkey is the only shared state.** Without it, searches degrade
+  gracefully (no cache, no rate-limit enforcement, no snapshots, no jobs).
+- **Versioning.** The MCP server reports the package version
+  (`importlib.metadata`), not the FastAPI app's `/health` version field.
+- **Metrics.** Per-tool call/error/latency counters appear on the HTTP
+  service's `/metrics` endpoint (`slopsearx_mcp_tool_*`) — operators only;
+  agents see `slopsearx_get_service_status` instead.
+- **Cache scoping.** Cached responses are keyed by query, language,
+  safesearch, categories, engines, page, and time range, so a cached
+  response always matches the requested scope.
+
+## 11. Troubleshooting
+
+| Symptom | Likely cause / fix |
+|---|---|
+| Remote client (e.g. Hermes) cannot connect | Server not bound for remote access (`MCP_HOST=0.0.0.0`), wrong port, token mismatch, or firewall; endpoint path is `/mcp` |
+| OAuth connector (Claude Web) cannot authorize | Server not in OAuth mode (`MCP_OAUTH_ENABLED=1` + `MCP_OAUTH_ISSUER_URL`); issuer URL not reachable from the browser; TLS not terminated in front of the server |
+| Gateway `--oauth` never prints an authorize URL | Callback port already in use by another process — pick a free one with `--oauth-callback-port`; verify the remote is in OAuth mode and reachable |
+| Gateway `--oauth` prints the URL but authorization times out | The browser never hit the callback (loopback port blocked or URL opened on a different host); use `--oauth-no-browser` and complete the redirect on the agent host |
+| Gateway re-authorizes on every run | The token file was not persisted — pass `--oauth-token-file FILE` (or `MCP_REMOTE_TOKEN_FILE`) to a stable path |
+| Tool returns `tool_disabled` | Grant missing: set `MCP_GRANT_JOBS/SECURITY/SCIENCE/RESEARCH=1` |
+| `slopsearx_search_targeted` returns `tool_disabled` naming `hibp`/`dehashed` | Sensitive engines need the targeted grant: `MCP_TARGETED_SENSITIVE_ALLOWED=1` (or `mcp.targeted_sensitive_allowed: true`) — deliberate policy boundary, not a bug |
+| `invalid_scope` with alternatives | Engine name typo or engine disabled in config |
+| `safesearch_unenforced` | No adapter enforces SafeSearch; use `moderate`/`off` |
+| `invalid_cursor` / `invalid_result_id` | Snapshot expired (TTL) or Valkey unavailable at search time |
+| `all_engines_failed` | Every selected engine failed; check `engine_outcomes` and retry |
+| Research job stuck `running` | Process died; jobs are marked `expired` at next startup |
+| No results but engines `ok` | Legitimate empty match (e.g. jobs tool without a company) |

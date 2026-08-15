@@ -165,6 +165,24 @@ server_errors_total = Counter(
     "Server errors by type (timeout, circuit_open, rate_limited, internal)",
 )
 
+# MCP surface telemetry — per-tool counts, latency, and structured errors.
+# Raw values are operator-facing (/metrics); the MCP layer never exposes
+# them to agents directly.
+mcp_tool_calls = Counter(
+    "slopsearx_mcp_tool_calls_total",
+    "MCP tool invocations per tool",
+)
+
+mcp_tool_errors = Counter(
+    "slopsearx_mcp_tool_errors_total",
+    "MCP tool errors per tool and error code",
+)
+
+mcp_tool_latency = Histogram(
+    "slopsearx_mcp_tool_latency_seconds",
+    "MCP tool latency per tool in seconds",
+)
+
 
 # --- Render all metrics ---
 
@@ -180,5 +198,8 @@ def render_metrics() -> str:
         server_requests_by_category.render(),
         server_requests_by_format.render(),
         server_errors_total.render(),
+        mcp_tool_calls.render(),
+        mcp_tool_errors.render(),
+        mcp_tool_latency.render(),
     ]
     return "".join(parts)

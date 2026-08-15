@@ -36,12 +36,36 @@ def normalize_query(query: str) -> str:
     return norm.lower().strip()
 
 
-def cache_key(query: str, language: str = "en", safesearch: int = 0) -> str:
-    """Build deterministic cache key from normalized query tuple."""
+def cache_key(
+    query: str,
+    language: str = "en",
+    safesearch: int = 0,
+    *,
+    categories: list[str] | None = None,
+    engines: list[str] | None = None,
+    pageno: int = 1,
+    time_range: str | None = None,
+) -> str:
+    """Build deterministic cache key from normalized query tuple.
+
+    The key includes every result-affecting input. Categories, engines,
+    page, and time range were previously excluded, which could serve a
+    cached response that did not represent the requested filters — two
+    semantically different searches could share one entry. Scope inputs
+    are sorted so equivalent requests produce identical keys.
+    """
     norm_query = normalize_query(query)
-    norm = "{}|{}|{}".format(norm_query, language, safesearch)
+    scope = "|".join(
+        [
+            ",".join(sorted(categories)) if categories else "-",
+            ",".join(sorted(engines)) if engines else "-",
+            str(pageno),
+            time_range or "-",
+        ]
+    )
+    norm = f"{norm_query}|{language}|{safesearch}|{scope}"
     digest = hashlib.sha256(norm.encode()).hexdigest()
-    return "search:{}".format(digest)
+    return f"search:{digest}"
 
 
 def _answer_cache_key(query: str) -> str:
