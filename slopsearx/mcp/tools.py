@@ -27,6 +27,7 @@ from slopsearx.service import (
     ScopeResolver,
     SearchRequest,
 )
+from slopsearx.snapshot import SearchSnapshot
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -84,6 +85,16 @@ SOURCE_TYPE_ENGINES: dict[str, list[str]] = {
 }
 
 RANKING_EXPLANATION = "tier_then_cross_engine_presence"
+
+# The compact card snippet length (progressive disclosure). Full content is
+# a result-record concern; cards carry only the first N chars.
+SNIPPET_LENGTH = 300
+
+# Explicit, honest note on every expanded record: SlopSearX surfaces search
+# evidence but never fetches or verifies the linked page.
+NON_VERIFICATION_NOTE = "SlopSearX did not fetch or verify the linked page"
+
+CONTENT_UNAVAILABLE_NOTE = "full content unavailable (adapter returned snippet only)"
 
 JOBS_ADAPTERS = ("greenhouse", "ashby", "lever")
 
@@ -295,14 +306,28 @@ def _core_filter_enforcement(
     return report
 
 
-def _result_to_dict(result: SearchResult) -> dict[str, Any]:
-    """Normalize one result for MCP output (design §3.1)."""
-    return {
+def _source_engines(result: SearchResult) -> list[str]:
+    """Sorted, duplicate-free list of contributing engine names.
+
+    Falls back to the primary engine when ``engines`` is empty so the
+    cross-engine presence signal is always a non-empty name list.
+    """
+    return sorted(result.engines) if result.engines else [result.engine]
+
+
+def _result_to_dict(result: SearchResult, *, result_id: str | None = None) -> dict[str, Any]:
+    """Normalize one result into a compact triage card (design §3.1).
+
+    Cards carry triage fields plus a stable server-issued ``result_id``.
+    Full ``content``, ``thumbnail``, and ``img_src`` belong to the expanded
+    record (progressive disclosure), never the card.
+    """
+    card = {
         "title": result.title,
         "url": result.url,
-        "snippet": (result.content or "")[:300],
-        "source_engines": sorted(result.engines) if result.engines else [result.engine],
-        "source_count": len(result.engines) if result.engines else 1,
+        "snippet": (result.content or "")[:SNIPPET_LENGTH],
+        "source_engines": _source_engines(result),
+        "source_count": len(_source_engines(result)),
         "primary_engine": result.engine,
         "category": result.category,
         "published_at": result.published_date,
@@ -311,6 +336,55 @@ def _result_to_dict(result: SearchResult) -> dict[str, Any]:
         "tier": result.tier,
         "citation": {"label": result.title, "url": result.url},
     }
+    if result_id is not None:
+        card["result_id"] = result_id
+    return card
+
+
+def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: str) -> dict[str, Any]:
+    """Build the full result record for ``slopsearx_read_result``.
+
+    Reveals strictly more than the card: complete normalized ``content``,
+    media fields, every contributing engine, provenance, a
+    ``content_available`` flag, and an explicit non-verification note.
+    """
+    content = result.content or ""
+    source_engines = _source_engines(result)
+    content_available = len(content) > SNIPPET_LENGTH
+    record = {
+        "result_id": result_id,
+        "title": result.title,
+        "url": result.url,
+        "content": content,
+        "content_available": content_available,
+        "thumbnail": result.thumbnail,
+        "img_src": result.img_src,
+        "source_engines": source_engines,
+        "source_count": len(source_engines),
+        "primary_engine": result.engine,
+        "category": result.category,
+        "published_at": result.published_date,
+        "tier": result.tier,
+        "position": result.position,
+        "score": result.score,
+        "citation": {"label": result.title, "url": result.url},
+        "provenance": {
+            "query": snapshot.query,
+            "query_id": snapshot.query_id,
+            "rank_explanation": RANKING_EXPLANATION,
+            "source_engines": source_engines,
+        },
+        "snapshot": {
+            "cursor": snapshot.snapshot_id,
+            "query": snapshot.query,
+            "query_id": snapshot.query_id,
+            "total": snapshot.total,
+        },
+        "note": NON_VERIFICATION_NOTE,
+    }
+    if not content_available:
+        record["content_unavailable_note"] = CONTENT_UNAVAILABLE_NOTE
+    return record
 
 
 def _envelope(
@@ -342,7 +416,13 @@ def _envelope(
         )
     return {
         "query": response.query,
-        "results": [_result_to_dict(result) for result in response.results],
+        "results": [
+            _result_to_dict(
+                result,
+                result_id=(f"{cursor}:{index}" if cursor else None),
+            )
+            for index, result in enumerate(response.results)
+        ],
         "scope": {
             "requested_intent": requested_intent,
             "resolved_categories": response.scope.resolved_categories,
@@ -1019,7 +1099,10 @@ async def slopsearx_read_results(
         "query": snapshot.query,
         "cursor": cursor,
         "page": page,
-        "results": [_result_to_dict(result) for result in page_results],
+        "results": [
+            _result_to_dict(result, result_id=f"{cursor}:{start + index}")
+            for index, result in enumerate(page_results)
+        ],
         "meta": {
             "total": snapshot.total,
             "has_more": end < snapshot.total,
@@ -1029,10 +1112,12 @@ async def slopsearx_read_results(
 
 
 async def slopsearx_read_result(result_id: str) -> dict[str, Any]:
-    """Expand one server-issued result ID from a snapshot.
+    """Expand one server-issued result ID into a full result record.
 
-    Includes provenance (query, engines, rank explanation). SlopSearX
-    does not fetch or verify the full page body.
+    Returns complete content (not the card snippet), media fields, every
+    contributing engine, provenance, a ``content_available`` flag, and an
+    explicit note that SlopSearX did not fetch or verify the linked page.
+    Served from the immutable snapshot — the search is not re-executed.
     """
     state = get_state()
     if ":" not in result_id:
@@ -1051,16 +1136,7 @@ async def slopsearx_read_result(result_id: str) -> dict[str, Any]:
     if index >= len(snapshot.results):
         return _error("invalid_result_id", "result index out of range", field="result_id")
 
-    result = snapshot.results[index]
-    expanded = _result_to_dict(result)
-    expanded["provenance"] = {
-        "query": snapshot.query,
-        "query_id": snapshot.query_id,
-        "source_engines": sorted(result.engines) if result.engines else [result.engine],
-        "rank_explanation": RANKING_EXPLANATION,
-    }
-    expanded["note"] = "SlopSearX did not fetch or verify the full page body"
-    return expanded
+    return _result_record(snapshot.results[index], snapshot, result_id)
 
 
 # ---------------------------------------------------------------------------
