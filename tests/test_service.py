@@ -498,6 +498,24 @@ class TestDispatch:
         assert response.all_unresponsive is True
         assert response.engine_outcomes[0].status == "timeout"
 
+    async def test_semaphore_wait_timeout_is_not_reported_as_engine_timeout(self) -> None:
+        """An engine that never starts is unavailable, not an upstream timeout."""
+        service = _service(engines={"okeng": _OkEngine()})
+        started = {"okeng"}
+
+        async def _pending() -> AdapterResponse:
+            await asyncio.sleep(60)
+            raise AssertionError("pending task unexpectedly completed")
+
+        first = asyncio.create_task(_pending())
+        second = asyncio.create_task(_pending())
+        results = await service._gather_with_deadline(
+            [first, second], ["okeng", "second"], deadline_s=0.01, started_engines=started
+        )
+
+        assert results[0].status.value == "timeout"
+        assert results[1].status.value == "unavailable"
+
     async def test_overall_deadline_drains_cancelled_tasks(self) -> None:
         """Deadline cancellation drains child tasks before returning the response."""
         slow = _OkEngine(delay=30.0)

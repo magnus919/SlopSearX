@@ -539,7 +539,9 @@ class SearchService:
             [DEFAULT_SEARCH_TIMEOUT_S]
             + [self._resolve_engine_timeout_s(engine) for engine in target.values() if engine.circuit_allowed()]
         )
-        dispatch_results = await self._gather_with_deadline(tasks, engine_names, dispatch_deadline_s)
+        dispatch_results = await self._gather_with_deadline(
+            tasks, engine_names, dispatch_deadline_s, started_engines
+        )
 
         # Collect results and metadata
         responses: dict[str, AdapterResponse] = {}
@@ -782,12 +784,15 @@ class SearchService:
         tasks: list[asyncio.Task[AdapterResponse]],
         engine_names: list[str],
         deadline_s: float = DEFAULT_SEARCH_TIMEOUT_S,
+        started_engines: set[str] | None = None,
     ) -> list[Any]:
         """Gather engine dispatch tasks under an overall deadline.
 
         Cancels any task still running after ``DEFAULT_SEARCH_TIMEOUT_S`` so a
         single slow engine cannot hold the whole fan-out hostage, and returns a
-        ``TIMEOUT`` AdapterResponse for each cancelled engine.
+        A started engine that misses the deadline receives ``TIMEOUT``;
+        an engine still waiting for the dispatch semaphore receives
+        ``UNAVAILABLE`` so scheduler delay is not reported as upstream failure.
 
         Per-engine exceptions are isolated: ``Task.result()`` re-raises a stored
         exception, so we catch it and classify it as ``EngineStatus.ERROR`` —
@@ -821,11 +826,16 @@ class SearchService:
                 results[name] = raw
         for name in engine_names:
             if name not in results:
+                started = started_engines is None or name in started_engines
                 results[name] = AdapterResponse(
                     results=[],
-                    status=EngineStatus.TIMEOUT,
-                    error_message=f"timed out after {deadline_s}s",
-                    latency_ms=deadline_s * 1000,
+                    status=EngineStatus.TIMEOUT if started else EngineStatus.UNAVAILABLE,
+                    error_message=(
+                        f"timed out after {deadline_s}s"
+                        if started
+                        else "not started before the search deadline"
+                    ),
+                    latency_ms=deadline_s * 1000 if started else 0.0,
                 )
         return [results[name] for name in engine_names]
 
