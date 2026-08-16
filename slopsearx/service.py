@@ -68,6 +68,10 @@ DEFAULT_TIER1_ENGINES: frozenset[str] = frozenset(
 )
 
 DEFAULT_ENGINE_TIMEOUT_S = 3.0
+# Overall cap on a single search's engine fan-out. Bounds total dispatch time
+# even when individual engines honor longer configured timeouts, so one slow
+# engine (e.g. intelx at 15s) cannot hold an unscoped search hostage.
+DEFAULT_SEARCH_TIMEOUT_S = 10.0
 
 # ---------------------------------------------------------------------------
 # Request / response model
@@ -524,7 +528,7 @@ class SearchService:
         if self._ctx.suggestion_service is not None:
             suggestions_task = asyncio.create_task(self._generate_suggestions(request.query))
 
-        dispatch_results = await asyncio.gather(*tasks, return_exceptions=True)
+        dispatch_results = await self._gather_with_deadline(tasks, engine_names, target)
 
         # Collect results and metadata
         responses: dict[str, AdapterResponse] = {}
@@ -714,9 +718,7 @@ class SearchService:
         returned as EngineStatus.TIMEOUT.
         """
         del name
-        engine_timeout_ms = engine.config.get("timeout_ms")
-        if timeout_s is None:
-            timeout_s = (float(engine_timeout_ms) / 1000.0) if engine_timeout_ms else DEFAULT_ENGINE_TIMEOUT_S
+        timeout_s = timeout_s if timeout_s is not None else self._resolve_engine_timeout_s(engine)
         try:
             return await asyncio.wait_for(engine.search(query, params), timeout=timeout_s)
         except asyncio.TimeoutError:
@@ -745,12 +747,62 @@ class SearchService:
     ) -> AdapterResponse:
         """Dispatch engine query, bounded by the global semaphore."""
         if timeout_s is None:
-            engine_timeout_ms = engine.config.get("timeout_ms")
-            timeout_s = (float(engine_timeout_ms) / 1000.0) if engine_timeout_ms else DEFAULT_ENGINE_TIMEOUT_S
+            timeout_s = self._resolve_engine_timeout_s(engine)
         if self._ctx.engine_semaphore is not None:
             async with self._ctx.engine_semaphore:
                 return await self._dispatch_engine(name, engine, query, params, timeout_s)
         return await self._dispatch_engine(name, engine, query, params, timeout_s)
+
+    @staticmethod
+    def _resolve_engine_timeout_s(engine: EngineAdapter) -> float:
+        """Resolve an engine's dispatch timeout from its configured ``timeout_ms``.
+
+        Never raises: a missing, non-numeric, or non-positive ``timeout_ms``
+        falls back to :data:`DEFAULT_ENGINE_TIMEOUT_S`.
+        """
+        try:
+            ms = float(engine.config.get("timeout_ms") or 0.0)
+            if ms > 0:
+                return ms / 1000.0
+        except (TypeError, ValueError):
+            pass
+        return DEFAULT_ENGINE_TIMEOUT_S
+
+    async def _gather_with_deadline(
+        self,
+        tasks: list[asyncio.Task[AdapterResponse]],
+        engine_names: list[str],
+        target: dict[str, EngineAdapter],
+    ) -> list[Any]:
+        """Gather engine dispatch tasks under an overall deadline.
+
+        Cancels any task still running after ``DEFAULT_SEARCH_TIMEOUT_S`` so a
+        single slow engine cannot hold the whole fan-out hostage, and returns a
+        ``TIMEOUT`` AdapterResponse for each cancelled engine.
+        """
+        if not tasks:
+            return []
+        done, pending = await asyncio.wait(tasks, timeout=DEFAULT_SEARCH_TIMEOUT_S)
+        for task in pending:
+            task.cancel()
+        results: dict[str, AdapterResponse] = {}
+        for task in done:
+            raw = task.result()
+            if isinstance(raw, BaseException):
+                results[engine_names[tasks.index(task)]] = AdapterResponse(
+                    results=[], status=EngineStatus.ERROR, error_message=sanitize_url(str(raw))
+                )
+            else:
+                results[engine_names[tasks.index(task)]] = raw
+        for name in engine_names:
+            if name not in results:
+                results[name] = AdapterResponse(
+                    results=[],
+                    status=EngineStatus.TIMEOUT,
+                    error_message=f"timed out after {DEFAULT_SEARCH_TIMEOUT_S}s",
+                    latency_ms=DEFAULT_SEARCH_TIMEOUT_S * 1000,
+                )
+        return [results[name] for name in engine_names]
 
     # -- Helpers --------------------------------------------------------
 

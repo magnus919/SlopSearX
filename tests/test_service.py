@@ -476,6 +476,28 @@ class TestDispatch:
         assert response.all_unresponsive is True
         assert response.engine_outcomes[0].status == "timeout"
 
+    async def test_dispatch_never_raises_on_bad_timeout_ms(self) -> None:
+        """A non-numeric timeout_ms falls back to the default instead of raising."""
+        slow = _OkEngine(delay=0.0)
+        slow.config = {"timeout_ms": "not-a-number"}
+        service = _service(engines={"okeng": slow}, tier1={"okeng"})
+
+        response = await service.search(_req())
+
+        assert response.all_unresponsive is False
+        assert response.engine_outcomes[0].status == "ok"
+
+    async def test_overall_deadline_caps_fanout(self) -> None:
+        """A slow engine is cut at the overall deadline, not allowed to hang the search."""
+        slow = _OkEngine(delay=30.0)
+        slow.config = {"timeout_ms": 60_000}  # would otherwise wait 60s
+        service = _service(engines={"okeng": slow})
+
+        response = await service.search(_req())
+
+        assert response.all_unresponsive is True
+        assert response.engine_outcomes[0].status == "timeout"
+
 
 # ---------------------------------------------------------------------------
 # SearchService — rate limiting
