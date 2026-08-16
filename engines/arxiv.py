@@ -92,6 +92,9 @@ class ArxivAdapter(EngineAdapter):
                     resp = await client.get(redirected_url, headers=headers)
                     latency = (time.monotonic() - start_time) * 1000
 
+                    if resp.status_code == 429:
+                        return AdapterResponse(results=[], status=EngineStatus.RATE_LIMITED, latency_ms=latency)
+
                 resp.raise_for_status()
 
                 results = self._parse_feed(resp.text, query)

@@ -538,6 +538,23 @@ class TestArxivAdapter:
         assert result.status == EngineStatus.ERROR
         assert "redirect rejected" in (result.error_message or "")
 
+    async def test_search_classifies_redirected_rate_limit(self, adapter):
+        adapter.config["base_url"] = "http://export.arxiv.org/api/query"
+
+        def handler(request):
+            if request.url.scheme == "http":
+                return httpx.Response(
+                    301,
+                    headers={"Location": "https://export.arxiv.org/api/query"},
+                    request=request,
+                )
+            return httpx.Response(429, request=request)
+
+        async with MockHTTP(handler):
+            result = await adapter.search("transformer")
+        assert result.status == EngineStatus.RATE_LIMITED
+        assert result.results == []
+
     async def test_search_rate_limited(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(429)):
             result = await adapter.search("test")
