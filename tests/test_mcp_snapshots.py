@@ -61,13 +61,31 @@ class TestSnapshotStore:
         assert snapshot.tenant == "t1"
         assert snapshot.results[0].engines == {"brave", "wikipedia"}
         assert snapshot.results[0].published_date == "2026-01-01"
-        assert store.set_ttls == [120]
+        assert store.set_ttls == [snapshots.store_ttl_seconds]
 
     async def test_ttl_applied(self) -> None:
         store = _FakeStore()
         snapshots = SnapshotStore(store, ttl_seconds=3600)
         await snapshots.create("q", "ssx-1", _results(1), ScopeDecision())
-        assert store.set_ttls == [3600]
+        assert store.set_ttls == [snapshots.store_ttl_seconds]
+
+    async def test_store_ttl_exceeds_expires_at_horizon(self) -> None:
+        """research-snapshot-hardening (a): backing key TTL outlives expires_at.
+
+        On real Valkey the key is evicted at ``created_at + store_ttl``. For
+        ``expired_handle`` to be reachable the store TTL must exceed the
+        logical ``expires_at`` offset (``created_at + snapshot_ttl``), so the
+        payload is still present and classified ``expired`` after expiry rather
+        than evicted/``unknown``.
+        """
+        store = _FakeStore()
+        snapshots = SnapshotStore(store, ttl_seconds=120)
+        snapshot_id = await snapshots.create("q", "ssx-1", _results(1), ScopeDecision())
+        payload = store._data[f"mcp:snapshot:default:{snapshot_id}"]
+        expires_offset = payload["expires_at"] - payload["created_at"]
+        assert expires_offset == 120
+        assert store.set_ttls[0] > expires_offset
+        assert store.set_ttls[0] == snapshots.store_ttl_seconds
 
     async def test_unknown_snapshot_returns_none(self) -> None:
         store = _FakeStore()

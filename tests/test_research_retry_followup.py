@@ -306,6 +306,58 @@ class TestRetry:
         # zero re-execution
         assert state.ctx.active_engines["brave"].calls == 1
 
+    async def test_retry_deadline_passed_finalizes_to_expired(self, state: McpState) -> None:
+        """research-snapshot-hardening (c) — a deadline-passed retry finalizes to expired.
+
+        Instead of re-running (which would end in ``partial``/``failed`` when
+        the deadline check fires mid-run), a retry on a job whose deadline has
+        already passed must finalize the job to ``expired`` and re-execute no
+        subqueries.
+        """
+        state.ctx.active_engines["wikipedia"] = _MockEngine("wikipedia", status=EngineStatus.ERROR)
+        job = await _persist_and_run(
+            state,
+            [ResearchQuery(index=0, query="fail", intent="web", engines=["wikipedia"])],
+        )
+        assert _run_query(job, 0).state == "failed"
+        wiki_calls = state.ctx.active_engines["wikipedia"].calls
+
+        # Push the deadline into the past, then retry.
+        job.deadline = time.time() - 10
+        await state.job_store.save(job)
+
+        result = await t.slopsearx_retry_research(job.job_id)
+        assert "error" not in result
+        assert result["state"] == "expired"
+        assert "deadline" in result["note"]
+
+        job = await state.job_store.load(job.job_id)
+        assert job is not None
+        assert job.state == "expired"
+        # No subquery was re-executed and the failed query is unchanged.
+        assert state.ctx.active_engines["wikipedia"].calls == wiki_calls
+        assert _run_query(job, 0).state == "failed"
+
+    async def test_retry_terminal_cancelled_job_not_resurrected(self, state: McpState) -> None:
+        """research-snapshot-hardening (c) — a cancelled job is never resurrected by retry."""
+        state.ctx.active_engines["wikipedia"] = _MockEngine("wikipedia", status=EngineStatus.ERROR)
+        job = await _persist_and_run(
+            state,
+            [ResearchQuery(index=0, query="fail", intent="web", engines=["wikipedia"])],
+        )
+        assert _run_query(job, 0).state == "failed"
+        # Mark the whole job cancelled (terminal) even though a failed query exists.
+        job.state = "cancelled"
+        await state.job_store.save(job)
+        wiki_calls = state.ctx.active_engines["wikipedia"].calls
+
+        result = await t.slopsearx_retry_research(job.job_id)
+        assert "error" not in result
+        assert result["state"] == "cancelled"
+        assert "not retried" in result["note"]
+        # No re-execution happened.
+        assert state.ctx.active_engines["wikipedia"].calls == wiki_calls
+
 
 # ---------------------------------------------------------------------------
 # VAL-RESEARCH-009 / 015 / 020 — bounded, validated follow-up
@@ -381,6 +433,27 @@ class TestExtend:
         job = await state.job_store.load(job.job_id)
         assert job is not None
         assert len(job.queries) == 1
+
+    async def test_extend_explicit_engines_capped_to_per_query_bound(self, state: McpState) -> None:
+        """research-snapshot-hardening (b) — explicit engines list is capped.
+
+        In parity with the intent path, an explicit engine list in extend must
+        be capped to ``job_max_engines_per_query`` rather than appended whole.
+        """
+        state.policy.job_max_engines_per_query = 2
+        job = await _persist_and_run(state, [ResearchQuery(index=0, query="q", intent="web", engines=["brave"])])
+        result = await t.slopsearx_extend_research(
+            job.job_id,
+            "followup",
+            engines=["brave", "wikipedia", "duckduckgo", "arxiv"],
+        )
+        assert "error" not in result
+        job = await state.job_store.load(job.job_id)
+        assert job is not None
+        new_q = job.queries[-1]
+        assert len(new_q.engines) == 2
+        assert new_q.engines == ["brave", "wikipedia"]
+        assert len(set(new_q.engines)) == 2
 
     async def test_extend_invalid_intent_rejected(self, state: McpState) -> None:
         """VAL-RESEARCH-020 — unknown follow-up intent rejected with alternatives."""

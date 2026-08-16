@@ -23,6 +23,14 @@ from slopsearx.service import ScopeDecision, search_result_from_dict, search_res
 
 SNAPSHOT_KEY_PREFIX = "mcp:snapshot"
 
+# How much longer the backing-store key lives than the snapshot's logical
+# ``expires_at`` horizon. The store TTL must EXCEED the ``expires_at`` offset
+# so the payload is still present (and classified ``expired``) on real Valkey
+# after ``expires_at`` passes — otherwise the key is evicted at the exact
+# moment it becomes "expired" and ``read()`` would surface ``unknown``
+# instead of ``expired_handle`` (VAL-EXPAND-015).
+SNAPSHOT_STORE_TTL_MARGIN_SECONDS = 300
+
 
 class KeyValueStore(Protocol):
     """Minimal cache-like interface (SearchCache satisfies this)."""
@@ -84,6 +92,17 @@ class SnapshotStore:
         self._ttl = ttl_seconds
 
     @property
+    def store_ttl_seconds(self) -> int:
+        """Backing-store TTL, deliberately longer than the snapshot horizon.
+
+        The snapshot is logically "expired" at ``expires_at`` (``_ttl`` after
+        creation), but the store key must outlive that point so a real Valkey
+        keeps the payload around long enough to report ``expired_handle`` with
+        expiry metadata instead of an evicted/unknown handle.
+        """
+        return self._ttl + SNAPSHOT_STORE_TTL_MARGIN_SECONDS
+
+    @property
     def available(self) -> bool:
         """Whether snapshots can be created (Valkey connected)."""
         return self._store is not None and self._store.is_connected
@@ -119,7 +138,10 @@ class SnapshotStore:
             "created_at": created_at,
             "expires_at": created_at + self._ttl,
         }
-        await store.set(self._key(snapshot_id), payload, self._ttl)
+        # Store TTL exceeds the logical expires_at horizon (see
+        # ``store_ttl_seconds``) so expired snapshots remain reachable on real
+        # Valkey and surface ``expired_handle`` rather than ``invalid_cursor``.
+        await store.set(self._key(snapshot_id), payload, self.store_ttl_seconds)
         return snapshot_id
 
     async def read(self, snapshot_id: str) -> SnapshotRead:

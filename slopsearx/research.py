@@ -507,6 +507,12 @@ class ResearchJobRunner:
     async def retry(self, job_id: str) -> ResearchJob | None:
         """Re-run only failed/empty subqueries (VAL-RESEARCH-008).
 
+        Gated on the job's deadline/terminal state: a job that is already
+        ``cancelled``/``expired`` is left untouched (never resurrected), and a
+        job whose deadline has already passed is finalized to ``expired``
+        rather than re-run (which would otherwise end in ``partial``/``failed``
+        when the deadline check fires mid-run).
+
         Successful subqueries are never re-executed and their snapshot
         cursors are byte-for-byte unchanged. Each retried subquery gets a
         NEW linked attempt appended; the original attempt's cursor remains
@@ -515,8 +521,21 @@ class ResearchJobRunner:
         job = await self._jobs.load(job_id)
         if job is None:
             return None
+        # Terminal-state gate: never resurrect a cancelled or expired job.
+        if job.state in ("cancelled", "expired"):
+            return job
         retryable = [query for query in job.queries if is_retryable_query(query)]
         if not retryable:
+            return job
+        # Deadline gate: a deadline-passed retry finalizes to expired, not
+        # partial/failed (the run_pending deadline branch would otherwise
+        # classify a re-run that breaks on the deadline as partial/failed).
+        if time.time() >= job.deadline:
+            for query in job.queries:
+                if query.state in ("pending", "running"):
+                    query.state = "cancelled"
+            job.state = "expired"
+            await self._jobs.save(job)
             return job
         job.state = "running"
         for query in retryable:

@@ -1460,6 +1460,15 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
 
+    # Terminal-state gate: a cancelled or already-expired job is never
+    # resurrected by a retry (VAL-RESEARCH-010/011).
+    if job.state in ("cancelled", "expired"):
+        return {
+            "job_id": job.job_id,
+            "state": job.state,
+            "note": "job already reached a terminal state; it was not retried",
+        }
+
     retryable = [query for query in job.queries if is_retryable_query(query)]
     if not retryable:
         return _error(
@@ -1475,11 +1484,19 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
         return _error("invalid_job_id", "unknown job id", field="job_id")
 
     result = _job_summary(job)
-    result["retried"] = [query.index for query in retryable]
-    result["note"] = (
-        "retried only failed/empty subqueries; each gained a new linked attempt, "
-        "and successful evidence was preserved unchanged"
-    )
+    if job.state == "expired":
+        # Deadline gate: a deadline-passed retry finalizes to expired instead
+        # of re-running and ending in partial/failed.
+        result["note"] = (
+            "job deadline had already passed; retry finalized the job to expired "
+            "and re-executed no subqueries"
+        )
+    else:
+        result["retried"] = [query.index for query in retryable]
+        result["note"] = (
+            "retried only failed/empty subqueries; each gained a new linked attempt, "
+            "and successful evidence was preserved unchanged"
+        )
     return result
 
 
@@ -1529,7 +1546,9 @@ async def slopsearx_extend_research(
         policy_error = _enforce_policy(state, list(engines), field="engines")
         if policy_error:
             return policy_error
-        resolved_engines = list(engines)
+        # Cap an explicit engine list to the per-query bound, in parity with
+        # the intent path below, so extend can never exceed job_max_engines.
+        resolved_engines = list(engines)[: state.policy.job_max_engines_per_query]
     else:
         resolved_engines, _ = resolve_intent(intent, state.catalog)
         resolved_engines = resolved_engines[: state.policy.job_max_engines_per_query]
