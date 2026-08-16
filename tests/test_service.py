@@ -525,6 +525,32 @@ class TestDispatch:
         assert results[0].status == EngineStatus.ERROR
         assert "boomeng" not in results[0].results or results[0].results == []
 
+    async def test_gather_cancellation_cancels_child_tasks(self) -> None:
+        """Cancelling fan-out must not leave engine tasks running in the background."""
+        service = _service(engines={"okeng": _OkEngine()})
+        started = asyncio.Event()
+        cancelled = asyncio.Event()
+
+        async def _slow() -> AdapterResponse:
+            started.set()
+            try:
+                await asyncio.sleep(60)
+            except asyncio.CancelledError:
+                cancelled.set()
+                raise
+            raise AssertionError("slow task unexpectedly completed")
+
+        task = asyncio.create_task(_slow())
+        await started.wait()
+        gather_task = asyncio.create_task(service._gather_with_deadline([task], ["sloweng"]))
+        await asyncio.sleep(0)
+        gather_task.cancel()
+
+        with pytest.raises(asyncio.CancelledError):
+            await gather_task
+        assert cancelled.is_set()
+        assert task.done()
+
 
 # ---------------------------------------------------------------------------
 # SearchService — rate limiting

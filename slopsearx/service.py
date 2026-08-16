@@ -787,7 +787,14 @@ class SearchService:
         """
         if not tasks:
             return []
-        done, pending = await asyncio.wait(tasks, timeout=DEFAULT_SEARCH_TIMEOUT_S)
+        try:
+            done, pending = await asyncio.wait(tasks, timeout=DEFAULT_SEARCH_TIMEOUT_S)
+        except asyncio.CancelledError:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            raise
         for task in pending:
             task.cancel()
         results: dict[str, AdapterResponse] = {}
