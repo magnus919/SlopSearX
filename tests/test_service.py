@@ -523,6 +523,7 @@ class TestDispatch:
 
         assert results[0].status.value == "timeout"
         assert results[1].status.value == "unavailable"
+        assert results[1].latency_ms == 0.0
 
     async def test_overall_deadline_drains_cancelled_tasks(self) -> None:
         """Deadline cancellation drains child tasks before returning the response."""
