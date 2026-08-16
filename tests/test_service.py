@@ -548,12 +548,21 @@ class TestDispatch:
 
     async def test_overall_deadline_drains_cancelled_tasks(self) -> None:
         """Deadline cancellation drains child tasks before returning the response."""
-        slow = _OkEngine(delay=30.0)
-        slow.config = {"timeout_ms": 4_000}
-        service = _service(engines={"okeng": slow})
-        response = await service.search(_req())
-        assert response.engine_outcomes[0].status == "timeout"
-        assert slow.calls == 1
+        service = _service(engines={"okeng": _OkEngine()})
+        started = asyncio.Event()
+
+        async def _started_slow() -> AdapterResponse:
+            started.set()
+            await asyncio.sleep(30.0)
+            raise AssertionError("engine unexpectedly completed")
+
+        task = asyncio.create_task(_started_slow())
+        await started.wait()
+        response = await service._gather_with_deadline(
+            [task], ["okeng"], deadline_s=0.01, started_engines={"okeng"}
+        )
+        assert response[0].status.value == "timeout"
+        assert task.done()
 
     async def test_raising_engine_isolated_with_deadline(self) -> None:
         """A raising engine is classified as ERROR, not allowed to fail the whole search."""
