@@ -5,8 +5,12 @@ operator and agent guide. This document is the original discovery and
 architecture proposal; implementation notes and deviations:
 
 - Co-located in-process deployment (FastMCP), per §2.1 and §7.
-- Cache scoping repaired (§1.5): cache keys now include categories, engines,
-  page, and time range; the answer cache is no longer used by the search path.
+- Cache scoping and representation identity (§1.5): cache keys now include
+  categories, engines, page, and time range; the answer cache is no longer
+  used by the search path. The cache stores the **canonical full response**
+  and the MCP read boundary derives the requested `include`/`max_results`
+  view, so a cached response's representation never depends on the request
+  that populated it.
 - Specialist tools (jobs, security, science) implemented and config-gated
   (§5); research jobs implemented with Valkey-backed state (§2.2).
 - Snapshot pagination uses opaque cursors (§10.8); `read_results`/`read_result`
@@ -67,7 +71,10 @@ The endpoint has important behavior that an MCP layer must preserve and explain:
 
 The live source registry contains 51 adapters, discovered by importing `engines/` and registering classes with `@register_engine`. The source-level count includes the job adapters `ashby`, `greenhouse`, and `lever`.
 
-The repository's README and adapter reference still describe the system as having 48 engines in several places. The MCP capability catalog must be generated from the runtime registry, not copied from those prose counts. The discrepancy should be resolved as a separate documentation task before declaring the MCP catalog complete.
+The repository's README and adapter reference previously described the system
+as having 48 engines; that count has since been reconciled to the live 51-adapter
+registry (`docs/ENGINE_ADAPTERS.md`, `README.md`). The MCP capability catalog is
+generated from the runtime registry, not copied from those prose counts.
 
 The registry spans these capability families:
 
@@ -412,7 +419,14 @@ It must not describe every engine as externally healthy merely because `/health`
 
 The MCP layer must not treat every registered adapter as safe for generic discovery or unrestricted search. In particular:
 
-- Sensitive security engines such as HIBP and DeHashed require explicit policy gating. Generic search should not route account, email, credential, or breach-oriented queries to them accidentally.
+- Sensitive security engines such as HIBP and DeHashed require one explicit
+  operator grant (`MCP_TARGETED_SENSITIVE_ALLOWED`). A single shared policy gate
+  applies it uniformly across every search path (generic explicit engines,
+  targeted, jobs, security, science), so no path — including the generic
+  explicit-engine route — can reach them without the grant. Generic routing,
+  categories, and intent profiles never select them. Specialist grants
+  (`MCP_GRANT_JOBS/SECURITY/SCIENCE`) enable their tools but do not grant
+  sensitive access.
 - Sensitive searches should not use the current shared cache and audit behavior without an explicit privacy design. Raw queries and client IPs are retained in Valkey audit streams.
 - Strict SafeSearch must fail closed when selected engines cannot enforce it. It must never be reported as enforced merely because the HTTP parameter was accepted.
 - Explicit engine selection is an advanced operation and should be allowlisted by capability and policy. Generic agents should select intent or source families.

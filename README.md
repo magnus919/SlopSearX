@@ -183,9 +183,10 @@ MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.
   the operator grants them (`MCP_GRANT_JOBS=1`, `MCP_GRANT_SECURITY=1`,
   `MCP_GRANT_SCIENCE=1`, `MCP_GRANT_RESEARCH=1`).
 - Sensitive engines (`hibp`, `dehashed`) are unreachable from generic
-  routing and are rejected by `slopsearx_search_targeted` unless the
-  operator sets `MCP_TARGETED_SENSITIVE_ALLOWED=1` (deliberate policy
-  boundary).
+  routing, categories, and intent profiles, and are rejected by **every**
+  explicit-engine search path (generic explicit engines, targeted, jobs,
+  security, science) unless the operator sets `MCP_TARGETED_SENSITIVE_ALLOWED=1`
+  (deliberate, uniform policy boundary enforced by one shared gate).
 
 Full installation, configuration, client setup (Claude Desktop, Cursor,
 **Hermes Agent** — see "Hermes Agent (Nous Research)" in the guide — and

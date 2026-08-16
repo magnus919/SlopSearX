@@ -554,17 +554,48 @@ The hybrid model preserves the core stateless property: the file is read once at
 
 ### 7.1 Response Cache (Valkey)
 
-**Cache key:** `search:{hash(normalized_query + language + safesearch)}`
+**Cache key:** `search:{sha256(normalized_query | language | safesearch | scope)}`
 
 ```python
-def cache_key(query: str, params: dict) -> str:
-    """Build deterministic cache key from normalized query tuple."""
-    norm_query = query.lower().strip()
-    norm = f"{norm_query}|{params.get('language','en')}|{params.get('safesearch',0)}"
+def cache_key(
+    query: str,
+    language: str = "en",
+    safesearch: int = 0,
+    *,
+    categories: list[str] | None = None,
+    engines: list[str] | None = None,
+    pageno: int = 1,
+    time_range: str | None = None,
+) -> str:
+    """Build deterministic cache key from the normalized query tuple.
+
+    The key includes every result-affecting input: query, language,
+    safesearch, categories, engines, page, and time range. Scope inputs
+    are sorted so equivalent requests produce identical keys. It does
+    NOT include the requested include/representation set, max_results, or
+    freshness — the cache stores the canonical full response and the
+    per-request view is derived at the read boundary.
+    """
+    norm_query = normalize_query(query)  # strip, collapse whitespace, lowercase
+    scope = "|".join(
+        [
+            ",".join(sorted(categories)) if categories else "-",
+            ",".join(sorted(engines)) if engines else "-",
+            str(pageno),
+            time_range or "-",
+        ]
+    )
+    norm = f"{norm_query}|{language}|{safesearch}|{scope}"
     return f"search:{sha256(norm.encode()).hexdigest()}"
 ```
 
-**Value:** Serialized merged result set (after ranking), stored as JSON.
+**Value:** Serialized merged result set (after ranking), stored as JSON. The
+stored value is the **canonical full response** — all include-able fields and
+the unsliced result set — so a cached entry is reusable across requests that
+differ only in `include`/`max_results`/`freshness`. The requesting boundary
+derives the presentation view (include-filtered fields and the `max_results`
+slice) from the current request; this keeps a cached response's representation
+independent of the request that populated it.
 
 **TTL strategy:**
 - Default: 300 seconds (5 minutes)
