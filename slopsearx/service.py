@@ -528,7 +528,7 @@ class SearchService:
         if self._ctx.suggestion_service is not None:
             suggestions_task = asyncio.create_task(self._generate_suggestions(request.query))
 
-        dispatch_results = await self._gather_with_deadline(tasks, engine_names, target)
+        dispatch_results = await self._gather_with_deadline(tasks, engine_names)
 
         # Collect results and metadata
         responses: dict[str, AdapterResponse] = {}
@@ -772,13 +772,18 @@ class SearchService:
         self,
         tasks: list[asyncio.Task[AdapterResponse]],
         engine_names: list[str],
-        target: dict[str, EngineAdapter],
     ) -> list[Any]:
         """Gather engine dispatch tasks under an overall deadline.
 
         Cancels any task still running after ``DEFAULT_SEARCH_TIMEOUT_S`` so a
         single slow engine cannot hold the whole fan-out hostage, and returns a
         ``TIMEOUT`` AdapterResponse for each cancelled engine.
+
+        Per-engine exceptions are isolated: ``Task.result()`` re-raises a stored
+        exception (unlike ``gather(return_exceptions=True)``), so we catch it and
+        classify it as ``EngineStatus.ERROR`` — preserving the "adapters never
+        raise" contract even if cancellation or another ``BaseException`` escapes
+        the per-engine dispatch wrapper.
         """
         if not tasks:
             return []
@@ -787,13 +792,15 @@ class SearchService:
             task.cancel()
         results: dict[str, AdapterResponse] = {}
         for task in done:
-            raw = task.result()
-            if isinstance(raw, BaseException):
-                results[engine_names[tasks.index(task)]] = AdapterResponse(
-                    results=[], status=EngineStatus.ERROR, error_message=sanitize_url(str(raw))
+            name = engine_names[tasks.index(task)]
+            try:
+                raw = task.result()
+            except BaseException as exc:  # noqa: BLE001 - isolate one engine from fan-out
+                results[name] = AdapterResponse(
+                    results=[], status=EngineStatus.ERROR, error_message=sanitize_url(str(exc))
                 )
             else:
-                results[engine_names[tasks.index(task)]] = raw
+                results[name] = raw
         for name in engine_names:
             if name not in results:
                 results[name] = AdapterResponse(

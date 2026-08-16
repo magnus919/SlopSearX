@@ -498,6 +498,33 @@ class TestDispatch:
         assert response.all_unresponsive is True
         assert response.engine_outcomes[0].status == "timeout"
 
+    async def test_raising_engine_isolated_with_deadline(self) -> None:
+        """A raising engine is classified as ERROR, not allowed to fail the whole search."""
+        ok = _OkEngine(count=2)
+        boom = _ExplodingEngine()
+        service = _service(engines={"okeng": ok, "boomeng": boom}, tier1={"okeng"})
+
+        response = await service.search(_req())
+
+        assert response.all_unresponsive is False
+        statuses = {o.engine: o.status for o in response.engine_outcomes}
+        assert statuses == {"okeng": "ok", "boomeng": "error"}
+        assert len(response.results) == 2
+
+    async def test_gather_isolates_baseexception_from_task_result(self) -> None:
+        """task.result() re-raises stored exceptions; _gather_with_deadline must isolate them."""
+        service = _service(engines={"okeng": _OkEngine()})
+
+        async def _boom() -> AdapterResponse:
+            raise asyncio.CancelledError()  # escapes `except Exception` in _dispatch_engine
+
+        task = asyncio.create_task(_boom())
+        results = await service._gather_with_deadline([task], ["boomeng"])
+
+        assert len(results) == 1
+        assert results[0].status == EngineStatus.ERROR
+        assert "boomeng" not in results[0].results or results[0].results == []
+
 
 # ---------------------------------------------------------------------------
 # SearchService — rate limiting
