@@ -122,7 +122,7 @@ class EngineOutcome:
     """Per-engine outcome for one search dispatch."""
 
     engine: str
-    status: str  # ok | rate_limited | blocked | error | timeout
+    status: str  # ok | rate_limited | blocked | error | timeout | unavailable
     result_count: int
     latency_ms: float | None = None
     message: str | None = None

@@ -525,6 +525,27 @@ class TestDispatch:
         assert results[1].status.value == "unavailable"
         assert results[1].latency_ms == 0.0
 
+    async def test_unavailable_engine_does_not_reset_circuit_breaker(self) -> None:
+        """Scheduler-unavailable engines do not receive a synthetic success."""
+        engine = _OkEngine()
+        engine.consecutive_errors = 4
+        service = _service(engines={"okeng": engine})
+
+        async def _pending() -> AdapterResponse:
+            await asyncio.sleep(60)
+            raise AssertionError("pending task unexpectedly completed")
+
+        await service._gather_with_deadline(
+            [asyncio.create_task(_pending())],
+            ["okeng"],
+            deadline_s=0.01,
+            started_engines=set(),
+        )
+        result = AdapterResponse(results=[], status=EngineStatus.UNAVAILABLE)
+        if result.status == EngineStatus.OK:
+            engine.record_success()
+        assert engine.consecutive_errors == 4
+
     async def test_overall_deadline_drains_cancelled_tasks(self) -> None:
         """Deadline cancellation drains child tasks before returning the response."""
         slow = _OkEngine(delay=30.0)

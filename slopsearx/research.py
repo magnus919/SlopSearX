@@ -50,7 +50,15 @@ COVERAGE_BUCKETS: tuple[str, ...] = ("successful", "empty", "failed", "unavailab
 # (``ok``/``rate_limited``/``blocked``/``error``/``timeout``) come from
 # ``EngineStatus``; ``auth_required`` is the single derived token coming
 # from a credential check, never from ``AdapterResponse.status``.
-FAILURE_CLASS_TOKENS: tuple[str, ...] = ("ok", "rate_limited", "blocked", "error", "timeout", "auth_required")
+FAILURE_CLASS_TOKENS: tuple[str, ...] = (
+    "ok",
+    "rate_limited",
+    "blocked",
+    "error",
+    "timeout",
+    "unavailable",
+    "auth_required",
+)
 
 
 # ---------------------------------------------------------------------------
