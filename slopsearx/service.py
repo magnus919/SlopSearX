@@ -704,14 +704,19 @@ class SearchService:
         engine: EngineAdapter,
         query: str,
         params: dict[str, Any],
-        timeout_s: float = DEFAULT_ENGINE_TIMEOUT_S,
+        timeout_s: float | None = None,
     ) -> AdapterResponse:
         """Dispatch a query to one engine with a timeout.
 
+        Honors the engine's configured ``timeout_ms`` when set; falls back to
+        :data:`DEFAULT_ENGINE_TIMEOUT_S` for engines with no explicit timeout.
         Returns AdapterResponse — never raises. Timeouts are caught and
         returned as EngineStatus.TIMEOUT.
         """
         del name
+        engine_timeout_ms = engine.config.get("timeout_ms")
+        if timeout_s is None:
+            timeout_s = (float(engine_timeout_ms) / 1000.0) if engine_timeout_ms else DEFAULT_ENGINE_TIMEOUT_S
         try:
             return await asyncio.wait_for(engine.search(query, params), timeout=timeout_s)
         except asyncio.TimeoutError:
@@ -736,9 +741,12 @@ class SearchService:
         engine: EngineAdapter,
         query: str,
         params: dict[str, Any],
-        timeout_s: float = DEFAULT_ENGINE_TIMEOUT_S,
+        timeout_s: float | None = None,
     ) -> AdapterResponse:
         """Dispatch engine query, bounded by the global semaphore."""
+        if timeout_s is None:
+            engine_timeout_ms = engine.config.get("timeout_ms")
+            timeout_s = (float(engine_timeout_ms) / 1000.0) if engine_timeout_ms else DEFAULT_ENGINE_TIMEOUT_S
         if self._ctx.engine_semaphore is not None:
             async with self._ctx.engine_semaphore:
                 return await self._dispatch_engine(name, engine, query, params, timeout_s)

@@ -450,6 +450,32 @@ class TestDispatch:
         assert response.engine_outcomes == []
         assert response.partial is False
 
+    async def test_dispatch_honors_engine_timeout_ms(self) -> None:
+        """An engine configured with timeout_ms > the 3s default is not killed early.
+
+        Regression: the dispatcher previously hardcoded a 3s ceiling and never
+        consulted the engine's configured timeout_ms, so slow-but-legit engines
+        (e.g. Internet Archive Wayback CDX) always surfaced as TIMEOUT.
+        """
+        slow = _OkEngine(delay=4.0)
+        slow.config = {"timeout_ms": 10_000}
+        service = _service(engines={"okeng": slow}, tier1={"okeng"})
+
+        response = await service.search(_req())
+
+        assert response.all_unresponsive is False
+        assert response.engine_outcomes[0].status == "ok"
+
+    async def test_dispatch_falls_back_to_default_timeout(self) -> None:
+        """An engine without a configured timeout still uses the 3s default."""
+        slow = _OkEngine(delay=4.0)  # config defaults to {} → no timeout_ms
+        service = _service(engines={"okeng": slow})
+
+        response = await service.search(_req())
+
+        assert response.all_unresponsive is True
+        assert response.engine_outcomes[0].status == "timeout"
+
 
 # ---------------------------------------------------------------------------
 # SearchService — rate limiting
