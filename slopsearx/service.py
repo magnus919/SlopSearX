@@ -915,9 +915,7 @@ def _rehydrate_engines(value: Any) -> set[str]:
         text = value.strip()
         if text.startswith("{") and text.endswith("}"):
             inner = text[1:-1]
-            return set(
-                part.strip().strip("'\"") for part in inner.split(",") if part.strip()
-            )
+            return set(part.strip().strip("'\"") for part in inner.split(",") if part.strip())
         # A single engine name written as a bare string.
         return set(text.split())
     if isinstance(value, (list, tuple, set, frozenset)):

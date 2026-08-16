@@ -87,9 +87,7 @@ class EngineCapability:
     caveats: list[str]
     # Feature matrix (design §4.6): the full capability surface.
     sensitive: bool = False  # reaching this engine requires the sensitive-engine grant
-    supported_filters: dict[str, bool] = field(
-        default_factory=lambda: {key: False for key in SUPPORTED_FILTER_KEYS}
-    )
+    supported_filters: dict[str, bool] = field(default_factory=lambda: {key: False for key in SUPPORTED_FILTER_KEYS})
     supported_result_types: list[str] = field(default_factory=lambda: ["text"])
     failure_classes: list[str] = field(
         default_factory=lambda: ["rate_limited", "blocked", "error", "timeout", "auth_required", "unavailable"]
@@ -124,9 +122,7 @@ class CapabilityCatalog:
         self._required_key = (
             set(required_key_engines) if required_key_engines is not None else set(REQUIRED_KEY_ENGINES)
         )
-        self._sensitive = (
-            set(sensitive_engines) if sensitive_engines is not None else set(DEFAULT_SENSITIVE_ENGINES)
-        )
+        self._sensitive = set(sensitive_engines) if sensitive_engines is not None else set(DEFAULT_SENSITIVE_ENGINES)
         self._caveats = dict(engine_caveats or _DEFAULT_ENGINE_CAVEATS)
         self._by_name = self._build()
 

@@ -207,9 +207,7 @@ class TestSpecialistSensitive:
     async def test_security_reputation_cannot_reach_hibp(self, state: McpState) -> None:
         """VAL-FILTER-010 — security evidence_types=['reputation'] cannot reach hibp without the grant."""
         state.policy.enabled_tools["security"] = True
-        state.ctx.active_engines = _make_engines(
-            ["otx", "greynoise", "abuseipdb", "virustotal", "hibp"]
-        )
+        state.ctx.active_engines = _make_engines(["otx", "greynoise", "abuseipdb", "virustotal", "hibp"])
         result = await t.slopsearx_search_security("breach", evidence_types=["reputation"])
         _assert_sensitive_blocked(result, ["hibp"], "evidence_types")
 
@@ -407,9 +405,7 @@ class TestResearchPlanning:
         # includes brave; mark brave sensitive to exercise the gate.
         state.policy.sensitive_engines = {"brave"}
         catalog = state.catalog
-        queries, warnings = plan_research_queries(
-            "question", "triangulate", 10, 20, catalog, state.policy
-        )
+        queries, warnings = plan_research_queries("question", "triangulate", 10, 20, catalog, state.policy)
         all_engines = {name for q in queries for name in q.engines}
         assert "brave" not in all_engines
         assert any("sensitive" in w and "MCP_TARGETED_SENSITIVE_ALLOWED" in w for w in warnings)

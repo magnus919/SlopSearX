@@ -470,9 +470,7 @@ class TestEnforcementAgainstDispatchedScope:
         state_obj = _build_state(engine_names=["wikipedia", "brave", "duckduckgo"], engines_map=engines_map)
         set_state(state_obj)
         try:
-            result = await t.slopsearx_search_targeted(
-                "hello", engines=["wikipedia", "brave"], language="de"
-            )
+            result = await t.slopsearx_search_targeted("hello", engines=["wikipedia", "brave"], language="de")
         finally:
             set_state(None)
 

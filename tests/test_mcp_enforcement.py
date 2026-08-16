@@ -345,9 +345,7 @@ class TestSupportedFiltersConsistency:
             "brave": _MockEngine("brave", supported_filters={"time_range": True}),
             "duckduckgo": _MockEngine("duckduckgo"),
         }
-        result = await t.slopsearx_search_targeted(
-            "hello", engines=["brave", "duckduckgo"], time_range="week"
-        )
+        result = await t.slopsearx_search_targeted("hello", engines=["brave", "duckduckgo"], time_range="week")
         assert "error" not in result
         entry = result["enforcement"]["time_range"]
         assert entry["status"] == "partially_enforced"

@@ -69,4 +69,3 @@ issues from error events:
 4. Errors will automatically appear as GitHub issues with stack traces and context
 
 This closes the loop from production error → tracked issue → code fix.
-

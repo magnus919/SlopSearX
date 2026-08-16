@@ -157,7 +157,8 @@ class SlopSearxOAuthProvider:
             subject=self._subject,
         )
         await self._store.set("code", code, auth_code.model_dump(mode="json"), ttl=self._code_ttl)
-        return construct_redirect_uri(str(params.redirect_uri), code=code, state=params.state)
+        # The MCP SDK's helper is untyped (returns Any); the redirect URI is a string.
+        return cast(str, construct_redirect_uri(str(params.redirect_uri), code=code, state=params.state))
 
     async def load_authorization_code(
         self, client: OAuthClientInformationFull, authorization_code: str

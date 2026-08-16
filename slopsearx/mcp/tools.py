@@ -105,9 +105,7 @@ ENGINE_STATUS_CLASSES: tuple[str, ...] = ("ok", "rate_limited", "blocked", "erro
 
 # Engine-health note: /health never actively probes external APIs; health is
 # observed passively through search outcomes (unchanged product behavior).
-HEALTH_PASSIVE_NOTE = (
-    "/health does not actively probe external APIs; use search outcomes for passive engine health"
-)
+HEALTH_PASSIVE_NOTE = "/health does not actively probe external APIs; use search outcomes for passive engine health"
 
 # Explicit, honest note on every expanded record: SlopSearX surfaces search
 # evidence but never fetches or verifies the linked page.
@@ -1455,9 +1453,7 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
     """
     state = get_state()
     if not state.policy.tool_enabled("research"):
-        return _error(
-            "tool_disabled", "slopsearx_retry_research requires the research grant (MCP_GRANT_RESEARCH=1)"
-        )
+        return _error("tool_disabled", "slopsearx_retry_research requires the research grant (MCP_GRANT_RESEARCH=1)")
     if not state.job_store.available:
         return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
     job = await state.job_store.load(job_id)
@@ -1502,9 +1498,7 @@ async def slopsearx_extend_research(
     """
     state = get_state()
     if not state.policy.tool_enabled("research"):
-        return _error(
-            "tool_disabled", "slopsearx_extend_research requires the research grant (MCP_GRANT_RESEARCH=1)"
-        )
+        return _error("tool_disabled", "slopsearx_extend_research requires the research grant (MCP_GRANT_RESEARCH=1)")
     if not state.job_store.available:
         return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
     job = await state.job_store.load(job_id)

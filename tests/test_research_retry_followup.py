@@ -181,9 +181,7 @@ class TestStartHandle:
 
     async def test_get_job_echoes_idempotency_key_and_deadline(self, state: McpState) -> None:
         """VAL-RESEARCH-022 — get_job echoes the submitted key and resolved deadline."""
-        r = await t.slopsearx_start_research(
-            "q", deadline="2031-01-01T00:00:00Z", idempotency_key="echo-key"
-        )
+        r = await t.slopsearx_start_research("q", deadline="2031-01-01T00:00:00Z", idempotency_key="echo-key")
         got = await t.slopsearx_get_job(r["job_id"])
         assert "error" not in got
         assert got["idempotency_key"] == "echo-key"

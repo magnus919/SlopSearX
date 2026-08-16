@@ -242,7 +242,9 @@ class TestRecords:
         # whose engines set = {brave, wikipedia}.
         multi = _build_state(
             {
-                "brave": _RichEngine("brave", count=2, content=LONG_CONTENT, urls=["https://shared.com/0", "https://b.com/1"]),
+                "brave": _RichEngine(
+                    "brave", count=2, content=LONG_CONTENT, urls=["https://shared.com/0", "https://b.com/1"]
+                ),
                 "wikipedia": _RichEngine(
                     "wikipedia", count=2, content=LONG_CONTENT, urls=["https://shared.com/0", "https://w.com/1"]
                 ),

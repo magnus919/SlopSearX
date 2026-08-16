@@ -609,6 +609,39 @@ and expire after 24h. Stale `running` jobs from a dead process are marked
 `expired` at startup. Completed queries are immutable — their cursors remain
 readable across retry and cancel.
 
+### 6.14 Why there is no separate "advanced search" tool
+
+Earlier design work (the original PRD) floated a dedicated, typed
+"advanced search" operation with explicit detail selection and
+`requires_answers` / `requires_media` / `requires_source_type`
+requirements. That separate tool was **not** added. The richer `include`,
+detail (record vs. card), and capability-`requires_*` semantics on the
+existing tools cover the same needs with no extra surface area:
+
+- **Field / detail selection.** `slopsearx_search(include=[...])` selects
+  which envelope sections to return (`results`, `suggestions`,
+  `engine_status`, `diagnostics`). Detail is progressive: cards are compact
+  and `slopsearx_read_result` expands a card into a full record (complete
+  `content`, media, every contributing engine, provenance) without a new
+  tool. `max_results` bounds the presented page.
+- **`requires_*` evaluation.** `slopsearx_list_capabilities` exposes each
+  engine's `supported_result_types` (text/answers/corrections/infoboxes/
+  media/structured) and `supported_filters`, generated from the live
+  registry. An agent that "requires answers" or "requires media" reads the
+  catalog to select engines that declare the result type, then dispatches
+  with `engines`/`intent`/`categories` — the "require" check is delegated to
+  the catalog, not a new tool.
+- **Explicit source boundaries.** `slopsearx_search_targeted` (and the
+  specialist tools) already provide deliberate, auditable engine selection
+  when a precise source set is required.
+
+Because the catalog already evaluates capability requirements and the
+search/read tools already expose explicit detail control, a separate typed
+tool would only duplicate surface area, re-implement the policy gate, and
+add a second way to express the same request. Keeping one search surface
+with progressive disclosure is the deliberate, documented decision; the
+capability catalog is the canonical way to inspect what a source supports.
+
 ## 7. Resources and prompts
 
 Read resources instead of guessing: `slopsearx://capabilities`,

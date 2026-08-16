@@ -187,6 +187,10 @@ MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.
   explicit-engine search path (generic explicit engines, targeted, jobs,
   security, science) unless the operator sets `MCP_TARGETED_SENSITIVE_ALLOWED=1`
   (deliberate, uniform policy boundary enforced by one shared gate).
+- There is no separate "advanced search" tool. Richer `include`/detail
+  (card vs. full record) semantics on the existing search/read tools and the
+  per-engine capability matrix (`slopsearx_list_capabilities`) cover
+  `requires_*` needs — see `docs/MCP_SERVER.md` §6.14.
 
 Full installation, configuration, client setup (Claude Desktop, Cursor,
 **Hermes Agent** — see "Hermes Agent (Nous Research)" in the guide — and
