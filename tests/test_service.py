@@ -489,14 +489,22 @@ class TestDispatch:
 
     async def test_overall_deadline_caps_fanout(self) -> None:
         """A slow engine is cut at the overall deadline, not allowed to hang the search."""
-        slow = _OkEngine(delay=30.0)
-        slow.config = {"timeout_ms": 4_000}  # configured engine deadline
-        service = _service(engines={"okeng": slow})
+        service = _service(engines={"okeng": _OkEngine()})
+        started = asyncio.Event()
 
-        response = await service.search(_req())
+        async def _started_slow() -> AdapterResponse:
+            started.set()
+            await asyncio.sleep(30.0)
+            raise AssertionError("engine unexpectedly completed")
 
-        assert response.all_unresponsive is True
-        assert response.engine_outcomes[0].status == "timeout"
+        task = asyncio.create_task(_started_slow())
+        await started.wait()
+        response = await service._gather_with_deadline(
+            [task], ["okeng"], deadline_s=0.01, started_engines={"okeng"}
+        )
+
+        assert response[0].status.value == "timeout"
+        assert task.done()
 
     async def test_semaphore_wait_timeout_is_not_reported_as_engine_timeout(self) -> None:
         """An engine that never starts is unavailable, not an upstream timeout."""

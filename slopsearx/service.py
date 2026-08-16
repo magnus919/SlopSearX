@@ -68,9 +68,8 @@ DEFAULT_TIER1_ENGINES: frozenset[str] = frozenset(
 )
 
 DEFAULT_ENGINE_TIMEOUT_S = 3.0
-# Overall cap on a single search's engine fan-out. Bounds total dispatch time
-# even when individual engines honor longer configured timeouts, so one slow
-# engine (e.g. intelx at 15s) cannot hold an unscoped search hostage.
+# Minimum fan-out deadline. The effective deadline also honors the selected
+# engines' configured timeouts, including targeted engines above this floor.
 DEFAULT_SEARCH_TIMEOUT_S = 10.0
 
 # ---------------------------------------------------------------------------
@@ -793,6 +792,8 @@ class SearchService:
         A started engine that misses the deadline receives ``TIMEOUT``;
         an engine still waiting for the dispatch semaphore receives
         ``UNAVAILABLE`` so scheduler delay is not reported as upstream failure.
+        The effective deadline is supplied by the caller and is at least the
+        configured minimum fan-out deadline.
 
         Per-engine exceptions are isolated: ``Task.result()`` re-raises a stored
         exception, so we catch it and classify it as ``EngineStatus.ERROR`` —
