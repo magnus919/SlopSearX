@@ -797,6 +797,8 @@ class SearchService:
             raise
         for task in pending:
             task.cancel()
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
         results: dict[str, AdapterResponse] = {}
         for task in done:
             name = engine_names[tasks.index(task)]

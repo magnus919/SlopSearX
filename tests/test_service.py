@@ -498,6 +498,15 @@ class TestDispatch:
         assert response.all_unresponsive is True
         assert response.engine_outcomes[0].status == "timeout"
 
+    async def test_overall_deadline_drains_cancelled_tasks(self) -> None:
+        """Deadline cancellation drains child tasks before returning the response."""
+        slow = _OkEngine(delay=30.0)
+        slow.config = {"timeout_ms": 60_000}
+        service = _service(engines={"okeng": slow})
+        response = await service.search(_req())
+        assert response.engine_outcomes[0].status == "timeout"
+        assert slow.calls == 1
+
     async def test_raising_engine_isolated_with_deadline(self) -> None:
         """A raising engine is classified as ERROR, not allowed to fail the whole search."""
         ok = _OkEngine(count=2)
