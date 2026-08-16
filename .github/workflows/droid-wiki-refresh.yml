@@ -13,7 +13,22 @@ jobs:
       - name: Install Factory Droid
         run: curl -fsSL https://app.factory.ai/cli | sh
 
+      # BYOK: install the repo's custom-model config on the runner so wiki
+      # generation uses your own keys (see .github/droid-settings.json).
+      # `droid exec` reads $HOME/.factory/settings.json, and each apiKey
+      # references a secret-backed env var exported on the run step below.
+      # Secrets required: DEEPSEEK_API_KEY, NOUS_API_KEY, QWEN_API_KEY
+      # (Settings > Secrets and variables > Actions).
+      - name: Install Droid BYOK settings
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.factory"
+          cp .github/droid-settings.json "$HOME/.factory/settings.json"
+
       - name: Generate wiki
-        run: droid exec --auto high "/wiki"
+        run: droid exec --auto high --model "deepseek-v4-flash" "/wiki"
         env:
           FACTORY_API_KEY: ${{ secrets.FACTORY_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          NOUS_API_KEY: ${{ secrets.NOUS_API_KEY }}
+          QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}

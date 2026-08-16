@@ -1,0 +1,51 @@
+{
+  "customModels": [
+    {
+      "model": "deepseek-v4-flash",
+      "id": "custom:DeepSeek-V4-Flash-0",
+      "index": 0,
+      "displayName": "DeepSeek V4 Flash",
+      "baseUrl": "https://api.deepseek.com/v1",
+      "apiKey": "${DEEPSEEK_API_KEY}",
+      "provider": "generic-chat-completion-api",
+      "noImageSupport": true
+    },
+    {
+      "model": "deepseek-v4-pro",
+      "id": "custom:DeepSeek-V4-Pro-0",
+      "index": 0,
+      "displayName": "DeepSeek V4 Pro",
+      "baseUrl": "https://api.deepseek.com/v1",
+      "apiKey": "${DEEPSEEK_API_KEY}",
+      "provider": "generic-chat-completion-api",
+      "noImageSupport": true
+    },
+    {
+      "model": "qwen3.8-max-preview",
+      "id": "custom:qwen3.8-max-preview",
+      "displayName": "Qwen-3.8-Max-Preview",
+      "baseUrl": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1",
+      "apiKey": "${QWEN_API_KEY}",
+      "provider": "generic-chat-completion-api",
+      "noImageSupport": true
+    },
+    {
+      "model": "deepseek/deepseek-v4-flash-latest",
+      "id": "custom:DeepSeek-V4-Flash-Latest",
+      "displayName": "Deepseek V4 Flash (Latest)",
+      "baseUrl": "https://inference-api.nousresearch.com/v1",
+      "apiKey": "${NOUS_API_KEY}",
+      "provider": "generic-chat-completion-api",
+      "noImageSupport": true
+    },
+    {
+      "model": "deepseek/deepseek-v4-pro-0813",
+      "id": "custom:DeepSeek-V4-Pro-0813",
+      "displayName": "Deepseek V4 Pro",
+      "baseUrl": "https://inference-api.nousresearch.com/v1",
+      "apiKey": "${NOUS_API_KEY}",
+      "provider": "generic-chat-completion-api",
+      "noImageSupport": true
+    }
+  ]
+}

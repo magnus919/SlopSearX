@@ -33,7 +33,30 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 1
+
+      # BYOK: install the repo's custom-model config on the runner so @droid
+      # runs use your own keys (see .github/droid-settings.json). `droid exec`
+      # reads $HOME/.factory/settings.json, and each apiKey references a
+      # secret-backed env var exported on the action step below.
+      # Secrets required: DEEPSEEK_API_KEY, NOUS_API_KEY, QWEN_API_KEY
+      # (Settings > Secrets and variables > Actions).
+      - name: Install Droid BYOK settings
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.factory"
+          cp .github/droid-settings.json "$HOME/.factory/settings.json"
+
       - name: Run Droid Exec
         uses: Factory-AI/droid-action@7c7bfea2aa3bb7ea87579402cc1d89dbcf6b13b3
         with:
           factory_api_key: ${{ secrets.FACTORY_API_KEY }}
+          # BYOK model overrides covering every @droid flow (review, security,
+          # security-full, fill). Any provider model id from
+          # .github/droid-settings.json works here.
+          review_model: "deepseek-v4-flash"
+          security_model: "deepseek-v4-flash"
+          fill_model: "deepseek-v4-flash"
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          NOUS_API_KEY: ${{ secrets.NOUS_API_KEY }}
+          QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
