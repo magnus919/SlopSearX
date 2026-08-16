@@ -22,7 +22,7 @@ import time
 from contextlib import asynccontextmanager
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _pkg_version
-from typing import Any, AsyncIterator
+from typing import Any, AsyncIterator, Awaitable, Callable
 
 import uvicorn
 from mcp.server.fastmcp import FastMCP
@@ -43,7 +43,7 @@ from slopsearx.mcp.oauth import oauth_settings_from_policy
 from slopsearx.mcp.security import make_http_app
 from slopsearx.mcp.state import McpState, set_state
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
-from slopsearx.service import SearchService, build_context, destroy_context
+from slopsearx.service import AppContext, SearchService, build_context, destroy_context
 from slopsearx.snapshot import SnapshotStore
 
 logger = logging.getLogger(__name__)
@@ -86,10 +86,19 @@ def _package_version() -> str:
 async def _lifespan(
     server: FastMCP,
     oauth_provider: Any = None,
+    state_factory: Callable[[], Awaitable[AppContext]] | None = None,
 ) -> AsyncIterator[McpState]:
-    """Build and tear down the shared runtime for one server session."""
+    """Build and tear down the shared runtime for one server session.
+
+    ``state_factory`` is an injectable override for the runtime wiring. It
+    returns an :class:`AppContext`; when omitted, ``build_context()`` wires
+    the live engines and Valkey-backed cache. The fixture harness
+    (``slopsearx.mcp.harness``) uses it to inject deterministic fake engines
+    and an in-memory cache/snapshot/job store so the real MCP server can be
+    driven over streamable HTTP without a live network or Valkey.
+    """
     del server
-    ctx = await build_context()
+    ctx = await (state_factory() if state_factory is not None else build_context())
     if oauth_provider is not None:
         # Bind the OAuth token store to the shared Valkey cache so tokens
         # and registrations survive across replicas.
@@ -100,6 +109,7 @@ async def _lifespan(
         config=cfg,
         adapters=ctx.active_engines,
         required_key_engines=policy.required_key_engines,
+        sensitive_engines=policy.sensitive_engines,
     )
     for problem in validate_intent_profiles(catalog) + policy.validate(catalog):
         logger.warning("MCP startup problem: %s", problem)
@@ -164,12 +174,17 @@ def create_server(
     *,
     oauth: Any = None,
     oauth_provider: Any = None,
+    state_factory: Callable[[], Awaitable[AppContext]] | None = None,
 ) -> FastMCP:
     """Build the configured FastMCP server with all tools/resources/prompts.
 
     When ``oauth`` (AuthSettings) is provided, the server runs in OAuth
     2.1 mode with dynamic client registration instead of static bearer
     tokens; ``oauth_provider`` must accompany it. See slopsearx.mcp.oauth.
+
+    ``state_factory`` overrides the runtime wiring with a caller-supplied
+    :class:`AppContext` factory (used by the fixture harness); when omitted
+    the server wires the live engines and Valkey-backed cache itself.
     """
     kwargs: dict[str, Any] = {}
     if oauth is not None:
@@ -181,7 +196,7 @@ def create_server(
     mcp = FastMCP(
         "slopsearx",
         instructions=_INSTRUCTIONS,
-        lifespan=lambda server: _lifespan(server, oauth_provider=oauth_provider),
+        lifespan=lambda server: _lifespan(server, oauth_provider=oauth_provider, state_factory=state_factory),
         host=host,
         port=port,
         **kwargs,
@@ -201,6 +216,8 @@ def create_server(
     mcp.tool()(_instrumented(_tools.slopsearx_start_research))
     mcp.tool()(_instrumented(_tools.slopsearx_get_job))
     mcp.tool()(_instrumented(_tools.slopsearx_cancel_job))
+    mcp.tool()(_instrumented(_tools.slopsearx_retry_research))
+    mcp.tool()(_instrumented(_tools.slopsearx_extend_research))
 
     # --- resources ------------------------------------------------------
     mcp.resource(

@@ -102,9 +102,12 @@ class TestPlanning:
     def test_triangulate_plans_three_queries(self) -> None:
         runner, _ = _make_state()
         queries, warnings = plan_research_queries("question", "triangulate", 5, 5, runner._catalog, runner._policy)
-        assert warnings == []
         assert len(queries) == 3
         assert [q.intent for q in queries] == ["web", "science", "reference"]
+        # Without the sensitive grant, sensitive engines (e.g. hibp, which
+        # the reference profile includes) are excluded with an explicit
+        # policy warning (VAL-RESEARCH-017), never silently dropped.
+        assert warnings and all("sensitive engines excluded by policy" in w for w in warnings)
 
     def test_max_queries_bounds(self) -> None:
         runner, _ = _make_state()

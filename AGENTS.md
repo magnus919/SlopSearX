@@ -6,7 +6,7 @@ This document helps AI coding agents understand the project structure, architect
 
 ```
 slopsearx/
-├── engines/            # Engine adapter plugins (one file per engine, 48 total)
+├── engines/            # Engine adapter plugins (one file per engine, 51 total)
 │   ├── arxiv.py           brave.py           crates.py
 │   ├── censys.py          clinicaltrials.py  courtlistener.py (removed)
 │   ├── crtsh.py           cve.py             dehashed.py
@@ -23,7 +23,8 @@ slopsearx/
 │   ├── semanticscholar.py shodan.py          stackexchange.py
 │   ├── tmdb.py            uniprot.py         urlhaus.py
 │   ├── virustotal.py      vulncheck.py       wikipedia.py
-│   └── abuseipdb.py
+│   ├── abuseipdb.py       ashby.py           greenhouse.py
+│   └── lever.py
 ├── slopsearx/          # Core library
 │   ├── adapter.py      # EngineAdapter base class + ScrapeAdapter
 │   ├── service.py      # Normalized search pipeline (SearchService, ScopeResolver, AppContext)
@@ -55,6 +56,11 @@ slopsearx/
 4. **Valkey is the only shared state.** No local volumes, no persistent DB, no per-replica state beyond what Valkey provides.
 5. **Scrape engines use HTTP + HTML parsing.** No headless browsers. DDG and Google adapters use `httpx` + `lxml` for HTML parsing — the same approach SearXNG uses.
 6. **README.md reflects every engine.** Adding or removing an engine file requires updating the Engines table in `README.md`. The table lists every registered adapter with its type, auth, and categories.
+7. **One shared policy gate.** Every search-capable MCP path (generic `slopsearx_search`, `slopsearx_search_targeted`, jobs, security, science) and the scope-preview tool and research query planning reach a single fail-closed gate (`_enforce_policy` in `slopsearx/mcp/tools.py`) before any engine dispatch. Sensitive engines (`hibp`, `dehashed`) are unreachable on every path unless the uniform sensitive-engine grant `MCP_TARGETED_SENSITIVE_ALLOWED` is set. The specialist grants (`MCP_GRANT_JOBS/SECURITY/SCIENCE/RESEARCH`) enable their tools; they do **not** by themselves grant sensitive-engine access. A mixed sensitive + non-sensitive explicit engine list fails closed atomically.
+8. **Structured filter-enforcement report.** Every search tool returns a machine-readable `enforcement` object keyed by filter name (`language`, `time_range`, `safesearch`, plus specialist params like jobs `location`/`employment_type` and science `date_from`/`date_to`), each entry `{requested, status, reason, enforced_by}` where `status` is exactly one of `enforced`/`partially_enforced`/`unsupported`/`rejected`. No adapter enforces language/time/safesearch today, so they report `unsupported`; strict SafeSearch is `rejected` (fails closed). Never report an unenforced filter as enforced.
+9. **Canonical cache + view derivation.** The cache stores the canonical full `SearchResponse` (all include-able fields, unsliced results), keyed by query, language, safesearch, categories, engines, page, and time range — not by `include`/`max_results`/`freshness`. The MCP read boundary derives the requested view (include-filtered fields and the `max_results` slice) from the current request, so a cached response never depends on the request that populated it. `max_results` is a presentation bound that slices the presented page; it never truncates the captured snapshot.
+10. **JSON-safe serialization.** `SearchResult.engines` is a `set[str]`; it is canonicalized to a sorted list at the serialization boundary and rehydrated robustly (accepting a list or a legacy stringified set). Never rely on `json.dumps(default=str)` for any typed field that must round-trip through the cache or snapshots.
+11. **MCP `state_factory` test-injection hook.** `slopsearx/mcp/server.py` accepts a `state_factory` callable that overrides the runtime wiring (engines + shared store) while keeping the transport, tool surface, and auth identical. It is used by `slopsearx/mcp/harness.py` to drive deterministic MCP client tests against fake engines and an in-memory store. Do not remove it; it is the user-testing validation seam.
 
 ## API Contract
 

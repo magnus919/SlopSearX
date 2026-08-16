@@ -54,7 +54,7 @@ SlopSearX uses a two-tier engine system to keep unscoped search results clean wh
 
 **All new engines are Tier 2 by default.** An engine may only be classified as Tier 1 with prior approval from the project maintainers. The bar for Tier 1 is high: the engine must return broadly relevant results across the long tail of everyday queries, not just within its domain.
 
-Current Tier 1 engines are defined in `_TIER1_ENGINES` in `slopsearx/server.py`. This set changes rarely.
+Current Tier 1 engines are defined in `DEFAULT_TIER1_ENGINES` in `slopsearx/service.py`. This set changes rarely.
 
 ## Code of Conduct
 

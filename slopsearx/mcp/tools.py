@@ -13,13 +13,16 @@ import time
 from typing import Any
 
 from slopsearx.adapter import SearchResult
-from slopsearx.capabilities import INTENT_PROFILES
+from slopsearx.capabilities import INTENT_PROFILES, resolve_intent
 from slopsearx.mcp.state import McpState, get_state
 from slopsearx.ratelimit import ValkeySlidingWindow
 from slopsearx.research import (
     ResearchJob,
+    ResearchQuery,
     generate_job_id,
+    is_retryable_query,
     plan_research_queries,
+    summarize_coverage,
 )
 from slopsearx.service import (
     QueryValidationError,
@@ -27,6 +30,7 @@ from slopsearx.service import (
     ScopeResolver,
     SearchRequest,
 )
+from slopsearx.snapshot import SearchSnapshot
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -36,6 +40,25 @@ VALID_INTENTS = tuple(INTENT_PROFILES)
 VALID_SAFESEARCH = ("off", "moderate", "strict")
 VALID_FRESHNESS = ("prefer_cache", "prefer_fresh", "no_preference")
 VALID_STRATEGIES = ("triangulate", "broad", "fresh", "counterevidence")
+
+# The sensitive-engine grant. This is the SINGLE grant that permits a
+# sensitive engine to be dispatched on any path (schema pin); the
+# specialist grants never grant sensitive access by themselves.
+SENSITIVE_GRANT = "MCP_TARGETED_SENSITIVE_ALLOWED"
+
+# Intent → required specialist grant. Generic search reaches these
+# intents through the shared policy gate, so a disabled specialist grant
+# also blocks the corresponding intent (VAL-SPEC-017/018).
+GRANT_ENV = {
+    "jobs": "MCP_GRANT_JOBS",
+    "security": "MCP_GRANT_SECURITY",
+    "science": "MCP_GRANT_SCIENCE",
+}
+INTENT_GRANTS: dict[str, str] = {
+    "jobs": "jobs",
+    "security": "security",
+    "science": "science",
+}
 
 # No adapter consumes the safesearch parameter (Brave hardcodes it off),
 # so strict SafeSearch can never be honestly enforced — fail closed.
@@ -65,6 +88,30 @@ SOURCE_TYPE_ENGINES: dict[str, list[str]] = {
 }
 
 RANKING_EXPLANATION = "tier_then_cross_engine_presence"
+
+# The compact card snippet length (progressive disclosure). Full content is
+# a result-record concern; cards carry only the first N chars.
+SNIPPET_LENGTH = 300
+
+# The MCP contract version for the operational diagnostics surface. This is
+# distinct from the service (package) version so agents can negotiate schema
+# changes independently of releases (design §7, decision 15).
+MCP_CONTRACT_VERSION = "1.0"
+
+# Closed set of status classes used to aggregate engine health. The final
+# ``unknown`` bucket captures engines never observed by a search outcome
+# (VAL-DIAG-006).
+ENGINE_STATUS_CLASSES: tuple[str, ...] = ("ok", "rate_limited", "blocked", "error", "timeout", "unknown")
+
+# Engine-health note: /health never actively probes external APIs; health is
+# observed passively through search outcomes (unchanged product behavior).
+HEALTH_PASSIVE_NOTE = "/health does not actively probe external APIs; use search outcomes for passive engine health"
+
+# Explicit, honest note on every expanded record: SlopSearX surfaces search
+# evidence but never fetches or verifies the linked page.
+NON_VERIFICATION_NOTE = "SlopSearX did not fetch or verify the linked page"
+
+CONTENT_UNAVAILABLE_NOTE = "full content unavailable (adapter returned snippet only)"
 
 JOBS_ADAPTERS = ("greenhouse", "ashby", "lever")
 
@@ -135,15 +182,34 @@ def _validate_engines(state: McpState, engines: list[str]) -> dict[str, Any] | N
     return None
 
 
-def _sensitive_check(state: McpState, engines: list[str]) -> dict[str, Any] | None:
-    """Reject sensitive engines in targeted search unless granted."""
+def _enforce_policy(
+    state: McpState,
+    engines: list[str],
+    *,
+    field: str = "engines",
+) -> dict[str, Any] | None:
+    """One shared, fail-closed policy gate: engine validation + sensitive block.
+
+    Every search-capable path (generic, targeted, jobs, security,
+    science) and the scope-preview tool reach this before any engine
+    dispatch. Returns an error envelope or ``None`` to proceed.
+
+    A mixed sensitive + non-sensitive list fails closed atomically: the
+    whole request is rejected, naming the sensitive engines in the
+    structured ``error.engines`` field.
+    """
+    error = _validate_engines(state, engines)
+    if error:
+        return error
     sensitive = [name for name in engines if name in state.policy.sensitive_engines]
     if sensitive and not state.policy.targeted_sensitive_allowed:
         return _error(
             "tool_disabled",
-            "explicit selection of sensitive engines requires an operator grant (MCP_TARGETED_SENSITIVE_ALLOWED=1)",
-            field="engines",
+            "sensitive engines are unreachable without the sensitive-engine grant "
+            f"({SENSITIVE_GRANT}=1): {', '.join(sorted(sensitive))}",
+            field=field,
             engines=sensitive,
+            grant=SENSITIVE_GRANT,
         )
     return None
 
@@ -171,14 +237,114 @@ def _safesearch_warning_or_error(state: McpState, safesearch: str) -> list[str] 
     return []
 
 
-def _result_to_dict(result: SearchResult) -> dict[str, Any]:
-    """Normalize one result for MCP output (design §3.1)."""
+# ---------------------------------------------------------------------------
+# Structured filter-enforcement report
+# ---------------------------------------------------------------------------
+
+ENFORCEMENT_STATUSES: tuple[str, ...] = ("enforced", "partially_enforced", "unsupported", "rejected")
+
+
+def _enforcement_entry(
+    requested: Any,
+    status: str,
+    reason: str,
+    enforced_by: list[str] | None = None,
+) -> dict[str, Any]:
+    """Build one machine-readable filter-enforcement entry (schema pin).
+
+    Shape: ``{requested, status, reason, enforced_by}`` where ``status``
+    is exactly one of the closed ``ENFORCEMENT_STATUSES`` enum.
+    """
     return {
+        "requested": requested,
+        "status": status,
+        "reason": reason,
+        "enforced_by": list(enforced_by) if enforced_by else [],
+    }
+
+
+def _engine_supports_filter(state: McpState, engine_name: str, filter_name: str) -> bool:
+    """Whether an adapter declares support for a filter via ``supported_filters``.
+
+    No adapter currently declares support for language/time_range/safesearch,
+    so this defaults to ``False`` (honest "unsupported"). It reads the
+    optional class attribute so the report stays consistent with the
+    capability catalog if adapters later declare support.
+    """
+    adapter = state.ctx.active_engines.get(engine_name)
+    supported = getattr(adapter, "supported_filters", None) if adapter is not None else None
+    if isinstance(supported, dict):
+        return bool(supported.get(filter_name))
+    return False
+
+
+def _filter_enforcement(
+    state: McpState,
+    selected_engines: list[str],
+    filter_name: str,
+    requested: Any,
+) -> dict[str, Any]:
+    """One enforcement entry consistent with the selected engines' supported_filters."""
+    supporting = [name for name in selected_engines if _engine_supports_filter(state, name, filter_name)]
+    if supporting and len(supporting) == len(selected_engines) and selected_engines:
+        return _enforcement_entry(
+            requested, "enforced", f"{filter_name} is enforced by all selected adapters", supporting
+        )
+    if supporting:
+        return _enforcement_entry(
+            requested,
+            "partially_enforced",
+            f"{filter_name} is enforced by a subset of selected adapters",
+            supporting,
+        )
+    return _enforcement_entry(requested, "unsupported", f"no selected adapter consumes the {filter_name} parameter", [])
+
+
+def _core_filter_enforcement(
+    state: McpState,
+    selected_engines: list[str],
+    *,
+    language: str,
+    time_range: str | None,
+    safesearch: str,
+) -> dict[str, Any]:
+    """Structured enforcement report for language/time_range/safesearch.
+
+    Strict SafeSearch fails closed earlier (structured rejection), so it
+    never reaches here; moderate SafeSearch is reported ``unsupported``.
+    """
+    report: dict[str, Any] = {}
+    if language and language != "en":
+        report["language"] = _filter_enforcement(state, selected_engines, "language", language)
+    if time_range:
+        report["time_range"] = _filter_enforcement(state, selected_engines, "time_range", time_range)
+    if safesearch == "moderate":
+        report["safesearch"] = _filter_enforcement(state, selected_engines, "safesearch", safesearch)
+    return report
+
+
+def _source_engines(result: SearchResult) -> list[str]:
+    """Sorted, duplicate-free list of contributing engine names.
+
+    Falls back to the primary engine when ``engines`` is empty so the
+    cross-engine presence signal is always a non-empty name list.
+    """
+    return sorted(result.engines) if result.engines else [result.engine]
+
+
+def _result_to_dict(result: SearchResult, *, result_id: str | None = None) -> dict[str, Any]:
+    """Normalize one result into a compact triage card (design §3.1).
+
+    Cards carry triage fields plus a stable server-issued ``result_id``.
+    Full ``content``, ``thumbnail``, and ``img_src`` belong to the expanded
+    record (progressive disclosure), never the card.
+    """
+    card = {
         "title": result.title,
         "url": result.url,
-        "snippet": (result.content or "")[:300],
-        "source_engines": sorted(result.engines) if result.engines else [result.engine],
-        "source_count": len(result.engines) if result.engines else 1,
+        "snippet": (result.content or "")[:SNIPPET_LENGTH],
+        "source_engines": _source_engines(result),
+        "source_count": len(_source_engines(result)),
         "primary_engine": result.engine,
         "category": result.category,
         "published_at": result.published_date,
@@ -187,6 +353,55 @@ def _result_to_dict(result: SearchResult) -> dict[str, Any]:
         "tier": result.tier,
         "citation": {"label": result.title, "url": result.url},
     }
+    if result_id is not None:
+        card["result_id"] = result_id
+    return card
+
+
+def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: str) -> dict[str, Any]:
+    """Build the full result record for ``slopsearx_read_result``.
+
+    Reveals strictly more than the card: complete normalized ``content``,
+    media fields, every contributing engine, provenance, a
+    ``content_available`` flag, and an explicit non-verification note.
+    """
+    content = result.content or ""
+    source_engines = _source_engines(result)
+    content_available = len(content) > SNIPPET_LENGTH
+    record = {
+        "result_id": result_id,
+        "title": result.title,
+        "url": result.url,
+        "content": content,
+        "content_available": content_available,
+        "thumbnail": result.thumbnail,
+        "img_src": result.img_src,
+        "source_engines": source_engines,
+        "source_count": len(source_engines),
+        "primary_engine": result.engine,
+        "category": result.category,
+        "published_at": result.published_date,
+        "tier": result.tier,
+        "position": result.position,
+        "score": result.score,
+        "citation": {"label": result.title, "url": result.url},
+        "provenance": {
+            "query": snapshot.query,
+            "query_id": snapshot.query_id,
+            "rank_explanation": RANKING_EXPLANATION,
+            "source_engines": source_engines,
+        },
+        "snapshot": {
+            "cursor": snapshot.snapshot_id,
+            "query": snapshot.query,
+            "query_id": snapshot.query_id,
+            "total": snapshot.total,
+        },
+        "note": NON_VERIFICATION_NOTE,
+    }
+    if not content_available:
+        record["content_unavailable_note"] = CONTENT_UNAVAILABLE_NOTE
+    return record
 
 
 def _envelope(
@@ -197,18 +412,30 @@ def _envelope(
     warnings: list[str],
     cursor: str | None,
     include_suggestions: bool,
+    total: int,
+    enforcement: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Build the standard search envelope from a SearchResponse."""
+    """Build the standard search envelope from a SearchResponse.
+
+    Surfaces every piece of evidence the service produced — answers,
+    corrections, infoboxes, suggestions, per-engine outcomes, empty engines,
+    excluded engines, aggregate count, and pagination signal — so no
+    available evidence is silently discarded (envelope recovery).
+    """
+    excluded_engines = [{"engine": e.engine, "reason": e.reason} for e in response.scope.excluded_engines]
+    scope = {
+        "requested_intent": requested_intent,
+        "resolved_categories": response.scope.resolved_categories,
+        "selected_engines": response.scope.selected_engines,
+        "routing_reason": response.scope.routing_rule,
+        "excluded_engines": excluded_engines,
+    }
     if response.all_unresponsive:
         return _error(
             "all_engines_failed",
             "every selected engine failed to respond",
             query_id=response.query_id,
-            scope={
-                "requested_intent": requested_intent,
-                "selected_engines": response.scope.selected_engines,
-                "routing_reason": response.scope.routing_rule,
-            },
+            scope=scope,
             engine_outcomes=[
                 {"engine": o.engine, "status": o.status, "result_count": o.result_count, "message": o.message}
                 for o in response.engine_outcomes
@@ -217,13 +444,19 @@ def _envelope(
         )
     return {
         "query": response.query,
-        "results": [_result_to_dict(result) for result in response.results],
-        "scope": {
-            "requested_intent": requested_intent,
-            "resolved_categories": response.scope.resolved_categories,
-            "selected_engines": response.scope.selected_engines,
-            "routing_reason": response.scope.routing_rule,
-        },
+        "results": [
+            _result_to_dict(
+                result,
+                result_id=(state.snapshots.result_id(cursor, index) if cursor else None),
+            )
+            for index, result in enumerate(response.results)
+        ],
+        "scope": scope,
+        "answers": response.answers,
+        "corrections": response.corrections,
+        "infoboxes": response.infoboxes,
+        "empty_engines": [{"engine": entry[0], "reason": entry[1]} for entry in response.empty_engines],
+        "enforcement": enforcement or {},
         "engine_outcomes": [
             {
                 "engine": o.engine,
@@ -237,11 +470,14 @@ def _envelope(
         "meta": {
             "query_id": response.query_id,
             "cached": response.cached,
+            "cached_error": response.cached_error,
             "response_time_ms": response.response_time_ms,
             "partial": response.partial,
             "ranking": RANKING_EXPLANATION,
             "cursor": cursor,
             "suggestions": response.suggestions if include_suggestions else [],
+            "total": total,
+            "has_more": total > len(response.results),
         },
         "warnings": warnings + response.scope.warnings,
     }
@@ -254,12 +490,20 @@ async def _run_search(
     warnings: list[str],
     include_suggestions: bool,
     max_results: int | None = None,
+    enforcement: dict[str, Any] | None = None,
+    core_filters: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Execute one search through the service and build the envelope.
 
     The full ranked set is captured as an immutable snapshot (for
     pagination); ``max_results`` is a presentation bound applied to the
     returned page only.
+
+    When ``enforcement`` is not supplied and ``core_filters`` is, the
+    filter-enforcement report is resolved against the **dispatched/executed
+    scope** (``response.scope.selected_engines``), never against all active
+    engines. This keeps the report consistent with the engine set that
+    actually ran once per-engine ``supported_filters`` are declared.
     """
     try:
         response = await state.service.search(request)
@@ -268,8 +512,13 @@ async def _run_search(
     except RateLimitExceededError:
         return _error("rate_limited", "too many requests; please retry later")
 
+    if enforcement is None and core_filters is not None:
+        enforcement = _core_filter_enforcement(state, response.scope.selected_engines, **core_filters)
+
     # Capture the full ranked set as an immutable snapshot for pagination,
-    # then present the bounded page.
+    # then present the bounded page. ``total`` is the aggregate captured
+    # count (meta.total), independent of the max_results page bound.
+    total = len(response.results)
     cursor = await state.snapshots.create(response.query, response.query_id, response.results, response.scope)
     if cursor is None:
         warnings = warnings + ["snapshot store unavailable — pagination cursor not created"]
@@ -282,11 +531,20 @@ async def _run_search(
         warnings=warnings,
         cursor=cursor,
         include_suggestions=include_suggestions,
+        total=total,
+        enforcement=enforcement,
     )
 
 
 def _deadline_iso(deadline: float) -> str:
     return _dt.datetime.fromtimestamp(deadline, tz=_dt.timezone.utc).isoformat()
+
+
+def _expires_iso(expires_at: float | None) -> str | None:
+    """Render a snapshot expiry epoch as an ISO 8601 UTC timestamp."""
+    if expires_at is None:
+        return None
+    return _dt.datetime.fromtimestamp(expires_at, tz=_dt.timezone.utc).isoformat()
 
 
 # ---------------------------------------------------------------------------
@@ -354,6 +612,13 @@ async def slopsearx_search(
     if isinstance(resolved_categories, dict):  # error envelope
         return resolved_categories
 
+    # Shared policy gate: sensitive engines (and specialist intents) are
+    # fail-closed on the generic explicit-engine/profile path too.
+    if resolved_engines is not None:
+        policy_error = _enforce_policy(state, resolved_engines, field="engines")
+        if policy_error:
+            return policy_error
+
     include_set = set(include) if include is not None else {"results", "engine_status"}
     max_results = _bounded_max_results(state, max_results)
 
@@ -372,6 +637,10 @@ async def slopsearx_search(
     if isinstance(safesearch_check, list):
         warnings = warnings + safesearch_check
 
+    # Structured filter-enforcement report is resolved inside ``_run_search``
+    # against the dispatched/executed scope (response.scope.selected_engines),
+    # not against all active engines, so it stays consistent with the engine
+    # set that actually ran.
     return await _run_search(
         state,
         request,
@@ -379,6 +648,7 @@ async def slopsearx_search(
         warnings,
         include_suggestions="suggestions" in include_set,
         max_results=max_results,
+        core_filters={"language": language, "time_range": time_range, "safesearch": safesearch},
     )
 
 
@@ -408,12 +678,14 @@ def _resolve_scope(
     profile = INTENT_PROFILES.get(intent)
     if profile is None:
         return _error("invalid_input", f"unknown intent '{intent}'", field="intent"), None, intent, []
-    if profile.sensitive and not state.policy.tool_enabled("security"):
+    required_grant = INTENT_GRANTS.get(intent)
+    if required_grant is not None and not state.policy.tool_enabled(required_grant):
         return (
             _error(
                 "tool_disabled",
-                f"intent '{intent}' requires the security grant (MCP_GRANT_SECURITY=1)",
+                f"intent '{intent}' requires the {required_grant} grant ({GRANT_ENV[required_grant]}=1)",
                 field="intent",
+                grant=GRANT_ENV[required_grant],
             ),
             None,
             intent,
@@ -457,10 +729,7 @@ async def slopsearx_search_targeted(
     error = _validate_query(query, state)
     if error:
         return error
-    error = _validate_engines(state, engines)
-    if error:
-        return error
-    error = _sensitive_check(state, engines)
+    error = _enforce_policy(state, engines, field="engines")
     if error:
         return error
     if safesearch not in VALID_SAFESEARCH:
@@ -489,6 +758,7 @@ async def slopsearx_search_targeted(
         warnings,
         include_suggestions=False,
         max_results=_bounded_max_results(state, max_results),
+        core_filters={"language": language, "time_range": time_range, "safesearch": safesearch},
     )
 
 
@@ -519,10 +789,7 @@ async def slopsearx_search_jobs(
         return _error("invalid_input", "company is required", field="company")
 
     sources = list(sources) if sources else list(JOBS_ADAPTERS)
-    error = _validate_engines(state, sources)
-    if error:
-        return error
-    error = _sensitive_check(state, sources)
+    error = _enforce_policy(state, sources, field="sources")
     if error:
         return error
 
@@ -533,6 +800,17 @@ async def slopsearx_search_jobs(
         warnings.append(f"location '{location}' is not consumed by current adapters")
     if employment_type:
         warnings.append(f"employment_type '{employment_type}' is not consumed by current adapters")
+
+    # Structured filter-enforcement report for jobs-specific filter params.
+    enforcement: dict[str, Any] = {}
+    if location:
+        enforcement["location"] = _enforcement_entry(
+            location, "unsupported", "location is not consumed by current adapters"
+        )
+    if employment_type:
+        enforcement["employment_type"] = _enforcement_entry(
+            employment_type, "unsupported", "employment_type is not consumed by current adapters"
+        )
 
     request = SearchRequest(
         query=query,
@@ -547,6 +825,7 @@ async def slopsearx_search_jobs(
         warnings,
         include_suggestions=False,
         max_results=_bounded_max_results(state, max_results),
+        enforcement=enforcement,
     )
 
 
@@ -590,12 +869,16 @@ async def slopsearx_search_security(
                 selected.append(name)
 
     if engines:
-        error = _validate_engines(state, engines)
-        if error:
-            return error
         selected = list(engines)
     else:
         selected = [name for name in selected if name in state.catalog.known_names()]
+
+    # Shared policy gate: a sensitive engine reached via explicit engines
+    # OR an evidence-type profile is blocked unless the sensitive grant is set.
+    policy_field = "engines" if engines else "evidence_types"
+    policy_error = _enforce_policy(state, selected, field=policy_field)
+    if policy_error:
+        return policy_error
 
     request = SearchRequest(
         query=query,
@@ -610,6 +893,7 @@ async def slopsearx_search_security(
         [SECURITY_LIMITATION_NOTE, f"resolved evidence_types: {', '.join(evidence_types)}"],
         include_suggestions=False,
         max_results=_bounded_max_results(state, max_results),
+        enforcement={},
     )
 
 
@@ -655,16 +939,35 @@ async def slopsearx_search_science(
                 selected.append(name)
 
     if engines:
-        error = _validate_engines(state, engines)
-        if error:
-            return error
         selected = list(engines)
     else:
         selected = [name for name in selected if name in state.catalog.known_names()]
 
+    # Shared policy gate: a sensitive engine reached via explicit engines
+    # OR a source-type profile is blocked unless the sensitive grant is set.
+    policy_field = "engines" if engines else "source_types"
+    policy_error = _enforce_policy(state, selected, field=policy_field)
+    if policy_error:
+        return policy_error
+
     warnings = [SCIENCE_LIMITATION_NOTE, f"resolved source_types: {', '.join(source_types)}"]
     if date_from or date_to:
         warnings.append("date_from/date_to are not consumed by current adapters; use time_range in slopsearx_search")
+
+    # Structured filter-enforcement report for science date filters.
+    enforcement: dict[str, Any] = {}
+    if date_from:
+        enforcement["date_from"] = _enforcement_entry(
+            date_from,
+            "unsupported",
+            "date_from is not consumed by current adapters; use time_range in slopsearx_search",
+        )
+    if date_to:
+        enforcement["date_to"] = _enforcement_entry(
+            date_to,
+            "unsupported",
+            "date_to is not consumed by current adapters; use time_range in slopsearx_search",
+        )
 
     request = SearchRequest(
         query=query,
@@ -679,6 +982,7 @@ async def slopsearx_search_science(
         warnings,
         include_suggestions=False,
         max_results=_bounded_max_results(state, max_results),
+        enforcement=enforcement,
     )
 
 
@@ -715,6 +1019,13 @@ async def slopsearx_list_capabilities(
             "categories": cap.categories,
             "subcategories": cap.subcategories,
             "enabled": cap.enabled,
+            "sensitive": cap.sensitive,
+            "supported_filters": cap.supported_filters,
+            "supported_result_types": cap.supported_result_types,
+            "failure_classes": cap.failure_classes,
+            "cost_class": cap.cost_class or None,
+            "last_known_status": cap.last_known_status,
+            "last_known_status_at": cap.last_known_status_at,
             "scope_hints": cap.scope_hints,
             "caveats": cap.caveats,
         }
@@ -751,6 +1062,13 @@ async def slopsearx_explain_search_scope(
     if isinstance(resolved_categories, dict):
         return resolved_categories
 
+    # Scope preview must match execution: sensitive engines and specialist
+    # intents are fail-closed here exactly as they are on the search path.
+    if resolved_engines is not None:
+        policy_error = _enforce_policy(state, resolved_engines, field="engines")
+        if policy_error:
+            return policy_error
+
     resolver = ScopeResolver(
         active_engines=state.ctx.active_engines,
         router=state.ctx.router,
@@ -761,6 +1079,10 @@ async def slopsearx_explain_search_scope(
     return {
         "selected_engines": decision.selected_engines,
         "excluded_engines": [{"engine": e.engine, "reason": e.reason} for e in decision.excluded_engines],
+        "routing_reason": decision.routing_rule,
+        # Backward-compatible alias so preview and executed scope agree on
+        # the routing_reason field (schema pin) while older consumers that
+        # read routing_rule keep working.
         "routing_rule": decision.routing_rule,
         "matched_topic": decision.matched_topic,
         "requested_intent": requested_intent,
@@ -768,13 +1090,45 @@ async def slopsearx_explain_search_scope(
     }
 
 
-async def slopsearx_get_service_status() -> dict[str, Any]:
-    """Operational status: liveness, Valkey, engine inventory.
+def _engine_health_by_class(state: McpState) -> dict[str, Any]:
+    """Aggregate enabled-engine health into per-status-class integer counts.
 
-    /health does not actively probe external APIs — engine health is
-    observed passively through search outcomes.
+    Health is observed passively: every engine's last-known status defaults to
+    ``unknown`` until a search outcome records otherwise, so unobserved engines
+    land in the ``unknown`` bucket (never a fabricated ``ok``).
     """
-    state = get_state()
+    counts: dict[str, Any] = {cls: 0 for cls in ENGINE_STATUS_CLASSES}
+    for cap in state.catalog.enabled():
+        status = cap.last_known_status if cap.last_known_status in counts else "unknown"
+        counts[status] += 1
+    counts["note"] = HEALTH_PASSIVE_NOTE
+    return counts
+
+
+def _enabled_grants(state: McpState) -> dict[str, Any]:
+    """The enabled specialist grants by name (never any token/key value).
+
+    Specialist grants are jobs/security/science/research. Disabled grants are
+    present as ``False`` so agents can tell absent from disabled; the
+    sensitive-engine grant is exposed as a boolean only.
+    """
+    enabled = sorted(name for name, flag in state.policy.enabled_tools.items() if flag)
+    specialist = {name: bool(flag) for name, flag in sorted(state.policy.enabled_tools.items())}
+    return {
+        "enabled": enabled,
+        "specialist": specialist,
+        "targeted_sensitive_allowed": bool(state.policy.targeted_sensitive_allowed),
+    }
+
+
+def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str, Any]:
+    """Build the curated, non-secret operational diagnostics schema.
+
+    Shared by ``slopsearx_get_service_status`` and the ``slopsearx://health/
+    summary`` resource so both report the same authoritative values
+    (VAL-DIAG-010). Deliberately excludes credentials, raw audit, environment,
+    and unrestricted metrics.
+    """
     ctx = state.ctx
     window = ctx.client_rate_window
     valkey_connected: bool | None = False
@@ -783,19 +1137,59 @@ async def slopsearx_get_service_status() -> dict[str, Any]:
         valkey_connected = window._connected
         fail_closed = window._fail_closed
 
+    cache_available = bool(ctx.cache is not None and ctx.cache.is_connected)
+    snapshots_available = bool(state.snapshots.available)
+    job_store_available = bool(state.job_store.available)
+    engine_count = len(state.catalog.enabled())
+
+    causes: list[str] = []
+    if not valkey_connected:
+        causes.append("Valkey unavailable")
+    if not cache_available:
+        causes.append("cache unavailable")
+    if not snapshots_available:
+        causes.append("snapshot store unavailable")
+    if not job_store_available:
+        causes.append("research job store unavailable")
+
     return {
-        "status": "ok",
         "version": state.version,
+        "contract_version": MCP_CONTRACT_VERSION,
         "valkey": {"connected": valkey_connected, "fail_closed": fail_closed},
-        "cache_connected": bool(ctx.cache is not None and ctx.cache.is_connected),
-        "snapshots_available": state.snapshots.available,
-        "job_store_available": state.job_store.available,
-        "active_engines": len(ctx.active_engines),
+        "cache_connected": cache_available,
+        "snapshots_available": snapshots_available,
+        "job_store_available": job_store_available,
+        "active_engines": engine_count,
         "router_enabled": bool(ctx.router is not None and ctx.router.enabled),
-        "engine_health": {
-            "note": "/health does not actively probe external APIs; use search outcomes for passive engine health"
+        "engine_health": _engine_health_by_class(state),
+        "grants": _enabled_grants(state),
+        "policy_bounds": {
+            "max_query_length": state.policy.max_query_length,
+            "max_results": state.policy.max_results,
+            "snapshot_ttl_seconds": state.policy.snapshot_ttl_seconds,
+            "job_max_queries": state.policy.job_max_queries,
+            "job_max_engines_per_query": state.policy.job_max_engines_per_query,
+            "job_max_results": state.policy.job_max_results,
+            "job_default_deadline_seconds": state.policy.job_default_deadline_seconds,
         },
+        "degradation": {
+            "operational": not causes,
+            "summary": "fully operational" if not causes else "degraded",
+            "causes": causes,
+        },
+        "freshness": now or _dt.datetime.now(_dt.timezone.utc).isoformat(),
     }
+
+
+async def slopsearx_get_service_status() -> dict[str, Any]:
+    """Operational status: liveness, versions, Valkey, engine inventory.
+
+    Returns the curated, non-secret diagnostics schema shared with
+    ``slopsearx://health/summary``. /health does not actively probe external
+    APIs — engine health is observed passively through search outcomes.
+    """
+    state = get_state()
+    return {"status": "ok", **service_diagnostics(state)}
 
 
 # ---------------------------------------------------------------------------
@@ -820,9 +1214,20 @@ async def slopsearx_read_results(
         return _error("invalid_input", "page must be >= 1", field="page")
 
     page_size = _bounded_max_results(state, max_results)
-    snapshot = await state.snapshots.get(cursor)
+    lookup = await state.snapshots.read(cursor)
+    if lookup.unavailable:
+        return _error("store_unavailable", "snapshot store is unavailable", field="cursor")
+    if lookup.expired:
+        return _error(
+            "expired_handle",
+            "snapshot has expired",
+            handle=cursor,
+            expires_at=_expires_iso(lookup.expires_at),
+            field="cursor",
+        )
+    snapshot = lookup.snapshot
     if snapshot is None:
-        return _error("invalid_cursor", "unknown or expired cursor", field="cursor")
+        return _error("invalid_cursor", "unknown cursor", field="cursor")
 
     start = (page - 1) * page_size
     end = start + page_size
@@ -831,7 +1236,10 @@ async def slopsearx_read_results(
         "query": snapshot.query,
         "cursor": cursor,
         "page": page,
-        "results": [_result_to_dict(result) for result in page_results],
+        "results": [
+            _result_to_dict(result, result_id=state.snapshots.result_id(cursor, start + index))
+            for index, result in enumerate(page_results)
+        ],
         "meta": {
             "total": snapshot.total,
             "has_more": end < snapshot.total,
@@ -841,10 +1249,12 @@ async def slopsearx_read_results(
 
 
 async def slopsearx_read_result(result_id: str) -> dict[str, Any]:
-    """Expand one server-issued result ID from a snapshot.
+    """Expand one server-issued result ID into a full result record.
 
-    Includes provenance (query, engines, rank explanation). SlopSearX
-    does not fetch or verify the full page body.
+    Returns complete content (not the card snippet), media fields, every
+    contributing engine, provenance, a ``content_available`` flag, and an
+    explicit note that SlopSearX did not fetch or verify the linked page.
+    Served from the immutable snapshot — the search is not re-executed.
     """
     state = get_state()
     if ":" not in result_id:
@@ -857,22 +1267,24 @@ async def slopsearx_read_result(result_id: str) -> dict[str, Any]:
     if index < 0:
         return _error("invalid_result_id", "result index out of range", field="result_id")
 
-    snapshot = await state.snapshots.get(snapshot_id)
+    lookup = await state.snapshots.read(snapshot_id)
+    if lookup.unavailable:
+        return _error("store_unavailable", "snapshot store is unavailable", field="result_id")
+    if lookup.expired:
+        return _error(
+            "expired_handle",
+            "snapshot has expired",
+            handle=result_id,
+            expires_at=_expires_iso(lookup.expires_at),
+            field="result_id",
+        )
+    snapshot = lookup.snapshot
     if snapshot is None:
         return _error("invalid_cursor", "unknown or expired snapshot", field="result_id")
     if index >= len(snapshot.results):
         return _error("invalid_result_id", "result index out of range", field="result_id")
 
-    result = snapshot.results[index]
-    expanded = _result_to_dict(result)
-    expanded["provenance"] = {
-        "query": snapshot.query,
-        "query_id": snapshot.query_id,
-        "source_engines": sorted(result.engines) if result.engines else [result.engine],
-        "rank_explanation": RANKING_EXPLANATION,
-    }
-    expanded["note"] = "SlopSearX did not fetch or verify the full page body"
-    return expanded
+    return _result_record(snapshot.results[index], snapshot, result_id)
 
 
 # ---------------------------------------------------------------------------
@@ -956,7 +1368,15 @@ async def slopsearx_start_research(
     state.runner.enqueue(job.job_id)
 
     result = _job_summary(job)
-    result["note"] = "job queued; in-flight engine calls are not interrupted by cancellation"
+    if not state.job_store.available:
+        result["degraded"] = True
+        result["ephemeral"] = True
+        result["note"] = (
+            "job store unavailable — this job is process-local and non-durable; "
+            "idempotency was not checked or persisted (VAL-RESEARCH-003)"
+        )
+    else:
+        result["note"] = "job queued; in-flight engine calls are not interrupted by cancellation"
     return result
 
 
@@ -980,11 +1400,12 @@ def _resolve_deadline(state: McpState, deadline: str | None) -> float | dict[str
 async def slopsearx_get_job(job_id: str) -> dict[str, Any]:
     """Return research job state, progress, and per-query cursors."""
     state = get_state()
+    if not state.job_store.available:
+        return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
     job = await state.job_store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
     result = _job_summary(job)
-    result["deadline"] = _deadline_iso(job.deadline)
     result["created_at"] = _dt.datetime.fromtimestamp(job.created_at, tz=_dt.timezone.utc).isoformat()
     result["note"] = "completed queries are immutable; their cursors remain readable"
     return result
@@ -997,6 +1418,8 @@ async def slopsearx_cancel_job(job_id: str) -> dict[str, Any]:
     their evidence stays readable.
     """
     state = get_state()
+    if not state.job_store.available:
+        return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
     job = await state.job_store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
@@ -1019,27 +1442,201 @@ async def slopsearx_cancel_job(job_id: str) -> dict[str, Any]:
     }
 
 
+async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
+    """Re-run only failed/empty subqueries of a research job.
+
+    Successful subqueries are never re-executed; their snapshot cursors
+    remain byte-for-byte unchanged. Each retried subquery is linked to the
+    same job under a NEW attempt/cursor; the original failed/empty attempt's
+    evidence stays readable. Returns a structured ``no_retryable_work``
+    error when the job has no failed/empty work (VAL-RESEARCH-008/016/021).
+    """
+    state = get_state()
+    if not state.policy.tool_enabled("research"):
+        return _error("tool_disabled", "slopsearx_retry_research requires the research grant (MCP_GRANT_RESEARCH=1)")
+    if not state.job_store.available:
+        return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
+    job = await state.job_store.load(job_id)
+    if job is None:
+        return _error("invalid_job_id", "unknown job id", field="job_id")
+
+    # Terminal-state gate: a cancelled or already-expired job is never
+    # resurrected by a retry (VAL-RESEARCH-010/011).
+    if job.state in ("cancelled", "expired"):
+        return {
+            "job_id": job.job_id,
+            "state": job.state,
+            "note": "job already reached a terminal state; it was not retried",
+        }
+
+    retryable = [query for query in job.queries if is_retryable_query(query)]
+    if not retryable:
+        return _error(
+            "no_retryable_work",
+            "job has no failed or empty subqueries to retry",
+            job_id=job.job_id,
+            state=job.state,
+            field="job_id",
+        )
+
+    job = await state.runner.retry(job_id)
+    if job is None:
+        return _error("invalid_job_id", "unknown job id", field="job_id")
+
+    result = _job_summary(job)
+    if job.state == "expired":
+        # Deadline gate: a deadline-passed retry finalizes to expired instead
+        # of re-running and ending in partial/failed.
+        result["note"] = (
+            "job deadline had already passed; retry finalized the job to expired "
+            "and re-executed no subqueries"
+        )
+    else:
+        result["retried"] = [query.index for query in retryable]
+        result["note"] = (
+            "retried only failed/empty subqueries; each gained a new linked attempt, "
+            "and successful evidence was preserved unchanged"
+        )
+    return result
+
+
+async def slopsearx_extend_research(
+    job_id: str,
+    query: str,
+    intent: str = "web",
+    engines: list[str] | None = None,
+) -> dict[str, Any]:
+    """Append and execute one bounded follow-up query to a research job.
+
+    Appends a new subquery only while the job has remaining query budget
+    (under ``job_max_queries``) and its deadline has not passed. The
+    follow-up is validated and routed through the same sensitive-engine /
+    specialist-grant gate as a normal subquery (VAL-RESEARCH-009/015/020).
+    """
+    state = get_state()
+    if not state.policy.tool_enabled("research"):
+        return _error("tool_disabled", "slopsearx_extend_research requires the research grant (MCP_GRANT_RESEARCH=1)")
+    if not state.job_store.available:
+        return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
+    job = await state.job_store.load(job_id)
+    if job is None:
+        return _error("invalid_job_id", "unknown job id", field="job_id")
+
+    error = _validate_query(query, state)
+    if error:
+        return error
+    if intent not in INTENT_PROFILES:
+        return _error(
+            "invalid_input",
+            f"unknown intent '{intent}'",
+            field="intent",
+            valid_alternatives=sorted(INTENT_PROFILES),
+        )
+    required_grant = INTENT_GRANTS.get(intent)
+    if required_grant is not None and not state.policy.tool_enabled(required_grant):
+        return _error(
+            "tool_disabled",
+            f"intent '{intent}' requires the {required_grant} grant ({GRANT_ENV[required_grant]}=1)",
+            field="intent",
+            grant=GRANT_ENV[required_grant],
+        )
+
+    # Resolve the follow-up engine scope through the shared policy gate.
+    if engines:
+        policy_error = _enforce_policy(state, list(engines), field="engines")
+        if policy_error:
+            return policy_error
+        # Cap an explicit engine list to the per-query bound, in parity with
+        # the intent path below, so extend can never exceed job_max_engines.
+        resolved_engines = list(engines)[: state.policy.job_max_engines_per_query]
+    else:
+        resolved_engines, _ = resolve_intent(intent, state.catalog)
+        resolved_engines = resolved_engines[: state.policy.job_max_engines_per_query]
+        sensitive = [
+            name
+            for name in resolved_engines
+            if name in state.policy.sensitive_engines and not state.policy.targeted_sensitive_allowed
+        ]
+        if sensitive:
+            resolved_engines = [name for name in resolved_engines if name not in state.policy.sensitive_engines]
+
+    # Budget + deadline guards (VAL-RESEARCH-015): reject without corrupting.
+    if len(job.queries) >= state.policy.job_max_queries:
+        return _error(
+            "job_budget_exceeded",
+            f"job is at its query budget of {state.policy.job_max_queries} subqueries",
+            field="query",
+        )
+    if time.time() >= job.deadline:
+        return _error("deadline_exceeded", "job deadline has passed; cannot extend", field="query")
+
+    new_query = ResearchQuery(
+        index=len(job.queries),
+        query=query.strip(),
+        intent=intent,
+        engines=resolved_engines,
+    )
+    job.queries.append(new_query)
+    await state.job_store.save(job)
+
+    job = await state.runner.run_pending(job)
+    result = _job_summary(job)
+    result["note"] = "follow-up query appended and executed; prior completed evidence was preserved"
+    return result
+
+
 def _job_summary(job: ResearchJob) -> dict[str, Any]:
-    """Compact job view for tool responses."""
+    """Compact job view for tool responses.
+
+    Exposes per-query state plus per-engine coverage (each entry carrying
+    ``{engine, bucket, status, result_count, failure_class}``) and the
+    disjoint coverage summary per query and at the job level.
+    """
     completed, total = job.progress
+    job_coverage = summarize_coverage([entry for query in job.queries for entry in query.engine_coverage])
     return {
         "job_id": job.job_id,
         "state": job.state,
         "question": job.question,
         "strategy": job.strategy,
         "progress": {"completed": completed, "total": total},
+        "deadline": _deadline_iso(job.deadline) if job.deadline else None,
+        "idempotency_key": job.idempotency_key,
         "queries": [
             {
                 "index": query.index,
                 "query": query.query,
                 "intent": query.intent,
+                "engines": query.engines,
                 "state": query.state,
                 "result_count": query.result_count,
                 "query_id": query.query_id,
                 "cursor": query.cursor,
                 "error": query.error,
+                "attempts": [
+                    {
+                        "cursor": attempt.cursor,
+                        "query_id": attempt.query_id,
+                        "result_count": attempt.result_count,
+                        "error": attempt.error,
+                        "state": attempt.state,
+                    }
+                    for attempt in query.attempts
+                ],
+                "engine_coverage": [
+                    {
+                        "engine": cov.engine,
+                        "bucket": cov.bucket,
+                        "status": cov.status,
+                        "result_count": cov.result_count,
+                        "failure_class": cov.failure_class,
+                    }
+                    for cov in query.engine_coverage
+                ],
+                "coverage": summarize_coverage(query.engine_coverage).as_dict(),
             }
             for query in job.queries
         ],
+        "coverage": job_coverage.as_dict(),
         "warnings": job.warnings,
     }

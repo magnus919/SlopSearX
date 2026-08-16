@@ -99,6 +99,43 @@ class TestCatalogBasics:
         assert all(isinstance(v, list) and v for v in families.values())
 
 
+class TestCatalogFeatureMatrix:
+    """The declarative per-engine capability matrix (design §4.6, capability-catalog)."""
+
+    def test_supported_filters_always_has_all_four_keys(self) -> None:
+        catalog = _catalog()
+        for cap in catalog.all():
+            assert set(cap.supported_filters) == {"language", "time_range", "safesearch", "pagination"}
+            assert all(isinstance(v, bool) for v in cap.supported_filters.values())
+
+    def test_supported_result_types_and_failure_classes_in_vocab(self) -> None:
+        catalog = _catalog()
+        from slopsearx.adapter import FAILURE_CLASS_TOKENS, SUPPORTED_RESULT_TYPES
+
+        for cap in catalog.all():
+            assert cap.supported_result_types
+            assert set(cap.supported_result_types) <= set(SUPPORTED_RESULT_TYPES)
+            assert cap.failure_classes
+            assert set(cap.failure_classes) <= set(FAILURE_CLASS_TOKENS)
+
+    def test_sensitive_defaults_and_policy_override(self) -> None:
+        catalog = _catalog()
+        assert catalog.get("hibp").sensitive is True  # type: ignore[union-attr]
+        assert catalog.get("dehashed").sensitive is True  # type: ignore[union-attr]
+        assert catalog.get("wikipedia").sensitive is False  # type: ignore[union-attr]
+
+        override = _catalog(sensitive_engines={"cve"})
+        assert override.get("cve").sensitive is True  # type: ignore[union-attr]
+        assert override.get("hibp").sensitive is False  # type: ignore[union-attr]
+
+    def test_cost_class_and_last_known_status_present(self) -> None:
+        catalog = _catalog()
+        for cap in catalog.all():
+            assert cap.cost_class == ""  # unknown by default; never fabricated
+            assert cap.last_known_status == "unknown"
+            assert cap.last_known_status_at is None
+
+
 class TestIntentProfiles:
     def test_code_profile_known_engines(self) -> None:
         catalog = _catalog()

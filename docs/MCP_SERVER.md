@@ -11,9 +11,9 @@ The MCP server runs the **same pipeline** as the HTTP API
 deduplication, caching, and failure semantics. The HTTP API remains the
 SearXNG compatibility boundary; MCP is a second, agent-native surface.
 
-- **Tools (13):** intent search, targeted search, jobs, security, science,
+- **Tools (15):** intent search, targeted search, jobs, security, science,
   capability listing, scope explanation, service status, snapshot reads,
-  research jobs (start/get/cancel).
+  research jobs (start/get/cancel/retry/extend).
 - **Resources:** `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`.
 - **Prompts (4):** repeatable agent workflows that compose the tools.
@@ -38,7 +38,7 @@ pip install -e ".[dev]"      # or: pip install slopsearx
 Verify the server starts and lists its tools:
 
 ```bash
-slopsearx-mcp --help 2>&1 | head -5   # no --help flag; use the client checks below
+slopsearx-mcp --help 2>&1 | head -5   # shows the CLI flags (--remote, --token, --oauth, ...)
 ```
 
 ## 3. Configuration
@@ -488,8 +488,10 @@ npx @modelcontextprotocol/inspector -- /path/to/slopsearx/.venv/bin/slopsearx-mc
 
 All tools return JSON. A search tool returns an envelope with `results`,
 `scope` (what was selected and why), `engine_outcomes` (which sources
-answered and which failed), and `meta` (query id, cache status, partial
-flag, rank explanation, pagination cursor, warnings).
+answered and which failed), a structured `enforcement` report (per-filter
+`enforced`/`partially_enforced`/`unsupported`/`rejected` with reasons), and
+`meta` (query id, cache status, partial flag, rank explanation, pagination
+cursor, warnings).
 
 ### 6.1 `slopsearx_search`
 
@@ -513,17 +515,20 @@ Intent-based search — the primary entry point.
 Deliberate, auditable selection of named engines. Unknown or inactive
 engines are rejected with a list of valid alternatives.
 
-> **Sensitive engines are gated by an operator grant.** The engines in
-> `mcp.sensitive_engines` (default: `hibp`, `dehashed`) are **never**
-> reachable through generic routing, categories, or intent profiles — that
-> is deliberate. If you name one in `slopsearx_search_targeted` without the
-> operator having set `MCP_TARGETED_SENSITIVE_ALLOWED=1` (or
-> `targeted_sensitive_allowed: true`), the tool returns `tool_disabled`
+> **Sensitive engines are gated by one uniform operator grant.** The engines in
+> `mcp.sensitive_engines` (default: `hibp`, `dehashed`) are **never** reachable
+> through generic routing, categories, or intent profiles — that is deliberate.
+> They are also unreachable through any explicit-engine path unless the operator
+> set the single sensitive-engine grant `MCP_TARGETED_SENSITIVE_ALLOWED=1` (or
+> `targeted_sensitive_allowed: true`). One shared policy gate applies this grant
+> uniformly across **every** search path — generic `slopsearx_search` with an
+> explicit `engines` list, `slopsearx_search_targeted`, jobs, security, and
+> science. Naming a sensitive engine without the grant returns `tool_disabled`
 > listing the rejected engines. This is a policy boundary, not a bug: the
 > operator must explicitly opt in before an agent can query breach and
-> credential-exposure sources through this tool. The security tool
-> (`slopsearx_search_security`) uses its own grant (`MCP_GRANT_SECURITY`)
-> for its evidence profiles, which include the same sensitive engines.
+> credential-exposure sources through any tool. The specialist grants
+> (`MCP_GRANT_JOBS/SECURITY/SCIENCE`) enable their tools; they do **not** by
+> themselves grant sensitive-engine access.
 
 ### 6.3 `slopsearx_search_jobs` (grant: `MCP_GRANT_JOBS`)
 
@@ -590,10 +595,52 @@ fetcher.
 - `slopsearx_cancel_job(job_id)` — best-effort: stops undispatched
   queries; in-flight upstream calls complete and their evidence stays
   readable.
+- `slopsearx_retry_research(job_id)` — re-runs only the failed/empty
+  subqueries of a completed job, reusing successful subqueries'
+  byte-for-byte-unchanged snapshot cursors. Each retried subquery is
+  linked to the same job under a NEW attempt/cursor; the original attempt's
+  evidence stays readable. Returns a structured `no_retryable_work` error
+  when the job has no failed/empty work.
+- `slopsearx_extend_research(job_id, query)` — a bounded follow-up query
+  within the job's remaining budget, persisted as part of the same job.
 
 Jobs are idempotent (caller-supplied `idempotency_key`), budget-bounded,
 and expire after 24h. Stale `running` jobs from a dead process are marked
-`expired` at startup.
+`expired` at startup. Completed queries are immutable — their cursors remain
+readable across retry and cancel.
+
+### 6.14 Why there is no separate "advanced search" tool
+
+Earlier design work (the original PRD) floated a dedicated, typed
+"advanced search" operation with explicit detail selection and
+`requires_answers` / `requires_media` / `requires_source_type`
+requirements. That separate tool was **not** added. The richer `include`,
+detail (record vs. card), and capability-`requires_*` semantics on the
+existing tools cover the same needs with no extra surface area:
+
+- **Field / detail selection.** `slopsearx_search(include=[...])` selects
+  which envelope sections to return (`results`, `suggestions`,
+  `engine_status`, `diagnostics`). Detail is progressive: cards are compact
+  and `slopsearx_read_result` expands a card into a full record (complete
+  `content`, media, every contributing engine, provenance) without a new
+  tool. `max_results` bounds the presented page.
+- **`requires_*` evaluation.** `slopsearx_list_capabilities` exposes each
+  engine's `supported_result_types` (text/answers/corrections/infoboxes/
+  media/structured) and `supported_filters`, generated from the live
+  registry. An agent that "requires answers" or "requires media" reads the
+  catalog to select engines that declare the result type, then dispatches
+  with `engines`/`intent`/`categories` — the "require" check is delegated to
+  the catalog, not a new tool.
+- **Explicit source boundaries.** `slopsearx_search_targeted` (and the
+  specialist tools) already provide deliberate, auditable engine selection
+  when a precise source set is required.
+
+Because the catalog already evaluates capability requirements and the
+search/read tools already expose explicit detail control, a separate typed
+tool would only duplicate surface area, re-implement the policy gate, and
+add a second way to express the same request. Keeping one search surface
+with progressive disclosure is the deliberate, documented decision; the
+capability catalog is the canonical way to inspect what a source supports.
 
 ## 7. Resources and prompts
 
@@ -619,28 +666,35 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
   Pages come from captured evidence; the query never re-runs.
 - **Do not invent engines.** Read `slopsearx://capabilities` for the live
   set. Unknown engine names are rejected with alternatives.
-- **Respect filter honesty.** `language`, `time_range`, and `safesearch`
-  are not enforced by any adapter. Strict SafeSearch is refused rather than
-  silently claimed. Use `safesearch=moderate` at most, and treat the
-  warnings as authoritative.
+- **Respect filter honesty.** Every search response carries a structured
+  `enforcement` report keyed by filter name (`language`, `time_range`,
+  `safesearch`, plus specialist params such as jobs `location`/`employment_type`
+  and science `date_from`/`date_to`), each entry `{requested, status, reason,
+  enforced_by}`. `status` is one of `enforced`/`partially_enforced`/`unsupported`/
+  `rejected`. No adapter enforces `language`, `time_range`, or `moderate`
+  safesearch, so those report `unsupported`; strict SafeSearch is `rejected`
+  (fails closed). Read the `status` field, not the warning strings, to decide
+  how a filter was applied.
 - **Specialist workflows need grants.** Jobs, security, science, and
   research tools return a clear `tool_disabled` error until the operator
   grants them — do not work around it.
 - **Sensitive engines are off-limits by default.** `hibp` and `dehashed`
-  are rejected by `slopsearx_search_targeted` unless the operator set
-  `MCP_TARGETED_SENSITIVE_ALLOWED=1`. A `tool_disabled` error naming those
-  engines means the operator has not opted in — do not try alternate
-  spellings or workarounds; report the grant requirement instead.
+  are rejected by **every** search path (generic explicit engines, targeted,
+  jobs, security, science) unless the operator set `MCP_TARGETED_SENSITIVE_ALLOWED=1`.
+  A `tool_disabled` error naming those engines means the operator has not
+  opted in — do not try alternate spellings or workarounds; report the grant
+  requirement instead.
 
 ## 9. Safety boundaries
 
-- **Sensitive engines (`hibp`, `dehashed`) require explicit operator
-  grants.** They are unreachable from generic, category, and intent
-  routing. `slopsearx_search_targeted` rejects them unless
-  `MCP_TARGETED_SENSITIVE_ALLOWED=1`; `slopsearx_search_security` can
-  include them only under its own `MCP_GRANT_SECURITY`. Operators should
-  treat granting either as authorizing queries against breach and
-  credential-exposure data.
+- **Sensitive engines (`hibp`, `dehashed`) require one explicit operator
+  grant.** They are unreachable from generic, category, and intent routing,
+  and from every explicit-engine path, unless `MCP_TARGETED_SENSITIVE_ALLOWED=1`
+  is set. The single shared policy gate applies the grant uniformly across
+  generic, targeted, jobs, security, and science — the specialist grants
+  enable their tools but do not grant sensitive access. Operators should
+  treat granting `MCP_TARGETED_SENSITIVE_ALLOWED` as authorizing queries
+  against breach and credential-exposure data.
 - API keys are never exposed: the catalog reports only `auth.class` and
   `auth.configured`.
 - `read_results`/`read_result` accept only server-issued cursors/IDs —
@@ -660,14 +714,23 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
 
 - **Valkey is the only shared state.** Without it, searches degrade
   gracefully (no cache, no rate-limit enforcement, no snapshots, no jobs).
-- **Versioning.** The MCP server reports the package version
-  (`importlib.metadata`), not the FastAPI app's `/health` version field.
+- **Versioning.** `slopsearx_get_service_status` and `slopsearx://health/summary`
+  report two versions: the package version (`importlib.metadata`, `0.2.0`)
+  and the MCP contract version (`contract_version`), not the FastAPI app's
+  `/health` version field.
 - **Metrics.** Per-tool call/error/latency counters appear on the HTTP
   service's `/metrics` endpoint (`slopsearx_mcp_tool_*`) — operators only;
   agents see `slopsearx_get_service_status` instead.
-- **Cache scoping.** Cached responses are keyed by query, language,
-  safesearch, categories, engines, page, and time range, so a cached
-  response always matches the requested scope.
+- **Cache scoping & representation identity.** Cached responses are keyed by
+  query, language, safesearch, categories, engines, page, and time range, so a
+  cached response always matches the requested search scope. The cache stores
+  the **canonical full response** — all include-able fields and the unsliced
+  result set. `include` filtering and the `max_results` presentation slice are
+  derived at the MCP read boundary from the current request, never from the
+  request that populated the cache, so a cached response's `include`/`max_results`
+  view always agrees with the current request. `max_results` bounds the presented
+  page; it does not truncate the captured snapshot (pagination still reaches the
+  full set).
 
 ## 11. Troubleshooting
 
@@ -679,10 +742,10 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
 | Gateway `--oauth` prints the URL but authorization times out | The browser never hit the callback (loopback port blocked or URL opened on a different host); use `--oauth-no-browser` and complete the redirect on the agent host |
 | Gateway re-authorizes on every run | The token file was not persisted — pass `--oauth-token-file FILE` (or `MCP_REMOTE_TOKEN_FILE`) to a stable path |
 | Tool returns `tool_disabled` | Grant missing: set `MCP_GRANT_JOBS/SECURITY/SCIENCE/RESEARCH=1` |
-| `slopsearx_search_targeted` returns `tool_disabled` naming `hibp`/`dehashed` | Sensitive engines need the targeted grant: `MCP_TARGETED_SENSITIVE_ALLOWED=1` (or `mcp.targeted_sensitive_allowed: true`) — deliberate policy boundary, not a bug |
+| Any search tool returns `tool_disabled` naming `hibp`/`dehashed` | Sensitive engines need the uniform grant: `MCP_TARGETED_SENSITIVE_ALLOWED=1` (or `mcp.targeted_sensitive_allowed: true`) — deliberate policy boundary, not a bug |
 | `invalid_scope` with alternatives | Engine name typo or engine disabled in config |
 | `safesearch_unenforced` | No adapter enforces SafeSearch; use `moderate`/`off` |
-| `invalid_cursor` / `invalid_result_id` | Snapshot expired (TTL) or Valkey unavailable at search time |
+| `expired_handle` / `store_unavailable` / `invalid_cursor` / `invalid_result_id` | Snapshot read lifecycle: `expired_handle` when a snapshot is present but past its TTL (with `expires_at`); `store_unavailable` when Valkey is unreachable at read time; `invalid_cursor`/`invalid_result_id` when the handle is unknown/malformed |
 | `all_engines_failed` | Every selected engine failed; check `engine_outcomes` and retry |
 | Research job stuck `running` | Process died; jobs are marked `expired` at next startup |
 | No results but engines `ok` | Legitimate empty match (e.g. jobs tool without a company) |

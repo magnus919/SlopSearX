@@ -4,8 +4,9 @@
 
 ### Features
 
-* add MCP server (`slopsearx-mcp`): 13 intent-level tools, capability
-  discovery, scope explanation, snapshot pagination, research jobs, and
+* add MCP server (`slopsearx-mcp`): 15 intent-level tools, capability
+  discovery, scope explanation, snapshot pagination, research jobs (including
+  selective retry and bounded follow-up), and
   bearer-token HTTP transport — see `docs/MCP_SERVER.md`
 * add remote gateway mode (`slopsearx-mcp --remote <url>`): a stdio MCP
   server that proxies tools, resources, and prompts to a remote SlopSearX
@@ -21,16 +22,40 @@
 * extract shared `SearchService`/`ScopeResolver` pipeline used by both the
   HTTP API and the MCP server
 * scope cache keys to include categories, engines, page, and time range so
-  cached responses can never cross search scopes
+  cached responses can never cross search scopes; cache the canonical full
+  response and derive the requested `include`/`max_results` view at the MCP
+  read boundary so representation never depends on the request that populated
+  the cache
 * add runtime capability catalog (`slopsearx/capabilities.py`) generated
   from the live engine registry, with intent profiles and an operator
   policy model for MCP grants, bounds, and sensitive engines
+* unify sensitive-engine and specialist-grant enforcement behind one shared
+  policy gate applied to every search path (generic explicit engines,
+  targeted, jobs, security, science); `MCP_TARGETED_SENSITIVE_ALLOWED` is the
+  single grant that permits sensitive engines, applied uniformly
+* add a structured per-filter enforcement report (`enforcement`) to every
+  search tool with statuses `enforced`/`partially_enforced`/`unsupported`/
+  `rejected`, replacing prose-only filter warnings
+* make `SearchResult` serialization JSON-safe (set → sorted list) so engine
+  provenance survives cache and snapshot round-trips
+* harden snapshot/cursor lifecycle with explicit `expired_handle` and
+  `store_unavailable` semantics and JSON-safe provenance through snapshots
+* persist per-query and per-engine research coverage with structured failure
+  classes; add selective retry (`slopsearx_retry_research`) and bounded
+  follow-up (`slopsearx_extend_research`)
+* expose the full engine capability matrix and curated non-secret operational
+  diagnostics (service + MCP contract version, Valkey state, engine count,
+  grants by name, health by status class, policy bounds, degradation summary)
 
 ### Documentation
 
 * add end-user and agent install/configuration guide for the MCP server
   (`docs/MCP_SERVER.md`); reconcile the README engine table with the live
   51-adapter registry
+* fix the stale 48-engine count in `docs/ENGINE_ADAPTERS.md` and `AGENTS.md`
+  (51 registered adapters, including the jobs adapters `ashby`, `greenhouse`,
+  `lever`); correct the cache-scoping, sensitive-engine-grant, and snapshot
+  error-mapping claims to match the implemented behavior
 
 ## [0.2.0](https://github.com/magnus919/SlopSearX/compare/v0.1.1...v0.2.0) (2026-07-02)
 

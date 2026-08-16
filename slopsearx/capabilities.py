@@ -20,7 +20,13 @@ from typing import Any
 
 import yaml
 
-from slopsearx.adapter import EngineAdapter, list_engines
+from slopsearx.adapter import (
+    FAILURE_CLASS_TOKENS,
+    SUPPORTED_FILTER_KEYS,
+    SUPPORTED_RESULT_TYPES,
+    EngineAdapter,
+    list_engines,
+)
 from slopsearx.config import CONFIG_FILE_PATH, Config, EngineEntry, load_config
 
 # ---------------------------------------------------------------------------
@@ -79,6 +85,16 @@ class EngineCapability:
     auth_configured: bool
     scope_hints: list[str]
     caveats: list[str]
+    # Feature matrix (design §4.6): the full capability surface.
+    sensitive: bool = False  # reaching this engine requires the sensitive-engine grant
+    supported_filters: dict[str, bool] = field(default_factory=lambda: {key: False for key in SUPPORTED_FILTER_KEYS})
+    supported_result_types: list[str] = field(default_factory=lambda: ["text"])
+    failure_classes: list[str] = field(
+        default_factory=lambda: ["rate_limited", "blocked", "error", "timeout", "auth_required", "unavailable"]
+    )
+    cost_class: str = ""  # coarse operator hint; "" = unknown (emitted as null)
+    last_known_status: str = "unknown"  # ok|rate_limited|blocked|error|timeout|unknown
+    last_known_status_at: str | None = None  # ISO freshness marker, or None when unknown
 
     @property
     def subcategories(self) -> list[str]:
@@ -99,12 +115,14 @@ class CapabilityCatalog:
         adapters: dict[str, EngineAdapter] | None = None,
         required_key_engines: set[str] | frozenset[str] | None = None,
         engine_caveats: dict[str, list[str]] | None = None,
+        sensitive_engines: set[str] | frozenset[str] | None = None,
     ) -> None:
         self._config = config or load_config()
         self._adapters = adapters or {}
         self._required_key = (
             set(required_key_engines) if required_key_engines is not None else set(REQUIRED_KEY_ENGINES)
         )
+        self._sensitive = set(sensitive_engines) if sensitive_engines is not None else set(DEFAULT_SENSITIVE_ENGINES)
         self._caveats = dict(engine_caveats or _DEFAULT_ENGINE_CAVEATS)
         self._by_name = self._build()
 
@@ -132,6 +150,14 @@ class CapabilityCatalog:
                 auth_configured=auth_configured,
                 scope_hints=_scope_hints(categories),
                 caveats=list(self._caveats.get(name, [])),
+                sensitive=name in self._sensitive
+                or bool(getattr(adapter if adapter is not None else cls, "sensitive", False)),
+                supported_filters=_normalize_supported_filters(cls, adapter),
+                supported_result_types=_normalize_result_types(cls, adapter),
+                failure_classes=_normalize_failure_classes(cls, adapter),
+                cost_class=str(getattr(adapter if adapter is not None else cls, "cost_class", "") or ""),
+                last_known_status="unknown",
+                last_known_status_at=None,
             )
         return out
 
@@ -554,6 +580,40 @@ def _auth_class_for(
     if entry is None:
         return AUTH_UNKNOWN, False
     return AUTH_NONE, False
+
+
+def _normalize_supported_filters(
+    cls: type[EngineAdapter],
+    adapter: EngineAdapter | None,
+) -> dict[str, bool]:
+    """Normalize an adapter's declared supported_filters to all filter keys.
+
+    Every entry must carry boolean members for ``language``, ``time_range``,
+    ``safesearch``, and ``pagination`` (VAL-CAP-002), so undeclared keys
+    default to ``False``.
+    """
+    declared = getattr(adapter if adapter is not None else cls, "supported_filters", None) or {}
+    return {key: bool(declared.get(key)) for key in SUPPORTED_FILTER_KEYS}
+
+
+def _normalize_result_types(
+    cls: type[EngineAdapter],
+    adapter: EngineAdapter | None,
+) -> list[str]:
+    """Normalize declared supported_result_types to the stable vocabulary."""
+    declared = getattr(adapter if adapter is not None else cls, "supported_result_types", None) or ("text",)
+    values = [value for value in declared if value in SUPPORTED_RESULT_TYPES]
+    return values or ["text"]
+
+
+def _normalize_failure_classes(
+    cls: type[EngineAdapter],
+    adapter: EngineAdapter | None,
+) -> list[str]:
+    """Normalize declared failure_classes to the stable machine-readable set."""
+    declared = getattr(adapter if adapter is not None else cls, "failure_classes", None) or ()
+    values = [value for value in declared if value in FAILURE_CLASS_TOKENS]
+    return values or ["error"]
 
 
 def _scope_hints(categories: list[str]) -> list[str]:

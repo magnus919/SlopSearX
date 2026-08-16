@@ -157,7 +157,10 @@ class SlopSearxOAuthProvider:
             subject=self._subject,
         )
         await self._store.set("code", code, auth_code.model_dump(mode="json"), ttl=self._code_ttl)
-        return construct_redirect_uri(str(params.redirect_uri), code=code, state=params.state)
+        # The MCP SDK helper's return typing differs across mypy versions (str vs Any);
+        # bind to an explicitly-typed local so strict checks on both accept it.
+        redirect_uri: str = construct_redirect_uri(str(params.redirect_uri), code=code, state=params.state)
+        return redirect_uri
 
     async def load_authorization_code(
         self, client: OAuthClientInformationFull, authorization_code: str

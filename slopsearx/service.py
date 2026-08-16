@@ -516,9 +516,12 @@ class SearchService:
             tasks.append(asyncio.create_task(self._dispatch_with_semaphore(name, engine, request.query, search_params)))
             engine_names.append(name)
 
-        # Fire suggestion fetch concurrently with engine dispatch
+        # Fire suggestion fetch concurrently with engine dispatch. Suggestions
+        # are always fetched so the cached canonical response is complete; the
+        # requested include view is derived at read time (the cache key omits
+        # include/max_results/freshness, so the cache must hold the full form).
         suggestions_task: asyncio.Task[list[str]] | None = None
-        if "suggestions" in request.include and self._ctx.suggestion_service is not None:
+        if self._ctx.suggestion_service is not None:
             suggestions_task = asyncio.create_task(self._generate_suggestions(request.query))
 
         dispatch_results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -582,9 +585,11 @@ class SearchService:
 
         elapsed_ms = (time.monotonic() - t_start) * 1000
 
-        # Empty-scrape diagnostics (opt-in feature flag, plus MCP opt-in)
+        # Empty-scrape diagnostics (opt-in feature flag). Computed whenever the
+        # flag is enabled so the cached canonical response is complete; the
+        # include view is derived at read time.
         empty_engines: list[list[str]] = []
-        if self._ctx.empty_scrape_diagnostics_enabled and "diagnostics" in request.include:
+        if self._ctx.empty_scrape_diagnostics_enabled:
             scrape_engine_names = {name for name, engine in target.items() if engine.engine_type == "scrape"}
             empty_engines = extract_empty_scrape_engines(responses, scrape_engine_names)
             for name, reason in empty_engines:
@@ -607,16 +612,15 @@ class SearchService:
             if resp.infoboxes:
                 all_infoboxes.extend(resp.infoboxes)
 
-        # Presentation bound: never re-rank or renumber, just slice
-        results = ranked
-        if request.max_results is not None and request.max_results > 0:
-            results = ranked[: request.max_results]
-
-        response = SearchResponse(
+        # Build the canonical full response: every include-able field present
+        # and results unsliced. This is the form written to the cache, so a
+        # cache entry is independent of the populating request's
+        # include/max_results/freshness.
+        canonical = SearchResponse(
             query=request.query,
-            results=results,
+            results=ranked,
             scope=scope,
-            engine_outcomes=self._outcomes(responses, include_status="engine_status" in request.include),
+            engine_outcomes=self._outcomes(responses, include_status=True),
             suggestions=suggestions,
             answers=all_answers,
             corrections=all_corrections,
@@ -625,10 +629,13 @@ class SearchService:
             response_time_ms=round(elapsed_ms),
             partial=not all_unresponsive and non_ok > 0,
             all_unresponsive=all_unresponsive,
-            empty_engines=empty_engines if "diagnostics" in request.include else [],
+            empty_engines=empty_engines,
         )
 
-        await self._write_cache(request, response, all_unresponsive)
+        await self._write_cache(request, canonical, all_unresponsive)
+
+        # Derive the requested include-filtered + max_results-sliced view.
+        response = self._view_for_request(request, canonical)
 
         # Record audit trail (fire-and-forget)
         if self._ctx.audit_logger is not None:
@@ -673,7 +680,10 @@ class SearchService:
         m.cache_hits.inc({"type": "hit"})
         response = search_response_from_payload(payload)
         response.cached = True
-        return response
+        # The stored entry is the canonical full response; derive the view
+        # requested by THIS request (include filtering + max_results slicing)
+        # so a cache hit never leaks fields from the populating request.
+        return self._view_for_request(request, response)
 
     async def _write_cache(self, request: SearchRequest, response: SearchResponse, all_unresponsive: bool) -> None:
         """Persist a fresh response under the fully scoped cache key."""
@@ -766,6 +776,26 @@ class SearchService:
             for name, resp in responses.items()
         ]
 
+    @staticmethod
+    def _view_for_request(request: SearchRequest, response: SearchResponse) -> SearchResponse:
+        """Derive the requested view from a canonical full response.
+
+        Include filtering (``engine_outcomes``/``suggestions``/``empty_engines``)
+        and the ``max_results`` presentation bound depend only on the current
+        request. Applying them here — on both the fresh and the cache-hit path —
+        guarantees a cached response never returns a representation inconsistent
+        with the current request's requested fields or detail level.
+        """
+        if "engine_status" not in request.include:
+            response.engine_outcomes = []
+        if "suggestions" not in request.include:
+            response.suggestions = []
+        if "diagnostics" not in request.include:
+            response.empty_engines = []
+        if request.max_results is not None and request.max_results > 0:
+            response.results = response.results[: request.max_results]
+        return response
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -820,9 +850,21 @@ def unresponsive_from_outcomes(outcomes: list[EngineOutcome]) -> list[list[str]]
 # ---------------------------------------------------------------------------
 
 
+def search_result_to_dict(result: SearchResult) -> dict[str, Any]:
+    """Serialize a :class:`SearchResult` to a JSON-safe dict.
+
+    ``engines`` (a ``set[str]``) is canonicalized to a sorted list so the
+    value survives ``json.dumps`` without being stringified to its repr.
+    """
+    data = dataclasses.asdict(result)
+    data["engines"] = sorted(result.engines)
+    return data
+
+
 def search_response_to_payload(response: SearchResponse) -> dict[str, Any]:
     """Serialize a :class:`SearchResponse` for the Valkey cache (JSON-safe)."""
     payload = dataclasses.asdict(response)
+    payload["results"] = [search_result_to_dict(result) for result in response.results]
     payload["cached"] = False
     return payload
 
@@ -860,21 +902,46 @@ def search_response_from_payload(payload: dict[str, Any]) -> SearchResponse:
     )
 
 
+def _rehydrate_engines(value: Any) -> set[str]:
+    """Coerce a serialized ``engines`` value back into a ``set[str]``.
+
+    Accepts a JSON list of engine names (the canonical form) and, for
+    backward compatibility, the legacy stringified-set repr such as
+    ``"{'arxiv', 'github'}"`` — never iterating the string's characters.
+    """
+    if value is None:
+        return set()
+    if isinstance(value, str):
+        text = value.strip()
+        if text.startswith("{") and text.endswith("}"):
+            inner = text[1:-1]
+            return set(part.strip().strip("'\"") for part in inner.split(",") if part.strip())
+        # A single engine name written as a bare string.
+        return set(text.split())
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return {str(item) for item in value}
+    return set()
+
+
 def search_result_from_dict(data: dict[str, Any]) -> SearchResult:
     """Rehydrate a :class:`SearchResult` from a serialized dict."""
+    raw_category = data.get("category")
+    raw_score = data.get("score")
+    raw_position = data.get("position")
+    raw_tier = data.get("tier")
     return SearchResult(
         url=str(data.get("url", "")),
         title=str(data.get("title", "")),
         content=str(data.get("content", "")),
         engine=str(data.get("engine", "")),
-        engines=set(str(item) for item in (data.get("engines") or [])),
-        score=float(data.get("score", 0.0)),
-        position=int(data.get("position", 0)),
-        category=str(data.get("category", "general")),
+        engines=_rehydrate_engines(data.get("engines")),
+        score=float(raw_score) if raw_score is not None else 0.0,
+        position=int(raw_position) if raw_position is not None else 0,
+        category=raw_category if raw_category is not None else "general",
         published_date=data.get("published_date"),
         thumbnail=data.get("thumbnail"),
         img_src=data.get("img_src"),
-        tier=int(data.get("tier", 2)),
+        tier=int(raw_tier) if raw_tier is not None else 1,
     )
 
 

@@ -556,6 +556,52 @@ class TestCache:
         assert r1.cached is False and r2.cached is False
         assert len(cache._data) == 2
 
+    async def test_cache_include_filtering_is_request_scoped(self) -> None:
+        """VAL-CORRECT-009 — include filtering depends only on the current request."""
+        cache = _FakeCache()
+        service = _service(engines={"okeng": _OkEngine(count=2)}, cache=cache)
+
+        # Populate the cache with a request that omits engine_status.
+        without = await service.search(_req(include={"results"}))
+        assert without.cached is False
+        assert without.engine_outcomes == []
+
+        # A request that requests engine_status hits the cache and must still
+        # receive engine_outcomes — the cached canonical response is complete.
+        with_status = await service.search(_req(include={"results", "engine_status"}))
+        assert with_status.cached is True
+        assert len(with_status.engine_outcomes) == 1
+
+        # Reverse population order: warm with engine_status, read without.
+        with_status2 = await service.search(_req(query="other query", include={"results", "engine_status"}))
+        assert with_status2.cached is False
+        assert len(with_status2.engine_outcomes) == 1
+        without2 = await service.search(_req(query="other query", include={"results"}))
+        assert without2.cached is True
+        assert without2.engine_outcomes == []
+
+    async def test_cache_max_results_slicing_is_per_request(self) -> None:
+        """VAL-CORRECT-011 — max_results slicing is applied per request."""
+        cache = _FakeCache()
+        service = _service(engines={"okeng": _OkEngine(count=5)}, cache=cache)
+
+        # Warm with a large max_results, then read with a smaller one.
+        big = await service.search(_req(max_results=10))
+        assert big.cached is False
+        assert len(big.results) == 5
+        small = await service.search(_req(max_results=3))
+        assert small.cached is True
+        assert len(small.results) == 3
+
+        # Warm with a small max_results, then read with a larger one — the
+        # cached unsliced set must serve the full requested count, never a
+        # stale smaller slice.
+        small2 = await service.search(_req(query="warm small", max_results=3))
+        assert len(small2.results) == 3
+        big2 = await service.search(_req(query="warm small", max_results=10))
+        assert big2.cached is True
+        assert len(big2.results) == 5
+
 
 # ---------------------------------------------------------------------------
 # Cache key scoping
@@ -669,3 +715,182 @@ class TestPayloadRoundTrip:
         rebuilt = engine_outcome_from_dict(payload["engine_outcomes"][0])
         assert rebuilt.status == "rate_limited"
         assert rebuilt.latency_ms is None
+
+    # ------------------------------------------------------------------
+    # JSON-safe serialization (VAL-CORRECT-001/004/005/006/007/008)
+    # ------------------------------------------------------------------
+
+    def test_engines_serialized_as_sorted_list_not_set_repr(self) -> None:
+        result = SearchResult(
+            url="https://x.com",
+            title="X",
+            content="y",
+            engine="github",
+            engines={"github", "arxiv", "wikipedia"},
+        )
+        response = SearchResponse(query="", results=[result], scope=ScopeDecision(), engine_outcomes=[])
+
+        payload = search_response_to_payload(response)
+
+        stored = payload["results"][0]["engines"]
+        assert stored == ["arxiv", "github", "wikipedia"]
+        assert isinstance(stored, list)
+
+    def test_cache_round_trip_preserves_engine_set_exactly(self) -> None:
+        original_set = {"github", "arxiv", "wikipedia"}
+        result = SearchResult(url="https://x.com", title="X", content="y", engine="github", engines=set(original_set))
+        response = SearchResponse(query="", results=[result], scope=ScopeDecision(), engine_outcomes=[])
+
+        payload = search_response_to_payload(response)
+        rebuilt = search_result_from_dict(payload["results"][0])
+
+        assert rebuilt.engines == original_set
+        assert sorted(rebuilt.engines) == sorted(original_set)
+
+    def test_engines_count_preserved_after_round_trip(self) -> None:
+        for count in (1, 2, 0):
+            engines = {f"eng{i}" for i in range(count)}
+            result = SearchResult(url="https://x.com", title="X", content="y", engine="eng0", engines=engines)
+            response = SearchResponse(query="", results=[result], scope=ScopeDecision(), engine_outcomes=[])
+            payload = search_response_to_payload(response)
+            rebuilt = search_result_from_dict(payload["results"][0])
+            assert len(rebuilt.engines) == count
+
+    def test_optional_fields_round_trip_without_coercion(self) -> None:
+        result = SearchResult(
+            url="https://x.com",
+            title="X",
+            content="y",
+            engine="eng",
+            engines={"eng"},
+            score=4.5,
+            position=7,
+            category="science",
+            published_date="2026-03-01",
+            thumbnail="https://x.com/thumb.png",
+            img_src="https://x.com/img.png",
+            tier=2,
+        )
+        response = SearchResponse(query="", results=[result], scope=ScopeDecision(), engine_outcomes=[])
+
+        payload = search_response_to_payload(response)
+        rebuilt = search_result_from_dict(payload["results"][0])
+
+        assert rebuilt.score == 4.5 and isinstance(rebuilt.score, float)
+        assert rebuilt.position == 7 and isinstance(rebuilt.position, int)
+        assert rebuilt.category == "science"
+        assert rebuilt.published_date == "2026-03-01"
+        assert rebuilt.thumbnail == "https://x.com/thumb.png"
+        assert rebuilt.img_src == "https://x.com/img.png"
+        assert rebuilt.tier == 2 and isinstance(rebuilt.tier, int)
+
+    def test_optional_fields_none_stays_none(self) -> None:
+        result = SearchResult(
+            url="https://x.com",
+            title="X",
+            content="y",
+            engine="eng",
+            engines={"eng"},
+            published_date=None,
+            thumbnail=None,
+            img_src=None,
+        )
+        response = SearchResponse(query="", results=[result], scope=ScopeDecision(), engine_outcomes=[])
+        payload = search_response_to_payload(response)
+
+        rebuilt = search_result_from_dict(payload["results"][0])
+
+        assert rebuilt.published_date is None
+        assert rebuilt.thumbnail is None
+        assert rebuilt.img_src is None
+
+    def test_empty_collections_round_trip_as_empty(self) -> None:
+        response = SearchResponse(
+            query="q",
+            results=[],
+            scope=ScopeDecision(),
+            engine_outcomes=[],
+            suggestions=[],
+            answers=[],
+            corrections=[],
+            infoboxes=[],
+            empty_engines=[],
+        )
+
+        payload = search_response_to_payload(response)
+        rebuilt = search_response_from_payload(payload)
+
+        assert rebuilt.results == []
+        assert rebuilt.engine_outcomes == []
+        assert rebuilt.suggestions == []
+        assert rebuilt.answers == []
+        assert rebuilt.corrections == []
+        assert rebuilt.infoboxes == []
+        assert rebuilt.empty_engines == []
+
+    def test_nested_structured_metadata_round_trips(self) -> None:
+        answer = {"text": "The answer", "engines": ["wikipedia"], "meta": {"score": 0.9}}
+        correction = "did you mean foo"
+        infobox = {"title": "Info", "attributes": {"k": "v"}, "urls": ["https://a.com"]}
+        outcome = EngineOutcome(engine="wikipedia", status="ok", result_count=1, latency_ms=1.5, message="fine")
+        response = SearchResponse(
+            query="q",
+            results=[
+                SearchResult(
+                    url="https://x.com",
+                    title="X",
+                    content="y",
+                    engine="wikipedia",
+                    engines={"wikipedia"},
+                )
+            ],
+            scope=ScopeDecision(),
+            engine_outcomes=[outcome],
+            suggestions=["s"],
+            answers=[answer],
+            corrections=[correction],
+            infoboxes=[infobox],
+        )
+
+        payload = search_response_to_payload(response)
+        rebuilt = search_response_from_payload(payload)
+
+        assert rebuilt.answers == [answer]
+        assert rebuilt.corrections == [correction]
+        assert rebuilt.infoboxes == [infobox]
+        assert rebuilt.engine_outcomes[0].latency_ms == 1.5
+
+    def test_legacy_stringified_set_rehydrates(self) -> None:
+        data: dict[str, Any] = {
+            "url": "https://x.com",
+            "title": "X",
+            "content": "y",
+            "engine": "arxiv",
+            "engines": "{'arxiv', 'github'}",
+            "score": 1.0,
+            "position": 1,
+            "category": "science",
+            "tier": 2,
+        }
+
+        rebuilt = search_result_from_dict(data)
+
+        assert rebuilt.engines == {"arxiv", "github"}
+        assert "a" not in rebuilt.engines  # not the set of single characters
+
+    def test_legacy_single_engine_string_rehydrates(self) -> None:
+        data: dict[str, Any] = {
+            "url": "https://x.com",
+            "title": "X",
+            "content": "y",
+            "engine": "brave",
+            "engines": "{'brave'}",
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "tier": 1,
+        }
+
+        rebuilt = search_result_from_dict(data)
+
+        assert rebuilt.engines == {"brave"}
