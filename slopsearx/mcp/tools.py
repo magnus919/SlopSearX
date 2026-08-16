@@ -93,6 +93,22 @@ RANKING_EXPLANATION = "tier_then_cross_engine_presence"
 # a result-record concern; cards carry only the first N chars.
 SNIPPET_LENGTH = 300
 
+# The MCP contract version for the operational diagnostics surface. This is
+# distinct from the service (package) version so agents can negotiate schema
+# changes independently of releases (design §7, decision 15).
+MCP_CONTRACT_VERSION = "1.0"
+
+# Closed set of status classes used to aggregate engine health. The final
+# ``unknown`` bucket captures engines never observed by a search outcome
+# (VAL-DIAG-006).
+ENGINE_STATUS_CLASSES: tuple[str, ...] = ("ok", "rate_limited", "blocked", "error", "timeout", "unknown")
+
+# Engine-health note: /health never actively probes external APIs; health is
+# observed passively through search outcomes (unchanged product behavior).
+HEALTH_PASSIVE_NOTE = (
+    "/health does not actively probe external APIs; use search outcomes for passive engine health"
+)
+
 # Explicit, honest note on every expanded record: SlopSearX surfaces search
 # evidence but never fetches or verifies the linked page.
 NON_VERIFICATION_NOTE = "SlopSearX did not fetch or verify the linked page"
@@ -1076,13 +1092,45 @@ async def slopsearx_explain_search_scope(
     }
 
 
-async def slopsearx_get_service_status() -> dict[str, Any]:
-    """Operational status: liveness, Valkey, engine inventory.
+def _engine_health_by_class(state: McpState) -> dict[str, Any]:
+    """Aggregate enabled-engine health into per-status-class integer counts.
 
-    /health does not actively probe external APIs — engine health is
-    observed passively through search outcomes.
+    Health is observed passively: every engine's last-known status defaults to
+    ``unknown`` until a search outcome records otherwise, so unobserved engines
+    land in the ``unknown`` bucket (never a fabricated ``ok``).
     """
-    state = get_state()
+    counts: dict[str, Any] = {cls: 0 for cls in ENGINE_STATUS_CLASSES}
+    for cap in state.catalog.enabled():
+        status = cap.last_known_status if cap.last_known_status in counts else "unknown"
+        counts[status] += 1
+    counts["note"] = HEALTH_PASSIVE_NOTE
+    return counts
+
+
+def _enabled_grants(state: McpState) -> dict[str, Any]:
+    """The enabled specialist grants by name (never any token/key value).
+
+    Specialist grants are jobs/security/science/research. Disabled grants are
+    present as ``False`` so agents can tell absent from disabled; the
+    sensitive-engine grant is exposed as a boolean only.
+    """
+    enabled = sorted(name for name, flag in state.policy.enabled_tools.items() if flag)
+    specialist = {name: bool(flag) for name, flag in sorted(state.policy.enabled_tools.items())}
+    return {
+        "enabled": enabled,
+        "specialist": specialist,
+        "targeted_sensitive_allowed": bool(state.policy.targeted_sensitive_allowed),
+    }
+
+
+def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str, Any]:
+    """Build the curated, non-secret operational diagnostics schema.
+
+    Shared by ``slopsearx_get_service_status`` and the ``slopsearx://health/
+    summary`` resource so both report the same authoritative values
+    (VAL-DIAG-010). Deliberately excludes credentials, raw audit, environment,
+    and unrestricted metrics.
+    """
     ctx = state.ctx
     window = ctx.client_rate_window
     valkey_connected: bool | None = False
@@ -1091,19 +1139,59 @@ async def slopsearx_get_service_status() -> dict[str, Any]:
         valkey_connected = window._connected
         fail_closed = window._fail_closed
 
+    cache_available = bool(ctx.cache is not None and ctx.cache.is_connected)
+    snapshots_available = bool(state.snapshots.available)
+    job_store_available = bool(state.job_store.available)
+    engine_count = len(state.catalog.enabled())
+
+    causes: list[str] = []
+    if not valkey_connected:
+        causes.append("Valkey unavailable")
+    if not cache_available:
+        causes.append("cache unavailable")
+    if not snapshots_available:
+        causes.append("snapshot store unavailable")
+    if not job_store_available:
+        causes.append("research job store unavailable")
+
     return {
-        "status": "ok",
         "version": state.version,
+        "contract_version": MCP_CONTRACT_VERSION,
         "valkey": {"connected": valkey_connected, "fail_closed": fail_closed},
-        "cache_connected": bool(ctx.cache is not None and ctx.cache.is_connected),
-        "snapshots_available": state.snapshots.available,
-        "job_store_available": state.job_store.available,
-        "active_engines": len(ctx.active_engines),
+        "cache_connected": cache_available,
+        "snapshots_available": snapshots_available,
+        "job_store_available": job_store_available,
+        "active_engines": engine_count,
         "router_enabled": bool(ctx.router is not None and ctx.router.enabled),
-        "engine_health": {
-            "note": "/health does not actively probe external APIs; use search outcomes for passive engine health"
+        "engine_health": _engine_health_by_class(state),
+        "grants": _enabled_grants(state),
+        "policy_bounds": {
+            "max_query_length": state.policy.max_query_length,
+            "max_results": state.policy.max_results,
+            "snapshot_ttl_seconds": state.policy.snapshot_ttl_seconds,
+            "job_max_queries": state.policy.job_max_queries,
+            "job_max_engines_per_query": state.policy.job_max_engines_per_query,
+            "job_max_results": state.policy.job_max_results,
+            "job_default_deadline_seconds": state.policy.job_default_deadline_seconds,
         },
+        "degradation": {
+            "operational": not causes,
+            "summary": "fully operational" if not causes else "degraded",
+            "causes": causes,
+        },
+        "freshness": now or _dt.datetime.now(_dt.timezone.utc).isoformat(),
     }
+
+
+async def slopsearx_get_service_status() -> dict[str, Any]:
+    """Operational status: liveness, versions, Valkey, engine inventory.
+
+    Returns the curated, non-secret diagnostics schema shared with
+    ``slopsearx://health/summary``. /health does not actively probe external
+    APIs — engine health is observed passively through search outcomes.
+    """
+    state = get_state()
+    return {"status": "ok", **service_diagnostics(state)}
 
 
 # ---------------------------------------------------------------------------

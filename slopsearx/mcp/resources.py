@@ -100,29 +100,50 @@ def render_routing_profiles() -> str:
 
 
 def render_health_summary() -> str:
-    """Current server health with the active-health limitation stated."""
+    """Current server health with the active-health limitation stated.
+
+    Rendered from the same shared diagnostics schema as
+    ``slopsearx_get_service_status`` so the resource and the tool report
+    identical shared values (VAL-DIAG-010). No credentials, raw audit,
+    environment, or unrestricted metrics are ever included.
+    """
     try:
         state = get_state()
     except RuntimeError:
         return "SlopSearX MCP server is not initialized."
-    ctx = state.ctx
-    window = ctx.client_rate_window
-    valkey = "unknown"
-    fail_closed = "unknown"
-    from slopsearx.ratelimit import ValkeySlidingWindow
+    from slopsearx.mcp.tools import service_diagnostics
 
-    if isinstance(window, ValkeySlidingWindow):
-        valkey = str(bool(window._connected)).lower()
-        fail_closed = str(bool(window._fail_closed)).lower()
+    diag = service_diagnostics(state)
+    health = diag["engine_health"]
+    bounds = diag["policy_bounds"]
+    degradation = diag["degradation"]
+    grants = diag["grants"]["enabled"]
+    causes = ", ".join(degradation["causes"]) if degradation["causes"] else "none"
     lines = [
         "# SlopSearX service status",
         "- status: ok (liveness)",
-        f"- version: {state.version}",
-        f"- valkey connected: {valkey}",
-        f"- valkey fail-closed: {fail_closed}",
-        f"- cache connected: {bool(ctx.cache is not None and ctx.cache.is_connected)}",
-        f"- snapshots available: {state.snapshots.available}",
-        f"- active engines: {len(ctx.active_engines)}",
-        "- engine health: /health does not actively probe external APIs; use search outcomes for passive engine health",
+        f"- version: {diag['version']}",
+        f"- contract version: {diag['contract_version']}",
+        f"- valkey connected: {diag['valkey']['connected']}",
+        f"- valkey fail-closed: {diag['valkey']['fail_closed']}",
+        f"- cache connected: {diag['cache_connected']}",
+        f"- snapshots available: {diag['snapshots_available']}",
+        f"- job store available: {diag['job_store_available']}",
+        f"- active engines: {diag['active_engines']}",
+        f"- router enabled: {diag['router_enabled']}",
+        f"- grants enabled: {', '.join(grants) if grants else 'none'}",
+        "- policy bounds: "
+        f"max_query_length={bounds['max_query_length']}, max_results={bounds['max_results']}, "
+        f"snapshot_ttl_seconds={bounds['snapshot_ttl_seconds']}, "
+        f"job_max_queries={bounds['job_max_queries']}, "
+        f"job_max_engines_per_query={bounds['job_max_engines_per_query']}, "
+        f"job_max_results={bounds['job_max_results']}, "
+        f"job_default_deadline_seconds={bounds['job_default_deadline_seconds']}",
+        f"- degradation: {degradation['summary']} (causes: {causes})",
+        f"- freshness: {diag['freshness']}",
+        "- engine health: "
+        f"ok={health['ok']}, rate_limited={health['rate_limited']}, blocked={health['blocked']}, "
+        f"error={health['error']}, timeout={health['timeout']}, unknown={health['unknown']}",
+        f"- engine health note: {health['note']}",
     ]
     return "\n".join(lines)

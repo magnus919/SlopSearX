@@ -345,6 +345,32 @@ class TestCapabilityResources:
         for name in list(list_engines().keys()):
             assert name in content
 
+    # -- Operational diagnostics resource (feature: operational-diagnostics) --
+
+    def test_health_resource_matches_status_tool(self, state: McpState) -> None:
+        """VAL-DIAG-010 — the health resource reports the same version/valkey/count/bounds as the tool."""
+        content = r.render_health_summary()
+        diag = t.service_diagnostics(state)
+        assert f"- version: {diag['version']}" in content
+        assert f"- contract version: {diag['contract_version']}" in content
+        assert f"- valkey connected: {diag['valkey']['connected']}" in content
+        assert f"- valkey fail-closed: {diag['valkey']['fail_closed']}" in content
+        assert f"- active engines: {diag['active_engines']}" in content
+        assert f"- cache connected: {diag['cache_connected']}" in content
+        assert f"- snapshots available: {diag['snapshots_available']}" in content
+        assert f"max_query_length={diag['policy_bounds']['max_query_length']}" in content
+        assert f"max_results={diag['policy_bounds']['max_results']}" in content
+
+    def test_health_resource_leaks_no_secrets_or_environment(self, state: McpState) -> None:
+        """VAL-DIAG-011/012/013 — the health resource is redacted: no secrets, env, or metrics dump."""
+        state.policy.auth_token = "sentinel-token-abc"
+        content = r.render_health_summary()
+        assert "sentinel-token-abc" not in content
+        assert "api_key" not in content.lower()
+        assert "os.environ" not in content
+        assert "MCP_AUTH_TOKEN" not in content.upper()
+        assert "# HELP" not in content and "# TYPE" not in content
+
 
 # ---------------------------------------------------------------------------
 # VAL-CAP-013 / VAL-CAP-014 / VAL-CROSS-009 — scope preview

@@ -6,6 +6,7 @@ few integration checks through FastMCP's call_tool.
 
 from __future__ import annotations
 
+import datetime as _dt
 from typing import Any
 
 import pytest
@@ -535,6 +536,127 @@ class TestDiscoveryTools:
         assert result["status"] == "ok"
         assert result["active_engines"] > 0
         assert result["version"] == "test"
+
+    # -- Operational diagnostics (feature: operational-diagnostics) --------
+
+    async def test_status_reports_service_and_contract_versions(self, state: McpState) -> None:
+        """VAL-DIAG-001 — status reports both service version and MCP contract version."""
+        result = await t.slopsearx_get_service_status()
+        assert isinstance(result["version"], str) and result["version"]
+        assert isinstance(result["contract_version"], str) and result["contract_version"]
+        assert result["version"] == state.version
+
+    async def test_status_reports_no_parameters_and_ok(self, state: McpState) -> None:
+        """VAL-DIAG-014 — status accepts no arguments and returns status='ok' with the schema."""
+        result = await t.slopsearx_get_service_status()
+        assert result["status"] == "ok"
+        for key in (
+            "version",
+            "contract_version",
+            "valkey",
+            "active_engines",
+            "grants",
+            "engine_health",
+            "cache_connected",
+            "snapshots_available",
+            "policy_bounds",
+            "degradation",
+            "freshness",
+        ):
+            assert key in result, f"missing schema key {key}"
+
+    async def test_status_valkey_reported_honestly(self, state: McpState) -> None:
+        """VAL-DIAG-003 — valkey.connected is false and fail_closed is reflected when no Valkey."""
+        result = await t.slopsearx_get_service_status()
+        assert result["valkey"]["connected"] is False
+        assert "fail_closed" in result["valkey"]
+
+    async def test_status_effective_engine_count_matches_catalog(self, state: McpState) -> None:
+        """VAL-DIAG-004 — effective engine count equals the enabled catalog count."""
+        result = await t.slopsearx_get_service_status()
+        enabled = await t.slopsearx_list_capabilities()
+        assert result["active_engines"] == enabled["count"] == len(state.catalog.enabled())
+        assert result["active_engines"] > 0
+
+    async def test_status_grants_listed_by_name_only(self, state: McpState) -> None:
+        """VAL-DIAG-005 — enabled grants are listed by name; no secret value appears."""
+        state.policy.enabled_tools["jobs"] = True
+        state.policy.enabled_tools["science"] = True
+        result = await t.slopsearx_get_service_status()
+        blob = str(result)
+        assert "jobs" in result["grants"]["enabled"]
+        assert "science" in result["grants"]["enabled"]
+        assert "security" not in result["grants"]["enabled"]
+        assert "MCP_GRANT" not in blob
+
+    async def test_status_engine_health_aggregated_by_class(self, state: McpState) -> None:
+        """VAL-DIAG-006 — engine health is a machine-readable per-class integer count mapping."""
+        result = await t.slopsearx_get_service_status()
+        health = result["engine_health"]
+        for cls in ("ok", "rate_limited", "blocked", "error", "timeout", "unknown"):
+            assert isinstance(health[cls], int), f"{cls} not an integer count"
+            assert health[cls] >= 0
+
+    async def test_status_policy_bounds_reported(self, state: McpState) -> None:
+        """VAL-DIAG-008 — current policy bounds are positive numbers matching policy."""
+        result = await t.slopsearx_get_service_status()
+        bounds = result["policy_bounds"]
+        for key in (
+            "max_query_length",
+            "max_results",
+            "snapshot_ttl_seconds",
+            "job_max_queries",
+            "job_max_engines_per_query",
+            "job_max_results",
+            "job_default_deadline_seconds",
+        ):
+            assert bounds[key] == getattr(state.policy, key), key
+            assert isinstance(bounds[key], int) and bounds[key] > 0
+
+    async def test_status_degradation_and_freshness(self, state: McpState) -> None:
+        """VAL-DIAG-009 — degradation summary + freshness timestamp are present and recent."""
+        result = await t.slopsearx_get_service_status()
+        degradation = result["degradation"]
+        assert "operational" in degradation and "summary" in degradation and "causes" in degradation
+        # No Valkey in the fixture → honest degraded view.
+        assert degradation["operational"] is False
+        assert "valkey" in " ".join(degradation["causes"]).lower()
+        parsed = _dt.datetime.fromisoformat(result["freshness"])
+        assert (parsed - _dt.datetime.now(_dt.timezone.utc)).total_seconds() < 10
+
+    async def test_status_and_health_resource_agree(self, state: McpState) -> None:
+        """VAL-DIAG-010 — the health resource reports the same shared values as the status tool."""
+        result = await t.slopsearx_get_service_status()
+        health = t.service_diagnostics(state, now=_dt.datetime.now(_dt.timezone.utc).isoformat())
+        assert health["version"] == result["version"] == state.version
+        assert health["valkey"] == result["valkey"]
+        assert health["active_engines"] == result["active_engines"]
+        assert health["cache_connected"] == result["cache_connected"]
+        assert health["snapshots_available"] == result["snapshots_available"]
+        assert health["policy_bounds"] == result["policy_bounds"]
+
+    async def test_status_reveals_no_credentials(self, state: McpState) -> None:
+        """VAL-DIAG-011 — a configured token never appears in the status output."""
+        sentinel = "super-secret-token-xyz"
+        state.policy.auth_token = sentinel
+        result = await t.slopsearx_get_service_status()
+        blob = str(result)
+        assert sentinel not in blob
+        assert "api_key" not in blob.lower()
+
+    async def test_status_reveals_no_audit_or_environment(self, state: McpState) -> None:
+        """VAL-DIAG-012 — status output has no raw audit records or environment dump."""
+        result = await t.slopsearx_get_service_status()
+        blob = str(result)
+        assert "os.environ" not in blob
+        assert "audit" not in blob.lower()
+
+    async def test_status_contains_no_unrestricted_metrics(self, state: McpState) -> None:
+        """VAL-DIAG-013 — status returns only the curated summary schema, no metric-series dump."""
+        result = await t.slopsearx_get_service_status()
+        blob = str(result)
+        assert "# HELP" not in blob and "# TYPE" not in blob
+        assert "metrics" not in blob.lower()
 
 
 # ---------------------------------------------------------------------------
