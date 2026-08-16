@@ -9,6 +9,7 @@ import pytest
 
 import engines  # noqa: F401 — trigger @register_engine
 from slopsearx.adapter import EngineStatus, discover_engines
+from slopsearx.config import _DEFAULT_ENGINES
 
 # ---------------------------------------------------------------------------
 # Helper: mock HTTP transport for adapters that create httpx clients inline
@@ -504,6 +505,38 @@ class TestArxivAdapter:
         assert "arxiv.org/abs/2401.12345" in result.results[0].url
         assert result.results[0].published_date == "2024-01-15T00:00:00Z"
         assert result.results[1].title == "BERT: Pre-training of Deep Bidirectional Transformers"
+
+    def test_default_base_url_is_https(self):
+        assert _DEFAULT_ENGINES["arxiv"]["base_url"] == "https://export.arxiv.org/api/query"
+
+    async def test_search_follows_same_host_https_redirect(self, adapter, sample_atom):
+        adapter.config["base_url"] = "http://export.arxiv.org/api/query"
+
+        def handler(request):
+            if request.url.scheme == "http":
+                return httpx.Response(
+                    301,
+                    headers={"Location": "https://export.arxiv.org/api/query"},
+                    request=request,
+                )
+            return httpx.Response(200, content=sample_atom.encode(), request=request)
+
+        async with MockHTTP(handler):
+            result = await adapter.search("transformer")
+        assert result.status == EngineStatus.OK
+        assert len(result.results) == 2
+
+    async def test_search_rejects_external_redirect(self, adapter):
+        async with MockHTTP(
+            lambda request: httpx.Response(
+                301,
+                headers={"Location": "https://example.com/redirect"},
+                request=request,
+            )
+        ):
+            result = await adapter.search("transformer")
+        assert result.status == EngineStatus.ERROR
+        assert "redirect rejected" in (result.error_message or "")
 
     async def test_search_rate_limited(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(429)):

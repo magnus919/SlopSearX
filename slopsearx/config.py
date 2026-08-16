@@ -81,7 +81,7 @@ class Config:
 
 _DEFAULT_ENGINES: dict[str, dict[str, Any]] = {
     "arxiv": {
-        "base_url": "http://export.arxiv.org/api/query",
+        "base_url": "https://export.arxiv.org/api/query",
         "type": "api",
         "timeout_ms": 10_000,
         "max_results": 5,

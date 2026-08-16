@@ -6,6 +6,7 @@ import re
 import time
 import xml.etree.ElementTree as ET
 from typing import Any
+from urllib.parse import urljoin, urlparse
 
 import httpx
 
@@ -58,12 +59,39 @@ class ArxivAdapter(EngineAdapter):
 
         start_time = time.monotonic()
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
+            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0, follow_redirects=False) as client:
                 resp = await client.get(base_url, params=url_params, headers=headers)
                 latency = (time.monotonic() - start_time) * 1000
 
                 if resp.status_code == 429:
                     return AdapterResponse(results=[], status=EngineStatus.RATE_LIMITED, latency_ms=latency)
+
+                if 300 <= resp.status_code < 400:
+                    location = resp.headers.get("location")
+                    if not location:
+                        return AdapterResponse(
+                            results=[],
+                            status=EngineStatus.ERROR,
+                            error_message=f"redirect response {resp.status_code} missing Location header",
+                            latency_ms=latency,
+                        )
+
+                    redirected_url = urljoin(base_url, location)
+                    source = urlparse(base_url)
+                    target = urlparse(redirected_url)
+                    if target.scheme != "https" or target.hostname != source.hostname or target.port != source.port:
+                        return AdapterResponse(
+                            results=[],
+                            status=EngineStatus.ERROR,
+                            error_message=(
+                                f"redirect rejected: expected HTTPS on the configured arXiv host, got {redirected_url}"
+                            ),
+                            latency_ms=latency,
+                        )
+
+                    resp = await client.get(redirected_url, headers=headers)
+                    latency = (time.monotonic() - start_time) * 1000
+
                 resp.raise_for_status()
 
                 results = self._parse_feed(resp.text, query)

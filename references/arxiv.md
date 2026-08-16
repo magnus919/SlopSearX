@@ -7,7 +7,7 @@ Search academic papers across physics, mathematics, computer science, and more. 
 - **Auth:** None
 - **Categories:** general, science, reference
 - **Rate limit:** 1 req/3s (arXiv ToS)
-- **Base URL:** `http://export.arxiv.org/api/query`
+- **Base URL:** `https://export.arxiv.org/api/query`
 
 ## Usage
 
