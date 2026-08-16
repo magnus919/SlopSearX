@@ -457,8 +457,8 @@ class TestDispatch:
         consulted the engine's configured timeout_ms, so slow-but-legit engines
         (e.g. Internet Archive Wayback CDX) always surfaced as TIMEOUT.
         """
-        slow = _OkEngine(delay=4.0)
-        slow.config = {"timeout_ms": 10_000}
+        slow = _OkEngine(delay=10.5)
+        slow.config = {"timeout_ms": 11_000}
         service = _service(engines={"okeng": slow}, tier1={"okeng"})
 
         response = await service.search(_req())
@@ -490,7 +490,7 @@ class TestDispatch:
     async def test_overall_deadline_caps_fanout(self) -> None:
         """A slow engine is cut at the overall deadline, not allowed to hang the search."""
         slow = _OkEngine(delay=30.0)
-        slow.config = {"timeout_ms": 60_000}  # would otherwise wait 60s
+        slow.config = {"timeout_ms": 4_000}  # configured engine deadline
         service = _service(engines={"okeng": slow})
 
         response = await service.search(_req())
@@ -501,7 +501,7 @@ class TestDispatch:
     async def test_overall_deadline_drains_cancelled_tasks(self) -> None:
         """Deadline cancellation drains child tasks before returning the response."""
         slow = _OkEngine(delay=30.0)
-        slow.config = {"timeout_ms": 60_000}
+        slow.config = {"timeout_ms": 4_000}
         service = _service(engines={"okeng": slow})
         response = await service.search(_req())
         assert response.engine_outcomes[0].status == "timeout"

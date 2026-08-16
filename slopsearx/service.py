@@ -512,12 +512,19 @@ class SearchService:
         # Dispatch to all engines concurrently (bounded by semaphore)
         tasks: list[asyncio.Task[AdapterResponse]] = []
         engine_names: list[str] = []
+        started_engines: set[str] = set()
         circuit_open: list[str] = []
         for name, engine in target.items():
             if not engine.circuit_allowed():
                 circuit_open.append(name)
                 continue
-            tasks.append(asyncio.create_task(self._dispatch_with_semaphore(name, engine, request.query, search_params)))
+            tasks.append(
+                asyncio.create_task(
+                    self._dispatch_with_semaphore(
+                        name, engine, request.query, search_params, started_engines=started_engines
+                    )
+                )
+            )
             engine_names.append(name)
 
         # Fire suggestion fetch concurrently with engine dispatch. Suggestions
@@ -528,25 +535,22 @@ class SearchService:
         if self._ctx.suggestion_service is not None:
             suggestions_task = asyncio.create_task(self._generate_suggestions(request.query))
 
-        dispatch_results = await self._gather_with_deadline(tasks, engine_names)
+        dispatch_deadline_s = max(
+            [DEFAULT_SEARCH_TIMEOUT_S]
+            + [self._resolve_engine_timeout_s(engine) for engine in target.values() if engine.circuit_allowed()]
+        )
+        dispatch_results = await self._gather_with_deadline(tasks, engine_names, dispatch_deadline_s)
 
         # Collect results and metadata
         responses: dict[str, AdapterResponse] = {}
-        for name, raw in zip(engine_names, dispatch_results):
-            if isinstance(raw, BaseException):
-                # Engine raised unexpectedly — classify as error
-                result: AdapterResponse = AdapterResponse(
-                    results=[],
-                    status=EngineStatus.ERROR,
-                    error_message=sanitize_url(str(raw)),
-                )
-            else:
-                result = raw
-
-            # Update circuit breaker state
+        for name, result in zip(engine_names, dispatch_results):
+            # A task waiting behind the semaphore may be cancelled by the
+            # search-wide deadline before its engine ever starts. Do not let a
+            # scheduler timeout count as an upstream engine failure.
             engine = target[name]
             if result.status in (EngineStatus.ERROR, EngineStatus.TIMEOUT):
-                engine.record_failure()
+                if name in started_engines:
+                    engine.record_failure()
             else:
                 engine.record_success()
 
@@ -744,13 +748,18 @@ class SearchService:
         query: str,
         params: dict[str, Any],
         timeout_s: float | None = None,
+        started_engines: set[str] | None = None,
     ) -> AdapterResponse:
         """Dispatch engine query, bounded by the global semaphore."""
         if timeout_s is None:
             timeout_s = self._resolve_engine_timeout_s(engine)
         if self._ctx.engine_semaphore is not None:
             async with self._ctx.engine_semaphore:
+                if started_engines is not None:
+                    started_engines.add(name)
                 return await self._dispatch_engine(name, engine, query, params, timeout_s)
+        if started_engines is not None:
+            started_engines.add(name)
         return await self._dispatch_engine(name, engine, query, params, timeout_s)
 
     @staticmethod
@@ -772,6 +781,7 @@ class SearchService:
         self,
         tasks: list[asyncio.Task[AdapterResponse]],
         engine_names: list[str],
+        deadline_s: float = DEFAULT_SEARCH_TIMEOUT_S,
     ) -> list[Any]:
         """Gather engine dispatch tasks under an overall deadline.
 
@@ -780,15 +790,14 @@ class SearchService:
         ``TIMEOUT`` AdapterResponse for each cancelled engine.
 
         Per-engine exceptions are isolated: ``Task.result()`` re-raises a stored
-        exception (unlike ``gather(return_exceptions=True)``), so we catch it and
-        classify it as ``EngineStatus.ERROR`` — preserving the "adapters never
-        raise" contract even if cancellation or another ``BaseException`` escapes
-        the per-engine dispatch wrapper.
+        exception, so we catch it and classify it as ``EngineStatus.ERROR`` —
+        preserving the "adapters never raise" contract even if cancellation or
+        another ``BaseException`` escapes the per-engine dispatch wrapper.
         """
         if not tasks:
             return []
         try:
-            done, pending = await asyncio.wait(tasks, timeout=DEFAULT_SEARCH_TIMEOUT_S)
+            done, pending = await asyncio.wait(tasks, timeout=deadline_s)
         except asyncio.CancelledError:
             for task in tasks:
                 if not task.done():
@@ -815,8 +824,8 @@ class SearchService:
                 results[name] = AdapterResponse(
                     results=[],
                     status=EngineStatus.TIMEOUT,
-                    error_message=f"timed out after {DEFAULT_SEARCH_TIMEOUT_S}s",
-                    latency_ms=DEFAULT_SEARCH_TIMEOUT_S * 1000,
+                    error_message=f"timed out after {deadline_s}s",
+                    latency_ms=deadline_s * 1000,
                 )
         return [results[name] for name in engine_names]
 
