@@ -41,6 +41,7 @@ from slopsearx.filters import (
 from slopsearx.mcp import tools as t
 from slopsearx.mcp.state import McpState, set_state
 from slopsearx.research import ResearchJob, ResearchJobRunner, ResearchJobStore, ResearchQuery, generate_job_id
+from slopsearx.router import QueryRouter
 from slopsearx.service import AppContext, SearchRequest, SearchService
 from slopsearx.snapshot import SnapshotStore
 
@@ -279,6 +280,49 @@ class TestStrictSafesearch:
         assert result["enforcement"]["safesearch"]["status"] == "rejected"
         assert state.ctx.active_engines["brave"].calls == 0
         assert state.ctx.active_engines["duckduckgo"].calls == 0
+
+    async def test_strict_rejected_on_auto_topic_scope_not_tier1_fallback(self, state: McpState) -> None:
+        """Auto-intent strict preview mirrors the query-topic scope, not tier-1.
+
+        The preview must route the real query so the dispatched (topic) scope
+        is what gets checked. Here every tier-1 fallback engine enforces
+        upstream safesearch — an empty-query preview would pass the strict
+        check — but the topic scope for the query mixes an enforcing engine
+        (brave) with a non-enforcing one (arxiv), so strict fails closed
+        before dispatch and the rejection names the topic scope.
+        """
+        state.ctx.active_engines = {
+            "brave": _MockEngine("brave", enforced_filters={"safesearch": "upstream"}),
+            "wikipedia": _MockEngine("wikipedia", enforced_filters={"safesearch": "upstream"}),
+            "arxiv": _MockEngine("arxiv"),
+        }
+        state.ctx.tier1_engines = {"brave", "wikipedia"}
+        state.ctx.router = QueryRouter(
+            routing_config={
+                "enabled": True,
+                "topics": {
+                    "science": {
+                        "keywords": ["machine learning", "paper"],
+                        "engines": ["brave", "arxiv"],
+                    }
+                },
+            }
+        )
+
+        result = await t.slopsearx_search("machine learning paper", safesearch="strict")
+
+        assert result["error"]["code"] == "safesearch_unenforced"
+        assert result["error"]["field"] == "safesearch"
+        # Rejection names the topic-routed scope (brave + arxiv), not the
+        # all-enforcing tier-1 fallback (brave + wikipedia).
+        assert set(result["error"]["selected_engines"]) == {"brave", "arxiv"}
+        entry = result["enforcement"]["safesearch"]
+        _assert_valid_entry(entry)
+        assert entry["status"] == "rejected"
+        assert entry["requested"] == "strict"
+        # Fail closed *before* dispatch: no engine may have run.
+        for engine in state.ctx.active_engines.values():
+            assert engine.calls == 0
 
 
 # ---------------------------------------------------------------------------

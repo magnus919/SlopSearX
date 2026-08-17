@@ -260,6 +260,7 @@ def _safesearch_warning(state: McpState, safesearch: str) -> list[str]:
 
 def _preview_selected_engines(
     state: McpState,
+    query: str,
     categories: list[str] | None,
     engines: list[str] | None,
 ) -> list[str]:
@@ -267,7 +268,10 @@ def _preview_selected_engines(
 
     Mirrors the service's scope resolution exactly (same active engines,
     router, tier-1 set, and sensitive set) so mandatory-constraint checks can
-    fail closed *before* any engine is dispatched.
+    fail closed *before* any engine is dispatched. The real ``query`` is
+    passed through so auto-intent topic routing previews the same scope the
+    service will dispatch — an empty-query preview would fall back to the
+    tier-1 set and mask non-conforming topic scopes.
     """
     resolver = ScopeResolver(
         active_engines=state.ctx.active_engines,
@@ -275,7 +279,7 @@ def _preview_selected_engines(
         tier1_engines=state.ctx.tier1_engines,
         sensitive_engines=state.ctx.sensitive_engines,
     )
-    return resolver.explain(SearchRequest(query="", categories=categories, engines=engines)).selected_engines
+    return resolver.explain(SearchRequest(query=query, categories=categories, engines=engines)).selected_engines
 
 
 def _strict_safesearch_satisfiable(state: McpState, selected_engines: list[str]) -> bool:
@@ -715,7 +719,7 @@ async def slopsearx_search(
     # Mandatory strict SafeSearch fails closed before dispatch when the
     # selected scope cannot satisfy it (no adapter enforces strict today).
     if safesearch == "strict":
-        selected = _preview_selected_engines(state, resolved_categories, resolved_engines)
+        selected = _preview_selected_engines(state, query, resolved_categories, resolved_engines)
         if not _strict_safesearch_satisfiable(state, selected):
             return _safesearch_rejection(selected)
 
