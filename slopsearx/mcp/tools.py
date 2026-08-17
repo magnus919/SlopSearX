@@ -11,6 +11,7 @@ from __future__ import annotations
 import datetime as _dt
 import time
 from typing import Any
+from urllib.parse import urlparse
 
 from slopsearx.adapter import SearchResult
 from slopsearx.capabilities import INTENT_PROFILES, resolve_intent
@@ -131,6 +132,40 @@ HEALTH_PASSIVE_NOTE = "/health does not actively probe external APIs; use search
 NON_VERIFICATION_NOTE = "SlopSearX did not fetch or verify the linked page"
 
 CONTENT_UNAVAILABLE_NOTE = "full content unavailable (adapter returned snippet only)"
+
+# ---------------------------------------------------------------------------
+# Search-to-retrieval handoff contract (issue 189)
+# ---------------------------------------------------------------------------
+
+# The stable contract name/version for the machine-readable handoff record
+# that links a search result to downstream retrieval. A downstream retriever
+# (e.g. GroktoCrawl) associates a captured page with the originating result
+# and snapshot through the ``retrieval`` block on cards and records without
+# parsing prose. See docs/RETRIEVAL_HANDOFF.md for the full contract.
+RETRIEVAL_HANDOFF_CONTRACT = "slopsearx.retrieval_handoff"
+RETRIEVAL_HANDOFF_VERSION = 1
+
+# Closed vocabulary of ``retrieval.url_status`` tokens. A URL is eligible for
+# downstream retrieval only when the status is ``ok``; every other token is
+# a machine-readable failure/warning reason for the handoff boundary.
+RETRIEVAL_URL_STATUS_OK = "ok"
+RETRIEVAL_URL_STATUS_MISSING = "missing"
+RETRIEVAL_URL_STATUS_NON_HTTP = "non_http"
+RETRIEVAL_URL_STATUS_UNSAFE = "unsafe_scheme"
+RETRIEVAL_URL_STATUS_AMBIGUOUS = "ambiguous"
+RETRIEVAL_URL_STATUSES: tuple[str, ...] = (
+    RETRIEVAL_URL_STATUS_OK,
+    RETRIEVAL_URL_STATUS_MISSING,
+    RETRIEVAL_URL_STATUS_NON_HTTP,
+    RETRIEVAL_URL_STATUS_UNSAFE,
+    RETRIEVAL_URL_STATUS_AMBIGUOUS,
+)
+
+# Schemes an HTTP-based downstream retriever must never be pointed at. This is
+# advisory classification at the handoff boundary — SlopSearX performs no fetch
+# itself — so a downstream capture layer can reject these URLs without
+# becoming an SSRF-capable proxy or mishandling embedded content.
+UNSAFE_RETRIEVAL_SCHEMES = frozenset({"file", "data", "javascript", "vbscript", "gopher", "ftp"})
 
 JOBS_ADAPTERS = ("greenhouse", "ashby", "lever")
 
@@ -430,6 +465,110 @@ def _payload_inline(result: SearchResult, *, requested: bool) -> dict[str, Any] 
     return None
 
 
+def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
+    """Classify a result URL for downstream retrieval — never fetches it.
+
+    SlopSearX is a search-only service: this is advisory metadata so a
+    downstream retriever (e.g. GroktoCrawl) can decide eligibility and fetch
+    safety without parsing prose. Returns ``(status, reason, scheme,
+    canonical_url)`` where ``status`` is one of ``RETRIEVAL_URL_STATUSES``
+    and ``canonical_url`` is non-``None`` **only** for ``ok`` — ineligible
+    URLs are never handed off as a fetch target.
+
+    - ``ok`` — absolute ``http``/``https`` URL with a host; eligible, and the
+      captured URL is the canonical value to hand off.
+    - ``missing`` — no URL string on the result.
+    - ``non_http`` — parses to a non-HTTP(S) scheme (e.g. ``mailto:``).
+    - ``unsafe_scheme`` — a scheme an HTTP retriever must not fetch
+      (``file:``, ``data:``, ``javascript:``, ...); see
+      ``UNSAFE_RETRIEVAL_SCHEMES``.
+    - ``ambiguous`` — canonicalization-ambiguous (no scheme, no host, or
+      unparseable); treated as ineligible rather than guessed at.
+    """
+    if not url or not url.strip():
+        return RETRIEVAL_URL_STATUS_MISSING, "result has no URL to retrieve", None, None
+    try:
+        parsed = urlparse(url)
+        scheme = (parsed.scheme or "").lower()
+        if not scheme:
+            return RETRIEVAL_URL_STATUS_AMBIGUOUS, "URL has no scheme; canonicalization is ambiguous", None, None
+        if scheme not in ("http", "https"):
+            if scheme in UNSAFE_RETRIEVAL_SCHEMES:
+                return (
+                    RETRIEVAL_URL_STATUS_UNSAFE,
+                    f"scheme '{scheme}' is unsafe for downstream HTTP retrieval",
+                    scheme,
+                    None,
+                )
+            return (
+                RETRIEVAL_URL_STATUS_NON_HTTP,
+                f"scheme '{scheme}' is not HTTP(S); not retrievable over HTTP",
+                scheme,
+                None,
+            )
+        if not parsed.hostname:
+            return RETRIEVAL_URL_STATUS_AMBIGUOUS, "URL has no host; canonicalization is ambiguous", scheme, None
+        return RETRIEVAL_URL_STATUS_OK, None, scheme, url
+    except ValueError:
+        # urlparse is lenient but can raise for malformed bracketed hosts
+        # (e.g. "http://[::1"); access to .hostname can also raise.
+        return RETRIEVAL_URL_STATUS_AMBIGUOUS, "URL cannot be parsed unambiguously", None, None
+
+
+def _retrieval_card(result: SearchResult) -> dict[str, Any]:
+    """Compact retrieval-eligibility summary for a triage card.
+
+    Cards carry the eligibility tokens so a card-only consumer can decide
+    whether a result is retrievable (and why not) without expanding it. The
+    full handoff record — result identity, canonical URL, provenance, and
+    disclosure — lives on the expanded record (progressive disclosure).
+    """
+    status, reason, scheme, _canonical = _retrieval_url(result.url)
+    return {
+        "contract": RETRIEVAL_HANDOFF_CONTRACT,
+        "version": RETRIEVAL_HANDOFF_VERSION,
+        "eligible": status == RETRIEVAL_URL_STATUS_OK,
+        "url_status": status,
+        "url_reason": reason,
+        "scheme": scheme,
+    }
+
+
+def _retrieval_handoff(result: SearchResult, snapshot: SearchSnapshot, result_id: str) -> dict[str, Any]:
+    """Build the stable search→retrieval handoff record (contract v1).
+
+    Self-contained and machine-readable so a downstream retriever
+    (GroktoCrawl or another capture layer) can associate a captured page with
+    the originating result and snapshot without parsing prose or re-querying
+    SlopSearX. Exposes the explicit retrieval boundary: a result is a
+    snippet-only lead (``verified`` is always ``False``), and ``url`` /
+    ``eligible`` carry the fetch-safety classification. SlopSearX never
+    fetches the linked page; this record is the composition contract, not a
+    runtime integration.
+    """
+    status, reason, scheme, canonical_url = _retrieval_url(result.url)
+    content = result.content or ""
+    return {
+        "contract": RETRIEVAL_HANDOFF_CONTRACT,
+        "version": RETRIEVAL_HANDOFF_VERSION,
+        "result_id": result_id,
+        "url": canonical_url,
+        "url_status": status,
+        "url_reason": reason,
+        "scheme": scheme,
+        "eligible": status == RETRIEVAL_URL_STATUS_OK,
+        "snippet_only": len(content) <= SNIPPET_LENGTH,
+        "verified": False,
+        "verification_note": NON_VERIFICATION_NOTE,
+        "provenance": {
+            "snapshot_cursor": snapshot.snapshot_id,
+            "query_id": snapshot.query_id,
+            "query": snapshot.query,
+            "source_engines": _source_engines(result),
+        },
+    }
+
+
 def _result_to_dict(
     result: SearchResult,
     *,
@@ -438,12 +577,13 @@ def _result_to_dict(
 ) -> dict[str, Any]:
     """Normalize one result into a compact triage card (design §3.1).
 
-    Cards carry triage fields plus a stable server-issued ``result_id``.
-    Full ``content``, ``thumbnail``, and ``img_src`` belong to the expanded
-    record (progressive disclosure), never the card. A domain payload is
-    inlined only when requested or small enough (see ``_payload_inline``);
-    the full payload is available via ``slopsearx_read_result`` when it is
-    within ``PAYLOAD_MAX_PERSIST_BYTES``.
+    Cards carry triage fields plus a stable server-issued ``result_id`` and a
+    compact ``retrieval`` eligibility block (contract in
+    docs/RETRIEVAL_HANDOFF.md). Full ``content``, ``thumbnail``, and
+    ``img_src`` belong to the expanded record (progressive disclosure), never
+    the card. A domain payload is inlined only when requested or small enough
+    (see ``_payload_inline``); the full payload is available via
+    ``slopsearx_read_result`` when it is within ``PAYLOAD_MAX_PERSIST_BYTES``.
     """
     card = {
         "title": result.title,
@@ -458,6 +598,7 @@ def _result_to_dict(
         "position": result.position,
         "tier": result.tier,
         "citation": {"label": result.title, "url": result.url},
+        "retrieval": _retrieval_card(result),
     }
     if result_id is not None:
         card["result_id"] = result_id
@@ -486,7 +627,9 @@ def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: st
 
     Reveals strictly more than the card: complete normalized ``content``,
     media fields, every contributing engine, provenance, a
-    ``content_available`` flag, and an explicit non-verification note.
+    ``content_available`` flag, an explicit non-verification note, and the
+    stable ``retrieval`` handoff record (docs/RETRIEVAL_HANDOFF.md) that a
+    downstream retriever uses to link a capture back to this result.
     """
     content = result.content or ""
     source_engines = _source_engines(result)
@@ -522,6 +665,7 @@ def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: st
             "total": snapshot.total,
         },
         "note": NON_VERIFICATION_NOTE,
+        "retrieval": _retrieval_handoff(result, snapshot, result_id),
     }
     if not content_available:
         record["content_unavailable_note"] = CONTENT_UNAVAILABLE_NOTE

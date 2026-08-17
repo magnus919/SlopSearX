@@ -168,6 +168,7 @@ CARD_KEYS = {
     "position",
     "tier",
     "citation",
+    "retrieval",
     "result_id",
 }
 

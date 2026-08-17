@@ -205,11 +205,18 @@ def build_meta(
 def _normalise_url(url: str) -> str:
     """Strip tracking parameters and normalise for dedup.
 
-    Handles: utm_*, fbclid, gclid.
+    Handles: utm_*, fbclid, gclid. A URL that cannot be parsed (e.g. a
+    canonicalization-ambiguous value such as a malformed bracketed host) is
+    returned verbatim for dedup instead of raising — the pipeline classifies
+    such URLs as ``ambiguous`` at the retrieval-handoff boundary rather than
+    crashing the search (issue 189).
     """
     import urllib.parse
 
-    parsed = urllib.parse.urlparse(url)
+    try:
+        parsed = urllib.parse.urlparse(url)
+    except ValueError:
+        return url
     query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
 
     strip_params = {
