@@ -463,6 +463,40 @@ class TestExtend:
         assert result["error"]["field"] == "intent"
         assert "web" in result["error"]["valid_alternatives"]
 
+    async def test_extend_after_durable_execution_clears_stale_lease(self, state: McpState) -> None:
+        """A durable-executed job keeps stale lease fields; extend must not raise.
+
+        ``release`` deletes the Valkey lease key but not the record fields, so
+        a job that finished under the durable worker still carries a stale
+        ``lease_token``. Extend must clear those fields before ``run_pending``
+        (which otherwise tries to renew the missing lease and raises
+        ``LeaseLostError``).
+        """
+        job = ResearchJob(
+            job_id=generate_job_id(),
+            question="q",
+            strategy="triangulate",
+            state="succeeded",
+            deadline=time.time() + 3600,
+            owner_id="worker-old",
+            lease_token="stale-lease-token",
+            queries=[
+                ResearchQuery(index=0, query="done", intent="web", engines=["brave"], state="done", cursor="snap-old"),
+            ],
+        )
+        await state.job_store.save(job)
+
+        result = await t.slopsearx_extend_research(job.job_id, "followup", intent="web")
+
+        assert "error" not in result
+        job = await state.job_store.load(job.job_id)
+        assert job is not None
+        assert len(job.queries) == 2
+        assert job.queries[0].cursor == "snap-old"
+        assert job.queries[1].state == "done"
+        assert job.owner_id is None
+        assert job.lease_token is None
+
 
 # ---------------------------------------------------------------------------
 # VAL-RESEARCH-010 / 011 — cancel and expiration preserve completed evidence

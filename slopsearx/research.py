@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import json
 import logging
 import secrets
 import time
@@ -73,6 +74,19 @@ FAILURE_CLASS_TOKENS: tuple[str, ...] = (
     "unavailable",
     "auth_required",
 )
+
+# Atomic compare-and-set used by :meth:`ResearchJobStore.save_if_owned`.
+# KEYS[1] is the lease key, KEYS[2] is the job-record key; ARGV[1] is the
+# lease token, ARGV[2] the record TTL, ARGV[3] the serialized job payload.
+# The check (does this token still own the lease) and the write happen in a
+# single Lua call so a concurrent reclamation cannot race between them.
+_LEASE_SAVE_SCRIPT = """
+if redis.call('GET', KEYS[1]) ~= ARGV[1] then
+    return 0
+end
+redis.call('SETEX', KEYS[2], ARGV[2], ARGV[3])
+return 1
+"""
 
 
 # ---------------------------------------------------------------------------
@@ -362,6 +376,50 @@ class ResearchJobStore:
                 {"job_id": job.job_id},
                 JOB_RETENTION_SECONDS,
             )
+
+    async def save_if_owned(self, job: ResearchJob) -> bool:
+        """Persist a job only if the caller still owns its lease.
+
+        Returns ``True`` when the job was persisted (or when it has no
+        lease, e.g. a direct retry/extend run) and ``False`` when the lease
+        was lost and the write was skipped. On Valkey the lease check and the
+        record write happen in one atomic Lua call (compare-and-set) so a
+        concurrent reclamation cannot race between them; the in-memory
+        fallback is check-then-save, which is atomic under single-threaded
+        asyncio (no await between the check and the write).
+        """
+        token = job.lease_token
+        if not token:
+            await self.save(job)
+            return True
+        store = self._store
+        if store is None or not store.is_connected:
+            return False
+        client = getattr(store, "_client", None)
+        eval_method = getattr(client, "eval", None) if client is not None else None
+        if eval_method is not None:
+            return await self._save_if_owned_valkey(eval_method, job, token)
+        if await self._lease_get(self._lease_key(job.job_id)) != token:
+            return False
+        await self.save(job)
+        return True
+
+    async def _save_if_owned_valkey(self, eval_method: Any, job: ResearchJob, token: str) -> bool:
+        """Atomic compare-and-set: persist ``job`` only if ``token`` still owns the lease."""
+        payload = json.dumps(_job_to_payload(job), default=str)
+        try:
+            result = await eval_method(
+                _LEASE_SAVE_SCRIPT,
+                2,
+                self._lease_key(job.job_id),
+                self._key(job.job_id),
+                token,
+                str(JOB_RETENTION_SECONDS),
+                payload,
+            )
+        except Exception:  # noqa: BLE001 — lease loss / transient store error
+            return False
+        return bool(result)
 
     async def load(self, job_id: str) -> ResearchJob | None:
         """Load a job by ID, merging the durable cancellation flag.
@@ -864,6 +922,23 @@ class ResearchJobRunner:
         await store.save(job)
         return job
 
+    async def run_direct(self, job: ResearchJob) -> ResearchJob:
+        """Run a loaded job directly, clearing any stale durable lease first.
+
+        ``retry``/``extend`` load a job that may still carry lease fields from
+        a prior ``claim``/``release`` cycle: ``release`` deletes the Valkey
+        lease key but not the record fields. ``run_pending`` treats a
+        non-empty ``lease_token`` as active ownership and renews it, so a
+        stale token would fail against the missing key and raise
+        ``LeaseLostError``. Clearing the fields makes a direct run lease-free.
+        """
+        store = self._jobs_for(job.tenant)
+        job.owner_id = None
+        job.lease_token = None
+        job.lease_expires_at = 0.0
+        await store.save(job)
+        return await self.run_pending(job)
+
     async def retry(self, job_id: str, tenant: str | None = None) -> ResearchJob | None:
         """Re-run only failed/empty subqueries (VAL-RESEARCH-008).
 
@@ -901,8 +976,7 @@ class ResearchJobRunner:
         job.state = "running"
         for query in retryable:
             query.state = "pending"
-        await store.save(job)
-        return await self.run_pending(job)
+        return await self.run_direct(job)
 
     def _build_query_coverage(self, query: ResearchQuery, response: Any) -> list[EngineCoverage]:
         """Derive per-engine coverage for a completed subquery (VAL-RESEARCH-004).
@@ -1040,7 +1114,8 @@ class ResearchJobRunner:
             query.state = "failed"
             query.error = str(exc)
             query.attempts.append(_attempt_from_query(query))
-            await store.save(job)
+            if not await store.save_if_owned(job):
+                raise LeaseLostError(job.job_id)
             return
 
         query.query_id = response.query_id
@@ -1067,7 +1142,8 @@ class ResearchJobRunner:
         else:
             query.state = "done"
         query.attempts.append(_attempt_from_query(query))
-        await store.save(job)
+        if not await store.save_if_owned(job):
+            raise LeaseLostError(job.job_id)
 
 
 # ---------------------------------------------------------------------------
@@ -1156,9 +1232,11 @@ def generate_lease_token() -> str:
 async def _scan_keys(store: KeyValueStore | None, pattern: str) -> list[str]:
     """List keys matching a glob across the supported store backends.
 
-    Valkey-backed stores expose a ``_client`` with an async ``keys`` method;
-    in-memory stores either expose a ``keys`` method or a ``_data`` dict.
-    Returns decoded string keys (empty list when the store is unavailable).
+    Valkey-backed stores are scanned with ``SCAN`` (via ``scan_iter``) so the
+    worker's periodic prefix scans never block the single-threaded Valkey
+    event loop with an O(N) ``KEYS`` command. In-memory stores either expose
+    a ``keys`` method or a ``_data`` dict. Returns decoded string keys (empty
+    list when the store is unavailable).
     """
     if store is None or not store.is_connected:
         return []
@@ -1167,12 +1245,19 @@ async def _scan_keys(store: KeyValueStore | None, pattern: str) -> list[str]:
         raw = await keys_method(pattern)
     else:
         client = getattr(store, "_client", None)
-        if client is not None and hasattr(client, "keys"):
-            raw = await client.keys(pattern)
+        scan_iter = getattr(client, "scan_iter", None) if client is not None else None
+        if scan_iter is not None:
+            raw = []
+            async for key in scan_iter(match=pattern):
+                raw.append(key)
         else:
-            data = getattr(store, "_data", None)
-            if data is None:
-                return []
-            prefix = pattern.rstrip("*")
-            raw = [key for key in data if key.startswith(prefix)]
+            keys_client_method = getattr(client, "keys", None) if client is not None else None
+            if keys_client_method is not None:
+                raw = await keys_client_method(pattern)
+            else:
+                data = getattr(store, "_data", None)
+                if data is None:
+                    return []
+                prefix = pattern.rstrip("*")
+                raw = [key for key in data if key.startswith(prefix)]
     return [key.decode() if isinstance(key, bytes) else str(key) for key in raw]

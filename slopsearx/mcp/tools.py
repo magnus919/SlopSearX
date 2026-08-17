@@ -1627,9 +1627,12 @@ async def slopsearx_extend_research(
         engines=resolved_engines,
     )
     job.queries.append(new_query)
-    await store.save(job)
 
-    job = await state.runner.run_pending(job)
+    # A job previously executed by the durable worker still carries lease
+    # fields whose Valkey key was already released. Run through run_direct so
+    # the stale lease is cleared before run_pending (which otherwise tries to
+    # renew the missing lease and raises LeaseLostError).
+    job = await state.runner.run_direct(job)
     result = _job_summary(job)
     result["note"] = "follow-up query appended and executed; prior completed evidence was preserved"
     return result

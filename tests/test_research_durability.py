@@ -186,6 +186,43 @@ class ValkeyLikeStore:
         await self._client.set(key, json.dumps(value, default=str), ex=ttl)
 
 
+class _ScanPreferredClient:
+    """Client exposing both ``scan_iter`` and ``keys``; tracks ``KEYS`` misuse."""
+
+    def __init__(self) -> None:
+        self._data: dict[bytes, bytes] = {
+            b"mcp:job:default:job-a": b"{}",
+            b"mcp:job:default:job-b": b"{}",
+        }
+        self.keys_calls = 0
+
+    async def scan_iter(self, match: str | None = None) -> Any:
+        prefix = (match or "").rstrip("*").encode()
+        for key in list(self._data):
+            if key.startswith(prefix):
+                yield key
+
+    async def keys(self, pattern: str) -> list[bytes]:
+        del pattern
+        self.keys_calls += 1
+        return []
+
+
+class ScanPreferredStore:
+    """A store whose ``_client`` can SCAN but should never be driven via KEYS."""
+
+    def __init__(self) -> None:
+        self.is_connected = True
+        self._client = _ScanPreferredClient()
+
+    async def get(self, key: str) -> dict[str, Any] | None:
+        del key
+        return None
+
+    async def set(self, key: str, value: dict[str, Any], ttl: int = 300) -> None:
+        del key, value, ttl
+
+
 class _MockEngine(EngineAdapter):
     """Deterministic engine with a call counter."""
 
@@ -213,6 +250,33 @@ class _MockEngine(EngineAdapter):
             ],
             status=EngineStatus.OK,
             latency_ms=1.0,
+        )
+
+
+class _SlowEngine(EngineAdapter):
+    """Engine whose search blocks long enough to outlive a short lease."""
+
+    def __init__(self, name: str, delay: float) -> None:
+        super().__init__()
+        self.name = name
+        self.delay = delay
+        self.calls = 0
+
+    async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
+        del query, params
+        self.calls += 1
+        await asyncio.sleep(self.delay)
+        return AdapterResponse(
+            results=[
+                SearchResult(
+                    url=f"https://{self.name}.example",
+                    title=self.name,
+                    content="Content.",
+                    engine=self.name,
+                )
+            ],
+            status=EngineStatus.OK,
+            latency_ms=self.delay * 1000,
         )
 
 
@@ -603,6 +667,96 @@ class TestRunnerExecution:
         state.runner.enqueue("job-123", tenant="tenant-x")
         assert state.runner._next_local() == ("tenant-x", "job-123")
         assert state.runner._next_local() is None
+
+
+# ---------------------------------------------------------------------------
+# Direct runs after durable execution (retry/extend on stale lease fields)
+# ---------------------------------------------------------------------------
+
+
+class TestDirectRunsAfterDurableExecution:
+    async def test_retry_clears_stale_lease_and_reruns(self) -> None:
+        state, store = _build_state()
+        job_store = state.job_store
+        state.ctx.active_engines["wikipedia"] = _MockEngine("wikipedia", status=EngineStatus.ERROR)
+        job = _job(queries=[ResearchQuery(index=0, query="q", intent="web", engines=["wikipedia"])])
+        await job_store.save(job)
+
+        claimed = await job_store.claim(job.job_id, "w1", 60)
+        assert claimed is not None
+        await state.runner._execute_claimed(claimed)
+
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.state == "failed"
+        # The lease key is gone but the record fields survive the release.
+        assert loaded.lease_token is not None
+        assert await job_store._lease_get(_lease_key("default", job.job_id)) is None
+
+        # A retry of a previously durable-executed job must not raise
+        # LeaseLostError against the released lease and must re-run the work.
+        state.ctx.active_engines["wikipedia"] = _MockEngine("wikipedia")
+        result = await state.runner.retry(job.job_id, tenant="default")
+
+        assert result is not None
+        assert result.state == "succeeded"
+        assert result.queries[0].state == "done"
+        assert result.owner_id is None
+        assert result.lease_token is None
+
+
+# ---------------------------------------------------------------------------
+# Lease ownership guard for subquery persistence
+# ---------------------------------------------------------------------------
+
+
+class TestLeaseOwnershipGuard:
+    async def test_stale_owner_does_not_persist_after_lease_reclaimed(self) -> None:
+        state, store = _build_state(lease_ttl=1)
+        job_store = state.job_store
+        state.ctx.active_engines["wikipedia"] = _SlowEngine("wikipedia", delay=2.0)
+        job = _job(queries=[ResearchQuery(index=0, query="q", intent="web", engines=["wikipedia"])])
+        await job_store.save(job)
+
+        claimed = await job_store.claim(job.job_id, "w1", 1)
+        assert claimed is not None
+
+        task = asyncio.create_task(state.runner._execute_claimed(claimed))
+
+        # Let the original owner start the subquery and let its lease expire
+        # (the engine call takes 2s vs a 1s lease).
+        await asyncio.sleep(1.5)
+
+        # Another replica reclaims the abandoned job: it resets the in-flight
+        # subquery to pending and installs a fresh lease token.
+        second = await job_store.claim(job.job_id, "w2", 60)
+        assert second is not None
+
+        await task
+
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        # The stale owner must not have written its done result over the
+        # reclaimer's reset; the job is still pending under w2.
+        assert loaded.queries[0].state == "pending"
+        assert loaded.owner_id == "w2"
+        assert loaded.lease_token == second.lease_token
+
+
+# ---------------------------------------------------------------------------
+# Key scanning backend selection
+# ---------------------------------------------------------------------------
+
+
+class TestScanKeys:
+    async def test_scan_keys_prefers_scan_iter_over_keys(self) -> None:
+        store = ScanPreferredStore()
+        job_store = ResearchJobStore(store)
+
+        ids = await job_store._scan_job_ids()
+
+        assert ids == ["job-a", "job-b"]
+        assert store._client.keys_calls == 0
 
 
 # ---------------------------------------------------------------------------
