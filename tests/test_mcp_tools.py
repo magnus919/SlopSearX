@@ -578,6 +578,32 @@ class TestDiscoveryTools:
         assert result["active_engines"] == enabled["count"] == len(state.catalog.enabled())
         assert result["active_engines"] > 0
 
+    async def test_status_and_capabilities_share_circuit_error_key(self, state: McpState) -> None:
+        """Both MCP surfaces report the breaker counter under one key.
+
+        ``service_diagnostics``'s per-engine map and
+        ``slopsearx_list_capabilities`` must both surface
+        ``circuit_consecutive_errors`` (docs/MCP_CONTRACT.md §7.2) — the
+        legacy ``consecutive_errors`` key is never emitted by either surface.
+        """
+        engine = state.ctx.active_engines["wikipedia"]
+        engine.consecutive_errors = 3
+        # Rebuild the catalog over the live adapters so both surfaces derive
+        # the counter from the same running engine state.
+        state.catalog = CapabilityCatalog(config=load_config(), adapters=state.ctx.active_engines)
+
+        status = t.service_diagnostics(state)
+        caps = await t.slopsearx_list_capabilities()
+
+        status_entry = status["engines"]["wikipedia"]
+        cap_entry = next(e for e in caps["engines"] if e["name"] == "wikipedia")
+
+        assert status_entry["circuit_consecutive_errors"] == 3
+        assert cap_entry["circuit_consecutive_errors"] == 3
+        assert status_entry["circuit_consecutive_errors"] == cap_entry["circuit_consecutive_errors"]
+        assert "consecutive_errors" not in status_entry
+        assert "consecutive_errors" not in cap_entry
+
     async def test_status_grants_listed_by_name_only(self, state: McpState) -> None:
         """VAL-DIAG-005 — enabled grants are listed by name; no secret value appears."""
         state.policy.enabled_tools["jobs"] = True

@@ -557,10 +557,14 @@ class SearchService:
             if name in started_engines:
                 # Synthetic outcomes (deadline timeouts the adapter never
                 # returned from) carry a fabricated latency bound; never store
-                # it as an observed latency (issue 190).
+                # it as an observed latency (issue 190). The AdapterResponse
+                # latency default (0.0) also means "not measured", so it is
+                # coerced to None at this recording boundary — a fabricated
+                # 0.0 must never surface as a real 0ms measurement (issue 190
+                # review).
                 engine.record_observation(
                     result.status,
-                    latency_ms=None if result.synthetic else result.latency_ms,
+                    latency_ms=None if result.synthetic else (result.latency_ms or None),
                     result_count=len(result.results),
                 )
                 if result.status in (EngineStatus.ERROR, EngineStatus.TIMEOUT):

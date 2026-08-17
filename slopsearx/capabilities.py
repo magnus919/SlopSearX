@@ -301,8 +301,10 @@ def build_engine_health(
       when never observed or when the outcome was service-synthesized (a
       fabricated latency is never surfaced as observed);
     - ``configured`` — configured availability (engine enabled);
-    - ``auth_class`` / ``auth_configured`` — authentication readiness;
-    - ``circuit_open`` / ``consecutive_errors`` — circuit-breaker state.
+    - ``auth_class`` / ``auth_configured`` — authentication readiness; both
+      are null when the capability is unavailable (e.g. the degraded fallback
+      path after a catalog failure) — never a fabricated ``unknown``/``false``;
+    - ``circuit_open`` / ``circuit_consecutive_errors`` — circuit-breaker state.
     """
     now = time.time() if now is None else now
     if stale_after is None:
@@ -324,10 +326,10 @@ def build_engine_health(
         "status_at": status_at,
         "stale": stale,
         "configured": capability.enabled if capability is not None else adapter is not None,
-        "auth_class": capability.auth_class if capability is not None else AUTH_UNKNOWN,
-        "auth_configured": capability.auth_configured if capability is not None else False,
+        "auth_class": capability.auth_class if capability is not None else None,
+        "auth_configured": capability.auth_configured if capability is not None else None,
         "circuit_open": bool(adapter is not None and adapter.circuit_open),
-        "consecutive_errors": int(adapter.consecutive_errors) if adapter is not None else 0,
+        "circuit_consecutive_errors": int(adapter.consecutive_errors) if adapter is not None else 0,
         "last_observed_latency_ms": adapter.last_observed_latency_ms if adapter is not None else None,
         "last_observed_result_count": adapter.last_observed_result_count if adapter is not None else None,
     }

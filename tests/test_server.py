@@ -341,7 +341,7 @@ class TestHealthEndpoint:
         assert "auth_class" in record
         assert "auth_configured" in record
         assert record["circuit_open"] is False
-        assert record["consecutive_errors"] == 0
+        assert record["circuit_consecutive_errors"] == 0
 
     def test_health_no_engines(self) -> None:
         """Health works even with no engines registered."""

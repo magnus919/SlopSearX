@@ -757,7 +757,7 @@ configured-but-never-observed engine stays `unknown` rather than `ok`.
       "auth_class": "required",
       "auth_configured": true,
       "circuit_open": false,
-      "consecutive_errors": 0
+      "circuit_consecutive_errors": 0
     },
     "wikipedia": {
       "status": "unknown",
@@ -767,7 +767,7 @@ configured-but-never-observed engine stays `unknown` rather than `ok`.
       "auth_class": "none",
       "auth_configured": false,
       "circuit_open": false,
-      "consecutive_errors": 0
+      "circuit_consecutive_errors": 0
     }
   }
 }
@@ -781,6 +781,11 @@ Per-engine `status` uses the shared observed-health vocabulary
 authentication readiness are exposed as distinct signals, never conflated with
 observed health. Optional active probes are bounded, opt-in, and not required
 for ordinary search correctness; they are intentionally not implemented here.
+
+When the memoized config/capability snapshot is unavailable (degraded liveness
+fallback), per-engine `auth_class` / `auth_configured` are explicit `null` —
+never a fabricated `unknown` / `false` that would contradict a key-requiring
+engine still serving from its startup config.
 
 ### 9.3 Quality Degradation Monitoring (Critical)
 

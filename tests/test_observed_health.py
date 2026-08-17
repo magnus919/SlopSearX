@@ -85,6 +85,30 @@ class _HangingEngine(EngineAdapter):
         raise AssertionError("hanging engine unexpectedly completed")
 
 
+class _LatencylessEngine(EngineAdapter):
+    """Adapter that never reports a latency (relies on the ``0.0`` default)."""
+
+    name = "latencyless"
+    display_name = "Latencyless Engine"
+    categories = ["general"]
+
+    async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
+        del query, params
+        # Deliberately no ``latency_ms``: the dataclass default ``0.0`` means
+        # "not measured" and must never be recorded as a 0ms observation.
+        return AdapterResponse(
+            results=[
+                SearchResult(
+                    url="https://example.com/latencyless/0",
+                    title="latencyless result 0",
+                    content="content",
+                    engine=self.name,
+                )
+            ],
+            status=EngineStatus.OK,
+        )
+
+
 def _service(engine: EngineAdapter) -> SearchService:
     return SearchService(
         AppContext(
@@ -138,6 +162,21 @@ class TestObservationRecording:
         engine = _FakeEngine(EngineStatus.RATE_LIMITED)
         await _service(engine).search(_request())
         assert engine.last_observed_status == "rate_limited"
+
+    async def test_unmeasured_latency_records_none_not_zero(self) -> None:
+        """An adapter that never reports latency records None, never 0.0.
+
+        ``AdapterResponse.latency_ms`` defaults to ``0.0``, which means "not
+        measured". That default must not be recorded as ``0.0`` — it would be
+        indistinguishable from a real 0ms measurement on /health (issue 190
+        review).
+        """
+        engine = _LatencylessEngine()
+        await _service(engine).search(_request())
+        assert engine.last_observed_status == "ok"
+        assert engine.last_observed_latency_ms is None
+        record = build_engine_health("latencyless", engine)
+        assert record["last_observed_latency_ms"] is None
 
 
 # ---------------------------------------------------------------------------
@@ -207,8 +246,24 @@ class TestHealthSignals:
 
         # Circuit is open even though no observation exists yet.
         assert record["circuit_open"] is True
-        assert record["consecutive_errors"] == 5
+        assert record["circuit_consecutive_errors"] == 5
         assert record["status"] == "unknown"
+
+    def test_degraded_path_reports_auth_fields_as_null(self) -> None:
+        """The degraded fallback (capability unavailable) never fabricates auth state.
+
+        When the capability is unavailable the builder must emit explicit
+        null for ``auth_class`` / ``auth_configured`` — never a fabricated
+        ``unknown`` / ``false`` that would contradict a key-requiring engine
+        still serving from its startup config (issue 190 review).
+        """
+        engine = _FakeEngine(EngineStatus.OK)
+        # capability=None models the memoized catalog failing; the adapter is
+        # still the running engine, so ``configured`` stays honest.
+        record = build_engine_health("brave", engine)
+        assert record["configured"] is True
+        assert record["auth_class"] is None
+        assert record["auth_configured"] is None
 
     def test_auth_readiness_is_distinct_from_health(self) -> None:
         config = load_config()
@@ -406,6 +461,11 @@ class TestHealthConfigSnapshot:
                 record = data["engines"]["wikipedia"]
                 assert record["configured"] is True
                 assert record["status"] == "unknown"
+                # The capability is unavailable, so auth readiness is an
+                # explicit null — never a fabricated unknown/false (issue 190
+                # review).
+                assert record["auth_class"] is None
+                assert record["auth_configured"] is None
         finally:
             server_mod._active_engines = original
             server_mod._health_config_cache = None
@@ -472,6 +532,30 @@ class TestHealthEndpointObserved:
                     CapabilityCatalog(config=load_config(), adapters={"wikipedia": engine}).get("wikipedia"),
                 )
                 assert after == expected
+        finally:
+            server_mod._active_engines = original
+            server_mod._router = original_router
+
+    def test_health_surfaces_null_for_unmeasured_latency(self) -> None:
+        """/health surfaces null, never 0.0, for an engine that never reports latency."""
+        import slopsearx.server as server_mod
+        from slopsearx.server import app
+
+        original = dict(server_mod._active_engines)
+        original_router = server_mod._router
+        engine = _LatencylessEngine()
+        engine.name = "wikipedia"
+        try:
+            with TestClient(app) as client:
+                server_mod._active_engines = {"wikipedia": engine}
+                server_mod._router = None
+
+                client.get("/search", params={"q": "test", "engines": "wikipedia"})
+
+                after = client.get("/health").json()["engines"]["wikipedia"]
+                assert after["status"] == "ok"
+                assert after["last_observed_latency_ms"] is None
+                assert after["last_observed_result_count"] == 1
         finally:
             server_mod._active_engines = original
             server_mod._router = original_router
