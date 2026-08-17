@@ -249,6 +249,14 @@ class TestUrlClassification:
             ("/relative/path", "ambiguous", None),
             ("https://", "ambiguous", "https"),
             ("https://[::1", "ambiguous", None),
+            # Backslash-authority host confusion (CWE-918): urlparse reports
+            # host "public.com" but a WHATWG client connects to
+            # "internal.example"; never handed off.
+            ("https://internal.example\\@public.com/", "ambiguous", "https"),
+            # Invalid / out-of-range / zero ports are not fetchable targets.
+            ("http://host:abc/", "ambiguous", "http"),
+            ("http://host:99999/", "ambiguous", "http"),
+            ("http://host:0/", "ambiguous", "http"),
         ],
     )
     async def test_url_status_classification(
@@ -304,13 +312,27 @@ class TestUrlClassification:
             set_state(None)
 
     async def test_ineligible_url_is_never_handed_off_as_fetch_target(self, state: McpState) -> None:
-        """unsafe/missing/ambiguous URLs are not exposed via handoff.url.
+        """missing/non-HTTP/unsafe/ambiguous URLs are not exposed via handoff.url.
 
         SlopSearX is not an SSRF-capable proxy: the handoff record only
         carries a fetch target when the URL is classified ``ok``.
         """
         state_obj = _build_state(
-            {"brave": _UrlEngine("brave", ["", "file:///etc/passwd", "javascript:alert(1)", "/relative/path"])}
+            {
+                "brave": _UrlEngine(
+                    "brave",
+                    [
+                        "",
+                        "mailto:someone@example.com",
+                        "tel:+15551234567",
+                        "file:///etc/passwd",
+                        "javascript:alert(1)",
+                        "/relative/path",
+                        "https://internal.example\\@public.com/",
+                        "http://host:99999/",
+                    ],
+                )
+            }
         )
         set_state(state_obj)
         try:
@@ -319,7 +341,12 @@ class TestUrlClassification:
                 expanded = await t.slopsearx_read_result(card["result_id"])
                 assert expanded["retrieval"]["eligible"] is False
                 assert expanded["retrieval"]["url"] is None
-                assert expanded["retrieval"]["url_status"] in {"missing", "unsafe_scheme", "ambiguous"}
+                assert expanded["retrieval"]["url_status"] in {
+                    "missing",
+                    "non_http",
+                    "unsafe_scheme",
+                    "ambiguous",
+                }
                 assert expanded["retrieval"]["url_reason"]
         finally:
             set_state(None)
@@ -372,26 +399,75 @@ class TestContractFixtures:
         assert capture_ref["snapshot_cursor"] == handoff["provenance"]["snapshot_cursor"]
         assert capture_ref["query_id"] == handoff["provenance"]["query_id"]
 
-    async def test_runtime_handoff_matches_ok_fixture_shape(self, state: McpState) -> None:
-        """A live ok handoff has the same shape and values as the fixture."""
+    async def test_runtime_handoff_matches_ok_fixture_shape(self) -> None:
+        """A live ok handoff matches the fixture's shape and values.
+
+        The runtime state is arranged to be fixture-consistent: the same
+        engine name (``nvd``), the same query text, the same result URL at the
+        same snapshot index (2), and ``SHORT_CONTENT`` so ``snippet_only`` is
+        true. This asserts url/result_id/snippet_only/provenance parity, not
+        just the runtime-independent constants.
+        """
         fixture = json.loads((FIXTURES / "search_handoff_capture.json").read_text())["handoff"]
+        nvd_url = "https://nvd.nist.gov/vuln/detail/CVE-2024-1234"
+        state_obj = _build_state(
+            {
+                "nvd": _UrlEngine(
+                    "nvd",
+                    ["https://example.com/0", "https://example.com/1", nvd_url],
+                    content=SHORT_CONTENT,
+                )
+            }
+        )
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("CVE-2024-1234 impact analysis", engines=["nvd"])
+            cursor = result["meta"]["cursor"]
+            assert cursor is not None
 
-        result = await t.slopsearx_search("CVE-2024-1234 impact analysis", engines=["brave"], max_results=1)
-        card = _first_card(result)
-        expanded = await t.slopsearx_read_result(card["result_id"])
-        handoff = expanded["retrieval"]
+            # The nvd result is the third adapter result, i.e. snapshot index
+            # 2 — the same index suffix as the fixture's "snap-...:2" id.
+            index = next(i for i, card in enumerate(result["results"]) if card["url"] == nvd_url)
+            assert index == 2
+            card = result["results"][index]
+            expanded = await t.slopsearx_read_result(card["result_id"])
+            handoff = expanded["retrieval"]
 
-        assert set(handoff) == set(fixture)
-        assert handoff["contract"] == fixture["contract"]
-        assert handoff["version"] == fixture["version"]
-        assert handoff["url_status"] == fixture["url_status"]
-        assert handoff["url_reason"] == fixture["url_reason"]
-        assert handoff["scheme"] == fixture["scheme"]
-        assert handoff["eligible"] == fixture["eligible"]
-        assert handoff["verified"] == fixture["verified"]
-        assert handoff["verification_note"] == fixture["verification_note"]
-        assert handoff["provenance"]["query"] == fixture["provenance"]["query"]
-        assert set(handoff["provenance"]) == set(fixture["provenance"])
+            assert set(handoff) == set(fixture)
+            # Runtime-independent constants match the fixture exactly.
+            assert handoff["contract"] == fixture["contract"]
+            assert handoff["version"] == fixture["version"]
+            assert handoff["url_status"] == fixture["url_status"]
+            assert handoff["url_reason"] == fixture["url_reason"]
+            assert handoff["scheme"] == fixture["scheme"]
+            assert handoff["eligible"] == fixture["eligible"]
+            assert handoff["verified"] == fixture["verified"]
+            assert handoff["verification_note"] == fixture["verification_note"]
+
+            # Verbatim url parity: the handoff target is the raw result URL
+            # from the envelope — identical to the card and to the fixture —
+            # never canonicalized or rewritten.
+            assert handoff["url"] == card["url"] == fixture["url"]
+
+            # Snippet-only parity: SHORT_CONTENT stays within the snippet
+            # bound, so the runtime record reports the same snippet_only as
+            # the fixture (true).
+            assert handoff["snippet_only"] == fixture["snippet_only"] is True
+
+            # Result identity parity: server-issued "<cursor>:<index>" with
+            # the same index suffix (":2") as the fixture.
+            assert handoff["result_id"] == card["result_id"] == f"{cursor}:{index}"
+            assert handoff["result_id"].rsplit(":", 1)[1] == fixture["result_id"].rsplit(":", 1)[1]
+
+            # Provenance parity: live cursor/query id/query text map onto the
+            # fixture's provenance fields; source_engines match exactly.
+            assert handoff["provenance"]["snapshot_cursor"] == cursor
+            assert handoff["provenance"]["query_id"] == result["meta"]["query_id"]
+            assert handoff["provenance"]["query"] == fixture["provenance"]["query"] == "CVE-2024-1234 impact analysis"
+            assert handoff["provenance"]["source_engines"] == fixture["provenance"]["source_engines"] == ["nvd"]
+            assert set(handoff["provenance"]) == set(fixture["provenance"])
+        finally:
+            set_state(None)
 
     async def test_runtime_unsafe_handoff_matches_fixture(self) -> None:
         """An unsafe URL at runtime produces exactly the fixture classification."""

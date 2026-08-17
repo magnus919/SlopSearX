@@ -100,7 +100,7 @@ contract in `docs/RETRIEVAL_HANDOFF.md`:
 | `retrieval.contract` | `str` | `"slopsearx.retrieval_handoff"` — stable contract name. |
 | `retrieval.version` | `int` | `1`. |
 | `retrieval.result_id` | `str` | Server-issued `"<cursor>:<index>"` — the result identity to record on a capture. |
-| `retrieval.url` | `str \| null` | Canonical URL to fetch — non-null only when `url_status == "ok"`; ineligible URLs are never handed off as a fetch target (SSRF boundary). |
+| `retrieval.url` | `str \| null` | The raw result URL handed off **verbatim** (never canonicalized or rewritten) — the value to fetch; non-null only when `url_status == "ok"`; ineligible URLs are never handed off as a fetch target (SSRF boundary). |
 | `retrieval.url_status` | `str` | Closed token: `ok` / `missing` / `non_http` / `unsafe_scheme` / `ambiguous`. |
 | `retrieval.url_reason` | `str \| null` | Stable reason; `null` when `url_status == "ok"`. |
 | `retrieval.scheme` | `str \| null` | Lowercased scheme. |

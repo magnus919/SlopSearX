@@ -167,6 +167,11 @@ RETRIEVAL_URL_STATUSES: tuple[str, ...] = (
 # becoming an SSRF-capable proxy or mishandling embedded content.
 UNSAFE_RETRIEVAL_SCHEMES = frozenset({"file", "data", "javascript", "vbscript", "gopher", "ftp"})
 
+# Highest port accepted for a handoff fetch target. Anything above this (or
+# non-numeric) is classified ``ambiguous`` and never handed off; port ``0`` is
+# excluded because it is not a connectable fetch target.
+RETRIEVAL_PORT_MAX = 65535
+
 JOBS_ADAPTERS = ("greenhouse", "ashby", "lever")
 
 JOBS_LIMITATION_NOTE = (
@@ -470,20 +475,24 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
 
     SlopSearX is a search-only service: this is advisory metadata so a
     downstream retriever (e.g. GroktoCrawl) can decide eligibility and fetch
-    safety without parsing prose. Returns ``(status, reason, scheme,
-    canonical_url)`` where ``status`` is one of ``RETRIEVAL_URL_STATUSES``
-    and ``canonical_url`` is non-``None`` **only** for ``ok`` — ineligible
-    URLs are never handed off as a fetch target.
+    safety without parsing prose. Returns ``(status, reason, scheme, url)``
+    where ``status`` is one of ``RETRIEVAL_URL_STATUSES`` and the URL is
+    non-``None`` **only** for ``ok`` — ineligible URLs are never handed off
+    as a fetch target.
 
-    - ``ok`` — absolute ``http``/``https`` URL with a host; eligible, and the
-      captured URL is the canonical value to hand off.
+    - ``ok`` — absolute ``http``/``https`` URL with a well-formed authority
+      (non-empty host, no backslash/control characters, valid in-range
+      port); eligible, and the captured URL is handed off verbatim (never
+      canonicalized or rewritten).
     - ``missing`` — no URL string on the result.
     - ``non_http`` — parses to a non-HTTP(S) scheme (e.g. ``mailto:``).
     - ``unsafe_scheme`` — a scheme an HTTP retriever must not fetch
       (``file:``, ``data:``, ``javascript:``, ...); see
       ``UNSAFE_RETRIEVAL_SCHEMES``.
-    - ``ambiguous`` — canonicalization-ambiguous (no scheme, no host, or
-      unparseable); treated as ineligible rather than guessed at.
+    - ``ambiguous`` — canonicalization-ambiguous (no scheme, no host, a
+      backslash or control character in the authority, an invalid or
+      out-of-range port, or unparseable); treated as ineligible rather than
+      guessed at.
     """
     if not url or not url.strip():
         return RETRIEVAL_URL_STATUS_MISSING, "result has no URL to retrieve", None, None
@@ -508,6 +517,39 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
             )
         if not parsed.hostname:
             return RETRIEVAL_URL_STATUS_AMBIGUOUS, "URL has no host; canonicalization is ambiguous", scheme, None
+        # urlparse does not normalize backslashes and does not strip control
+        # characters, so the authority it reports is not necessarily the
+        # authority a WHATWG client (browser/HTTP stack) would resolve: e.g.
+        # "https://internal.example\@public.com/" parses with hostname
+        # "public.com" here but a WHATWG client connects to
+        # "internal.example". Never hand off a target whose authority cannot
+        # be canonicalized unambiguously (CWE-918 host-confusion guard).
+        if "\\" in parsed.netloc or any(ord(char) < 0x20 or ord(char) == 0x7F for char in parsed.netloc):
+            return (
+                RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                "URL authority contains a backslash or control character; canonicalization is ambiguous",
+                scheme,
+                None,
+            )
+        # A port that is not a parseable integer or is outside the sane TCP
+        # range is not a fetchable target (http://host:abc/,
+        # http://host:99999/, http://host:0/).
+        try:
+            port = parsed.port
+        except ValueError:
+            return (
+                RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                "URL port is invalid; canonicalization is ambiguous",
+                scheme,
+                None,
+            )
+        if port is not None and not 1 <= port <= RETRIEVAL_PORT_MAX:
+            return (
+                RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                f"URL port is outside the sane range (1-{RETRIEVAL_PORT_MAX}); canonicalization is ambiguous",
+                scheme,
+                None,
+            )
         return RETRIEVAL_URL_STATUS_OK, None, scheme, url
     except ValueError:
         # urlparse is lenient but can raise for malformed bracketed hosts
@@ -523,7 +565,7 @@ def _retrieval_card(result: SearchResult) -> dict[str, Any]:
     full handoff record — result identity, canonical URL, provenance, and
     disclosure — lives on the expanded record (progressive disclosure).
     """
-    status, reason, scheme, _canonical = _retrieval_url(result.url)
+    status, reason, scheme, _url = _retrieval_url(result.url)
     return {
         "contract": RETRIEVAL_HANDOFF_CONTRACT,
         "version": RETRIEVAL_HANDOFF_VERSION,
@@ -546,13 +588,13 @@ def _retrieval_handoff(result: SearchResult, snapshot: SearchSnapshot, result_id
     fetches the linked page; this record is the composition contract, not a
     runtime integration.
     """
-    status, reason, scheme, canonical_url = _retrieval_url(result.url)
+    status, reason, scheme, handoff_url = _retrieval_url(result.url)
     content = result.content or ""
     return {
         "contract": RETRIEVAL_HANDOFF_CONTRACT,
         "version": RETRIEVAL_HANDOFF_VERSION,
         "result_id": result_id,
-        "url": canonical_url,
+        "url": handoff_url,
         "url_status": status,
         "url_reason": reason,
         "scheme": scheme,

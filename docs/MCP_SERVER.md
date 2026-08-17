@@ -595,8 +595,9 @@ fetcher.
 
 Every expanded record also carries a machine-readable `retrieval` handoff
 record (contract `slopsearx.retrieval_handoff` v1, defined in
-`docs/RETRIEVAL_HANDOFF.md`): the result identity, the canonical URL when it is
-eligible for downstream retrieval, a closed `url_status` token
+`docs/RETRIEVAL_HANDOFF.md`): the result identity, the raw result URL handed
+off verbatim when it is eligible for downstream retrieval, a closed
+`url_status` token
 (`ok`/`missing`/`non_http`/`unsafe_scheme`/`ambiguous`) with a stable reason,
 snippet-only/non-verification status, and the snapshot/query provenance a
 downstream retriever (e.g. GroktoCrawl) uses to associate a captured page back

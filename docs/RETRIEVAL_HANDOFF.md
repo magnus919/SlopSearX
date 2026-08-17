@@ -61,7 +61,7 @@ exposed in two disclosure levels:
   eligibility summary — enough for a card-only consumer to decide whether to
   retrieve, and why not when it cannot.
 - **Record** (`slopsearx_read_result`): the full handoff record — result
-  identity, canonical URL, provenance, and disclosure.
+  identity, the verbatim result URL, provenance, and disclosure.
 
 The record is **machine-readable by construction**: a downstream retriever
 associates a capture with the originating result and snapshot through
@@ -90,7 +90,7 @@ Present on every expanded result record, in addition to the card fields:
 | `contract` | `str` | `"slopsearx.retrieval_handoff"`. |
 | `version` | `int` | `1`. |
 | `result_id` | `str` | Server-issued `"<cursor>:<index>"` — the result identity to record on a capture. |
-| `url` | `str \| null` | The canonical URL to fetch — **non-null only when `url_status == "ok"`** (§5). |
+| `url` | `str \| null` | The raw result URL handed off **verbatim** — never canonicalized or rewritten — and the value to fetch; **non-null only when `url_status == "ok"`** (§5). |
 | `url_status` | `str` | Closed eligibility token (see §4). |
 | `url_reason` | `str \| null` | Stable reason; `null` when `url_status == "ok"`. |
 | `scheme` | `str \| null` | Lowercased scheme. |
@@ -145,7 +145,7 @@ eligibility and fetch safety deterministically.
 | `missing` | The result has no URL string. | `false` |
 | `non_http` | Parses to a non-HTTP(S) scheme (e.g. `mailto:`, `tel:`). | `false` |
 | `unsafe_scheme` | A scheme an HTTP retriever must not fetch (`file:`, `data:`, `javascript:`, `vbscript:`, `gopher:`, `ftp:`). | `false` |
-| `ambiguous` | Canonicalization-ambiguous: no scheme, no host, or unparseable (e.g. a relative reference, a bare `https://`, or a malformed bracketed host). | `false` |
+| `ambiguous` | Canonicalization-ambiguous: no scheme, no host, or unparseable (e.g. a relative reference, a bare `https://`, a malformed bracketed host, a backslash or control character in the authority, or an invalid/out-of-range port). | `false` |
 
 Only `ok` is eligible. Every other token is a machine-readable failure/warning
 reason; `url_reason` carries the corresponding prose.
@@ -186,10 +186,19 @@ expired.
 ## 7. GroktoCrawl composition
 
 GroktoCrawl can be composed with SlopSearX as the **downstream reader**: it
-consumes search results from SlopSearX (over the SearXNG-compatible HTTP shape
-or the MCP surface), retrieves eligible `retrieval.url` targets itself, and
-links each capture back via `retrieval.result_id` /
+consumes search results from SlopSearX, retrieves eligible `retrieval.url`
+targets itself, and links each capture back via `retrieval.result_id` /
 `retrieval.provenance.snapshot_cursor` / `retrieval.provenance.query_id`.
+
+**The `retrieval` handoff block is emitted only on the MCP surface.** The
+SearXNG-compatible HTTP JSON/YAML shape (`/search?q=...&format=json|yaml`)
+carries no `retrieval` fields — it stays SearXNG-shaped so drop-in HTTP
+consumers keep working unchanged (see §1). A consumer that needs the handoff
+record must read results over MCP (`slopsearx_search` /
+`slopsearx_read_results` / `slopsearx_read_result`). A consumer that only
+integrates over the HTTP shape gets no handoff record: it can associate a
+capture with the envelope fields alone, or read the corresponding result over
+MCP.
 
 This document names GroktoCrawl as a **composition option**. It is not an
 undocumented runtime integration: SlopSearX ships no code that calls
@@ -205,8 +214,14 @@ side honors this handoff contract; neither depends on the other's internals.
 - **Unsafe scheme** — `url_status: "unsafe_scheme"`. The handoff refuses to
   mint a fetch target; a retriever must skip it.
 - **Canonicalization-ambiguous URL** — `url_status: "ambiguous"`. SlopSearX
-  never guesses a target; the retriever must treat it as ineligible. The search
-  pipeline itself also survives such URLs: a result whose URL cannot be parsed
+  never guesses a target; the retriever must treat it as ineligible. This
+  includes URLs whose authority cannot be canonicalized unambiguously: a
+  backslash or control character in the authority (Python's `urlparse` does
+  not normalize backslashes, so `https://internal.example\@public.com/` would
+  otherwise parse with host `public.com` while a WHATWG client connects to
+  `internal.example`), or a port that is not a parseable integer or is
+  outside the sane TCP range (`http://host:abc/`, `http://host:99999/`).
+  The search pipeline itself also survives such URLs: a result whose URL cannot be parsed
   is deduplicated by its raw value and classified `ambiguous` at the handoff
   boundary instead of failing the whole search.
 - **`verified` is always `false`** — no handoff record ever implies the page

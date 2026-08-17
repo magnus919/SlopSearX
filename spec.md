@@ -877,7 +877,11 @@ downstream reader) captures a page, it links the capture back to the
 originating search result and snapshot through the machine-readable `retrieval`
 handoff record (`retrieval.result_id`,
 `retrieval.provenance.snapshot_cursor`, `retrieval.provenance.query_id`; see
-`docs/RETRIEVAL_HANDOFF.md`). Unsafe, non-HTTP, missing, and
+`docs/RETRIEVAL_HANDOFF.md`). The handoff record is emitted **only on the MCP
+surface** — the SearXNG-compatible HTTP JSON/YAML shape stays SearXNG-shaped
+and carries no `retrieval` fields, so drop-in HTTP consumers (including
+GroktoCrawl's `searxng_client.py`) need no changes; a consumer that needs the
+handoff record reads results over MCP. Unsafe, non-HTTP, missing, and
 canonicalization-ambiguous URLs are classified with machine-readable reasons
 and are never handed off as fetch targets — SlopSearX is not an SSRF-capable
 proxy.
