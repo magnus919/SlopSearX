@@ -453,6 +453,76 @@ class TestUrlClassification:
     @pytest.mark.parametrize(
         "url",
         [
+            # Dotted all-numeric hosts that every literal-IP candidate parser
+            # rejects (an empty octet, an out-of-range octet): WHATWG clients
+            # treat them as failed IPv4 literal attempts, so they are not
+            # legitimate hostnames. Without this branch they fell through to
+            # ``ok`` and were handed off as fetch targets.
+            "http://169..127.1/",
+            "http://1.2.3.300/",
+            "http://127.300.255.127/",
+            "http://255.300.1/",
+            "http://1.300.3/",
+        ],
+    )
+    async def test_malformed_dotted_numeric_host_is_never_handed_off(self, url: str) -> None:
+        """A dotted all-numeric host that fails every candidate parser is ambiguous.
+
+        ``169..127.1``, ``1.2.3.300``, ``127.300.255.127``, ``255.300.1``,
+        and ``1.300.3`` are digits+dots only, but none decodes as an IP
+        literal (empty or out-of-range octet), so every candidate source
+        (``ipaddress``, the WHATWG-style parser, ``getaddrinfo`` with
+        ``AI_NUMERICHOST``) rejects them. They are not genuine hostnames and
+        must never be certified ``ok`` — only a host containing at least one
+        non-digit, non-dot character may reach ``ok``.
+        """
+        state_obj = _build_state({"brave": _UrlEngine("brave", [url])})
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("hello", engines=["brave"])
+            card = _first_card(result)
+            expanded = await t.slopsearx_read_result(card["result_id"])
+            assert card["retrieval"]["url_status"] == "ambiguous"
+            assert card["retrieval"]["url_reason"] == (
+                "URL host is a malformed dotted numeric literal; canonicalization is ambiguous"
+            )
+            assert card["retrieval"]["eligible"] is False
+            assert expanded["retrieval"]["url"] is None
+        finally:
+            set_state(None)
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            # DNS-resolvable hostnames — including nip.io-style aliases of
+            # loopback/link-local/metadata IPs and "localtest.me" — are
+            # certified ``ok`` by design: the classifier performs literal-only
+            # checks and NO DNS resolution, so it cannot see what a host
+            # resolves to at fetch time. The downstream retriever owns
+            # post-resolution SSRF controls (see docs/RETRIEVAL_HANDOFF.md §5
+            # and §8). This test pins the documented boundary, not a gap.
+            "https://169.254.169.254.nip.io/",
+            "https://127.0.0.1.nip.io/",
+            "https://localtest.me/",
+        ],
+    )
+    async def test_dns_resolvable_hostnames_stay_ok_at_literal_boundary(self, url: str) -> None:
+        """Hostnames pass the literal-only check; resolution is downstream."""
+        state_obj = _build_state({"brave": _UrlEngine("brave", [url])})
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("hello", engines=["brave"])
+            card = _first_card(result)
+            expanded = await t.slopsearx_read_result(card["result_id"])
+            assert card["retrieval"]["url_status"] == "ok"
+            assert card["retrieval"]["eligible"] is True
+            assert expanded["retrieval"]["url"] == url
+        finally:
+            set_state(None)
+
+    @pytest.mark.parametrize(
+        "url",
+        [
             # Numeric encodings of a public address stay eligible, mirroring
             # the dotted positive control ("http://8.8.8.8/" -> ok).
             "http://134744072/",  # decimal integer -> 8.8.8.8

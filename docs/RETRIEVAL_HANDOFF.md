@@ -141,11 +141,11 @@ eligibility and fetch safety deterministically.
 
 | `url_status` | Meaning | `eligible` |
 |---|---|---|
-| `ok` | Absolute `http`/`https` URL with a host; `url` carries the captured value. | `true` |
+| `ok` | Well-formed absolute `http`/`https` URL with a **safe literal authority** (no literal private/loopback/link-local/reserved/shared IP host in any numeric encoding, no userinfo, no percent-encoded/non-ASCII/whitespace host, valid in-range port); `url` carries the captured value. This is a literal/structural certification only — it is **not** a safety certification for DNS-resolvable hostnames (§5). | `true` |
 | `missing` | The result has no URL string. | `false` |
 | `non_http` | Parses to a non-HTTP(S) scheme (e.g. `mailto:`, `tel:`). | `false` |
 | `unsafe_scheme` | A scheme an HTTP retriever must not fetch (`file:`, `data:`, `javascript:`, `vbscript:`, `gopher:`, `ftp:`). | `false` |
-| `ambiguous` | Canonicalization-ambiguous: no scheme, no host, or unparseable (e.g. a relative reference, a bare `https://`, a malformed bracketed host, a backslash, whitespace, or control character in the authority, an invalid/out-of-range port, a percent-encoded or non-ASCII host, a literal IP host that is not globally routable — including decimal/hex/octal/abbreviated numeric encodings — or userinfo credentials in the authority). | `false` |
+| `ambiguous` | Canonicalization-ambiguous: no scheme, no host, or unparseable (e.g. a relative reference, a bare `https://`, a malformed bracketed host, a backslash, whitespace, or control character in the authority, an invalid/out-of-range port, a percent-encoded or non-ASCII host, a literal IP host that is not globally routable — including decimal/hex/octal/abbreviated numeric encodings — a dotted all-numeric host no literal-IP parser can decode, or userinfo credentials in the authority). | `false` |
 
 Only `ok` is eligible. Every other token is a machine-readable failure/warning
 reason; `url_reason` carries the corresponding prose.
@@ -160,6 +160,19 @@ SlopSearX from becoming an SSRF-capable proxy: there is no fetch anywhere in
 SlopSearX, and the handoff refuses to mint a target for schemes such as
 `file:`/`data:`/`javascript:` or for URLs that cannot be unambiguously
 canonicalized).
+
+`ok` (`eligible: true`) is a **literal/structural certification only**. It
+means "well-formed `http(s)` URL with a safe literal authority" — no literal
+private/loopback/link-local/reserved/shared IP host (in any numeric encoding),
+no userinfo, no percent-encoded/non-ASCII/whitespace host, and a valid
+in-range port. It is **not** a safety certification for DNS-resolvable
+hostnames: SlopSearX performs **no DNS resolution**, so a hostname such as
+`169.254.169.254.nip.io`, `127.0.0.1.nip.io`, or `localtest.me` is certified
+`ok` even though it may resolve to a private or link-local address at fetch
+time. Because SlopSearX never resolves a host, it cannot validate what a
+hostname will resolve to. The downstream retriever **MUST** enforce its own
+post-resolution SSRF controls — including blocking DNS-rebinding and
+nip.io-style aliases — as part of its fetch path.
 
 The raw result URL remains available in the common envelope (`url` on the
 card/record) for audit and provenance; only the handoff target is withheld.
@@ -233,11 +246,26 @@ side honors this handoff contract; neither depends on the other's internals.
     `http://169.254.169.254/`, and the decimal/hex/octal/abbreviated forms
     `http://2130706433/`, `http://0x7f000001/`, `http://0177.0.0.1/`, and
     `http://127.1/` (all loopback) or `http://2852039166/` /
-    `http://0xa9fea9fe/` (the metadata IP). The check is literal-only: it
-    performs no DNS, so hostnames still classify normally;
-  - userinfo credentials in the authority (`http://user:pass@example.com/`),
+    `http://0xa9fea9fe/` (the metadata IP);
+  - a dotted all-numeric host that no literal-IP candidate parser can decode
+    (an empty or out-of-range octet) — `http://169..127.1/`,
+    `http://1.2.3.300/`, `http://127.300.255.127/`, `http://255.300.1/`,
+    `http://1.300.3/`. WHATWG clients treat these as failed IPv4 literal
+    attempts, so they are classified `ambiguous` rather than certified `ok`;
+  - userinfo credentials in the authority (`****************************/`),
     which would otherwise persist credentials and trigger downstream
     Basic-auth transmission.
+
+  **All of the above are literal-only checks: SlopSearX performs no DNS
+  resolution**, so hostnames still classify normally. In particular, a
+  DNS-resolvable hostname — including nip.io-style aliases of
+  loopback/link-local/metadata IPs (`169.254.169.254.nip.io`,
+  `127.0.0.1.nip.io`) and `localtest.me` — is certified `ok` even though it
+  may resolve to a private or link-local address at fetch time. SlopSearX
+  cannot see what a hostname resolves to (and makes no DNS calls); the
+  downstream retriever **MUST** enforce its own post-resolution SSRF controls
+  (including blocking DNS-rebinding and nip.io-style aliases).
+
   The search pipeline itself also survives such URLs: a result whose URL cannot be parsed
   is deduplicated by its raw value and classified `ambiguous` at the handoff
   boundary instead of failing the whole search.

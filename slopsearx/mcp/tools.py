@@ -546,8 +546,11 @@ def _ip_literal_candidates(host: str) -> list[ipaddress.IPv4Address | ipaddress.
     come from three deterministic sources: canonical ``ipaddress`` parsing,
     the WHATWG-style IPv4 parser above, and ``getaddrinfo`` restricted to
     ``AI_NUMERICHOST`` (a numeric-only flag that never triggers DNS). A host
-    that yields no candidates is not a numeric literal and classifies as a
-    normal hostname.
+    that yields no candidates is not a parseable numeric literal: a genuine
+    hostname (one containing non-numeric characters) classifies normally,
+    while a dotted all-numeric host that fails every candidate parser (e.g.
+    ``169..127.1`` or ``1.2.3.300``) is treated as a malformed IPv4 literal
+    attempt, never as a normal hostname.
     """
     candidates: list[ipaddress.IPv4Address | ipaddress.IPv6Address] = []
     try:
@@ -582,7 +585,14 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
     - ``ok`` — absolute ``http``/``https`` URL with a well-formed authority
       (non-empty host, no backslash, whitespace, or control characters,
       valid in-range port); eligible, and the captured URL is handed off
-      verbatim (never canonicalized or rewritten).
+      verbatim (never canonicalized or rewritten). ``ok`` is a
+      literal/structural certification only: no DNS resolution is performed,
+      so a DNS-resolvable hostname — including nip.io-style aliases of
+      loopback/link-local/metadata IPs (``169.254.169.254.nip.io``,
+      ``127.0.0.1.nip.io``) and ``localtest.me`` — is certified ``ok`` even
+      though it may resolve to a private or link-local address at fetch time.
+      The downstream retriever MUST enforce its own post-resolution SSRF
+      controls (including blocking DNS-rebinding and nip.io-style aliases).
     - ``missing`` — no URL string on the result.
     - ``non_http`` — parses to a non-HTTP(S) scheme (e.g. ``mailto:``).
     - ``unsafe_scheme`` — a scheme an HTTP retriever must not fetch
@@ -593,8 +603,10 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
       the authority, a percent-encoded or non-ASCII host, an invalid or
       out-of-range port, or unparseable), a literal IP host — in any numeric
       encoding, including decimal/hex/octal/abbreviated forms — that is not
-      globally routable, or an authority carrying userinfo credentials;
-      treated as ineligible rather than guessed at.
+      globally routable, a dotted all-numeric host no literal-IP parser can
+      decode (an empty or out-of-range octet, e.g. ``169..127.1`` or
+      ``1.2.3.300``), or an authority carrying userinfo credentials; treated
+      as ineligible rather than guessed at.
     """
     if not url or not url.strip():
         return RETRIEVAL_URL_STATUS_MISSING, "result has no URL to retrieve", None, None
@@ -671,8 +683,13 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
         # resolve to loopback). Only literal IPs are checked — getaddrinfo is
         # used solely with AI_NUMERICHOST, so no DNS resolution is performed —
         # and any non-global address (loopback, private, CGNAT, link-local,
-        # reserved, documentation, or unspecified) is never handed off.
-        for ip in _ip_literal_candidates(parsed.hostname):
+        # reserved, documentation, or unspecified) is never handed off. A
+        # dotted all-numeric host that every candidate parser rejects (an
+        # empty or out-of-range octet, e.g. "169..127.1" or "1.2.3.300") is a
+        # failed IPv4 literal attempt, not a legitimate hostname — a WHATWG
+        # client would fail to canonicalize it, so it is never certified ok.
+        ip_candidates = _ip_literal_candidates(parsed.hostname)
+        for ip in ip_candidates:
             if not ip.is_global:
                 return (
                     RETRIEVAL_URL_STATUS_AMBIGUOUS,
@@ -680,6 +697,13 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
                     scheme,
                     None,
                 )
+        if not ip_candidates and all(char.isdigit() or char == "." for char in parsed.hostname):
+            return (
+                RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                "URL host is a malformed dotted numeric literal; canonicalization is ambiguous",
+                scheme,
+                None,
+            )
         # A port that is not a parseable integer or is outside the sane TCP
         # range is not a fetchable target (http://host:abc/,
         # http://host:99999/, http://host:0/).

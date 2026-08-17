@@ -5,6 +5,7 @@ from __future__ import annotations
 from slopsearx.adapter import AdapterResponse, EngineStatus, SearchResult
 from slopsearx.merger import (
     PresenceRanker,
+    _normalise_url,
     build_engine_status,
     build_meta,
     extract_empty_scrape_engines,
@@ -301,6 +302,36 @@ class TestBuildMeta:
         )
 
         assert meta["empty_engines"] == [["google", "successful scrape returned no results"]]
+
+
+# ---------------------------------------------------------------------------
+# URL normalisation for dedup
+# ---------------------------------------------------------------------------
+
+
+class TestNormaliseUrl:
+    """_normalise_url() never raises — malformed URLs dedup by raw value."""
+
+    def test_strips_tracking_params(self) -> None:
+        """Tracking params are stripped; the rest of the query survives."""
+        assert (
+            _normalise_url("https://example.com/p?utm_source=twitter&id=7&fbclid=123") == "https://example.com/p?id=7"
+        )
+
+    def test_malformed_bracketed_host_falls_back_to_raw(self) -> None:
+        """A urlparse ValueError falls back to the raw URL for dedup."""
+        assert _normalise_url("http://[::1") == "http://[::1"
+
+    def test_lone_surrogate_in_query_does_not_crash(self) -> None:
+        """A lone surrogate query param must not crash the whole search.
+
+        ``urlencode`` re-encodes the parsed query with strict UTF-8 and
+        raises ``UnicodeEncodeError`` on a lone surrogate; the normaliser
+        bails to the raw-URL dedup fallback (same as the ValueError path)
+        instead of taking down the merge pipeline.
+        """
+        url = "https://example.com/?q=\ud800"
+        assert _normalise_url(url) == url
 
 
 # ---------------------------------------------------------------------------

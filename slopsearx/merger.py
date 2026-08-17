@@ -217,6 +217,13 @@ def _normalise_url(url: str) -> str:
         parsed = urllib.parse.urlparse(url)
     except ValueError:
         return url
+    # urlencode re-encodes the parsed query with strict UTF-8 and raises
+    # UnicodeEncodeError on a lone surrogate, which would crash the whole
+    # search from an untrusted result URL. Bail to the raw-URL dedup
+    # fallback (same as the ValueError path) when the query contains
+    # surrogate code points.
+    if any(0xD800 <= ord(char) <= 0xDFFF for char in parsed.query):
+        return url
     query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
 
     strip_params = {

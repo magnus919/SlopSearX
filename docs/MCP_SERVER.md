@@ -834,9 +834,14 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
   `unsafe_scheme`/`ambiguous`) and only hands off an absolute `http`/`https`
   URL with a host. `file:`, `data:`, `javascript:`, and similar schemes are
   marked ineligible (`retrieval.url` is `null`), so a downstream retriever
-  cannot be pointed at them. SlopSearX performs no fetch anywhere — the MCP
-  server is not an SSRF-capable page fetcher, and the handoff record is
-  advisory composition metadata (see `docs/RETRIEVAL_HANDOFF.md`).
+  cannot be pointed at them. `ok` is a **literal/structural certification
+  only**: SlopSearX performs no DNS resolution, so a DNS-resolvable hostname
+  (including nip.io-style aliases such as `169.254.169.254.nip.io` or
+  `localtest.me`) is not safety-certified — the downstream retriever MUST
+  enforce its own post-resolution SSRF controls. SlopSearX performs no fetch
+  anywhere — the MCP server is not an SSRF-capable page fetcher, and the
+  handoff record is advisory composition metadata (see
+  `docs/RETRIEVAL_HANDOFF.md`).
 - Queries, engine fan-out, result pages, and job budgets are bounded.
 - **OAuth mode trusts the network boundary.** Authorization is
   auto-approved for dynamically registered clients (no user accounts on
