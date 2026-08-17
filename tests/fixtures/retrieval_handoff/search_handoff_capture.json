@@ -1,0 +1,59 @@
+{
+  "$comment": "Composition example for the SlopSearX search-to-retrieval handoff contract (docs/RETRIEVAL_HANDOFF.md). SlopSearX discovers and hands off a result; the downstream retriever (e.g. GroktoCrawl) captures the page and links the capture back through the handoff record without parsing prose. SlopSearX itself never fetches the linked page; this file is a contract fixture, not a runtime artifact.",
+  "contract": "slopsearx.retrieval_handoff",
+  "version": 1,
+  "search": {
+    "query": "CVE-2024-1234 impact analysis",
+    "query_id": "ssx-3f9a1c2b",
+    "cursor": "snap-abc123def456",
+    "scope": {
+      "selected_engines": ["nvd", "brave"],
+      "routing_reason": "auto:security"
+    },
+    "card": {
+      "result_id": "snap-abc123def456:2",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-1234",
+      "source_engines": ["nvd"],
+      "retrieval": {
+        "contract": "slopsearx.retrieval_handoff",
+        "version": 1,
+        "eligible": true,
+        "url_status": "ok",
+        "url_reason": null,
+        "scheme": "https"
+      }
+    }
+  },
+  "handoff": {
+    "contract": "slopsearx.retrieval_handoff",
+    "version": 1,
+    "result_id": "snap-abc123def456:2",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-1234",
+    "url_status": "ok",
+    "url_reason": null,
+    "scheme": "https",
+    "eligible": true,
+    "snippet_only": true,
+    "verified": false,
+    "verification_note": "SlopSearX did not fetch or verify the linked page",
+    "provenance": {
+      "snapshot_cursor": "snap-abc123def456",
+      "query_id": "ssx-3f9a1c2b",
+      "query": "CVE-2024-1234 impact analysis",
+      "source_engines": ["nvd"]
+    }
+  },
+  "capture": {
+    "capture_id": "cap-000000000001",
+    "fetched_at": "2026-01-02T03:04:05Z",
+    "status": "ok",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "handoff_ref": {
+      "contract": "slopsearx.retrieval_handoff",
+      "result_id": "snap-abc123def456:2",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-1234",
+      "snapshot_cursor": "snap-abc123def456",
+      "query_id": "ssx-3f9a1c2b"
+    }
+  }
+}

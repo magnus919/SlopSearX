@@ -901,6 +901,21 @@ slopsearx:
 
 The `SEARXNG_URL` env var in GroktoCrawl's agent-svc points to `slopsearx:8080` instead of `searxng:8080`. The response format is backward compatible, so no code changes are needed in `searxng_client.py`.
 
+**Search-to-retrieval handoff.** SlopSearX is a standalone search service and
+never delegates to SearXNG or fetches linked pages. When GroktoCrawl (or any
+downstream reader) captures a page, it links the capture back to the
+originating search result and snapshot through the machine-readable `retrieval`
+handoff record (`retrieval.result_id`,
+`retrieval.provenance.snapshot_cursor`, `retrieval.provenance.query_id`; see
+`docs/RETRIEVAL_HANDOFF.md`). The handoff record is emitted **only on the MCP
+surface** — the SearXNG-compatible HTTP JSON/YAML shape stays SearXNG-shaped
+and carries no `retrieval` fields, so drop-in HTTP consumers (including
+GroktoCrawl's `searxng_client.py`) need no changes; a consumer that needs the
+handoff record reads results over MCP. Unsafe, non-HTTP, missing, and
+canonicalization-ambiguous URLs are classified with machine-readable reasons
+and are never handed off as fetch targets — SlopSearX is not an SSRF-capable
+proxy.
+
 ---
 
 ## 11. Out-of-the-Box Engines

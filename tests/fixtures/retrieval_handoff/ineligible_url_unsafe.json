@@ -1,0 +1,20 @@
+{
+  "$comment": "Example handoff record for an ineligible URL (issue 189). The unsafe scheme is classified with a machine-readable url_status and reason, and the URL is NOT handed off as a fetch target (url is null) so a downstream retriever cannot blindly fetch it. See docs/RETRIEVAL_HANDOFF.md.",
+  "contract": "slopsearx.retrieval_handoff",
+  "version": 1,
+  "result_id": "snap-abc123def456:0",
+  "url": null,
+  "url_status": "unsafe_scheme",
+  "url_reason": "scheme 'file' is unsafe for downstream HTTP retrieval",
+  "scheme": "file",
+  "eligible": false,
+  "snippet_only": true,
+  "verified": false,
+  "verification_note": "SlopSearX did not fetch or verify the linked page",
+  "provenance": {
+    "snapshot_cursor": "snap-abc123def456",
+    "query_id": "ssx-3f9a1c2b",
+    "query": "local file disclosure",
+    "source_engines": ["brave"]
+  }
+}

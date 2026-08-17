@@ -155,7 +155,10 @@ observed health (`last_known_status`). See `docs/MCP_CONTRACT.md` §7.4.
 SlopSearX ships a Model Context Protocol server for AI agents. It exposes
 intent-level search (no URL strings), capability discovery, scope
 explanation, snapshot-based pagination, and asynchronous research jobs —
-built on the same pipeline as the HTTP API.
+built on the same pipeline as the HTTP API. Search results carry a
+machine-readable `retrieval` handoff record so a downstream reader (e.g.
+GroktoCrawl) can capture pages and link them back to the originating result
+(see [docs/RETRIEVAL_HANDOFF.md](docs/RETRIEVAL_HANDOFF.md)).
 
 ```bash
 # Install (already included in the package dependencies)

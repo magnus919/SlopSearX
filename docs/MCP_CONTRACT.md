@@ -80,6 +80,40 @@ internal model, but derived from it):
 | `provenance` | `{query, query_id, rank_explanation, source_engines}` — how the result entered the set. |
 | `snapshot` | `{cursor, query, query_id, total}` — citation/snapshot context. |
 | `note` | `"SlopSearX did not fetch or verify the linked page"` — mandatory non-verification disclosure (`VAL-EXPAND-010`). |
+| `retrieval` | The search-to-retrieval handoff record (contract `slopsearx.retrieval_handoff` v1) — result identity, the raw result URL handed off verbatim when eligible, URL classification, snippet-only/non-verification status, and provenance for downstream capture association. See §2.1 and `docs/RETRIEVAL_HANDOFF.md`. |
+
+Cards additionally carry a **compact eligibility subset** of the handoff record
+under `retrieval`: `{contract, version, eligible, url_status, url_reason,
+scheme}` — enough for a card-only consumer to decide whether to retrieve a
+result (and why not) without expanding it (progressive disclosure, same model
+as content/media). The full handoff record (result identity, verbatim URL,
+provenance, disclosure) lives on the record.
+
+### 2.1 The `retrieval` handoff record (issue 189)
+
+The `retrieval` block on an expanded record is the stable, machine-readable
+handoff to a downstream retriever (e.g. GroktoCrawl). It is defined by the
+contract in `docs/RETRIEVAL_HANDOFF.md`:
+
+| MCP field | Type | Meaning |
+|---|---|---|
+| `retrieval.contract` | `str` | `"slopsearx.retrieval_handoff"` — stable contract name. |
+| `retrieval.version` | `int` | `1`. |
+| `retrieval.result_id` | `str` | Server-issued `"<cursor>:<index>"` — the result identity to record on a capture. |
+| `retrieval.url` | `str \| null` | The raw result URL handed off **verbatim** (never canonicalized or rewritten) — the value to fetch; non-null only when `url_status == "ok"`; ineligible URLs are never handed off as a fetch target. `ok` is a **literal/structural certification only** — no DNS resolution is performed, so DNS-resolvable hostnames (including nip.io-style aliases such as `169.254.169.254.nip.io` or `localtest.me`) are not safety-certified; the downstream retriever MUST enforce its own post-resolution SSRF controls (SSRF boundary, see `docs/RETRIEVAL_HANDOFF.md` §5). |
+| `retrieval.url_status` | `str` | Closed token: `ok` / `missing` / `non_http` / `unsafe_scheme` / `ambiguous`. |
+| `retrieval.url_reason` | `str \| null` | Stable reason; `null` when `url_status == "ok"`. |
+| `retrieval.scheme` | `str \| null` | Lowercased scheme. |
+| `retrieval.eligible` | `bool` | `true` iff `url_status == "ok"`. |
+| `retrieval.snippet_only` | `bool` | `true` when full content is at most the snippet bound (adapter returned snippet only). |
+| `retrieval.verified` | `bool` | Always `false` — SlopSearX never fetches or verifies the linked page. |
+| `retrieval.verification_note` | `str` | `"SlopSearX did not fetch or verify the linked page"`. |
+| `retrieval.provenance` | `object` | `{snapshot_cursor, query_id, query, source_engines}` — snapshot/query provenance for capture association. |
+
+The record `retrieval.provenance.snapshot_cursor` equals `snapshot.cursor`, and
+`retrieval.provenance.query_id` equals `meta.query_id`, so a downstream
+retriever can associate a capture with the originating result and snapshot
+without parsing prose (verified by `tests/test_retrieval_handoff.py`).
 
 ---
 
