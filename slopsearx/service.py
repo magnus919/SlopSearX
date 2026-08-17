@@ -551,13 +551,26 @@ class SearchService:
         for name, result in zip(engine_names, dispatch_results):
             # A task waiting behind the semaphore may be cancelled by the
             # search-wide deadline before its engine ever starts. Do not let a
-            # scheduler timeout count as an upstream engine failure.
+            # scheduler timeout count as an upstream engine failure, and never
+            # record a never-started engine as an observed outcome (issue 190).
             engine = target[name]
-            if result.status in (EngineStatus.ERROR, EngineStatus.TIMEOUT):
-                if name in started_engines:
+            if name in started_engines:
+                # Synthetic outcomes (deadline timeouts the adapter never
+                # returned from) carry a fabricated latency bound; never store
+                # it as an observed latency (issue 190). The AdapterResponse
+                # latency default (0.0) also means "not measured", so it is
+                # coerced to None at this recording boundary — a fabricated
+                # 0.0 must never surface as a real 0ms measurement (issue 190
+                # review).
+                engine.record_observation(
+                    result.status,
+                    latency_ms=None if result.synthetic else (result.latency_ms or None),
+                    result_count=len(result.results),
+                )
+                if result.status in (EngineStatus.ERROR, EngineStatus.TIMEOUT):
                     engine.record_failure()
-            elif result.status != EngineStatus.UNAVAILABLE:
-                engine.record_success()
+                elif result.status != EngineStatus.UNAVAILABLE:
+                    engine.record_success()
 
             responses[name] = result
 
@@ -738,11 +751,15 @@ class SearchService:
         try:
             return await asyncio.wait_for(engine.search(query, params), timeout=timeout_s)
         except asyncio.TimeoutError:
+            # Synthetic: the adapter never returned, so there is no measured
+            # latency — only the configured bound. Mark it so the observed-
+            # health record does not surface the fabricated value (issue 190).
             return AdapterResponse(
                 results=[],
                 status=EngineStatus.TIMEOUT,
                 error_message=f"timed out after {timeout_s}s",
                 latency_ms=timeout_s * 1000,
+                synthetic=True,
             )
         except Exception as exc:
             capture_exception(exc)
@@ -846,6 +863,9 @@ class SearchService:
                         f"timed out after {deadline_s}s" if started else "not started before the search deadline"
                     ),
                     latency_ms=deadline_s * 1000 if started else 0.0,
+                    # Synthetic: the adapter never returned, so the latency is
+                    # a fabricated bound and must not surface as observed (issue 190).
+                    synthetic=True,
                 )
         return [results[name] for name in engine_names]
 

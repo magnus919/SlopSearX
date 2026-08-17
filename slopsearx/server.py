@@ -25,6 +25,8 @@ from slopsearx import metrics as m
 from slopsearx.adapter import EngineAdapter
 from slopsearx.audit import QueryAuditLogger
 from slopsearx.cache import SearchCache
+from slopsearx.capabilities import CapabilityCatalog, build_engine_health
+from slopsearx.config import Config, load_config
 from slopsearx.formatter import format_json, format_yaml_markdown
 from slopsearx.logging import setup_logging
 from slopsearx.middleware import RequestIDMiddleware
@@ -143,21 +145,74 @@ def _current_context() -> AppContext:
 # /health
 # ---------------------------------------------------------------------------
 
+# Memoized startup snapshot for the /health probe path. The probe is polled
+# continuously (k8s liveness/readiness every 10s/30s, Docker HEALTHCHECK),
+# so it must not re-read config.yaml, re-scan ``ENGINE_*``/``SEARCH_*`` env
+# vars, or rebuild the capability catalog (a registry walk) on every call.
+# The snapshot reflects the startup state the running adapters were built
+# from, so ``configured``/``auth_configured`` never silently contradict
+# runtime reality when a config file or env var changes after boot.
+_health_config_cache: Config | None = None
+_health_catalog_cache: CapabilityCatalog | None = None
+_health_catalog_engines: dict[str, EngineAdapter] | None = None
+
+
+def _health_config() -> Config:
+    """Return the startup config snapshot for the health probe (memoized).
+
+    ``load_config()`` re-reads the YAML file and re-scans every env var; the
+    memo captures it once so a continuous probe does no disk I/O or env scan
+    and a runtime env change cannot silently alter what the running adapters
+    report as configured.
+    """
+    global _health_config_cache  # noqa: PLW0603
+    if _health_config_cache is None:
+        _health_config_cache = load_config()
+    return _health_config_cache
+
+
+def _health_catalog() -> CapabilityCatalog:
+    """Return the capability catalog for the health probe (memoized).
+
+    Rebuilt only when the ``_active_engines`` mapping is replaced (test
+    fixtures and runtime overrides rebind it); steady-state probes reuse the
+    cached catalog so the path does no registry walk and no config I/O while
+    still reflecting the running adapters' live observed health.
+    """
+    global _health_catalog_cache, _health_catalog_engines  # noqa: PLW0603
+    if _health_catalog_cache is None or _health_catalog_engines is not _active_engines:
+        _health_catalog_cache = CapabilityCatalog(config=_health_config(), adapters=_active_engines)
+        _health_catalog_engines = _active_engines
+    return _health_catalog_cache
+
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
-    """Health check — server liveness and Valkey connectivity.
+    """Health check — server liveness, Valkey connectivity, and observed engine health.
 
-    Does NOT probe external search APIs. Engine health is tracked via
-    the circuit breaker at search time and exposed via /metrics.
-    Every search that succeeds or fails updates engine status — no
-    separate health-check calls needed.
+    Does NOT probe external search APIs. Engine health is *observed* from
+    classified search outcomes (see ``slopsearx.adapter.EngineAdapter``) and
+    reported with a consistent status vocabulary, freshness timestamp, and
+    distinct circuit/auth signals. A configured-but-never-observed engine is
+    ``unknown``, never ``ok`` (issue 190).
+
+    The probe path is cheap and exception-proof: the layered config and the
+    capability catalog are captured once (memoized) instead of re-read or
+    rebuilt on every poll, and a config/catalog failure degrades to a minimal
+    liveness record instead of a 500.
     """
-    engine_statuses: dict[str, dict[str, Any]] = {}
-    for name in _active_engines:
-        engine_statuses[name] = {"status": "ok"}
+    try:
+        catalog = _health_catalog()
+    except Exception:  # noqa: BLE001 — a liveness probe must never 500
+        catalog = None
 
-    all_ok = True
+    engine_health: dict[str, dict[str, Any]] = {}
+    for name, adapter in _active_engines.items():
+        try:
+            capability = catalog.get(name) if catalog is not None else None
+        except Exception:  # noqa: BLE001 — one bad engine must not 500 the probe
+            capability = None
+        engine_health[name] = build_engine_health(name, adapter, capability)
 
     # Check Valkey connectivity for rate limiting
     valkey_connected: bool = False
@@ -166,7 +221,7 @@ async def health() -> dict[str, Any]:
         valkey_connected = valkey_device._connected
 
     # Degrade status if Valkey is unreachable and fail-closed is enabled
-    overall_status = "ok" if all_ok else "degraded"
+    overall_status = "ok"
     if not valkey_connected and isinstance(valkey_device, ValkeySlidingWindow):
         if valkey_device._fail_closed:
             overall_status = "degraded"
@@ -175,7 +230,7 @@ async def health() -> dict[str, Any]:
         "status": overall_status,
         "version": "0.1.0",
         "valkey_connected": valkey_connected,
-        "engines": engine_statuses,
+        "engines": engine_health,
     }
 
 

@@ -16,6 +16,11 @@
 * make result URL normalization robust to canonicalization-ambiguous URLs so a
   malformed result URL is classified `ambiguous` at the handoff boundary
   instead of failing the whole search
+* derive live engine health from observed search outcomes and
+  circuit-breaker/auth state: `/health`, the MCP status surface, and the
+  capability catalog now share one status vocabulary and freshness timestamp,
+  keep never-observed engines explicitly `unknown`, mark stale observations
+  stale, and expose circuit/auth signals separately (no active probing)
 * make research job execution durable across replicas: Valkey-backed lease
   claim with ownership, visibility timeout, orphan recovery, cancellation
   flags, idempotent duplicate-delivery, bounded per-replica concurrency, and

@@ -134,6 +134,21 @@ class EngineStatus(enum.Enum):
     UNAVAILABLE = "unavailable"
 
 
+# Observed-health status vocabulary (issue 190). Every ``EngineStatus`` token
+# plus ``unknown`` for engines with no recorded observation. This is the
+# canonical set shared by the HTTP /health endpoint, the MCP status surface,
+# and the capability catalog so all three agree on status semantics.
+OBSERVED_STATUS_VOCAB: tuple[str, ...] = (
+    "ok",
+    "rate_limited",
+    "blocked",
+    "error",
+    "timeout",
+    "unavailable",
+    "unknown",
+)
+
+
 @dataclass
 class AdapterResponse:
     """Canonical response type for every adapter's search() method."""
@@ -146,6 +161,12 @@ class AdapterResponse:
     answers: list[dict[str, Any]] = field(default_factory=list)
     corrections: list[str] = field(default_factory=list)
     infoboxes: list[dict[str, Any]] = field(default_factory=list)
+    # True when the service fabricated this response (e.g. a deadline timeout
+    # the adapter never returned from) instead of the adapter returning its
+    # own classified outcome. Synthetic responses carry no *measured*
+    # latency — ``latency_ms`` is a fabricated bound — so they must never
+    # populate the observed-health latency field (issue 190).
+    synthetic: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -228,6 +249,14 @@ class EngineAdapter(ABC):
             self._circuit_timeout: int = int(env_timeout)
         except (ValueError, TypeError):
             self._circuit_timeout = self.CIRCUIT_BREAKER_TIMEOUT
+
+        # Passive observed health (issue 190). Updated by the search service
+        # after each *dispatched* outcome with the classified status and
+        # aggregate latency/result count — never the query or raw content.
+        self.last_observed_status: str | None = None
+        self.last_observed_at: float | None = None
+        self.last_observed_latency_ms: float | None = None
+        self.last_observed_result_count: int | None = None
 
     async def _check_rate_limit(self) -> AdapterResponse | None:
         """Check rate limiter before dispatching a search request.
@@ -330,6 +359,34 @@ class EngineAdapter(ABC):
         self.consecutive_errors += 1
         if self.consecutive_errors >= self._circuit_threshold:
             self.circuit_open_until = time.time() + self._circuit_timeout
+
+    @property
+    def circuit_open(self) -> bool:
+        """Whether the circuit breaker is currently open (dispatches skipped)."""
+        return self.circuit_open_until > time.time()
+
+    def record_observation(
+        self,
+        status: EngineStatus,
+        *,
+        latency_ms: float | None = None,
+        result_count: int | None = None,
+    ) -> None:
+        """Record a redacted observed-health summary for one search outcome.
+
+        Called by the search service after a *dispatched* outcome. Only the
+        classified status and aggregate latency/result count are kept; query
+        text and result content are never stored (issue 190).
+
+        ``latency_ms`` must be the adapter-reported latency when one exists
+        and ``None`` for service-synthesized outcomes (e.g. a deadline
+        timeout the adapter never returned from) so a fabricated bound is
+        never surfaced as an observed latency.
+        """
+        self.last_observed_status = status.value
+        self.last_observed_at = time.time()
+        self.last_observed_latency_ms = latency_ms
+        self.last_observed_result_count = result_count
 
 
 class ScrapeAdapter(EngineAdapter, ABC):
