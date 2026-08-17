@@ -296,6 +296,10 @@ def build_engine_health(
     - ``status`` — observed search health (``unknown`` when never observed);
     - ``status_at`` — ISO 8601 timestamp of the last observation (null if never);
     - ``stale`` — whether the observation is older than the freshness bound;
+    - ``last_observed_latency_ms`` / ``last_observed_result_count`` — the
+      adapter-reported latency/result count of the last observation, null
+      when never observed or when the outcome was service-synthesized (a
+      fabricated latency is never surfaced as observed);
     - ``configured`` — configured availability (engine enabled);
     - ``auth_class`` / ``auth_configured`` — authentication readiness;
     - ``circuit_open`` / ``consecutive_errors`` — circuit-breaker state.
@@ -324,6 +328,8 @@ def build_engine_health(
         "auth_configured": capability.auth_configured if capability is not None else False,
         "circuit_open": bool(adapter is not None and adapter.circuit_open),
         "consecutive_errors": int(adapter.consecutive_errors) if adapter is not None else 0,
+        "last_observed_latency_ms": adapter.last_observed_latency_ms if adapter is not None else None,
+        "last_observed_result_count": adapter.last_observed_result_count if adapter is not None else None,
     }
 
 

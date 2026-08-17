@@ -161,6 +161,12 @@ class AdapterResponse:
     answers: list[dict[str, Any]] = field(default_factory=list)
     corrections: list[str] = field(default_factory=list)
     infoboxes: list[dict[str, Any]] = field(default_factory=list)
+    # True when the service fabricated this response (e.g. a deadline timeout
+    # the adapter never returned from) instead of the adapter returning its
+    # own classified outcome. Synthetic responses carry no *measured*
+    # latency — ``latency_ms`` is a fabricated bound — so they must never
+    # populate the observed-health latency field (issue 190).
+    synthetic: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -371,6 +377,11 @@ class EngineAdapter(ABC):
         Called by the search service after a *dispatched* outcome. Only the
         classified status and aggregate latency/result count are kept; query
         text and result content are never stored (issue 190).
+
+        ``latency_ms`` must be the adapter-reported latency when one exists
+        and ``None`` for service-synthesized outcomes (e.g. a deadline
+        timeout the adapter never returned from) so a fabricated bound is
+        never surfaced as an observed latency.
         """
         self.last_observed_status = status.value
         self.last_observed_at = time.time()

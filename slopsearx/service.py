@@ -555,9 +555,12 @@ class SearchService:
             # record a never-started engine as an observed outcome (issue 190).
             engine = target[name]
             if name in started_engines:
+                # Synthetic outcomes (deadline timeouts the adapter never
+                # returned from) carry a fabricated latency bound; never store
+                # it as an observed latency (issue 190).
                 engine.record_observation(
                     result.status,
-                    latency_ms=result.latency_ms,
+                    latency_ms=None if result.synthetic else result.latency_ms,
                     result_count=len(result.results),
                 )
                 if result.status in (EngineStatus.ERROR, EngineStatus.TIMEOUT):
@@ -744,11 +747,15 @@ class SearchService:
         try:
             return await asyncio.wait_for(engine.search(query, params), timeout=timeout_s)
         except asyncio.TimeoutError:
+            # Synthetic: the adapter never returned, so there is no measured
+            # latency — only the configured bound. Mark it so the observed-
+            # health record does not surface the fabricated value (issue 190).
             return AdapterResponse(
                 results=[],
                 status=EngineStatus.TIMEOUT,
                 error_message=f"timed out after {timeout_s}s",
                 latency_ms=timeout_s * 1000,
+                synthetic=True,
             )
         except Exception as exc:
             capture_exception(exc)
@@ -852,6 +859,9 @@ class SearchService:
                         f"timed out after {deadline_s}s" if started else "not started before the search deadline"
                     ),
                     latency_ms=deadline_s * 1000 if started else 0.0,
+                    # Synthetic: the adapter never returned, so the latency is
+                    # a fabricated bound and must not surface as observed (issue 190).
+                    synthetic=True,
                 )
         return [results[name] for name in engine_names]
 

@@ -13,6 +13,7 @@ registration or configuration:
 
 from __future__ import annotations
 
+import asyncio
 import datetime as _dt
 import time
 from typing import Any
@@ -69,6 +70,19 @@ class _FakeEngine(EngineAdapter):
             status=EngineStatus.OK,
             latency_ms=3.0,
         )
+
+
+class _HangingEngine(EngineAdapter):
+    """Adapter that never returns — used to force service-synthesized timeouts."""
+
+    name = "hangeng"
+    display_name = "Hanging Engine"
+    categories = ["general"]
+
+    async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
+        del query, params
+        await asyncio.sleep(60.0)
+        raise AssertionError("hanging engine unexpectedly completed")
 
 
 def _service(engine: EngineAdapter) -> SearchService:
@@ -139,6 +153,24 @@ class TestHealthSignals:
         assert record["status_at"] is None
         assert record["stale"] is False
         assert record["status"] != "ok"
+
+    def test_health_surfaces_observed_latency_and_result_count(self) -> None:
+        """build_engine_health exposes the last measured latency/result count.
+
+        Null before any observation and never populated from a synthetic
+        outcome — the fields surface only real adapter-reported values.
+        """
+        engine = _FakeEngine(EngineStatus.OK)
+
+        never = build_engine_health("wikipedia", engine)
+        assert never["last_observed_latency_ms"] is None
+        assert never["last_observed_result_count"] is None
+
+        engine.record_observation(EngineStatus.OK, latency_ms=11.5, result_count=4)
+        observed = build_engine_health("wikipedia", engine)
+        assert observed["last_observed_latency_ms"] == 11.5
+        assert observed["last_observed_result_count"] == 4
+        assert observed["status"] == "ok"
 
     def test_stale_observation_is_visibly_stale(self) -> None:
         engine = _FakeEngine(EngineStatus.OK)
@@ -223,8 +255,191 @@ class TestCatalogObservedHealth:
 
 
 # ---------------------------------------------------------------------------
-# HTTP /health agrees with the shared builder
+# Synthetic (service-fabricated) timeout latency is never observed
 # ---------------------------------------------------------------------------
+
+
+class TestDeadlineSyntheticLatency:
+    async def test_gather_deadline_marks_synthetic_timeout(self) -> None:
+        """A deadline-cut engine is marked synthetic so its latency is not observed."""
+        service = _service(_FakeEngine(EngineStatus.OK))
+
+        async def _never_completes() -> AdapterResponse:
+            await asyncio.sleep(60.0)
+            raise AssertionError("slow task unexpectedly completed")
+
+        task = asyncio.create_task(_never_completes())
+        results = await service._gather_with_deadline(  # type: ignore[attr-defined]
+            [task], ["fakeeng"], deadline_s=0.01, started_engines={"fakeeng"}
+        )
+
+        assert results[0].status == EngineStatus.TIMEOUT
+        assert results[0].synthetic is True
+        assert task.done()
+
+    async def test_dispatch_timeout_marks_synthetic(self) -> None:
+        """A per-engine timeout the adapter never returned from is synthetic."""
+        engine = _HangingEngine()
+        service = SearchService(AppContext(active_engines={"hangeng": engine}))
+        result = await service._dispatch_engine("hangeng", engine, "q", {}, timeout_s=0.01)
+
+        assert result.status == EngineStatus.TIMEOUT
+        assert result.synthetic is True
+
+    async def test_synthetic_timeout_does_not_record_fabricated_latency(self) -> None:
+        """The service stores None latency for synthetic outcomes (issue 190).
+
+        A deadline timeout carries a fabricated latency bound (the deadline),
+        never a measured latency, so ``last_observed_latency_ms`` must stay
+        null while the (real) observed result count of zero is retained.
+        """
+        engine = _FakeEngine(EngineStatus.OK)
+        service = _service(engine)
+
+        async def _fake_gather(
+            tasks: list[asyncio.Task[AdapterResponse]],
+            engine_names: list[str],
+            deadline_s: float = 10.0,
+            started_engines: set[str] | None = None,
+        ) -> list[AdapterResponse]:
+            del deadline_s, started_engines
+            # Let the dispatch tasks actually start (so ``started_engines`` is
+            # populated), then fabricate a deadline-timeout outcome — the
+            # scenario where the service synthesized the response.
+            await asyncio.gather(*tasks, return_exceptions=True)
+            return [
+                AdapterResponse(
+                    results=[],
+                    status=EngineStatus.TIMEOUT,
+                    error_message="timed out after 0.01s",
+                    latency_ms=10.0,
+                    synthetic=True,
+                )
+                for _ in engine_names
+            ]
+
+        original_gather = service._gather_with_deadline
+        service._gather_with_deadline = _fake_gather  # type: ignore[method-assign]
+        try:
+            await service.search(_request())
+        finally:
+            service._gather_with_deadline = original_gather  # type: ignore[method-assign]
+
+        assert engine.last_observed_status == "timeout"
+        assert engine.last_observed_latency_ms is None
+        assert engine.last_observed_result_count == 0
+        # The observed-health record agrees: latency stays null.
+        record = build_engine_health("fakeeng", engine)
+        assert record["last_observed_latency_ms"] is None
+        assert record["last_observed_result_count"] == 0
+
+
+# ---------------------------------------------------------------------------
+# HTTP /health memoizes the startup config/catalog snapshot
+# ---------------------------------------------------------------------------
+
+
+class TestHealthConfigSnapshot:
+    def test_runtime_env_change_does_not_alter_health_after_startup(self, monkeypatch: Any) -> None:
+        """The /health probe must not re-read config or rebuild the catalog.
+
+        k8s and Docker poll /health continuously; re-reading config.yaml and
+        re-scanning env vars per probe is disk/registry work, and reporting
+        the *current* file/env state contradicts the startup state the running
+        adapters were built from. The snapshot is captured once: a runtime env
+        change after startup must not change the health output.
+        """
+        import slopsearx.server as server_mod
+        from slopsearx.server import app
+
+        # Reset the memo so this test controls the startup snapshot, and make
+        # sure the env does not carry an unrelated brave key.
+        server_mod._health_config_cache = None
+        server_mod._health_catalog_cache = None
+        server_mod._health_catalog_engines = None
+        monkeypatch.delenv("ENGINE_BRAVE_API_KEY", raising=False)
+
+        original = dict(server_mod._active_engines)
+        try:
+            with TestClient(app) as client:
+                before = client.get("/health").json()["engines"]
+                assert before["brave"]["auth_configured"] is False
+
+                # A runtime env change after startup must not leak into the
+                # health record: the probe uses the startup config snapshot.
+                monkeypatch.setenv("ENGINE_BRAVE_API_KEY", "changed-after-startup")
+                after = client.get("/health").json()["engines"]
+
+                assert after["brave"] == before["brave"]
+        finally:
+            server_mod._active_engines = original
+            server_mod._health_config_cache = None
+            server_mod._health_catalog_cache = None
+            server_mod._health_catalog_engines = None
+
+    def test_health_survives_catalog_failure(self, monkeypatch: Any) -> None:
+        """A config/catalog failure degrades to liveness, never a 500.
+
+        A malformed/unreadable config file must not take the probe down even
+        though the server is alive (issue 190 review): the handler falls back
+        to a minimal record built from the running adapter alone.
+        """
+        import slopsearx.server as server_mod
+        from slopsearx.server import app
+
+        server_mod._health_config_cache = None
+        server_mod._health_catalog_cache = None
+        server_mod._health_catalog_engines = None
+        original = dict(server_mod._active_engines)
+
+        def _boom_catalog() -> None:
+            raise RuntimeError("config unreadable")
+
+        monkeypatch.setattr(server_mod, "_health_catalog", _boom_catalog)
+        try:
+            with TestClient(app) as client:
+                server_mod._active_engines = {"wikipedia": _FakeEngine(EngineStatus.OK)}
+                response = client.get("/health")
+                assert response.status_code == 200
+                data = response.json()
+                assert data["status"] == "ok"
+                record = data["engines"]["wikipedia"]
+                assert record["configured"] is True
+                assert record["status"] == "unknown"
+        finally:
+            server_mod._active_engines = original
+            server_mod._health_config_cache = None
+            server_mod._health_catalog_cache = None
+            server_mod._health_catalog_engines = None
+
+    def test_health_survives_capability_lookup_failure(self, monkeypatch: Any) -> None:
+        """A single engine's capability lookup failure never 500s the probe."""
+        import slopsearx.server as server_mod
+        from slopsearx.server import app
+
+        server_mod._health_config_cache = None
+        server_mod._health_catalog_cache = None
+        server_mod._health_catalog_engines = None
+        original = dict(server_mod._active_engines)
+
+        def _boom_get(self: Any, name: str) -> None:
+            del self, name
+            raise RuntimeError("capability lookup failed")
+
+        monkeypatch.setattr(CapabilityCatalog, "get", _boom_get)
+        try:
+            with TestClient(app) as client:
+                server_mod._active_engines = {"wikipedia": _FakeEngine(EngineStatus.OK)}
+                response = client.get("/health")
+                assert response.status_code == 200
+                record = response.json()["engines"]["wikipedia"]
+                # Degrades to a record derived from the running adapter alone.
+                assert record["configured"] is True
+        finally:
+            server_mod._active_engines = original
+            server_mod._health_config_cache = None
+            server_mod._health_catalog_cache = None
+            server_mod._health_catalog_engines = None
 
 
 class TestHealthEndpointObserved:
