@@ -31,6 +31,7 @@ rather than materializing as a fabricated ``null``.
 
 from __future__ import annotations
 
+import json
 from typing import Any, cast
 
 # ---------------------------------------------------------------------------
@@ -39,6 +40,13 @@ from typing import Any, cast
 
 # Version of the payload *envelope* schema (not the per-domain data schema).
 PAYLOAD_SCHEMA_VERSION = 1
+
+# Compact-disclosure inline threshold (bytes). Compact surfaces — the MCP
+# result cards and the public, unauthenticated HTTP /search output — inline a
+# payload only when its serialized form is this small. Larger payloads are
+# omitted from compact output and stay available through the full-record read
+# path (MCP ``slopsearx_read_result``).
+PAYLOAD_INLINE_BYTES = 512
 
 # The provenance kinds carried in ``provenance``.
 PROVENANCE_KINDS: tuple[str, ...] = ("adapter", "normalized", "inferred")
@@ -152,23 +160,72 @@ PAYLOAD_FIELDS: dict[str, dict[str, tuple[str, ...]]] = {
 # ---------------------------------------------------------------------------
 
 
-def _json_safe(value: Any) -> Any:
+# Marker emitted when a payload contains a reference cycle. Cycles cannot be
+# represented in JSON, so the canonicalizer replaces the back-reference with a
+# deterministic string instead of recursing forever (RecursionError).
+_CIRCULAR_REF_MARKER = "<circular reference>"
+
+
+def _json_safe(value: Any, _seen: set[int] | None = None) -> Any:
     """Deep-convert a value to JSON-safe primitives.
 
     Dict keys are stringified; lists/tuples become lists (order preserved);
     sets/frozensets become deterministically sorted lists; ``None`` and scalar
     primitives are returned unchanged. Anything else (e.g. a stray datetime)
-    is stringified as a deterministic last resort.
+    is stringified as a deterministic last resort. Reference cycles are
+    replaced with ``<circular reference>`` rather than recursing forever.
     """
+    if _seen is None:
+        _seen = set()
+
     if isinstance(value, dict):
-        return {str(key): _json_safe(item) for key, item in value.items()}
+        marker = id(value)
+        if marker in _seen:
+            return _CIRCULAR_REF_MARKER
+        _seen.add(marker)
+        try:
+            return {str(key): _json_safe(item, _seen) for key, item in value.items()}
+        finally:
+            _seen.discard(marker)
+
     if isinstance(value, (list, tuple)):
-        return [_json_safe(item) for item in value]
+        marker = id(value)
+        if marker in _seen:
+            return _CIRCULAR_REF_MARKER
+        _seen.add(marker)
+        try:
+            return [_json_safe(item, _seen) for item in value]
+        finally:
+            _seen.discard(marker)
+
     if isinstance(value, (set, frozenset)):
-        return [_json_safe(item) for item in sorted(value, key=repr)]
+        marker = id(value)
+        if marker in _seen:
+            return _CIRCULAR_REF_MARKER
+        _seen.add(marker)
+        try:
+            return [_json_safe(item, _seen) for item in sorted(value, key=repr)]
+        finally:
+            _seen.discard(marker)
+
     if value is None or isinstance(value, (bool, int, float, str)):
         return value
     return str(value)
+
+
+def payload_serialized_size(payload: dict[str, Any] | None) -> int | None:
+    """Approximate serialized byte size of a payload envelope.
+
+    Returns ``None`` when the payload cannot be JSON-serialized so callers can
+    conservatively omit it — an unserializable payload is never treated as the
+    smallest possible payload and inlined by mistake.
+    """
+    if not isinstance(payload, dict):
+        return None
+    try:
+        return len(json.dumps(payload, separators=(",", ":"), default=str).encode("utf-8"))
+    except (TypeError, ValueError):
+        return None
 
 
 def build_payload(

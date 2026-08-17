@@ -248,7 +248,10 @@ class NVDAdapter(EngineAdapter):
                 continue
             cvss_data = entry.get("cvssData", {}) or entry
             score = cvss_data.get("baseScore")
-            severity = cvss_data.get("baseSeverity")
+            # NVD API 2.0 keeps ``baseSeverity`` inside ``cvssData`` for
+            # V30/V31/V40, but at the entry level (sibling of ``cvssData``)
+            # for CVSSv2 — so fall back to the entry itself for v2 records.
+            severity = cvss_data.get("baseSeverity") or entry.get("baseSeverity")
             vector = cvss_data.get("vectorString")
             out: dict[str, Any] = {}
             if score is not None:

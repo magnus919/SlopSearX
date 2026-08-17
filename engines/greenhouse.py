@@ -100,7 +100,7 @@ class GreenhouseAdapter(EngineAdapter):
                             "title": title or None,
                             "location": location_str or None,
                             "salary": salary or None,
-                            "job_id": job_id,
+                            "job_id": job_id or None,
                         },
                         engine=self.name,
                     )

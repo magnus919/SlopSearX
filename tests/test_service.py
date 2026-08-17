@@ -515,9 +515,7 @@ class TestDispatch:
 
         task = asyncio.create_task(_started_slow())
         await started.wait()
-        response = await service._gather_with_deadline(
-            [task], ["okeng"], deadline_s=0.01, started_engines={"okeng"}
-        )
+        response = await service._gather_with_deadline([task], ["okeng"], deadline_s=0.01, started_engines={"okeng"})
 
         assert response[0].status.value == "timeout"
         assert task.done()
@@ -546,6 +544,7 @@ class TestDispatch:
         engine = _OkEngine()
         engine.consecutive_errors = 4
         service = _service(engines={"okeng": engine})
+
         async def _fake_gather(
             tasks: list[asyncio.Task[AdapterResponse]],
             engine_names: list[str],
@@ -555,10 +554,7 @@ class TestDispatch:
             for task in tasks:
                 task.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
-            return [
-                AdapterResponse(results=[], status=EngineStatus.UNAVAILABLE)
-                for _ in engine_names
-            ]
+            return [AdapterResponse(results=[], status=EngineStatus.UNAVAILABLE) for _ in engine_names]
 
         original_gather = service._gather_with_deadline
         service._gather_with_deadline = _fake_gather  # type: ignore[method-assign]
@@ -581,9 +577,7 @@ class TestDispatch:
 
         task = asyncio.create_task(_started_slow())
         await started.wait()
-        response = await service._gather_with_deadline(
-            [task], ["okeng"], deadline_s=0.01, started_engines={"okeng"}
-        )
+        response = await service._gather_with_deadline([task], ["okeng"], deadline_s=0.01, started_engines={"okeng"})
         assert response[0].status.value == "timeout"
         assert task.done()
 

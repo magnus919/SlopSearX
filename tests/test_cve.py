@@ -225,11 +225,45 @@ class TestCVEAdapter:
         assert "CVSS 9.8" in text
         assert "CVSS:3.1" in text
 
+    def test_extract_metrics_v40(self, adapter):
+        container = {
+            "metrics": [
+                {
+                    "cvssV4_0": {
+                        "vectorString": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+                        "baseScore": 9.3,
+                    },
+                },
+            ],
+        }
+        text = adapter._extract_metrics(container)
+        assert "CVSS 9.3" in text
+        assert "CVSS:4.0" in text
+
     def test_extract_metrics_empty(self, adapter):
         assert adapter._extract_metrics({}) == ""
 
     def test_extract_metrics_no_metrics(self, adapter):
         assert adapter._extract_metrics({"descriptions": []}) == ""
+
+    def test_cvss_payload_v40(self, adapter):
+        container = {
+            "metrics": [
+                {
+                    "cvssV4_0": {
+                        "baseScore": 9.3,
+                        "baseSeverity": "CRITICAL",
+                        "vectorString": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+                    },
+                },
+            ],
+        }
+        payload = adapter._cvss_payload(container)
+        assert payload is not None
+        assert payload["score"] == 9.3
+        assert payload["severity"] == "CRITICAL"
+        assert payload["version"] == "4.0"
+        assert payload["vector"].startswith("CVSS:4.0")
 
     def test_parse_cve_record_sets_title(self, adapter, sample_cve_record):
         results = adapter._parse_cve_record(sample_cve_record, "CVE-2024-12345")

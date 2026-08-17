@@ -394,6 +394,26 @@ class TestNVDAdapter:
         assert "CVSS 10.0" in text
         assert "AV:N/AC:L" in text
 
+    def test_cvss_payload_v2_reads_severity_from_entry(self, adapter):
+        """NVD API 2.0 keeps baseSeverity at the entry level for CVSSv2."""
+        metrics = {
+            "cvssMetricV2": [
+                {
+                    "cvssData": {
+                        "vectorString": "AV:N/AC:L/Au:N/C:C/I:C/A:C",
+                        "baseScore": 10.0,
+                    },
+                    "baseSeverity": "HIGH",
+                },
+            ],
+        }
+        payload = adapter._cvss_payload(metrics)
+        assert payload is not None
+        assert payload["score"] == 10.0
+        assert payload["severity"] == "HIGH"
+        assert payload["version"] == "2.0"
+        assert payload["vector"] == "AV:N/AC:L/Au:N/C:C/I:C/A:C"
+
 
 class TestNVDAdapterNoKeyNeeded:
     """NVD works without an API key — key only improves rate limits."""

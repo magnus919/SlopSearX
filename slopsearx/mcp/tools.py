@@ -9,13 +9,13 @@ envelope described in docs/MCP_SERVER_DESIGN.md §3.
 from __future__ import annotations
 
 import datetime as _dt
-import json
 import time
 from typing import Any
 
 from slopsearx.adapter import SearchResult
 from slopsearx.capabilities import INTENT_PROFILES, resolve_intent
 from slopsearx.mcp.state import McpState, get_state
+from slopsearx.payload import PAYLOAD_INLINE_BYTES, payload_serialized_size
 from slopsearx.ratelimit import ValkeySlidingWindow
 from slopsearx.research import (
     ResearchJob,
@@ -93,11 +93,6 @@ RANKING_EXPLANATION = "tier_then_cross_engine_presence"
 # The compact card snippet length (progressive disclosure). Full content is
 # a result-record concern; cards carry only the first N chars.
 SNIPPET_LENGTH = 300
-
-# Payloads are omitted from compact cards unless the caller requested them via
-# ``include=["payload"]`` or the serialized payload is small enough to inline.
-# Full payloads are always available through ``slopsearx_read_result``.
-PAYLOAD_INLINE_BYTES = 512
 
 # The MCP contract version for the operational diagnostics surface. This is
 # distinct from the service (package) version so agents can negotiate schema
@@ -346,28 +341,31 @@ def _source_engines(result: SearchResult) -> list[str]:
     return sorted(result.engines) if result.engines else [result.engine]
 
 
-def _payload_size(payload: dict[str, Any]) -> int:
+def _payload_size(payload: dict[str, Any]) -> int | None:
     """Approximate serialized byte size of a payload envelope.
 
-    Used only for the compact-card inline decision; a conservative estimate is
-    fine because the full payload is always reachable via
-    ``slopsearx_read_result``.
+    Returns ``None`` when the payload cannot be JSON-serialized. Callers must
+    treat ``None`` as "omit", never as the smallest possible payload — an
+    unserializable (e.g. circular-reference) payload must not be inlined on a
+    compact card.
     """
-    try:
-        return len(json.dumps(payload, separators=(",", ":"), default=str).encode("utf-8"))
-    except (TypeError, ValueError):
-        return 0
+    return payload_serialized_size(payload)
 
 
 def _payload_inline(result: SearchResult, *, requested: bool) -> dict[str, Any] | None:
     """Return the payload to inline on a compact card, or ``None``.
 
     Compact cards carry a payload only when the caller requested it
-    (``include=["payload"]``) or the payload is small enough to inline.
+    (``include=["payload"]``) or the payload is small enough to inline. An
+    unserializable payload is always omitted, even when requested, so the MCP
+    response itself never fails to serialize.
     """
     if result.payload is None:
         return None
-    if requested or _payload_size(result.payload) <= PAYLOAD_INLINE_BYTES:
+    size = _payload_size(result.payload)
+    if size is None:
+        return None
+    if requested or size <= PAYLOAD_INLINE_BYTES:
         return result.payload
     return None
 
@@ -1548,8 +1546,7 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
         # Deadline gate: a deadline-passed retry finalizes to expired instead
         # of re-running and ending in partial/failed.
         result["note"] = (
-            "job deadline had already passed; retry finalized the job to expired "
-            "and re-executed no subqueries"
+            "job deadline had already passed; retry finalized the job to expired and re-executed no subqueries"
         )
     else:
         result["retried"] = [query.index for query in retryable]

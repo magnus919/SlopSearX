@@ -12,10 +12,28 @@ from typing import Any
 import yaml
 
 from slopsearx.adapter import SearchResult
+from slopsearx.payload import PAYLOAD_INLINE_BYTES, payload_serialized_size
 
 # ---------------------------------------------------------------------------
 # JSON Formatter — SearXNG-compatible
 # ---------------------------------------------------------------------------
+
+
+def _payload_for_output(payload: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Inline a payload only when it is small enough for compact output.
+
+    The public, unauthenticated HTTP ``/search`` surface mirrors the MCP
+    compact-card disclosure model: payloads are omitted unless their
+    serialized form is ``<= PAYLOAD_INLINE_BYTES``. Larger payloads are not
+    emitted here (there is no HTTP equivalent of ``slopsearx_read_result``),
+    and an unserializable payload is always omitted.
+    """
+    if payload is None:
+        return None
+    size = payload_serialized_size(payload)
+    if size is None or size > PAYLOAD_INLINE_BYTES:
+        return None
+    return payload
 
 
 def _result_to_searxng(result: SearchResult) -> dict[str, Any]:
@@ -39,7 +57,7 @@ def _result_to_searxng(result: SearchResult) -> dict[str, Any]:
         "length": None,
         "thumbnail": result.thumbnail,
         "img_src": result.img_src,
-        "payload": result.payload,
+        "payload": _payload_for_output(result.payload),
         "iframe_src": None,
         "audio_src": None,
         "views": None,
@@ -189,7 +207,7 @@ def format_yaml_markdown(
             "position": r.position,
             "published": r.published_date,
             "tier": r.tier,
-            "payload": r.payload,
+            "payload": _payload_for_output(r.payload),
         }
         for r in results
     ]

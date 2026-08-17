@@ -155,9 +155,7 @@ class TestPayloadContract:
         assert is_valid_payload(None) is False
         assert is_valid_payload({"domain": "security"}) is False
         assert is_valid_payload({"domain": "security", "type": "vulnerability"}) is False
-        assert is_valid_payload(
-            {"domain": "security", "type": "vulnerability", "schema_version": 1}
-        ) is False
+        assert is_valid_payload({"domain": "security", "type": "vulnerability", "schema_version": 1}) is False
 
 
 # ---------------------------------------------------------------------------
@@ -235,6 +233,37 @@ class TestPayloadSerialization:
         assert rebuilt.results[0].payload == response.results[0].payload
         assert rebuilt.results[0].payload is not None
         assert rebuilt.results[0].payload["provenance"]["engine"] == "nvd"
+
+    def test_result_to_dict_does_not_deep_copy_via_asdict(self, monkeypatch) -> None:
+        """The cache-write path must not deep-copy results via dataclasses.asdict."""
+        import slopsearx.service as service_module
+
+        def _fail(*_args: Any, **_kwargs: Any) -> Any:
+            raise AssertionError("dataclasses.asdict must not be used on the cache-write path")
+
+        monkeypatch.setattr(service_module.dataclasses, "asdict", _fail)
+        payload = search_result_to_dict(_result_with_payload())
+        assert payload["payload"]["domain"] == "security"
+        assert payload["engines"] == ["cve", "nvd"]
+
+    def test_response_to_payload_does_not_deep_copy_via_asdict(self, monkeypatch) -> None:
+        """The cache-write path must not deep-copy the response via dataclasses.asdict."""
+        import slopsearx.service as service_module
+        from slopsearx.service import EngineOutcome, ScopeDecision, SearchResponse
+
+        def _fail(*_args: Any, **_kwargs: Any) -> Any:
+            raise AssertionError("dataclasses.asdict must not be used on the cache-write path")
+
+        monkeypatch.setattr(service_module.dataclasses, "asdict", _fail)
+        response = SearchResponse(
+            query="cve",
+            results=[_result_with_payload()],
+            scope=ScopeDecision(selected_engines=["nvd"]),
+            engine_outcomes=[EngineOutcome(engine="nvd", status="ok", result_count=1, latency_ms=1.0, message=None)],
+        )
+        payload = search_response_to_payload(response)
+        assert payload["results"][0]["payload"]["domain"] == "security"
+        assert payload["cached"] is False
 
     def test_result_without_payload_remains_valid(self) -> None:
         result = SearchResult(
@@ -352,6 +381,21 @@ class TestPayloadDisclosure:
 
             requested = await t.slopsearx_search("paper", engines=["brave"], include=["results", "payload"])
             assert requested["results"][0]["payload"] == payload
+        finally:
+            set_state(None)
+
+    async def test_unserializable_payload_does_not_crash_search_and_is_omitted(self) -> None:
+        payload: dict[str, Any] = {"domain": "security", "type": "vulnerability", "data": {}}
+        payload["self"] = payload  # circular reference — cannot be JSON-serialized
+
+        state = _mcp_state(_PayloadEngine("brave", payload))
+        set_state(state)
+        try:
+            result = await t.slopsearx_search("cve", engines=["brave"])
+            assert "error" not in result
+            assert len(result["results"]) == 1
+            assert result["results"][0]["title"] == "Payload result"
+            assert "payload" not in result["results"][0]
         finally:
             set_state(None)
 

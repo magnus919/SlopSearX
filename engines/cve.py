@@ -185,7 +185,7 @@ class CVEAdapter(EngineAdapter):
         parts = []
         for m in metrics_list:
             if isinstance(m, dict):
-                for key in ("cvssV3_1", "cvssV3_0", "cvssV2_0"):
+                for key in ("cvssV4_0", "cvssV3_1", "cvssV3_0", "cvssV2_0"):
                     cvss = m.get(key, {})
                     if isinstance(cvss, dict):
                         vs = cvss.get("vectorString", "")
@@ -211,7 +211,12 @@ class CVEAdapter(EngineAdapter):
         for m in metrics_list:
             if not isinstance(m, dict):
                 continue
-            for key, version in (("cvssV3_1", "3.1"), ("cvssV3_0", "3.0"), ("cvssV2_0", "2.0")):
+            for key, version in (
+                ("cvssV4_0", "4.0"),
+                ("cvssV3_1", "3.1"),
+                ("cvssV3_0", "3.0"),
+                ("cvssV2_0", "2.0"),
+            ):
                 cvss = m.get(key, {})
                 if not isinstance(cvss, dict):
                     continue
