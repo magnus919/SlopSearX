@@ -247,6 +247,70 @@ class TestCatalogMatrix:
         assert by_name["wikipedia"] is False
 
 
+class TestAuditedCapabilityDeclarations:
+    """Issue 185 — the runtime catalog exposes the audited capability matrix.
+
+    The ``state`` fixture overrides ``wikipedia``/``brave``/``duckduckgo``
+    with mocks; every other registry engine is surfaced from its real class
+    declarations, so these assertions prove the tool/resource wire the
+    audited adapter metadata through end to end.
+    """
+
+    async def test_tool_exposes_audited_declarations_for_registry_engines(self, state: McpState) -> None:
+        """Representative domain families report distinct declarations via the tool."""
+        result = await t.slopsearx_list_capabilities(include_disabled=True)
+        by_name = {e["name"]: e for e in result["engines"]}
+        # Security: keyed engines declare a freemium cost class.
+        assert by_name["shodan"]["cost_class"] == "freemium"
+        assert by_name["virustotal"]["cost_class"] == "freemium"
+        # Science: free scholarly indexes with honest failure classes.
+        assert by_name["openalex"]["cost_class"] == "free"
+        assert by_name["openalex"]["failure_classes"] == ["error"]
+        # Media: TMDB returns media thumbnails and needs a key.
+        assert "media" in by_name["tmdb"]["supported_result_types"]
+        assert by_name["tmdb"]["cost_class"] == "freemium"
+        # Jobs: free, text-only ATS boards.
+        assert by_name["greenhouse"]["cost_class"] == "free"
+        assert by_name["greenhouse"]["supported_result_types"] == ["text"]
+        # General/web: registry-backed engines carry the audited matrix.
+        assert by_name["openlibrary"]["cost_class"] == "free"
+        assert by_name["openlibrary"]["supported_result_types"] == ["text", "media"]
+        assert by_name["openlibrary"]["supported_filters"]["safesearch"] is False
+
+    async def test_tool_exposes_audited_declarations_for_disabled_engine(self, state: McpState) -> None:
+        """VAL-CAP-002/007 — a disabled engine still exposes its audited matrix."""
+        result = await t.slopsearx_list_capabilities(include_disabled=True)
+        entry = _entry(result, "internetarchive")
+        assert entry["enabled"] is False
+        assert entry["cost_class"] == "free"
+        assert entry["supported_result_types"] == ["text"]
+        assert entry["failure_classes"] == ["error"]
+        assert entry["supported_filters"]["safesearch"] is False
+
+    async def test_tool_declared_filters_are_not_enforcement_claims(self, state: McpState) -> None:
+        """A declaration is a boolean hint; the report never invents enforcement."""
+        result = await t.slopsearx_list_capabilities(include_disabled=True)
+        for entry in result["engines"]:
+            assert set(entry["supported_filters"]) == SUPPORTED_FILTER_KEYS
+            assert all(isinstance(v, bool) for v in entry["supported_filters"].values())
+
+    def test_resource_exposes_audited_capabilities_for_registry_engine(self, state: McpState) -> None:
+        """The per-engine resource shows the audited cost/result/failure matrix."""
+        content = r.render_engine_capability("shodan")
+        assert "cost class: freemium" in content
+        assert "supported result types: text" in content
+        assert "rate_limited" in content and "blocked" in content
+
+    def test_full_capabilities_resource_shows_declared_cost_classes(self, state: McpState) -> None:
+        """The full-catalog resource renders declared cost classes and result types."""
+        content = r.render_capabilities()
+        assert "## internetarchive (disabled) — Internet Archive" in content
+        assert "## tmdb — TMDB" in content
+        assert "cost class: freemium" in content
+        # Registry-backed engines render their declared result-type matrix.
+        assert "supported result types: text, media" in content
+
+
 # ---------------------------------------------------------------------------
 # VAL-CAP-005 / VAL-CAP-006 / VAL-CAP-007 / VAL-CAP-008 / VAL-CAP-011
 # ---------------------------------------------------------------------------

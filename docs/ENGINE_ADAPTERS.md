@@ -42,6 +42,28 @@ class MyEngine(EngineAdapter):
 | `engine_type` | No | `"api"` | `"api"` (structured JSON API), `"scrape"` (HTML parsing), `"structured"` (e.g. Wikipedia). |
 | `categories` | No | `["general"]` | SearXNG-compatible category tags. Determines which `?categories=` queries include this engine. Can use namespace prefixes: `github:code`, `huggingface:datasets`. |
 
+### Declarative capability metadata (audited, issue 185)
+
+Every registered adapter additionally declares the capability surface it
+actually provides. These class attributes feed the live MCP capability
+catalog (`slopsearx_list_capabilities`, `slopsearx://capabilities`) and the
+filter-enforcement report — never prose tables.
+
+| Attribute | Default | Vocabulary / semantics |
+|---|---|---|
+| `sensitive` | `False` | `True` means reaching the engine requires `MCP_TARGETED_SENSITIVE_ALLOWED` (fail-closed). |
+| `supported_result_types` | `("text",)` | Subset of `SUPPORTED_RESULT_TYPES` = `text`, `answers`, `corrections`, `infoboxes`, `media`, `structured`. Declare a type only when the adapter actually populates the corresponding `AdapterResponse` field (`answers`/`corrections`/`infoboxes`) or result fields (`media` = `thumbnail`/`img_src`). |
+| `supported_filters` | `{}` | Keys from `SUPPORTED_FILTER_KEYS` = `language`, `time_range`, `safesearch`, `pagination`. Audited: **no adapter consumes any of these parameter-bag keys today**, so every engine keeps the `{}` default (normalized to all-`false`). A declaration is a capability hint, never an enforcement claim. |
+| `failure_classes` | all six tokens | Subset of `FAILURE_CLASS_TOKENS`. Declare exactly the statuses the adapter's `search()` can emit (e.g. an adapter whose only catch-all is `ERROR` declares `("error",)`). |
+| `cost_class` | `""` | One of `COST_CLASSES` = `free`, `freemium`, `paid`; `""` = unknown (emitted as `null`). |
+
+**Audit convention:** a new engine must declare `supported_result_types`,
+`failure_classes`, and `cost_class` accurately, or state in its docstring why
+the conservative default is correct. Never claim a result type, filter, or
+failure class the adapter does not actually provide. `structured` is reserved
+until typed domain payloads ship (tracked separately) and should not be
+declared yet.
+
 ### Category Reclassification
 
 Operators can override categories without modifying adapter code:

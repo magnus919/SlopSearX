@@ -21,6 +21,7 @@ from typing import Any
 import yaml
 
 from slopsearx.adapter import (
+    COST_CLASSES,
     FAILURE_CLASS_TOKENS,
     SUPPORTED_FILTER_KEYS,
     SUPPORTED_RESULT_TYPES,
@@ -155,7 +156,7 @@ class CapabilityCatalog:
                 supported_filters=_normalize_supported_filters(cls, adapter),
                 supported_result_types=_normalize_result_types(cls, adapter),
                 failure_classes=_normalize_failure_classes(cls, adapter),
-                cost_class=str(getattr(adapter if adapter is not None else cls, "cost_class", "") or ""),
+                cost_class=_normalize_cost_class(cls, adapter),
                 last_known_status="unknown",
                 last_known_status_at=None,
             )
@@ -614,6 +615,20 @@ def _normalize_failure_classes(
     declared = getattr(adapter if adapter is not None else cls, "failure_classes", None) or ()
     values = [value for value in declared if value in FAILURE_CLASS_TOKENS]
     return values or ["error"]
+
+
+def _normalize_cost_class(
+    cls: type[EngineAdapter],
+    adapter: EngineAdapter | None,
+) -> str:
+    """Normalize a declared cost_class to the closed ``COST_CLASSES`` set.
+
+    A declared value outside the vocabulary is treated as unknown (``""``)
+    so a typo can never fabricate a cost hint. ``""`` is emitted as ``null``
+    by the MCP boundary — explicit unknown, never a made-up estimate.
+    """
+    declared = str(getattr(adapter if adapter is not None else cls, "cost_class", "") or "")
+    return declared if declared in COST_CLASSES else ""
 
 
 def _scope_hints(categories: list[str]) -> list[str]:

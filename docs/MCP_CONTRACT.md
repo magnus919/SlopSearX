@@ -209,16 +209,18 @@ capability field from the internal model maps to a same-name MCP entry.
 ### 7.2 Feature matrix (design §4.6)
 
 These derive from `EngineAdapter` declarative class attributes
-(`adapter.py:113-129`), normalized with registry-derived defaults so every entry
-is complete.
+(`adapter.py`), normalized with registry-derived defaults so every entry
+is complete. Every registered adapter carries an **audited declaration**
+for result types, failure classes, and cost class (issue 185); the catalog
+reads the live registry, never prose.
 
 | Internal field | MCP key | Vocabulary / semantics |
 |---|---|---|
 | `sensitive` | `sensitive` | Boolean; `true` means reaching the engine requires `MCP_TARGETED_SENSITIVE_ALLOWED`. Fail-closed by default. |
-| `supported_filters` | `supported_filters` | Object keyed by `language`, `time_range`, `safesearch`, `pagination`, each a boolean. No adapter declares support today → all `false`, matching the `unsupported` enforcement status. |
-| `supported_result_types` | `supported_result_types` | List drawn from `text` / `answers` / `corrections` / `infoboxes` / `media` / `structured` (`SUPPORTED_RESULT_TYPES`). |
-| `failure_classes` | `failure_classes` | List drawn from the stable token set `ok`, `rate_limited`, `blocked`, `error`, `timeout`, `auth_required`, `unavailable`. |
-| `cost_class` | `cost_class` | Coarse operator-configured hint; empty string is emitted as `null` (explicit unknown — no fabricated estimates). |
+| `supported_filters` | `supported_filters` | Object keyed by `language`, `time_range`, `safesearch`, `pagination`, each a boolean. Audited: **no adapter consumes any filter parameter today**, so every entry is `false`, matching the `unsupported` enforcement status. A declaration is a capability hint, never an enforcement claim — the enforcement report resolves against the dispatched scope at search time. |
+| `supported_result_types` | `supported_result_types` | List drawn from `text` / `answers` / `corrections` / `infoboxes` / `media` / `structured` (`SUPPORTED_RESULT_TYPES`). Audited per adapter: e.g. Brave declares `answers`+`media`, Wikipedia declares `corrections`+`infoboxes`+`media`, TMDB/openlibrary/Reddit/DDG declare `media`. `structured` is intentionally unused until typed domain payloads ship (tracked separately). |
+| `failure_classes` | `failure_classes` | List drawn from the stable token set `ok`, `rate_limited`, `blocked`, `error`, `timeout`, `auth_required`, `unavailable`. Audited per adapter to the statuses its `search()` can actually emit (e.g. `openalex`/`internetarchive` classify everything as `error`; most keyed API adapters emit `rate_limited`/`blocked`/`error`/`timeout`). |
+| `cost_class` | `cost_class` | One of `free` / `freemium` / `paid` (`COST_CLASSES`); audited per adapter from its access model. Empty string is emitted as `null` (explicit unknown — no fabricated estimates). |
 | `last_known_status` | `last_known_status` | `ok` / `rate_limited` / `blocked` / `error` / `timeout` / `unknown`. Observed passively through search outcomes; defaults to `unknown`. |
 | `last_known_status_at` | `last_known_status_at` | ISO freshness marker, or `None` when status is unknown. |
 
@@ -229,12 +231,32 @@ Defined in `adapter.py` and used verbatim:
 - `SUPPORTED_FILTER_KEYS = (language, time_range, safesearch, pagination)`
 - `SUPPORTED_RESULT_TYPES = (text, answers, corrections, infoboxes, media, structured)`
 - `FAILURE_CLASS_TOKENS = (ok, rate_limited, blocked, error, timeout, auth_required, unavailable)`
+- `COST_CLASSES = (free, freemium, paid)` — `""` = unknown (emitted as `null`)
 
 The filter-enforcement report (`enforcement`) is consistent with the catalog:
 an adapter that does not declare a filter yields `unsupported`; a strict
 `safesearch` yields `rejected` (`_core_filter_enforcement`, `tools.py`). This
 is the explicit-unsupported state the feature requires: the MCP layer carries
 the filter parameter but honestly reports that no adapter consumes it.
+Declaring a filter in `supported_filters` never by itself marks the request
+as enforced — enforcement is derived from the **dispatched** engine scope.
+
+### 7.4 Declared capability vs. operational state
+
+Four distinct concepts are conflated nowhere in the catalog:
+
+| Concept | Catalog field | Source | Changes at runtime? |
+|---|---|---|---|
+| **Declared capability** | `supported_filters`, `supported_result_types`, `failure_classes`, `cost_class` | Audited `EngineAdapter` class attributes (issue 185) | No — static audit of what the adapter *can* do |
+| **Configured availability** | `enabled` | Effective engine config (`config.yaml` / env) | Yes — operator flips engines on/off |
+| **Authentication state** | `auth.class`, `auth.configured` | Credential presence for the engine's requirement class | Yes — key added/removed |
+| **Observed health** | `last_known_status`, `last_known_status_at` | Passive search-outcome observation | Yes — updated by every dispatched search |
+
+A `freemium` engine with no key configured is therefore `cost_class=freemium`
+(declared), `enabled=true` (configured), `auth.class=required,
+auth.configured=false` (authentication), and `last_known_status=unknown`
+(observed — never fabricated as `ok`). Capability declarations must never be
+read as health, and health must never be read as capability.
 
 ---
 

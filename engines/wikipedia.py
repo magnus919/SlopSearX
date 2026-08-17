@@ -25,6 +25,11 @@ class WikipediaAdapter(EngineAdapter):
     engine_type = "api"
     categories = ["general", "science", "reference"]
 
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text", "corrections", "infoboxes", "media")
+    failure_classes = ("rate_limited", "error", "timeout")
+    cost_class = "free"
+
     async def search(
         self,
         query: str,

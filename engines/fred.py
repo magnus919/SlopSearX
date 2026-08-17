@@ -35,6 +35,11 @@ class FredAdapter(EngineAdapter):
     engine_type = "api"
     categories = ["finance", "reference", "economics"]
 
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text",)
+    failure_classes = ("rate_limited", "error", "timeout")
+    cost_class = "freemium"
+
     async def search(
         self,
         query: str,

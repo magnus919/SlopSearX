@@ -1496,8 +1496,7 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
         # Deadline gate: a deadline-passed retry finalizes to expired instead
         # of re-running and ending in partial/failed.
         result["note"] = (
-            "job deadline had already passed; retry finalized the job to expired "
-            "and re-executed no subqueries"
+            "job deadline had already passed; retry finalized the job to expired and re-executed no subqueries"
         )
     else:
         result["retried"] = [query.index for query in retryable]
