@@ -21,7 +21,7 @@ import secrets
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 from slopsearx.adapter import EngineStatus
 from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, resolve_intent
@@ -295,6 +295,25 @@ def is_retryable_query(query: ResearchQuery) -> bool:
     if query.state == "done" and query.result_count == 0 and not query.error:
         return True
     return False
+
+
+def _reset_retryable_queries(job: ResearchJob) -> None:
+    """Re-apply a retry reset onto an authoritative job record.
+
+    Resets any still-retryable (failed/empty) subqueries to ``pending`` and
+    marks the job ``running``. Never resurrects a cancelled/expired job, and
+    leaves a record with no retryable work untouched, so a record that was
+    concurrently finalized by a durable worker (or a cancel request) is
+    preserved as-is.
+    """
+    if job.state in ("cancelled", "expired"):
+        return
+    retryable = [query for query in job.queries if is_retryable_query(query)]
+    if not retryable:
+        return
+    job.state = "running"
+    for query in retryable:
+        query.state = "pending"
 
 
 def _attempt_from_query(query: ResearchQuery) -> ResearchQueryAttempt:
@@ -727,26 +746,38 @@ class ResearchJobStore:
         await self.save(job)
         return job
 
-    async def _claim_prepared(self, job: ResearchJob, owner_id: str, lease_ttl: int) -> ResearchJob | None:
-        """Claim an already-mutated job under a fresh lease.
+    async def _claim_prepared(
+        self,
+        job: ResearchJob,
+        owner_id: str,
+        lease_ttl: int,
+        mutate: Callable[[ResearchJob], None] | None = None,
+    ) -> ResearchJob | None:
+        """Claim a job under a fresh lease, re-applying the caller's mutation.
 
-        Mirrors :meth:`claim`, but persists the caller-supplied ``job`` (which
-        may carry direct-run mutations such as reset-to-pending retry queries
-        or an appended follow-up) instead of re-loading and persisting the
-        authoritative record. The lease acquisition remains the atomic
-        exclusion gate; a re-load is used only to validate that the record is
-        still claimable and to re-check the deadline before writing.
+        Mirrors :meth:`claim`, but re-applies the caller's direct-run mutation
+        (reset-to-pending retry queries or an appended follow-up) to the
+        authoritative record *after* re-loading it under the lease, instead of
+        persisting the caller-supplied copy. The lease acquisition is the
+        atomic exclusion gate; the re-load validates claimability and the
+        deadline before writing, so a record concurrently finalized by another
+        worker is never clobbered.
         """
         store = self._store
         if store is None or not store.is_connected:
-            return None
-        if job.state not in ("queued", "running"):
             return None
         token = generate_lease_token()
         if not await self._lease_acquire(self._lease_key(job.job_id), token, lease_ttl):
             return None
         current = await self.load(job.job_id)
-        if current is None or current.state not in ("queued", "running"):
+        if current is None:
+            await self._lease_release(self._lease_key(job.job_id), token)
+            return None
+        # Re-apply the caller's intended mutation to the freshly loaded record
+        # while holding the lease, so a concurrent finalizer cannot interleave.
+        if mutate is not None:
+            mutate(current)
+        if current.state not in ("queued", "running"):
             await self._lease_release(self._lease_key(job.job_id), token)
             return None
         if time.time() >= current.deadline:
@@ -758,16 +789,16 @@ class ResearchJobStore:
             await self._lease_release(self._lease_key(job.job_id), token)
             return None
         # Preserve a cancellation request that landed after ``job`` was loaded.
-        job.cancel_requested = job.cancel_requested or current.cancel_requested
-        for query in job.queries:
+        current.cancel_requested = current.cancel_requested or job.cancel_requested
+        for query in current.queries:
             if query.state == "running":
                 query.state = "pending"
-        job.state = "running"
-        job.owner_id = owner_id
-        job.lease_token = token
-        job.lease_expires_at = time.time() + lease_ttl
-        await self.save(job)
-        return job
+        current.state = "running"
+        current.owner_id = owner_id
+        current.lease_token = token
+        current.lease_expires_at = time.time() + lease_ttl
+        await self.save(current)
+        return current
 
     async def claim_next(self, owner_id: str, lease_ttl: int) -> ResearchJob | None:
         """Claim the next claimable job for this store's tenant."""
@@ -1073,7 +1104,12 @@ class ResearchJobRunner:
         if live == job.lease_token:
             raise JobStillRunningError(job.job_id)
 
-    async def run_direct(self, job: ResearchJob) -> ResearchJob:
+    async def run_direct(
+        self,
+        job: ResearchJob,
+        *,
+        mutate: Callable[[ResearchJob], None] | None = None,
+    ) -> ResearchJob:
         """Run a loaded job directly, claiming it first when claimable.
 
         ``retry``/``extend`` load a job that may still carry lease fields from
@@ -1082,6 +1118,12 @@ class ResearchJobRunner:
         ``running``) is claimed under a fresh lease before execution so a
         concurrent durable worker excludes it (exactly-one-owner). Terminal
         jobs are not claimable and still run lease-free exactly as before.
+
+        ``mutate``, when given, is the caller's intended direct-run mutation
+        (reset-to-pending retry queries or an appended follow-up). It is
+        applied to the freshly loaded record — never the caller's in-memory
+        copy — so a record that a durable worker finalized between the
+        caller's load and this call is reconciled, not clobbered.
 
         A job that is still ``running`` under a *live* owner must not be
         cleared or run here: that would race the owner's execution. Liveness
@@ -1095,7 +1137,7 @@ class ResearchJobRunner:
 
         await self._raise_if_live_owned(fresh)
 
-        claimed = await store._claim_prepared(job, self._owner_id, self._lease_ttl)
+        claimed = await store._claim_prepared(fresh, self._owner_id, self._lease_ttl, mutate=mutate)
         if claimed is not None:
             try:
                 result = await self.run_pending(claimed)
@@ -1113,12 +1155,18 @@ class ResearchJobRunner:
         if current is not None and current.state in ("queued", "running"):
             raise JobStillRunningError(job.job_id)
 
-        # Terminal or non-claimable job: run lease-free as before.
-        job.owner_id = None
-        job.lease_token = None
-        job.lease_expires_at = 0.0
-        await store.save(job)
-        return await self.run_pending(job)
+        # Terminal or non-claimable job: reconcile with the freshly loaded
+        # record (never the caller's stale copy) and re-apply the caller's
+        # intended mutation before persisting, so completed evidence written
+        # by a concurrently finalizing worker is preserved.
+        base = current if current is not None else fresh
+        if mutate is not None:
+            mutate(base)
+        base.owner_id = None
+        base.lease_token = None
+        base.lease_expires_at = 0.0
+        await store.save(base)
+        return await self.run_pending(base)
 
     async def retry(self, job_id: str, tenant: str | None = None) -> ResearchJob | None:
         """Re-run only failed/empty subqueries (VAL-RESEARCH-008).
@@ -1163,16 +1211,12 @@ class ResearchJobRunner:
             job.state = "expired"
             await store.save(job)
             return job
-        job.state = "running"
-        for query in retryable:
-            query.state = "pending"
-        # Persist the claimable running state BEFORE run_direct so the claim
-        # gate re-loads a claimable record and the fresh lease excludes the
-        # durable worker during execution (exactly-one-owner). If the worker
-        # wins the race first, run_direct raises JobStillRunningError and the
-        # caller hands the job to the worker.
-        await store.save(job)
-        return await self.run_direct(job)
+        # The retry mutation is applied to the freshly loaded record inside
+        # run_direct's claim (exactly-one-owner), never persisted ahead of
+        # time. This avoids stripping a concurrently-claiming worker's
+        # owner_id/lease_token and avoids clobbering a record a durable worker
+        # finalized between the load above and the claim.
+        return await self.run_direct(job, mutate=_reset_retryable_queries)
 
     def _build_query_coverage(self, query: ResearchQuery, response: Any) -> list[EngineCoverage]:
         """Derive per-engine coverage for a completed subquery (VAL-RESEARCH-004).

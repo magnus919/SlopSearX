@@ -1253,11 +1253,7 @@ def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str,
         "engine_health": _engine_health_by_class(state),
         "grants": _enabled_grants(state),
         "research_execution": {
-            "mode": (
-                "durable_leased"
-                if durable_research
-                else ("single_worker" if job_store_available else "degraded_ephemeral")
-            ),
+            "mode": "durable_leased" if durable_research else "degraded",
             "worker_id": state.runner.worker_id,
             "lease_ttl_seconds": state.runner.lease_ttl,
             "poll_interval_seconds": state.runner.poll_interval,
@@ -1266,7 +1262,7 @@ def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str,
                 "research jobs are claimed under an exclusive Valkey lease and "
                 "reclaimed by another replica on lease expiry"
                 if durable_research
-                else "Valkey unavailable — research execution is not durable across replicas"
+                else "Valkey unavailable — research jobs are not executed (no shared job store)"
             ),
         },
         "policy_bounds": {
@@ -1484,8 +1480,9 @@ async def slopsearx_start_research(
         result["degraded"] = True
         result["ephemeral"] = True
         result["note"] = (
-            "job store unavailable — this job is process-local and non-durable; "
-            "idempotency was not checked or persisted (VAL-RESEARCH-003)"
+            "job store unavailable — this job was not persisted and will not be "
+            "executed (research jobs require Valkey); idempotency was not checked "
+            "or persisted (VAL-RESEARCH-003)"
         )
     else:
         result["note"] = "job queued; in-flight engine calls are not interrupted by cancellation"
@@ -1623,6 +1620,16 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
 
+    if job.state == "cancelled":
+        # A durable cancel flag finalized the job mid-operation: no subquery
+        # was actually re-run, so surface the cancellation rather than a
+        # success note.
+        return {
+            "job_id": job.job_id,
+            "state": "cancelled",
+            "note": "the job had a pending cancellation request; the retry was cancelled, not executed",
+        }
+
     result = _job_summary(job)
     if job.state == "expired":
         # Deadline gate: a deadline-passed retry finalizes to expired instead
@@ -1727,16 +1734,20 @@ async def slopsearx_extend_research(
             state=job.state,
             field="query",
         )
-    job.queries.append(new_query)
+
+    def _append_followup(target: ResearchJob) -> None:
+        target.queries.append(new_query)
 
     # A job previously executed by the durable worker still carries lease
     # fields whose Valkey key was already released. Run through run_direct so
     # the stale lease is cleared before run_pending (which otherwise tries to
-    # renew the missing lease and raises LeaseLostError). If a live worker
-    # still owns the job, run_direct raises JobStillRunningError instead of
-    # racing it.
+    # renew the missing lease and raises LeaseLostError). The follow-up is
+    # applied to the freshly loaded record (never the caller's copy) so a
+    # record finalized concurrently is reconciled, not clobbered. If a live
+    # worker still owns the job, run_direct raises JobStillRunningError
+    # instead of racing it.
     try:
-        job = await state.runner.run_direct(job)
+        job = await state.runner.run_direct(job, mutate=_append_followup)
     except JobStillRunningError:
         return {
             "job_id": job_id,
@@ -1748,6 +1759,15 @@ async def slopsearx_extend_research(
             "job_id": job_id,
             "state": "running",
             "note": "job was reclaimed by another worker mid-run; the follow-up query will be completed by that worker",
+        }
+    if job.state == "cancelled":
+        # A durable cancel flag finalized the job mid-operation: the follow-up
+        # was not executed, so surface the cancellation instead of a success
+        # note.
+        return {
+            "job_id": job.job_id,
+            "state": "cancelled",
+            "note": "the job had a pending cancellation request; the follow-up query was cancelled, not executed",
         }
     result = _job_summary(job)
     result["note"] = "follow-up query appended and executed; prior completed evidence was preserved"

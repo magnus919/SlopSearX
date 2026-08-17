@@ -38,6 +38,8 @@ from slopsearx.research import (
     ResearchJobRunner,
     ResearchJobStore,
     ResearchQuery,
+    ResearchQueryAttempt,
+    _reset_retryable_queries,
     generate_job_id,
 )
 from slopsearx.service import AppContext, ScopeDecision, SearchService
@@ -1050,6 +1052,159 @@ class TestDirectRunsAfterDurableExecution:
         assert loaded.queries[0].state == "done"
         assert loaded.owner_id is None
         assert loaded.lease_token is None
+
+
+# ---------------------------------------------------------------------------
+# Direct-run reconciliation with a concurrently finalized record
+# ---------------------------------------------------------------------------
+
+
+class TestDirectRunReconciliation:
+    async def test_run_direct_does_not_clobber_finalized_record(self) -> None:
+        """A stale in-memory copy must not overwrite a worker's final record.
+
+        The tool loads a job and hands its (now stale) in-memory copy to
+        ``run_direct``. If the durable worker finalized the job in between,
+        ``run_direct`` must reconcile with the freshly loaded record instead of
+        persisting the stale copy over the completed evidence and re-executing
+        a completed subquery.
+        """
+        state, _store = _build_state()
+        job_store = state.job_store
+        engine = state.ctx.active_engines["wikipedia"]
+        job_id = generate_job_id()
+
+        # The durable worker's final record.
+        finalized = _job(
+            job_id=job_id,
+            state="succeeded",
+            queries=[
+                ResearchQuery(
+                    index=0,
+                    query="done",
+                    intent="web",
+                    engines=["wikipedia"],
+                    state="done",
+                    cursor="snap-done",
+                    result_count=1,
+                ),
+                ResearchQuery(
+                    index=1,
+                    query="was-failed",
+                    intent="web",
+                    engines=["wikipedia"],
+                    state="done",
+                    cursor="snap-worker",
+                    result_count=1,
+                    attempts=[
+                        ResearchQueryAttempt(
+                            cursor="snap-worker",
+                            query_id="ssx-worker",
+                            result_count=1,
+                            state="done",
+                        ),
+                    ],
+                ),
+            ],
+        )
+        await job_store.save(finalized)
+
+        # The tool's stale copy, loaded before the worker finalized.
+        stale = _job(
+            job_id=job_id,
+            state="running",
+            queries=[
+                ResearchQuery(
+                    index=0,
+                    query="done",
+                    intent="web",
+                    engines=["wikipedia"],
+                    state="done",
+                    cursor="snap-done",
+                    result_count=1,
+                ),
+                ResearchQuery(index=1, query="was-failed", intent="web", engines=["wikipedia"], state="failed"),
+            ],
+        )
+
+        calls_before = engine.calls
+
+        result = await state.runner.run_direct(stale, mutate=_reset_retryable_queries)
+
+        assert result.state == "succeeded"
+        # The completed subquery was NOT re-executed and its evidence survived.
+        assert engine.calls == calls_before
+        loaded = await job_store.load(job_id)
+        assert loaded is not None
+        assert loaded.state == "succeeded"
+        assert loaded.queries[0].cursor == "snap-done"
+        assert loaded.queries[1].state == "done"
+        assert loaded.queries[1].cursor == "snap-worker"
+        assert loaded.queries[1].attempts[0].cursor == "snap-worker"
+
+    async def test_retry_pending_cancel_flag_returns_cancelled(self) -> None:
+        """A durable cancel flag must surface ``cancelled``, not a success note."""
+        state, store = _build_state()
+        job_store = state.job_store
+        set_state(state)
+        try:
+            job = _job(
+                state="running",
+                queries=[
+                    ResearchQuery(index=0, query="fail", intent="web", engines=["wikipedia"], state="failed"),
+                ],
+            )
+            await job_store.save(job)
+            # A durable cancel flag is pending while the record is still running.
+            cancel_key = f"{CANCEL_KEY_PREFIX}:default:{job.job_id}"
+            await store.set(cancel_key, {"cancel_requested": True, "requested_at": time.time()}, 60)
+
+            engine = state.ctx.active_engines["wikipedia"]
+            calls_before = engine.calls
+
+            result = await t.slopsearx_retry_research(job.job_id)
+
+            assert result["state"] == "cancelled"
+            assert "cancelled, not executed" in result["note"]
+            assert engine.calls == calls_before
+            loaded = await job_store.load(job.job_id)
+            assert loaded is not None
+            assert loaded.state == "cancelled"
+        finally:
+            set_state(None)
+
+    async def test_extend_pending_cancel_flag_returns_cancelled(self) -> None:
+        """Extend surfaces a durable cancellation instead of a success note."""
+        state, store = _build_state()
+        job_store = state.job_store
+        set_state(state)
+        try:
+            job = _job(
+                state="running",
+                queries=[
+                    ResearchQuery(
+                        index=0, query="done", intent="web", engines=["wikipedia"], state="done", cursor="snap-old"
+                    ),
+                ],
+            )
+            await job_store.save(job)
+            # A durable cancel flag is pending while the record is still running.
+            cancel_key = f"{CANCEL_KEY_PREFIX}:default:{job.job_id}"
+            await store.set(cancel_key, {"cancel_requested": True, "requested_at": time.time()}, 60)
+
+            engine = state.ctx.active_engines["wikipedia"]
+            calls_before = engine.calls
+
+            result = await t.slopsearx_extend_research(job.job_id, "followup", intent="web")
+
+            assert result["state"] == "cancelled"
+            assert "cancelled, not executed" in result["note"]
+            assert engine.calls == calls_before
+            loaded = await job_store.load(job.job_id)
+            assert loaded is not None
+            assert loaded.state == "cancelled"
+        finally:
+            set_state(None)
 
 
 # ---------------------------------------------------------------------------

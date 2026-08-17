@@ -640,12 +640,12 @@ a lease-based claim model:
 
 The topology is machine-discoverable via `slopsearx_get_service_status` /
 `slopsearx://health/summary` under `research_execution`:
-`mode` is `durable_leased` (Valkey connected), `single_worker` (job store
-available without Valkey), or `degraded_ephemeral` (no job store).
+`mode` is `durable_leased` (Valkey connected) or `degraded` (no Valkey).
 
-Without Valkey, research jobs degrade to the single-process, non-durable mode:
-a job is accepted only for the local process and is explicitly flagged
-`degraded`/`ephemeral` in the start response.
+Without Valkey, research jobs are **not executed**. The job store is a no-op
+and the worker cannot claim the locally enqueued job, so it is dropped rather
+than run. `slopsearx_start_research` still returns a handle, but it is flagged
+`degraded`/`ephemeral` and the job is never persisted or executed.
 
 ### 6.14 Why there is no separate "advanced search" tool
 
@@ -818,8 +818,8 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
 - **Research execution topology.** With Valkey connected, research jobs are
   durable across replicas via the lease-based claim model (see §6.13.1); the
   `research_execution.mode` field in `slopsearx_get_service_status` reports
-  the effective mode. Without Valkey, research jobs are single-process and
-  non-durable (flagged `ephemeral` at start).
+  the effective mode (`durable_leased` or `degraded`). Without Valkey,
+  research jobs are not executed (the enqueued job is dropped).
 - **Versioning.** `slopsearx_get_service_status` and `slopsearx://health/summary`
   report two versions: the package version (`importlib.metadata`, `0.2.0`)
   and the MCP contract version (`contract_version`), not the FastAPI app's

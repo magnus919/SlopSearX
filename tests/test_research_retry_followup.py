@@ -222,7 +222,8 @@ class TestIdempotency:
         assert "error" not in result
         assert result.get("degraded") is True
         assert result.get("ephemeral") is True
-        assert "non-durable" in (result.get("note") or "")
+        assert "not persisted" in (result.get("note") or "")
+        assert "will not be executed" in (result.get("note") or "")
 
 
 # ---------------------------------------------------------------------------
