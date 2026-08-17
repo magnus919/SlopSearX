@@ -43,6 +43,7 @@ from slopsearx.capabilities import DEFAULT_SENSITIVE_ENGINES
 from slopsearx.config import load_config
 from slopsearx.logging import capture_exception
 from slopsearx.merger import PresenceRanker, extract_empty_scrape_engines
+from slopsearx.payload import payload_for_persistence, payload_from_dict
 from slopsearx.ratelimit import LocalTokenBucket, RateLimiter, RateLimitStrategy, ValkeySlidingWindow
 from slopsearx.router import QueryRouter
 from slopsearx.stats import EngineStatsTracker
@@ -949,20 +950,76 @@ def unresponsive_from_outcomes(outcomes: list[EngineOutcome]) -> list[list[str]]
 def search_result_to_dict(result: SearchResult) -> dict[str, Any]:
     """Serialize a :class:`SearchResult` to a JSON-safe dict.
 
-    ``engines`` (a ``set[str]``) is canonicalized to a sorted list so the
-    value survives ``json.dumps`` without being stringified to its repr.
+    Built field-by-field (no ``dataclasses.asdict`` deep copy) so the optional
+    ``payload`` is canonicalized exactly once through
+    :func:`~slopsearx.payload.payload_for_persistence` — which also enforces
+    the persistence bound so the canonical cache/snapshot form never stores an
+    unbounded payload. ``engines`` (a ``set[str]``) is canonicalized to a
+    sorted list so the value survives ``json.dumps`` without being stringified
+    to its repr.
     """
-    data = dataclasses.asdict(result)
-    data["engines"] = sorted(result.engines)
-    return data
+    return {
+        "url": result.url,
+        "title": result.title,
+        "content": result.content,
+        "engine": result.engine,
+        "engines": sorted(result.engines),
+        "score": result.score,
+        "position": result.position,
+        "category": result.category,
+        "published_date": result.published_date,
+        "thumbnail": result.thumbnail,
+        "img_src": result.img_src,
+        "tier": result.tier,
+        "payload": payload_for_persistence(result.payload),
+    }
 
 
 def search_response_to_payload(response: SearchResponse) -> dict[str, Any]:
-    """Serialize a :class:`SearchResponse` for the Valkey cache (JSON-safe)."""
-    payload = dataclasses.asdict(response)
-    payload["results"] = [search_result_to_dict(result) for result in response.results]
-    payload["cached"] = False
-    return payload
+    """Serialize a :class:`SearchResponse` for the Valkey cache (JSON-safe).
+
+    Built field-by-field (no ``dataclasses.asdict`` deep copy) so the
+    ``results`` payloads are not deep-copied and then discarded. The
+    serialized payload is the canonical full response, with ``cached`` forced
+    to ``False`` so a stored entry never reflects the request that populated
+    it.
+    """
+    return {
+        "query": response.query,
+        "results": [search_result_to_dict(result) for result in response.results],
+        "scope": {
+            "selected_engines": list(response.scope.selected_engines),
+            "resolved_categories": list(response.scope.resolved_categories),
+            "routing_rule": response.scope.routing_rule,
+            "matched_topic": response.scope.matched_topic,
+            "warnings": list(response.scope.warnings),
+            "excluded_engines": [
+                {"engine": exclusion.engine, "reason": exclusion.reason}
+                for exclusion in response.scope.excluded_engines
+            ],
+        },
+        "engine_outcomes": [
+            {
+                "engine": outcome.engine,
+                "status": outcome.status,
+                "result_count": outcome.result_count,
+                "latency_ms": outcome.latency_ms,
+                "message": outcome.message,
+            }
+            for outcome in response.engine_outcomes
+        ],
+        "suggestions": list(response.suggestions),
+        "answers": list(response.answers),
+        "corrections": list(response.corrections),
+        "infoboxes": list(response.infoboxes),
+        "query_id": response.query_id,
+        "cached": False,
+        "response_time_ms": response.response_time_ms,
+        "partial": response.partial,
+        "all_unresponsive": response.all_unresponsive,
+        "empty_engines": [list(entry) for entry in response.empty_engines],
+        "cached_error": response.cached_error,
+    }
 
 
 def search_response_from_payload(payload: dict[str, Any]) -> SearchResponse:
@@ -1038,6 +1095,7 @@ def search_result_from_dict(data: dict[str, Any]) -> SearchResult:
         thumbnail=data.get("thumbnail"),
         img_src=data.get("img_src"),
         tier=int(raw_tier) if raw_tier is not None else 1,
+        payload=payload_from_dict(data.get("payload")),
     )
 
 

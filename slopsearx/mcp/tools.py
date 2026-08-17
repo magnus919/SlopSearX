@@ -15,6 +15,12 @@ from typing import Any
 from slopsearx.adapter import SearchResult
 from slopsearx.capabilities import INTENT_PROFILES, resolve_intent
 from slopsearx.mcp.state import McpState, get_state
+from slopsearx.payload import (
+    PAYLOAD_INLINE_BYTES,
+    is_valid_payload,
+    payload_max_persist_bytes,
+    payload_serialized_size,
+)
 from slopsearx.ratelimit import ValkeySlidingWindow
 from slopsearx.research import (
     ResearchJob,
@@ -340,12 +346,53 @@ def _source_engines(result: SearchResult) -> list[str]:
     return sorted(result.engines) if result.engines else [result.engine]
 
 
-def _result_to_dict(result: SearchResult, *, result_id: str | None = None) -> dict[str, Any]:
+def _payload_size(payload: dict[str, Any]) -> int | None:
+    """Approximate serialized byte size of a payload envelope.
+
+    Returns ``None`` when the payload cannot be JSON-serialized. Callers must
+    treat ``None`` as "omit", never as the smallest possible payload — an
+    unserializable (e.g. circular-reference) payload must not be inlined on a
+    compact card.
+    """
+    return payload_serialized_size(payload)
+
+
+def _payload_inline(result: SearchResult, *, requested: bool) -> dict[str, Any] | None:
+    """Return the payload to inline on a compact card, or ``None``.
+
+    Compact cards carry a payload only when the caller requested it
+    (``include=["payload"]``) or the payload is small enough to inline — and,
+    in both cases, only when it is within the persistence bound, so a card
+    never shows a payload the record path would return as ``null``. An
+    unserializable payload is always omitted, even when requested, so the MCP
+    response itself never fails to serialize.
+    """
+    if result.payload is None:
+        return None
+    size = _payload_size(result.payload)
+    if size is None:
+        return None
+    if requested:
+        return result.payload if size <= payload_max_persist_bytes() else None
+    if size <= PAYLOAD_INLINE_BYTES:
+        return result.payload
+    return None
+
+
+def _result_to_dict(
+    result: SearchResult,
+    *,
+    result_id: str | None = None,
+    include_payload: bool = False,
+) -> dict[str, Any]:
     """Normalize one result into a compact triage card (design §3.1).
 
     Cards carry triage fields plus a stable server-issued ``result_id``.
     Full ``content``, ``thumbnail``, and ``img_src`` belong to the expanded
-    record (progressive disclosure), never the card.
+    record (progressive disclosure), never the card. A domain payload is
+    inlined only when requested or small enough (see ``_payload_inline``);
+    the full payload is available via ``slopsearx_read_result`` when it is
+    within ``PAYLOAD_MAX_PERSIST_BYTES``.
     """
     card = {
         "title": result.title,
@@ -363,7 +410,24 @@ def _result_to_dict(result: SearchResult, *, result_id: str | None = None) -> di
     }
     if result_id is not None:
         card["result_id"] = result_id
+    inline = _payload_inline(result, requested=include_payload)
+    if inline is not None:
+        card["payload"] = inline
     return card
+
+
+def _payload_for_record(payload: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Return the payload to reveal on a full record, or ``None``.
+
+    The record reveals the complete payload only when it satisfies the
+    self-describing envelope contract and is JSON-serializable. A malformed or
+    unserializable payload is omitted rather than risking an invalid record.
+    """
+    if not is_valid_payload(payload):
+        return None
+    if payload_serialized_size(payload) is None:
+        return None
+    return payload
 
 
 def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: str) -> dict[str, Any]:
@@ -384,6 +448,7 @@ def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: st
         "content_available": content_available,
         "thumbnail": result.thumbnail,
         "img_src": result.img_src,
+        "payload": _payload_for_record(result.payload),
         "source_engines": source_engines,
         "source_count": len(source_engines),
         "primary_engine": result.engine,
@@ -422,6 +487,7 @@ def _envelope(
     include_suggestions: bool,
     total: int,
     enforcement: dict[str, Any] | None = None,
+    include_payload: bool = False,
 ) -> dict[str, Any]:
     """Build the standard search envelope from a SearchResponse.
 
@@ -456,6 +522,7 @@ def _envelope(
             _result_to_dict(
                 result,
                 result_id=(state.snapshots.result_id(cursor, index) if cursor else None),
+                include_payload=include_payload,
             )
             for index, result in enumerate(response.results)
         ],
@@ -500,6 +567,7 @@ async def _run_search(
     max_results: int | None = None,
     enforcement: dict[str, Any] | None = None,
     core_filters: dict[str, Any] | None = None,
+    include_payload: bool = False,
 ) -> dict[str, Any]:
     """Execute one search through the service and build the envelope.
 
@@ -541,6 +609,7 @@ async def _run_search(
         include_suggestions=include_suggestions,
         total=total,
         enforcement=enforcement,
+        include_payload=include_payload,
     )
 
 
@@ -582,7 +651,12 @@ async def slopsearx_search(
     - safesearch: off | moderate | strict. strict fails closed because no
       adapter enforces it.
     - freshness: prefer_cache | prefer_fresh | no_preference.
-    - include: subset of results, suggestions, engine_status, diagnostics.
+    - include: subset of results, suggestions, engine_status, diagnostics,
+      payload. When ``payload`` is included, compact result cards inline the
+      domain payload only when it is within ``PAYLOAD_MAX_PERSIST_BYTES``
+      (the snapshot persistence bound); otherwise cards inline a payload only
+      when it is small. The full payload is available via
+      slopsearx_read_result when it is within the persistence bound.
     Returns results, scope, engine outcomes, and a pagination cursor.
     """
     state = get_state()
@@ -657,6 +731,7 @@ async def slopsearx_search(
         include_suggestions="suggestions" in include_set,
         max_results=max_results,
         core_filters={"language": language, "time_range": time_range, "safesearch": safesearch},
+        include_payload="payload" in include_set,
     )
 
 

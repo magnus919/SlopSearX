@@ -21,6 +21,7 @@ from slopsearx.adapter import (
     register_engine,
     sanitize_url,
 )
+from slopsearx.payload import DOMAIN_SECURITY, build_payload
 
 _CVE_ID_PATTERN = re.compile(r"CVE-\d{4}-\d{4,}", re.IGNORECASE)
 
@@ -177,6 +178,19 @@ class NVDAdapter(EngineAdapter):
             if published_date and "T" in published_date:
                 published_date = published_date.split("T")[0]
 
+            payload = build_payload(
+                DOMAIN_SECURITY,
+                "vulnerability",
+                {
+                    "cve_id": cve_id or None,
+                    "description": desc_text or None,
+                    "cvss": self._cvss_payload(metrics),
+                    "cwe_ids": cwe_ids or None,
+                    "references": ref_urls or None,
+                },
+                engine=self.name,
+            )
+
             results.append(
                 SearchResult(
                     url=f"https://nvd.nist.gov/vuln/detail/{cve_id}",
@@ -185,6 +199,7 @@ class NVDAdapter(EngineAdapter):
                     engine=self.name,
                     position=len(results) + 1,
                     published_date=published_date,
+                    payload=payload,
                 ),
             )
 
@@ -216,3 +231,41 @@ class NVDAdapter(EngineAdapter):
                 if parts:
                     return " ".join(parts)
         return ""
+
+    def _cvss_payload(self, metrics: dict[str, Any]) -> dict[str, Any] | None:
+        """Extract structured CVSS fields (score/severity/vector/version).
+
+        Prefers CVSS v4, then v3.1, v3.0, then v2 — matching the text
+        formatter's precedence. Returns ``None`` when no metric is present so
+        the field stays absent rather than fabricating an empty object.
+        """
+        for version_key, version in (
+            ("cvssMetricV40", "4.0"),
+            ("cvssMetricV31", "3.1"),
+            ("cvssMetricV30", "3.0"),
+            ("cvssMetricV2", "2.0"),
+        ):
+            metric_list = metrics.get(version_key)
+            if not metric_list:
+                continue
+            entry = metric_list[0]
+            if not isinstance(entry, dict):
+                continue
+            cvss_data = entry.get("cvssData", {}) or entry
+            score = cvss_data.get("baseScore")
+            # NVD API 2.0 keeps ``baseSeverity`` inside ``cvssData`` for
+            # V30/V31/V40, but at the entry level (sibling of ``cvssData``)
+            # for CVSSv2 — so fall back to the entry itself for v2 records.
+            severity = cvss_data.get("baseSeverity") or entry.get("baseSeverity")
+            vector = cvss_data.get("vectorString")
+            out: dict[str, Any] = {}
+            if score is not None:
+                out["score"] = score
+            if severity:
+                out["severity"] = severity
+            if vector:
+                out["vector"] = vector
+            if out:
+                out["version"] = version
+                return out
+        return None

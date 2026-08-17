@@ -19,6 +19,7 @@ from slopsearx.adapter import (
     register_engine,
     sanitize_url,
 )
+from slopsearx.payload import DOMAIN_MEDIA, build_payload
 
 
 @register_engine
@@ -94,6 +95,8 @@ class TMDBAdapter(EngineAdapter):
 
                     overview = item.get("overview", "") or ""
                     vote = item.get("vote_average", 0) or 0
+                    vote_raw = item.get("vote_average")
+                    vote_average = float(vote_raw) if vote_raw is not None else None
                     poster = item.get("poster_path")
 
                     content = f"[{_type}] "
@@ -106,6 +109,19 @@ class TMDBAdapter(EngineAdapter):
                     if poster:
                         thumbnail = f"https://image.tmdb.org/t/p/w200{poster}"
 
+                    payload = build_payload(
+                        DOMAIN_MEDIA,
+                        "media_item",
+                        {
+                            "media_type": media_type or None,
+                            "title": title or None,
+                            "release_date": date or None,
+                            "overview": overview or None,
+                            "vote_average": vote_average,
+                        },
+                        engine=self.name,
+                    )
+
                     results.append(
                         SearchResult(
                             url=f"https://www.themoviedb.org/{media_type}/{item.get('id', '')}" if media_type else "",
@@ -116,6 +132,7 @@ class TMDBAdapter(EngineAdapter):
                             score=float(vote) if vote else 0.0,
                             published_date=date if date else None,
                             thumbnail=thumbnail,
+                            payload=payload,
                         ),
                     )
 

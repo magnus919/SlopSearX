@@ -507,7 +507,7 @@ Intent-based search — the primary entry point.
 | `time_range` | string | `day`/`month`/`year` — **not enforced by adapters** (warning returned) |
 | `safesearch` | string | `off` (default), `moderate`, `strict`. **Strict fails closed**: no adapter enforces it |
 | `max_results` | int | presentation bound, capped at `MCP_MAX_RESULTS` |
-| `include` | string[] | subset of `results`, `suggestions`, `engine_status`, `diagnostics` |
+| `include` | string[] | subset of `results`, `suggestions`, `engine_status`, `diagnostics`, `payload` |
 | `freshness` | string | `no_preference` (default), `prefer_cache`, `prefer_fresh` |
 
 ### 6.2 `slopsearx_search_targeted`
@@ -620,7 +620,7 @@ existing tools cover the same needs with no extra surface area:
 
 - **Field / detail selection.** `slopsearx_search(include=[...])` selects
   which envelope sections to return (`results`, `suggestions`,
-  `engine_status`, `diagnostics`). Detail is progressive: cards are compact
+  `engine_status`, `diagnostics`, `payload`). Detail is progressive: cards are compact
   and `slopsearx_read_result` expands a card into a full record (complete
   `content`, media, every contributing engine, provenance) without a new
   tool. `max_results` bounds the presented page.
@@ -642,6 +642,67 @@ add a second way to express the same request. Keeping one search surface
 with progressive disclosure is the deliberate, documented decision; the
 capability catalog is the canonical way to inspect what a source supports.
 
+### 6.15 Structured domain payloads
+
+Some adapters return structured fields that do not fit the common result
+envelope (e.g. a CVE's CVSS vector, a paper's authors, a package's license, a
+job's salary, a movie's release date, a FRED series' units, or an FDA drug
+label's active substance). SlopSearX preserves these as an **optional,
+versioned payload** attached to a result, rather than flattening them into a
+single generic snippet.
+
+A payload is self-describing:
+
+```json
+{
+  "domain": "security",
+  "type": "vulnerability",
+  "schema_version": 1,
+  "data": { "cve_id": "CVE-2024-12345", "cvss": { "score": 9.8 } },
+  "provenance": {
+    "engine": "nvd",
+    "adapter_fields": ["cve_id", "cvss"],
+    "normalized_fields": [],
+    "inferred_fields": []
+  }
+}
+```
+
+- `domain` is one of `security`, `science`, `packages`, `jobs`, `media`,
+  `financial`, `biomedical`; `type` narrows it within the family (e.g.
+  `vulnerability`, `publication`, `package`, `job`, `media_item`,
+  `economic_series`, `drug_label`). `schema_version` versions the envelope.
+- `provenance` distinguishes `adapter_fields` (reported by the source) from
+  `normalized_fields` (mapped from the common envelope) and `inferred_fields`
+  (derived by the pipeline). `data` never invents fields the adapter did not
+  return — an absent field is absent, not `null`/`false`/empty.
+- Results **without** a payload remain valid and backward-compatible; the
+  common envelope is their complete representation.
+
+Disclosure follows the same progressive model as content:
+
+- **Compact cards** inline a payload only when the caller passed
+  `include=["payload"]` or the serialized payload is small enough to inline.
+- **`slopsearx_read_result`** returns the complete available payload
+  (`payload`), or `null` when the result has none (or an unserializable
+  payload), so an agent never has to rediscover the source to reason over
+  structured fields.
+
+The canonical cache/snapshot form also bounds what is persisted: a payload is
+stored only when its serialized size is ≤ `PAYLOAD_MAX_PERSIST_BYTES`
+(default 16384 = 16 KiB, overridable via the `PAYLOAD_MAX_PERSIST_BYTES`
+environment variable). This is distinct from the 512-byte compact-disclosure
+cap — the smaller cap keeps triage cards small, while the persistence bound
+prevents the shared Valkey cache and snapshots from absorbing unbounded
+payloads. A payload above the persistence bound is dropped from the persisted
+form and therefore reads back as `null` on `slopsearx_read_result`.
+
+**Payloads are source-derived evidence, not verification.** They are exactly
+what the adapter reported; SlopSearX did not fetch or verify the linked page,
+did not fill in missing fields, and draws no domain-specific conclusions from
+them. A CVSS score in a payload is the score the source reported, not an
+independent assessment.
+
 ## 7. Resources and prompts
 
 Read resources instead of guessing: `slopsearx://capabilities`,
@@ -661,7 +722,9 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
 - **Treat results as leads, not facts.** SlopSearX returns titles, URLs, and
   snippets. It never fetches or verifies page bodies. The `score` is a
   cross-engine presence signal (`tier_then_cross_engine_presence`), not
-  relevance confidence.
+  relevance confidence. Structured `payload` fields are source-derived
+  evidence — exactly what the adapter reported — not verification or
+  analysis.
 - **Paginate with cursors.** `meta.cursor` → `slopsearx_read_results`.
   Pages come from captured evidence; the query never re-runs.
 - **Do not invent engines.** Read `slopsearx://capabilities` for the live

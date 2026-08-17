@@ -66,6 +66,7 @@ Source: `slopsearx/adapter.py:78-91`. The internal normalized result dataclass.
 | `thumbnail` | `Optional[str]` | *(omitted)* | `thumbnail` | **Media is record-only** (design §4.4 / decision 4; `VAL-EXPAND-006`). Omitted from cards by deliberate choice. |
 | `img_src` | `Optional[str]` | *(omitted)* | `img_src` | **Media is record-only**. Omitted from cards by deliberate choice. |
 | `tier` | `int` (1 or 2) | `tier` | `tier` | PresenceRanker tier; 1 = broad, 2 = specialized. `meta.ranking` states `tier_then_cross_engine_presence`. |
+| `payload` | `Optional[dict]` | `payload` (conditionally) | `payload` (full) | Optional versioned domain payload (see §14). Cards inline it only when `include=["payload"]` was requested or the serialized payload is small enough (`PAYLOAD_INLINE_BYTES = 512`) — and, in both cases, only when it is within `PAYLOAD_MAX_PERSIST_BYTES`; otherwise it is omitted from cards. Records carry the complete payload when it is within `PAYLOAD_MAX_PERSIST_BYTES`, or `null` when the result has none, the payload is unserializable, or it exceeds the persistence bound. |
 
 Additional record-only fields synthesized at the MCP boundary (not on the
 internal model, but derived from it):
@@ -342,11 +343,17 @@ serialization boundary must round-trip exactly. Documented guarantees
   (`search_result_to_dict`); rehydration (`search_result_from_dict`) is robust
   to lists and legacy stringified-set values — never iterating string
   characters.
+- `SearchResult.payload` is canonicalized through
+  `slopsearx.payload.payload_to_dict` (sets/tuples → lists, JSON-safe
+  primitives) at the boundary and rehydrated through
+  `slopsearx.payload.payload_from_dict`; missing/malformed values yield
+  `None`, so a broken payload never crashes the read path.
 - The cache stores the **canonical full response**; the MCP read boundary
   derives the requested `include`/`max_results` view so a cached response never
   disagrees with the current request.
 - Optional/nullable fields (`thumbnail`, `img_src`, `published_date`, `category`,
-  `score`, `tier`, `position`) and empty collections round-trip as exact values.
+  `score`, `tier`, `position`, `payload`) and empty collections round-trip as
+  exact values.
 - Snapshot payloads preserve engine provenance across `SnapshotStore.create` →
   read → rehydrate.
 
@@ -383,3 +390,67 @@ Every name in this mapping matches the schema pins in `validation-contract.md`:
 If a field name in this document ever diverges from the implemented source or
 the contract pins, the contract pins and source are authoritative and this
 document must be corrected.
+
+---
+
+## 14. Structured domain payloads
+
+Source: `slopsearx/payload.py` (envelope contract and initial typed schemas),
+attached by adapters via `SearchResult.payload` and mapped at the MCP boundary
+in `tools.py` (`_payload_inline`, `_result_to_dict`, `_result_record`).
+
+### 14.1 Envelope
+
+A payload is an optional, self-describing object:
+
+| Key | Type | Meaning |
+|---|---|---|
+| `domain` | `str` | Stable family: `security`, `science`, `packages`, `jobs`, `media`, `financial`, `biomedical`. |
+| `type` | `str` | Narrower type within the family (e.g. `vulnerability`, `publication`, `package`, `job`, `media_item`, `economic_series`, `drug_label`). |
+| `schema_version` | `int` | Version of the envelope schema (currently `1`). |
+| `data` | `dict` | Domain-typed fields actually reported by the adapter. |
+| `provenance` | `dict` | `engine` plus `adapter_fields`, `normalized_fields`, `inferred_fields` lists distinguishing field origin. |
+
+`data` never invents fields the adapter did not return: `build_payload` drops
+`None` values, so an absent source field stays absent rather than becoming a
+fabricated `null`/`false`/empty value.
+
+### 14.2 Disclosure (progressive)
+
+- **Card** (`slopsearx_search` and friends): `payload` is present only when
+  the caller requested `include=["payload"]` or the serialized payload is ≤
+  `PAYLOAD_INLINE_BYTES` (512) — and, in both cases, only when it is within
+  `PAYLOAD_MAX_PERSIST_BYTES`. Otherwise the key is omitted.
+- **Paginated card** (`slopsearx_read_results`): `payload` is inlined only
+  when the serialized payload is ≤ `PAYLOAD_INLINE_BYTES` (512); this tool
+  has no `include` parameter.
+- **Record** (`slopsearx_read_result`): `payload` is present with the
+  complete payload when it is within `PAYLOAD_MAX_PERSIST_BYTES`, or `null`
+  when the result has none, the payload is unserializable, or it exceeds the
+  persistence bound.
+
+### 14.3 Source-derived evidence
+
+Payload `data` is exactly what the adapter reported. SlopSearX does not fetch
+or verify the linked page, does not fill in missing fields, and draws no
+domain-specific conclusions from payload fields — a reported CVSS score is the
+source's score, not an independent assessment.
+
+### 14.4 Persistence bound
+
+The canonical cache/snapshot form (`search_result_to_dict`,
+`slopsearx/payload.py::payload_for_persistence`) stores a payload only when
+its serialized size is ≤ `PAYLOAD_MAX_PERSIST_BYTES` (default 16384 = 16 KiB,
+overridable via the `PAYLOAD_MAX_PERSIST_BYTES` environment variable).
+Payloads above that bound are omitted from the persisted form, so the shared
+Valkey cache and snapshots never grow without limit when an adapter reports a
+very large structured payload.
+
+This is a distinct, coarser bound than the 512-byte compact-disclosure cap:
+the 512-byte cap keeps triage cards small, while the persistence bound caps
+memory amplification in shared state. Cards honor the persistence bound even
+for an explicit `include=["payload"]` request, so a card never shows a payload
+that the record path would return as `null`. Tradeoff: a payload between 512
+bytes and `PAYLOAD_MAX_PERSIST_BYTES` is hidden on cards but fully preserved on
+`slopsearx_read_result`; a payload above the persistence bound is dropped from
+the persisted form and therefore reads back as `null` on `slopsearx_read_result`.

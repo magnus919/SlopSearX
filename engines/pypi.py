@@ -12,6 +12,7 @@ from typing import Any
 import httpx
 
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult, register_engine
+from slopsearx.payload import DOMAIN_PACKAGES, build_payload
 
 
 @register_engine
@@ -68,6 +69,7 @@ class PyPIAdapter(EngineAdapter):
                                 engine=self.name,
                                 position=1,
                                 score=1.0,
+                                payload=self._package_payload(info, name),
                             ),
                         ],
                         status=EngineStatus.OK,
@@ -137,6 +139,7 @@ class PyPIAdapter(EngineAdapter):
                                     engine=self.name,
                                     position=len(results) + 1,
                                     score=1.0,
+                                    payload=self._package_payload(info, name),
                                 ),
                             )
                     except Exception:
@@ -152,3 +155,18 @@ class PyPIAdapter(EngineAdapter):
                 error_message=str(exc),
                 latency_ms=latency,
             )
+
+    def _package_payload(self, info: dict[str, Any], name: str) -> dict[str, Any]:
+        """Build the ``packages/package`` payload from a PyPI ``info`` object."""
+        return build_payload(
+            DOMAIN_PACKAGES,
+            "package",
+            {
+                "name": info.get("name") or name or None,
+                "version": info.get("version") or None,
+                "summary": info.get("summary") or None,
+                "license": info.get("license") or None,
+                "homepage": info.get("home_page") or None,
+            },
+            engine=self.name,
+        )
