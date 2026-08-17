@@ -386,6 +386,11 @@ class MCPPolicy:
     job_max_engines_per_query: int = 10
     job_max_results: int = 500
     job_default_deadline_seconds: int = 600
+    # Durable research execution: lease visibility timeout, idle-worker poll
+    # interval, and bounded per-replica job concurrency.
+    job_lease_ttl_seconds: int = 60
+    job_poll_interval_seconds: float = 1.0
+    job_max_concurrent_jobs: int = 1
     # Empty token = authentication disabled (stdio transport is trusted by
     # process-launch boundary; HTTP transport requires a token).
     auth_token: str = ""
@@ -466,10 +471,15 @@ def _apply_mcp_section(policy: MCPPolicy, section: dict[str, Any]) -> None:
         ("job_max_engines_per_query", 10),
         ("job_max_results", 500),
         ("job_default_deadline_seconds", 600),
+        ("job_lease_ttl_seconds", 60),
+        ("job_max_concurrent_jobs", 1),
     ):
         value = section.get(key)
         if isinstance(value, int) and value > 0:
             setattr(policy, key, value)
+    poll_interval = section.get("job_poll_interval_seconds")
+    if isinstance(poll_interval, (int, float)) and poll_interval > 0:
+        policy.job_poll_interval_seconds = float(poll_interval)
     token = section.get("auth_token")
     if isinstance(token, str):
         policy.auth_token = token
@@ -520,6 +530,8 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
         "MCP_JOB_MAX_ENGINES_PER_QUERY": "job_max_engines_per_query",
         "MCP_JOB_MAX_RESULTS": "job_max_results",
         "MCP_JOB_DEFAULT_DEADLINE_SECONDS": "job_default_deadline_seconds",
+        "MCP_JOB_LEASE_TTL_SECONDS": "job_lease_ttl_seconds",
+        "MCP_JOB_MAX_CONCURRENT_JOBS": "job_max_concurrent_jobs",
     }
     for env_var, attr in int_map.items():
         raw = os.environ.get(env_var, "").strip()
@@ -530,6 +542,15 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
                 continue
             if parsed > 0:
                 setattr(policy, attr, parsed)
+
+    raw_poll = os.environ.get("MCP_JOB_POLL_INTERVAL_SECONDS", "").strip()
+    if raw_poll:
+        try:
+            parsed_poll = float(raw_poll)
+        except ValueError:
+            parsed_poll = 0.0
+        if parsed_poll > 0:
+            policy.job_poll_interval_seconds = parsed_poll
 
     token = os.environ.get("MCP_AUTH_TOKEN")
     if token is not None:

@@ -120,7 +120,16 @@ async def _lifespan(
     expired = await job_store.expire_stale_running()
     if expired:
         logger.warning("MCP startup: expired %d stale running research job(s)", expired)
-    runner = ResearchJobRunner(service, job_store, snapshots, catalog, policy)
+    runner = ResearchJobRunner(
+        service,
+        job_store,
+        snapshots,
+        catalog,
+        policy,
+        lease_ttl=policy.job_lease_ttl_seconds,
+        poll_interval=policy.job_poll_interval_seconds,
+        max_concurrent_jobs=policy.job_max_concurrent_jobs,
+    )
     state = McpState(
         ctx=ctx,
         policy=policy,

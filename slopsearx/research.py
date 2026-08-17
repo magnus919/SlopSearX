@@ -15,11 +15,13 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import json
 import logging
+import secrets
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 from slopsearx.adapter import EngineStatus
 from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, resolve_intent
@@ -36,7 +38,30 @@ logger = logging.getLogger(__name__)
 
 JOB_KEY_PREFIX = "mcp:job"
 IDEMPOTENCY_PREFIX = "mcp:idem"
+LEASE_KEY_PREFIX = "mcp:joblease"
+CANCEL_KEY_PREFIX = "mcp:jobcancel"
 JOB_RETENTION_SECONDS = 86_400  # 24 hours
+DEFAULT_JOB_LEASE_TTL_SECONDS = 60
+DEFAULT_JOB_POLL_INTERVAL_SECONDS = 1.0
+
+
+class LeaseLostError(Exception):
+    """Raised when a worker loses ownership of a job mid-execution.
+
+    The runner catches this and stops without finalizing, leaving the job
+    ``running`` so the next owner reclaims and resumes the remaining work.
+    """
+
+
+class JobStillRunningError(Exception):
+    """Raised when a direct run would race a live worker's execution.
+
+    Retry/extend load a job that may still be actively executed by a worker
+    that holds a live lease. Clearing its lease fields and running directly
+    would cause concurrent execution, so the caller surfaces "job still
+    running" instead of dispatching work.
+    """
+
 
 JOB_STATES = frozenset({"queued", "running", "partial", "succeeded", "failed", "cancelled", "expired"})
 QUERY_STATES = frozenset({"pending", "running", "done", "failed", "cancelled"})
@@ -60,6 +85,42 @@ FAILURE_CLASS_TOKENS: tuple[str, ...] = (
     "unavailable",
     "auth_required",
 )
+
+# Atomic compare-and-set used by :meth:`ResearchJobStore.save_if_owned`.
+# KEYS[1] is the lease key, KEYS[2] is the job-record key; ARGV[1] is the
+# lease token, ARGV[2] the record TTL, ARGV[3] the serialized job payload.
+# The check (does this token still own the lease) and the write happen in a
+# single Lua call so a concurrent reclamation cannot race between them.
+_LEASE_SAVE_SCRIPT = """
+if redis.call('GET', KEYS[1]) ~= ARGV[1] then
+    return 0
+end
+redis.call('SETEX', KEYS[2], ARGV[2], ARGV[3])
+return 1
+"""
+
+# Atomic lease renewal used by :meth:`ResearchJobStore._lease_renew`.
+# KEYS[1] is the lease key; ARGV[1] is the lease token, ARGV[2] the new TTL.
+# The check (does this token still own the lease) and the SETEX happen in a
+# single Lua call so a concurrent reclamation cannot race between them.
+_LEASE_RENEW_SCRIPT = """
+if redis.call('GET', KEYS[1]) ~= ARGV[1] then
+    return 0
+end
+redis.call('SETEX', KEYS[1], ARGV[2], ARGV[1])
+return 1
+"""
+
+# Atomic lease release used by :meth:`ResearchJobStore._lease_release`.
+# KEYS[1] is the lease key; ARGV[1] is the lease token. The check (does this
+# token still own the lease) and the DEL happen in a single Lua call.
+_LEASE_RELEASE_SCRIPT = """
+if redis.call('GET', KEYS[1]) ~= ARGV[1] then
+    return 0
+end
+redis.call('DEL', KEYS[1])
+return 1
+"""
 
 
 # ---------------------------------------------------------------------------
@@ -242,6 +303,25 @@ def is_retryable_query(query: ResearchQuery) -> bool:
     return False
 
 
+def _reset_retryable_queries(job: ResearchJob) -> None:
+    """Re-apply a retry reset onto an authoritative job record.
+
+    Resets any still-retryable (failed/empty) subqueries to ``pending`` and
+    marks the job ``running``. Never resurrects a cancelled/expired job, and
+    leaves a record with no retryable work untouched, so a record that was
+    concurrently finalized by a durable worker (or a cancel request) is
+    preserved as-is.
+    """
+    if job.state in ("cancelled", "expired"):
+        return
+    retryable = [query for query in job.queries if is_retryable_query(query)]
+    if not retryable:
+        return
+    job.state = "running"
+    for query in retryable:
+        query.state = "pending"
+
+
 def _attempt_from_query(query: ResearchQuery) -> ResearchQueryAttempt:
     """Snapshot the query's current fields as one immutable attempt."""
     return ResearchQueryAttempt(
@@ -269,6 +349,12 @@ class ResearchJob:
     tenant: str = "default"
     idempotency_key: str | None = None
     cancel_requested: bool = False
+    # Durable-execution lease fields. ``owner_id`` identifies the replica,
+    # ``lease_token`` proves ownership, and ``lease_expires_at`` is the
+    # visibility timeout. None/0.0 means the job is not currently leased.
+    owner_id: str | None = None
+    lease_token: str | None = None
+    lease_expires_at: float = 0.0
 
     @property
     def progress(self) -> tuple[int, int]:
@@ -284,7 +370,21 @@ class ResearchJob:
 
 
 class ResearchJobStore:
-    """Valkey-backed persistence for research jobs."""
+    """Valkey-backed persistence and durable execution coordination.
+
+    Beyond plain persistence, this store implements a distributed
+    claim/lease model so multiple replicas can execute research jobs
+    without double delivery:
+
+    - :meth:`claim` atomically moves a ``queued`` (or lease-expired
+      ``running``) job to ``running`` under a unique lease token. The
+      atomic primitive is Valkey ``SET NX`` (or an equivalent in-memory
+      store primitive), so exactly one replica wins.
+    - :meth:`renew` extends the visibility timeout while a worker is
+      still executing; :meth:`release` drops it on completion.
+    - :meth:`request_cancel` records a durable, race-free cancellation
+      flag and finalizes immediately when no worker holds the lease.
+    """
 
     def __init__(self, store: KeyValueStore | None, tenant: str = "default") -> None:
         self._store = store
@@ -294,11 +394,32 @@ class ResearchJobStore:
     def available(self) -> bool:
         return self._store is not None and self._store.is_connected
 
+    @property
+    def durable(self) -> bool:
+        """Whether the backing store is shared Valkey (durable across replicas)."""
+        store = self._store
+        if store is None or not store.is_connected:
+            return False
+        client = getattr(store, "_client", None)
+        return client is not None and hasattr(client, "get") and hasattr(client, "set")
+
+    def for_tenant(self, tenant: str) -> "ResearchJobStore":
+        """Return a tenant-scoped view sharing the same backing store."""
+        if tenant == self._tenant:
+            return self
+        return ResearchJobStore(self._store, tenant=tenant)
+
     def _key(self, job_id: str) -> str:
         return f"{JOB_KEY_PREFIX}:{self._tenant}:{job_id}"
 
     def _idem_key(self, idempotency_key: str) -> str:
         return f"{IDEMPOTENCY_PREFIX}:{self._tenant}:{idempotency_key}"
+
+    def _lease_key(self, job_id: str) -> str:
+        return f"{LEASE_KEY_PREFIX}:{self._tenant}:{job_id}"
+
+    def _cancel_key(self, job_id: str) -> str:
+        return f"{CANCEL_KEY_PREFIX}:{self._tenant}:{job_id}"
 
     async def save(self, job: ResearchJob) -> None:
         """Persist a job. No-op when the store is unavailable."""
@@ -314,8 +435,56 @@ class ResearchJobStore:
                 JOB_RETENTION_SECONDS,
             )
 
+    async def save_if_owned(self, job: ResearchJob) -> bool:
+        """Persist a job only if the caller still owns its lease.
+
+        Returns ``True`` when the job was persisted (or when it has no
+        lease, e.g. a direct retry/extend run) and ``False`` when the lease
+        was lost and the write was skipped. On Valkey the lease check and the
+        record write happen in one atomic Lua call (compare-and-set) so a
+        concurrent reclamation cannot race between them; the in-memory
+        fallback is check-then-save, which is atomic under single-threaded
+        asyncio (no await between the check and the write).
+        """
+        token = job.lease_token
+        if not token:
+            await self.save(job)
+            return True
+        store = self._store
+        if store is None or not store.is_connected:
+            return False
+        client = getattr(store, "_client", None)
+        eval_method = getattr(client, "eval", None) if client is not None else None
+        if eval_method is not None:
+            return await self._save_if_owned_valkey(eval_method, job, token)
+        if await self._lease_get(self._lease_key(job.job_id)) != token:
+            return False
+        await self.save(job)
+        return True
+
+    async def _save_if_owned_valkey(self, eval_method: Any, job: ResearchJob, token: str) -> bool:
+        """Atomic compare-and-set: persist ``job`` only if ``token`` still owns the lease."""
+        payload = json.dumps(_job_to_payload(job), default=str)
+        try:
+            result = await eval_method(
+                _LEASE_SAVE_SCRIPT,
+                2,
+                self._lease_key(job.job_id),
+                self._key(job.job_id),
+                token,
+                str(JOB_RETENTION_SECONDS),
+                payload,
+            )
+        except Exception:  # noqa: BLE001 — lease loss / transient store error
+            return False
+        return bool(result)
+
     async def load(self, job_id: str) -> ResearchJob | None:
-        """Load a job by ID, or None when missing/unavailable."""
+        """Load a job by ID, merging the durable cancellation flag.
+
+        Returns ``None`` when missing/unavailable or when the record's
+        tenant does not match this store's tenant.
+        """
         store = self._store
         if store is None or not store.is_connected:
             return None
@@ -325,6 +494,11 @@ class ResearchJobStore:
         job = _job_from_payload(payload)
         if job.tenant != self._tenant:
             return None
+        # Merge the race-free cancellation signal (a separate key, so a
+        # concurrent worker's job-record writes can never clobber it).
+        cancel_payload = await store.get(self._cancel_key(job_id))
+        if cancel_payload and cancel_payload.get("cancel_requested"):
+            job.cancel_requested = True
         return job
 
     async def find_by_idempotency(self, idempotency_key: str) -> ResearchJob | None:
@@ -340,39 +514,374 @@ class ResearchJobStore:
             return None
         return await self.load(job_id)
 
-    async def expire_stale_running(self) -> int:
-        """Mark jobs left in ``running`` by a dead process as ``expired``.
+    async def _scan_job_ids(self) -> list[str]:
+        """List this tenant's persisted job IDs."""
+        store = self._store
+        if store is None or not store.is_connected:
+            return []
+        prefix = f"{JOB_KEY_PREFIX}:{self._tenant}:"
+        keys = await _scan_keys(store, f"{JOB_KEY_PREFIX}:{self._tenant}:*")
+        return [key[len(prefix) :] for key in keys if key.startswith(prefix)]
 
-        Returns the number of jobs expired. Called at MCP server startup.
+    async def scan_tenants(self) -> list[str]:
+        """Enumerate the distinct tenant namespaces that have job records.
+
+        Job keys are ``{JOB_KEY_PREFIX}:{tenant}:{job_id}`` and job ids never
+        contain ``:``, so the tenant is everything between the prefix and the
+        FINAL colon. Parsing on the first colon would truncate a tenant whose
+        name itself contains ``:`` (e.g. an OAuth ``client_id``), and its jobs
+        would never be claimed by the durable poll loop.
+        """
+        store = self._store
+        if store is None or not store.is_connected:
+            return []
+        prefix = f"{JOB_KEY_PREFIX}:"
+        tenants: set[str] = set()
+        for key in await _scan_keys(store, f"{JOB_KEY_PREFIX}:*"):
+            if not key.startswith(prefix):
+                continue
+            rest = key[len(prefix) :]
+            if ":" in rest:
+                tenants.add(rest.rsplit(":", 1)[0])
+        return sorted(tenants)
+
+    async def expire_stale_running(self) -> int:
+        """Expire unowned ``running`` jobs whose deadline has passed.
+
+        An unowned ``running`` job with a future deadline is left alone so the
+        durable worker loop can reclaim and resume it (orphan recovery). A job
+        whose deadline has already passed cannot make progress, so it is
+        finalized to ``expired`` here. Jobs still held by a live lease are
+        never touched. Returns the number expired.
         """
         store = self._store
         if store is None or not store.is_connected:
             return 0
-        # Enumerate running jobs by scanning tenant keys (bounded by
-        # prefix scan in Valkey).
         expired = 0
+        now = time.time()
         try:
-            client = getattr(store, "_client", None)
-            if client is None:
-                return 0
-            pattern = f"{JOB_KEY_PREFIX}:{self._tenant}:*"
-            keys = await client.keys(pattern)
-            for raw_key in keys:
-                key = raw_key.decode() if isinstance(raw_key, bytes) else str(raw_key)
-                payload = await store.get(key)
-                if payload is None:
+            for job_id in await self._scan_job_ids():
+                job = await self.load(job_id)
+                if job is None or job.state != "running":
                     continue
-                job = _job_from_payload(payload)
-                if job.state == "running":
-                    job.state = "expired"
-                    for query in job.queries:
-                        if query.state in ("pending", "running"):
-                            query.state = "cancelled"
-                    await self.save(job)
-                    expired += 1
+                if await self._lease_get(self._lease_key(job_id)) is not None:
+                    continue
+                if job.deadline > now:
+                    continue
+                job.state = "expired"
+                for query in job.queries:
+                    if query.state in ("pending", "running"):
+                        query.state = "cancelled"
+                await self.save(job)
+                expired += 1
         except Exception as exc:  # noqa: BLE001 — graceful degradation
             logger.warning("ResearchJobStore: stale-job scan failed: %s", exc)
         return expired
+
+    # -- lease primitives -------------------------------------------------
+
+    async def _lease_get(self, key: str) -> str | None:
+        """Return the lease token held at ``key``, or None."""
+        store = self._store
+        if store is None or not store.is_connected:
+            return None
+        client = getattr(store, "_client", None)
+        if client is not None and hasattr(client, "get") and hasattr(client, "set"):
+            try:
+                raw = await client.get(key)
+            except Exception:  # noqa: BLE001 — graceful degradation
+                return None
+            if raw is None:
+                return None
+            return raw.decode() if isinstance(raw, bytes) else str(raw)
+        value: Any = await store.get(key)
+        if value is None:
+            return None
+        if isinstance(value, dict):
+            token = value.get("token")
+            return str(token) if token else None
+        return str(value)
+
+    async def _lease_acquire(self, key: str, token: str, ttl: int) -> bool:
+        """Atomically acquire a lease (SET NX) and return success."""
+        store = self._store
+        if store is None or not store.is_connected:
+            return False
+        client = getattr(store, "_client", None)
+        if client is not None and hasattr(client, "set") and hasattr(client, "get"):
+            try:
+                result = await client.set(key, token, nx=True, ex=ttl)
+            except Exception:  # noqa: BLE001 — graceful degradation
+                return False
+            return bool(result)
+        method = getattr(store, "acquire_lease", None)
+        if method is not None:
+            return bool(await method(key, token, ttl))
+        method = getattr(store, "set_nx", None)
+        if method is not None:
+            return bool(await method(key, {"token": token}, ttl))
+        # Non-atomic fallback for single-process stores (safe because no
+        # concurrent replica shares the process).
+        if await self._lease_get(key) is not None:
+            return False
+        await store.set(key, {"token": token}, ttl)
+        return True
+
+    async def _lease_renew(self, key: str, token: str, ttl: int) -> bool:
+        """Extend a lease only if it is still held by ``token``.
+
+        On a Valkey client this is a single atomic Lua compare-and-set
+        (GET + compare + SETEX in one EVAL), so a stale owner whose lease was
+        reclaimed cannot renew over the reclaimer's token. Falls back to the
+        non-Lua check-then-set path only when the client has no ``eval``.
+        """
+        store = self._store
+        if store is None or not store.is_connected:
+            return False
+        client = getattr(store, "_client", None)
+        eval_method = getattr(client, "eval", None) if client is not None else None
+        if eval_method is not None:
+            try:
+                return bool(await eval_method(_LEASE_RENEW_SCRIPT, 1, key, token, str(ttl)))
+            except Exception:  # noqa: BLE001 — graceful degradation
+                return False
+        if client is not None and hasattr(client, "get") and hasattr(client, "set"):
+            try:
+                current = await client.get(key)
+                if current is None:
+                    return False
+                current_s = current.decode() if isinstance(current, bytes) else str(current)
+                if current_s != token:
+                    return False
+                await client.set(key, token, ex=ttl)
+                return True
+            except Exception:  # noqa: BLE001 — graceful degradation
+                return False
+        method = getattr(store, "renew_lease", None)
+        if method is not None:
+            return bool(await method(key, token, ttl))
+        if await self._lease_get(key) != token:
+            return False
+        await store.set(key, {"token": token}, ttl)
+        return True
+
+    async def _lease_release(self, key: str, token: str) -> bool:
+        """Release a lease only if it is still held by ``token``.
+
+        On a Valkey client this is a single atomic Lua compare-and-delete
+        (GET + compare + DEL in one EVAL), so a stale owner whose lease was
+        reclaimed cannot delete the reclaimer's lease. Falls back to the
+        non-Lua check-then-delete path only when the client has no ``eval``.
+        """
+        store = self._store
+        if store is None or not store.is_connected:
+            return False
+        client = getattr(store, "_client", None)
+        eval_method = getattr(client, "eval", None) if client is not None else None
+        if eval_method is not None:
+            try:
+                return bool(await eval_method(_LEASE_RELEASE_SCRIPT, 1, key, token))
+            except Exception:  # noqa: BLE001 — graceful degradation
+                return False
+        if client is not None and hasattr(client, "get") and hasattr(client, "delete"):
+            try:
+                current = await client.get(key)
+                if current is None:
+                    return False
+                current_s = current.decode() if isinstance(current, bytes) else str(current)
+                if current_s != token:
+                    return False
+                await client.delete(key)
+                return True
+            except Exception:  # noqa: BLE001 — graceful degradation
+                return False
+        method = getattr(store, "release_lease", None)
+        if method is not None:
+            return bool(await method(key, token))
+        if await self._lease_get(key) != token:
+            return False
+        delete = getattr(store, "delete", None)
+        if delete is not None:
+            await delete(key)
+            return True
+        data = getattr(store, "_data", None)
+        if data is not None:
+            data.pop(key, None)
+            return True
+        return False
+
+    # -- durable claim / lease lifecycle ----------------------------------
+
+    async def claim(self, job_id: str, owner_id: str, lease_ttl: int) -> ResearchJob | None:
+        """Atomically claim a claimable job for ``owner_id``.
+
+        Claimable means ``queued`` or ``running`` with an expired/absent
+        lease. On success the job is persisted as ``running`` under a fresh
+        lease and any subquery left ``running`` by a dead owner is reset to
+        ``pending`` (orphan recovery). Returns ``None`` when the job is not
+        claimable or another replica won the race.
+        """
+        store = self._store
+        if store is None or not store.is_connected:
+            return None
+        # Cheap pre-filter: avoid lease churn on terminal jobs.
+        pre = await self.load(job_id)
+        if pre is None or pre.state not in ("queued", "running"):
+            return None
+        token = generate_lease_token()
+        if not await self._lease_acquire(self._lease_key(job_id), token, lease_ttl):
+            return None
+        # Re-load under the lease (authoritative; another replica may have
+        # finalized the job between the pre-filter and the lease win).
+        job = await self.load(job_id)
+        if job is None or job.state not in ("queued", "running"):
+            await self._lease_release(self._lease_key(job_id), token)
+            return None
+        elif time.time() >= job.deadline:
+            # A deadline-passed job can no longer make progress: finalize it to
+            # ``expired`` (matching ``_run_job``/``retry``/``expire_stale_running``)
+            # instead of handing it to a worker that would classify it
+            # ``partial``/``failed`` when the deadline gate fires mid-run.
+            for query in job.queries:
+                if query.state in ("pending", "running"):
+                    query.state = "cancelled"
+            job.state = "expired"
+            await self.save(job)
+            await self._lease_release(self._lease_key(job_id), token)
+            return None
+        for query in job.queries:
+            if query.state == "running":
+                query.state = "pending"
+        job.state = "running"
+        job.owner_id = owner_id
+        job.lease_token = token
+        job.lease_expires_at = time.time() + lease_ttl
+        await self.save(job)
+        return job
+
+    async def _claim_prepared(
+        self,
+        job: ResearchJob,
+        owner_id: str,
+        lease_ttl: int,
+        mutate: Callable[[ResearchJob], None] | None = None,
+    ) -> ResearchJob | None:
+        """Claim a job under a fresh lease, re-applying the caller's mutation.
+
+        Mirrors :meth:`claim`, but re-applies the caller's direct-run mutation
+        (reset-to-pending retry queries or an appended follow-up) to the
+        authoritative record *after* re-loading it under the lease, instead of
+        persisting the caller-supplied copy. The lease acquisition is the
+        atomic exclusion gate; the re-load validates claimability and the
+        deadline before writing, so a record concurrently finalized by another
+        worker is never clobbered.
+        """
+        store = self._store
+        if store is None or not store.is_connected:
+            return None
+        token = generate_lease_token()
+        if not await self._lease_acquire(self._lease_key(job.job_id), token, lease_ttl):
+            return None
+        current = await self.load(job.job_id)
+        if current is None:
+            await self._lease_release(self._lease_key(job.job_id), token)
+            return None
+        # Deadline finalization runs BEFORE the caller's mutation is applied or
+        # persisted: a claimable job whose deadline lapsed between the caller's
+        # deadline gate and this point is finalized to ``expired`` here, so a
+        # follow-up that can never run is not written into the record (and is
+        # therefore never appended twice by run_direct's terminal path).
+        if time.time() >= current.deadline:
+            for query in current.queries:
+                if query.state in ("pending", "running"):
+                    query.state = "cancelled"
+            current.state = "expired"
+            await self.save(current)
+            await self._lease_release(self._lease_key(job.job_id), token)
+            return None
+        # Re-apply the caller's intended mutation to the freshly loaded record
+        # while holding the lease, so a concurrent finalizer cannot interleave.
+        if mutate is not None:
+            mutate(current)
+        if current.state not in ("queued", "running"):
+            await self._lease_release(self._lease_key(job.job_id), token)
+            return None
+        # Preserve a cancellation request that landed after ``job`` was loaded.
+        current.cancel_requested = current.cancel_requested or job.cancel_requested
+        for query in current.queries:
+            if query.state == "running":
+                query.state = "pending"
+        current.state = "running"
+        current.owner_id = owner_id
+        current.lease_token = token
+        current.lease_expires_at = time.time() + lease_ttl
+        await self.save(current)
+        return current
+
+    async def claim_next(self, owner_id: str, lease_ttl: int) -> ResearchJob | None:
+        """Claim the next claimable job for this store's tenant."""
+        for job_id in await self._scan_job_ids():
+            job = await self.claim(job_id, owner_id, lease_ttl)
+            if job is not None:
+                return job
+        return None
+
+    async def claim_next_any_tenant(self, owner_id: str, lease_ttl: int) -> ResearchJob | None:
+        """Claim the next claimable job across all tenant namespaces."""
+        for tenant in await self.scan_tenants():
+            job = await self.for_tenant(tenant).claim_next(owner_id, lease_ttl)
+            if job is not None:
+                return job
+        return None
+
+    async def renew(self, job_id: str, token: str, lease_ttl: int) -> bool:
+        """Extend the lease on ``job_id`` if ``token`` still owns it."""
+        if not token:
+            return False
+        return await self._lease_renew(self._lease_key(job_id), token, lease_ttl)
+
+    async def release(self, job_id: str, token: str | None) -> None:
+        """Release the lease on ``job_id`` if ``token`` still owns it."""
+        if not token:
+            return
+        await self._lease_release(self._lease_key(job_id), token)
+
+    async def request_cancel(self, job_id: str) -> str:
+        """Record a durable cancellation request and finalize if unowned.
+
+        Returns the resulting job state: ``cancelled`` when finalized here,
+        ``running`` when a live worker still owns the lease (it will observe
+        the flag and finalize), or the existing terminal state.
+        """
+        store = self._store
+        if store is None or not store.is_connected:
+            return "unavailable"
+        # Terminal-state gate first: never write a durable cancel flag for a
+        # job that is already finished. Otherwise the flag would linger and
+        # silently cancel every later retry/extend of that terminal job.
+        job = await self.load(job_id)
+        if job is None:
+            return "unknown"
+        if job.state in ("succeeded", "partial", "failed", "cancelled", "expired"):
+            return job.state
+        # Durable, race-free signal: a separate key so the owner's
+        # job-record writes can never clobber the cancellation request.
+        await store.set(
+            self._cancel_key(job_id),
+            {"cancel_requested": True, "requested_at": time.time()},
+            JOB_RETENTION_SECONDS,
+        )
+        # A live owner will observe the flag on its next reload; leave the
+        # job record alone so we don't fight its intermediate writes.
+        if await self._lease_get(self._lease_key(job_id)) is not None:
+            return "running"
+        job.cancel_requested = True
+        job.state = "cancelled"
+        for query in job.queries:
+            if query.state in ("pending", "running"):
+                query.state = "cancelled"
+        await self.save(job)
+        return "cancelled"
 
 
 # ---------------------------------------------------------------------------
@@ -458,11 +967,15 @@ def plan_research_queries(
 
 
 class ResearchJobRunner:
-    """Background executor for research jobs (single in-process worker).
+    """Background executor for research jobs (durable, lease-based worker).
 
-    Jobs are processed one at a time, queries sequentially, respecting
-    each job's deadline. Cancellation stops undispatched work; in-flight
-    engine calls complete and their results are preserved.
+    Each replica runs one or more worker tasks. A worker claims the next
+    claimable job from the shared store under an exclusive lease (see
+    :meth:`ResearchJobStore.claim`), renews that lease while it executes,
+    and releases it on completion. Jobs are processed with bounded
+    concurrency; queries run sequentially within a job, respecting each
+    job's deadline. Cancellation stops undispatched work; in-flight engine
+    calls complete and their results are preserved.
     """
 
     def __init__(
@@ -472,42 +985,110 @@ class ResearchJobRunner:
         snapshot_store: SnapshotStore,
         catalog: CapabilityCatalog,
         policy: MCPPolicy,
+        *,
+        owner_id: str | None = None,
+        lease_ttl: int = DEFAULT_JOB_LEASE_TTL_SECONDS,
+        poll_interval: float = DEFAULT_JOB_POLL_INTERVAL_SECONDS,
+        max_concurrent_jobs: int = 1,
     ) -> None:
         self._service = service
         self._jobs = job_store
         self._snapshots = snapshot_store
         self._catalog = catalog
         self._policy = policy
-        self._queue: asyncio.Queue[str] = asyncio.Queue()
+        self._owner_id = owner_id or generate_owner_id()
+        self._lease_ttl = lease_ttl
+        self._poll_interval = poll_interval
+        self._max_concurrent_jobs = max(1, max_concurrent_jobs)
+        self._default_tenant = job_store._tenant
+        self._queue: asyncio.Queue[tuple[str, str]] = asyncio.Queue()
 
-    def enqueue(self, job_id: str) -> None:
-        """Queue a job for execution."""
-        self._queue.put_nowait(job_id)
+    @property
+    def worker_id(self) -> str:
+        """The replica-local worker identifier used for lease ownership."""
+        return self._owner_id
+
+    @property
+    def lease_ttl(self) -> int:
+        """The lease visibility timeout in seconds."""
+        return self._lease_ttl
+
+    @property
+    def poll_interval(self) -> float:
+        """How often an idle worker polls the shared store for claimable jobs."""
+        return self._poll_interval
+
+    @property
+    def max_concurrent_jobs(self) -> int:
+        """The bounded per-replica job-execution concurrency."""
+        return self._max_concurrent_jobs
+
+    def _jobs_for(self, tenant: str) -> ResearchJobStore:
+        return self._jobs.for_tenant(tenant)
+
+    def _snapshots_for(self, tenant: str) -> SnapshotStore:
+        return self._snapshots.for_tenant(tenant)
+
+    def enqueue(self, job_id: str, tenant: str = "default") -> None:
+        """Queue a job for immediate execution by this replica (fast path)."""
+        self._queue.put_nowait((tenant, job_id))
 
     async def run_pending(self, job: ResearchJob) -> ResearchJob:
         """Execute any pending/running subqueries, then finalize the job.
 
-        Used by the normal runner loop and by retry/extend so completed
+        Used by the durable worker loop and by retry/extend so completed
         evidence is preserved and the job's terminal state is recomputed
-        consistently (VAL-RESEARCH-008/009/011). Returns the final job.
+        consistently (VAL-RESEARCH-008/009/011). Reloads the job before each
+        subquery so cancellation/lease changes that land mid-run are observed.
+        Returns the final job.
         """
-        completed = 0
-        for query in job.queries:
+        store = self._jobs_for(job.tenant)
+        for index in range(len(job.queries)):
+            # Reload to observe cancellation or deadline changes that landed
+            # from another request (e.g. the cancel tool) mid-run.
+            fresh = await store.load(job.job_id)
+            if fresh is not None:
+                if fresh.owner_id is not None and fresh.owner_id != self._owner_id:
+                    raise LeaseLostError(job.job_id)
+                job = fresh
+            query = job.queries[index]
             if query.state in ("done", "failed", "cancelled"):
-                if query.state == "done":
-                    completed += 1
                 continue
             if job.cancel_requested:
                 query.state = "cancelled"
+                await store.save(job)
                 continue
             if time.time() >= job.deadline:
                 break
-            await self._execute_query(job, query)
-            if query.state == "done":
-                completed += 1
+            if job.lease_token:
+                lease_token: str = job.lease_token
+                if not await store.renew(job.job_id, lease_token, self._lease_ttl):
+                    raise LeaseLostError(job.job_id)
+
+                async def _keep_alive(job_id: str = job.job_id, token: str = lease_token) -> None:
+                    # Renew on a cadence shorter than the lease TTL so a
+                    # subquery that outlives the TTL is never reclaimed and
+                    # re-executed by another replica mid-flight.
+                    while True:
+                        await asyncio.sleep(max(self._lease_ttl / 3, 0.5))
+                        if not await store.renew(job_id, token, self._lease_ttl):
+                            return
+
+                keep_alive = asyncio.create_task(_keep_alive())
+                try:
+                    await self._execute_query(job, query)
+                finally:
+                    keep_alive.cancel()
+                    try:
+                        await keep_alive
+                    except asyncio.CancelledError:
+                        pass
+            else:
+                await self._execute_query(job, query)
 
         # Reload to observe any cancellation/deadline that landed mid-run.
-        job = await self._jobs.load(job.job_id) or job
+        job = await store.load(job.job_id) or job
+        completed = sum(1 for query in job.queries if query.state == "done")
         if job.cancel_requested:
             for query in job.queries:
                 if query.state in ("pending", "running"):
@@ -524,10 +1105,104 @@ class ResearchJobRunner:
             job.state = "partial"
         else:
             job.state = "failed"
-        await self._jobs.save(job)
+        await store.save(job)
         return job
 
-    async def retry(self, job_id: str) -> ResearchJob | None:
+    async def _raise_if_live_owned(self, job: ResearchJob) -> None:
+        """Raise :class:`JobStillRunningError` if ``job`` is live-lease-owned.
+
+        Liveness is checked against the lease key, not the record's
+        ``lease_token``/``owner_id`` fields (which survive a released/expired
+        lease), so a lease-expired orphan is not refused.
+        """
+        if job.state != "running" or not job.lease_token:
+            return
+        store = self._jobs_for(job.tenant)
+        live = await store._lease_get(store._lease_key(job.job_id))
+        if live == job.lease_token:
+            raise JobStillRunningError(job.job_id)
+
+    async def run_direct(
+        self,
+        job: ResearchJob,
+        *,
+        mutate: Callable[[ResearchJob], None] | None = None,
+    ) -> ResearchJob:
+        """Run a loaded job directly, claiming it first when claimable.
+
+        ``retry``/``extend`` load a job that may still carry lease fields from
+        a prior ``claim``/``release`` cycle: ``release`` deletes the Valkey
+        lease key but not the record fields. A claimable job (``queued`` or
+        ``running``) is claimed under a fresh lease before execution so a
+        concurrent durable worker excludes it (exactly-one-owner). Terminal
+        jobs are not claimable and still run lease-free exactly as before.
+
+        ``mutate``, when given, is the caller's intended direct-run mutation
+        (reset-to-pending retry queries or an appended follow-up). It is
+        applied to the freshly loaded record — never the caller's in-memory
+        copy — so a record that a durable worker finalized between the
+        caller's load and this call is reconciled, not clobbered.
+
+        A job that is still ``running`` under a *live* owner must not be
+        cleared or run here: that would race the owner's execution. Liveness
+        is checked against the lease key — not the record fields, which survive
+        a released/expired lease — so a lease-expired orphan is resumed rather
+        than refused. Live-owner calls raise :class:`JobStillRunningError` so
+        the tool can surface "job still running".
+        """
+        store = self._jobs_for(job.tenant)
+        fresh = await store.load(job.job_id) or job
+
+        await self._raise_if_live_owned(fresh)
+
+        claimed = await store._claim_prepared(fresh, self._owner_id, self._lease_ttl, mutate=mutate)
+        if claimed is not None:
+            try:
+                result = await self.run_pending(claimed)
+            finally:
+                await store.release(job.job_id, claimed.lease_token)
+            result.owner_id = None
+            result.lease_token = None
+            result.lease_expires_at = 0.0
+            await store.save(result)
+            return result
+
+        # Claim returned None. A claimable job that lost the lease race is now
+        # owned by another worker; running lease-free would double-execute.
+        current = await store.load(job.job_id)
+        if current is not None and current.state in ("queued", "running"):
+            raise JobStillRunningError(job.job_id)
+
+        # Terminal or non-claimable job: reconcile with the freshly loaded
+        # record (never the caller's stale copy) and re-apply the caller's
+        # intended mutation before persisting, so completed evidence written
+        # by a concurrently finalizing worker is preserved.
+        base = current if current is not None else fresh
+        if time.time() >= base.deadline:
+            # A deadline-passed job can no longer make progress: finalize it to
+            # ``expired`` (matching the claim/retry deadline finalization)
+            # instead of re-applying the caller's mutation and executing it.
+            # Running here would append a follow-up that can never run and let
+            # run_pending's mid-run deadline branch re-classify the record as
+            # ``partial``/``failed``, losing the ``expired`` terminal state.
+            for query in base.queries:
+                if query.state in ("pending", "running"):
+                    query.state = "cancelled"
+            base.state = "expired"
+            base.owner_id = None
+            base.lease_token = None
+            base.lease_expires_at = 0.0
+            await store.save(base)
+            return base
+        if mutate is not None:
+            mutate(base)
+        base.owner_id = None
+        base.lease_token = None
+        base.lease_expires_at = 0.0
+        await store.save(base)
+        return await self.run_pending(base)
+
+    async def retry(self, job_id: str, tenant: str | None = None) -> ResearchJob | None:
         """Re-run only failed/empty subqueries (VAL-RESEARCH-008).
 
         Gated on the job's deadline/terminal state: a job that is already
@@ -540,8 +1215,11 @@ class ResearchJobRunner:
         cursors are byte-for-byte unchanged. Each retried subquery gets a
         NEW linked attempt appended; the original attempt's cursor remains
         readable. Returns the updated job, or ``None`` for an unknown id.
+        Raises :class:`JobStillRunningError` when the job is still running
+        under a live owner and must not be retried concurrently.
         """
-        job = await self._jobs.load(job_id)
+        store = self._jobs_for(tenant or self._default_tenant)
+        job = await store.load(job_id)
         if job is None:
             return None
         # Terminal-state gate: never resurrect a cancelled or expired job.
@@ -550,6 +1228,13 @@ class ResearchJobRunner:
         retryable = [query for query in job.queries if is_retryable_query(query)]
         if not retryable:
             return job
+        # A still-running job under a live owner must not be retried (or have
+        # its record rewritten) concurrently. Liveness is checked against the
+        # lease key, not the record fields, so a lease-expired orphan proceeds.
+        # This runs before the deadline gate so a deadline-passed but still
+        # live job surfaces JobStillRunningError instead of being rewritten to
+        # ``expired`` mid-run.
+        await self._raise_if_live_owned(job)
         # Deadline gate: a deadline-passed retry finalizes to expired, not
         # partial/failed (the run_pending deadline branch would otherwise
         # classify a re-run that breaks on the deadline as partial/failed).
@@ -558,13 +1243,14 @@ class ResearchJobRunner:
                 if query.state in ("pending", "running"):
                     query.state = "cancelled"
             job.state = "expired"
-            await self._jobs.save(job)
+            await store.save(job)
             return job
-        job.state = "running"
-        for query in retryable:
-            query.state = "pending"
-        await self._jobs.save(job)
-        return await self.run_pending(job)
+        # The retry mutation is applied to the freshly loaded record inside
+        # run_direct's claim (exactly-one-owner), never persisted ahead of
+        # time. This avoids stripping a concurrently-claiming worker's
+        # owner_id/lease_token and avoids clobbering a record a durable worker
+        # finalized between the load above and the claim.
+        return await self.run_direct(job, mutate=_reset_retryable_queries)
 
     def _build_query_coverage(self, query: ResearchQuery, response: Any) -> list[EngineCoverage]:
         """Derive per-engine coverage for a completed subquery (VAL-RESEARCH-004).
@@ -616,20 +1302,65 @@ class ResearchJobRunner:
         return report
 
     async def run_forever(self) -> None:
-        """Process queued jobs until cancelled."""
+        """Process claimable jobs until cancelled (bounded worker pool)."""
+        workers = [asyncio.create_task(self._worker()) for _ in range(self._max_concurrent_jobs)]
+        try:
+            await asyncio.gather(*workers)
+        except asyncio.CancelledError:
+            for worker in workers:
+                worker.cancel()
+            await asyncio.gather(*workers, return_exceptions=True)
+            raise
+
+    async def _worker(self) -> None:
+        """One worker task: claim + execute jobs until cancelled."""
         while True:
-            job_id = await self._queue.get()
             try:
-                await self._run_job(job_id)
+                entry = self._next_local()
+                if entry is None:
+                    # Durable path: claim the next queued/orphaned job in the
+                    # shared store (across all tenants).
+                    job = await self._jobs.claim_next_any_tenant(self._owner_id, self._lease_ttl)
+                else:
+                    tenant, job_id = entry
+                    job = await self._jobs.for_tenant(tenant).claim(job_id, self._owner_id, self._lease_ttl)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:  # noqa: BLE001 — transient claim/store error
+                logger.exception("ResearchJobRunner: claim failed: %s", exc)
+                await asyncio.sleep(self._poll_interval)
+                continue
+            if job is None:
+                await asyncio.sleep(self._poll_interval)
+                continue
+            try:
+                await self._execute_claimed(job)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:  # noqa: BLE001 — never let a job kill the worker
-                logger.exception("ResearchJobRunner: job %s crashed: %s", job_id, exc)
-            finally:
-                self._queue.task_done()
+                logger.exception("ResearchJobRunner: job %s crashed: %s", job.job_id, exc)
 
-    async def _run_job(self, job_id: str) -> None:
-        job = await self._jobs.load(job_id)
+    def _next_local(self) -> tuple[str, str] | None:
+        """Pop the next locally-enqueued ``(tenant, job_id)`` entry, if any."""
+        try:
+            return self._queue.get_nowait()
+        except asyncio.QueueEmpty:
+            return None
+
+    async def _execute_claimed(self, job: ResearchJob) -> None:
+        """Execute a claimed job and always release its lease afterwards."""
+        try:
+            await self.run_pending(job)
+        except LeaseLostError:
+            logger.warning("ResearchJobRunner: lost lease for job %s; abandoning execution", job.job_id)
+        finally:
+            # Token-guarded: only deletes the lease if we still own it.
+            await self._jobs.for_tenant(job.tenant).release(job.job_id, job.lease_token)
+
+    async def _run_job(self, job_id: str, tenant: str | None = None) -> None:
+        """Run a single job directly (test/legacy path, no lease claim)."""
+        store = self._jobs_for(tenant or self._default_tenant)
+        job = await store.load(job_id)
         if job is None:
             return
 
@@ -640,16 +1371,16 @@ class ResearchJobRunner:
                 for query in job.queries:
                     if query.state in ("pending", "running"):
                         query.state = "cancelled"
-                await self._jobs.save(job)
+                await store.save(job)
             return
 
         if time.time() >= job.deadline:
             job.state = "expired"
-            await self._jobs.save(job)
+            await store.save(job)
             return
 
         job.state = "running"
-        await self._jobs.save(job)
+        await store.save(job)
         await self.run_pending(job)
 
     async def _execute_query(self, job: ResearchJob, query: ResearchQuery) -> None:
@@ -657,9 +1388,12 @@ class ResearchJobRunner:
 
         Reused by the normal runner loop and by retry, so a retried query
         is executed exactly like the original and appends a new attempt.
+        Tenant-scoped so subquery snapshots land in the job's tenant.
         """
+        store = self._jobs_for(job.tenant)
+        snapshots = self._snapshots_for(job.tenant)
         query.state = "running"
-        await self._jobs.save(job)
+        await store.save(job)
         request = SearchRequest(
             query=query.query,
             engines=query.engines or None,
@@ -673,12 +1407,13 @@ class ResearchJobRunner:
             query.state = "failed"
             query.error = str(exc)
             query.attempts.append(_attempt_from_query(query))
-            await self._jobs.save(job)
+            if not await store.save_if_owned(job):
+                raise LeaseLostError(job.job_id)
             return
 
         query.query_id = response.query_id
         query.result_count = len(response.results)
-        query.cursor = await self._snapshots.create(
+        query.cursor = await snapshots.create(
             response.query,
             response.query_id,
             response.results,
@@ -703,7 +1438,8 @@ class ResearchJobRunner:
         else:
             query.state = "done"
         query.attempts.append(_attempt_from_query(query))
-        await self._jobs.save(job)
+        if not await store.save_if_owned(job):
+            raise LeaseLostError(job.job_id)
 
 
 # ---------------------------------------------------------------------------
@@ -769,9 +1505,56 @@ def _job_from_payload(payload: dict[str, Any]) -> ResearchJob:
         tenant=str(payload.get("tenant", "default")),
         idempotency_key=payload.get("idempotency_key"),
         cancel_requested=bool(payload.get("cancel_requested", False)),
+        owner_id=payload.get("owner_id"),
+        lease_token=payload.get("lease_token"),
+        lease_expires_at=float(payload.get("lease_expires_at", 0.0)),
     )
 
 
 def generate_job_id() -> str:
     """Generate a short, traceable research job identifier."""
     return f"job-{uuid.uuid4().hex[:12]}"
+
+
+def generate_owner_id() -> str:
+    """Generate a stable per-process worker/replica identifier."""
+    return f"worker-{uuid.uuid4().hex[:8]}"
+
+
+def generate_lease_token() -> str:
+    """Generate an opaque, unforgeable lease ownership token."""
+    return f"lease-{secrets.token_hex(16)}"
+
+
+async def _scan_keys(store: KeyValueStore | None, pattern: str) -> list[str]:
+    """List keys matching a glob across the supported store backends.
+
+    Valkey-backed stores are scanned with ``SCAN`` (via ``scan_iter``) so the
+    worker's periodic prefix scans never block the single-threaded Valkey
+    event loop with an O(N) ``KEYS`` command. In-memory stores either expose
+    a ``keys`` method or a ``_data`` dict. Returns decoded string keys (empty
+    list when the store is unavailable).
+    """
+    if store is None or not store.is_connected:
+        return []
+    keys_method = getattr(store, "keys", None)
+    if keys_method is not None:
+        raw = await keys_method(pattern)
+    else:
+        client = getattr(store, "_client", None)
+        scan_iter = getattr(client, "scan_iter", None) if client is not None else None
+        if scan_iter is not None:
+            raw = []
+            async for key in scan_iter(match=pattern):
+                raw.append(key)
+        else:
+            keys_client_method = getattr(client, "keys", None) if client is not None else None
+            if keys_client_method is not None:
+                raw = await keys_client_method(pattern)
+            else:
+                data = getattr(store, "_data", None)
+                if data is None:
+                    return []
+                prefix = pattern.rstrip("*")
+                raw = [key for key in data if key.startswith(prefix)]
+    return [key.decode() if isinstance(key, bytes) else str(key) for key in raw]

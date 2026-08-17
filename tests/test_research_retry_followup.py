@@ -222,7 +222,8 @@ class TestIdempotency:
         assert "error" not in result
         assert result.get("degraded") is True
         assert result.get("ephemeral") is True
-        assert "non-durable" in (result.get("note") or "")
+        assert "not persisted" in (result.get("note") or "")
+        assert "will not be executed" in (result.get("note") or "")
 
 
 # ---------------------------------------------------------------------------
@@ -463,6 +464,40 @@ class TestExtend:
         assert result["error"]["field"] == "intent"
         assert "web" in result["error"]["valid_alternatives"]
 
+    async def test_extend_after_durable_execution_clears_stale_lease(self, state: McpState) -> None:
+        """A durable-executed job keeps stale lease fields; extend must not raise.
+
+        ``release`` deletes the Valkey lease key but not the record fields, so
+        a job that finished under the durable worker still carries a stale
+        ``lease_token``. Extend must clear those fields before ``run_pending``
+        (which otherwise tries to renew the missing lease and raises
+        ``LeaseLostError``).
+        """
+        job = ResearchJob(
+            job_id=generate_job_id(),
+            question="q",
+            strategy="triangulate",
+            state="succeeded",
+            deadline=time.time() + 3600,
+            owner_id="worker-old",
+            lease_token="stale-lease-token",
+            queries=[
+                ResearchQuery(index=0, query="done", intent="web", engines=["brave"], state="done", cursor="snap-old"),
+            ],
+        )
+        await state.job_store.save(job)
+
+        result = await t.slopsearx_extend_research(job.job_id, "followup", intent="web")
+
+        assert "error" not in result
+        job = await state.job_store.load(job.job_id)
+        assert job is not None
+        assert len(job.queries) == 2
+        assert job.queries[0].cursor == "snap-old"
+        assert job.queries[1].state == "done"
+        assert job.owner_id is None
+        assert job.lease_token is None
+
 
 # ---------------------------------------------------------------------------
 # VAL-RESEARCH-010 / 011 — cancel and expiration preserve completed evidence
@@ -471,7 +506,7 @@ class TestExtend:
 
 class TestCancelAndExpiry:
     async def test_cancel_preserves_completed_evidence(self, state: McpState) -> None:
-        """VAL-RESEARCH-010 — cancel marks the job cancelled, completed cursors stay readable."""
+        """VAL-RESEARCH-010 — cancel preserves completed evidence; a finished partial job stays partial."""
         state.ctx.active_engines["wikipedia"] = _MockEngine("wikipedia", status=EngineStatus.ERROR)
         job = await _persist_and_run(
             state,
@@ -484,14 +519,40 @@ class TestCancelAndExpiry:
         assert done_cursor is not None
 
         result = await t.slopsearx_cancel_job(job.job_id)
-        assert result["state"] == "cancelled"
+        # A finished partial job is not rewritten to cancelled: it keeps its
+        # partial state so the failed subquery stays retryable.
+        assert result["state"] == "partial"
 
         re = await t.slopsearx_read_results(done_cursor)
         assert "error" not in re
         job = await state.job_store.load(job.job_id)
         assert job is not None
-        assert job.state == "cancelled"
-        assert not any(q.state in ("pending", "running") for q in job.queries)
+        assert job.state == "partial"
+        assert _run_query(job, 0).state == "done"
+        assert _run_query(job, 1).state == "failed"
+
+    async def test_cancel_finished_partial_job_reports_already_finished(self, state: McpState) -> None:
+        """Cancelling a finished ``partial`` job returns the "already finished"
+        note, not "best-effort cancellation requested"."""
+        state.ctx.active_engines["wikipedia"] = _MockEngine("wikipedia", status=EngineStatus.ERROR)
+        job = await _persist_and_run(
+            state,
+            [
+                ResearchQuery(index=0, query="ok", intent="web", engines=["brave"]),
+                ResearchQuery(index=1, query="fail", intent="web", engines=["wikipedia"]),
+            ],
+        )
+        assert job.state == "partial"
+
+        result = await t.slopsearx_cancel_job(job.job_id)
+
+        assert result["state"] == "partial"
+        assert "already finished" in result["note"]
+        assert "best-effort cancellation requested" not in result["note"]
+        loaded = await state.job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.state == "partial"
+        assert loaded.cancel_requested is False
 
     async def test_deadline_passed_finalizes_to_expired(self, state: McpState) -> None:
         """VAL-RESEARCH-011 — a deadline-passed job is finalized (not left running)."""
@@ -503,13 +564,13 @@ class TestCancelAndExpiry:
         assert job.state == "expired"
 
     async def test_stale_running_cleanup_marks_expired(self, state: McpState) -> None:
-        """VAL-RESEARCH-011 — startup cleanup expires jobs left running by a dead process."""
+        """VAL-RESEARCH-011 — startup cleanup expires deadline-passed orphans only."""
         stale = ResearchJob(
             job_id="job-stale-cleanup",
             question="q",
             strategy="broad",
             state="running",
-            deadline=time.time() + 100,
+            deadline=time.time() - 10,
         )
         stale.queries = [ResearchQuery(index=0, query="q", intent="web", engines=["brave"])]
         await state.job_store.save(stale)
@@ -520,6 +581,23 @@ class TestCancelAndExpiry:
         assert loaded is not None
         assert loaded.state == "expired"
         assert all(q.state == "cancelled" for q in loaded.queries)
+
+    async def test_future_deadline_running_job_left_for_reclaim(self, state: McpState) -> None:
+        """VAL-RESEARCH-011 — a future-deadline orphan stays reclaimable."""
+        stale = ResearchJob(
+            job_id="job-reclaimable",
+            question="q",
+            strategy="broad",
+            state="running",
+            deadline=time.time() + 3600,
+        )
+        stale.queries = [ResearchQuery(index=0, query="q", intent="web", engines=["brave"])]
+        await state.job_store.save(stale)
+
+        assert await state.job_store.expire_stale_running() == 0
+        loaded = await state.job_store.load("job-reclaimable")
+        assert loaded is not None
+        assert loaded.state == "running"
 
 
 # ---------------------------------------------------------------------------
