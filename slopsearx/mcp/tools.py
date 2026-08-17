@@ -259,12 +259,21 @@ def _filter_warnings(state: McpState, selected_engines: list[str], language: str
     return warnings
 
 
-def _safesearch_warning(state: McpState, safesearch: str) -> list[str]:
-    """Moderate SafeSearch is best-effort; the enforcement report is authoritative."""
-    del state
-    if safesearch == "moderate":
-        return ["moderate safesearch is requested but may not be enforced by every adapter"]
-    return []
+def _safesearch_warning(state: McpState, selected_engines: list[str], safesearch: str) -> list[str]:
+    """Moderate SafeSearch is best-effort; the enforcement report is authoritative.
+
+    Gated on the resolved enforcement status like :func:`_filter_warnings`:
+    when every selected adapter enforces moderate SafeSearch (the report says
+    ``enforced``), the prose must not contradict the report, so no warning is
+    emitted. Resolved via :func:`_core_filter_enforcement` against the same
+    scope the search will dispatch.
+    """
+    if safesearch != "moderate":
+        return []
+    report = _core_filter_enforcement(state, selected_engines, language="en", time_range=None, safesearch=safesearch)
+    if report.get("safesearch", {}).get("status") == "enforced":
+        return []
+    return ["moderate safesearch is requested but may not be enforced by every adapter"]
 
 
 def _preview_selected_engines(
@@ -749,7 +758,7 @@ async def slopsearx_search(
     if safesearch == "strict" and not _strict_safesearch_satisfiable(state, selected):
         return _safesearch_rejection(state, selected)
 
-    safesearch_warning = _safesearch_warning(state, safesearch)
+    safesearch_warning = _safesearch_warning(state, selected, safesearch)
 
     include_set = set(include) if include is not None else {"results", "engine_status"}
     max_results = _bounded_max_results(state, max_results)
@@ -871,7 +880,7 @@ async def slopsearx_search_targeted(
     if safesearch == "strict" and not _strict_safesearch_satisfiable(state, engines):
         return _safesearch_rejection(state, list(engines))
 
-    safesearch_warning = _safesearch_warning(state, safesearch)
+    safesearch_warning = _safesearch_warning(state, list(engines), safesearch)
 
     request = SearchRequest(
         query=query,

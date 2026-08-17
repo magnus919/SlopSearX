@@ -223,6 +223,55 @@ class TestEnforcementModel:
         assert entry["status"] == "partially_enforced"
         assert entry["enforced_by"] == ["upstream:brave"]
 
+    def test_local_safesearch_declaration_is_not_enforcement(self) -> None:
+        """A 'local' safesearch declaration counts as no enforcement.
+
+        The service has no local post-filter for safesearch (only time_range
+        has one), so the resolver must not report 'enforced' — and this is
+        consistent with the strict gate, which only accepts an upstream
+        safesearch layer and therefore treats a local-only adapter as
+        non-enforcing.
+        """
+        adapters = {"brave": _MockEngine("brave", enforced_filters={"safesearch": "local"})}
+
+        entry = resolve_filter_enforcement(["brave"], "safesearch", "moderate", adapters)
+        assert entry["status"] == "unsupported"
+        assert entry["status"] != "enforced"
+        assert entry["enforced_by"] == []
+
+        state = _build_state(engine_names=["brave"], engines_map=adapters)
+        assert t._strict_safesearch_satisfiable(state, ["brave"]) is False
+
+    def test_local_language_and_pagination_declarations_are_not_enforcement(self) -> None:
+        """'local' declarations for filters without a local post-filter
+        (language, pagination) must not be counted as enforcement."""
+        for filter_name, requested in (("language", "de"), ("pagination", 2)):
+            adapter = _MockEngine("brave", enforced_filters={filter_name: "local"})
+            entry = resolve_filter_enforcement(["brave"], filter_name, requested, {"brave": adapter})
+            assert entry["status"] == "unsupported", filter_name
+            assert entry["status"] != "enforced", filter_name
+            assert entry["enforced_by"] == [], filter_name
+
+    def test_local_safesearch_does_not_contribute_to_mixed_scope(self) -> None:
+        """Only the upstream layer counts for safesearch: a local-only adapter
+        contributes nothing to the aggregate."""
+        adapters = {
+            "brave": _MockEngine("brave", enforced_filters={"safesearch": "upstream"}),
+            "arxiv": _MockEngine("arxiv", enforced_filters={"safesearch": "local"}),
+        }
+        entry = resolve_filter_enforcement(["brave", "arxiv"], "safesearch", "moderate", adapters)
+        assert entry["status"] == "partially_enforced"
+        assert entry["enforced_by"] == ["upstream:brave"]
+
+    def test_local_time_range_in_vocab_still_enforces(self) -> None:
+        """The one filter with a real local post-filter (time_range) still
+        reports 'enforced' for the entire in-vocabulary set."""
+        adapters = {"arxiv": _MockEngine("arxiv", enforced_filters={"time_range": "local"})}
+        for value in ("day", "week", "month", "year"):
+            entry = resolve_filter_enforcement(["arxiv"], "time_range", value, adapters)
+            assert entry["status"] == "enforced", value
+            assert entry["enforced_by"] == ["local:arxiv"], value
+
     def test_time_range_window_and_date_helpers(self) -> None:
         today = _dt.date(2026, 1, 15)
         start, end = time_range_window("week", now=today)
@@ -426,6 +475,36 @@ class TestEnforcementLayer:
 
         assert result["enforcement"]["time_range"]["status"] == "unsupported"
         assert any("time_range 'month'" in w and "not consumed" in w for w in result["warnings"])
+
+
+class TestModerateSafesearchWarning:
+    async def test_warning_absent_when_enforced(self, state: McpState) -> None:
+        """Prose warnings must not contradict the report: when every selected
+        adapter enforces moderate safesearch upstream, no 'may not be
+        enforced' warning is emitted."""
+        state.ctx.active_engines = {
+            "brave": _MockEngine("brave", enforced_filters={"safesearch": "upstream"}),
+            "duckduckgo": _MockEngine("duckduckgo", enforced_filters={"safesearch": "upstream"}),
+        }
+        result = await t.slopsearx_search("hello", safesearch="moderate")
+
+        assert result["enforcement"]["safesearch"]["status"] == "enforced"
+        assert not any("moderate safesearch" in w for w in result["warnings"])
+
+    async def test_targeted_warning_absent_when_enforced(self, state: McpState) -> None:
+        """The targeted path gates the warning on the report the same way."""
+        state.ctx.active_engines = {"brave": _MockEngine("brave", enforced_filters={"safesearch": "upstream"})}
+        result = await t.slopsearx_search_targeted("hello", engines=["brave"], safesearch="moderate")
+
+        assert result["enforcement"]["safesearch"]["status"] == "enforced"
+        assert not any("moderate safesearch" in w for w in result["warnings"])
+
+    async def test_warning_present_when_not_enforced(self, state: McpState) -> None:
+        """The warning stays when the report does not say enforced."""
+        result = await t.slopsearx_search("hello", safesearch="moderate")
+
+        assert result["enforcement"]["safesearch"]["status"] == "unsupported"
+        assert any("moderate safesearch" in w for w in result["warnings"])
 
 
 class TestLocalTimeRangePostFilter:
