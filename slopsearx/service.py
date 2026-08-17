@@ -535,18 +535,14 @@ class SearchService:
             suggestions_task = asyncio.create_task(self._generate_suggestions(request.query))
 
         engine_timeouts = [
-            self._resolve_engine_timeout_s(engine)
-            for engine in target.values()
-            if engine.circuit_allowed()
+            self._resolve_engine_timeout_s(engine) for engine in target.values() if engine.circuit_allowed()
         ]
         # The deadline covers semaphore acquisition as well as engine work.
         # Use the sum, rather than the maximum, so serialized dispatch can give
         # every selected engine its configured execution budget.
         dispatch_deadline_s = max(DEFAULT_SEARCH_TIMEOUT_S, sum(engine_timeouts))
 
-        dispatch_results = await self._gather_with_deadline(
-            tasks, engine_names, dispatch_deadline_s, started_engines
-        )
+        dispatch_results = await self._gather_with_deadline(tasks, engine_names, dispatch_deadline_s, started_engines)
 
         # Collect results and metadata
         responses: dict[str, AdapterResponse] = {}
@@ -558,7 +554,7 @@ class SearchService:
             if result.status in (EngineStatus.ERROR, EngineStatus.TIMEOUT):
                 if name in started_engines:
                     engine.record_failure()
-            elif result.status == EngineStatus.OK:
+            elif result.status != EngineStatus.UNAVAILABLE:
                 engine.record_success()
 
             responses[name] = result
@@ -838,9 +834,7 @@ class SearchService:
                     results=[],
                     status=EngineStatus.TIMEOUT if started else EngineStatus.UNAVAILABLE,
                     error_message=(
-                        f"timed out after {deadline_s}s"
-                        if started
-                        else "not started before the search deadline"
+                        f"timed out after {deadline_s}s" if started else "not started before the search deadline"
                     ),
                     latency_ms=deadline_s * 1000 if started else 0.0,
                 )
