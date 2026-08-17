@@ -21,6 +21,7 @@ from slopsearx.adapter import (
     EngineStatus,
     ScrapeAdapter,
     SearchResult,
+    build_media,
     register_engine,
 )
 
@@ -35,6 +36,7 @@ class DuckDuckGoAdapter(ScrapeAdapter):
 
     # -- Declared capability metadata (audited, issue 185) --
     supported_result_types = ("text", "media")
+    supported_media_types = ("image",)
     failure_classes = ("rate_limited", "blocked", "error", "timeout")
     cost_class = "free"
 
@@ -229,6 +231,12 @@ class DuckDuckGoAdapter(ScrapeAdapter):
                         engine=self.name,
                         category="images",
                         position=i + 1,
+                        media=build_media(
+                            "image",
+                            url=img_src or None,
+                            thumbnail=img_src or None,
+                            source=url or None,
+                        ),
                     ),
                 )
 

@@ -11,7 +11,7 @@ from typing import Any
 
 import yaml
 
-from slopsearx.adapter import SearchResult
+from slopsearx.adapter import SearchResult, media_to_dict
 from slopsearx.payload import PAYLOAD_INLINE_BYTES, payload_serialized_size
 
 # ---------------------------------------------------------------------------
@@ -57,6 +57,7 @@ def _result_to_searxng(result: SearchResult) -> dict[str, Any]:
         "length": None,
         "thumbnail": result.thumbnail,
         "img_src": result.img_src,
+        "media": media_to_dict(result.media),
         "payload": _payload_for_output(result.payload),
         "iframe_src": None,
         "audio_src": None,
@@ -207,6 +208,7 @@ def format_yaml_markdown(
             "position": r.position,
             "published": r.published_date,
             "tier": r.tier,
+            "media": media_to_dict(r.media),
             "payload": _payload_for_output(r.payload),
         }
         for r in results

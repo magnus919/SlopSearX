@@ -30,11 +30,14 @@ from typing import Any
 
 from slopsearx import metrics as m
 from slopsearx.adapter import (
+    SUPPORTED_MEDIA_TYPES,
     AdapterResponse,
     EngineAdapter,
     EngineStatus,
     SearchResult,
     discover_engines,
+    media_from_dict,
+    media_to_dict,
     sanitize_url,
 )
 from slopsearx.audit import QueryAuditLogger
@@ -74,6 +77,10 @@ DEFAULT_ENGINE_TIMEOUT_S = 3.0
 # engines' configured timeouts, including targeted engines above this floor.
 DEFAULT_SEARCH_TIMEOUT_S = 10.0
 
+# Media type → SearXNG category used to route a media-intent search to
+# category-aware adapters (Brave images/videos endpoints, DDG image search).
+_MEDIA_TYPE_CATEGORY: dict[str, str] = {"image": "images", "video": "videos"}
+
 # ---------------------------------------------------------------------------
 # Request / response model
 # ---------------------------------------------------------------------------
@@ -90,6 +97,9 @@ class SearchRequest:
     page: int = 1
     time_range: str | None = None
     safesearch: int = 0
+    # Dedicated image/video search constraint (issue 188). When set, the
+    # dispatched scope is limited to engines that advertise this media type.
+    media_type: str | None = None
     max_results: int | None = None
     include: set[str] = field(default_factory=lambda: {"results", "suggestions", "engine_status", "diagnostics"})
     # prefer_cache | prefer_fresh | no_preference
@@ -367,42 +377,45 @@ class ScopeResolver:
             decision.excluded_engines = [
                 EngineExclusion(engine=name, reason="not an active engine") for name in sorted(unknown)
             ]
-            return decision
-
-        cats = [c.strip() for c in (request.categories or []) if c.strip()]
-        if cats:
-            selected = [name for name, engine in self._active.items() if any(cat in engine.categories for cat in cats)]
-            decision.selected_engines = self._drop_sensitive(decision, selected, "sensitive engine excluded by policy")
-            decision.resolved_categories = cats
-            decision.routing_rule = "explicit category"
-            return decision
-
-        if self._router is not None:
-            routed = self._router.route(request.query, cats)
-            if routed is not None:
-                selected = [name for name in routed if name in self._active]
+        else:
+            cats = [c.strip() for c in (request.categories or []) if c.strip()]
+            if cats:
+                selected = [
+                    name for name, engine in self._active.items() if any(cat in engine.categories for cat in cats)
+                ]
                 decision.selected_engines = self._drop_sensitive(
                     decision, selected, "sensitive engine excluded by policy"
                 )
-                decision.matched_topic = self._router.match_topic(request.query)
-                decision.routing_rule = "topic match"
-                return decision
-
-            tier1 = [name for name in self._tier1 if name in self._active]
-            if tier1:
-                decision.selected_engines = self._drop_sensitive(decision, tier1, "sensitive engine excluded by policy")
-                decision.routing_rule = "tier-1 fallback"
+                decision.resolved_categories = cats
+                decision.routing_rule = "explicit category"
+            elif self._router is not None:
+                routed = self._router.route(request.query, cats)
+                if routed is not None:
+                    selected = [name for name in routed if name in self._active]
+                    decision.selected_engines = self._drop_sensitive(
+                        decision, selected, "sensitive engine excluded by policy"
+                    )
+                    decision.matched_topic = self._router.match_topic(request.query)
+                    decision.routing_rule = "topic match"
+                else:
+                    tier1 = [name for name in self._tier1 if name in self._active]
+                    if tier1:
+                        decision.selected_engines = self._drop_sensitive(
+                            decision, tier1, "sensitive engine excluded by policy"
+                        )
+                        decision.routing_rule = "tier-1 fallback"
+                    else:
+                        decision.selected_engines = self._drop_sensitive(
+                            decision, list(self._active), "sensitive engine excluded by policy"
+                        )
+                        decision.routing_rule = "all active engines"
             else:
                 decision.selected_engines = self._drop_sensitive(
                     decision, list(self._active), "sensitive engine excluded by policy"
                 )
                 decision.routing_rule = "all active engines"
-            return decision
 
-        decision.selected_engines = self._drop_sensitive(
-            decision, list(self._active), "sensitive engine excluded by policy"
-        )
-        decision.routing_rule = "all active engines"
+        decision.selected_engines = self._apply_media_filter(decision, decision.selected_engines, request.media_type)
         return decision
 
     def explain(self, request: SearchRequest) -> ScopeDecision:
@@ -423,6 +436,36 @@ class ScopeResolver:
                 decision.warnings.append(
                     f"sensitive engine '{name}' requires an explicit engines list or a policy grant"
                 )
+        return kept
+
+    def _apply_media_filter(
+        self,
+        decision: ScopeDecision,
+        engines: list[str],
+        media_type: str | None,
+    ) -> list[str]:
+        """Constrain a candidate list to engines advertising ``media_type``.
+
+        A media-intent search selects only engines whose
+        ``supported_media_types`` declaration includes the requested type.
+        Non-advertising engines are recorded as explicit exclusions, and an
+        empty result (no coverage) is reported as a warning so the coverage
+        gap is never silent. An unknown media type fails closed to an empty
+        selection.
+        """
+        if media_type is None:
+            return engines
+        if media_type not in SUPPORTED_MEDIA_TYPES:
+            decision.warnings.append(f"unknown media type '{media_type}'")
+            return []
+        kept = [name for name in engines if media_type in getattr(self._active.get(name), "supported_media_types", ())]
+        for name in engines:
+            if name not in kept:
+                decision.excluded_engines.append(
+                    EngineExclusion(engine=name, reason=f"does not advertise media type '{media_type}'")
+                )
+        if engines and not kept:
+            decision.warnings.append(f"no selected engine advertises media type '{media_type}'")
         return kept
 
 
@@ -502,12 +545,20 @@ class SearchService:
             return cached
 
         target = {name: self._ctx.active_engines[name] for name in scope.selected_engines}
+        # A media-intent search translates the media type to the SearXNG
+        # category the category-aware adapters understand (images/videos), so
+        # Brave and DDG route to their media endpoints. Explicit categories
+        # still win when the caller supplied them directly.
+        categories = request.categories or (
+            [_MEDIA_TYPE_CATEGORY[request.media_type]] if request.media_type in _MEDIA_TYPE_CATEGORY else ["general"]
+        )
         search_params: dict[str, Any] = {
             "language": request.language,
             "safesearch": request.safesearch,
             "pageno": request.page,
             "time_range": request.time_range,
-            "categories": request.categories or ["general"],
+            "categories": categories,
+            "media_type": request.media_type,
         }
 
         # Dispatch to all engines concurrently (bounded by semaphore)
@@ -922,6 +973,7 @@ def _scope_cache_key(request: SearchRequest) -> str:
         engines=request.engines,
         pageno=request.page,
         time_range=request.time_range,
+        media_type=request.media_type,
     )
 
 
@@ -978,6 +1030,7 @@ def search_result_to_dict(result: SearchResult) -> dict[str, Any]:
         "published_date": result.published_date,
         "thumbnail": result.thumbnail,
         "img_src": result.img_src,
+        "media": media_to_dict(result.media),
         "tier": result.tier,
         "payload": payload_for_persistence(result.payload),
     }
@@ -1102,6 +1155,7 @@ def search_result_from_dict(data: dict[str, Any]) -> SearchResult:
         published_date=data.get("published_date"),
         thumbnail=data.get("thumbnail"),
         img_src=data.get("img_src"),
+        media=media_from_dict(data.get("media")),
         tier=int(raw_tier) if raw_tier is not None else 1,
         payload=payload_from_dict(data.get("payload")),
     )

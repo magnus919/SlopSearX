@@ -12,7 +12,7 @@ import datetime as _dt
 import time
 from typing import Any
 
-from slopsearx.adapter import SearchResult
+from slopsearx.adapter import SUPPORTED_MEDIA_TYPES, SearchResult, media_to_dict
 from slopsearx.capabilities import INTENT_PROFILES, resolve_intent
 from slopsearx.filters import (
     enforcement_entry,
@@ -50,6 +50,7 @@ from slopsearx.snapshot import SearchSnapshot
 # ---------------------------------------------------------------------------
 
 VALID_INTENTS = tuple(INTENT_PROFILES)
+VALID_MEDIA_TYPES = SUPPORTED_MEDIA_TYPES
 VALID_SAFESEARCH = ("off", "moderate", "strict")
 VALID_FRESHNESS = ("prefer_cache", "prefer_fresh", "no_preference")
 VALID_STRATEGIES = ("triangulate", "broad", "fresh", "counterevidence")
@@ -281,15 +282,17 @@ def _preview_selected_engines(
     query: str,
     categories: list[str] | None,
     engines: list[str] | None,
+    media_type: str | None = None,
 ) -> list[str]:
     """Preview the engine scope that would execute for a request (no dispatch).
 
     Mirrors the service's scope resolution exactly (same active engines,
-    router, tier-1 set, and sensitive set) so mandatory-constraint checks can
-    fail closed *before* any engine is dispatched. The real ``query`` is
-    passed through so auto-intent topic routing previews the same scope the
-    service will dispatch — an empty-query preview would fall back to the
-    tier-1 set and mask non-conforming topic scopes.
+    router, tier-1 set, sensitive set, and media-type constraint) so
+    mandatory-constraint checks can fail closed *before* any engine is
+    dispatched. The real ``query`` is passed through so auto-intent topic
+    routing previews the same scope the service will dispatch — an
+    empty-query preview would fall back to the tier-1 set and mask
+    non-conforming topic scopes.
     """
     resolver = ScopeResolver(
         active_engines=state.ctx.active_engines,
@@ -297,7 +300,9 @@ def _preview_selected_engines(
         tier1_engines=state.ctx.tier1_engines,
         sensitive_engines=state.ctx.sensitive_engines,
     )
-    return resolver.explain(SearchRequest(query=query, categories=categories, engines=engines)).selected_engines
+    return resolver.explain(
+        SearchRequest(query=query, categories=categories, engines=engines, media_type=media_type)
+    ).selected_engines
 
 
 def _strict_safesearch_satisfiable(state: McpState, selected_engines: list[str]) -> bool:
@@ -430,6 +435,23 @@ def _payload_inline(result: SearchResult, *, requested: bool) -> dict[str, Any] 
     return None
 
 
+def _media_triage(result: SearchResult) -> dict[str, Any] | None:
+    """Compact, triage-safe media summary for a compact card (issue 188).
+
+    Carries ``media_type`` plus thumbnail/dimensions/duration where present —
+    enough to triage a media result without fetching it — but omits the
+    media file ``url`` and ``source`` attribution, which belong to the
+    expanded record (progressive disclosure). Returns ``None`` for
+    non-media results so text cards stay field-identical to before.
+    """
+    if result.media is None:
+        return None
+    media = media_to_dict(result.media)
+    if not media:
+        return None
+    return {key: media[key] for key in ("media_type", "thumbnail", "width", "height", "duration") if key in media}
+
+
 def _result_to_dict(
     result: SearchResult,
     *,
@@ -440,10 +462,13 @@ def _result_to_dict(
 
     Cards carry triage fields plus a stable server-issued ``result_id``.
     Full ``content``, ``thumbnail``, and ``img_src`` belong to the expanded
-    record (progressive disclosure), never the card. A domain payload is
-    inlined only when requested or small enough (see ``_payload_inline``);
-    the full payload is available via ``slopsearx_read_result`` when it is
-    within ``PAYLOAD_MAX_PERSIST_BYTES``.
+    record (progressive disclosure), never the card. A media result's card
+    carries a compact ``media`` triage summary; the complete media record
+    (including the media file URL and source attribution) is available via
+    ``slopsearx_read_result``. A domain payload is inlined only when
+    requested or small enough (see ``_payload_inline``); the full payload is
+    available via ``slopsearx_read_result`` when it is within
+    ``PAYLOAD_MAX_PERSIST_BYTES``.
     """
     card = {
         "title": result.title,
@@ -459,6 +484,9 @@ def _result_to_dict(
         "tier": result.tier,
         "citation": {"label": result.title, "url": result.url},
     }
+    media = _media_triage(result)
+    if media:
+        card["media"] = media
     if result_id is not None:
         card["result_id"] = result_id
     inline = _payload_inline(result, requested=include_payload)
@@ -499,6 +527,7 @@ def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: st
         "content_available": content_available,
         "thumbnail": result.thumbnail,
         "img_src": result.img_src,
+        "media": media_to_dict(result.media),
         "payload": _payload_for_record(result.payload),
         "source_engines": source_engines,
         "source_count": len(source_engines),
@@ -690,6 +719,7 @@ async def slopsearx_search(
     language: str = "en",
     time_range: str | None = None,
     safesearch: str = "off",
+    media_type: str | None = None,
     max_results: int | None = None,
     include: list[str] | None = None,
     freshness: str = "no_preference",
@@ -697,10 +727,14 @@ async def slopsearx_search(
     """Search across SlopSearX engines with intent-based routing.
 
     - intent: one of auto, web, news, science, reference, code, social,
-      historical, jobs, security, medical, finance, packages, media,
-      legal, geography. auto uses query-topic routing with tier-1 fallback.
+      historical, jobs, security, medical, finance, packages, media, images,
+      videos, legal, geography. auto uses query-topic routing with tier-1
+      fallback.
     - categories: explicit category OR-filter (overridden by engines).
     - engines: explicit engine list (overrides everything; must be known).
+    - media_type: image | video. Constrains the dispatched scope to engines
+      that advertise the requested media type; when no selected engine
+      advertises it, the coverage gap is reported explicitly.
     - safesearch: off | moderate | strict. strict fails closed because no
       adapter enforces it.
     - freshness: prefer_cache | prefer_fresh | no_preference.
@@ -723,6 +757,13 @@ async def slopsearx_search(
         )
     if safesearch not in VALID_SAFESEARCH:
         return _error("invalid_input", "safesearch must be off, moderate, or strict", field="safesearch")
+    if media_type is not None and media_type not in VALID_MEDIA_TYPES:
+        return _error(
+            "invalid_input",
+            f"unknown media_type '{media_type}'",
+            field="media_type",
+            valid_alternatives=list(VALID_MEDIA_TYPES),
+        )
     if freshness not in VALID_FRESHNESS:
         return _error(
             "invalid_input",
@@ -736,8 +777,8 @@ async def slopsearx_search(
         return error
 
     # Resolve intent → scope (explicit inputs win over the profile).
-    resolved_categories, resolved_engines, requested_intent, warnings = _resolve_scope(
-        state, intent, categories, engines
+    resolved_categories, resolved_engines, resolved_media_type, requested_intent, warnings = _resolve_scope(
+        state, intent, categories, engines, media_type
     )
     if isinstance(resolved_categories, dict):  # error envelope
         return resolved_categories
@@ -751,7 +792,17 @@ async def slopsearx_search(
 
     # Preview the scope that will execute so strict SafeSearch and the filter
     # warnings are resolved against the same engine set the report will name.
-    selected = _preview_selected_engines(state, query, resolved_categories, resolved_engines)
+    selected = _preview_selected_engines(state, query, resolved_categories, resolved_engines, resolved_media_type)
+
+    # A media-intent search that resolves to no engines reports the coverage
+    # gap explicitly instead of surfacing a misleading "all engines failed".
+    if resolved_media_type is not None and not selected:
+        return _error(
+            "media_coverage_gap",
+            f"no selected engine advertises media type '{resolved_media_type}'",
+            field="media_type",
+            media_type=resolved_media_type,
+        )
 
     # Mandatory strict SafeSearch fails closed before dispatch when the
     # selected scope cannot satisfy it.
@@ -770,6 +821,7 @@ async def slopsearx_search(
         language=language,
         time_range=time_range,
         safesearch=_safesearch_value(safesearch),
+        media_type=resolved_media_type,
         include=include_set,
         freshness=freshness,
         client_identifier=_client_identifier(state),
@@ -797,27 +849,28 @@ def _resolve_scope(
     intent: str,
     categories: list[str] | None,
     engines: list[str] | None,
-) -> tuple[list[str] | dict[str, Any] | None, list[str] | None, str, list[str]]:
+    media_type: str | None = None,
+) -> tuple[list[str] | dict[str, Any] | None, list[str] | None, str | None, str, list[str]]:
     """Resolve intent/scope precedence.
 
-    Returns (categories, engines, requested_intent, warnings); a dict as
-    the first element signals an error envelope.
+    Returns (categories, engines, media_type, requested_intent, warnings); a
+    dict as the first element signals an error envelope.
     """
     if engines:
         error = _validate_engines(state, engines)
         if error:
-            return error, None, intent, []
-        return None, engines, intent, []
+            return error, None, media_type, intent, []
+        return None, engines, media_type, intent, []
 
     if categories:
-        return categories, None, intent, []
+        return categories, None, media_type, intent, []
 
     if intent == "auto":
-        return None, None, "auto", []
+        return None, None, media_type, "auto", []
 
     profile = INTENT_PROFILES.get(intent)
     if profile is None:
-        return _error("invalid_input", f"unknown intent '{intent}'", field="intent"), None, intent, []
+        return _error("invalid_input", f"unknown intent '{intent}'", field="intent"), None, media_type, intent, []
     required_grant = INTENT_GRANTS.get(intent)
     if required_grant is not None and not state.policy.tool_enabled(required_grant):
         return (
@@ -828,13 +881,23 @@ def _resolve_scope(
                 grant=GRANT_ENV[required_grant],
             ),
             None,
+            media_type,
             intent,
             [],
         )
     if profile.engines:
         engines_list = [name for name in profile.engines if name in state.catalog.known_names()]
-        return None, engines_list, intent, [f"intent profile '{intent}' selected explicit engines"]
-    return profile.categories, None, intent, [f"intent profile '{intent}' selected categories"]
+        return None, engines_list, media_type, intent, [f"intent profile '{intent}' selected explicit engines"]
+    if profile.media_types:
+        resolved_media_type = media_type if media_type is not None else profile.media_types[0]
+        return (
+            None,
+            None,
+            resolved_media_type,
+            intent,
+            [f"intent profile '{intent}' selected media type '{resolved_media_type}'"],
+        )
+    return profile.categories, None, media_type, intent, [f"intent profile '{intent}' selected categories"]
 
 
 def _bounded_max_results(state: McpState, requested: int | None) -> int:
@@ -1164,6 +1227,7 @@ async def slopsearx_list_capabilities(
             "supported_filters": cap.supported_filters,
             "enforced_filters": cap.enforced_filters,
             "supported_result_types": cap.supported_result_types,
+            "supported_media_types": cap.supported_media_types,
             "failure_classes": cap.failure_classes,
             "cost_class": cap.cost_class or None,
             "last_known_status": cap.last_known_status,
@@ -1187,19 +1251,28 @@ async def slopsearx_explain_search_scope(
     intent: str = "auto",
     categories: list[str] | None = None,
     engines: list[str] | None = None,
+    media_type: str | None = None,
 ) -> dict[str, Any]:
     """Dry-run routing preview: which engines would run and why.
 
     Executes no searches and spends no rate limits. Useful to correct
-    scope before dispatching.
+    scope before dispatching. ``media_type`` (image | video) constrains the
+    preview to engines that advertise the requested media type.
     """
     state = get_state()
     error = _validate_query(query, state)
     if error:
         return error
+    if media_type is not None and media_type not in VALID_MEDIA_TYPES:
+        return _error(
+            "invalid_input",
+            f"unknown media_type '{media_type}'",
+            field="media_type",
+            valid_alternatives=list(VALID_MEDIA_TYPES),
+        )
 
-    resolved_categories, resolved_engines, requested_intent, warnings = _resolve_scope(
-        state, intent, categories, engines
+    resolved_categories, resolved_engines, resolved_media_type, requested_intent, warnings = _resolve_scope(
+        state, intent, categories, engines, media_type
     )
     if isinstance(resolved_categories, dict):
         return resolved_categories
@@ -1217,7 +1290,14 @@ async def slopsearx_explain_search_scope(
         tier1_engines=state.ctx.tier1_engines,
         sensitive_engines=state.policy.sensitive_engines,
     )
-    decision = resolver.explain(SearchRequest(query=query, categories=resolved_categories, engines=resolved_engines))
+    decision = resolver.explain(
+        SearchRequest(
+            query=query,
+            categories=resolved_categories,
+            engines=resolved_engines,
+            media_type=resolved_media_type,
+        )
+    )
     return {
         "selected_engines": decision.selected_engines,
         "excluded_engines": [{"engine": e.engine, "reason": e.reason} for e in decision.excluded_engines],
@@ -1228,6 +1308,7 @@ async def slopsearx_explain_search_scope(
         "routing_rule": decision.routing_rule,
         "matched_topic": decision.matched_topic,
         "requested_intent": requested_intent,
+        "media_type": resolved_media_type,
         "warnings": warnings + decision.warnings,
     }
 

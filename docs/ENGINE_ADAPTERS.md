@@ -53,17 +53,20 @@ filter-enforcement report — never prose tables.
 |---|---|---|
 | `sensitive` | `False` | `True` means reaching the engine requires `MCP_TARGETED_SENSITIVE_ALLOWED` (fail-closed). |
 | `supported_result_types` | `("text",)` | Subset of `SUPPORTED_RESULT_TYPES` = `text`, `answers`, `corrections`, `infoboxes`, `media`, `structured`. Declare a type only when the adapter actually populates the corresponding `AdapterResponse` field (`answers`/`corrections`/`infoboxes`) or result fields (`media` = `thumbnail`/`img_src`). |
+| `supported_media_types` | `()` | Subset of `SUPPORTED_MEDIA_TYPES` = `image`, `video` (issue 188). Declares dedicated image/video **search** capability — which media types the adapter can actively search and return a structured `media` record for. Distinct from the coarse `media` result type: an adapter may attach a thumbnail to text results (`media` in `supported_result_types`) without advertising image/video search. Empty means no dedicated media search. |
 | `supported_filters` | `{}` | Keys from `SUPPORTED_FILTER_KEYS` = `language`, `time_range`, `safesearch`, `pagination`. Audited: **no adapter consumes any of these parameter-bag keys today**, so every engine keeps the `{}` default (normalized to all-`false`). A declaration is a capability hint, never an enforcement claim. |
 | `enforced_filters` | `{}` | Audited enforcement layer per filter (issue 187): `{"<filter>": "upstream" | "local"}`. `"upstream"` means the source applies the filter; `"local"` means the service post-filters this adapter's results (e.g. `time_range` via `published_date`). Absent keys mean "not enforced". Audited: **no adapter enforces any filter today**, so the default `{}` (normalized to all-`null`) keeps the report honest. Distinct from `supported_filters` — accepting a parameter never marks it enforced. |
 | `failure_classes` | all six tokens | Subset of `FAILURE_CLASS_TOKENS`. Declare exactly the statuses the adapter's `search()` can emit (e.g. an adapter whose only catch-all is `ERROR` declares `("error",)`). |
 | `cost_class` | `""` | One of `COST_CLASSES` = `free`, `freemium`, `paid`; `""` = unknown (emitted as `null`). |
 
 **Audit convention:** a new engine must declare `supported_result_types`,
-`failure_classes`, and `cost_class` accurately, or state in its docstring why
-the conservative default is correct. Never claim a result type, filter, or
-failure class the adapter does not actually provide. `structured` is reserved
-until typed domain payloads ship (tracked separately) and should not be
-declared yet.
+`supported_media_types`, `failure_classes`, and `cost_class` accurately, or
+state in its docstring why the conservative default is correct. Never claim a
+result type, media type, filter, or failure class the adapter does not
+actually provide. `structured` is reserved until typed domain payloads ship
+(tracked separately) and should not be declared yet. Only engines that
+actively perform image/video search and return structured `media` records
+declare `supported_media_types`.
 
 ### Category Reclassification
 
@@ -102,7 +105,16 @@ class SearchResult:
     published_date: str | None = None  # ISO 8601
     thumbnail: str | None = None
     img_src: str | None = None
+    media: MediaInfo | None = None     # structured image/video record (issue 188)
 ```
+
+`media` is the dedicated media result contract for image/video results. Build
+it with `build_media(media_type, url=..., thumbnail=..., source=...,
+width=..., height=..., duration=...)`; `url`/`thumbnail`/`source` are
+sanitized with `sanitize_url`, absent dimensions/duration stay `None` and are
+dropped at serialization. `thumbnail`/`img_src` remain the legacy flat fields
+for backward compatibility. `media_type` is one of `SUPPORTED_MEDIA_TYPES`
+(`image` | `video`).
 
 ### AdapterResponse (return type)
 
