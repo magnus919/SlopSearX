@@ -17,6 +17,7 @@ from slopsearx.capabilities import INTENT_PROFILES, resolve_intent
 from slopsearx.mcp.state import McpState, current_tenant, get_state
 from slopsearx.ratelimit import ValkeySlidingWindow
 from slopsearx.research import (
+    JobStillRunningError,
     ResearchJob,
     ResearchQuery,
     generate_job_id,
@@ -1529,7 +1530,14 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
             field="job_id",
         )
 
-    job = await state.runner.retry(job_id, tenant=tenant)
+    try:
+        job = await state.runner.retry(job_id, tenant=tenant)
+    except JobStillRunningError:
+        return {
+            "job_id": job_id,
+            "state": "running",
+            "note": "job is still running under a live worker; retry was not started to avoid concurrent execution",
+        }
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
 
@@ -1631,8 +1639,17 @@ async def slopsearx_extend_research(
     # A job previously executed by the durable worker still carries lease
     # fields whose Valkey key was already released. Run through run_direct so
     # the stale lease is cleared before run_pending (which otherwise tries to
-    # renew the missing lease and raises LeaseLostError).
-    job = await state.runner.run_direct(job)
+    # renew the missing lease and raises LeaseLostError). If a live worker
+    # still owns the job, run_direct raises JobStillRunningError instead of
+    # racing it.
+    try:
+        job = await state.runner.run_direct(job)
+    except JobStillRunningError:
+        return {
+            "job_id": job_id,
+            "state": "running",
+            "note": "job is still running under a live worker; follow-up query was not appended or executed",
+        }
     result = _job_summary(job)
     result["note"] = "follow-up query appended and executed; prior completed evidence was preserved"
     return result

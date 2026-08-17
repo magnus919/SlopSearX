@@ -52,6 +52,16 @@ class LeaseLostError(Exception):
     """
 
 
+class JobStillRunningError(Exception):
+    """Raised when a direct run would race a live worker's execution.
+
+    Retry/extend load a job that may still be actively executed by a worker
+    that holds a live lease. Clearing its lease fields and running directly
+    would cause concurrent execution, so the caller surfaces "job still
+    running" instead of dispatching work.
+    """
+
+
 JOB_STATES = frozenset({"queued", "running", "partial", "succeeded", "failed", "cancelled", "expired"})
 QUERY_STATES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 STRATEGIES = ("triangulate", "broad", "fresh", "counterevidence")
@@ -648,6 +658,18 @@ class ResearchJobStore:
         if job is None or job.state not in ("queued", "running"):
             await self._lease_release(self._lease_key(job_id), token)
             return None
+        elif time.time() >= job.deadline:
+            # A deadline-passed job can no longer make progress: finalize it to
+            # ``expired`` (matching ``_run_job``/``retry``/``expire_stale_running``)
+            # instead of handing it to a worker that would classify it
+            # ``partial``/``failed`` when the deadline gate fires mid-run.
+            for query in job.queries:
+                if query.state in ("pending", "running"):
+                    query.state = "cancelled"
+            job.state = "expired"
+            await self.save(job)
+            await self._lease_release(self._lease_key(job_id), token)
+            return None
         for query in job.queries:
             if query.state == "running":
                 query.state = "pending"
@@ -885,6 +907,8 @@ class ResearchJobRunner:
             # from another request (e.g. the cancel tool) mid-run.
             fresh = await store.load(job.job_id)
             if fresh is not None:
+                if fresh.owner_id is not None and fresh.owner_id != self._owner_id:
+                    raise LeaseLostError(job.job_id)
                 job = fresh
             query = job.queries[index]
             if query.state in ("done", "failed", "cancelled"):
@@ -931,8 +955,16 @@ class ResearchJobRunner:
         non-empty ``lease_token`` as active ownership and renews it, so a
         stale token would fail against the missing key and raise
         ``LeaseLostError``. Clearing the fields makes a direct run lease-free.
+
+        A job that is still ``running`` under a *live* owner must not be
+        cleared or run here: that would race the owner's execution. Those
+        calls raise :class:`JobStillRunningError` so the tool can surface
+        "job still running" instead of dispatching concurrently.
         """
         store = self._jobs_for(job.tenant)
+        fresh = await store.load(job.job_id) or job
+        if fresh.state == "running" and fresh.lease_token:
+            raise JobStillRunningError(job.job_id)
         job.owner_id = None
         job.lease_token = None
         job.lease_expires_at = 0.0
@@ -952,6 +984,8 @@ class ResearchJobRunner:
         cursors are byte-for-byte unchanged. Each retried subquery gets a
         NEW linked attempt appended; the original attempt's cursor remains
         readable. Returns the updated job, or ``None`` for an unknown id.
+        Raises :class:`JobStillRunningError` when the job is still running
+        under a live owner and must not be retried concurrently.
         """
         store = self._jobs_for(tenant or self._default_tenant)
         job = await store.load(job_id)

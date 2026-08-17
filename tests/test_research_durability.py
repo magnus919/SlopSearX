@@ -28,6 +28,7 @@ from slopsearx.mcp import tools as t
 from slopsearx.mcp.state import McpState, set_state, tenant_scope
 from slopsearx.research import (
     LEASE_KEY_PREFIX,
+    LeaseLostError,
     ResearchJob,
     ResearchJobRunner,
     ResearchJobStore,
@@ -436,6 +437,51 @@ class TestClaim:
         assert second.owner_id == "w2"
         assert second.lease_token != first.lease_token
 
+    async def test_claim_deadline_passed_job_finalizes_to_expired(self) -> None:
+        _, store = _build_state()
+        job_store = ResearchJobStore(store)
+        job = _job(
+            deadline=time.time() - 10,
+            queries=[
+                ResearchQuery(index=0, query="q", intent="web", engines=["wikipedia"]),
+                ResearchQuery(index=1, query="q2", intent="web", engines=["wikipedia"]),
+            ],
+        )
+        await job_store.save(job)
+
+        claimed = await job_store.claim(job.job_id, "w1", 60)
+
+        # The durable claim path must finalize a deadline-passed job to
+        # ``expired`` (never hand it to a worker that would classify it
+        # ``failed``/``partial``) and leave nothing claimable.
+        assert claimed is None
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.state == "expired"
+        assert all(query.state == "cancelled" for query in loaded.queries)
+        assert await job_store._lease_get(_lease_key("default", job.job_id)) is None
+
+    async def test_claim_deadline_passed_running_job_finalizes_to_expired(self) -> None:
+        _, store = _build_state()
+        job_store = ResearchJobStore(store)
+        job = _job(
+            state="running",
+            deadline=time.time() - 10,
+            queries=[
+                ResearchQuery(index=0, query="q", intent="web", engines=["wikipedia"], state="running"),
+            ],
+        )
+        await job_store.save(job)
+
+        claimed = await job_store.claim(job.job_id, "w1", 60)
+
+        assert claimed is None
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.state == "expired"
+        assert loaded.queries[0].state == "cancelled"
+        assert await job_store._lease_get(_lease_key("default", job.job_id)) is None
+
 
 class TestLeasePrimitives:
     async def test_renew_and_release_are_token_guarded(self) -> None:
@@ -532,7 +578,7 @@ class TestCancellation:
         job_store = state.job_store
         job = _job(queries=[ResearchQuery(index=0, query="q", intent="web", engines=["wikipedia"])])
         await job_store.save(job)
-        claimed = await job_store.claim(job.job_id, "w1", 60)
+        claimed = await job_store.claim(job.job_id, state.runner.worker_id, 60)
         assert claimed is not None
 
         # Owner holds the lease → cancel records the flag but does not fight
@@ -562,7 +608,7 @@ class TestCancellation:
             ],
         )
         await job_store.save(job)
-        claimed = await job_store.claim(job.job_id, "w1", 60)
+        claimed = await job_store.claim(job.job_id, state.runner.worker_id, 60)
         assert claimed is not None
 
         await job_store.request_cancel(job.job_id)
@@ -589,7 +635,7 @@ class TestRunnerExecution:
             ]
         )
         await job_store.save(job)
-        claimed = await job_store.claim(job.job_id, "w1", 60)
+        claimed = await job_store.claim(job.job_id, state.runner.worker_id, 60)
         assert claimed is not None
 
         await state.runner._execute_claimed(claimed)
@@ -621,7 +667,7 @@ class TestRunnerExecution:
 
         # Another replica claims the abandoned job and resumes only the
         # unfinished subquery.
-        claimed = await job_store.claim(job.job_id, "w2", 60)
+        claimed = await job_store.claim(job.job_id, state.runner.worker_id, 60)
         assert claimed is not None
         await state.runner._execute_claimed(claimed)
 
@@ -646,8 +692,8 @@ class TestRunnerExecution:
         winners = [
             r
             for r in await asyncio.gather(
-                job_store.claim(job.job_id, "w1", 60),
-                job_store.claim(job.job_id, "w2", 60),
+                job_store.claim(job.job_id, state.runner.worker_id, 60),
+                job_store.claim(job.job_id, state.runner.worker_id, 60),
             )
             if r is not None
         ]
@@ -682,7 +728,7 @@ class TestDirectRunsAfterDurableExecution:
         job = _job(queries=[ResearchQuery(index=0, query="q", intent="web", engines=["wikipedia"])])
         await job_store.save(job)
 
-        claimed = await job_store.claim(job.job_id, "w1", 60)
+        claimed = await job_store.claim(job.job_id, state.runner.worker_id, 60)
         assert claimed is not None
         await state.runner._execute_claimed(claimed)
 
@@ -718,7 +764,7 @@ class TestLeaseOwnershipGuard:
         job = _job(queries=[ResearchQuery(index=0, query="q", intent="web", engines=["wikipedia"])])
         await job_store.save(job)
 
-        claimed = await job_store.claim(job.job_id, "w1", 1)
+        claimed = await job_store.claim(job.job_id, state.runner.worker_id, 1)
         assert claimed is not None
 
         task = asyncio.create_task(state.runner._execute_claimed(claimed))
@@ -741,6 +787,126 @@ class TestLeaseOwnershipGuard:
         assert loaded.queries[0].state == "pending"
         assert loaded.owner_id == "w2"
         assert loaded.lease_token == second.lease_token
+
+    async def test_stale_owner_reload_after_reclaim_raises_lease_lost(self) -> None:
+        """A stale owner that reloads after a reclaimer changed ``owner_id``
+        must not adopt the new owner's lease and keep executing.
+
+        ``run_pending`` reloads the record before each subquery; when that
+        reloaded record is owned by a different worker, ownership is lost and
+        execution must stop (``LeaseLostError``) before the stale owner can
+        renew the new owner's lease.
+        """
+        state, store = _build_state(owner_id="w1")
+        job_store = state.job_store
+        job = _job(queries=[ResearchQuery(index=0, query="q", intent="web", engines=["wikipedia"])])
+        await job_store.save(job)
+
+        claimed = await job_store.claim(job.job_id, "w1", 60)
+        assert claimed is not None
+
+        # Simulate lease expiry + a reclaimer installing a new owner/token.
+        store._expiry[_lease_key("default", job.job_id)] = time.time() - 1
+        second = await job_store.claim(job.job_id, "w2", 60)
+        assert second is not None
+        assert second.owner_id == "w2"
+
+        # The stale owner (runner owner_id "w1") still holds its stale
+        # in-memory copy; its next reload observes the new owner and must
+        # stop instead of adopting w2's lease token.
+        with pytest.raises(LeaseLostError):
+            await state.runner.run_pending(claimed)
+
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.owner_id == "w2"
+        assert loaded.lease_token == second.lease_token
+        assert loaded.queries[0].state == "pending"
+
+
+# ---------------------------------------------------------------------------
+# Still-running guard for direct retry/extend runs
+# ---------------------------------------------------------------------------
+
+
+class TestStillRunningGuard:
+    async def test_retry_live_lease_does_not_clear_or_run(self) -> None:
+        state, _ = _build_state()
+        job_store = state.job_store
+        set_state(state)
+        try:
+            job = _job(
+                state="running",
+                queries=[
+                    ResearchQuery(index=0, query="fail", intent="web", engines=["wikipedia"], state="failed"),
+                ],
+            )
+            await job_store.save(job)
+            claimed = await job_store.claim(job.job_id, "w1", 60)
+            assert claimed is not None
+            lease_key = _lease_key("default", job.job_id)
+            assert await job_store._lease_get(lease_key) == claimed.lease_token
+
+            engine = state.ctx.active_engines["wikipedia"]
+            calls_before = engine.calls
+
+            result = await t.slopsearx_retry_research(job.job_id)
+
+            # A live owner holds the lease: retry must surface "still running"
+            # without clearing the lease or dispatching any subquery.
+            assert result["state"] == "running"
+            assert "still running" in result["note"]
+            assert await job_store._lease_get(lease_key) == claimed.lease_token
+            loaded = await job_store.load(job.job_id)
+            assert loaded is not None
+            assert loaded.owner_id == "w1"
+            assert loaded.lease_token == claimed.lease_token
+            assert loaded.queries[0].state == "failed"
+            assert engine.calls == calls_before
+        finally:
+            set_state(None)
+
+    async def test_extend_live_lease_does_not_clear_or_run(self) -> None:
+        state, _ = _build_state()
+        job_store = state.job_store
+        set_state(state)
+        try:
+            job = _job(
+                state="running",
+                queries=[
+                    ResearchQuery(
+                        index=0,
+                        query="done",
+                        intent="web",
+                        engines=["wikipedia"],
+                        state="done",
+                        cursor="snap-old",
+                    ),
+                ],
+            )
+            await job_store.save(job)
+            claimed = await job_store.claim(job.job_id, "w1", 60)
+            assert claimed is not None
+            lease_key = _lease_key("default", job.job_id)
+            assert await job_store._lease_get(lease_key) == claimed.lease_token
+
+            engine = state.ctx.active_engines["wikipedia"]
+            calls_before = engine.calls
+
+            result = await t.slopsearx_extend_research(job.job_id, "followup", intent="web")
+
+            # Extend must not append/execute against a live owner's job.
+            assert result["state"] == "running"
+            assert "still running" in result["note"]
+            assert await job_store._lease_get(lease_key) == claimed.lease_token
+            loaded = await job_store.load(job.job_id)
+            assert loaded is not None
+            assert loaded.owner_id == "w1"
+            assert loaded.lease_token == claimed.lease_token
+            assert len(loaded.queries) == 1
+            assert engine.calls == calls_before
+        finally:
+            set_state(None)
 
 
 # ---------------------------------------------------------------------------
