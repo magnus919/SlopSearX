@@ -110,7 +110,7 @@ All replicas are identical, interchangeable, and scaled behind a single load bal
    │ GoogleAdapter.search(q, params) │  →  scrape-proxy:8080/search     →  Scraped Results
    └─────────────────────────────────┘
 5. Each adapter returns (results: Result[], engine_health: EngineStatus)
-   → EngineStatus: ok, rate_limited, blocked, error, timeout
+   → EngineStatus: ok, rate_limited, blocked, error, timeout, unavailable
 6. Merge results:
    a. URL normalization (strip tracking params, resolve redirect targets)
    b. Deduplication by normalized URL (first occurrence wins)

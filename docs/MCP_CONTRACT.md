@@ -176,8 +176,9 @@ research coverage.
 | *(derived)* | — | `failure_class` (research only; see §8) |
 
 `status` is exactly one of `EngineStatus` tokens: `ok`, `rate_limited`,
-`blocked`, `error`, `timeout`. Engines that returned zero results are reported
-via `empty_engines`, not as a non-ok outcome status (`VAL-SEARCH-009`).
+`blocked`, `error`, `timeout`, or `unavailable`. Engines that returned zero
+results are reported via `empty_engines`, not as a non-ok outcome status
+(`VAL-SEARCH-009`).
 
 ---
 
@@ -250,7 +251,7 @@ Sources: `slopsearx/research.py` (`EngineCoverage`, `CoverageSummary`,
 | `bucket` | `bucket` | Disjoint class: `successful` / `empty` / `failed` / `unavailable` / `not-selected` (`VAL-RESEARCH-005`). |
 | `status` | `status` | `EngineStatus` token where applicable. |
 | `result_count` | `result_count` | |
-| `failure_class` | `failure_class` | Stable token (`ok`/`rate_limited`/`blocked`/`error`/`timeout`/`auth_required`); `auth_required` derived from credential state, not `AdapterResponse.status` (`VAL-RESEARCH-006`). |
+| `failure_class` | `failure_class` | Stable token (`ok`/`rate_limited`/`blocked`/`error`/`timeout`/`unavailable`/`auth_required`); `auth_required` derived from credential state, not `AdapterResponse.status` (`VAL-RESEARCH-006`). |
 
 ### 8.2 Coverage summary (`coverage`, job- and query-level)
 

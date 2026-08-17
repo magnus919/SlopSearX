@@ -121,6 +121,22 @@ class _CircuitOpenEngine(EngineAdapter):
         raise AssertionError("circuit-open engines must never be dispatched")
 
 
+class _BlockingEngine(EngineAdapter):
+    """Engine that holds the semaphore until the caller cancels it."""
+
+    name = "blocker"
+    categories = ["general"]
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.started = asyncio.Event()
+
+    async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
+        self.started.set()
+        await asyncio.sleep(60)
+        raise AssertionError("blocking engine unexpectedly completed")
+
+
 # ---------------------------------------------------------------------------
 # Fake cache
 # ---------------------------------------------------------------------------
@@ -526,24 +542,31 @@ class TestDispatch:
         assert results[1].latency_ms == 0.0
 
     async def test_unavailable_engine_does_not_reset_circuit_breaker(self) -> None:
-        """Scheduler-unavailable engines do not receive a synthetic success."""
+        """A scheduler-unavailable engine does not reset its circuit breaker."""
         engine = _OkEngine()
         engine.consecutive_errors = 4
         service = _service(engines={"okeng": engine})
+        async def _fake_gather(
+            tasks: list[asyncio.Task[AdapterResponse]],
+            engine_names: list[str],
+            deadline_s: float = 10.0,
+            started_engines: set[str] | None = None,
+        ) -> list[AdapterResponse]:
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            return [
+                AdapterResponse(results=[], status=EngineStatus.UNAVAILABLE)
+                for _ in engine_names
+            ]
 
-        async def _pending() -> AdapterResponse:
-            await asyncio.sleep(60)
-            raise AssertionError("pending task unexpectedly completed")
+        original_gather = service._gather_with_deadline
+        service._gather_with_deadline = _fake_gather  # type: ignore[method-assign]
+        try:
+            await service.search(_req())
+        finally:
+            service._gather_with_deadline = original_gather  # type: ignore[method-assign]
 
-        await service._gather_with_deadline(
-            [asyncio.create_task(_pending())],
-            ["okeng"],
-            deadline_s=0.01,
-            started_engines=set(),
-        )
-        result = AdapterResponse(results=[], status=EngineStatus.UNAVAILABLE)
-        if result.status == EngineStatus.OK:
-            engine.record_success()
         assert engine.consecutive_errors == 4
 
     async def test_overall_deadline_drains_cancelled_tasks(self) -> None:

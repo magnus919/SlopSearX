@@ -101,7 +101,15 @@ MCP_CONTRACT_VERSION = "1.0"
 # Closed set of status classes used to aggregate engine health. The final
 # ``unknown`` bucket captures engines never observed by a search outcome
 # (VAL-DIAG-006).
-ENGINE_STATUS_CLASSES: tuple[str, ...] = ("ok", "rate_limited", "blocked", "error", "timeout", "unknown")
+ENGINE_STATUS_CLASSES: tuple[str, ...] = (
+    "ok",
+    "rate_limited",
+    "blocked",
+    "error",
+    "timeout",
+    "unavailable",
+    "unknown",
+)
 
 # Engine-health note: /health never actively probes external APIs; health is
 # observed passively through search outcomes (unchanged product behavior).

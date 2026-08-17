@@ -225,7 +225,7 @@ Output:
   "engine_outcomes": [
     {
       "engine": "string",
-      "status": "ok | rate_limited | blocked | error | timeout",
+      "status": "ok | rate_limited | blocked | error | timeout | unavailable",
       "result_count": "integer",
       "latency_ms": "number | null",
       "message": "string | null"
