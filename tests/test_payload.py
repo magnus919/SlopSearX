@@ -8,6 +8,7 @@ source fields must stay absent — never fabricated as null/false/empty.
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import httpx
@@ -458,6 +459,25 @@ class TestPayloadDisclosure:
             result = await t.slopsearx_search("hello", engines=["brave"])
             expanded = await t.slopsearx_read_result(result["results"][0]["result_id"])
             assert expanded["payload"] is None
+        finally:
+            set_state(None)
+
+    async def test_read_result_omits_json_hostile_payload(self) -> None:
+        """NaN-bearing payloads are omitted from the full record, not emitted as invalid JSON."""
+        payload = {"domain": "security", "type": "vulnerability", "data": {"score": float("nan")}}
+        state = _mcp_state(_PayloadEngine("brave", payload))
+        set_state(state)
+        try:
+            result = await t.slopsearx_search("cve", engines=["brave"], freshness="prefer_fresh")
+            card = result["results"][0]
+            assert "payload" not in card  # hostile payloads never inline on cards
+
+            expanded = await t.slopsearx_read_result(card["result_id"])
+            assert expanded["payload"] is None
+
+            # The full record must remain strict-JSON serializable — no NaN
+            # leaks onto the MCP wire as invalid JSON.
+            assert json.dumps(expanded, allow_nan=False)
         finally:
             set_state(None)
 

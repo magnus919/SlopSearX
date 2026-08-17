@@ -424,7 +424,7 @@ def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: st
         "content_available": content_available,
         "thumbnail": result.thumbnail,
         "img_src": result.img_src,
-        "payload": result.payload,
+        "payload": result.payload if payload_serialized_size(result.payload) is not None else None,
         "source_engines": source_engines,
         "source_count": len(source_engines),
         "primary_engine": result.engine,

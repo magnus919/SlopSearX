@@ -48,9 +48,6 @@ PAYLOAD_SCHEMA_VERSION = 1
 # path (MCP ``slopsearx_read_result``).
 PAYLOAD_INLINE_BYTES = 512
 
-# The provenance kinds carried in ``provenance``.
-PROVENANCE_KINDS: tuple[str, ...] = ("adapter", "normalized", "inferred")
-
 # Stable domain-family identifiers. Families group payload types that share a
 # common shape so consumers can branch on the family without knowing every
 # adapter.
@@ -61,98 +58,6 @@ DOMAIN_JOBS = "jobs"
 DOMAIN_MEDIA = "media"
 DOMAIN_FINANCIAL = "financial"
 DOMAIN_BIOMEDICAL = "biomedical"
-
-DOMAIN_FAMILIES: tuple[str, ...] = (
-    DOMAIN_SECURITY,
-    DOMAIN_SCIENCE,
-    DOMAIN_PACKAGES,
-    DOMAIN_JOBS,
-    DOMAIN_MEDIA,
-    DOMAIN_FINANCIAL,
-    DOMAIN_BIOMEDICAL,
-)
-
-# Well-known payload types per family (the initial typed schemas).
-PAYLOAD_TYPES: dict[str, tuple[str, ...]] = {
-    DOMAIN_SECURITY: ("vulnerability",),
-    DOMAIN_SCIENCE: ("publication",),
-    DOMAIN_PACKAGES: ("package",),
-    DOMAIN_JOBS: ("job",),
-    DOMAIN_MEDIA: ("media_item",),
-    DOMAIN_FINANCIAL: ("economic_series",),
-    DOMAIN_BIOMEDICAL: ("drug_label",),
-}
-
-# Initial typed field schemas. Each documents the *possible* fields of a
-# payload type; adapters include only the fields their source actually
-# returned, so an absent field is absent — never fabricated.
-PAYLOAD_FIELDS: dict[str, dict[str, tuple[str, ...]]] = {
-    DOMAIN_SECURITY: {
-        "vulnerability": (
-            "cve_id",
-            "description",
-            "cvss",
-            "cwe_ids",
-            "references",
-        ),
-    },
-    DOMAIN_SCIENCE: {
-        "publication": (
-            "publication_id",
-            "authors",
-            "journal",
-            "abstract",
-        ),
-    },
-    DOMAIN_PACKAGES: {
-        "package": (
-            "name",
-            "version",
-            "summary",
-            "license",
-            "homepage",
-        ),
-    },
-    DOMAIN_JOBS: {
-        "job": (
-            "company",
-            "title",
-            "location",
-            "salary",
-            "job_id",
-        ),
-    },
-    DOMAIN_MEDIA: {
-        "media_item": (
-            "media_type",
-            "title",
-            "release_date",
-            "overview",
-            "vote_average",
-        ),
-    },
-    DOMAIN_FINANCIAL: {
-        "economic_series": (
-            "series_id",
-            "title",
-            "units",
-            "frequency",
-            "seasonal_adjustment",
-            "observation_start",
-            "notes",
-        ),
-    },
-    DOMAIN_BIOMEDICAL: {
-        "drug_label": (
-            "brand_name",
-            "generic_name",
-            "manufacturer",
-            "substance",
-            "purpose",
-            "indications",
-        ),
-    },
-}
 
 
 # ---------------------------------------------------------------------------
