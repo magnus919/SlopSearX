@@ -41,6 +41,7 @@ from slopsearx.audit import QueryAuditLogger
 from slopsearx.cache import SearchCache, _ttl_for_query, cache_key
 from slopsearx.capabilities import DEFAULT_SENSITIVE_ENGINES
 from slopsearx.config import load_config
+from slopsearx.filters import engine_filter_layer, filter_results_by_time_range
 from slopsearx.logging import capture_exception
 from slopsearx.merger import PresenceRanker, extract_empty_scrape_engines
 from slopsearx.payload import payload_for_persistence, payload_from_dict
@@ -565,6 +566,13 @@ class SearchService:
                     engine.record_success()
 
             responses[name] = result
+
+            # Local filter enforcement (issue 187): engines that declare local
+            # time_range enforcement have their results post-filtered using
+            # only the adapter-provided published_date field — never inferred
+            # from other result fields.
+            if request.time_range and engine_filter_layer(engine, "time_range") == "local":
+                result.results = filter_results_by_time_range(result.results, request.time_range)
 
             # Annotate each result with its tier for unscoped searches
             tier = 1 if name in self._ctx.tier1_engines else 2

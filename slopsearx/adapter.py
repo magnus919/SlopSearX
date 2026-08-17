@@ -200,6 +200,14 @@ class EngineAdapter(ABC):
     # enforcement report derives ``unsupported`` from exactly this).
     sensitive: bool = False  # reaching this engine requires the sensitive-engine grant
     supported_filters: dict[str, bool] = {}  # keys from SUPPORTED_FILTER_KEYS
+    # Audited enforcement layer per filter (issue 187). Unlike
+    # ``supported_filters`` (which only records whether the adapter consumes
+    # the parameter bag), this records the layer that actually *enforces* the
+    # filter: ``"upstream"`` (the upstream source applies it) or ``"local"``
+    # (the service post-filters this adapter's results). An absent key means
+    # the adapter does not enforce the filter. Defaults to ``{}``: no adapter
+    # enforces any filter today, so the enforcement report stays honest.
+    enforced_filters: dict[str, str] = {}  # filter name -> "upstream" | "local"
     supported_result_types: tuple[str, ...] = ("text",)  # subset of SUPPORTED_RESULT_TYPES
     failure_classes: tuple[str, ...] = (
         "rate_limited",
