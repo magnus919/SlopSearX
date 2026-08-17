@@ -490,9 +490,9 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
       (``file:``, ``data:``, ``javascript:``, ...); see
       ``UNSAFE_RETRIEVAL_SCHEMES``.
     - ``ambiguous`` — canonicalization-ambiguous (no scheme, no host, a
-      backslash or control character in the authority, an invalid or
-      out-of-range port, or unparseable); treated as ineligible rather than
-      guessed at.
+      backslash or control character in the authority, a percent-encoded or
+      non-ASCII host, an invalid or out-of-range port, or unparseable);
+      treated as ineligible rather than guessed at.
     """
     if not url or not url.strip():
         return RETRIEVAL_URL_STATUS_MISSING, "result has no URL to retrieve", None, None
@@ -528,6 +528,19 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
             return (
                 RETRIEVAL_URL_STATUS_AMBIGUOUS,
                 "URL authority contains a backslash or control character; canonicalization is ambiguous",
+                scheme,
+                None,
+            )
+        # urlparse does not percent-decode or IDNA-map the host, but WHATWG
+        # clients (browsers, HTTP stacks) do, so a percent-encoded host
+        # ("%31%36%39.%32%35%34..." -> 169.254.169.254) or a fullwidth host
+        # would be certified ok here while a WHATWG client resolves a
+        # different host. Never hand off a target whose host cannot be
+        # canonicalized unambiguously (CWE-918 host-confusion guard).
+        if "%" in parsed.hostname or any(ord(char) > 0x7F for char in parsed.hostname):
+            return (
+                RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                "URL host contains a percent-encoded or non-ASCII character; canonicalization is ambiguous",
                 scheme,
                 None,
             )

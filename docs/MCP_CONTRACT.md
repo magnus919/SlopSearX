@@ -80,13 +80,13 @@ internal model, but derived from it):
 | `provenance` | `{query, query_id, rank_explanation, source_engines}` — how the result entered the set. |
 | `snapshot` | `{cursor, query, query_id, total}` — citation/snapshot context. |
 | `note` | `"SlopSearX did not fetch or verify the linked page"` — mandatory non-verification disclosure (`VAL-EXPAND-010`). |
-| `retrieval` | The search-to-retrieval handoff record (contract `slopsearx.retrieval_handoff` v1) — result identity, canonical URL when eligible, URL classification, snippet-only/non-verification status, and provenance for downstream capture association. See §2.1 and `docs/RETRIEVAL_HANDOFF.md`. |
+| `retrieval` | The search-to-retrieval handoff record (contract `slopsearx.retrieval_handoff` v1) — result identity, the raw result URL handed off verbatim when eligible, URL classification, snippet-only/non-verification status, and provenance for downstream capture association. See §2.1 and `docs/RETRIEVAL_HANDOFF.md`. |
 
 Cards additionally carry a **compact eligibility subset** of the handoff record
 under `retrieval`: `{contract, version, eligible, url_status, url_reason,
 scheme}` — enough for a card-only consumer to decide whether to retrieve a
 result (and why not) without expanding it (progressive disclosure, same model
-as content/media). The full handoff record (result identity, canonical URL,
+as content/media). The full handoff record (result identity, verbatim URL,
 provenance, disclosure) lives on the record.
 
 ### 2.1 The `retrieval` handoff record (issue 189)

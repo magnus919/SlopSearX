@@ -289,6 +289,25 @@ class TestUrlClassification:
             ("file:///etc/passwd", "unsafe_scheme", "scheme 'file' is unsafe for downstream HTTP retrieval"),
             ("/relative/path", "ambiguous", "URL has no scheme; canonicalization is ambiguous"),
             ("https://", "ambiguous", "URL has no host; canonicalization is ambiguous"),
+            # Exact reason strings for the remaining ambiguous branches (pinned
+            # contract strings — see _retrieval_url): backslash authority,
+            # invalid port, out-of-range port, zero port, unparseable.
+            (
+                "https://internal.example\\@public.com/",
+                "ambiguous",
+                "URL authority contains a backslash or control character; canonicalization is ambiguous",
+            ),
+            ("http://host:abc/", "ambiguous", "URL port is invalid; canonicalization is ambiguous"),
+            # 99999 parses as a port out of Python's uint16 range, so .port
+            # itself raises ValueError — the "invalid port" branch, not the
+            # sane-range branch (only port 0 reaches the 1-65535 check).
+            ("http://host:99999/", "ambiguous", "URL port is invalid; canonicalization is ambiguous"),
+            (
+                "http://host:0/",
+                "ambiguous",
+                "URL port is outside the sane range (1-65535); canonicalization is ambiguous",
+            ),
+            ("https://[::1", "ambiguous", "URL cannot be parsed unambiguously"),
         ],
     )
     async def test_url_reasons_are_machine_readable(
@@ -308,6 +327,44 @@ class TestUrlClassification:
             assert card["retrieval"]["url_reason"] == expected_reason
             assert expanded["retrieval"]["url_status"] == expected_status
             assert expanded["retrieval"]["url_reason"] == expected_reason
+        finally:
+            set_state(None)
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            # Percent-encoded hosts: Python's urlparse does not percent-decode
+            # the host, but a WHATWG client does, so "%31%36%39.%32%35%34..."
+            # resolves to 169.254.169.254 after handoff (metadata-IP SSRF).
+            "http://%31%32%37.0.0.1/",
+            "http://%31%36%39.%32%35%34.%31%36%39.%32%35%34/",
+            # Fullwidth host: urlparse does not IDNA-map, but WHATWG clients
+            # do; the effective host is not the one reported here.
+            "http://\uff45\uff58\uff41\uff4d\uff50\uff4c\uff45.example/",
+        ],
+    )
+    async def test_percent_encoded_or_non_ascii_host_is_never_handed_off(self, url: str) -> None:
+        """A host that cannot be canonicalized unambiguously is never handed off.
+
+        Python's ``urlparse`` neither percent-decodes nor IDNA-maps the host,
+        but WHATWG clients (browsers, HTTP stacks) do, so a percent-encoded
+        metadata IP (``%31%32%37.0.0.1`` -> 127.0.0.1) or a fullwidth host
+        would otherwise be certified ``ok`` and handed off verbatim. Such
+        hosts are classified ``ambiguous`` and never handed off as a fetch
+        target (CWE-918 host-confusion guard).
+        """
+        state_obj = _build_state({"brave": _UrlEngine("brave", [url])})
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("hello", engines=["brave"])
+            card = _first_card(result)
+            expanded = await t.slopsearx_read_result(card["result_id"])
+            assert card["retrieval"]["url_status"] == "ambiguous"
+            assert card["retrieval"]["url_reason"] == (
+                "URL host contains a percent-encoded or non-ASCII character; canonicalization is ambiguous"
+            )
+            assert card["retrieval"]["eligible"] is False
+            assert expanded["retrieval"]["url"] is None
         finally:
             set_state(None)
 

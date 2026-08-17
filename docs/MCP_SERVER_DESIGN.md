@@ -161,10 +161,10 @@ The default search response should contain only title, URL, short snippet, publi
 service and is not a page fetcher, so the boundary to a downstream reader must
 be explicit and machine-readable. Each result exposes a `retrieval` handoff
 record (contract `slopsearx.retrieval_handoff`, `docs/RETRIEVAL_HANDOFF.md`)
-that carries result identity, the canonical URL when eligible, a closed
-`url_status` classification (`ok`/`missing`/`non_http`/`unsafe_scheme`/
-`ambiguous`), snippet-only/non-verification status, and snapshot/query
-provenance. Unsafe, non-HTTP, missing, and canonicalization-ambiguous URLs are
+that carries result identity, the raw result URL handed off verbatim when
+eligible, a closed `url_status` classification (`ok`/`missing`/`non_http`/
+`unsafe_scheme`/`ambiguous`), snippet-only/non-verification status, and
+snapshot/query provenance. Unsafe, non-HTTP, missing, and canonicalization-ambiguous URLs are
 never handed off as fetch targets, which is what keeps the MCP server from
 becoming an SSRF-capable proxy while still supporting composition with a
 downstream retriever such as GroktoCrawl. Cards carry the compact eligibility

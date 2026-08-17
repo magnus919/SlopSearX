@@ -6,7 +6,8 @@
 
 * expose a machine-readable search-to-retrieval handoff record (`retrieval`,
   contract `slopsearx.retrieval_handoff` v1) on every MCP result card and
-  expanded record: result identity, canonical URL when eligible, a closed
+  expanded record: result identity, the raw result URL handed off verbatim
+  when eligible, a closed
   `url_status` classification (`ok`/`missing`/`non_http`/`unsafe_scheme`/
   `ambiguous`) with stable reasons, snippet-only/non-verification status, and
   snapshot/query provenance so a downstream retriever (e.g. GroktoCrawl) can
