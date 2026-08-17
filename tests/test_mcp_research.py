@@ -244,7 +244,7 @@ class TestJobLifecycle:
     async def test_expire_stale_running(self) -> None:
         runner, store = _make_state()
         stale = ResearchJob(
-            job_id="job-stale", question="q", strategy="broad", state="running", deadline=time.time() + 100
+            job_id="job-stale", question="q", strategy="broad", state="running", deadline=time.time() - 10
         )
         queries, _ = plan_research_queries("q", "broad", 2, 5, runner._catalog, runner._policy)
         stale.queries = queries
@@ -257,3 +257,18 @@ class TestJobLifecycle:
         assert loaded is not None
         assert loaded.state == "expired"
         assert all(q.state == "cancelled" for q in loaded.queries)
+
+    async def test_future_deadline_running_job_left_for_reclaim(self) -> None:
+        runner, store = _make_state()
+        stale = ResearchJob(
+            job_id="job-future", question="q", strategy="broad", state="running", deadline=time.time() + 3600
+        )
+        queries, _ = plan_research_queries("q", "broad", 2, 5, runner._catalog, runner._policy)
+        stale.queries = queries
+        await runner._jobs.save(stale)
+
+        # A future-deadline orphan is reclaimable, not expired.
+        assert await runner._jobs.expire_stale_running() == 0
+        loaded = await runner._jobs.load("job-future")
+        assert loaded is not None
+        assert loaded.state == "running"
