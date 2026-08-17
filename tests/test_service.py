@@ -121,6 +121,22 @@ class _CircuitOpenEngine(EngineAdapter):
         raise AssertionError("circuit-open engines must never be dispatched")
 
 
+class _BlockingEngine(EngineAdapter):
+    """Engine that holds the semaphore until the caller cancels it."""
+
+    name = "blocker"
+    categories = ["general"]
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.started = asyncio.Event()
+
+    async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
+        self.started.set()
+        await asyncio.sleep(60)
+        raise AssertionError("blocking engine unexpectedly completed")
+
+
 # ---------------------------------------------------------------------------
 # Fake cache
 # ---------------------------------------------------------------------------
@@ -449,6 +465,180 @@ class TestDispatch:
 
         assert response.engine_outcomes == []
         assert response.partial is False
+
+    async def test_dispatch_honors_engine_timeout_ms(self) -> None:
+        """An engine configured with timeout_ms > the 3s default is not killed early.
+
+        Regression: the dispatcher previously hardcoded a 3s ceiling and never
+        consulted the engine's configured timeout_ms, so slow-but-legit engines
+        (e.g. Internet Archive Wayback CDX) always surfaced as TIMEOUT.
+        """
+        slow = _OkEngine(delay=10.5)
+        slow.config = {"timeout_ms": 11_000}
+        service = _service(engines={"okeng": slow}, tier1={"okeng"})
+
+        response = await service.search(_req())
+
+        assert response.all_unresponsive is False
+        assert response.engine_outcomes[0].status == "ok"
+
+    async def test_dispatch_falls_back_to_default_timeout(self) -> None:
+        """An engine without a configured timeout still uses the 3s default."""
+        slow = _OkEngine(delay=4.0)  # config defaults to {} → no timeout_ms
+        service = _service(engines={"okeng": slow})
+
+        response = await service.search(_req())
+
+        assert response.all_unresponsive is True
+        assert response.engine_outcomes[0].status == "timeout"
+
+    async def test_dispatch_never_raises_on_bad_timeout_ms(self) -> None:
+        """A non-numeric timeout_ms falls back to the default instead of raising."""
+        slow = _OkEngine(delay=0.0)
+        slow.config = {"timeout_ms": "not-a-number"}
+        service = _service(engines={"okeng": slow}, tier1={"okeng"})
+
+        response = await service.search(_req())
+
+        assert response.all_unresponsive is False
+        assert response.engine_outcomes[0].status == "ok"
+
+    async def test_overall_deadline_caps_fanout(self) -> None:
+        """A slow engine is cut at the overall deadline, not allowed to hang the search."""
+        service = _service(engines={"okeng": _OkEngine()})
+        started = asyncio.Event()
+
+        async def _started_slow() -> AdapterResponse:
+            started.set()
+            await asyncio.sleep(30.0)
+            raise AssertionError("engine unexpectedly completed")
+
+        task = asyncio.create_task(_started_slow())
+        await started.wait()
+        response = await service._gather_with_deadline(
+            [task], ["okeng"], deadline_s=0.01, started_engines={"okeng"}
+        )
+
+        assert response[0].status.value == "timeout"
+        assert task.done()
+
+    async def test_semaphore_wait_timeout_is_not_reported_as_engine_timeout(self) -> None:
+        """An engine that never starts is unavailable, not an upstream timeout."""
+        service = _service(engines={"okeng": _OkEngine()})
+        started = {"okeng"}
+
+        async def _pending() -> AdapterResponse:
+            await asyncio.sleep(60)
+            raise AssertionError("pending task unexpectedly completed")
+
+        first = asyncio.create_task(_pending())
+        second = asyncio.create_task(_pending())
+        results = await service._gather_with_deadline(
+            [first, second], ["okeng", "second"], deadline_s=0.01, started_engines=started
+        )
+
+        assert results[0].status.value == "timeout"
+        assert results[1].status.value == "unavailable"
+        assert results[1].latency_ms == 0.0
+
+    async def test_unavailable_engine_does_not_reset_circuit_breaker(self) -> None:
+        """A scheduler-unavailable engine does not reset its circuit breaker."""
+        engine = _OkEngine()
+        engine.consecutive_errors = 4
+        service = _service(engines={"okeng": engine})
+        async def _fake_gather(
+            tasks: list[asyncio.Task[AdapterResponse]],
+            engine_names: list[str],
+            deadline_s: float = 10.0,
+            started_engines: set[str] | None = None,
+        ) -> list[AdapterResponse]:
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            return [
+                AdapterResponse(results=[], status=EngineStatus.UNAVAILABLE)
+                for _ in engine_names
+            ]
+
+        original_gather = service._gather_with_deadline
+        service._gather_with_deadline = _fake_gather  # type: ignore[method-assign]
+        try:
+            await service.search(_req())
+        finally:
+            service._gather_with_deadline = original_gather  # type: ignore[method-assign]
+
+        assert engine.consecutive_errors == 4
+
+    async def test_overall_deadline_drains_cancelled_tasks(self) -> None:
+        """Deadline cancellation drains child tasks before returning the response."""
+        service = _service(engines={"okeng": _OkEngine()})
+        started = asyncio.Event()
+
+        async def _started_slow() -> AdapterResponse:
+            started.set()
+            await asyncio.sleep(30.0)
+            raise AssertionError("engine unexpectedly completed")
+
+        task = asyncio.create_task(_started_slow())
+        await started.wait()
+        response = await service._gather_with_deadline(
+            [task], ["okeng"], deadline_s=0.01, started_engines={"okeng"}
+        )
+        assert response[0].status.value == "timeout"
+        assert task.done()
+
+    async def test_raising_engine_isolated_with_deadline(self) -> None:
+        """A raising engine is classified as ERROR, not allowed to fail the whole search."""
+        ok = _OkEngine(count=2)
+        boom = _ExplodingEngine()
+        service = _service(engines={"okeng": ok, "boomeng": boom}, tier1={"okeng"})
+
+        response = await service.search(_req())
+
+        assert response.all_unresponsive is False
+        statuses = {o.engine: o.status for o in response.engine_outcomes}
+        assert statuses == {"okeng": "ok", "boomeng": "error"}
+        assert len(response.results) == 2
+
+    async def test_gather_isolates_baseexception_from_task_result(self) -> None:
+        """task.result() re-raises stored exceptions; _gather_with_deadline must isolate them."""
+        service = _service(engines={"okeng": _OkEngine()})
+
+        async def _boom() -> AdapterResponse:
+            raise asyncio.CancelledError()  # escapes `except Exception` in _dispatch_engine
+
+        task = asyncio.create_task(_boom())
+        results = await service._gather_with_deadline([task], ["boomeng"])
+
+        assert len(results) == 1
+        assert results[0].status == EngineStatus.ERROR
+        assert "boomeng" not in results[0].results or results[0].results == []
+
+    async def test_gather_cancellation_cancels_child_tasks(self) -> None:
+        """Cancelling fan-out must not leave engine tasks running in the background."""
+        service = _service(engines={"okeng": _OkEngine()})
+        started = asyncio.Event()
+        cancelled = asyncio.Event()
+
+        async def _slow() -> AdapterResponse:
+            started.set()
+            try:
+                await asyncio.sleep(60)
+            except asyncio.CancelledError:
+                cancelled.set()
+                raise
+            raise AssertionError("slow task unexpectedly completed")
+
+        task = asyncio.create_task(_slow())
+        await started.wait()
+        gather_task = asyncio.create_task(service._gather_with_deadline([task], ["sloweng"]))
+        await asyncio.sleep(0)
+        gather_task.cancel()
+
+        with pytest.raises(asyncio.CancelledError):
+            await gather_task
+        assert cancelled.is_set()
+        assert task.done()
 
 
 # ---------------------------------------------------------------------------

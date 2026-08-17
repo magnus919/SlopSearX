@@ -68,6 +68,9 @@ DEFAULT_TIER1_ENGINES: frozenset[str] = frozenset(
 )
 
 DEFAULT_ENGINE_TIMEOUT_S = 3.0
+# Minimum fan-out deadline. The effective deadline also honors the selected
+# engines' configured timeouts, including targeted engines above this floor.
+DEFAULT_SEARCH_TIMEOUT_S = 10.0
 
 # ---------------------------------------------------------------------------
 # Request / response model
@@ -119,7 +122,7 @@ class EngineOutcome:
     """Per-engine outcome for one search dispatch."""
 
     engine: str
-    status: str  # ok | rate_limited | blocked | error | timeout
+    status: str  # ok | rate_limited | blocked | error | timeout | unavailable
     result_count: int
     latency_ms: float | None = None
     message: str | None = None
@@ -508,12 +511,19 @@ class SearchService:
         # Dispatch to all engines concurrently (bounded by semaphore)
         tasks: list[asyncio.Task[AdapterResponse]] = []
         engine_names: list[str] = []
+        started_engines: set[str] = set()
         circuit_open: list[str] = []
         for name, engine in target.items():
             if not engine.circuit_allowed():
                 circuit_open.append(name)
                 continue
-            tasks.append(asyncio.create_task(self._dispatch_with_semaphore(name, engine, request.query, search_params)))
+            tasks.append(
+                asyncio.create_task(
+                    self._dispatch_with_semaphore(
+                        name, engine, request.query, search_params, started_engines=started_engines
+                    )
+                )
+            )
             engine_names.append(name)
 
         # Fire suggestion fetch concurrently with engine dispatch. Suggestions
@@ -524,26 +534,27 @@ class SearchService:
         if self._ctx.suggestion_service is not None:
             suggestions_task = asyncio.create_task(self._generate_suggestions(request.query))
 
-        dispatch_results = await asyncio.gather(*tasks, return_exceptions=True)
+        engine_timeouts = [
+            self._resolve_engine_timeout_s(engine) for engine in target.values() if engine.circuit_allowed()
+        ]
+        # The deadline covers semaphore acquisition as well as engine work.
+        # Use the sum, rather than the maximum, so serialized dispatch can give
+        # every selected engine its configured execution budget.
+        dispatch_deadline_s = max(DEFAULT_SEARCH_TIMEOUT_S, sum(engine_timeouts))
+
+        dispatch_results = await self._gather_with_deadline(tasks, engine_names, dispatch_deadline_s, started_engines)
 
         # Collect results and metadata
         responses: dict[str, AdapterResponse] = {}
-        for name, raw in zip(engine_names, dispatch_results):
-            if isinstance(raw, BaseException):
-                # Engine raised unexpectedly — classify as error
-                result: AdapterResponse = AdapterResponse(
-                    results=[],
-                    status=EngineStatus.ERROR,
-                    error_message=sanitize_url(str(raw)),
-                )
-            else:
-                result = raw
-
-            # Update circuit breaker state
+        for name, result in zip(engine_names, dispatch_results):
+            # A task waiting behind the semaphore may be cancelled by the
+            # search-wide deadline before its engine ever starts. Do not let a
+            # scheduler timeout count as an upstream engine failure.
             engine = target[name]
             if result.status in (EngineStatus.ERROR, EngineStatus.TIMEOUT):
-                engine.record_failure()
-            else:
+                if name in started_engines:
+                    engine.record_failure()
+            elif result.status != EngineStatus.UNAVAILABLE:
                 engine.record_success()
 
             responses[name] = result
@@ -704,14 +715,17 @@ class SearchService:
         engine: EngineAdapter,
         query: str,
         params: dict[str, Any],
-        timeout_s: float = DEFAULT_ENGINE_TIMEOUT_S,
+        timeout_s: float | None = None,
     ) -> AdapterResponse:
         """Dispatch a query to one engine with a timeout.
 
+        Honors the engine's configured ``timeout_ms`` when set; falls back to
+        :data:`DEFAULT_ENGINE_TIMEOUT_S` for engines with no explicit timeout.
         Returns AdapterResponse — never raises. Timeouts are caught and
         returned as EngineStatus.TIMEOUT.
         """
         del name
+        timeout_s = timeout_s if timeout_s is not None else self._resolve_engine_timeout_s(engine)
         try:
             return await asyncio.wait_for(engine.search(query, params), timeout=timeout_s)
         except asyncio.TimeoutError:
@@ -736,13 +750,95 @@ class SearchService:
         engine: EngineAdapter,
         query: str,
         params: dict[str, Any],
-        timeout_s: float = DEFAULT_ENGINE_TIMEOUT_S,
+        timeout_s: float | None = None,
+        started_engines: set[str] | None = None,
     ) -> AdapterResponse:
         """Dispatch engine query, bounded by the global semaphore."""
+        if timeout_s is None:
+            timeout_s = self._resolve_engine_timeout_s(engine)
         if self._ctx.engine_semaphore is not None:
             async with self._ctx.engine_semaphore:
+                if started_engines is not None:
+                    started_engines.add(name)
                 return await self._dispatch_engine(name, engine, query, params, timeout_s)
+        if started_engines is not None:
+            started_engines.add(name)
         return await self._dispatch_engine(name, engine, query, params, timeout_s)
+
+    @staticmethod
+    def _resolve_engine_timeout_s(engine: EngineAdapter) -> float:
+        """Resolve an engine's dispatch timeout from its configured ``timeout_ms``.
+
+        Never raises: a missing, non-numeric, or non-positive ``timeout_ms``
+        falls back to :data:`DEFAULT_ENGINE_TIMEOUT_S`.
+        """
+        try:
+            ms = float(engine.config.get("timeout_ms") or 0.0)
+            if ms > 0:
+                return ms / 1000.0
+        except (TypeError, ValueError):
+            pass
+        return DEFAULT_ENGINE_TIMEOUT_S
+
+    async def _gather_with_deadline(
+        self,
+        tasks: list[asyncio.Task[AdapterResponse]],
+        engine_names: list[str],
+        deadline_s: float = DEFAULT_SEARCH_TIMEOUT_S,
+        started_engines: set[str] | None = None,
+    ) -> list[Any]:
+        """Gather engine dispatch tasks under an overall deadline.
+
+        Cancels any task still running after the caller-supplied effective
+        deadline so a single slow engine cannot hold the whole fan-out hostage.
+        A started engine that misses the deadline receives ``TIMEOUT``;
+        an engine still waiting for the dispatch semaphore receives
+        ``UNAVAILABLE`` so scheduler delay is not reported as upstream failure.
+        The effective deadline is supplied by the caller and is at least the
+        configured minimum fan-out deadline.
+
+        Per-engine exceptions are isolated: ``Task.result()`` re-raises a stored
+        exception, so we catch it and classify it as ``EngineStatus.ERROR`` —
+        preserving the "adapters never raise" contract even if cancellation or
+        another ``BaseException`` escapes the per-engine dispatch wrapper.
+        """
+        if not tasks:
+            return []
+        try:
+            done, pending = await asyncio.wait(tasks, timeout=deadline_s)
+        except asyncio.CancelledError:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            raise
+        for task in pending:
+            task.cancel()
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
+        results: dict[str, AdapterResponse] = {}
+        for task in done:
+            name = engine_names[tasks.index(task)]
+            try:
+                raw = task.result()
+            except BaseException as exc:  # noqa: BLE001 - isolate one engine from fan-out
+                results[name] = AdapterResponse(
+                    results=[], status=EngineStatus.ERROR, error_message=sanitize_url(str(exc))
+                )
+            else:
+                results[name] = raw
+        for name in engine_names:
+            if name not in results:
+                started = started_engines is None or name in started_engines
+                results[name] = AdapterResponse(
+                    results=[],
+                    status=EngineStatus.TIMEOUT if started else EngineStatus.UNAVAILABLE,
+                    error_message=(
+                        f"timed out after {deadline_s}s" if started else "not started before the search deadline"
+                    ),
+                    latency_ms=deadline_s * 1000 if started else 0.0,
+                )
+        return [results[name] for name in engine_names]
 
     # -- Helpers --------------------------------------------------------
 

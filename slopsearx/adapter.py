@@ -116,6 +116,7 @@ class EngineStatus(enum.Enum):
     BLOCKED = "blocked"
     ERROR = "error"
     TIMEOUT = "timeout"
+    UNAVAILABLE = "unavailable"
 
 
 @dataclass

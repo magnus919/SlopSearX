@@ -87,7 +87,7 @@ class SearchResult:
 @dataclass
 class AdapterResponse:
     results: list[SearchResult]
-    status: EngineStatus      # OK, RATE_LIMITED, BLOCKED, ERROR, TIMEOUT
+    status: EngineStatus      # OK, RATE_LIMITED, BLOCKED, ERROR, TIMEOUT, UNAVAILABLE
     error_message: str | None = None
     latency_ms: float = 0.0
 ```

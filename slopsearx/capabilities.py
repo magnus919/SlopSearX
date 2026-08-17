@@ -93,7 +93,7 @@ class EngineCapability:
         default_factory=lambda: ["rate_limited", "blocked", "error", "timeout", "auth_required", "unavailable"]
     )
     cost_class: str = ""  # coarse operator hint; "" = unknown (emitted as null)
-    last_known_status: str = "unknown"  # ok|rate_limited|blocked|error|timeout|unknown
+    last_known_status: str = "unknown"  # ok|rate_limited|blocked|error|timeout|unavailable|unknown
     last_known_status_at: str | None = None  # ISO freshness marker, or None when unknown
 
     @property

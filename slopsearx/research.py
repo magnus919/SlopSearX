@@ -50,7 +50,15 @@ COVERAGE_BUCKETS: tuple[str, ...] = ("successful", "empty", "failed", "unavailab
 # (``ok``/``rate_limited``/``blocked``/``error``/``timeout``) come from
 # ``EngineStatus``; ``auth_required`` is the single derived token coming
 # from a credential check, never from ``AdapterResponse.status``.
-FAILURE_CLASS_TOKENS: tuple[str, ...] = ("ok", "rate_limited", "blocked", "error", "timeout", "auth_required")
+FAILURE_CLASS_TOKENS: tuple[str, ...] = (
+    "ok",
+    "rate_limited",
+    "blocked",
+    "error",
+    "timeout",
+    "unavailable",
+    "auth_required",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -165,6 +173,7 @@ def classify_coverage(
     - ``ok`` + results > 0          -> ``successful`` / ``ok``
     - ``ok`` + results == 0         -> ``empty``      / ``ok``
     - ``rate_limited|blocked|error|timeout`` -> ``failed`` / same token
+    - ``unavailable``               -> ``unavailable`` / ``unavailable``
     - credential missing            -> ``unavailable`` / ``auth_required``
     - not dispatched (scope-excluded) -> ``not-selected`` / ``None``
 
@@ -185,6 +194,14 @@ def classify_coverage(
     if token == "ok":
         bucket = "successful" if result_count > 0 else "empty"
         return EngineCoverage(engine=engine, bucket=bucket, status=token, result_count=result_count, failure_class="ok")
+    if token == "unavailable":
+        return EngineCoverage(
+            engine=engine,
+            bucket="unavailable",
+            status=token,
+            result_count=result_count,
+            failure_class="unavailable",
+        )
     return EngineCoverage(engine=engine, bucket="failed", status=token, result_count=result_count, failure_class=token)
 
 
