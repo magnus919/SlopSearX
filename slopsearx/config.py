@@ -38,6 +38,10 @@ class RoutingConfig:
     enabled: bool = True
     topics: Optional[dict[str, Any]] = None
     fallback: Optional[list[str]] = None
+    # Issue 192: operator bounds for cost/coverage-aware automatic routing.
+    # Keys: max_engines_per_intent, max_cost_class, coverage_target. Parsed
+    # by slopsearx.routing.load_routing_budget (env vars ROUTING_* win).
+    budget: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -342,6 +346,7 @@ def _dict_to_config(data: dict[str, Any]) -> Config:
         enabled=routing_data.get("enabled", True),
         topics=routing_data.get("topics"),
         fallback=routing_data.get("fallback"),
+        budget=routing_data.get("budget"),
     )
 
     return Config(
@@ -466,6 +471,8 @@ def load_config(
                 config.routing.topics = rd["topics"]
             if "fallback" in rd:
                 config.routing.fallback = rd["fallback"]
+            if "budget" in rd:
+                config.routing.budget = rd["budget"]
         config.default_engines = file_data.get("default_engines", config.default_engines)
         config.log_level = file_data.get("log_level", config.log_level)
         config.enable_suggestions = file_data.get("enable_suggestions", config.enable_suggestions)

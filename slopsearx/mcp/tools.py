@@ -43,6 +43,7 @@ from slopsearx.research import (
 from slopsearx.service import (
     QueryValidationError,
     RateLimitExceededError,
+    ScopeDecision,
     ScopeResolver,
     SearchRequest,
 )
@@ -320,17 +321,22 @@ def _preview_selected_engines(
     """Preview the engine scope that would execute for a request (no dispatch).
 
     Mirrors the service's scope resolution exactly (same active engines,
-    router, tier-1 set, and sensitive set) so mandatory-constraint checks can
-    fail closed *before* any engine is dispatched. The real ``query`` is
-    passed through so auto-intent topic routing previews the same scope the
-    service will dispatch — an empty-query preview would fall back to the
-    tier-1 set and mask non-conforming topic scopes.
+    router, tier-1 set, sensitive set, capability catalog, and routing
+    budget) so mandatory-constraint checks can fail closed *before* any
+    engine is dispatched. The real ``query`` is passed through so
+    auto-intent topic routing previews the same scope the service will
+    dispatch — an empty-query preview would fall back to the tier-1 set and
+    mask non-conforming topic scopes. The catalog comes from the shared
+    context (wired by the server lifespan) so the preview and the executed
+    scope agree on cost/coverage-aware automatic routing (issue 192).
     """
     resolver = ScopeResolver(
         active_engines=state.ctx.active_engines,
         router=state.ctx.router,
         tier1_engines=state.ctx.tier1_engines,
         sensitive_engines=state.ctx.sensitive_engines,
+        catalog=state.ctx.catalog,
+        budget=state.ctx.routing_budget,
     )
     return resolver.explain(SearchRequest(query=query, categories=categories, engines=engines)).selected_engines
 
@@ -887,6 +893,28 @@ def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: st
     return record
 
 
+def _routing_scope_block(scope: ScopeDecision) -> dict[str, Any]:
+    """The machine-readable routing explanation attached to a scope decision.
+
+    Exposed on both the search envelope's ``scope`` block and the
+    ``slopsearx_explain_search_scope`` tool so preview and executed scope
+    agree (issue 192). Every exclusion carries a ``stage`` (policy | auth |
+    health | budget), and ``routing`` reports whether the deterministic
+    fallback ran, whether configured budget bounds shaped the mix, and any
+    coverage-for-cost/availability trade-offs.
+    """
+    return {
+        "fallback": bool(scope.routing_fallback),
+        "budget_applied": bool(scope.routing_budget_applied),
+        "tradeoffs": [{"kind": t.kind, "detail": t.detail} for t in scope.routing_tradeoffs],
+    }
+
+
+def _excluded_engines_list(scope: ScopeDecision) -> list[dict[str, str]]:
+    """Machine-readable excluded-engines list with reasons and stages."""
+    return [{"engine": e.engine, "reason": e.reason, "stage": e.stage} for e in scope.excluded_engines]
+
+
 def _envelope(
     state: McpState,
     response: Any,
@@ -906,13 +934,14 @@ def _envelope(
     excluded engines, aggregate count, and pagination signal — so no
     available evidence is silently discarded (envelope recovery).
     """
-    excluded_engines = [{"engine": e.engine, "reason": e.reason} for e in response.scope.excluded_engines]
+    excluded_engines = _excluded_engines_list(response.scope)
     scope = {
         "requested_intent": requested_intent,
         "resolved_categories": response.scope.resolved_categories,
         "selected_engines": response.scope.selected_engines,
         "routing_reason": response.scope.routing_rule,
         "excluded_engines": excluded_engines,
+        "routing": _routing_scope_block(response.scope),
     }
     if response.all_unresponsive:
         return _error(
@@ -1578,11 +1607,14 @@ async def slopsearx_explain_search_scope(
         router=state.ctx.router,
         tier1_engines=state.ctx.tier1_engines,
         sensitive_engines=state.policy.sensitive_engines,
+        catalog=state.ctx.catalog,
+        budget=state.ctx.routing_budget,
     )
     decision = resolver.explain(SearchRequest(query=query, categories=resolved_categories, engines=resolved_engines))
     return {
         "selected_engines": decision.selected_engines,
-        "excluded_engines": [{"engine": e.engine, "reason": e.reason} for e in decision.excluded_engines],
+        "excluded_engines": _excluded_engines_list(decision),
+        "routing": _routing_scope_block(decision),
         "routing_reason": decision.routing_rule,
         # Backward-compatible alias so preview and executed scope agree on
         # the routing_reason field (schema pin) while older consumers that

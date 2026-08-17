@@ -88,7 +88,11 @@ fail_under = 80
 paths = ["slopsearx", "engines"]
 min_confidence = 65
 ignore_decorators = ["@register_engine"]
-ignore_names = ["engine_type", "categories", "fallback"]
+# Public API names that are consumed across modules/tests but look unused
+# within their defining module (routing_inputs documents the issue-192
+# precedence order; the adapter class attributes are part of the capability
+# declaration surface).
+ignore_names = ["engine_type", "categories", "fallback", "routing_inputs"]
 
 [tool.deptry]
 extend_exclude = ["tests", "engines"]
@@ -107,6 +111,7 @@ layers = [
     "slopsearx.research",
     "slopsearx.snapshot",
     "slopsearx.service",
+    "slopsearx.routing",
     "slopsearx.capabilities",
     "slopsearx.router",
     "slopsearx.merger",

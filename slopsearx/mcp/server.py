@@ -43,6 +43,7 @@ from slopsearx.mcp.oauth import oauth_settings_from_policy
 from slopsearx.mcp.security import make_http_app
 from slopsearx.mcp.state import McpState, set_state
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
+from slopsearx.routing import load_routing_budget
 from slopsearx.service import AppContext, SearchService, build_context, destroy_context
 from slopsearx.snapshot import SnapshotStore
 
@@ -113,6 +114,14 @@ async def _lifespan(
     )
     for problem in validate_intent_profiles(catalog) + policy.validate(catalog):
         logger.warning("MCP startup problem: %s", problem)
+
+    # Wire the live catalog and operator routing budget into the shared
+    # context so the service's scope resolver (and the scope preview) apply
+    # cost/coverage-aware automatic routing with the exact same catalog
+    # (issue 192). Adapters are shared instances, so observed health stays
+    # live through the catalog's read boundary.
+    ctx.catalog = catalog
+    ctx.routing_budget = load_routing_budget(cfg)
 
     service = SearchService(ctx)
     snapshots = SnapshotStore(ctx.cache, ttl_seconds=policy.snapshot_ttl_seconds)

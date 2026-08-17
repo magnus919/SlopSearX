@@ -198,9 +198,17 @@ class TestDeterministicSearchEnvelope:
                 res = await session.call_tool("slopsearx_search", {"query": "hello world"})
                 data = _payload(res)
                 assert "query" in data
-                assert data["scope"]["selected_engines"] == ["wikipedia", "brave"]
+                # The fixture deployment has no Brave key configured, so
+                # automatic routing excludes the keyless brave fake with a
+                # machine-readable reason (issue 192) while explicit
+                # targeted searches can still reach it.
+                assert data["scope"]["selected_engines"] == ["wikipedia"]
+                excluded = {e["engine"]: e for e in data["scope"]["excluded_engines"]}
+                assert excluded["brave"]["stage"] == "auth"
+                assert "credentials" in excluded["brave"]["reason"]
+                assert data["scope"]["routing"]["fallback"] is False
                 assert data["meta"]["cursor"]
-                assert len(data["results"]) == 5  # 3 + 2 deterministic results
+                assert len(data["results"]) == 3  # 3 deterministic wikipedia results
 
     async def test_max_results_is_bounded_per_request(self) -> None:
         app = make_fixture_http_app(_FIXTURE_SPECS)
