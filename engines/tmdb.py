@@ -31,6 +31,11 @@ class TMDBAdapter(EngineAdapter):
     engine_type = "api"
     categories = ["movies", "entertainment"]
 
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text", "media")
+    failure_classes = ("rate_limited", "error", "timeout")
+    cost_class = "freemium"
+
     async def search(
         self,
         query: str,

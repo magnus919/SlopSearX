@@ -34,6 +34,11 @@ class VulnCheckAdapter(EngineAdapter):
     engine_type = "api"
     categories = ["security", "threat-intel"]
 
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text",)
+    failure_classes = ("rate_limited", "blocked", "error", "timeout")
+    cost_class = "freemium"
+
     async def search(
         self,
         query: str,

@@ -24,6 +24,11 @@ class OpenFDAAdapter(EngineAdapter):
     engine_type = "api"
     categories = ["medical", "health", "science", "government"]
 
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text",)
+    failure_classes = ("rate_limited", "error", "timeout")
+    cost_class = "free"
+
     async def search(
         self,
         query: str,

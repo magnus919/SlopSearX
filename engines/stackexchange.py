@@ -28,6 +28,11 @@ class StackExchangeAdapter(EngineAdapter):
         "stackexchange:serverfault",
     ]
 
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text",)
+    failure_classes = ("rate_limited", "error")
+    cost_class = "free"
+
     async def search(
         self,
         query: str,
