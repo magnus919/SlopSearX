@@ -98,6 +98,29 @@ redis.call('SETEX', KEYS[2], ARGV[2], ARGV[3])
 return 1
 """
 
+# Atomic lease renewal used by :meth:`ResearchJobStore._lease_renew`.
+# KEYS[1] is the lease key; ARGV[1] is the lease token, ARGV[2] the new TTL.
+# The check (does this token still own the lease) and the SETEX happen in a
+# single Lua call so a concurrent reclamation cannot race between them.
+_LEASE_RENEW_SCRIPT = """
+if redis.call('GET', KEYS[1]) ~= ARGV[1] then
+    return 0
+end
+redis.call('SETEX', KEYS[1], ARGV[2], ARGV[1])
+return 1
+"""
+
+# Atomic lease release used by :meth:`ResearchJobStore._lease_release`.
+# KEYS[1] is the lease key; ARGV[1] is the lease token. The check (does this
+# token still own the lease) and the DEL happen in a single Lua call.
+_LEASE_RELEASE_SCRIPT = """
+if redis.call('GET', KEYS[1]) ~= ARGV[1] then
+    return 0
+end
+redis.call('DEL', KEYS[1])
+return 1
+"""
+
 
 # ---------------------------------------------------------------------------
 # Model
@@ -573,11 +596,23 @@ class ResearchJobStore:
         return True
 
     async def _lease_renew(self, key: str, token: str, ttl: int) -> bool:
-        """Extend a lease only if it is still held by ``token``."""
+        """Extend a lease only if it is still held by ``token``.
+
+        On a Valkey client this is a single atomic Lua compare-and-set
+        (GET + compare + SETEX in one EVAL), so a stale owner whose lease was
+        reclaimed cannot renew over the reclaimer's token. Falls back to the
+        non-Lua check-then-set path only when the client has no ``eval``.
+        """
         store = self._store
         if store is None or not store.is_connected:
             return False
         client = getattr(store, "_client", None)
+        eval_method = getattr(client, "eval", None) if client is not None else None
+        if eval_method is not None:
+            try:
+                return bool(await eval_method(_LEASE_RENEW_SCRIPT, 1, key, token, str(ttl)))
+            except Exception:  # noqa: BLE001 — graceful degradation
+                return False
         if client is not None and hasattr(client, "get") and hasattr(client, "set"):
             try:
                 current = await client.get(key)
@@ -599,11 +634,23 @@ class ResearchJobStore:
         return True
 
     async def _lease_release(self, key: str, token: str) -> bool:
-        """Release a lease only if it is still held by ``token``."""
+        """Release a lease only if it is still held by ``token``.
+
+        On a Valkey client this is a single atomic Lua compare-and-delete
+        (GET + compare + DEL in one EVAL), so a stale owner whose lease was
+        reclaimed cannot delete the reclaimer's lease. Falls back to the
+        non-Lua check-then-delete path only when the client has no ``eval``.
+        """
         store = self._store
         if store is None or not store.is_connected:
             return False
         client = getattr(store, "_client", None)
+        eval_method = getattr(client, "eval", None) if client is not None else None
+        if eval_method is not None:
+            try:
+                return bool(await eval_method(_LEASE_RELEASE_SCRIPT, 1, key, token))
+            except Exception:  # noqa: BLE001 — graceful degradation
+                return False
         if client is not None and hasattr(client, "get") and hasattr(client, "delete"):
             try:
                 current = await client.get(key)
@@ -774,7 +821,7 @@ class ResearchJobStore:
         job = await self.load(job_id)
         if job is None:
             return "unknown"
-        if job.state in ("succeeded", "failed", "cancelled", "expired"):
+        if job.state in ("succeeded", "partial", "failed", "cancelled", "expired"):
             return job.state
         job.cancel_requested = True
         job.state = "cancelled"
@@ -988,6 +1035,20 @@ class ResearchJobRunner:
         await store.save(job)
         return job
 
+    async def _raise_if_live_owned(self, job: ResearchJob) -> None:
+        """Raise :class:`JobStillRunningError` if ``job`` is live-lease-owned.
+
+        Liveness is checked against the lease key, not the record's
+        ``lease_token``/``owner_id`` fields (which survive a released/expired
+        lease), so a lease-expired orphan is not refused.
+        """
+        if job.state != "running" or not job.lease_token:
+            return
+        store = self._jobs_for(job.tenant)
+        live = await store._lease_get(store._lease_key(job.job_id))
+        if live == job.lease_token:
+            raise JobStillRunningError(job.job_id)
+
     async def run_direct(self, job: ResearchJob) -> ResearchJob:
         """Run a loaded job directly, claiming it first when claimable.
 
@@ -1008,10 +1069,7 @@ class ResearchJobRunner:
         store = self._jobs_for(job.tenant)
         fresh = await store.load(job.job_id) or job
 
-        if fresh.state == "running" and fresh.lease_token:
-            live = await store._lease_get(store._lease_key(job.job_id))
-            if live == fresh.lease_token:
-                raise JobStillRunningError(job.job_id)
+        await self._raise_if_live_owned(fresh)
 
         claimed = await store._claim_prepared(job, self._owner_id, self._lease_ttl)
         if claimed is not None:
@@ -1074,9 +1132,19 @@ class ResearchJobRunner:
             job.state = "expired"
             await store.save(job)
             return job
+        # A still-running job under a live owner must not be retried (or have
+        # its record rewritten) concurrently. Liveness is checked against the
+        # lease key, not the record fields, so a lease-expired orphan proceeds.
+        await self._raise_if_live_owned(job)
         job.state = "running"
         for query in retryable:
             query.state = "pending"
+        # Persist the claimable running state BEFORE run_direct so the claim
+        # gate re-loads a claimable record and the fresh lease excludes the
+        # durable worker during execution (exactly-one-owner). If the worker
+        # wins the race first, run_direct raises JobStillRunningError and the
+        # caller hands the job to the worker.
+        await store.save(job)
         return await self.run_direct(job)
 
     def _build_query_coverage(self, query: ResearchQuery, response: Any) -> list[EngineCoverage]:

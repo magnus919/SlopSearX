@@ -505,7 +505,7 @@ class TestExtend:
 
 class TestCancelAndExpiry:
     async def test_cancel_preserves_completed_evidence(self, state: McpState) -> None:
-        """VAL-RESEARCH-010 — cancel marks the job cancelled, completed cursors stay readable."""
+        """VAL-RESEARCH-010 — cancel preserves completed evidence; a finished partial job stays partial."""
         state.ctx.active_engines["wikipedia"] = _MockEngine("wikipedia", status=EngineStatus.ERROR)
         job = await _persist_and_run(
             state,
@@ -518,14 +518,17 @@ class TestCancelAndExpiry:
         assert done_cursor is not None
 
         result = await t.slopsearx_cancel_job(job.job_id)
-        assert result["state"] == "cancelled"
+        # A finished partial job is not rewritten to cancelled: it keeps its
+        # partial state so the failed subquery stays retryable.
+        assert result["state"] == "partial"
 
         re = await t.slopsearx_read_results(done_cursor)
         assert "error" not in re
         job = await state.job_store.load(job.job_id)
         assert job is not None
-        assert job.state == "cancelled"
-        assert not any(q.state in ("pending", "running") for q in job.queries)
+        assert job.state == "partial"
+        assert _run_query(job, 0).state == "done"
+        assert _run_query(job, 1).state == "failed"
 
     async def test_deadline_passed_finalizes_to_expired(self, state: McpState) -> None:
         """VAL-RESEARCH-011 — a deadline-passed job is finalized (not left running)."""

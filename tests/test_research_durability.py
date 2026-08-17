@@ -27,6 +27,9 @@ from slopsearx.mcp import state as state_mod
 from slopsearx.mcp import tools as t
 from slopsearx.mcp.state import McpState, set_state, tenant_scope
 from slopsearx.research import (
+    _LEASE_RELEASE_SCRIPT,
+    _LEASE_RENEW_SCRIPT,
+    _LEASE_SAVE_SCRIPT,
     LEASE_KEY_PREFIX,
     LeaseLostError,
     ResearchJob,
@@ -185,6 +188,51 @@ class ValkeyLikeStore:
 
     async def set(self, key: str, value: dict[str, Any], ttl: int = 300) -> None:
         await self._client.set(key, json.dumps(value, default=str), ex=ttl)
+
+
+class _LuaEvalClient(_ValkeyLikeClient):
+    """Valkey-like client that faithfully implements the lease Lua scripts.
+
+    ``eval`` performs each lease script's compare-and-act in a single
+    synchronous step (no ``await`` inside), mirroring the atomicity of a
+    server-side EVAL.
+    """
+
+    async def eval(self, script: str, numkeys: int, *args: Any) -> int:
+        del numkeys
+        if script == _LEASE_RENEW_SCRIPT:
+            key, token, ttl = args
+            current = self._data.get(key)
+            if current is None or current != token.encode():
+                return 0
+            self._data[key] = token.encode()
+            self._ttl[key] = time.time() + int(ttl)
+            return 1
+        if script == _LEASE_RELEASE_SCRIPT:
+            key, token = args
+            current = self._data.get(key)
+            if current is None or current != token.encode():
+                return 0
+            self._data.pop(key, None)
+            self._ttl.pop(key, None)
+            return 1
+        if script == _LEASE_SAVE_SCRIPT:
+            lease_key, job_key, token, ttl, payload = args
+            current = self._data.get(lease_key)
+            if current is None or current != token.encode():
+                return 0
+            self._data[job_key] = payload.encode()
+            self._ttl[job_key] = time.time() + int(ttl)
+            return 1
+        raise AssertionError(f"unexpected eval script: {script!r}")
+
+
+class LuaCapableStore(ValkeyLikeStore):
+    """A store whose ``_client`` also exposes ``eval`` (Lua lease primitives)."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._client = _LuaEvalClient()
 
 
 class _ScanPreferredClient:
@@ -587,6 +635,63 @@ class TestValkeyLikeBackend:
         assert claimed.job_id == job.job_id
 
 
+class TestLeaseAtomicLua:
+    """Exercise the atomic Lua lease primitives (GET + compare + SETEX/DEL)."""
+
+    async def test_renew_lua_stale_owner_does_not_clobber_reclaimer(self) -> None:
+        store = LuaCapableStore()
+        job_store = ResearchJobStore(store)
+        job = _job()
+        await job_store.save(job)
+
+        first = await job_store.claim(job.job_id, "w1", 60)
+        assert first is not None
+        stale_token = first.lease_token
+        assert stale_token is not None
+        key = _lease_key("default", job.job_id)
+
+        # Original owner's lease expires; a reclaimer installs a fresh token.
+        store._client._ttl[key] = time.time() - 1
+        second = await job_store.claim(job.job_id, "w2", 60)
+        assert second is not None
+        assert second.lease_token is not None
+        assert second.lease_token != stale_token
+
+        # A stale renew with the old token must fail without clobbering the
+        # reclaimer's lease (atomic Lua compare-and-set).
+        assert await job_store.renew(job.job_id, stale_token, 60) is False
+        assert await job_store._lease_get(key) == second.lease_token
+
+        # The reclaimer can still renew its own lease.
+        assert await job_store.renew(job.job_id, second.lease_token, 60) is True
+
+    async def test_release_lua_stale_owner_does_not_clobber_reclaimer(self) -> None:
+        store = LuaCapableStore()
+        job_store = ResearchJobStore(store)
+        job = _job()
+        await job_store.save(job)
+
+        first = await job_store.claim(job.job_id, "w1", 60)
+        assert first is not None
+        stale_token = first.lease_token
+        assert stale_token is not None
+        key = _lease_key("default", job.job_id)
+
+        store._client._ttl[key] = time.time() - 1
+        second = await job_store.claim(job.job_id, "w2", 60)
+        assert second is not None
+        assert second.lease_token is not None
+
+        # A stale release with the old token must fail without deleting the
+        # reclaimer's lease (atomic Lua compare-and-delete).
+        assert await job_store._lease_release(key, stale_token) is False
+        assert await job_store._lease_get(key) == second.lease_token
+
+        # The reclaimer's own release still works.
+        assert await job_store._lease_release(key, second.lease_token) is True
+        assert await job_store._lease_get(key) is None
+
+
 # ---------------------------------------------------------------------------
 # Cancellation across owners
 # ---------------------------------------------------------------------------
@@ -651,6 +756,36 @@ class TestCancellation:
         assert finalized.queries[0].state == "done"
         assert finalized.queries[0].cursor == "snap-done"
         assert finalized.queries[1].state == "cancelled"
+
+    async def test_cancel_finished_partial_job_preserves_state_and_retryability(self) -> None:
+        _, store = _build_state()
+        job_store = ResearchJobStore(store)
+        job = _job(
+            state="partial",
+            queries=[
+                ResearchQuery(
+                    index=0,
+                    query="done",
+                    intent="web",
+                    engines=["wikipedia"],
+                    state="done",
+                    cursor="snap-done",
+                ),
+                ResearchQuery(index=1, query="fail", intent="web", engines=["wikipedia"], state="failed"),
+            ],
+        )
+        await job_store.save(job)
+
+        assert await job_store.request_cancel(job.job_id) == "partial"
+
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        # A finished partial job must not be rewritten to cancelled: the
+        # failed subquery stays retryable and completed evidence is intact.
+        assert loaded.state == "partial"
+        assert loaded.queries[0].state == "done"
+        assert loaded.queries[0].cursor == "snap-done"
+        assert loaded.queries[1].state == "failed"
 
 
 # ---------------------------------------------------------------------------
@@ -833,6 +968,49 @@ class TestDirectRunsAfterDurableExecution:
         assert loaded is not None
         assert loaded.queries[0].cursor == "snap-old"
         assert loaded.queries[1].state == "done"
+        assert loaded.owner_id is None
+        assert loaded.lease_token is None
+
+    async def test_retry_terminal_failed_job_holds_lease_against_worker(self) -> None:
+        """A retry of a terminal failed job must claim before running.
+
+        The retry target is ``failed``/``empty`` (not ``queued``/``running``),
+        so retry must persist its claimable ``running`` mutation before
+        ``run_direct``; otherwise the claim gate re-loads the still-terminal
+        record, bails, and the retried subquery runs lease-free — letting a
+        concurrent durable worker reclaim and re-execute it (engine calls
+        doubled).
+        """
+        state, store = _build_state()
+        job_store = state.job_store
+        started = asyncio.Event()
+        release = asyncio.Event()
+        engine = _GateEngine("wikipedia", started, release)
+        state.ctx.active_engines["wikipedia"] = engine
+        job = _job(
+            state="failed",
+            queries=[
+                ResearchQuery(index=0, query="retry", intent="web", engines=["wikipedia"], state="failed"),
+            ],
+        )
+        await job_store.save(job)
+
+        task = asyncio.create_task(state.runner.retry(job.job_id, tenant="default"))
+        await asyncio.wait_for(started.wait(), timeout=5)
+
+        # The direct retry holds a live lease while the retried subquery is in
+        # flight, so a concurrent durable worker cannot reclaim/re-execute it.
+        assert await job_store.claim(job.job_id, "w2", 60) is None
+
+        release.set()
+        result = await task
+
+        assert result is not None
+        assert result.state == "succeeded"
+        assert engine.calls == 1
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.queries[0].state == "done"
         assert loaded.owner_id is None
         assert loaded.lease_token is None
 
