@@ -434,6 +434,7 @@ class TestCapabilityResources:
         assert f"- snapshots available: {diag['snapshots_available']}" in content
         assert f"max_query_length={diag['policy_bounds']['max_query_length']}" in content
         assert f"max_results={diag['policy_bounds']['max_results']}" in content
+        assert "unavailable=" in content
 
     def test_health_resource_leaks_no_secrets_or_environment(self, state: McpState) -> None:
         """VAL-DIAG-011/012/013 — the health resource is redacted: no secrets, env, or metrics dump."""

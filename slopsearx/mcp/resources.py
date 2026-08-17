@@ -157,7 +157,8 @@ def render_health_summary() -> str:
         f"- freshness: {diag['freshness']}",
         "- engine health: "
         f"ok={health['ok']}, rate_limited={health['rate_limited']}, blocked={health['blocked']}, "
-        f"error={health['error']}, timeout={health['timeout']}, unknown={health['unknown']}",
+        f"error={health['error']}, timeout={health['timeout']}, "
+        f"unavailable={health['unavailable']}, unknown={health['unknown']}",
         f"- engine health note: {health['note']}",
     ]
     return "\n".join(lines)
