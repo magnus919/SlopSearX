@@ -73,12 +73,10 @@ INTENT_GRANTS: dict[str, str] = {
     "science": "science",
 }
 
-# No adapter consumes the safesearch parameter (Brave hardcodes it off),
-# so strict SafeSearch can never be honestly enforced — fail closed.
-SAFESEARCH_UNENFORCED_NOTE = (
-    "no adapter enforces the safesearch parameter (Brave hardcodes it off); "
-    "strict SafeSearch cannot be guaranteed — use 'off' or 'moderate'"
-)
+# Strict SafeSearch is all-or-nothing: the whole selected scope must enforce
+# it upstream, so a single non-enforcing engine fails the request closed.
+# The rejection message is derived from the actual per-engine layers, never
+# from a static claim, so mixed scopes are described accurately.
 
 # Evidence-type → engine profile for the security search tool.
 EVIDENCE_TYPE_ENGINES: dict[str, list[str]] = {
@@ -240,12 +238,23 @@ def _safesearch_value(safesearch: str) -> int:
     return {"off": 0, "moderate": 1, "strict": 2}[safesearch]
 
 
-def _filter_warnings(state: McpState, language: str, time_range: str | None) -> list[str]:
-    """Honest warnings for filter parameters no adapter enforces."""
+def _filter_warnings(state: McpState, selected_engines: list[str], language: str, time_range: str | None) -> list[str]:
+    """Honest warnings for filter parameters no adapter enforces.
+
+    Gated on the resolved enforcement status so the prose never contradicts
+    the machine-readable report: a filter that any selected adapter enforces
+    (``enforced``/``partially_enforced``) must not be described as "not
+    consumed by any adapter". The report is derived via
+    :func:`_core_filter_enforcement` against the same scope the search will
+    dispatch.
+    """
+    report = _core_filter_enforcement(
+        state, selected_engines, language=language, time_range=time_range, safesearch="off"
+    )
     warnings: list[str] = []
-    if language != "en":
+    if report.get("language", {}).get("status") == "unsupported":
         warnings.append(f"language '{language}' is not consumed by any adapter")
-    if time_range:
+    if report.get("time_range", {}).get("status") == "unsupported":
         warnings.append(f"time_range '{time_range}' is not consumed by any adapter")
     return warnings
 
@@ -296,18 +305,33 @@ def _strict_safesearch_satisfiable(state: McpState, selected_engines: list[str])
     )
 
 
-def _safesearch_rejection(selected_engines: list[str]) -> dict[str, Any]:
+def _safesearch_rejection(state: McpState, selected_engines: list[str]) -> dict[str, Any]:
     """Fail-closed strict SafeSearch rejection with the machine-readable report.
 
     The ``enforcement`` object carries the ``rejected`` status (the closed
     vocabulary's fail-closed member), while the error envelope names the
     selected engines that could not satisfy the constraint.
+
+    Strict SafeSearch is all-or-nothing — every selected engine must enforce
+    it upstream. The reason/message name the non-enforcing subset so a mixed
+    scope (some engines enforce, some do not) is never described as "no
+    adapter enforces".
     """
-    entry = enforcement_entry("strict", "rejected", SAFESEARCH_UNENFORCED_NOTE, [])
+    non_enforcing = sorted(
+        name
+        for name in selected_engines
+        if engine_filter_layer(state.ctx.active_engines.get(name), "safesearch") != "upstream"
+    )
+    reason = (
+        "strict SafeSearch is not enforced by "
+        + (", ".join(non_enforcing) or "any selected engine")
+        + "; strict results cannot be guaranteed — use 'off' or 'moderate'"
+    )
+    entry = enforcement_entry("strict", "rejected", reason, [])
     return {
         "error": {
             "code": "safesearch_unenforced",
-            "message": SAFESEARCH_UNENFORCED_NOTE,
+            "message": reason,
             "field": "safesearch",
             "selected_engines": list(selected_engines),
         },
@@ -716,12 +740,14 @@ async def slopsearx_search(
         if policy_error:
             return policy_error
 
+    # Preview the scope that will execute so strict SafeSearch and the filter
+    # warnings are resolved against the same engine set the report will name.
+    selected = _preview_selected_engines(state, query, resolved_categories, resolved_engines)
+
     # Mandatory strict SafeSearch fails closed before dispatch when the
-    # selected scope cannot satisfy it (no adapter enforces strict today).
-    if safesearch == "strict":
-        selected = _preview_selected_engines(state, query, resolved_categories, resolved_engines)
-        if not _strict_safesearch_satisfiable(state, selected):
-            return _safesearch_rejection(selected)
+    # selected scope cannot satisfy it.
+    if safesearch == "strict" and not _strict_safesearch_satisfiable(state, selected):
+        return _safesearch_rejection(state, selected)
 
     safesearch_warning = _safesearch_warning(state, safesearch)
 
@@ -739,7 +765,7 @@ async def slopsearx_search(
         freshness=freshness,
         client_identifier=_client_identifier(state),
     )
-    warnings = warnings + _filter_warnings(state, language, time_range) + safesearch_warning
+    warnings = warnings + _filter_warnings(state, selected, language, time_range) + safesearch_warning
 
     # Structured filter-enforcement report is resolved inside ``_run_search``
     # against the dispatched/executed scope (response.scope.selected_engines),
@@ -843,7 +869,7 @@ async def slopsearx_search_targeted(
     # Mandatory strict SafeSearch fails closed before dispatch when the
     # selected scope cannot satisfy it.
     if safesearch == "strict" and not _strict_safesearch_satisfiable(state, engines):
-        return _safesearch_rejection(list(engines))
+        return _safesearch_rejection(state, list(engines))
 
     safesearch_warning = _safesearch_warning(state, safesearch)
 
@@ -856,7 +882,7 @@ async def slopsearx_search_targeted(
         include={"results", "engine_status"},
         client_identifier=_client_identifier(state),
     )
-    warnings = _filter_warnings(state, language, time_range) + safesearch_warning
+    warnings = _filter_warnings(state, list(engines), language, time_range) + safesearch_warning
     return await _run_search(
         state,
         request,

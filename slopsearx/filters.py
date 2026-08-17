@@ -104,6 +104,13 @@ def resolve_filter_enforcement(
         if layer in by_layer:
             by_layer[layer].append(name)
 
+    # Local enforcement is value-dependent: the service post-filter only
+    # understands the closed SearXNG time-range vocabulary, so a local
+    # declaration cannot count as enforcement for an out-of-vocabulary value
+    # (e.g. time_range="all"), which passes through results unchanged.
+    if filter_name == "time_range" and isinstance(requested, str) and time_range_window(requested) is None:
+        by_layer["local"] = []
+
     supporting = sorted(by_layer["upstream"] + by_layer["local"])
     enforced_by = [f"upstream:{name}" for name in sorted(by_layer["upstream"])] + [
         f"local:{name}" for name in sorted(by_layer["local"])

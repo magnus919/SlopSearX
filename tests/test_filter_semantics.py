@@ -197,6 +197,32 @@ class TestEnforcementModel:
         assert entry["requested"] == 2
         assert entry["enforced_by"] == ["upstream:github"]
 
+    def test_local_time_range_resolution_is_value_aware(self) -> None:
+        """Local time_range enforcement only counts for the enforceable
+        vocabulary — the service post-filter passes out-of-vocabulary values
+        (e.g. 'all') through unchanged, so they must never report 'enforced'."""
+        adapters = {"arxiv": _MockEngine("arxiv", enforced_filters={"time_range": "local"})}
+
+        in_vocab = resolve_filter_enforcement(["arxiv"], "time_range", "week", adapters)
+        assert in_vocab["status"] == "enforced"
+        assert in_vocab["enforced_by"] == ["local:arxiv"]
+
+        out_of_vocab = resolve_filter_enforcement(["arxiv"], "time_range", "all", adapters)
+        assert out_of_vocab["status"] == "unsupported"
+        assert out_of_vocab["status"] != "enforced"
+        assert out_of_vocab["enforced_by"] == []
+
+    def test_local_time_range_value_aware_keeps_upstream_layers(self) -> None:
+        """Out-of-vocabulary values still count upstream enforcement; only the
+        local post-filter layer is value-dependent."""
+        adapters = {
+            "brave": _MockEngine("brave", enforced_filters={"time_range": "upstream"}),
+            "arxiv": _MockEngine("arxiv", enforced_filters={"time_range": "local"}),
+        }
+        entry = resolve_filter_enforcement(["brave", "arxiv"], "time_range", "all", adapters)
+        assert entry["status"] == "partially_enforced"
+        assert entry["enforced_by"] == ["upstream:brave"]
+
     def test_time_range_window_and_date_helpers(self) -> None:
         today = _dt.date(2026, 1, 15)
         start, end = time_range_window("week", now=today)
@@ -278,8 +304,24 @@ class TestStrictSafesearch:
         result = await t.slopsearx_search_targeted("hello", engines=["brave", "duckduckgo"], safesearch="strict")
         assert result["error"]["code"] == "safesearch_unenforced"
         assert result["enforcement"]["safesearch"]["status"] == "rejected"
+        # Mixed scope: the message names the non-enforcing subset rather than
+        # claiming "no adapter enforces" (brave DOES enforce here).
+        assert "duckduckgo" in result["error"]["message"]
+        assert "brave" not in result["error"]["message"]
+        assert "no adapter enforces" not in result["error"]["message"]
+        assert "duckduckgo" in result["enforcement"]["safesearch"]["reason"]
         assert state.ctx.active_engines["brave"].calls == 0
         assert state.ctx.active_engines["duckduckgo"].calls == 0
+
+    async def test_strict_rejection_names_every_engine_when_none_enforce(self, state: McpState) -> None:
+        """With no enforcing engine in scope, the rejection names the whole scope."""
+        result = await t.slopsearx_search("hello", safesearch="strict")
+
+        assert result["error"]["code"] == "safesearch_unenforced"
+        message = result["error"]["message"]
+        for name in result["error"]["selected_engines"]:
+            assert name in message
+        assert "no adapter enforces" not in message
 
     async def test_strict_rejected_on_auto_topic_scope_not_tier1_fallback(self, state: McpState) -> None:
         """Auto-intent strict preview mirrors the query-topic scope, not tier-1.
@@ -355,6 +397,36 @@ class TestEnforcementLayer:
         assert entry["status"] == "enforced"
         assert set(entry["enforced_by"]) == {"local:arxiv", "upstream:brave"}
 
+    async def test_time_range_warning_absent_when_enforced(self, state: McpState) -> None:
+        """Prose warnings must not contradict the report: when every selected
+        adapter enforces time_range, no 'not consumed by any adapter' warning."""
+        state.ctx.active_engines = {
+            "arxiv": _MockEngine("arxiv", enforced_filters={"time_range": "local"}),
+            "brave": _MockEngine("brave", enforced_filters={"time_range": "upstream"}),
+        }
+        result = await t.slopsearx_search_targeted("hello", engines=["arxiv", "brave"], time_range="week")
+
+        assert result["enforcement"]["time_range"]["status"] == "enforced"
+        assert not any("time_range" in w and "not consumed" in w for w in result["warnings"])
+
+    async def test_time_range_warning_absent_when_partially_enforced(self, state: McpState) -> None:
+        """partially_enforced scopes also must not emit the 'not consumed' warning."""
+        state.ctx.active_engines = {
+            "arxiv": _MockEngine("arxiv", enforced_filters={"time_range": "upstream"}),
+            "duckduckgo": _MockEngine("duckduckgo"),
+        }
+        result = await t.slopsearx_search_targeted("hello", engines=["arxiv", "duckduckgo"], time_range="week")
+
+        assert result["enforcement"]["time_range"]["status"] == "partially_enforced"
+        assert not any("time_range" in w and "not consumed" in w for w in result["warnings"])
+
+    async def test_time_range_warning_emitted_when_unsupported(self, state: McpState) -> None:
+        """The warning stays for genuinely unenforced time_range values."""
+        result = await t.slopsearx_search("hello", time_range="month")
+
+        assert result["enforcement"]["time_range"]["status"] == "unsupported"
+        assert any("time_range 'month'" in w and "not consumed" in w for w in result["warnings"])
+
 
 class TestLocalTimeRangePostFilter:
     async def test_local_time_range_post_filters_results(self) -> None:
@@ -389,6 +461,38 @@ class TestLocalTimeRangePostFilter:
 
         # No local declaration → the stale result is retained.
         assert len(response.results) == 2
+
+    async def test_out_of_vocabulary_time_range_not_reported_enforced(self, state: McpState) -> None:
+        """A local time_range declaration only enforces the closed vocabulary.
+
+        ``time_range="all"`` passes the post-filter through unchanged, so it
+        must report ``unsupported`` (never ``enforced``) and the results must
+        stay unfiltered, consistent with the report.
+        """
+        today = _dt.date.today()
+        state.ctx.active_engines = {
+            "arxiv": _MockEngine(
+                "arxiv",
+                count=3,
+                enforced_filters={"time_range": "local"},
+                published_dates=[
+                    today.isoformat(),
+                    (today - _dt.timedelta(days=400)).isoformat(),
+                    None,
+                ],
+            )
+        }
+        result = await t.slopsearx_search_targeted("hello", engines=["arxiv"], time_range="all")
+
+        entry = result["enforcement"]["time_range"]
+        assert entry["status"] == "unsupported"
+        assert entry["status"] != "enforced"
+        assert entry["enforced_by"] == []
+        # Consistent with the report: out-of-vocabulary results are unfiltered.
+        assert len(result["results"]) == 3
+        # An in-vocabulary value on the same scope still reports enforced.
+        result_week = await t.slopsearx_search_targeted("hello", engines=["arxiv"], time_range="week")
+        assert result_week["enforcement"]["time_range"]["status"] == "enforced"
 
 
 # ---------------------------------------------------------------------------
