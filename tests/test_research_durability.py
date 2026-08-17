@@ -30,7 +30,9 @@ from slopsearx.research import (
     _LEASE_RELEASE_SCRIPT,
     _LEASE_RENEW_SCRIPT,
     _LEASE_SAVE_SCRIPT,
+    CANCEL_KEY_PREFIX,
     LEASE_KEY_PREFIX,
+    JobStillRunningError,
     LeaseLostError,
     ResearchJob,
     ResearchJobRunner,
@@ -787,6 +789,41 @@ class TestCancellation:
         assert loaded.queries[0].cursor == "snap-done"
         assert loaded.queries[1].state == "failed"
 
+    async def test_cancel_finished_partial_job_leaves_no_flag_and_retry_reexecutes(self) -> None:
+        state, store = _build_state()
+        job_store = state.job_store
+        job = _job(
+            state="partial",
+            queries=[
+                ResearchQuery(
+                    index=0,
+                    query="done",
+                    intent="web",
+                    engines=["wikipedia"],
+                    state="done",
+                    cursor="snap-done",
+                    result_count=1,
+                ),
+                ResearchQuery(index=1, query="fail", intent="web", engines=["wikipedia"], state="failed"),
+            ],
+        )
+        await job_store.save(job)
+
+        assert await job_store.request_cancel(job.job_id) == "partial"
+
+        # A finished partial job must not leave a durable cancel flag behind,
+        # or a later retry would be silently finalized to cancelled instead of
+        # re-executing the failed subquery.
+        cancel_key = f"{CANCEL_KEY_PREFIX}:default:{job.job_id}"
+        assert await store.get(cancel_key) is None
+
+        result = await state.runner.retry(job.job_id, tenant="default")
+        assert result is not None
+        assert result.state == "succeeded"
+        assert result.queries[0].state == "done"
+        assert result.queries[0].cursor == "snap-done"
+        assert result.queries[1].state == "done"
+
 
 # ---------------------------------------------------------------------------
 # Runner execution with leases
@@ -1024,7 +1061,9 @@ class TestLeaseOwnershipGuard:
     async def test_stale_owner_does_not_persist_after_lease_reclaimed(self) -> None:
         state, store = _build_state(lease_ttl=1)
         job_store = state.job_store
-        state.ctx.active_engines["wikipedia"] = _SlowEngine("wikipedia", delay=2.0)
+        started = asyncio.Event()
+        release = asyncio.Event()
+        state.ctx.active_engines["wikipedia"] = _GateEngine("wikipedia", started, release)
         job = _job(queries=[ResearchQuery(index=0, query="q", intent="web", engines=["wikipedia"])])
         await job_store.save(job)
 
@@ -1032,16 +1071,20 @@ class TestLeaseOwnershipGuard:
         assert claimed is not None
 
         task = asyncio.create_task(state.runner._execute_claimed(claimed))
+        await asyncio.wait_for(started.wait(), timeout=5)
 
-        # Let the original owner start the subquery and let its lease expire
-        # (the engine call takes 2s vs a 1s lease).
-        await asyncio.sleep(1.5)
+        # Force the visibility timeout to elapse mid-subquery. The keep-alive
+        # cannot re-establish an expired lease (renew only extends an existing
+        # one), so a reclaimer wins with a fresh token.
+        lease_key = _lease_key("default", job.job_id)
+        store._expiry[lease_key] = time.time() - 1
 
         # Another replica reclaims the abandoned job: it resets the in-flight
         # subquery to pending and installs a fresh lease token.
         second = await job_store.claim(job.job_id, "w2", 60)
         assert second is not None
 
+        release.set()
         await task
 
         loaded = await job_store.load(job.job_id)
@@ -1087,6 +1130,35 @@ class TestLeaseOwnershipGuard:
         assert loaded.lease_token == second.lease_token
         assert loaded.queries[0].state == "pending"
 
+    async def test_keep_alive_renews_lease_during_long_subquery(self) -> None:
+        state, store = _build_state(lease_ttl=1)
+        job_store = state.job_store
+        # 2s subquery outlives the 1s lease TTL but stays under the 3s engine
+        # dispatch timeout, so the engine completes OK.
+        engine = _SlowEngine("wikipedia", delay=2.0)
+        state.ctx.active_engines["wikipedia"] = engine
+        job = _job(queries=[ResearchQuery(index=0, query="q", intent="web", engines=["wikipedia"])])
+        await job_store.save(job)
+
+        claimed = await job_store.claim(job.job_id, state.runner.worker_id, 1)
+        assert claimed is not None
+
+        task = asyncio.create_task(state.runner._execute_claimed(claimed))
+
+        # The subquery (2s) outlives the 1s lease TTL; the keep-alive must
+        # renew the lease so a reclaimer cannot steal and re-execute it.
+        await asyncio.sleep(1.5)
+        assert await job_store.claim(job.job_id, "w2", 60) is None
+
+        await task
+
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.state == "succeeded"
+        assert loaded.queries[0].state == "done"
+        assert loaded.queries[0].cursor is not None
+        assert engine.calls == 1
+
 
 # ---------------------------------------------------------------------------
 # Still-running guard for direct retry/extend runs
@@ -1129,6 +1201,34 @@ class TestStillRunningGuard:
             assert engine.calls == calls_before
         finally:
             set_state(None)
+
+    async def test_retry_deadline_passed_live_lease_raises_still_running(self) -> None:
+        state, store = _build_state()
+        job_store = state.job_store
+        job = _job(
+            state="running",
+            owner_id="w1",
+            lease_token="live-token",
+            deadline=time.time() - 1,
+            queries=[
+                ResearchQuery(index=0, query="fail", intent="web", engines=["wikipedia"], state="failed"),
+            ],
+        )
+        await job_store.save(job)
+        assert await job_store._lease_acquire(job_store._lease_key(job.job_id), "live-token", 60) is True
+
+        # Liveness check runs before the deadline gate: a deadline-passed but
+        # still-running job must surface JobStillRunningError, not have its
+        # record rewritten to expired mid-run.
+        with pytest.raises(JobStillRunningError):
+            await state.runner.retry(job.job_id, tenant="default")
+
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.state == "running"
+        assert loaded.owner_id == "w1"
+        assert loaded.lease_token == "live-token"
+        assert loaded.queries[0].state == "failed"
 
     async def test_extend_live_lease_does_not_clear_or_run(self) -> None:
         state, _ = _build_state()
@@ -1234,6 +1334,38 @@ class TestStillRunningGuard:
             assert loaded.queries[1].state == "done"
             assert loaded.owner_id is None
             assert loaded.lease_token is None
+        finally:
+            set_state(None)
+
+
+# ---------------------------------------------------------------------------
+# Terminal-state gates for extend
+# ---------------------------------------------------------------------------
+
+
+class TestTerminalStateGates:
+    async def test_extend_cancelled_job_returns_invalid_job_state(self) -> None:
+        state, _ = _build_state()
+        job_store = state.job_store
+        set_state(state)
+        try:
+            job = _job(
+                state="cancelled",
+                queries=[
+                    ResearchQuery(index=0, query="done", intent="web", engines=["wikipedia"], state="cancelled"),
+                ],
+            )
+            await job_store.save(job)
+
+            result = await t.slopsearx_extend_research(job.job_id, "followup", intent="web")
+
+            assert "error" in result
+            assert result["error"]["code"] == "invalid_job_state"
+            assert result["error"]["state"] == "cancelled"
+            loaded = await job_store.load(job.job_id)
+            assert loaded is not None
+            assert loaded.state == "cancelled"
+            assert len(loaded.queries) == 1
         finally:
             set_state(None)
 

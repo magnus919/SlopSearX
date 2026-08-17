@@ -807,6 +807,14 @@ class ResearchJobStore:
         store = self._store
         if store is None or not store.is_connected:
             return "unavailable"
+        # Terminal-state gate first: never write a durable cancel flag for a
+        # job that is already finished. Otherwise the flag would linger and
+        # silently cancel every later retry/extend of that terminal job.
+        job = await self.load(job_id)
+        if job is None:
+            return "unknown"
+        if job.state in ("succeeded", "partial", "failed", "cancelled", "expired"):
+            return job.state
         # Durable, race-free signal: a separate key so the owner's
         # job-record writes can never clobber the cancellation request.
         await store.set(
@@ -818,11 +826,6 @@ class ResearchJobStore:
         # job record alone so we don't fight its intermediate writes.
         if await self._lease_get(self._lease_key(job_id)) is not None:
             return "running"
-        job = await self.load(job_id)
-        if job is None:
-            return "unknown"
-        if job.state in ("succeeded", "partial", "failed", "cancelled", "expired"):
-            return job.state
         job.cancel_requested = True
         job.state = "cancelled"
         for query in job.queries:
@@ -1009,9 +1012,30 @@ class ResearchJobRunner:
             if time.time() >= job.deadline:
                 break
             if job.lease_token:
-                if not await store.renew(job.job_id, job.lease_token, self._lease_ttl):
+                lease_token: str = job.lease_token
+                if not await store.renew(job.job_id, lease_token, self._lease_ttl):
                     raise LeaseLostError(job.job_id)
-            await self._execute_query(job, query)
+
+                async def _keep_alive(job_id: str = job.job_id, token: str = lease_token) -> None:
+                    # Renew on a cadence shorter than the lease TTL so a
+                    # subquery that outlives the TTL is never reclaimed and
+                    # re-executed by another replica mid-flight.
+                    while True:
+                        await asyncio.sleep(max(self._lease_ttl / 3, 0.5))
+                        if not await store.renew(job_id, token, self._lease_ttl):
+                            return
+
+                keep_alive = asyncio.create_task(_keep_alive())
+                try:
+                    await self._execute_query(job, query)
+                finally:
+                    keep_alive.cancel()
+                    try:
+                        await keep_alive
+                    except asyncio.CancelledError:
+                        pass
+            else:
+                await self._execute_query(job, query)
 
         # Reload to observe any cancellation/deadline that landed mid-run.
         job = await store.load(job.job_id) or job
@@ -1122,6 +1146,13 @@ class ResearchJobRunner:
         retryable = [query for query in job.queries if is_retryable_query(query)]
         if not retryable:
             return job
+        # A still-running job under a live owner must not be retried (or have
+        # its record rewritten) concurrently. Liveness is checked against the
+        # lease key, not the record fields, so a lease-expired orphan proceeds.
+        # This runs before the deadline gate so a deadline-passed but still
+        # live job surfaces JobStillRunningError instead of being rewritten to
+        # ``expired`` mid-run.
+        await self._raise_if_live_owned(job)
         # Deadline gate: a deadline-passed retry finalizes to expired, not
         # partial/failed (the run_pending deadline branch would otherwise
         # classify a re-run that breaks on the deadline as partial/failed).
@@ -1132,10 +1163,6 @@ class ResearchJobRunner:
             job.state = "expired"
             await store.save(job)
             return job
-        # A still-running job under a live owner must not be retried (or have
-        # its record rewritten) concurrently. Liveness is checked against the
-        # lease key, not the record fields, so a lease-expired orphan proceeds.
-        await self._raise_if_live_owned(job)
         job.state = "running"
         for query in retryable:
             query.state = "pending"

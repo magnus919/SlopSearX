@@ -1641,6 +1641,17 @@ async def slopsearx_extend_research(
         intent=intent,
         engines=resolved_engines,
     )
+    # Terminal-state gate: mirror retry and refuse to append a follow-up
+    # query to a job that already reached a terminal state (never resurrect
+    # a cancelled/expired job).
+    if job.state in ("cancelled", "expired"):
+        return _error(
+            "invalid_job_state",
+            f"job is in terminal state '{job.state}'; cannot extend",
+            job_id=job.job_id,
+            state=job.state,
+            field="query",
+        )
     job.queries.append(new_query)
 
     # A job previously executed by the durable worker still carries lease

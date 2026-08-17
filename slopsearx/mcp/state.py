@@ -38,7 +38,6 @@ class McpState:
     job_store: ResearchJobStore
     runner: ResearchJobRunner
     version: str
-    tenant: str = "default"
 
 
 _state: McpState | None = None

@@ -137,7 +137,7 @@ contract between tool inputs and the `SearchResponse`.
 | `max_results` | `max_results` | Bounded by policy; a presentation bound only — never truncates the captured snapshot. |
 | `include` | `include` | Selects surfaced fields (e.g. `suggestions`, `engine_status`); view derivation is per-request and independent of cache population order. |
 | `freshness` | `freshness` | `prefer_cache` / `prefer_fresh` / `no_preference`; not part of cache identity (cache stores the canonical full response). |
-| `client_identifier` | *(derived)* | From `state.tenant`; not a user-facing input. |
+| `client_identifier` | *(derived)* | From the request-scoped tenant identity (`current_tenant()`); not a user-facing input. |
 
 ---
 
