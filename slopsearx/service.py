@@ -550,13 +550,19 @@ class SearchService:
         for name, result in zip(engine_names, dispatch_results):
             # A task waiting behind the semaphore may be cancelled by the
             # search-wide deadline before its engine ever starts. Do not let a
-            # scheduler timeout count as an upstream engine failure.
+            # scheduler timeout count as an upstream engine failure, and never
+            # record a never-started engine as an observed outcome (issue 190).
             engine = target[name]
-            if result.status in (EngineStatus.ERROR, EngineStatus.TIMEOUT):
-                if name in started_engines:
+            if name in started_engines:
+                engine.record_observation(
+                    result.status,
+                    latency_ms=result.latency_ms,
+                    result_count=len(result.results),
+                )
+                if result.status in (EngineStatus.ERROR, EngineStatus.TIMEOUT):
                     engine.record_failure()
-            elif result.status != EngineStatus.UNAVAILABLE:
-                engine.record_success()
+                elif result.status != EngineStatus.UNAVAILABLE:
+                    engine.record_success()
 
             responses[name] = result
 

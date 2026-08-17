@@ -25,6 +25,8 @@ from slopsearx import metrics as m
 from slopsearx.adapter import EngineAdapter
 from slopsearx.audit import QueryAuditLogger
 from slopsearx.cache import SearchCache
+from slopsearx.capabilities import CapabilityCatalog, build_engine_health
+from slopsearx.config import load_config
 from slopsearx.formatter import format_json, format_yaml_markdown
 from slopsearx.logging import setup_logging
 from slopsearx.middleware import RequestIDMiddleware
@@ -146,18 +148,18 @@ def _current_context() -> AppContext:
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
-    """Health check — server liveness and Valkey connectivity.
+    """Health check — server liveness, Valkey connectivity, and observed engine health.
 
-    Does NOT probe external search APIs. Engine health is tracked via
-    the circuit breaker at search time and exposed via /metrics.
-    Every search that succeeds or fails updates engine status — no
-    separate health-check calls needed.
+    Does NOT probe external search APIs. Engine health is *observed* from
+    classified search outcomes (see ``slopsearx.adapter.EngineAdapter``) and
+    reported with a consistent status vocabulary, freshness timestamp, and
+    distinct circuit/auth signals. A configured-but-never-observed engine is
+    ``unknown``, never ``ok`` (issue 190).
     """
-    engine_statuses: dict[str, dict[str, Any]] = {}
-    for name in _active_engines:
-        engine_statuses[name] = {"status": "ok"}
-
-    all_ok = True
+    catalog = CapabilityCatalog(config=load_config(), adapters=_active_engines)
+    engine_health: dict[str, dict[str, Any]] = {}
+    for name, adapter in _active_engines.items():
+        engine_health[name] = build_engine_health(name, adapter, catalog.get(name))
 
     # Check Valkey connectivity for rate limiting
     valkey_connected: bool = False
@@ -166,7 +168,7 @@ async def health() -> dict[str, Any]:
         valkey_connected = valkey_device._connected
 
     # Degrade status if Valkey is unreachable and fail-closed is enabled
-    overall_status = "ok" if all_ok else "degraded"
+    overall_status = "ok"
     if not valkey_connected and isinstance(valkey_device, ValkeySlidingWindow):
         if valkey_device._fail_closed:
             overall_status = "degraded"
@@ -175,7 +177,7 @@ async def health() -> dict[str, Any]:
         "status": overall_status,
         "version": "0.1.0",
         "valkey_connected": valkey_connected,
-        "engines": engine_statuses,
+        "engines": engine_health,
     }
 
 

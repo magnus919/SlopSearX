@@ -222,8 +222,11 @@ reads the live registry, never prose.
 | `supported_result_types` | `supported_result_types` | List drawn from `text` / `answers` / `corrections` / `infoboxes` / `media` / `structured` (`SUPPORTED_RESULT_TYPES`). Audited per adapter: e.g. Brave declares `answers`+`media`, Wikipedia declares `corrections`+`infoboxes`+`media`, TMDB/openlibrary/Reddit/DDG declare `media`. `structured` is intentionally unused until typed domain payloads ship (tracked separately). |
 | `failure_classes` | `failure_classes` | List drawn from the stable token set `ok`, `rate_limited`, `blocked`, `error`, `timeout`, `auth_required`, `unavailable`. Audited per adapter to the statuses its `search()` can actually emit (e.g. `openalex`/`internetarchive` classify everything as `error`; most keyed API adapters emit `rate_limited`/`blocked`/`error`/`timeout`). |
 | `cost_class` | `cost_class` | One of `free` / `freemium` / `paid` (`COST_CLASSES`); audited per adapter from its access model. Empty string is emitted as `null` (explicit unknown — no fabricated estimates). |
-| `last_known_status` | `last_known_status` | `ok` / `rate_limited` / `blocked` / `error` / `timeout` / `unknown`. Observed passively through search outcomes; defaults to `unknown`. |
-| `last_known_status_at` | `last_known_status_at` | ISO freshness marker, or `None` when status is unknown. |
+| `last_known_status` | `last_known_status` | One of `ok` / `rate_limited` / `blocked` / `error` / `timeout` / `unavailable` / `unknown`. Observed passively through classified search outcomes; defaults to `unknown` and is never fabricated from registration or configuration. |
+| `last_known_status_at` | `last_known_status_at` | ISO 8601 freshness marker of the last observation, or `None` when status is `unknown`. |
+| `last_known_status_stale` | `last_known_status_stale` | Boolean. `true` when the last observation is older than the freshness bound (`OBSERVED_HEALTH_STALE_SECONDS`, default 300s), so a stale `ok` is never mistaken for current health. |
+| `circuit_open` | `circuit_open` | Boolean. `true` when the engine's circuit breaker is open (dispatches are skipped); a distinct signal from observed health. |
+| `circuit_consecutive_errors` | `circuit_consecutive_errors` | Integer consecutive-error counter feeding the circuit breaker. |
 
 ### 7.3 Capability vocabularies (shared by catalog and enforcement)
 
@@ -251,13 +254,20 @@ Four distinct concepts are conflated nowhere in the catalog:
 | **Declared capability** | `supported_filters`, `supported_result_types`, `failure_classes`, `cost_class` | Audited `EngineAdapter` class attributes (issue 185) | No — static audit of what the adapter *can* do |
 | **Configured availability** | `enabled` | Effective engine config (`config.yaml` / env) | Yes — operator flips engines on/off |
 | **Authentication state** | `auth.class`, `auth.configured` | Credential presence for the engine's requirement class | Yes — key added/removed |
-| **Observed health** | `last_known_status`, `last_known_status_at` | Passive search-outcome observation | Yes — updated by every dispatched search |
+| **Observed health** | `last_known_status`, `last_known_status_at` | Passive classified search-outcome observation | Yes — updated by every dispatched search |
+| **Observed-health freshness** | `last_known_status_stale` | Age of `last_known_status_at` vs. the freshness bound | Yes — becomes `true` past `OBSERVED_HEALTH_STALE_SECONDS` |
+| **Circuit state** | `circuit_open`, `circuit_consecutive_errors` | Engine circuit breaker | Yes — opens after consecutive errors |
 
 A `freemium` engine with no key configured is therefore `cost_class=freemium`
 (declared), `enabled=true` (configured), `auth.class=required,
 auth.configured=false` (authentication), and `last_known_status=unknown`
 (observed — never fabricated as `ok`). Capability declarations must never be
 read as health, and health must never be read as capability.
+
+Observed health is recorded **passively** from classified search outcomes.
+Neither `/health` nor the MCP status surface actively probes external APIs.
+Optional active probes are intentionally not implemented: they are bounded and
+opt-in by design, and are not required for ordinary search correctness.
 
 ---
 

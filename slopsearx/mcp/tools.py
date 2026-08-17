@@ -12,8 +12,8 @@ import datetime as _dt
 import time
 from typing import Any
 
-from slopsearx.adapter import SearchResult
-from slopsearx.capabilities import INTENT_PROFILES, resolve_intent
+from slopsearx.adapter import OBSERVED_STATUS_VOCAB, SearchResult
+from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, resolve_intent
 from slopsearx.mcp.state import McpState, current_tenant, get_state
 from slopsearx.payload import (
     PAYLOAD_INLINE_BYTES,
@@ -108,16 +108,9 @@ MCP_CONTRACT_VERSION = "1.0"
 
 # Closed set of status classes used to aggregate engine health. The final
 # ``unknown`` bucket captures engines never observed by a search outcome
-# (VAL-DIAG-006).
-ENGINE_STATUS_CLASSES: tuple[str, ...] = (
-    "ok",
-    "rate_limited",
-    "blocked",
-    "error",
-    "timeout",
-    "unavailable",
-    "unknown",
-)
+# (VAL-DIAG-006). Aligned with ``slopsearx.adapter.OBSERVED_STATUS_VOCAB`` so
+# the MCP status surface and HTTP /health share one vocabulary (issue 190).
+ENGINE_STATUS_CLASSES: tuple[str, ...] = OBSERVED_STATUS_VOCAB
 
 # Engine-health note: /health never actively probes external APIs; health is
 # observed passively through search outcomes (unchanged product behavior).
@@ -1114,6 +1107,9 @@ async def slopsearx_list_capabilities(
             "cost_class": cap.cost_class or None,
             "last_known_status": cap.last_known_status,
             "last_known_status_at": cap.last_known_status_at,
+            "last_known_status_stale": cap.last_known_status_stale,
+            "circuit_open": cap.circuit_open,
+            "circuit_consecutive_errors": cap.circuit_consecutive_errors,
             "scope_hints": cap.scope_hints,
             "caveats": cap.caveats,
         }
@@ -1231,6 +1227,14 @@ def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str,
     engine_count = len(state.catalog.enabled())
     durable_research = bool(state.job_store.durable)
 
+    # Per-engine observed-health detail, derived with the same builder used by
+    # HTTP /health so the two surfaces agree on status vocabulary, freshness
+    # timestamps, and the distinct circuit/auth signals (issue 190).
+    engine_details: dict[str, Any] = {}
+    for cap in state.catalog.enabled():
+        adapter = ctx.active_engines.get(cap.name)
+        engine_details[cap.name] = build_engine_health(cap.name, adapter, cap)
+
     causes: list[str] = []
     if not valkey_connected:
         causes.append("Valkey unavailable")
@@ -1251,6 +1255,7 @@ def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str,
         "active_engines": engine_count,
         "router_enabled": bool(ctx.router is not None and ctx.router.enabled),
         "engine_health": _engine_health_by_class(state),
+        "engines": engine_details,
         "grants": _enabled_grants(state),
         "research_execution": {
             "mode": "durable_leased" if durable_research else "degraded",
