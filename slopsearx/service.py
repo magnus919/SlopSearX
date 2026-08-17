@@ -43,6 +43,7 @@ from slopsearx.capabilities import DEFAULT_SENSITIVE_ENGINES
 from slopsearx.config import load_config
 from slopsearx.logging import capture_exception
 from slopsearx.merger import PresenceRanker, extract_empty_scrape_engines
+from slopsearx.payload import payload_from_dict, payload_to_dict
 from slopsearx.ratelimit import LocalTokenBucket, RateLimiter, RateLimitStrategy, ValkeySlidingWindow
 from slopsearx.router import QueryRouter
 from slopsearx.stats import EngineStatsTracker
@@ -951,9 +952,13 @@ def search_result_to_dict(result: SearchResult) -> dict[str, Any]:
 
     ``engines`` (a ``set[str]``) is canonicalized to a sorted list so the
     value survives ``json.dumps`` without being stringified to its repr.
+    The optional ``payload`` is canonicalized through
+    :func:`~slopsearx.payload.payload_to_dict` so its nested values are
+    JSON-safe and never rely on ``json.dumps(default=str)``.
     """
     data = dataclasses.asdict(result)
     data["engines"] = sorted(result.engines)
+    data["payload"] = payload_to_dict(result.payload)
     return data
 
 
@@ -1038,6 +1043,7 @@ def search_result_from_dict(data: dict[str, Any]) -> SearchResult:
         thumbnail=data.get("thumbnail"),
         img_src=data.get("img_src"),
         tier=int(raw_tier) if raw_tier is not None else 1,
+        payload=payload_from_dict(data.get("payload")),
     )
 
 

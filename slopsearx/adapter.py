@@ -106,6 +106,10 @@ class SearchResult:
     thumbnail: Optional[str] = None
     img_src: Optional[str] = None
     tier: int = 1  # 1 = primary (broad), 2 = secondary (specialized)
+    # Optional versioned, JSON-safe domain payload (see slopsearx.payload).
+    # None means the result has no domain-specific structured payload and the
+    # common envelope is the complete representation.
+    payload: Optional[dict[str, Any]] = None
 
 
 class EngineStatus(enum.Enum):

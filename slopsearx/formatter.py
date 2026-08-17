@@ -39,6 +39,7 @@ def _result_to_searxng(result: SearchResult) -> dict[str, Any]:
         "length": None,
         "thumbnail": result.thumbnail,
         "img_src": result.img_src,
+        "payload": result.payload,
         "iframe_src": None,
         "audio_src": None,
         "views": None,
@@ -188,6 +189,7 @@ def format_yaml_markdown(
             "position": r.position,
             "published": r.published_date,
             "tier": r.tier,
+            "payload": r.payload,
         }
         for r in results
     ]

@@ -23,6 +23,7 @@ from slopsearx.adapter import (
     register_engine,
     sanitize_url,
 )
+from slopsearx.payload import DOMAIN_FINANCIAL, build_payload
 
 
 @register_engine
@@ -103,6 +104,21 @@ class FredAdapter(EngineAdapter):
                         content_parts.append(notes)
                     content = " — ".join(content_parts) if content_parts else "Economic data series"
 
+                    payload = build_payload(
+                        DOMAIN_FINANCIAL,
+                        "economic_series",
+                        {
+                            "series_id": series_id or None,
+                            "title": title or None,
+                            "units": units or None,
+                            "frequency": frequency or None,
+                            "seasonal_adjustment": seasonal_adjustment or None,
+                            "observation_start": observation_start or None,
+                            "notes": notes or None,
+                        },
+                        engine=self.name,
+                    )
+
                     results.append(
                         SearchResult(
                             url=f"https://fred.stlouisfed.org/series/{series_id}",
@@ -112,6 +128,7 @@ class FredAdapter(EngineAdapter):
                             position=idx + 1,
                             published_date=observation_start if observation_start else None,
                             score=float(popularity),
+                            payload=payload,
                         ),
                     )
 

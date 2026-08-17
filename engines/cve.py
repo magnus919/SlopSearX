@@ -23,6 +23,7 @@ from slopsearx.adapter import (
     SearchResult,
     register_engine,
 )
+from slopsearx.payload import DOMAIN_SECURITY, build_payload
 
 _CVE_ID_PATTERN = re.compile(r"(CVE-\d{4}-\d{4,})", re.IGNORECASE)
 
@@ -142,6 +143,18 @@ class CVEAdapter(EngineAdapter):
         if not published_date and data.get("cveId") == cve_id:
             published_date = data.get("datePublished") or data.get("dateUpdated")
 
+        payload = build_payload(
+            DOMAIN_SECURITY,
+            "vulnerability",
+            {
+                "cve_id": cve_id or None,
+                "description": desc_text or None,
+                "cvss": self._cvss_payload(cna),
+                "references": ref_urls or None,
+            },
+            engine=self.name,
+        )
+
         return [
             SearchResult(
                 url=f"https://nvd.nist.gov/vuln/detail/{cve_id}",
@@ -150,6 +163,7 @@ class CVEAdapter(EngineAdapter):
                 engine=self.name,
                 position=1,
                 published_date=published_date[:10] if published_date and len(published_date) >= 10 else published_date,
+                payload=payload,
             ),
         ]
 
@@ -186,3 +200,32 @@ class CVEAdapter(EngineAdapter):
                     # Only take the first metric set
                     break
         return " | ".join(parts) if parts else ""
+
+    def _cvss_payload(self, container: dict[str, Any]) -> dict[str, Any] | None:
+        """Extract structured CVSS fields from a CVE Record container.
+
+        Returns ``None`` when no metric is present so the field stays absent
+        rather than fabricating an empty object.
+        """
+        metrics_list = container.get("metrics", []) if container else []
+        for m in metrics_list:
+            if not isinstance(m, dict):
+                continue
+            for key, version in (("cvssV3_1", "3.1"), ("cvssV3_0", "3.0"), ("cvssV2_0", "2.0")):
+                cvss = m.get(key, {})
+                if not isinstance(cvss, dict):
+                    continue
+                score = cvss.get("baseScore")
+                severity = cvss.get("baseSeverity")
+                vector = cvss.get("vectorString")
+                out: dict[str, Any] = {}
+                if score is not None:
+                    out["score"] = score
+                if severity:
+                    out["severity"] = severity
+                if vector:
+                    out["vector"] = vector
+                if out:
+                    out["version"] = version
+                    return out
+        return None

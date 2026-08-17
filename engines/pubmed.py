@@ -18,6 +18,7 @@ from slopsearx.adapter import (
     SearchResult,
     register_engine,
 )
+from slopsearx.payload import DOMAIN_SCIENCE, build_payload
 
 
 @register_engine
@@ -99,6 +100,17 @@ class PubMedAdapter(EngineAdapter):
                         content_parts.append(author_str)
                     content = " — ".join(content_parts)
 
+                    payload = build_payload(
+                        DOMAIN_SCIENCE,
+                        "publication",
+                        {
+                            "publication_id": pmid or None,
+                            "journal": source or None,
+                            "authors": author_names or None,
+                        },
+                        engine=self.name,
+                    )
+
                     results.append(
                         SearchResult(
                             url=f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
@@ -108,6 +120,7 @@ class PubMedAdapter(EngineAdapter):
                             position=idx + 1,
                             published_date=pub_date if pub_date else None,
                             score=1.0,
+                            payload=payload,
                         ),
                     )
 
