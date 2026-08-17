@@ -87,6 +87,21 @@ _JSON_SAFE_MAX_DEPTH = 100
 _DEPTH_LIMIT_MARKER = "<max depth exceeded>"
 
 
+def _sanitize_surrogates(value: str) -> str:
+    """Replace UTF-16 surrogate code points with U+FFFD (``\\ufffd``).
+
+    A Python ``str`` can hold surrogates (for example ``"\\ud800"``) that
+    ``str.encode("utf-8")`` and the HTTP JSON renderer cannot represent; a
+    surrogate would otherwise crash serialization with ``UnicodeEncodeError``.
+    Payloads built from normally decoded JSON never contain them, but a
+    hostile or malformed payload could, so they are neutralized here before a
+    payload is persisted or emitted.
+    """
+    if not any(0xD800 <= ord(char) <= 0xDFFF for char in value):
+        return value
+    return "".join("\ufffd" if 0xD800 <= ord(char) <= 0xDFFF else char for char in value)
+
+
 def _json_safe(value: Any, _seen: set[int] | None = None, _depth: int = 0) -> Any:
     """Deep-convert a value to JSON-safe primitives.
 
@@ -110,7 +125,7 @@ def _json_safe(value: Any, _seen: set[int] | None = None, _depth: int = 0) -> An
             return _CIRCULAR_REF_MARKER
         _seen.add(marker)
         try:
-            return {str(key): _json_safe(item, _seen, _depth + 1) for key, item in value.items()}
+            return {_sanitize_surrogates(str(key)): _json_safe(item, _seen, _depth + 1) for key, item in value.items()}
         finally:
             _seen.discard(marker)
 
@@ -134,13 +149,20 @@ def _json_safe(value: Any, _seen: set[int] | None = None, _depth: int = 0) -> An
         finally:
             _seen.discard(marker)
 
-    if value is None or isinstance(value, (bool, int, float, str)):
+    if value is None or isinstance(value, (bool, int, float)):
         return value
-    return str(value)
+    if isinstance(value, str):
+        return _sanitize_surrogates(value)
+    return _sanitize_surrogates(str(value))
 
 
 def payload_serialized_size(payload: dict[str, Any] | None) -> int | None:
     """Approximate serialized byte size of a payload envelope.
+
+    Measures exactly the way the HTTP JSON renderer does
+    (``ensure_ascii=False`` then UTF-8 encode), so a payload holding a lone
+    surrogate — which the renderer cannot encode — is measured as
+    unserializable rather than being under-counted by the ASCII-escaped form.
 
     Returns ``None`` when the payload cannot be JSON-serialized so callers can
     conservatively omit it — an unserializable payload is never treated as the
@@ -149,8 +171,8 @@ def payload_serialized_size(payload: dict[str, Any] | None) -> int | None:
     if not isinstance(payload, dict):
         return None
     try:
-        return len(json.dumps(payload, separators=(",", ":"), allow_nan=False).encode("utf-8"))
-    except (TypeError, ValueError, RecursionError):
+        return len(json.dumps(payload, separators=(",", ":"), allow_nan=False, ensure_ascii=False).encode("utf-8"))
+    except (TypeError, ValueError, RecursionError, UnicodeEncodeError):
         return None
 
 

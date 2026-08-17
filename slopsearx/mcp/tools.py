@@ -15,7 +15,12 @@ from typing import Any
 from slopsearx.adapter import SearchResult
 from slopsearx.capabilities import INTENT_PROFILES, resolve_intent
 from slopsearx.mcp.state import McpState, get_state
-from slopsearx.payload import PAYLOAD_INLINE_BYTES, is_valid_payload, payload_serialized_size
+from slopsearx.payload import (
+    PAYLOAD_INLINE_BYTES,
+    is_valid_payload,
+    payload_max_persist_bytes,
+    payload_serialized_size,
+)
 from slopsearx.ratelimit import ValkeySlidingWindow
 from slopsearx.research import (
     ResearchJob,
@@ -356,7 +361,9 @@ def _payload_inline(result: SearchResult, *, requested: bool) -> dict[str, Any] 
     """Return the payload to inline on a compact card, or ``None``.
 
     Compact cards carry a payload only when the caller requested it
-    (``include=["payload"]``) or the payload is small enough to inline. An
+    (``include=["payload"]``) or the payload is small enough to inline — and,
+    in both cases, only when it is within the persistence bound, so a card
+    never shows a payload the record path would return as ``null``. An
     unserializable payload is always omitted, even when requested, so the MCP
     response itself never fails to serialize.
     """
@@ -365,7 +372,9 @@ def _payload_inline(result: SearchResult, *, requested: bool) -> dict[str, Any] 
     size = _payload_size(result.payload)
     if size is None:
         return None
-    if requested or size <= PAYLOAD_INLINE_BYTES:
+    if requested:
+        return result.payload if size <= payload_max_persist_bytes() else None
+    if size <= PAYLOAD_INLINE_BYTES:
         return result.payload
     return None
 
@@ -382,7 +391,8 @@ def _result_to_dict(
     Full ``content``, ``thumbnail``, and ``img_src`` belong to the expanded
     record (progressive disclosure), never the card. A domain payload is
     inlined only when requested or small enough (see ``_payload_inline``);
-    the full payload is always available via ``slopsearx_read_result``.
+    the full payload is available via ``slopsearx_read_result`` when it is
+    within ``PAYLOAD_MAX_PERSIST_BYTES``.
     """
     card = {
         "title": result.title,
@@ -643,9 +653,10 @@ async def slopsearx_search(
     - freshness: prefer_cache | prefer_fresh | no_preference.
     - include: subset of results, suggestions, engine_status, diagnostics,
       payload. When ``payload`` is included, compact result cards inline the
-      (possibly large) domain payload; otherwise cards inline a payload only
-      when it is small. The full payload is always available via
-      slopsearx_read_result.
+      domain payload only when it is within ``PAYLOAD_MAX_PERSIST_BYTES``
+      (the snapshot persistence bound); otherwise cards inline a payload only
+      when it is small. The full payload is available via
+      slopsearx_read_result when it is within the persistence bound.
     Returns results, scope, engine outcomes, and a pagination cursor.
     """
     state = get_state()

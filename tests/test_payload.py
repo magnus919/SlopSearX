@@ -189,6 +189,16 @@ class TestPayloadContract:
         nested = _deeply_nested_payload(20_000)
         assert payload_serialized_size(nested) is None
 
+    def test_payload_serialized_size_returns_none_for_lone_surrogate(self) -> None:
+        """A lone surrogate is measured the renderer's way and treated as unserializable."""
+        assert payload_serialized_size({"data": "\ud800"}) is None
+
+    def test_json_safe_neutralizes_surrogates(self) -> None:
+        """Lone surrogates are replaced so the canonical form stays UTF-8 encodable."""
+        safe = _json_safe({"data": "\ud800", "bad\udfff": ["ok", "\udc00"]})
+        assert safe == {"data": "\ufffd", "bad\ufffd": ["ok", "\ufffd"]}
+        json.dumps(safe, ensure_ascii=False).encode("utf-8")
+
 
 # ---------------------------------------------------------------------------
 # Cache / snapshot serialization round-trips
@@ -481,6 +491,26 @@ class TestPayloadDisclosure:
 
             requested = await t.slopsearx_search("paper", engines=["brave"], include=["results", "payload"])
             assert requested["results"][0]["payload"] == payload
+        finally:
+            set_state(None)
+
+    async def test_payload_above_persistence_bound_not_inlined_even_when_requested(self) -> None:
+        """A card never shows a payload the record path would return as null."""
+        payload = build_payload(
+            DOMAIN_SCIENCE,
+            "publication",
+            {"publication_id": "2401.00001", "abstract": "A" * 20_000},
+            engine="brave",
+        )
+        state = _mcp_state(_PayloadEngine("brave", payload))
+        set_state(state)
+        try:
+            result = await t.slopsearx_search("paper", engines=["brave"], include=["results", "payload"])
+            card = result["results"][0]
+            assert "payload" not in card  # above the persistence bound: never inlined
+
+            expanded = await t.slopsearx_read_result(card["result_id"])
+            assert expanded["payload"] is None  # dropped from the snapshot
         finally:
             set_state(None)
 

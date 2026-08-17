@@ -66,7 +66,7 @@ Source: `slopsearx/adapter.py:78-91`. The internal normalized result dataclass.
 | `thumbnail` | `Optional[str]` | *(omitted)* | `thumbnail` | **Media is record-only** (design §4.4 / decision 4; `VAL-EXPAND-006`). Omitted from cards by deliberate choice. |
 | `img_src` | `Optional[str]` | *(omitted)* | `img_src` | **Media is record-only**. Omitted from cards by deliberate choice. |
 | `tier` | `int` (1 or 2) | `tier` | `tier` | PresenceRanker tier; 1 = broad, 2 = specialized. `meta.ranking` states `tier_then_cross_engine_presence`. |
-| `payload` | `Optional[dict]` | `payload` (conditionally) | `payload` (full) | Optional versioned domain payload (see §14). Cards inline it only when `include=["payload"]` was requested or the serialized payload is small enough (`PAYLOAD_INLINE_BYTES = 512`); otherwise it is omitted from cards. Records carry the complete payload, or `null` when the result has none (or an unserializable payload). |
+| `payload` | `Optional[dict]` | `payload` (conditionally) | `payload` (full) | Optional versioned domain payload (see §14). Cards inline it only when `include=["payload"]` was requested or the serialized payload is small enough (`PAYLOAD_INLINE_BYTES = 512`) — and, in both cases, only when it is within `PAYLOAD_MAX_PERSIST_BYTES`; otherwise it is omitted from cards. Records carry the complete payload when it is within `PAYLOAD_MAX_PERSIST_BYTES`, or `null` when the result has none, the payload is unserializable, or it exceeds the persistence bound. |
 
 Additional record-only fields synthesized at the MCP boundary (not on the
 internal model, but derived from it):
@@ -397,13 +397,15 @@ fabricated `null`/`false`/empty value.
 
 - **Card** (`slopsearx_search` and friends): `payload` is present only when
   the caller requested `include=["payload"]` or the serialized payload is ≤
-  `PAYLOAD_INLINE_BYTES` (512). Otherwise the key is omitted.
+  `PAYLOAD_INLINE_BYTES` (512) — and, in both cases, only when it is within
+  `PAYLOAD_MAX_PERSIST_BYTES`. Otherwise the key is omitted.
 - **Paginated card** (`slopsearx_read_results`): `payload` is inlined only
   when the serialized payload is ≤ `PAYLOAD_INLINE_BYTES` (512); this tool
   has no `include` parameter.
 - **Record** (`slopsearx_read_result`): `payload` is present with the
-  complete payload, or `null` when the result has none (or an unserializable
-  payload).
+  complete payload when it is within `PAYLOAD_MAX_PERSIST_BYTES`, or `null`
+  when the result has none, the payload is unserializable, or it exceeds the
+  persistence bound.
 
 ### 14.3 Source-derived evidence
 
@@ -424,7 +426,9 @@ very large structured payload.
 
 This is a distinct, coarser bound than the 512-byte compact-disclosure cap:
 the 512-byte cap keeps triage cards small, while the persistence bound caps
-memory amplification in shared state. Tradeoff: a payload between 512 bytes
-and `PAYLOAD_MAX_PERSIST_BYTES` is hidden on cards but fully preserved on
+memory amplification in shared state. Cards honor the persistence bound even
+for an explicit `include=["payload"]` request, so a card never shows a payload
+that the record path would return as `null`. Tradeoff: a payload between 512
+bytes and `PAYLOAD_MAX_PERSIST_BYTES` is hidden on cards but fully preserved on
 `slopsearx_read_result`; a payload above the persistence bound is dropped from
 the persisted form and therefore reads back as `null` on `slopsearx_read_result`.
