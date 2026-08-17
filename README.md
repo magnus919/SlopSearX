@@ -142,6 +142,14 @@ registry at runtime — treat them as authoritative.
 
 **Adding a new engine:** See [`docs/ENGINE_ADAPTERS.md`](docs/ENGINE_ADAPTERS.md) for the full adapter reference — contract rules, data types, lifecycle hooks, and the category system.
 
+**Capability metadata:** every adapter additionally declares an audited
+capability surface (`supported_result_types`, `failure_classes`, `cost_class`
+from the closed vocabularies in `slopsearx/adapter.py`). The MCP capability
+catalog exposes these for enabled **and** disabled engines; a declaration is a
+static capability hint and must not be confused with configured availability
+(`enabled`), authentication state (`auth.class`/`auth.configured`), or
+observed health (`last_known_status`). See `docs/MCP_CONTRACT.md` §7.4.
+
 ## MCP Server (agents)
 
 SlopSearX ships a Model Context Protocol server for AI agents. It exposes

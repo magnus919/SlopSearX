@@ -62,6 +62,11 @@ class BraveAdapter(EngineAdapter):
     engine_type = "api"
     categories = ["general", "news", "science", "images"]
 
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text", "answers", "media")
+    failure_classes = ("rate_limited", "blocked", "error", "timeout")
+    cost_class = "freemium"
+
     def __init__(self, config: dict[str, Any] | None = None, **kwargs: Any) -> None:
         cfg = config or {}
         # Load API key from environment if not in config

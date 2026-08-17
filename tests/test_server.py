@@ -91,6 +91,30 @@ class _EmptyScrapeEngine(EngineAdapter):
         return AdapterResponse(results=[], status=EngineStatus.OK)
 
 
+class _SurrogatePayloadEngine(EngineAdapter):
+    """Mock engine returning a payload containing a lone UTF-16 surrogate."""
+
+    name = "surrogatepayload"
+    engine_type = "api"
+    categories = ["general"]
+
+    async def search(self, query, params=None):
+        return AdapterResponse(
+            results=[
+                SearchResult(
+                    url="https://example.com/result",
+                    title="Surrogate payload",
+                    content="snippet",
+                    engine=self.name,
+                    engines={self.name},
+                    payload={"domain": "security", "type": "vulnerability", "data": {"note": "\ud800"}},
+                )
+            ],
+            status=EngineStatus.OK,
+            latency_ms=1.0,
+        )
+
+
 # ---------------------------------------------------------------------------
 # Test fixture: server with mock engines enabled
 # ---------------------------------------------------------------------------
@@ -278,6 +302,16 @@ class TestSearchEndpoint:
         )
 
         assert response.status_code == 200
+
+    def test_lone_surrogate_payload_does_not_500(self, client: TestClient) -> None:
+        """A payload with a lone surrogate is omitted from JSON, never a 500."""
+        import slopsearx.server as server_mod
+
+        server_mod._active_engines = {"surrogatepayload": _SurrogatePayloadEngine()}
+        response = client.get("/search", params={"q": "surrogate", "engines": "surrogatepayload"})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["results"][0]["payload"] is None
 
 
 # ---------------------------------------------------------------------------

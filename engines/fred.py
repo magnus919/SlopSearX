@@ -23,6 +23,7 @@ from slopsearx.adapter import (
     register_engine,
     sanitize_url,
 )
+from slopsearx.payload import DOMAIN_FINANCIAL, build_payload
 
 
 @register_engine
@@ -34,6 +35,11 @@ class FredAdapter(EngineAdapter):
     env_prefix = "ENGINE_FRED"
     engine_type = "api"
     categories = ["finance", "reference", "economics"]
+
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text",)
+    failure_classes = ("rate_limited", "error", "timeout")
+    cost_class = "freemium"
 
     async def search(
         self,
@@ -90,7 +96,8 @@ class FredAdapter(EngineAdapter):
                     frequency = s.get("frequency", "")
                     seasonal_adjustment = s.get("seasonal_adjustment", "")
                     popularity = s.get("popularity", 0) or 0
-                    notes = (s.get("notes", "") or "")[:200]
+                    notes = s.get("notes", "") or ""
+                    notes_display = notes[:200]
 
                     content_parts = []
                     if frequency:
@@ -99,9 +106,24 @@ class FredAdapter(EngineAdapter):
                         content_parts.append(units)
                     if seasonal_adjustment:
                         content_parts.append(seasonal_adjustment)
-                    if notes:
-                        content_parts.append(notes)
+                    if notes_display:
+                        content_parts.append(notes_display)
                     content = " — ".join(content_parts) if content_parts else "Economic data series"
+
+                    payload = build_payload(
+                        DOMAIN_FINANCIAL,
+                        "economic_series",
+                        {
+                            "series_id": series_id or None,
+                            "title": title or None,
+                            "units": units or None,
+                            "frequency": frequency or None,
+                            "seasonal_adjustment": seasonal_adjustment or None,
+                            "observation_start": observation_start or None,
+                            "notes": notes or None,
+                        },
+                        engine=self.name,
+                    )
 
                     results.append(
                         SearchResult(
@@ -112,6 +134,7 @@ class FredAdapter(EngineAdapter):
                             position=idx + 1,
                             published_date=observation_start if observation_start else None,
                             score=float(popularity),
+                            payload=payload,
                         ),
                     )
 

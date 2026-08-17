@@ -18,6 +18,7 @@ from slopsearx.adapter import (
     SearchResult,
     register_engine,
 )
+from slopsearx.payload import DOMAIN_PACKAGES, build_payload
 
 
 @register_engine
@@ -29,6 +30,11 @@ class NpmAdapter(EngineAdapter):
     env_prefix = "ENGINE_NPM"
     engine_type = "api"
     categories = ["it", "reference", "packages"]
+
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text",)
+    failure_classes = ("rate_limited", "error", "timeout")
+    cost_class = "free"
 
     async def search(
         self,
@@ -71,6 +77,17 @@ class NpmAdapter(EngineAdapter):
                     if publisher:
                         content += f" — Published by {publisher}"
 
+                    payload = build_payload(
+                        DOMAIN_PACKAGES,
+                        "package",
+                        {
+                            "name": name or None,
+                            "version": version or None,
+                            "summary": description or None,
+                        },
+                        engine=self.name,
+                    )
+
                     results.append(
                         SearchResult(
                             url=f"https://www.npmjs.com/package/{name}",
@@ -79,6 +96,7 @@ class NpmAdapter(EngineAdapter):
                             engine=self.name,
                             position=idx + 1,
                             score=float(downloads) * 1000 if downloads else 0.0,
+                            payload=payload,
                         ),
                     )
 

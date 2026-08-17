@@ -141,6 +141,34 @@ class TestGreenhouseAdapter:
         assert result.results[0].category == "jobs"
         assert result.results[0].tier == 2
 
+    async def test_job_id_absent_stays_absent(self, adapter):
+        """An absent source ``id`` must not leak an empty-string ``job_id``."""
+        response = {
+            "jobs": [
+                {
+                    "id": 123,
+                    "title": "With ID",
+                    "absolute_url": "https://boards.greenhouse.io/anthropic/jobs/123",
+                    "offices": [],
+                    "metadata": [],
+                },
+                {
+                    "title": "Without ID",
+                    "absolute_url": "https://boards.greenhouse.io/anthropic/jobs/999",
+                    "offices": [],
+                    "metadata": [],
+                },
+            ],
+        }
+
+        async with MockHTTP(lambda r: httpx.Response(200, json=response)):
+            result = await adapter.search("Engineer at Anthropic")
+
+        assert result.status == EngineStatus.OK
+        assert len(result.results) == 2
+        assert result.results[0].payload["data"]["job_id"] == 123
+        assert "job_id" not in result.results[1].payload["data"]
+
     async def test_search_no_company_returns_empty(self, adapter):
         result = await adapter.search("python jobs")
         assert result.status == EngineStatus.OK

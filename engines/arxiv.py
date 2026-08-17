@@ -17,6 +17,7 @@ from slopsearx.adapter import (
     SearchResult,
     register_engine,
 )
+from slopsearx.payload import DOMAIN_SCIENCE, build_payload
 
 ARXIV_NS = {"atom": "http://www.w3.org/2005/Atom"}
 
@@ -28,6 +29,11 @@ class ArxivAdapter(EngineAdapter):
     env_prefix = "ENGINE_ARXIV"
     engine_type = "api"
     categories = ["science", "reference"]
+
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text",)
+    failure_classes = ("rate_limited", "error", "timeout")
+    cost_class = "free"
 
     async def search(
         self,
@@ -136,11 +142,22 @@ class ArxivAdapter(EngineAdapter):
             url = f"https://arxiv.org/abs/{arxiv_id}"
 
             # Clean summary: arXiv wraps newlines inside paragraphs
-            clean = re.sub(r"\s+", " ", summary).strip()
+            abstract = re.sub(r"\s+", " ", summary).strip()
+            clean = abstract
             if len(clean) > 300:
                 clean = clean[:300] + "…"
 
             published_date = published_el.text.strip() if published_el is not None and published_el.text else None
+
+            payload = build_payload(
+                DOMAIN_SCIENCE,
+                "publication",
+                {
+                    "publication_id": arxiv_id or None,
+                    "abstract": abstract or None,
+                },
+                engine=self.name,
+            )
 
             results.append(
                 SearchResult(
@@ -150,6 +167,7 @@ class ArxivAdapter(EngineAdapter):
                     engine=self.name,
                     position=idx + 1,
                     published_date=published_date,
+                    payload=payload,
                 ),
             )
 

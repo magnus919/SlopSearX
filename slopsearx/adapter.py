@@ -48,6 +48,17 @@ FAILURE_CLASS_TOKENS: tuple[str, ...] = (
     "unavailable",
 )
 
+# Coarse operator cost-class vocabulary (design §4.6, capability audit).
+# Adapters declare exactly one value on the class; the catalog emits ``""``
+# as ``null`` (explicit unknown — no fabricated estimates). Values:
+#   "free"     — no API key and no paid tier required for the endpoints used
+#   "freemium" — requires an API key but a usable free tier exists (may be
+#                rate-limited or quota-bound)
+#   "paid"     — requires paid API access (no meaningful free tier for the
+#                endpoint used)
+#   ""         — unknown / not audited (emitted as null)
+COST_CLASSES: tuple[str, ...] = ("free", "freemium", "paid")
+
 
 def sanitize_url(url: str) -> str:
     """Strip known sensitive query parameters from a URL.
@@ -106,6 +117,10 @@ class SearchResult:
     thumbnail: Optional[str] = None
     img_src: Optional[str] = None
     tier: int = 1  # 1 = primary (broad), 2 = secondary (specialized)
+    # Optional versioned, JSON-safe domain payload (see slopsearx.payload).
+    # None means the result has no domain-specific structured payload and the
+    # common envelope is the complete representation.
+    payload: Optional[dict[str, Any]] = None
 
 
 class EngineStatus(enum.Enum):
@@ -159,6 +174,15 @@ class EngineAdapter(ABC):
     # report. Subclasses override them; the catalog provides stable
     # registry-derived defaults so an entry is always complete and honest
     # even when an adapter does not declare anything.
+    #
+    # Capability-audit convention (issue 185): every registered adapter
+    # declares the capability surface it actually provides. ``sensitive``,
+    # ``supported_result_types``, ``failure_classes``, and ``cost_class``
+    # are audited per adapter. ``supported_filters`` stays at the base
+    # default for every adapter: no adapter consumes the
+    # ``language``/``time_range``/``safesearch``/``pagination`` parameter
+    # bag today, so claiming support would be dishonest (the filter
+    # enforcement report derives ``unsupported`` from exactly this).
     sensitive: bool = False  # reaching this engine requires the sensitive-engine grant
     supported_filters: dict[str, bool] = {}  # keys from SUPPORTED_FILTER_KEYS
     supported_result_types: tuple[str, ...] = ("text",)  # subset of SUPPORTED_RESULT_TYPES
@@ -170,7 +194,7 @@ class EngineAdapter(ABC):
         "auth_required",
         "unavailable",
     )  # subset of FAILURE_CLASS_TOKENS
-    cost_class: str = ""  # coarse operator-configured hint; "" = unknown (omitted)
+    cost_class: str = ""  # one of COST_CLASSES; "" = unknown (emitted as null)
 
     # Circuit-breaker defaults (can be overridden per-instance via config or env vars)
     CIRCUIT_BREAKER_THRESHOLD: int = 5  # consecutive errors before circuit opens

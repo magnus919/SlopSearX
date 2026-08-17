@@ -236,6 +236,59 @@ class TestFormatJson:
         )
         assert response["number_of_results"] == 42
 
+    def test_large_payload_omitted_by_default(self) -> None:
+        """HTTP JSON output must not emit a full payload by default."""
+        result = SearchResult(
+            url="https://example.com",
+            title="X",
+            content="y",
+            engine="brave",
+            engines={"brave"},
+            payload={"domain": "security", "type": "vulnerability", "data": {"description": "x" * 2000}},
+        )
+
+        response = format_json(results=[result], query="test")
+        assert response["results"][0]["payload"] is None
+
+    def test_small_payload_inlined_by_default(self) -> None:
+        """Small payloads stay inline, matching the MCP compact-card model."""
+        small_payload = {"domain": "security", "type": "vulnerability", "data": {"cve_id": "CVE-2024-1"}}
+        result = SearchResult(
+            url="https://example.com",
+            title="X",
+            content="y",
+            engine="brave",
+            engines={"brave"},
+            payload=small_payload,
+        )
+
+        response = format_json(results=[result], query="test")
+        assert response["results"][0]["payload"] == small_payload
+
+    def test_json_hostile_payload_omitted(self) -> None:
+        """set/bytes/NaN payloads must be omitted, never crash strict JSON render."""
+        import json
+
+        hostile_payloads = [
+            {"domain": "security", "type": "vulnerability", "data": {"tags": {"a", "b"}}},
+            {"domain": "security", "type": "vulnerability", "data": {"raw": b"\x00\x01"}},
+            {"domain": "security", "type": "vulnerability", "data": {"score": float("nan")}},
+        ]
+
+        for payload in hostile_payloads:
+            result = SearchResult(
+                url="https://example.com",
+                title="X",
+                content="y",
+                engine="brave",
+                engines={"brave"},
+                payload=payload,
+            )
+            response = format_json(results=[result], query="test")
+            assert response["results"][0]["payload"] is None
+            # The full response must survive strict JSON serialization (no 500).
+            json.dumps(response, allow_nan=False)
+
 
 # ---------------------------------------------------------------------------
 # YAML+Markdown Formatter
@@ -353,3 +406,25 @@ class TestFormatYamlMarkdown:
 
         # The markdown should contain a snippet <= ~120 chars
         assert long_content[:120] in output
+
+    def test_large_payload_omitted_by_default(self) -> None:
+        """HTTP YAML output must not emit a full payload by default."""
+        result = SearchResult(
+            url="https://example.com",
+            title="X",
+            content="y",
+            engine="brave",
+            engines={"brave"},
+            payload={"domain": "security", "type": "vulnerability", "data": {"description": "x" * 2000}},
+        )
+        meta = {
+            "response_time_ms": 100,
+            "cached": False,
+            "query_id": "ssx-test",
+            "engine_status": {"brave": {"results": 1, "latency_ms": 100, "status": "ok"}},
+        }
+
+        output = format_yaml_markdown([result], "test", meta=meta, engine_count=1, responsive_count=1)
+        parsed = yaml.safe_load(output.split("---\n", 1)[0])
+
+        assert parsed["results"][0]["payload"] is None

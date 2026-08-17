@@ -34,6 +34,11 @@ class GreyNoiseAdapter(EngineAdapter):
     engine_type = "api"
     categories = ["security", "threat-intel"]
 
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text",)
+    failure_classes = ("rate_limited", "blocked", "error", "timeout")
+    cost_class = "free"
+
     def __init__(self, config: dict[str, Any] | None = None, rate_limiter: Any = None) -> None:
         super().__init__(config, rate_limiter)
         self._has_api_key = bool(self.config.get("api_key"))

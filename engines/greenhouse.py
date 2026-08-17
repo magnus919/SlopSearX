@@ -19,6 +19,7 @@ from slopsearx.adapter import (
     register_engine,
 )
 from slopsearx.jobs_utils import extract_company
+from slopsearx.payload import DOMAIN_JOBS, build_payload
 
 
 @register_engine
@@ -30,6 +31,11 @@ class GreenhouseAdapter(EngineAdapter):
     env_prefix = "ENGINE_GREENHOUSE"
     engine_type = "api"
     categories = ["jobs"]
+
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text",)
+    failure_classes = ("rate_limited", "error", "timeout")
+    cost_class = "free"
 
     async def search(
         self,
@@ -91,6 +97,19 @@ class GreenhouseAdapter(EngineAdapter):
                     if salary:
                         content_parts.append(salary)
 
+                    payload = build_payload(
+                        DOMAIN_JOBS,
+                        "job",
+                        {
+                            "company": (company_name or company_slug.title()) or None,
+                            "title": title or None,
+                            "location": location_str or None,
+                            "salary": salary or None,
+                            "job_id": job_id or None,
+                        },
+                        engine=self.name,
+                    )
+
                     results.append(
                         SearchResult(
                             url=absolute_url,
@@ -102,6 +121,7 @@ class GreenhouseAdapter(EngineAdapter):
                             published_date=updated_at,
                             category="jobs",
                             tier=2,
+                            payload=payload,
                         ),
                     )
 

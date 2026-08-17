@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import engines  # noqa: F401 — triggers @register_engine to populate registry
+from slopsearx.adapter import COST_CLASSES, EngineAdapter
 from slopsearx.capabilities import (
     AUTH_NONE,
     AUTH_REQUIRED,
@@ -128,12 +129,139 @@ class TestCatalogFeatureMatrix:
         assert override.get("cve").sensitive is True  # type: ignore[union-attr]
         assert override.get("hibp").sensitive is False  # type: ignore[union-attr]
 
-    def test_cost_class_and_last_known_status_present(self) -> None:
+    def test_cost_class_declared_or_explicitly_unknown(self) -> None:
+        """Every engine has an audited cost class; '' is the explicit unknown.
+
+        ``last_known_status`` stays ``unknown`` — it is observed passively
+        through search outcomes and is never fabricated from declarations.
+        """
         catalog = _catalog()
         for cap in catalog.all():
-            assert cap.cost_class == ""  # unknown by default; never fabricated
+            assert cap.cost_class in COST_CLASSES or cap.cost_class == ""
             assert cap.last_known_status == "unknown"
             assert cap.last_known_status_at is None
+
+    def test_representative_families_report_distinct_capabilities(self) -> None:
+        """Audited declarations make domain families visibly distinct (issue 185)."""
+        catalog = _catalog()
+
+        # General/web: Brave carries answers + media; Wikipedia adds
+        # corrections and infoboxes on top of media thumbnails.
+        brave = catalog.get("brave")
+        assert brave is not None
+        assert set(brave.supported_result_types) == {"text", "answers", "media"}
+        assert brave.cost_class == "freemium"
+        wikipedia = catalog.get("wikipedia")
+        assert wikipedia is not None
+        assert set(wikipedia.supported_result_types) == {"text", "corrections", "infoboxes", "media"}
+        assert wikipedia.cost_class == "free"
+
+        # Packages: free, text-only registries.
+        for name in ("pypi", "npm", "crates", "rubygems", "dockerhub", "repology"):
+            cap = catalog.get(name)
+            assert cap is not None
+            assert cap.cost_class == "free"
+            assert cap.supported_result_types == ["text"]
+
+        # Science: free scholarly indexes.
+        for name in ("arxiv", "openalex", "semanticscholar", "pubmed", "uniprot"):
+            cap = catalog.get(name)
+            assert cap is not None
+            assert cap.cost_class == "free"
+
+        # Security: keyed engines are freemium; keyless ones are free.
+        for name in ("shodan", "censys", "virustotal", "abuseipdb", "otx", "intelx", "vulncheck", "hibp"):
+            assert catalog.get(name).cost_class == "freemium"  # type: ignore[union-attr]
+        for name in ("nvd", "cve", "urlhaus", "epss", "crtsh", "mitreattack", "exploitdb"):
+            assert catalog.get(name).cost_class == "free"  # type: ignore[union-attr]
+        for name in ("shodan", "censys", "cve", "nvd"):
+            assert catalog.get(name).supported_result_types == ["text"]  # type: ignore[union-attr]
+        assert catalog.get("dehashed").cost_class == "paid"  # type: ignore[union-attr]
+
+        # Media/entertainment: TMDB returns poster thumbnails and needs a key.
+        tmdb = catalog.get("tmdb")
+        assert tmdb is not None
+        assert "media" in tmdb.supported_result_types
+        assert tmdb.cost_class == "freemium"
+
+        # Jobs: free, text-only ATS boards.
+        for name in ("greenhouse", "ashby", "lever"):
+            cap = catalog.get(name)
+            assert cap is not None
+            assert cap.cost_class == "free"
+            assert "jobs" in cap.categories
+
+    def test_declared_failure_classes_match_adapter_behavior(self) -> None:
+        """Failure classes are trimmed to what each adapter can actually emit."""
+        catalog = _catalog()
+        # Single-class failures: these adapters classify every upstream error
+        # as a generic ERROR (no 429/403/timeout handling in the code path).
+        assert catalog.get("openalex").failure_classes == ["error"]  # type: ignore[union-attr]
+        assert catalog.get("internetarchive").failure_classes == ["error"]  # type: ignore[union-attr]
+        # Two-class failures.
+        assert catalog.get("hackernews").failure_classes == ["error", "timeout"]  # type: ignore[union-attr]
+        assert catalog.get("pypi").failure_classes == ["error", "timeout"]  # type: ignore[union-attr]
+        assert catalog.get("stackexchange").failure_classes == ["rate_limited", "error"]  # type: ignore[union-attr]
+        # Four-class failures: standard 429/403/timeout/error handling.
+        shodan = catalog.get("shodan")
+        assert shodan is not None
+        assert set(shodan.failure_classes) == {"rate_limited", "blocked", "error", "timeout"}
+
+    def test_disabled_engines_expose_the_same_declarations(self) -> None:
+        """include_disabled surfaces the audited matrix for disabled engines too."""
+        catalog = _catalog()
+        internetarchive = catalog.get("internetarchive")
+        assert internetarchive is not None
+        assert internetarchive.enabled is False
+        assert internetarchive.cost_class == "free"
+        assert internetarchive.supported_result_types == ["text"]
+        assert internetarchive.failure_classes == ["error"]
+        assert internetarchive.supported_filters["safesearch"] is False
+
+    def test_catalog_reflects_instance_declarations_consistently(self) -> None:
+        """The catalog normalizes instance declarations like class declarations.
+
+        Adapters are the test-injection seam (MCP ``state_factory``); the
+        catalog must reflect what the runtime adapter declares, not prose.
+        """
+
+        class _FakeWiki(EngineAdapter):
+            name = "wikipedia"
+            display_name = "Wikipedia"
+            supported_filters = {"time_range": True}
+            supported_result_types = ("text", "infoboxes")
+            failure_classes = ("error",)
+            cost_class = "paid"
+
+            async def search(self, query, params=None):  # pragma: no cover
+                from slopsearx.adapter import AdapterResponse, EngineStatus
+
+                return AdapterResponse(results=[], status=EngineStatus.OK)
+
+        catalog = CapabilityCatalog(config=load_config(), adapters={"wikipedia": _FakeWiki()})
+        cap = catalog.get("wikipedia")
+        assert cap is not None
+        assert cap.supported_filters["time_range"] is True
+        assert cap.supported_filters["safesearch"] is False
+        assert cap.supported_result_types == ["text", "infoboxes"]
+        assert cap.failure_classes == ["error"]
+        assert cap.cost_class == "paid"
+
+    def test_declared_supported_filter_is_not_an_enforcement_claim(self) -> None:
+        """Declaring a filter is a capability hint, never an enforcement claim.
+
+        The enforcement report is resolved against the dispatched scope at
+        search time (see ``TestEnforcementAgainstDispatchedScope``); the
+        catalog only reports the declaration as a boolean per filter key and
+        does not fabricate any ``enforced`` status.
+        """
+        catalog = _catalog()
+        for cap in catalog.all():
+            assert set(cap.supported_filters) == {"language", "time_range", "safesearch", "pagination"}
+            assert all(isinstance(v, bool) for v in cap.supported_filters.values())
+            # No adapter consumes any filter parameter today (audited), so no
+            # entry may claim a filter it cannot enforce.
+            assert not any(cap.supported_filters.values())
 
 
 class TestIntentProfiles:

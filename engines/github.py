@@ -24,6 +24,11 @@ class GitHubAdapter(EngineAdapter):
     engine_type = "api"
     categories = ["reference", "github:code", "github:issues", "github:prs"]
 
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text",)
+    failure_classes = ("rate_limited", "blocked", "error", "timeout")
+    cost_class = "free"
+
     async def search(
         self,
         query: str,

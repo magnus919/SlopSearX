@@ -12,6 +12,7 @@ from typing import Any
 import httpx
 
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult, register_engine
+from slopsearx.payload import DOMAIN_BIOMEDICAL, build_payload
 
 
 @register_engine
@@ -23,6 +24,11 @@ class OpenFDAAdapter(EngineAdapter):
     env_prefix = "ENGINE_OPENFDA"
     engine_type = "api"
     categories = ["medical", "health", "science", "government"]
+
+    # -- Declared capability metadata (audited, issue 185) --
+    supported_result_types = ("text",)
+    failure_classes = ("rate_limited", "error", "timeout")
+    cost_class = "free"
 
     async def search(
         self,
@@ -74,6 +80,20 @@ class OpenFDAAdapter(EngineAdapter):
 
                     url_suffix = f"?query={query}" if not brand_name else f"#{brand_name.lower().replace(' ', '-')}"
 
+                    payload = build_payload(
+                        DOMAIN_BIOMEDICAL,
+                        "drug_label",
+                        {
+                            "brand_name": brand_name or None,
+                            "generic_name": generic_name or None,
+                            "manufacturer": manufacturer or None,
+                            "substance": substance or None,
+                            "purpose": purpose or None,
+                            "indications": indications or None,
+                        },
+                        engine=self.name,
+                    )
+
                     results.append(
                         SearchResult(
                             url=f"https://open.fda.gov/drug/label/{url_suffix}",
@@ -82,6 +102,7 @@ class OpenFDAAdapter(EngineAdapter):
                             engine=self.name,
                             position=idx + 1,
                             score=1.0,
+                            payload=payload,
                         ),
                     )
 

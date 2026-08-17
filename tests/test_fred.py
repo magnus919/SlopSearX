@@ -127,3 +127,31 @@ class TestFREDAdapterSearch:
         async with MockHTTP(lambda r: (_ for _ in ()).throw(httpx.TimeoutException("timeout"))):
             result = await adapter.search("test")
         assert result.status == EngineStatus.TIMEOUT
+
+    async def test_payload_notes_untruncated_long_notes(self, adapter):
+        """Payload keeps the full notes; only the display content is capped."""
+        long_notes = "A" * 600
+        response = {
+            "seriess": [
+                {
+                    "id": "GDP",
+                    "title": "Gross Domestic Product",
+                    "observation_start": "1947-01-01",
+                    "units": "Billions of Dollars",
+                    "frequency": "Quarterly",
+                    "seasonal_adjustment": "Seasonally Adjusted Annual Rate",
+                    "popularity": 95,
+                    "notes": long_notes,
+                }
+            ]
+        }
+
+        async with MockHTTP(lambda r: httpx.Response(200, json=response)):
+            result = await adapter.search("GDP")
+
+        payload = result.results[0].payload
+        assert payload is not None
+        assert payload["data"]["notes"] == long_notes
+        # The display content keeps the 200-char notes cap.
+        assert "A" * 200 in result.results[0].content
+        assert long_notes not in result.results[0].content
