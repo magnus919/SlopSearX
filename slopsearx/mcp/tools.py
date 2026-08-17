@@ -18,6 +18,7 @@ from slopsearx.mcp.state import McpState, current_tenant, get_state
 from slopsearx.ratelimit import ValkeySlidingWindow
 from slopsearx.research import (
     JobStillRunningError,
+    LeaseLostError,
     ResearchJob,
     ResearchQuery,
     generate_job_id,
@@ -1538,6 +1539,12 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
             "state": "running",
             "note": "job is still running under a live worker; retry was not started to avoid concurrent execution",
         }
+    except LeaseLostError:
+        return {
+            "job_id": job_id,
+            "state": "running",
+            "note": "job was reclaimed by another worker mid-run; it will be completed by that worker",
+        }
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
 
@@ -1649,6 +1656,12 @@ async def slopsearx_extend_research(
             "job_id": job_id,
             "state": "running",
             "note": "job is still running under a live worker; follow-up query was not appended or executed",
+        }
+    except LeaseLostError:
+        return {
+            "job_id": job_id,
+            "state": "running",
+            "note": "job was reclaimed by another worker mid-run; the follow-up query will be completed by that worker",
         }
     result = _job_summary(job)
     result["note"] = "follow-up query appended and executed; prior completed evidence was preserved"

@@ -680,6 +680,48 @@ class ResearchJobStore:
         await self.save(job)
         return job
 
+    async def _claim_prepared(self, job: ResearchJob, owner_id: str, lease_ttl: int) -> ResearchJob | None:
+        """Claim an already-mutated job under a fresh lease.
+
+        Mirrors :meth:`claim`, but persists the caller-supplied ``job`` (which
+        may carry direct-run mutations such as reset-to-pending retry queries
+        or an appended follow-up) instead of re-loading and persisting the
+        authoritative record. The lease acquisition remains the atomic
+        exclusion gate; a re-load is used only to validate that the record is
+        still claimable and to re-check the deadline before writing.
+        """
+        store = self._store
+        if store is None or not store.is_connected:
+            return None
+        if job.state not in ("queued", "running"):
+            return None
+        token = generate_lease_token()
+        if not await self._lease_acquire(self._lease_key(job.job_id), token, lease_ttl):
+            return None
+        current = await self.load(job.job_id)
+        if current is None or current.state not in ("queued", "running"):
+            await self._lease_release(self._lease_key(job.job_id), token)
+            return None
+        if time.time() >= current.deadline:
+            for query in current.queries:
+                if query.state in ("pending", "running"):
+                    query.state = "cancelled"
+            current.state = "expired"
+            await self.save(current)
+            await self._lease_release(self._lease_key(job.job_id), token)
+            return None
+        # Preserve a cancellation request that landed after ``job`` was loaded.
+        job.cancel_requested = job.cancel_requested or current.cancel_requested
+        for query in job.queries:
+            if query.state == "running":
+                query.state = "pending"
+        job.state = "running"
+        job.owner_id = owner_id
+        job.lease_token = token
+        job.lease_expires_at = time.time() + lease_ttl
+        await self.save(job)
+        return job
+
     async def claim_next(self, owner_id: str, lease_ttl: int) -> ResearchJob | None:
         """Claim the next claimable job for this store's tenant."""
         for job_id in await self._scan_job_ids():
@@ -947,24 +989,49 @@ class ResearchJobRunner:
         return job
 
     async def run_direct(self, job: ResearchJob) -> ResearchJob:
-        """Run a loaded job directly, clearing any stale durable lease first.
+        """Run a loaded job directly, claiming it first when claimable.
 
         ``retry``/``extend`` load a job that may still carry lease fields from
         a prior ``claim``/``release`` cycle: ``release`` deletes the Valkey
-        lease key but not the record fields. ``run_pending`` treats a
-        non-empty ``lease_token`` as active ownership and renews it, so a
-        stale token would fail against the missing key and raise
-        ``LeaseLostError``. Clearing the fields makes a direct run lease-free.
+        lease key but not the record fields. A claimable job (``queued`` or
+        ``running``) is claimed under a fresh lease before execution so a
+        concurrent durable worker excludes it (exactly-one-owner). Terminal
+        jobs are not claimable and still run lease-free exactly as before.
 
         A job that is still ``running`` under a *live* owner must not be
-        cleared or run here: that would race the owner's execution. Those
-        calls raise :class:`JobStillRunningError` so the tool can surface
-        "job still running" instead of dispatching concurrently.
+        cleared or run here: that would race the owner's execution. Liveness
+        is checked against the lease key — not the record fields, which survive
+        a released/expired lease — so a lease-expired orphan is resumed rather
+        than refused. Live-owner calls raise :class:`JobStillRunningError` so
+        the tool can surface "job still running".
         """
         store = self._jobs_for(job.tenant)
         fresh = await store.load(job.job_id) or job
+
         if fresh.state == "running" and fresh.lease_token:
+            live = await store._lease_get(store._lease_key(job.job_id))
+            if live == fresh.lease_token:
+                raise JobStillRunningError(job.job_id)
+
+        claimed = await store._claim_prepared(job, self._owner_id, self._lease_ttl)
+        if claimed is not None:
+            try:
+                result = await self.run_pending(claimed)
+            finally:
+                await store.release(job.job_id, claimed.lease_token)
+            result.owner_id = None
+            result.lease_token = None
+            result.lease_expires_at = 0.0
+            await store.save(result)
+            return result
+
+        # Claim returned None. A claimable job that lost the lease race is now
+        # owned by another worker; running lease-free would double-execute.
+        current = await store.load(job.job_id)
+        if current is not None and current.state in ("queued", "running"):
             raise JobStillRunningError(job.job_id)
+
+        # Terminal or non-claimable job: run lease-free as before.
         job.owner_id = None
         job.lease_token = None
         job.lease_expires_at = 0.0

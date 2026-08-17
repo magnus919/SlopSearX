@@ -281,6 +281,35 @@ class _SlowEngine(EngineAdapter):
         )
 
 
+class _GateEngine(EngineAdapter):
+    """Engine that signals when it starts and blocks until released."""
+
+    def __init__(self, name: str, started: asyncio.Event, release: asyncio.Event) -> None:
+        super().__init__()
+        self.name = name
+        self.started = started
+        self.release = release
+        self.calls = 0
+
+    async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
+        del query, params
+        self.calls += 1
+        self.started.set()
+        await self.release.wait()
+        return AdapterResponse(
+            results=[
+                SearchResult(
+                    url=f"https://{self.name}.example",
+                    title=self.name,
+                    content="Content.",
+                    engine=self.name,
+                )
+            ],
+            status=EngineStatus.OK,
+            latency_ms=1.0,
+        )
+
+
 def _build_state(
     *,
     store: AtomicStore | None = None,
@@ -333,6 +362,8 @@ def _job(
     tenant: str = "default",
     queries: list[ResearchQuery] | None = None,
     deadline: float | None = None,
+    owner_id: str | None = None,
+    lease_token: str | None = None,
 ) -> ResearchJob:
     return ResearchJob(
         job_id=job_id or generate_job_id(),
@@ -342,6 +373,8 @@ def _job(
         tenant=tenant,
         queries=queries or [],
         deadline=deadline if deadline is not None else time.time() + 3600,
+        owner_id=owner_id,
+        lease_token=lease_token,
     )
 
 
@@ -750,6 +783,59 @@ class TestDirectRunsAfterDurableExecution:
         assert result.owner_id is None
         assert result.lease_token is None
 
+    async def test_direct_retry_claim_excludes_durable_worker(self) -> None:
+        """A direct retry of an orphaned running job must hold a lease.
+
+        ``run_direct`` clears stale lease fields and used to run lease-free,
+        so a concurrent durable worker would reclaim the same job and re-run
+        the retryable subquery (engine calls doubled). Claiming the job first
+        makes the durable worker exclude it while the direct run executes.
+        """
+        state, store = _build_state()
+        job_store = state.job_store
+        started = asyncio.Event()
+        release = asyncio.Event()
+        state.ctx.active_engines["wikipedia"] = _GateEngine("wikipedia", started, release)
+        job = _job(
+            state="running",
+            owner_id="dead-worker",
+            lease_token="stale-token",
+            queries=[
+                ResearchQuery(
+                    index=0,
+                    query="done",
+                    intent="web",
+                    engines=["wikipedia"],
+                    state="done",
+                    cursor="snap-old",
+                    result_count=1,
+                ),
+                ResearchQuery(index=1, query="retry", intent="web", engines=["wikipedia"], state="failed"),
+            ],
+        )
+        await job_store.save(job)
+        assert await job_store._lease_get(_lease_key("default", job.job_id)) is None
+
+        task = asyncio.create_task(state.runner.retry(job.job_id, tenant="default"))
+        await asyncio.wait_for(started.wait(), timeout=5)
+
+        # The direct run holds a live lease while the retryable subquery is in
+        # flight, so a concurrent durable worker cannot reclaim/re-execute it.
+        assert await job_store.claim(job.job_id, "w2", 60) is None
+
+        release.set()
+        result = await task
+
+        assert result is not None
+        assert result.state == "succeeded"
+        assert state.ctx.active_engines["wikipedia"].calls == 1
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.queries[0].cursor == "snap-old"
+        assert loaded.queries[1].state == "done"
+        assert loaded.owner_id is None
+        assert loaded.lease_token is None
+
 
 # ---------------------------------------------------------------------------
 # Lease ownership guard for subquery persistence
@@ -905,6 +991,71 @@ class TestStillRunningGuard:
             assert loaded.lease_token == claimed.lease_token
             assert len(loaded.queries) == 1
             assert engine.calls == calls_before
+        finally:
+            set_state(None)
+
+    async def test_retry_orphan_with_stale_token_is_not_refused(self) -> None:
+        """A dead owner leaves stale lease fields but no live lease key.
+
+        Retry must check lease-key liveness rather than the record fields, so
+        the orphan is resumed instead of being refused as "still running".
+        """
+        state, _ = _build_state()
+        job_store = state.job_store
+        set_state(state)
+        try:
+            job = _job(
+                state="running",
+                owner_id="dead-worker",
+                lease_token="stale-token",
+                queries=[
+                    ResearchQuery(index=0, query="fail", intent="web", engines=["wikipedia"], state="failed"),
+                ],
+            )
+            await job_store.save(job)
+            assert await job_store._lease_get(_lease_key("default", job.job_id)) is None
+
+            result = await t.slopsearx_retry_research(job.job_id)
+
+            assert "error" not in result
+            assert result["state"] == "succeeded"
+            loaded = await job_store.load(job.job_id)
+            assert loaded is not None
+            assert loaded.queries[0].state == "done"
+            assert loaded.owner_id is None
+            assert loaded.lease_token is None
+        finally:
+            set_state(None)
+
+    async def test_extend_orphan_with_stale_token_is_not_refused(self) -> None:
+        """Extend resumes a lease-expired orphan instead of refusing it."""
+        state, _ = _build_state()
+        job_store = state.job_store
+        set_state(state)
+        try:
+            job = _job(
+                state="running",
+                owner_id="dead-worker",
+                lease_token="stale-token",
+                queries=[
+                    ResearchQuery(
+                        index=0, query="done", intent="web", engines=["wikipedia"], state="done", cursor="snap-old"
+                    ),
+                ],
+            )
+            await job_store.save(job)
+            assert await job_store._lease_get(_lease_key("default", job.job_id)) is None
+
+            result = await t.slopsearx_extend_research(job.job_id, "followup", intent="web", engines=["wikipedia"])
+
+            assert "error" not in result
+            loaded = await job_store.load(job.job_id)
+            assert loaded is not None
+            assert len(loaded.queries) == 2
+            assert loaded.queries[0].cursor == "snap-old"
+            assert loaded.queries[1].state == "done"
+            assert loaded.owner_id is None
+            assert loaded.lease_token is None
         finally:
             set_state(None)
 
