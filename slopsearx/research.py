@@ -518,7 +518,14 @@ class ResearchJobStore:
         return [key[len(prefix) :] for key in keys if key.startswith(prefix)]
 
     async def scan_tenants(self) -> list[str]:
-        """Enumerate the distinct tenant namespaces that have job records."""
+        """Enumerate the distinct tenant namespaces that have job records.
+
+        Job keys are ``{JOB_KEY_PREFIX}:{tenant}:{job_id}`` and job ids never
+        contain ``:``, so the tenant is everything between the prefix and the
+        FINAL colon. Parsing on the first colon would truncate a tenant whose
+        name itself contains ``:`` (e.g. an OAuth ``client_id``), and its jobs
+        would never be claimed by the durable poll loop.
+        """
         store = self._store
         if store is None or not store.is_connected:
             return []
@@ -529,7 +536,7 @@ class ResearchJobStore:
                 continue
             rest = key[len(prefix) :]
             if ":" in rest:
-                tenants.add(rest.split(":", 1)[0])
+                tenants.add(rest.rsplit(":", 1)[0])
         return sorted(tenants)
 
     async def expire_stale_running(self) -> int:
@@ -773,19 +780,24 @@ class ResearchJobStore:
         if current is None:
             await self._lease_release(self._lease_key(job.job_id), token)
             return None
-        # Re-apply the caller's intended mutation to the freshly loaded record
-        # while holding the lease, so a concurrent finalizer cannot interleave.
-        if mutate is not None:
-            mutate(current)
-        if current.state not in ("queued", "running"):
-            await self._lease_release(self._lease_key(job.job_id), token)
-            return None
+        # Deadline finalization runs BEFORE the caller's mutation is applied or
+        # persisted: a claimable job whose deadline lapsed between the caller's
+        # deadline gate and this point is finalized to ``expired`` here, so a
+        # follow-up that can never run is not written into the record (and is
+        # therefore never appended twice by run_direct's terminal path).
         if time.time() >= current.deadline:
             for query in current.queries:
                 if query.state in ("pending", "running"):
                     query.state = "cancelled"
             current.state = "expired"
             await self.save(current)
+            await self._lease_release(self._lease_key(job.job_id), token)
+            return None
+        # Re-apply the caller's intended mutation to the freshly loaded record
+        # while holding the lease, so a concurrent finalizer cannot interleave.
+        if mutate is not None:
+            mutate(current)
+        if current.state not in ("queued", "running"):
             await self._lease_release(self._lease_key(job.job_id), token)
             return None
         # Preserve a cancellation request that landed after ``job`` was loaded.
@@ -1160,6 +1172,22 @@ class ResearchJobRunner:
         # intended mutation before persisting, so completed evidence written
         # by a concurrently finalizing worker is preserved.
         base = current if current is not None else fresh
+        if time.time() >= base.deadline:
+            # A deadline-passed job can no longer make progress: finalize it to
+            # ``expired`` (matching the claim/retry deadline finalization)
+            # instead of re-applying the caller's mutation and executing it.
+            # Running here would append a follow-up that can never run and let
+            # run_pending's mid-run deadline branch re-classify the record as
+            # ``partial``/``failed``, losing the ``expired`` terminal state.
+            for query in base.queries:
+                if query.state in ("pending", "running"):
+                    query.state = "cancelled"
+            base.state = "expired"
+            base.owner_id = None
+            base.lease_token = None
+            base.lease_expires_at = 0.0
+            await store.save(base)
+            return base
         if mutate is not None:
             mutate(base)
         base.owner_id = None

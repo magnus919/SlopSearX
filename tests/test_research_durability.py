@@ -20,6 +20,7 @@ from typing import Any
 import pytest
 
 import engines  # noqa: F401 — populates the engine registry
+from slopsearx import research as research_mod
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult
 from slopsearx.capabilities import CapabilityCatalog, load_mcp_policy
 from slopsearx.config import load_config
@@ -434,6 +435,16 @@ def _lease_key(tenant: str, job_id: str) -> str:
     return f"{LEASE_KEY_PREFIX}:{tenant}:{job_id}"
 
 
+class _FrozenClock:
+    """Stand-in for :mod:`time` with a caller-controlled ``time()`` value."""
+
+    def __init__(self, now: float) -> None:
+        self._now = now
+
+    def time(self) -> float:
+        return self._now
+
+
 # ---------------------------------------------------------------------------
 # Claim / lease semantics
 # ---------------------------------------------------------------------------
@@ -607,6 +618,20 @@ class TestLeasePrimitives:
         await job_store.for_tenant("a").save(_job(tenant="a"))
         assert await job_store.scan_tenants() == ["a", "b"]
 
+    async def test_scan_tenants_handles_colon_in_tenant_name(self) -> None:
+        """A tenant name containing ``:`` is parsed as a whole, not truncated
+        at the first colon, so its jobs are discoverable and claimable."""
+        _, store = _build_state()
+        job_store = ResearchJobStore(store)
+        job = _job(tenant="a:b")
+        await job_store.for_tenant("a:b").save(job)
+
+        assert await job_store.scan_tenants() == ["a:b"]
+        claimed = await job_store.claim_next_any_tenant("w1", 60)
+        assert claimed is not None
+        assert claimed.job_id == job.job_id
+        assert claimed.tenant == "a:b"
+
 
 class TestValkeyLikeBackend:
     """Exercise the production ``_client`` lease code paths."""
@@ -637,6 +662,19 @@ class TestValkeyLikeBackend:
         claimed = await job_store.claim_next("w1", 60)
         assert claimed is not None
         assert claimed.job_id == job.job_id
+
+    async def test_scan_tenants_colon_tenant_over_valkey_client(self) -> None:
+        """The colon-safe tenant parse works over the Valkey ``_client`` path."""
+        store = ValkeyLikeStore()
+        job_store = ResearchJobStore(store)
+        job = _job(tenant="a:b")
+        await job_store.for_tenant("a:b").save(job)
+
+        assert await job_store.scan_tenants() == ["a:b"]
+        claimed = await job_store.claim_next_any_tenant("w1", 60)
+        assert claimed is not None
+        assert claimed.job_id == job.job_id
+        assert claimed.tenant == "a:b"
 
 
 class TestLeaseAtomicLua:
@@ -1203,6 +1241,77 @@ class TestDirectRunReconciliation:
             loaded = await job_store.load(job.job_id)
             assert loaded is not None
             assert loaded.state == "cancelled"
+        finally:
+            set_state(None)
+
+    async def test_run_direct_deadline_lapse_does_not_persist_followup(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A deadline that lapses during a direct run is finalized to ``expired``
+        before the caller's mutation is applied, so the follow-up is never
+        persisted (and never twice)."""
+        state, _ = _build_state()
+        job_store = state.job_store
+        job = _job(
+            state="queued",
+            queries=[
+                ResearchQuery(
+                    index=0, query="done", intent="web", engines=["wikipedia"], state="done", cursor="snap-old"
+                ),
+            ],
+        )
+        await job_store.save(job)
+
+        # The tool's deadline gate passed against the real clock; by the time
+        # the direct run reaches _claim_prepared the deadline has lapsed.
+        real_now = time.time()
+        monkeypatch.setattr(research_mod, "time", _FrozenClock(real_now + 7200))
+
+        appended: list[int] = []
+
+        def _append_followup(target: ResearchJob) -> None:
+            target.queries.append(
+                ResearchQuery(index=len(target.queries), query="followup", intent="web", engines=["wikipedia"])
+            )
+            appended.append(1)
+
+        result = await state.runner.run_direct(job, mutate=_append_followup)
+
+        assert result.state == "expired"
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.state == "expired"
+        # Neither the claim path nor the terminal path persisted the follow-up.
+        assert len(loaded.queries) == 1
+        assert appended == []
+
+    async def test_extend_deadline_lapse_reports_terminal_state(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Extending a job whose deadline lapses during the direct run reports
+        the terminal ``expired`` state instead of "appended and executed" and
+        persists no follow-up."""
+        state, _ = _build_state()
+        job_store = state.job_store
+        set_state(state)
+        try:
+            job = _job(
+                state="queued",
+                queries=[
+                    ResearchQuery(
+                        index=0, query="done", intent="web", engines=["wikipedia"], state="done", cursor="snap-old"
+                    ),
+                ],
+            )
+            await job_store.save(job)
+
+            real_now = time.time()
+            monkeypatch.setattr(research_mod, "time", _FrozenClock(real_now + 7200))
+
+            result = await t.slopsearx_extend_research(job.job_id, "followup", intent="web", engines=["wikipedia"])
+
+            assert result["state"] == "expired"
+            assert "appended and executed" not in result["note"]
+            loaded = await job_store.load(job.job_id)
+            assert loaded is not None
+            assert loaded.state == "expired"
+            assert len(loaded.queries) == 1
         finally:
             set_state(None)
 

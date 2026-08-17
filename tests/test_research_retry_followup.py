@@ -531,6 +531,29 @@ class TestCancelAndExpiry:
         assert _run_query(job, 0).state == "done"
         assert _run_query(job, 1).state == "failed"
 
+    async def test_cancel_finished_partial_job_reports_already_finished(self, state: McpState) -> None:
+        """Cancelling a finished ``partial`` job returns the "already finished"
+        note, not "best-effort cancellation requested"."""
+        state.ctx.active_engines["wikipedia"] = _MockEngine("wikipedia", status=EngineStatus.ERROR)
+        job = await _persist_and_run(
+            state,
+            [
+                ResearchQuery(index=0, query="ok", intent="web", engines=["brave"]),
+                ResearchQuery(index=1, query="fail", intent="web", engines=["wikipedia"]),
+            ],
+        )
+        assert job.state == "partial"
+
+        result = await t.slopsearx_cancel_job(job.job_id)
+
+        assert result["state"] == "partial"
+        assert "already finished" in result["note"]
+        assert "best-effort cancellation requested" not in result["note"]
+        loaded = await state.job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.state == "partial"
+        assert loaded.cancel_requested is False
+
     async def test_deadline_passed_finalizes_to_expired(self, state: McpState) -> None:
         """VAL-RESEARCH-011 — a deadline-passed job is finalized (not left running)."""
         job = await _persist_and_run(

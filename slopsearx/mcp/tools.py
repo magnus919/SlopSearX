@@ -1535,7 +1535,7 @@ async def slopsearx_cancel_job(job_id: str) -> dict[str, Any]:
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
 
-    if job.state in ("succeeded", "failed", "cancelled", "expired"):
+    if job.state in ("succeeded", "partial", "failed", "cancelled", "expired"):
         return {
             "job_id": job.job_id,
             "state": job.state,
@@ -1768,6 +1768,17 @@ async def slopsearx_extend_research(
             "job_id": job.job_id,
             "state": "cancelled",
             "note": "the job had a pending cancellation request; the follow-up query was cancelled, not executed",
+        }
+    if job.state == "expired":
+        # The job's deadline lapsed during the direct run (the deadline gate
+        # above passed against the loaded record, then the deadline passed
+        # before/while the run claimed the job): the follow-up was not
+        # appended or executed, so surface the terminal state instead of
+        # claiming it was.
+        return {
+            "job_id": job.job_id,
+            "state": "expired",
+            "note": "job deadline had already passed; the follow-up query was not appended or executed",
         }
     result = _job_summary(job)
     result["note"] = "follow-up query appended and executed; prior completed evidence was preserved"
