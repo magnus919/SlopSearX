@@ -29,6 +29,7 @@ from slopsearx.adapter import (
     list_engines,
 )
 from slopsearx.config import CONFIG_FILE_PATH, Config, EngineEntry, load_config
+from slopsearx.filters import ENFORCEMENT_LAYERS
 
 # ---------------------------------------------------------------------------
 # Auth requirement classes
@@ -89,6 +90,13 @@ class EngineCapability:
     # Feature matrix (design §4.6): the full capability surface.
     sensitive: bool = False  # reaching this engine requires the sensitive-engine grant
     supported_filters: dict[str, bool] = field(default_factory=lambda: {key: False for key in SUPPORTED_FILTER_KEYS})
+    # Audited enforcement layer per filter key (issue 187): "upstream",
+    # "local", or None (not enforced). Distinct from ``supported_filters``,
+    # which only records parameter consumption — a capability hint, never an
+    # enforcement claim.
+    enforced_filters: dict[str, str | None] = field(
+        default_factory=lambda: {key: None for key in SUPPORTED_FILTER_KEYS}
+    )
     supported_result_types: list[str] = field(default_factory=lambda: ["text"])
     failure_classes: list[str] = field(
         default_factory=lambda: ["rate_limited", "blocked", "error", "timeout", "auth_required", "unavailable"]
@@ -154,6 +162,7 @@ class CapabilityCatalog:
                 sensitive=name in self._sensitive
                 or bool(getattr(adapter if adapter is not None else cls, "sensitive", False)),
                 supported_filters=_normalize_supported_filters(cls, adapter),
+                enforced_filters=_normalize_enforced_filters(cls, adapter),
                 supported_result_types=_normalize_result_types(cls, adapter),
                 failure_classes=_normalize_failure_classes(cls, adapter),
                 cost_class=_normalize_cost_class(cls, adapter),
@@ -595,6 +604,26 @@ def _normalize_supported_filters(
     """
     declared = getattr(adapter if adapter is not None else cls, "supported_filters", None) or {}
     return {key: bool(declared.get(key)) for key in SUPPORTED_FILTER_KEYS}
+
+
+def _normalize_enforced_filters(
+    cls: type[EngineAdapter],
+    adapter: EngineAdapter | None,
+) -> dict[str, str | None]:
+    """Normalize an adapter's declared enforced_filters to all filter keys.
+
+    Every entry carries a value for ``language``, ``time_range``,
+    ``safesearch``, and ``pagination``. A value outside the closed
+    ``ENFORCEMENT_LAYERS`` vocabulary (or an undeclared key) is ``None`` —
+    explicit "not enforced" — so a typo can never fabricate an enforcement
+    claim.
+    """
+    declared = getattr(adapter if adapter is not None else cls, "enforced_filters", None) or {}
+    normalized: dict[str, str | None] = {}
+    for key in SUPPORTED_FILTER_KEYS:
+        value = declared.get(key)
+        normalized[key] = value if value in ENFORCEMENT_LAYERS else None
+    return normalized
 
 
 def _normalize_result_types(

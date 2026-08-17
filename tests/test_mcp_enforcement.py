@@ -54,6 +54,7 @@ class _MockEngine(EngineAdapter):
         count: int = 3,
         categories: list[str] | None = None,
         supported_filters: dict[str, bool] | None = None,
+        enforced_filters: dict[str, str] | None = None,
     ) -> None:
         super().__init__()
         self.name = name
@@ -61,6 +62,7 @@ class _MockEngine(EngineAdapter):
         self._count = count
         self.categories = list(categories or ["general"])
         self.supported_filters = supported_filters or {}
+        self.enforced_filters = enforced_filters or {}
         self.calls = 0
 
     async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
@@ -333,32 +335,32 @@ class TestSpecialistFilterParams:
 
 
 # ---------------------------------------------------------------------------
-# VAL-SEARCH-008 — status consistent with supported_filters (partially_enforced path)
+# VAL-SEARCH-008 — status consistent with declared enforcement layers
 # ---------------------------------------------------------------------------
 
 
-class TestSupportedFiltersConsistency:
+class TestEnforcedFiltersConsistency:
     async def test_partially_enforced_when_subset_supports(self, state: McpState) -> None:
-        """VAL-SEARCH-008 — status is consistent with the catalog's supported_filters."""
-        # One engine declares support for time_range, one does not → partially_enforced.
+        """VAL-SEARCH-008 — a subset that enforces yields partially_enforced + layer."""
+        # One engine declares upstream time_range enforcement, one does not.
         state.ctx.active_engines = {
-            "brave": _MockEngine("brave", supported_filters={"time_range": True}),
+            "brave": _MockEngine("brave", enforced_filters={"time_range": "upstream"}),
             "duckduckgo": _MockEngine("duckduckgo"),
         }
         result = await t.slopsearx_search_targeted("hello", engines=["brave", "duckduckgo"], time_range="week")
         assert "error" not in result
         entry = result["enforcement"]["time_range"]
         assert entry["status"] == "partially_enforced"
-        assert entry["enforced_by"] == ["brave"]
+        assert entry["enforced_by"] == ["upstream:brave"]
 
     async def test_enforced_when_all_selected_support(self, state: McpState) -> None:
-        """VAL-SEARCH-008 — enforced when every selected engine supports the filter."""
+        """VAL-SEARCH-008 — every selected engine enforcing yields enforced + layer."""
         state.ctx.active_engines = {
-            "brave": _MockEngine("brave", supported_filters={"time_range": True}),
-            "duckduckgo": _MockEngine("duckduckgo", supported_filters={"time_range": True}),
+            "brave": _MockEngine("brave", enforced_filters={"time_range": "upstream"}),
+            "duckduckgo": _MockEngine("duckduckgo", enforced_filters={"time_range": "upstream"}),
         }
         result = await t.slopsearx_search_targeted("hello", engines=["brave", "duckduckgo"], time_range="week")
         assert "error" not in result
         entry = result["enforcement"]["time_range"]
         assert entry["status"] == "enforced"
-        assert set(entry["enforced_by"]) == {"brave", "duckduckgo"}
+        assert set(entry["enforced_by"]) == {"upstream:brave", "upstream:duckduckgo"}

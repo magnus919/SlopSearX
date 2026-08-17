@@ -14,6 +14,11 @@ from typing import Any
 
 from slopsearx.adapter import SearchResult
 from slopsearx.capabilities import INTENT_PROFILES, resolve_intent
+from slopsearx.filters import (
+    enforcement_entry,
+    engine_filter_layer,
+    resolve_filter_enforcement,
+)
 from slopsearx.mcp.state import McpState, get_state
 from slopsearx.payload import (
     PAYLOAD_INLINE_BYTES,
@@ -242,76 +247,70 @@ def _filter_warnings(state: McpState, language: str, time_range: str | None) -> 
     return warnings
 
 
-def _safesearch_warning_or_error(state: McpState, safesearch: str) -> list[str] | dict[str, Any]:
-    """Strict SafeSearch fails closed; moderate returns a warning."""
-    if safesearch == "strict":
-        return _error("safesearch_unenforced", SAFESEARCH_UNENFORCED_NOTE, field="safesearch")
+def _safesearch_warning(state: McpState, safesearch: str) -> list[str]:
+    """Moderate SafeSearch is best-effort; the enforcement report is authoritative."""
+    del state
     if safesearch == "moderate":
-        return ["moderate safesearch is requested but no adapter enforces it"]
+        return ["moderate safesearch is requested but may not be enforced by every adapter"]
     return []
+
+
+def _preview_selected_engines(
+    state: McpState,
+    categories: list[str] | None,
+    engines: list[str] | None,
+) -> list[str]:
+    """Preview the engine scope that would execute for a request (no dispatch).
+
+    Mirrors the service's scope resolution exactly (same active engines,
+    router, tier-1 set, and sensitive set) so mandatory-constraint checks can
+    fail closed *before* any engine is dispatched.
+    """
+    resolver = ScopeResolver(
+        active_engines=state.ctx.active_engines,
+        router=state.ctx.router,
+        tier1_engines=state.ctx.tier1_engines,
+        sensitive_engines=state.ctx.sensitive_engines,
+    )
+    return resolver.explain(SearchRequest(query="", categories=categories, engines=engines)).selected_engines
+
+
+def _strict_safesearch_satisfiable(state: McpState, selected_engines: list[str]) -> bool:
+    """Whether every selected engine enforces strict SafeSearch upstream.
+
+    Strict SafeSearch is only satisfiable when the entire dispatched scope
+    declares upstream safesearch enforcement; a single non-enforcing engine
+    makes the request fail closed.
+    """
+    if not selected_engines:
+        return False
+    return all(
+        engine_filter_layer(state.ctx.active_engines.get(name), "safesearch") == "upstream" for name in selected_engines
+    )
+
+
+def _safesearch_rejection(selected_engines: list[str]) -> dict[str, Any]:
+    """Fail-closed strict SafeSearch rejection with the machine-readable report.
+
+    The ``enforcement`` object carries the ``rejected`` status (the closed
+    vocabulary's fail-closed member), while the error envelope names the
+    selected engines that could not satisfy the constraint.
+    """
+    entry = enforcement_entry("strict", "rejected", SAFESEARCH_UNENFORCED_NOTE, [])
+    return {
+        "error": {
+            "code": "safesearch_unenforced",
+            "message": SAFESEARCH_UNENFORCED_NOTE,
+            "field": "safesearch",
+            "selected_engines": list(selected_engines),
+        },
+        "enforcement": {"safesearch": entry},
+    }
 
 
 # ---------------------------------------------------------------------------
 # Structured filter-enforcement report
 # ---------------------------------------------------------------------------
-
-ENFORCEMENT_STATUSES: tuple[str, ...] = ("enforced", "partially_enforced", "unsupported", "rejected")
-
-
-def _enforcement_entry(
-    requested: Any,
-    status: str,
-    reason: str,
-    enforced_by: list[str] | None = None,
-) -> dict[str, Any]:
-    """Build one machine-readable filter-enforcement entry (schema pin).
-
-    Shape: ``{requested, status, reason, enforced_by}`` where ``status``
-    is exactly one of the closed ``ENFORCEMENT_STATUSES`` enum.
-    """
-    return {
-        "requested": requested,
-        "status": status,
-        "reason": reason,
-        "enforced_by": list(enforced_by) if enforced_by else [],
-    }
-
-
-def _engine_supports_filter(state: McpState, engine_name: str, filter_name: str) -> bool:
-    """Whether an adapter declares support for a filter via ``supported_filters``.
-
-    No adapter currently declares support for language/time_range/safesearch,
-    so this defaults to ``False`` (honest "unsupported"). It reads the
-    optional class attribute so the report stays consistent with the
-    capability catalog if adapters later declare support.
-    """
-    adapter = state.ctx.active_engines.get(engine_name)
-    supported = getattr(adapter, "supported_filters", None) if adapter is not None else None
-    if isinstance(supported, dict):
-        return bool(supported.get(filter_name))
-    return False
-
-
-def _filter_enforcement(
-    state: McpState,
-    selected_engines: list[str],
-    filter_name: str,
-    requested: Any,
-) -> dict[str, Any]:
-    """One enforcement entry consistent with the selected engines' supported_filters."""
-    supporting = [name for name in selected_engines if _engine_supports_filter(state, name, filter_name)]
-    if supporting and len(supporting) == len(selected_engines) and selected_engines:
-        return _enforcement_entry(
-            requested, "enforced", f"{filter_name} is enforced by all selected adapters", supporting
-        )
-    if supporting:
-        return _enforcement_entry(
-            requested,
-            "partially_enforced",
-            f"{filter_name} is enforced by a subset of selected adapters",
-            supporting,
-        )
-    return _enforcement_entry(requested, "unsupported", f"no selected adapter consumes the {filter_name} parameter", [])
 
 
 def _core_filter_enforcement(
@@ -324,16 +323,28 @@ def _core_filter_enforcement(
 ) -> dict[str, Any]:
     """Structured enforcement report for language/time_range/safesearch.
 
-    Strict SafeSearch fails closed earlier (structured rejection), so it
-    never reaches here; moderate SafeSearch is reported ``unsupported``.
+    Resolved against the dispatched engine scope via the shared
+    :func:`slopsearx.filters.resolve_filter_enforcement`, so every search
+    path reports the same vocabulary, reasons, and layer-qualified
+    ``enforced_by`` tokens.
+
+    Strict SafeSearch is handled before dispatch (scope-aware fail-closed
+    rejection) and therefore never reaches here; moderate SafeSearch is
+    resolved like any other best-effort filter.
     """
     report: dict[str, Any] = {}
     if language and language != "en":
-        report["language"] = _filter_enforcement(state, selected_engines, "language", language)
+        report["language"] = resolve_filter_enforcement(
+            selected_engines, "language", language, state.ctx.active_engines
+        )
     if time_range:
-        report["time_range"] = _filter_enforcement(state, selected_engines, "time_range", time_range)
-    if safesearch == "moderate":
-        report["safesearch"] = _filter_enforcement(state, selected_engines, "safesearch", safesearch)
+        report["time_range"] = resolve_filter_enforcement(
+            selected_engines, "time_range", time_range, state.ctx.active_engines
+        )
+    if safesearch in ("moderate", "strict"):
+        report["safesearch"] = resolve_filter_enforcement(
+            selected_engines, "safesearch", safesearch, state.ctx.active_engines
+        )
     return report
 
 
@@ -682,11 +693,6 @@ async def slopsearx_search(
     if error:
         return error
 
-    # Strict SafeSearch fails closed: no adapter enforces it.
-    safesearch_check = _safesearch_warning_or_error(state, safesearch)
-    if isinstance(safesearch_check, dict):
-        return safesearch_check
-
     # Resolve intent → scope (explicit inputs win over the profile).
     resolved_categories, resolved_engines, requested_intent, warnings = _resolve_scope(
         state, intent, categories, engines
@@ -700,6 +706,15 @@ async def slopsearx_search(
         policy_error = _enforce_policy(state, resolved_engines, field="engines")
         if policy_error:
             return policy_error
+
+    # Mandatory strict SafeSearch fails closed before dispatch when the
+    # selected scope cannot satisfy it (no adapter enforces strict today).
+    if safesearch == "strict":
+        selected = _preview_selected_engines(state, resolved_categories, resolved_engines)
+        if not _strict_safesearch_satisfiable(state, selected):
+            return _safesearch_rejection(selected)
+
+    safesearch_warning = _safesearch_warning(state, safesearch)
 
     include_set = set(include) if include is not None else {"results", "engine_status"}
     max_results = _bounded_max_results(state, max_results)
@@ -715,9 +730,7 @@ async def slopsearx_search(
         freshness=freshness,
         client_identifier=_client_identifier(state),
     )
-    warnings = warnings + _filter_warnings(state, language, time_range)
-    if isinstance(safesearch_check, list):
-        warnings = warnings + safesearch_check
+    warnings = warnings + _filter_warnings(state, language, time_range) + safesearch_warning
 
     # Structured filter-enforcement report is resolved inside ``_run_search``
     # against the dispatched/executed scope (response.scope.selected_engines),
@@ -818,9 +831,12 @@ async def slopsearx_search_targeted(
     if safesearch not in VALID_SAFESEARCH:
         return _error("invalid_input", "safesearch must be off, moderate, or strict", field="safesearch")
 
-    safesearch_check = _safesearch_warning_or_error(state, safesearch)
-    if isinstance(safesearch_check, dict):
-        return safesearch_check
+    # Mandatory strict SafeSearch fails closed before dispatch when the
+    # selected scope cannot satisfy it.
+    if safesearch == "strict" and not _strict_safesearch_satisfiable(state, engines):
+        return _safesearch_rejection(list(engines))
+
+    safesearch_warning = _safesearch_warning(state, safesearch)
 
     request = SearchRequest(
         query=query,
@@ -831,9 +847,7 @@ async def slopsearx_search_targeted(
         include={"results", "engine_status"},
         client_identifier=_client_identifier(state),
     )
-    warnings = _filter_warnings(state, language, time_range)
-    if isinstance(safesearch_check, list):
-        warnings = warnings + safesearch_check
+    warnings = _filter_warnings(state, language, time_range) + safesearch_warning
     return await _run_search(
         state,
         request,
@@ -887,11 +901,11 @@ async def slopsearx_search_jobs(
     # Structured filter-enforcement report for jobs-specific filter params.
     enforcement: dict[str, Any] = {}
     if location:
-        enforcement["location"] = _enforcement_entry(
+        enforcement["location"] = enforcement_entry(
             location, "unsupported", "location is not consumed by current adapters"
         )
     if employment_type:
-        enforcement["employment_type"] = _enforcement_entry(
+        enforcement["employment_type"] = enforcement_entry(
             employment_type, "unsupported", "employment_type is not consumed by current adapters"
         )
 
@@ -1040,13 +1054,13 @@ async def slopsearx_search_science(
     # Structured filter-enforcement report for science date filters.
     enforcement: dict[str, Any] = {}
     if date_from:
-        enforcement["date_from"] = _enforcement_entry(
+        enforcement["date_from"] = enforcement_entry(
             date_from,
             "unsupported",
             "date_from is not consumed by current adapters; use time_range in slopsearx_search",
         )
     if date_to:
-        enforcement["date_to"] = _enforcement_entry(
+        enforcement["date_to"] = enforcement_entry(
             date_to,
             "unsupported",
             "date_to is not consumed by current adapters; use time_range in slopsearx_search",
@@ -1104,6 +1118,7 @@ async def slopsearx_list_capabilities(
             "enabled": cap.enabled,
             "sensitive": cap.sensitive,
             "supported_filters": cap.supported_filters,
+            "enforced_filters": cap.enforced_filters,
             "supported_result_types": cap.supported_result_types,
             "failure_classes": cap.failure_classes,
             "cost_class": cap.cost_class or None,
@@ -1716,6 +1731,7 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
                     for cov in query.engine_coverage
                 ],
                 "coverage": summarize_coverage(query.engine_coverage).as_dict(),
+                "enforcement": query.enforcement,
             }
             for query in job.queries
         ],

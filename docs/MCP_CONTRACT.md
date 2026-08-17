@@ -218,7 +218,8 @@ reads the live registry, never prose.
 | Internal field | MCP key | Vocabulary / semantics |
 |---|---|---|
 | `sensitive` | `sensitive` | Boolean; `true` means reaching the engine requires `MCP_TARGETED_SENSITIVE_ALLOWED`. Fail-closed by default. |
-| `supported_filters` | `supported_filters` | Object keyed by `language`, `time_range`, `safesearch`, `pagination`, each a boolean. Audited: **no adapter consumes any filter parameter today**, so every entry is `false`, matching the `unsupported` enforcement status. A declaration is a capability hint, never an enforcement claim — the enforcement report resolves against the dispatched scope at search time. |
+| `supported_filters` | `supported_filters` | Object keyed by `language`, `time_range`, `safesearch`, `pagination`, each a boolean. Audited: **no adapter consumes any filter parameter today**, so every entry is `false`. A declaration is a capability hint, never an enforcement claim — the enforcement report resolves against the dispatched scope at search time. |
+| `enforced_filters` | `enforced_filters` | Object keyed by `language`, `time_range`, `safesearch`, `pagination`, each `null` (not enforced), `"upstream"`, or `"local"` (service post-filter). Audited separately from `supported_filters`: this is the enforcement layer the report derives from. Audited: **no adapter enforces any filter today**, so every entry is `null`, matching the `unsupported` enforcement status. |
 | `supported_result_types` | `supported_result_types` | List drawn from `text` / `answers` / `corrections` / `infoboxes` / `media` / `structured` (`SUPPORTED_RESULT_TYPES`). Audited per adapter: e.g. Brave declares `answers`+`media`, Wikipedia declares `corrections`+`infoboxes`+`media`, TMDB/openlibrary/Reddit/DDG declare `media`. `structured` is intentionally unused until typed domain payloads ship (tracked separately). |
 | `failure_classes` | `failure_classes` | List drawn from the stable token set `ok`, `rate_limited`, `blocked`, `error`, `timeout`, `auth_required`, `unavailable`. Audited per adapter to the statuses its `search()` can actually emit (e.g. `openalex`/`internetarchive` classify everything as `error`; most keyed API adapters emit `rate_limited`/`blocked`/`error`/`timeout`). |
 | `cost_class` | `cost_class` | One of `free` / `freemium` / `paid` (`COST_CLASSES`); audited per adapter from its access model. Empty string is emitted as `null` (explicit unknown — no fabricated estimates). |
@@ -235,12 +236,13 @@ Defined in `adapter.py` and used verbatim:
 - `COST_CLASSES = (free, freemium, paid)` — `""` = unknown (emitted as `null`)
 
 The filter-enforcement report (`enforcement`) is consistent with the catalog:
-an adapter that does not declare a filter yields `unsupported`; a strict
-`safesearch` yields `rejected` (`_core_filter_enforcement`, `tools.py`). This
-is the explicit-unsupported state the feature requires: the MCP layer carries
-the filter parameter but honestly reports that no adapter consumes it.
-Declaring a filter in `supported_filters` never by itself marks the request
-as enforced — enforcement is derived from the **dispatched** engine scope.
+an adapter that does not declare an enforcement layer yields `unsupported`; a
+strict `safesearch` yields `rejected` (fail-closed before dispatch). This is
+the explicit-unsupported state the feature requires: the MCP layer carries
+the filter parameter but honestly reports that no adapter enforces it.
+Declaring a filter in `supported_filters` (parameter consumption) never marks
+the request as enforced — enforcement is derived from the audited
+`enforced_filters` layer of the **dispatched** engine scope.
 
 ### 7.4 Declared capability vs. operational state
 
@@ -248,7 +250,7 @@ Four distinct concepts are conflated nowhere in the catalog:
 
 | Concept | Catalog field | Source | Changes at runtime? |
 |---|---|---|---|
-| **Declared capability** | `supported_filters`, `supported_result_types`, `failure_classes`, `cost_class` | Audited `EngineAdapter` class attributes (issue 185) | No — static audit of what the adapter *can* do |
+| **Declared capability** | `supported_filters`, `enforced_filters`, `supported_result_types`, `failure_classes`, `cost_class` | Audited `EngineAdapter` class attributes (issues 185/187) | No — static audit of what the adapter *can* do |
 | **Configured availability** | `enabled` | Effective engine config (`config.yaml` / env) | Yes — operator flips engines on/off |
 | **Authentication state** | `auth.class`, `auth.configured` | Credential presence for the engine's requirement class | Yes — key added/removed |
 | **Observed health** | `last_known_status`, `last_known_status_at` | Passive search-outcome observation | Yes — updated by every dispatched search |
@@ -294,30 +296,40 @@ The invariant `attempted == successful + empty + failed + unavailable` holds
 | `progress` (`completed`, `total`) | `progress.{completed,total}` |
 | `deadline` | `deadline` (ISO) |
 | `idempotency_key` | `idempotency_key` |
-| `queries[]` | `queries` — each: `index`, `query`, `intent`, `engines`, `state`, `result_count`, `query_id`, `cursor`, `error`, `attempts[]`, `engine_coverage[]`, `coverage` |
+| `queries[]` | `queries` — each: `index`, `query`, `intent`, `engines`, `state`, `result_count`, `query_id`, `cursor`, `error`, `attempts[]`, `engine_coverage[]`, `coverage`, `enforcement` |
 | `warnings` | `warnings` |
 
 ---
 
 ## 9. Structured filter-enforcement report (`enforcement`)
 
-Source: `_core_filter_enforcement` / `_enforcement_entry` in `tools.py`. Schema
-pin: top-level key `enforcement`, an object keyed by filter name, each value
-`{requested, status, reason, enforced_by}` where `status ∈ {enforced,
-partially_enforced, unsupported, rejected}`.
+Source: `slopsearx/filters.py` (`resolve_filter_enforcement`,
+`enforcement_entry`), consumed by `_core_filter_enforcement` in `tools.py` and
+the research runner. Schema pin: top-level key `enforcement`, an object keyed
+by filter name (`language`, `time_range`, `safesearch`, `pagination`, plus
+specialist params), each value `{requested, status, reason, enforced_by}` where
+`status ∈ {enforced, partially_enforced, unsupported, rejected}`.
+
+`enforced_by` carries layer-qualified tokens `"<layer>:<engine>"` where
+`layer ∈ {upstream, local}` — it names the enforcing engines **and** the
+actual enforcement layer (empty for `unsupported`). Enforcement is derived
+only from the audited `enforced_filters` adapter declaration; `supported_filters`
+(parameter consumption) is never treated as an enforcement claim.
 
 | Filter | Reported status today | Rationale |
 |---|---|---|
-| `language` | `unsupported` | No adapter consumes it. |
-| `time_range` | `unsupported` | No adapter consumes it. |
+| `language` | `unsupported` | No adapter enforces it. |
+| `time_range` | `unsupported` | No adapter enforces it (no local post-filter declared). |
 | `safesearch` (moderate) | `unsupported` | No adapter enforces it. |
-| `safesearch` (strict) | `rejected` | Fail-closed: no engine can guarantee strict filtering. |
+| `safesearch` (strict) | `rejected` | Fail-closed before dispatch: no engine can guarantee strict filtering. |
+| `pagination` | *(modeled; not requested on MCP tools)* | Snapshot cursors handle MCP pagination; the shared resolver classifies it identically. |
 | `location`, `employment_type` (jobs) | `unsupported` | Not consumed by current ATS adapters. |
 | `date_from`, `date_to` (science) | `unsupported` | Not consumed; pointer to `time_range` in the reason. |
 
-`enforced_by` lists the engines that enforce the filter (empty for
-`unsupported`). This report is the machine-readable replacement for prose-only
-filter warnings (`VAL-FILTER-001`).
+This report is the machine-readable replacement for prose-only filter warnings
+(`VAL-FILTER-001`). The research path persists the same report per subquery
+(`queries[].enforcement`), so generic, targeted, specialist, cached, and
+research searches preserve the same enforcement truth.
 
 ---
 

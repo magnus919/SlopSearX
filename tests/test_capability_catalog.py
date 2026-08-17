@@ -41,6 +41,7 @@ REQUIRED_CAP_FIELDS = {
     "enabled",
     "sensitive",
     "supported_filters",
+    "enforced_filters",
     "supported_result_types",
     "failure_classes",
     "cost_class",
@@ -80,6 +81,7 @@ class _MockEngine(EngineAdapter):
         count: int = 2,
         categories: list[str] | None = None,
         supported_filters: dict[str, bool] | None = None,
+        enforced_filters: dict[str, str] | None = None,
     ) -> None:
         super().__init__()
         self.name = name
@@ -87,6 +89,7 @@ class _MockEngine(EngineAdapter):
         self._count = count
         self.categories = list(categories or ["general"])
         self.supported_filters = supported_filters or {}
+        self.enforced_filters = enforced_filters or {}
         self.calls = 0
 
     async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
@@ -170,6 +173,9 @@ def _assert_cap_entry(entry: dict[str, Any]) -> None:
     sf = entry["supported_filters"]
     assert set(sf) == SUPPORTED_FILTER_KEYS, sf
     assert all(isinstance(v, bool) for v in sf.values())
+    ef = entry["enforced_filters"]
+    assert set(ef) == SUPPORTED_FILTER_KEYS, ef
+    assert all(v is None or v in ("upstream", "local") for v in ef.values())
     assert entry["supported_result_types"], entry
     assert set(entry["supported_result_types"]) <= RESULT_TYPE_VOCAB, entry
     assert entry["failure_classes"], entry
@@ -485,11 +491,11 @@ class TestScopePreview:
 
 class TestEnforcementAgainstDispatchedScope:
     async def test_category_route_enforcement_uses_dispatched_scope(self) -> None:
-        """The enforcement report resolves supported_filters against dispatched engines, not all active."""
+        """The enforcement report resolves enforced_filters against dispatched engines, not all active."""
         engines_map = {
-            "a_sci": _MockEngine("a_sci", categories=["science"], supported_filters={"time_range": True}),
+            "a_sci": _MockEngine("a_sci", categories=["science"], enforced_filters={"time_range": "upstream"}),
             "b_sci": _MockEngine("b_sci", categories=["science"]),
-            "c_news": _MockEngine("c_news", categories=["news"], supported_filters={"time_range": True}),
+            "c_news": _MockEngine("c_news", categories=["news"], enforced_filters={"time_range": "upstream"}),
         }
         state_obj = _build_state(engine_names=["a_sci", "b_sci", "c_news"], engines_map=engines_map)
         set_state(state_obj)
@@ -502,15 +508,15 @@ class TestEnforcementAgainstDispatchedScope:
         # Dispatched scope is the two science engines only.
         assert set(result["scope"]["selected_engines"]) == {"a_sci", "b_sci"}
         entry = result["enforcement"]["time_range"]
-        # c_news supports time_range but was NOT dispatched → it must not appear as enforcing.
-        assert entry["enforced_by"] == ["a_sci"]
+        # c_news enforces time_range but was NOT dispatched → it must not appear.
+        assert entry["enforced_by"] == ["upstream:a_sci"]
         assert entry["status"] == "partially_enforced"
 
     async def test_category_route_all_dispatch_support_yields_enforced(self) -> None:
-        """When every dispatched engine supports the filter, status is enforced (not all-active unsupported)."""
+        """When every dispatched engine enforces the filter, status is enforced (not all-active unsupported)."""
         engines_map = {
-            "a_sci": _MockEngine("a_sci", categories=["science"], supported_filters={"time_range": True}),
-            "b_sci": _MockEngine("b_sci", categories=["science"], supported_filters={"time_range": True}),
+            "a_sci": _MockEngine("a_sci", categories=["science"], enforced_filters={"time_range": "upstream"}),
+            "b_sci": _MockEngine("b_sci", categories=["science"], enforced_filters={"time_range": "upstream"}),
         }
         state_obj = _build_state(engine_names=["a_sci", "b_sci"], engines_map=engines_map)
         set_state(state_obj)
@@ -522,14 +528,14 @@ class TestEnforcementAgainstDispatchedScope:
         assert "error" not in result
         entry = result["enforcement"]["time_range"]
         assert entry["status"] == "enforced"
-        assert set(entry["enforced_by"]) == {"a_sci", "b_sci"}
+        assert set(entry["enforced_by"]) == {"upstream:a_sci", "upstream:b_sci"}
 
     async def test_explicit_engine_enforcement_still_uses_selected_scope(self) -> None:
         """Targeted enforcement remains computed against the selected engines only."""
         engines_map = {
-            "wikipedia": _MockEngine("wikipedia", supported_filters={"language": True}),
+            "wikipedia": _MockEngine("wikipedia", enforced_filters={"language": "upstream"}),
             "brave": _MockEngine("brave"),
-            "duckduckgo": _MockEngine("duckduckgo", supported_filters={"language": True}),
+            "duckduckgo": _MockEngine("duckduckgo", enforced_filters={"language": "upstream"}),
         }
         state_obj = _build_state(engine_names=["wikipedia", "brave", "duckduckgo"], engines_map=engines_map)
         set_state(state_obj)
@@ -541,5 +547,5 @@ class TestEnforcementAgainstDispatchedScope:
         assert "error" not in result
         entry = result["enforcement"]["language"]
         assert entry["status"] == "partially_enforced"
-        assert entry["enforced_by"] == ["wikipedia"]
-        assert "duckduckgo" not in entry["enforced_by"]
+        assert entry["enforced_by"] == ["upstream:wikipedia"]
+        assert "upstream:duckduckgo" not in entry["enforced_by"]

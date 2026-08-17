@@ -23,6 +23,7 @@ from typing import Any
 
 from slopsearx.adapter import EngineStatus
 from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, resolve_intent
+from slopsearx.filters import resolve_filter_enforcement
 from slopsearx.service import (
     QueryValidationError,
     RateLimitExceededError,
@@ -142,6 +143,11 @@ class ResearchQuery:
     # attempt's cursor is preserved even after a retry overwrites the
     # query's *current* cursor (VAL-RESEARCH-008/021).
     attempts: list[ResearchQueryAttempt] = field(default_factory=list)
+    # Structured filter-enforcement report for this subquery (issue 187). Uses
+    # the same schema/vocabulary as the MCP search envelope so the research
+    # path preserves the same enforcement truth as generic/targeted/specialist
+    # searches.
+    enforcement: dict[str, Any] = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -590,6 +596,25 @@ class ResearchJobRunner:
         ordered = list(dict.fromkeys(list(query.engines) + [e.engine for e in response.scope.excluded_engines]))
         return [coverage[name] for name in ordered if name in coverage]
 
+    def _build_query_enforcement(self, query: ResearchQuery, response: Any) -> dict[str, Any]:
+        """Derive the subquery's filter-enforcement report (issue 187).
+
+        Uses the same shared resolver as the MCP tools, resolved against the
+        dispatched scope, so research jobs preserve the same enforcement truth
+        as generic/targeted/specialist searches. Only non-default filters the
+        subquery actually requested are reported (time_range for the ``fresh``
+        strategy; language defaults to ``en`` and safesearch to ``off``).
+        """
+        report: dict[str, Any] = {}
+        if query.time_range:
+            report["time_range"] = resolve_filter_enforcement(
+                response.scope.selected_engines,
+                "time_range",
+                query.time_range,
+                self._service._ctx.active_engines,
+            )
+        return report
+
     async def run_forever(self) -> None:
         """Process queued jobs until cancelled."""
         while True:
@@ -661,6 +686,9 @@ class ResearchJobRunner:
         )
         # Persist per-engine coverage and the disjoint bucket summary.
         query.engine_coverage = self._build_query_coverage(query, response)
+        # Persist the filter-enforcement report (issue 187) so research
+        # evidence carries the same enforcement truth as direct searches.
+        query.enforcement = self._build_query_enforcement(query, response)
         coverage_summary = summarize_coverage(query.engine_coverage)
         # Subquery state distinguishes successful/empty/failed
         # (VAL-RESEARCH-007): empty is done+result_count==0+no error and
@@ -725,6 +753,7 @@ def _job_from_payload(payload: dict[str, Any]) -> ResearchJob:
                 )
                 for attempt in (item.get("attempts") or [])
             ],
+            enforcement=dict(item.get("enforcement") or {}),
         )
         for item in (payload.get("queries") or [])
     ]
