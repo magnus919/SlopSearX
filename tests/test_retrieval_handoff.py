@@ -238,6 +238,9 @@ class TestUrlClassification:
         [
             ("https://example.com/page", "ok", "https"),
             ("http://example.com/page", "ok", "http"),
+            # A literal public IP host is still eligible — only
+            # loopback/private/link-local/reserved literal IPs are blocked.
+            ("http://8.8.8.8/", "ok", "http"),
             ("", "missing", None),
             ("   ", "missing", None),
             ("mailto:someone@example.com", "non_http", "mailto"),
@@ -368,6 +371,64 @@ class TestUrlClassification:
         finally:
             set_state(None)
 
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "http://127.0.0.1/",
+            "http://[::1]/",
+            "http://10.0.0.1/",
+            "http://169.254.169.254/latest/meta-data/",
+        ],
+    )
+    async def test_literal_loopback_private_link_local_reserved_ip_host_is_never_handed_off(self, url: str) -> None:
+        """A literal SSRF-prone IP host is never certified ``ok`` or handed off.
+
+        Loopback, private, link-local, and reserved literal IP hosts
+        (including the cloud metadata IP) are classified ``ambiguous`` and
+        the handoff URL is null, so a downstream retriever never fetches
+        them. Only literal IPs are checked (via ``ipaddress``, no DNS
+        resolution), so hostnames still classify normally.
+        """
+        state_obj = _build_state({"brave": _UrlEngine("brave", [url])})
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("hello", engines=["brave"])
+            card = _first_card(result)
+            expanded = await t.slopsearx_read_result(card["result_id"])
+            assert card["retrieval"]["url_status"] == "ambiguous"
+            assert card["retrieval"]["url_reason"] == (
+                "URL host is a loopback/private/link-local/reserved address; not a safe fetch target"
+            )
+            assert card["retrieval"]["eligible"] is False
+            assert expanded["retrieval"]["url"] is None
+        finally:
+            set_state(None)
+
+    async def test_userinfo_credentials_are_never_handed_off(self) -> None:
+        """A URL with embedded credentials is never certified ``ok`` or handed off.
+
+        ``http://user:pass@example.com/`` would otherwise pass every check
+        and be returned verbatim as ``retrieval.url``, persisting the
+        credentials and causing downstream Basic-auth transmission. Any
+        userinfo in the authority classifies the URL ``ambiguous`` with a
+        null handoff URL.
+        """
+        url = "http://user:pass@example.com/"
+        state_obj = _build_state({"brave": _UrlEngine("brave", [url])})
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("hello", engines=["brave"])
+            card = _first_card(result)
+            expanded = await t.slopsearx_read_result(card["result_id"])
+            assert card["retrieval"]["url_status"] == "ambiguous"
+            assert card["retrieval"]["url_reason"] == (
+                "URL authority contains userinfo credentials; not handed off as a fetch target"
+            )
+            assert card["retrieval"]["eligible"] is False
+            assert expanded["retrieval"]["url"] is None
+        finally:
+            set_state(None)
+
     async def test_ineligible_url_is_never_handed_off_as_fetch_target(self, state: McpState) -> None:
         """missing/non-HTTP/unsafe/ambiguous URLs are not exposed via handoff.url.
 
@@ -387,6 +448,11 @@ class TestUrlClassification:
                         "/relative/path",
                         "https://internal.example\\@public.com/",
                         "http://host:99999/",
+                        "http://127.0.0.1/",
+                        "http://[::1]/",
+                        "http://10.0.0.1/",
+                        "http://169.254.169.254/latest/meta-data/",
+                        "http://user:pass@example.com/",
                     ],
                 )
             }

@@ -9,6 +9,7 @@ envelope described in docs/MCP_SERVER_DESIGN.md §3.
 from __future__ import annotations
 
 import datetime as _dt
+import ipaddress
 import time
 from typing import Any
 from urllib.parse import urlparse
@@ -489,10 +490,12 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
     - ``unsafe_scheme`` — a scheme an HTTP retriever must not fetch
       (``file:``, ``data:``, ``javascript:``, ...); see
       ``UNSAFE_RETRIEVAL_SCHEMES``.
-    - ``ambiguous`` — canonicalization-ambiguous (no scheme, no host, a
-      backslash or control character in the authority, a percent-encoded or
-      non-ASCII host, an invalid or out-of-range port, or unparseable);
-      treated as ineligible rather than guessed at.
+    - ``ambiguous`` — not a safe fetch target: canonicalization-ambiguous
+      (no scheme, no host, a backslash or control character in the
+      authority, a percent-encoded or non-ASCII host, an invalid or
+      out-of-range port, or unparseable), a literal loopback/private/
+      link-local/reserved IP host, or an authority carrying userinfo
+      credentials; treated as ineligible rather than guessed at.
     """
     if not url or not url.strip():
         return RETRIEVAL_URL_STATUS_MISSING, "result has no URL to retrieve", None, None
@@ -531,6 +534,18 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
                 scheme,
                 None,
             )
+        # urlparse does not reject credentials embedded in the authority; a
+        # URL like "http://user:pass@example.com/" would otherwise pass every
+        # check and be returned verbatim as the fetch target, persisting
+        # credentials and causing downstream Basic-auth transmission. Any
+        # userinfo in the authority makes the target ineligible.
+        if parsed.username is not None or parsed.password is not None:
+            return (
+                RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                "URL authority contains userinfo credentials; not handed off as a fetch target",
+                scheme,
+                None,
+            )
         # urlparse does not percent-decode or IDNA-map the host, but WHATWG
         # clients (browsers, HTTP stacks) do, so a percent-encoded host
         # ("%31%36%39.%32%35%34..." -> 169.254.169.254) or a fullwidth host
@@ -541,6 +556,23 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
             return (
                 RETRIEVAL_URL_STATUS_AMBIGUOUS,
                 "URL host contains a percent-encoded or non-ASCII character; canonicalization is ambiguous",
+                scheme,
+                None,
+            )
+        # A literal loopback/private/link-local/reserved IP host is not a safe
+        # fetch target for a downstream retriever (SSRF: http://127.0.0.1/,
+        # http://[::1]/, http://10.0.0.1/, or the cloud metadata IP
+        # http://169.254.169.254/latest/meta-data/). Only literal IPs are
+        # checked here — no DNS resolution is performed — so hostnames still
+        # classify normally.
+        try:
+            ip = ipaddress.ip_address(parsed.hostname)
+        except ValueError:
+            ip = None
+        if ip is not None and (ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_reserved):
+            return (
+                RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                "URL host is a loopback/private/link-local/reserved address; not a safe fetch target",
                 scheme,
                 None,
             )
@@ -575,8 +607,8 @@ def _retrieval_card(result: SearchResult) -> dict[str, Any]:
 
     Cards carry the eligibility tokens so a card-only consumer can decide
     whether a result is retrievable (and why not) without expanding it. The
-    full handoff record — result identity, canonical URL, provenance, and
-    disclosure — lives on the expanded record (progressive disclosure).
+    full handoff record — result identity, the verbatim result URL, and
+    provenance — lives on the expanded record (progressive disclosure).
     """
     status, reason, scheme, _url = _retrieval_url(result.url)
     return {
