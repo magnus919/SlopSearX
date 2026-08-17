@@ -32,6 +32,10 @@ def render_capabilities() -> str:
         lines.append(f"- failure classes: {', '.join(cap.failure_classes)}")
         lines.append(f"- cost class: {cap.cost_class or 'unknown'}")
         lines.append(f"- last known status: {cap.last_known_status}")
+        lines.append(f"- last known status at: {cap.last_known_status_at or 'never observed'}")
+        lines.append(f"- stale: {cap.last_known_status_stale}")
+        lines.append(f"- circuit open: {cap.circuit_open}")
+        lines.append(f"- consecutive errors: {cap.circuit_consecutive_errors}")
         lines.append(f"- scope hints: {', '.join(cap.scope_hints)}")
         if cap.caveats:
             lines.append(f"- caveats: {'; '.join(cap.caveats)}")
@@ -68,6 +72,10 @@ def render_engine_capability(engine: str) -> str:
         f"- failure classes: {', '.join(cap.failure_classes)}",
         f"- cost class: {cap.cost_class or 'unknown'}",
         f"- last known status: {cap.last_known_status}",
+        f"- last known status at: {cap.last_known_status_at or 'never observed'}",
+        f"- stale: {cap.last_known_status_stale}",
+        f"- circuit open: {cap.circuit_open}",
+        f"- consecutive errors: {cap.circuit_consecutive_errors}",
         f"- scope hints: {', '.join(cap.scope_hints)}",
     ]
     if cap.caveats:

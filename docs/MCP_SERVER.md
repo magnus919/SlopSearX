@@ -10,6 +10,11 @@ The MCP server runs the **same pipeline** as the HTTP API
 (`slopsearx.service.SearchService`): identical scope resolution, ranking,
 deduplication, caching, and failure semantics. The HTTP API remains the
 SearXNG compatibility boundary; MCP is a second, agent-native surface.
+SlopSearX is a **standalone search service** — it never delegates to SearXNG
+and never fetches or verifies linked pages. Search results carry a
+machine-readable `retrieval` handoff record (see `docs/RETRIEVAL_HANDOFF.md`)
+so a downstream reader such as GroktoCrawl can capture pages and link them
+back to the originating result and snapshot.
 
 - **Tools (15):** intent search, targeted search, jobs, security, science,
   capability listing, scope explanation, service status, snapshot reads,
@@ -589,6 +594,20 @@ expands one server-issued ID (`<cursor>:<index>`) with provenance and rank
 explanation. Arbitrary URLs are rejected — the server is not an SSRF page
 fetcher.
 
+Every expanded record also carries a machine-readable `retrieval` handoff
+record (contract `slopsearx.retrieval_handoff` v1, defined in
+`docs/RETRIEVAL_HANDOFF.md`): the result identity, the raw result URL handed
+off verbatim when it is eligible for downstream retrieval, a closed
+`url_status` token
+(`ok`/`missing`/`non_http`/`unsafe_scheme`/`ambiguous`) with a stable reason,
+snippet-only/non-verification status, and the snapshot/query provenance a
+downstream retriever (e.g. GroktoCrawl) uses to associate a captured page back
+to this result — without parsing prose. Ineligible URLs (missing, unsafe
+schemes such as `file:`/`data:`/`javascript:`, non-HTTP, or
+canonicalization-ambiguous) are **never** handed off as fetch targets.
+Result cards carry the same eligibility summary in compact form (`retrieval`),
+so a card-only consumer can decide whether to fetch without expanding.
+
 ### 6.11–6.13 Research jobs (grant: `MCP_GRANT_RESEARCH`)
 
 - `slopsearx_start_research(question, strategy, max_queries, max_engines_per_query, deadline, idempotency_key)` — strategies:
@@ -765,6 +784,16 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
   relevance confidence. Structured `payload` fields are source-derived
   evidence — exactly what the adapter reported — not verification or
   analysis.
+- **Hand retrieval off through the handoff record.** Every result card and
+  expanded record carries a `retrieval` block (contract
+  `slopsearx.retrieval_handoff`, `docs/RETRIEVAL_HANDOFF.md`). Read
+  `retrieval.url_status` / `retrieval.eligible` to decide whether a URL may
+  be fetched — unsafe, non-HTTP, missing, and ambiguous URLs are never handed
+  off as fetch targets. When you capture a page downstream (e.g. with
+  GroktoCrawl), record `retrieval.result_id` and
+  `retrieval.provenance.{snapshot_cursor, query_id}` on the capture so the
+  capture links back to the search result without prose parsing. SlopSearX
+  itself never fetches the page.
 - **Paginate with cursors.** `meta.cursor` → `slopsearx_read_results`.
   Pages come from captured evidence; the query never re-runs.
 - **Do not invent engines.** Read `slopsearx://capabilities` for the live
@@ -802,6 +831,19 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
   `auth.configured`.
 - `read_results`/`read_result` accept only server-issued cursors/IDs —
   never caller-supplied URLs.
+- **The retrieval handoff never mints unsafe fetch targets.** The `retrieval`
+  handoff record classifies every result URL (`ok`/`missing`/`non_http`/
+  `unsafe_scheme`/`ambiguous`) and only hands off an absolute `http`/`https`
+  URL with a host. `file:`, `data:`, `javascript:`, and similar schemes are
+  marked ineligible (`retrieval.url` is `null`), so a downstream retriever
+  cannot be pointed at them. `ok` is a **literal/structural certification
+  only**: SlopSearX performs no DNS resolution, so a DNS-resolvable hostname
+  (including nip.io-style aliases such as `169.254.169.254.nip.io` or
+  `localtest.me`) is not safety-certified — the downstream retriever MUST
+  enforce its own post-resolution SSRF controls. SlopSearX performs no fetch
+  anywhere — the MCP server is not an SSRF-capable page fetcher, and the
+  handoff record is advisory composition metadata (see
+  `docs/RETRIEVAL_HANDOFF.md`).
 - Queries, engine fan-out, result pages, and job budgets are bounded.
 - **OAuth mode trusts the network boundary.** Authorization is
   auto-approved for dynamically registered clients (no user accounts on

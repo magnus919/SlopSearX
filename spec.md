@@ -738,24 +738,54 @@ slopsearx_cache_hit_total{type="miss"} 12000
 
 ### 9.2 Health Check Endpoint
 
-`GET /health` returns:
+`GET /health` returns server liveness, Valkey connectivity, and **observed**
+per-engine health. It does **not** actively probe external search APIs; engine
+health is recorded passively from classified search outcomes (issue 190), so a
+configured-but-never-observed engine stays `unknown` rather than `ok`.
 
 ```json
 {
   "status": "ok",
-  "engines": {
-    "brave": {"status": "ok", "latency_ms": 120, "results_24h": 12000},
-    "wikipedia": {"status": "ok", "latency_ms": 45, "results_24h": 800},
-    "duckduckgo": {"status": "degraded", "results_24h": 2000, "last_error": "CAPTCHA"},
-    "google": {"status": "down", "results_24h": 0, "last_error": "IP banned"}
-  },
-  "cache": {"size": 4500, "hit_rate": 0.79},
   "version": "0.1.0",
-  "uptime_seconds": 86400
+  "valkey_connected": true,
+  "engines": {
+    "brave": {
+      "status": "ok",
+      "status_at": "2026-06-10T12:00:00+00:00",
+      "stale": false,
+      "configured": true,
+      "auth_class": "required",
+      "auth_configured": true,
+      "circuit_open": false,
+      "circuit_consecutive_errors": 0
+    },
+    "wikipedia": {
+      "status": "unknown",
+      "status_at": null,
+      "stale": false,
+      "configured": true,
+      "auth_class": "none",
+      "auth_configured": false,
+      "circuit_open": false,
+      "circuit_consecutive_errors": 0
+    }
+  }
 }
 ```
 
-Load balancer liveness probe uses a 3-strike rule: an engine that fails health 3 consecutive times is deactivated until it recovers. This prevents a single broken engine from causing the replica to be killed by the load balancer.
+Per-engine `status` uses the shared observed-health vocabulary
+(`ok` / `rate_limited` / `blocked` / `error` / `timeout` / `unavailable` /
+`unknown`), identical to the MCP status surface and capability catalog.
+`stale` becomes `true` once the observation exceeds the freshness bound
+(`OBSERVED_HEALTH_STALE_SECONDS`, default 300s). Circuit-breaker state and
+authentication readiness are exposed as distinct signals, never conflated with
+observed health. Optional active probes are bounded, opt-in, and not required
+for ordinary search correctness; they are intentionally not implemented here.
+
+When the memoized config/capability snapshot is unavailable (degraded liveness
+fallback), per-engine `auth_class` / `auth_configured` are explicit `null` —
+never a fabricated `unknown` / `false` that would contradict a key-requiring
+engine still serving from its startup config.
 
 ### 9.3 Quality Degradation Monitoring (Critical)
 
@@ -870,6 +900,21 @@ slopsearx:
 ```
 
 The `SEARXNG_URL` env var in GroktoCrawl's agent-svc points to `slopsearx:8080` instead of `searxng:8080`. The response format is backward compatible, so no code changes are needed in `searxng_client.py`.
+
+**Search-to-retrieval handoff.** SlopSearX is a standalone search service and
+never delegates to SearXNG or fetches linked pages. When GroktoCrawl (or any
+downstream reader) captures a page, it links the capture back to the
+originating search result and snapshot through the machine-readable `retrieval`
+handoff record (`retrieval.result_id`,
+`retrieval.provenance.snapshot_cursor`, `retrieval.provenance.query_id`; see
+`docs/RETRIEVAL_HANDOFF.md`). The handoff record is emitted **only on the MCP
+surface** — the SearXNG-compatible HTTP JSON/YAML shape stays SearXNG-shaped
+and carries no `retrieval` fields, so drop-in HTTP consumers (including
+GroktoCrawl's `searxng_client.py`) need no changes; a consumer that needs the
+handoff record reads results over MCP. Unsafe, non-HTTP, missing, and
+canonicalization-ambiguous URLs are classified with machine-readable reasons
+and are never handed off as fetch targets — SlopSearX is not an SSRF-capable
+proxy.
 
 ---
 

@@ -4,6 +4,23 @@
 
 ### Features
 
+* expose a machine-readable search-to-retrieval handoff record (`retrieval`,
+  contract `slopsearx.retrieval_handoff` v1) on every MCP result card and
+  expanded record: result identity, the raw result URL handed off verbatim
+  when eligible, a closed
+  `url_status` classification (`ok`/`missing`/`non_http`/`unsafe_scheme`/
+  `ambiguous`) with stable reasons, snippet-only/non-verification status, and
+  snapshot/query provenance so a downstream retriever (e.g. GroktoCrawl) can
+  associate a capture with the originating result without parsing prose;
+  ineligible URLs are never handed off as fetch targets
+* make result URL normalization robust to canonicalization-ambiguous URLs so a
+  malformed result URL is classified `ambiguous` at the handoff boundary
+  instead of failing the whole search
+* derive live engine health from observed search outcomes and
+  circuit-breaker/auth state: `/health`, the MCP status surface, and the
+  capability catalog now share one status vocabulary and freshness timestamp,
+  keep never-observed engines explicitly `unknown`, mark stale observations
+  stale, and expose circuit/auth signals separately (no active probing)
 * make research job execution durable across replicas: Valkey-backed lease
   claim with ownership, visibility timeout, orphan recovery, cancellation
   flags, idempotent duplicate-delivery, bounded per-replica concurrency, and
@@ -56,6 +73,13 @@
 
 ### Documentation
 
+* add the search-to-retrieval handoff contract (`docs/RETRIEVAL_HANDOFF.md`):
+  the search-only boundary, the `retrieval` handoff record schema and URL
+  eligibility vocabulary, capture-association semantics, and GroktoCrawl as a
+  composition option without an undocumented runtime integration claim;
+  document the `retrieval` mapping in `docs/MCP_CONTRACT.md`, `docs/MCP_SERVER.md`,
+  `docs/MCP_SERVER_DESIGN.md`, and `spec.md`, with contract fixtures under
+  `tests/fixtures/retrieval_handoff/`
 * add end-user and agent install/configuration guide for the MCP server
   (`docs/MCP_SERVER.md`); reconcile the README engine table with the live
   51-adapter registry

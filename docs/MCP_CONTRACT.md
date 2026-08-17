@@ -84,6 +84,40 @@ internal model, but derived from it):
 | `provenance` | `{query, query_id, rank_explanation, source_engines}` — how the result entered the set. |
 | `snapshot` | `{cursor, query, query_id, total}` — citation/snapshot context. |
 | `note` | `"SlopSearX did not fetch or verify the linked page"` — mandatory non-verification disclosure (`VAL-EXPAND-010`). |
+| `retrieval` | The search-to-retrieval handoff record (contract `slopsearx.retrieval_handoff` v1) — result identity, the raw result URL handed off verbatim when eligible, URL classification, snippet-only/non-verification status, and provenance for downstream capture association. See §2.1 and `docs/RETRIEVAL_HANDOFF.md`. |
+
+Cards additionally carry a **compact eligibility subset** of the handoff record
+under `retrieval`: `{contract, version, eligible, url_status, url_reason,
+scheme}` — enough for a card-only consumer to decide whether to retrieve a
+result (and why not) without expanding it (progressive disclosure, same model
+as content/media). The full handoff record (result identity, verbatim URL,
+provenance, disclosure) lives on the record.
+
+### 2.1 The `retrieval` handoff record (issue 189)
+
+The `retrieval` block on an expanded record is the stable, machine-readable
+handoff to a downstream retriever (e.g. GroktoCrawl). It is defined by the
+contract in `docs/RETRIEVAL_HANDOFF.md`:
+
+| MCP field | Type | Meaning |
+|---|---|---|
+| `retrieval.contract` | `str` | `"slopsearx.retrieval_handoff"` — stable contract name. |
+| `retrieval.version` | `int` | `1`. |
+| `retrieval.result_id` | `str` | Server-issued `"<cursor>:<index>"` — the result identity to record on a capture. |
+| `retrieval.url` | `str \| null` | The raw result URL handed off **verbatim** (never canonicalized or rewritten) — the value to fetch; non-null only when `url_status == "ok"`; ineligible URLs are never handed off as a fetch target. `ok` is a **literal/structural certification only** — no DNS resolution is performed, so DNS-resolvable hostnames (including nip.io-style aliases such as `169.254.169.254.nip.io` or `localtest.me`) are not safety-certified; the downstream retriever MUST enforce its own post-resolution SSRF controls (SSRF boundary, see `docs/RETRIEVAL_HANDOFF.md` §5). |
+| `retrieval.url_status` | `str` | Closed token: `ok` / `missing` / `non_http` / `unsafe_scheme` / `ambiguous`. |
+| `retrieval.url_reason` | `str \| null` | Stable reason; `null` when `url_status == "ok"`. |
+| `retrieval.scheme` | `str \| null` | Lowercased scheme. |
+| `retrieval.eligible` | `bool` | `true` iff `url_status == "ok"`. |
+| `retrieval.snippet_only` | `bool` | `true` when full content is at most the snippet bound (adapter returned snippet only). |
+| `retrieval.verified` | `bool` | Always `false` — SlopSearX never fetches or verifies the linked page. |
+| `retrieval.verification_note` | `str` | `"SlopSearX did not fetch or verify the linked page"`. |
+| `retrieval.provenance` | `object` | `{snapshot_cursor, query_id, query, source_engines}` — snapshot/query provenance for capture association. |
+
+The record `retrieval.provenance.snapshot_cursor` equals `snapshot.cursor`, and
+`retrieval.provenance.query_id` equals `meta.query_id`, so a downstream
+retriever can associate a capture with the originating result and snapshot
+without parsing prose (verified by `tests/test_retrieval_handoff.py`).
 
 ---
 
@@ -228,8 +262,11 @@ reads the live registry, never prose.
 | `supported_media_types` | `supported_media_types` | List drawn from `image` / `video` (`SUPPORTED_MEDIA_TYPES`, issue 188). Dedicated image/video **search** capability, distinct from the coarse `media` result type. Audited per adapter: Brave declares `image`+`video`, DuckDuckGo declares `image`; adapters that only attach thumbnails to text results (Wikipedia, TMDB, openlibrary, Reddit) declare none. Empty list means no dedicated media search. |
 | `failure_classes` | `failure_classes` | List drawn from the stable token set `ok`, `rate_limited`, `blocked`, `error`, `timeout`, `auth_required`, `unavailable`. Audited per adapter to the statuses its `search()` can actually emit (e.g. `openalex`/`internetarchive` classify everything as `error`; most keyed API adapters emit `rate_limited`/`blocked`/`error`/`timeout`). |
 | `cost_class` | `cost_class` | One of `free` / `freemium` / `paid` (`COST_CLASSES`); audited per adapter from its access model. Empty string is emitted as `null` (explicit unknown — no fabricated estimates). |
-| `last_known_status` | `last_known_status` | `ok` / `rate_limited` / `blocked` / `error` / `timeout` / `unknown`. Observed passively through search outcomes; defaults to `unknown`. |
-| `last_known_status_at` | `last_known_status_at` | ISO freshness marker, or `None` when status is unknown. |
+| `last_known_status` | `last_known_status` | One of `ok` / `rate_limited` / `blocked` / `error` / `timeout` / `unavailable` / `unknown`. Observed passively through classified search outcomes; defaults to `unknown` and is never fabricated from registration or configuration. |
+| `last_known_status_at` | `last_known_status_at` | ISO 8601 freshness marker of the last observation, or `None` when status is `unknown`. |
+| `last_known_status_stale` | `last_known_status_stale` | Boolean. `true` when the last observation is older than the freshness bound (`OBSERVED_HEALTH_STALE_SECONDS`, default 300s), so a stale `ok` is never mistaken for current health. |
+| `circuit_open` | `circuit_open` | Boolean. `true` when the engine's circuit breaker is open (dispatches are skipped); a distinct signal from observed health. |
+| `circuit_consecutive_errors` | `circuit_consecutive_errors` | Integer consecutive-error counter feeding the circuit breaker. |
 
 ### 7.3 Capability vocabularies (shared by catalog and enforcement)
 
@@ -259,13 +296,20 @@ Four distinct concepts are conflated nowhere in the catalog:
 | **Declared capability** | `supported_filters`, `enforced_filters`, `supported_result_types`, `failure_classes`, `cost_class` | Audited `EngineAdapter` class attributes (issues 185/187) | No — static audit of what the adapter *can* do |
 | **Configured availability** | `enabled` | Effective engine config (`config.yaml` / env) | Yes — operator flips engines on/off |
 | **Authentication state** | `auth.class`, `auth.configured` | Credential presence for the engine's requirement class | Yes — key added/removed |
-| **Observed health** | `last_known_status`, `last_known_status_at` | Passive search-outcome observation | Yes — updated by every dispatched search |
+| **Observed health** | `last_known_status`, `last_known_status_at` | Passive classified search-outcome observation | Yes — updated by every dispatched search |
+| **Observed-health freshness** | `last_known_status_stale` | Age of `last_known_status_at` vs. the freshness bound | Yes — becomes `true` past `OBSERVED_HEALTH_STALE_SECONDS` |
+| **Circuit state** | `circuit_open`, `circuit_consecutive_errors` | Engine circuit breaker | Yes — opens after consecutive errors |
 
 A `freemium` engine with no key configured is therefore `cost_class=freemium`
 (declared), `enabled=true` (configured), `auth.class=required,
 auth.configured=false` (authentication), and `last_known_status=unknown`
 (observed — never fabricated as `ok`). Capability declarations must never be
 read as health, and health must never be read as capability.
+
+Observed health is recorded **passively** from classified search outcomes.
+Neither `/health` nor the MCP status surface actively probes external APIs.
+Optional active probes are intentionally not implemented: they are bounded and
+opt-in by design, and are not required for ordinary search correctness.
 
 ---
 

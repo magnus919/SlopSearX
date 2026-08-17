@@ -13,8 +13,10 @@ represented as the boolean ``auth_configured``).
 
 from __future__ import annotations
 
+import datetime as _dt
 import os
-from dataclasses import dataclass, field
+import time
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +25,7 @@ import yaml
 from slopsearx.adapter import (
     COST_CLASSES,
     FAILURE_CLASS_TOKENS,
+    OBSERVED_STATUS_VOCAB,
     SUPPORTED_FILTER_KEYS,
     SUPPORTED_MEDIA_TYPES,
     SUPPORTED_RESULT_TYPES,
@@ -108,6 +111,11 @@ class EngineCapability:
     cost_class: str = ""  # coarse operator hint; "" = unknown (emitted as null)
     last_known_status: str = "unknown"  # ok|rate_limited|blocked|error|timeout|unavailable|unknown
     last_known_status_at: str | None = None  # ISO freshness marker, or None when unknown
+    # Observed health freshness and circuit state (issue 190). Distinct from
+    # declared capability, configured availability, and authentication state.
+    last_known_status_stale: bool = False  # True when the observation is past the freshness bound
+    circuit_open: bool = False  # circuit breaker currently open (dispatches skipped)
+    circuit_consecutive_errors: int = 0  # consecutive-error counter feeding the breaker
 
     @property
     def subcategories(self) -> list[str]:
@@ -177,16 +185,50 @@ class CapabilityCatalog:
         return out
 
     def all(self) -> list[EngineCapability]:
-        """All engines in registry order."""
-        return list(self._by_name.values())
+        """All engines in registry order, enriched with live observed health."""
+        return [self._apply_observed(cap) for cap in self._by_name.values()]
 
     def enabled(self) -> list[EngineCapability]:
-        """Only engines enabled by the effective configuration."""
-        return [cap for cap in self._by_name.values() if cap.enabled]
+        """Only engines enabled by the effective configuration (live-observed)."""
+        return [cap for cap in self.all() if cap.enabled]
 
     def get(self, name: str) -> EngineCapability | None:
-        """Fetch one engine's capability, or None for unknown names."""
-        return self._by_name.get(name)
+        """Fetch one engine's capability (live-observed), or None when unknown."""
+        cap = self._by_name.get(name)
+        if cap is None:
+            return None
+        return self._apply_observed(cap)
+
+    def _apply_observed(self, cap: EngineCapability) -> EngineCapability:
+        """Merge live observed health and circuit state from the runtime adapter.
+
+        The catalog is built once at startup from the registry; search
+        outcomes mutate the runtime adapter instances over time. This read
+        boundary re-derives the observed-health fields from the matching
+        adapter so ``last_known_status`` stays honest (``unknown`` until a
+        dispatched outcome records otherwise) and circuit/auth state is never
+        conflated with observed health (issue 190).
+        """
+        adapter = self._adapters.get(cap.name)
+        if adapter is None:
+            return cap
+        status = cap.last_known_status
+        status_at = cap.last_known_status_at
+        stale = cap.last_known_status_stale
+        observed = adapter.last_observed_status
+        if observed in OBSERVED_STATUS_VOCAB and observed != "unknown":
+            status = observed
+            if adapter.last_observed_at is not None:
+                status_at = _iso_timestamp(adapter.last_observed_at)
+                stale = (time.time() - adapter.last_observed_at) > observed_health_stale_seconds()
+        return replace(
+            cap,
+            last_known_status=status,
+            last_known_status_at=status_at,
+            last_known_status_stale=stale,
+            circuit_open=bool(adapter.circuit_open),
+            circuit_consecutive_errors=int(adapter.consecutive_errors),
+        )
 
     def engines_for_categories(self, categories: list[str]) -> list[str]:
         """Engine names matching any of the given categories (OR)."""
@@ -221,6 +263,92 @@ class CapabilityCatalog:
         for names in result.values():
             names.sort()
         return result
+
+
+# ---------------------------------------------------------------------------
+# Observed health derivation (issue 190)
+# ---------------------------------------------------------------------------
+
+DEFAULT_OBSERVED_HEALTH_STALE_SECONDS = 300.0
+
+
+def observed_health_stale_seconds() -> float:
+    """Freshness bound for observed engine health, in seconds.
+
+    An observation older than this is reported with ``stale=True`` so a stale
+    ``ok`` is never mistaken for current health. Override with the positive
+    ``OBSERVED_HEALTH_STALE_SECONDS`` environment variable.
+    """
+    raw = os.environ.get("OBSERVED_HEALTH_STALE_SECONDS", "").strip()
+    if raw:
+        try:
+            parsed = float(raw)
+        except ValueError:
+            parsed = 0.0
+        if parsed > 0:
+            return parsed
+    return DEFAULT_OBSERVED_HEALTH_STALE_SECONDS
+
+
+def _iso_timestamp(epoch_seconds: float) -> str:
+    """Render a wall-clock epoch as an ISO 8601 UTC timestamp."""
+    return _dt.datetime.fromtimestamp(epoch_seconds, tz=_dt.timezone.utc).isoformat()
+
+
+def build_engine_health(
+    name: str,
+    adapter: EngineAdapter | None,
+    capability: EngineCapability | None = None,
+    *,
+    now: float | None = None,
+    stale_after: float | None = None,
+) -> dict[str, Any]:
+    """Build the canonical per-engine health record (issue 190).
+
+    Shared by the HTTP ``/health`` endpoint and the MCP status surface so
+    both agree on status vocabulary and freshness semantics. The distinct
+    concepts are exposed as separate fields:
+
+    - ``status`` — observed search health (``unknown`` when never observed);
+    - ``status_at`` — ISO 8601 timestamp of the last observation (null if never);
+    - ``stale`` — whether the observation is older than the freshness bound;
+    - ``last_observed_latency_ms`` / ``last_observed_result_count`` — the
+      adapter-reported latency/result count of the last observation, null
+      when never observed or when the outcome was service-synthesized (a
+      fabricated latency is never surfaced as observed);
+    - ``configured`` — configured availability (engine enabled);
+    - ``auth_class`` / ``auth_configured`` — authentication readiness; both
+      are null when the capability is unavailable (e.g. the degraded fallback
+      path after a catalog failure) — never a fabricated ``unknown``/``false``;
+    - ``circuit_open`` / ``circuit_consecutive_errors`` — circuit-breaker state.
+    """
+    now = time.time() if now is None else now
+    if stale_after is None:
+        stale_after = observed_health_stale_seconds()
+
+    status = "unknown"
+    status_at: str | None = None
+    stale = False
+    if adapter is not None:
+        observed = adapter.last_observed_status
+        if observed in OBSERVED_STATUS_VOCAB and observed != "unknown":
+            status = observed
+            if adapter.last_observed_at is not None:
+                status_at = _iso_timestamp(adapter.last_observed_at)
+                stale = (now - adapter.last_observed_at) > stale_after
+
+    return {
+        "status": status,
+        "status_at": status_at,
+        "stale": stale,
+        "configured": capability.enabled if capability is not None else adapter is not None,
+        "auth_class": capability.auth_class if capability is not None else None,
+        "auth_configured": capability.auth_configured if capability is not None else None,
+        "circuit_open": bool(adapter is not None and adapter.circuit_open),
+        "circuit_consecutive_errors": int(adapter.consecutive_errors) if adapter is not None else 0,
+        "last_observed_latency_ms": adapter.last_observed_latency_ms if adapter is not None else None,
+        "last_observed_result_count": adapter.last_observed_result_count if adapter is not None else None,
+    }
 
 
 # ---------------------------------------------------------------------------

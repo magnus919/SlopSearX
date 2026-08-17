@@ -9,11 +9,14 @@ envelope described in docs/MCP_SERVER_DESIGN.md §3.
 from __future__ import annotations
 
 import datetime as _dt
+import ipaddress
+import socket
 import time
 from typing import Any
+from urllib.parse import urlparse
 
-from slopsearx.adapter import SUPPORTED_MEDIA_TYPES, SearchResult, media_to_dict
-from slopsearx.capabilities import INTENT_PROFILES, resolve_intent
+from slopsearx.adapter import OBSERVED_STATUS_VOCAB, SUPPORTED_MEDIA_TYPES, SearchResult, media_to_dict
+from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, resolve_intent
 from slopsearx.filters import (
     enforcement_entry,
     engine_filter_layer,
@@ -112,16 +115,9 @@ MCP_CONTRACT_VERSION = "1.0"
 
 # Closed set of status classes used to aggregate engine health. The final
 # ``unknown`` bucket captures engines never observed by a search outcome
-# (VAL-DIAG-006).
-ENGINE_STATUS_CLASSES: tuple[str, ...] = (
-    "ok",
-    "rate_limited",
-    "blocked",
-    "error",
-    "timeout",
-    "unavailable",
-    "unknown",
-)
+# (VAL-DIAG-006). Aligned with ``slopsearx.adapter.OBSERVED_STATUS_VOCAB`` so
+# the MCP status surface and HTTP /health share one vocabulary (issue 190).
+ENGINE_STATUS_CLASSES: tuple[str, ...] = OBSERVED_STATUS_VOCAB
 
 # Engine-health note: /health never actively probes external APIs; health is
 # observed passively through search outcomes (unchanged product behavior).
@@ -132,6 +128,45 @@ HEALTH_PASSIVE_NOTE = "/health does not actively probe external APIs; use search
 NON_VERIFICATION_NOTE = "SlopSearX did not fetch or verify the linked page"
 
 CONTENT_UNAVAILABLE_NOTE = "full content unavailable (adapter returned snippet only)"
+
+# ---------------------------------------------------------------------------
+# Search-to-retrieval handoff contract (issue 189)
+# ---------------------------------------------------------------------------
+
+# The stable contract name/version for the machine-readable handoff record
+# that links a search result to downstream retrieval. A downstream retriever
+# (e.g. GroktoCrawl) associates a captured page with the originating result
+# and snapshot through the ``retrieval`` block on cards and records without
+# parsing prose. See docs/RETRIEVAL_HANDOFF.md for the full contract.
+RETRIEVAL_HANDOFF_CONTRACT = "slopsearx.retrieval_handoff"
+RETRIEVAL_HANDOFF_VERSION = 1
+
+# Closed vocabulary of ``retrieval.url_status`` tokens. A URL is eligible for
+# downstream retrieval only when the status is ``ok``; every other token is
+# a machine-readable failure/warning reason for the handoff boundary.
+RETRIEVAL_URL_STATUS_OK = "ok"
+RETRIEVAL_URL_STATUS_MISSING = "missing"
+RETRIEVAL_URL_STATUS_NON_HTTP = "non_http"
+RETRIEVAL_URL_STATUS_UNSAFE = "unsafe_scheme"
+RETRIEVAL_URL_STATUS_AMBIGUOUS = "ambiguous"
+RETRIEVAL_URL_STATUSES: tuple[str, ...] = (
+    RETRIEVAL_URL_STATUS_OK,
+    RETRIEVAL_URL_STATUS_MISSING,
+    RETRIEVAL_URL_STATUS_NON_HTTP,
+    RETRIEVAL_URL_STATUS_UNSAFE,
+    RETRIEVAL_URL_STATUS_AMBIGUOUS,
+)
+
+# Schemes an HTTP-based downstream retriever must never be pointed at. This is
+# advisory classification at the handoff boundary — SlopSearX performs no fetch
+# itself — so a downstream capture layer can reject these URLs without
+# becoming an SSRF-capable proxy or mishandling embedded content.
+UNSAFE_RETRIEVAL_SCHEMES = frozenset({"file", "data", "javascript", "vbscript", "gopher", "ftp"})
+
+# Highest port accepted for a handoff fetch target. Anything above this (or
+# non-numeric) is classified ``ambiguous`` and never handed off; port ``0`` is
+# excluded because it is not a connectable fetch target.
+RETRIEVAL_PORT_MAX = 65535
 
 JOBS_ADAPTERS = ("greenhouse", "ashby", "lever")
 
@@ -452,6 +487,325 @@ def _media_triage(result: SearchResult) -> dict[str, Any] | None:
     return {key: media[key] for key in ("media_type", "thumbnail", "width", "height", "duration") if key in media}
 
 
+def _ipv4_component_value(part: str) -> int:
+    """Parse one WHATWG IPv4 component (decimal/hex/octal) or raise ValueError.
+
+    WHATWG URL clients infer the component base from its prefix: ``0x``/``0X``
+    is hexadecimal, a leading ``0`` is octal (so ``0177`` is 127, not 177),
+    and everything else is decimal. Python's ``int``/``ipaddress`` do not
+    apply these rules, so a host like ``0177.0.0.1`` would otherwise evade a
+    literal-IP guard. A bare ``0x``/``0X`` component is treated as zero
+    (Chromium behavior), which keeps ``http://0x/`` (-> 0.0.0.0) inside the
+    guard.
+    """
+    if not part:
+        raise ValueError("empty IPv4 component")
+    if part[:2] in ("0x", "0X"):
+        digits = part[2:]
+        if not digits:
+            return 0
+        base = 16
+        allowed = "0123456789abcdefABCDEF"
+    elif part.startswith("0"):
+        digits = part
+        base = 8
+        allowed = "01234567"
+    else:
+        digits = part
+        base = 10
+        allowed = "0123456789"
+    if any(char not in allowed for char in digits):
+        raise ValueError("IPv4 component is not numeric in its base")
+    value = int(digits, base)
+    if value > 0xFFFFFFFF:
+        raise ValueError("IPv4 component exceeds 32 bits")
+    return value
+
+
+def _whatwg_ipv4_literal(host: str) -> ipaddress.IPv4Address | None:
+    """Resolve a host as a WHATWG-style IPv4 literal, or return ``None``.
+
+    Mirrors the WHATWG URL host parser's IPv4 rules (verified against
+    Chromium): at most four dot-separated components parsed as hex/octal/
+    decimal, abbreviated forms (``127.1``), a trailing dot, and a last
+    component that may carry the remaining 8-24 bits. Returns the address a
+    WHATWG client would resolve, or ``None`` when the host is not an IPv4
+    literal (a normal hostname). No DNS is performed.
+    """
+    parts = host.split(".")
+    if parts and parts[-1] == "":
+        parts = parts[:-1]
+    if not parts or len(parts) > 4:
+        return None
+    numbers: list[int] = []
+    for part in parts:
+        try:
+            numbers.append(_ipv4_component_value(part))
+        except ValueError:
+            return None
+    if len(numbers) == 1:
+        return ipaddress.IPv4Address(numbers[0])
+    if numbers[0] > 255:
+        return None
+    for number in numbers[1:-1]:
+        if number > 255:
+            return None
+    if numbers[-1] >= 256 ** (5 - len(numbers)):
+        return None
+    ipv4 = numbers[-1]
+    for index in range(len(numbers) - 2, -1, -1):
+        ipv4 += numbers[index] * (256 ** (3 - index))
+    return ipaddress.IPv4Address(ipv4)
+
+
+def _ip_literal_candidates(host: str) -> list[ipaddress.IPv4Address | ipaddress.IPv6Address]:
+    """Literal IP address(es) a host denotes, with no DNS resolution.
+
+    ``urlparse`` reports the host verbatim, but WHATWG clients (browsers,
+    HTTP stacks) accept numeric host forms that ``ipaddress.ip_address``
+    rejects: integer literals (``2130706433``), hex (``0x7f000001``), octal
+    (``0177.0.0.1``), and abbreviated dotted forms (``127.1``). Candidates
+    come from three deterministic sources: canonical ``ipaddress`` parsing,
+    the WHATWG-style IPv4 parser above, and ``getaddrinfo`` restricted to
+    ``AI_NUMERICHOST`` (a numeric-only flag that never triggers DNS). A host
+    that yields no candidates is not a parseable numeric literal: a genuine
+    hostname (one containing non-numeric characters) classifies normally,
+    while a dotted all-numeric host that fails every candidate parser (e.g.
+    ``169..127.1`` or ``1.2.3.300``) is treated as a malformed IPv4 literal
+    attempt, never as a normal hostname.
+    """
+    candidates: list[ipaddress.IPv4Address | ipaddress.IPv6Address] = []
+    try:
+        candidates.append(ipaddress.ip_address(host))
+    except ValueError:
+        pass
+    ipv4 = _whatwg_ipv4_literal(host)
+    if ipv4 is not None:
+        candidates.append(ipv4)
+    try:
+        infos = socket.getaddrinfo(host, None, type=socket.SOCK_STREAM, flags=socket.AI_NUMERICHOST)
+    except (socket.gaierror, ValueError, UnicodeError, OverflowError):
+        infos = []
+    for info in infos:
+        try:
+            candidates.append(ipaddress.ip_address(info[4][0]))
+        except ValueError:
+            continue
+    return list(dict.fromkeys(candidates))
+
+
+def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
+    """Classify a result URL for downstream retrieval — never fetches it.
+
+    SlopSearX is a search-only service: this is advisory metadata so a
+    downstream retriever (e.g. GroktoCrawl) can decide eligibility and fetch
+    safety without parsing prose. Returns ``(status, reason, scheme, url)``
+    where ``status`` is one of ``RETRIEVAL_URL_STATUSES`` and the URL is
+    non-``None`` **only** for ``ok`` — ineligible URLs are never handed off
+    as a fetch target.
+
+    - ``ok`` — absolute ``http``/``https`` URL with a well-formed authority
+      (non-empty host, no backslash, whitespace, or control characters,
+      valid in-range port); eligible, and the captured URL is handed off
+      verbatim (never canonicalized or rewritten). ``ok`` is a
+      literal/structural certification only: no DNS resolution is performed,
+      so a DNS-resolvable hostname — including nip.io-style aliases of
+      loopback/link-local/metadata IPs (``169.254.169.254.nip.io``,
+      ``127.0.0.1.nip.io``) and ``localtest.me`` — is certified ``ok`` even
+      though it may resolve to a private or link-local address at fetch time.
+      The downstream retriever MUST enforce its own post-resolution SSRF
+      controls (including blocking DNS-rebinding and nip.io-style aliases).
+    - ``missing`` — no URL string on the result.
+    - ``non_http`` — parses to a non-HTTP(S) scheme (e.g. ``mailto:``).
+    - ``unsafe_scheme`` — a scheme an HTTP retriever must not fetch
+      (``file:``, ``data:``, ``javascript:``, ...); see
+      ``UNSAFE_RETRIEVAL_SCHEMES``.
+    - ``ambiguous`` — not a safe fetch target: canonicalization-ambiguous
+      (no scheme, no host, a backslash, whitespace, or control character in
+      the authority, a percent-encoded or non-ASCII host, an invalid or
+      out-of-range port, or unparseable), a literal IP host — in any numeric
+      encoding, including decimal/hex/octal/abbreviated forms — that is not
+      globally routable, a dotted all-numeric host no literal-IP parser can
+      decode (an empty or out-of-range octet, e.g. ``169..127.1`` or
+      ``1.2.3.300``), or an authority carrying userinfo credentials; treated
+      as ineligible rather than guessed at.
+    """
+    if not url or not url.strip():
+        return RETRIEVAL_URL_STATUS_MISSING, "result has no URL to retrieve", None, None
+    try:
+        parsed = urlparse(url)
+        scheme = (parsed.scheme or "").lower()
+        if not scheme:
+            return RETRIEVAL_URL_STATUS_AMBIGUOUS, "URL has no scheme; canonicalization is ambiguous", None, None
+        if scheme not in ("http", "https"):
+            if scheme in UNSAFE_RETRIEVAL_SCHEMES:
+                return (
+                    RETRIEVAL_URL_STATUS_UNSAFE,
+                    f"scheme '{scheme}' is unsafe for downstream HTTP retrieval",
+                    scheme,
+                    None,
+                )
+            return (
+                RETRIEVAL_URL_STATUS_NON_HTTP,
+                f"scheme '{scheme}' is not HTTP(S); not retrievable over HTTP",
+                scheme,
+                None,
+            )
+        if not parsed.hostname:
+            return RETRIEVAL_URL_STATUS_AMBIGUOUS, "URL has no host; canonicalization is ambiguous", scheme, None
+        # urlparse does not normalize backslashes and does not strip control
+        # characters or whitespace, so the authority it reports is not
+        # necessarily the authority a WHATWG client (browser/HTTP stack)
+        # would resolve: e.g. "https://internal.example\@public.com/" parses
+        # with hostname "public.com" here but a WHATWG client connects to
+        # "internal.example", and a literal space in the authority would
+        # otherwise certify "http:// example.com/" as fetchable. Never hand
+        # off a target whose authority cannot be canonicalized unambiguously
+        # (CWE-918 host-confusion guard).
+        if "\\" in parsed.netloc or any(
+            ord(char) < 0x20 or ord(char) == 0x7F or char.isspace() for char in parsed.netloc
+        ):
+            return (
+                RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                "URL authority contains a backslash, whitespace, or control character; canonicalization is ambiguous",
+                scheme,
+                None,
+            )
+        # urlparse does not reject credentials embedded in the authority; a
+        # URL like "http://user:pass@example.com/" would otherwise pass every
+        # check and be returned verbatim as the fetch target, persisting
+        # credentials and causing downstream Basic-auth transmission. Any
+        # userinfo in the authority makes the target ineligible.
+        if parsed.username is not None or parsed.password is not None:
+            return (
+                RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                "URL authority contains userinfo credentials; not handed off as a fetch target",
+                scheme,
+                None,
+            )
+        # urlparse does not percent-decode or IDNA-map the host, but WHATWG
+        # clients (browsers, HTTP stacks) do, so a percent-encoded host
+        # ("%31%36%39.%32%35%34..." -> 169.254.169.254) or a fullwidth host
+        # would be certified ok here while a WHATWG client resolves a
+        # different host. Never hand off a target whose host cannot be
+        # canonicalized unambiguously (CWE-918 host-confusion guard).
+        if "%" in parsed.hostname or any(ord(char) > 0x7F for char in parsed.hostname):
+            return (
+                RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                "URL host contains a percent-encoded or non-ASCII character; canonicalization is ambiguous",
+                scheme,
+                None,
+            )
+        # A literal IP host — in any numeric encoding, not just canonical
+        # dotted-quad — is not a safe fetch target for a downstream retriever
+        # (SSRF: http://127.0.0.1/, http://[::1]/, http://10.0.0.1/, the cloud
+        # metadata IP http://169.254.169.254/latest/meta-data/, and
+        # non-canonical forms like http://2130706433/, http://127.1/,
+        # http://0177.0.0.1/, or http://0x7f000001/ that WHATWG clients
+        # resolve to loopback). Only literal IPs are checked — getaddrinfo is
+        # used solely with AI_NUMERICHOST, so no DNS resolution is performed —
+        # and any non-global address (loopback, private, CGNAT, link-local,
+        # reserved, documentation, or unspecified) is never handed off. A
+        # dotted all-numeric host that every candidate parser rejects (an
+        # empty or out-of-range octet, e.g. "169..127.1" or "1.2.3.300") is a
+        # failed IPv4 literal attempt, not a legitimate hostname — a WHATWG
+        # client would fail to canonicalize it, so it is never certified ok.
+        ip_candidates = _ip_literal_candidates(parsed.hostname)
+        for ip in ip_candidates:
+            if not ip.is_global:
+                return (
+                    RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                    "URL host is a non-global literal IP address; not a safe fetch target",
+                    scheme,
+                    None,
+                )
+        if not ip_candidates and all(char.isdigit() or char == "." for char in parsed.hostname):
+            return (
+                RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                "URL host is a malformed dotted numeric literal; canonicalization is ambiguous",
+                scheme,
+                None,
+            )
+        # A port that is not a parseable integer or is outside the sane TCP
+        # range is not a fetchable target (http://host:abc/,
+        # http://host:99999/, http://host:0/).
+        try:
+            port = parsed.port
+        except ValueError:
+            return (
+                RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                "URL port is invalid; canonicalization is ambiguous",
+                scheme,
+                None,
+            )
+        if port is not None and not 1 <= port <= RETRIEVAL_PORT_MAX:
+            return (
+                RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                f"URL port is outside the sane range (1-{RETRIEVAL_PORT_MAX}); canonicalization is ambiguous",
+                scheme,
+                None,
+            )
+        return RETRIEVAL_URL_STATUS_OK, None, scheme, url
+    except ValueError:
+        # urlparse is lenient but can raise for malformed bracketed hosts
+        # (e.g. "http://[::1"); access to .hostname can also raise.
+        return RETRIEVAL_URL_STATUS_AMBIGUOUS, "URL cannot be parsed unambiguously", None, None
+
+
+def _retrieval_card(result: SearchResult) -> dict[str, Any]:
+    """Compact retrieval-eligibility summary for a triage card.
+
+    Cards carry the eligibility tokens so a card-only consumer can decide
+    whether a result is retrievable (and why not) without expanding it. The
+    full handoff record — result identity, the verbatim result URL, and
+    provenance — lives on the expanded record (progressive disclosure).
+    """
+    status, reason, scheme, _url = _retrieval_url(result.url)
+    return {
+        "contract": RETRIEVAL_HANDOFF_CONTRACT,
+        "version": RETRIEVAL_HANDOFF_VERSION,
+        "eligible": status == RETRIEVAL_URL_STATUS_OK,
+        "url_status": status,
+        "url_reason": reason,
+        "scheme": scheme,
+    }
+
+
+def _retrieval_handoff(result: SearchResult, snapshot: SearchSnapshot, result_id: str) -> dict[str, Any]:
+    """Build the stable search→retrieval handoff record (contract v1).
+
+    Self-contained and machine-readable so a downstream retriever
+    (GroktoCrawl or another capture layer) can associate a captured page with
+    the originating result and snapshot without parsing prose or re-querying
+    SlopSearX. Exposes the explicit retrieval boundary: a result is a
+    snippet-only lead (``verified`` is always ``False``), and ``url`` /
+    ``eligible`` carry the fetch-safety classification. SlopSearX never
+    fetches the linked page; this record is the composition contract, not a
+    runtime integration.
+    """
+    status, reason, scheme, handoff_url = _retrieval_url(result.url)
+    content = result.content or ""
+    return {
+        "contract": RETRIEVAL_HANDOFF_CONTRACT,
+        "version": RETRIEVAL_HANDOFF_VERSION,
+        "result_id": result_id,
+        "url": handoff_url,
+        "url_status": status,
+        "url_reason": reason,
+        "scheme": scheme,
+        "eligible": status == RETRIEVAL_URL_STATUS_OK,
+        "snippet_only": len(content) <= SNIPPET_LENGTH,
+        "verified": False,
+        "verification_note": NON_VERIFICATION_NOTE,
+        "provenance": {
+            "snapshot_cursor": snapshot.snapshot_id,
+            "query_id": snapshot.query_id,
+            "query": snapshot.query,
+            "source_engines": _source_engines(result),
+        },
+    }
+
+
 def _result_to_dict(
     result: SearchResult,
     *,
@@ -460,15 +814,16 @@ def _result_to_dict(
 ) -> dict[str, Any]:
     """Normalize one result into a compact triage card (design §3.1).
 
-    Cards carry triage fields plus a stable server-issued ``result_id``.
-    Full ``content``, ``thumbnail``, and ``img_src`` belong to the expanded
-    record (progressive disclosure), never the card. A media result's card
-    carries a compact ``media`` triage summary; the complete media record
-    (including the media file URL and source attribution) is available via
-    ``slopsearx_read_result``. A domain payload is inlined only when
-    requested or small enough (see ``_payload_inline``); the full payload is
-    available via ``slopsearx_read_result`` when it is within
-    ``PAYLOAD_MAX_PERSIST_BYTES``.
+    Cards carry triage fields plus a stable server-issued ``result_id``, a
+    compact ``retrieval`` eligibility block (contract in
+    docs/RETRIEVAL_HANDOFF.md), and — for media results — a compact ``media``
+    triage summary. Full ``content``, ``thumbnail``, and ``img_src`` belong
+    to the expanded record (progressive disclosure), never the card. The
+    complete media record (including the media file URL and source
+    attribution) is available via ``slopsearx_read_result``. A domain payload
+    is inlined only when requested or small enough (see ``_payload_inline``);
+    the full payload is available via ``slopsearx_read_result`` when it is
+    within ``PAYLOAD_MAX_PERSIST_BYTES``.
     """
     card = {
         "title": result.title,
@@ -483,6 +838,7 @@ def _result_to_dict(
         "position": result.position,
         "tier": result.tier,
         "citation": {"label": result.title, "url": result.url},
+        "retrieval": _retrieval_card(result),
     }
     media = _media_triage(result)
     if media:
@@ -514,7 +870,9 @@ def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: st
 
     Reveals strictly more than the card: complete normalized ``content``,
     media fields, every contributing engine, provenance, a
-    ``content_available`` flag, and an explicit non-verification note.
+    ``content_available`` flag, an explicit non-verification note, and the
+    stable ``retrieval`` handoff record (docs/RETRIEVAL_HANDOFF.md) that a
+    downstream retriever uses to link a capture back to this result.
     """
     content = result.content or ""
     source_engines = _source_engines(result)
@@ -551,6 +909,7 @@ def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: st
             "total": snapshot.total,
         },
         "note": NON_VERIFICATION_NOTE,
+        "retrieval": _retrieval_handoff(result, snapshot, result_id),
     }
     if not content_available:
         record["content_unavailable_note"] = CONTENT_UNAVAILABLE_NOTE
@@ -1232,6 +1591,9 @@ async def slopsearx_list_capabilities(
             "cost_class": cap.cost_class or None,
             "last_known_status": cap.last_known_status,
             "last_known_status_at": cap.last_known_status_at,
+            "last_known_status_stale": cap.last_known_status_stale,
+            "circuit_open": cap.circuit_open,
+            "circuit_consecutive_errors": cap.circuit_consecutive_errors,
             "scope_hints": cap.scope_hints,
             "caveats": cap.caveats,
         }
@@ -1366,6 +1728,14 @@ def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str,
     engine_count = len(state.catalog.enabled())
     durable_research = bool(state.job_store.durable)
 
+    # Per-engine observed-health detail, derived with the same builder used by
+    # HTTP /health so the two surfaces agree on status vocabulary, freshness
+    # timestamps, and the distinct circuit/auth signals (issue 190).
+    engine_details: dict[str, Any] = {}
+    for cap in state.catalog.enabled():
+        adapter = ctx.active_engines.get(cap.name)
+        engine_details[cap.name] = build_engine_health(cap.name, adapter, cap)
+
     causes: list[str] = []
     if not valkey_connected:
         causes.append("Valkey unavailable")
@@ -1386,6 +1756,7 @@ def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str,
         "active_engines": engine_count,
         "router_enabled": bool(ctx.router is not None and ctx.router.enabled),
         "engine_health": _engine_health_by_class(state),
+        "engines": engine_details,
         "grants": _enabled_grants(state),
         "research_execution": {
             "mode": "durable_leased" if durable_research else "degraded",

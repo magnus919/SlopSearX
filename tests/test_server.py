@@ -323,7 +323,7 @@ class TestHealthEndpoint:
     """GET /health endpoint."""
 
     def test_health_ok(self, client: TestClient) -> None:
-        """Health check returns status with per-engine info."""
+        """Health check returns liveness plus observed (never fabricated) engine health."""
         response = client.get("/health")
 
         assert response.status_code == 200
@@ -332,9 +332,16 @@ class TestHealthEndpoint:
         assert "version" in data
         assert "engines" in data
         assert "mocktest" in data["engines"]
-        # Mock engine health uses search("healthcheck") which returns
-        # normal results, so status should be OK
-        assert data["engines"]["mocktest"]["status"] == "ok"
+        record = data["engines"]["mocktest"]
+        # Never-observed engines are explicitly unknown, never optimistically ok.
+        assert record["status"] == "unknown"
+        assert record["status_at"] is None
+        assert record["stale"] is False
+        assert record["configured"] is True
+        assert "auth_class" in record
+        assert "auth_configured" in record
+        assert record["circuit_open"] is False
+        assert record["circuit_consecutive_errors"] == 0
 
     def test_health_no_engines(self) -> None:
         """Health works even with no engines registered."""

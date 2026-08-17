@@ -157,6 +157,20 @@ The current HTTP parameters also overstate enforcement: `pageno`, `language`, `t
 
 The default search response should contain only title, URL, short snippet, publication date, source count, and stable result IDs. A diagnostic detail level can add per-engine latency, failures, empty-scrape diagnostics, and routing decisions. A `read_result` operation can expand normalized metadata and provenance, but must never imply that SlopSearX fetched the full page body.
 
+**Search-to-retrieval handoff (issue 189).** SlopSearX is a standalone search
+service and is not a page fetcher, so the boundary to a downstream reader must
+be explicit and machine-readable. Each result exposes a `retrieval` handoff
+record (contract `slopsearx.retrieval_handoff`, `docs/RETRIEVAL_HANDOFF.md`)
+that carries result identity, the raw result URL handed off verbatim when
+eligible, a closed `url_status` classification (`ok`/`missing`/`non_http`/
+`unsafe_scheme`/`ambiguous`), snippet-only/non-verification status, and
+snapshot/query provenance. Unsafe, non-HTTP, missing, and canonicalization-ambiguous URLs are
+never handed off as fetch targets, which is what keeps the MCP server from
+becoming an SSRF-capable proxy while still supporting composition with a
+downstream retriever such as GroktoCrawl. Cards carry the compact eligibility
+subset; the full record lives on `read_result` (same progressive-disclosure
+model as content/media).
+
 For multi-query research, an asynchronous job model is appropriate. It should use Valkey-backed shared state, bounded query/engine/result budgets, caller-supplied idempotency keys, immutable completed evidence, best-effort cancellation of undispatched work, and explicit `queued`, `running`, `partial`, `succeeded`, `failed`, `cancelled`, and `expired` states. This is a proposed MCP capability, not an existing SlopSearX HTTP feature.
 
 ## 3. Proposed MCP surface
