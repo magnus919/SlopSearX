@@ -73,6 +73,10 @@ mcp:
   job_max_engines_per_query: 10
   job_max_results: 500
   job_default_deadline_seconds: 600
+  # Durable research execution (Valkey-backed lease model).
+  job_lease_ttl_seconds: 60
+  job_poll_interval_seconds: 1.0
+  job_max_concurrent_jobs: 1
   # Auth (HTTP transport only). Empty = authentication disabled; stdio is
   # trusted by its process-launch boundary.
   auth_token: ""
@@ -117,6 +121,9 @@ mcp:
 | `MCP_JOB_MAX_ENGINES_PER_QUERY` | `10` | per-query engine budget |
 | `MCP_JOB_MAX_RESULTS` | `500` | job result budget |
 | `MCP_JOB_DEFAULT_DEADLINE_SECONDS` | `600` | default job deadline |
+| `MCP_JOB_LEASE_TTL_SECONDS` | `60` | research-job lease visibility timeout (how long a replica may own a running job before another replica can reclaim it) |
+| `MCP_JOB_POLL_INTERVAL_SECONDS` | `1.0` | how often an idle research worker polls Valkey for claimable jobs |
+| `MCP_JOB_MAX_CONCURRENT_JOBS` | `1` | bounded per-replica research-job concurrency |
 | `MCP_SENSITIVE_ENGINES` | `hibp,dehashed` | comma-separated override |
 | `MCP_LOG_LEVEL` | `info` | uvicorn log level for HTTP transport |
 | `MCP_REMOTE_URL` | empty | gateway mode: remote server URL (`--remote`) |
@@ -605,9 +612,40 @@ fetcher.
   within the job's remaining budget, persisted as part of the same job.
 
 Jobs are idempotent (caller-supplied `idempotency_key`), budget-bounded,
-and expire after 24h. Stale `running` jobs from a dead process are marked
-`expired` at startup. Completed queries are immutable — their cursors remain
+and expire after 24h. Completed queries are immutable — their cursors remain
 readable across retry and cancel.
+
+### 6.13.1 Durable execution across replicas
+
+When Valkey is connected, research jobs execute durably across replicas using
+a lease-based claim model:
+
+- A `queued` job is claimed atomically by exactly one replica (Valkey `SET NX`),
+  which marks it `running` under an exclusive lease token and a visibility
+  timeout (`job_lease_ttl_seconds`).
+- The owning replica renews its lease while it executes and releases it on
+  completion. If a replica dies mid-job, its lease expires and another replica
+  claims the job, resets any `running` subquery to `pending`, and resumes the
+  remaining work. Completed subqueries and their snapshot cursors are
+  preserved byte-for-byte.
+- Duplicate delivery cannot duplicate evidence: the atomic claim admits
+  exactly one owner, and completed subqueries are never re-executed.
+- Cancellation is durable and race-free: `slopsearx_cancel_job` records a
+  cancellation flag that the owning worker observes on its next reload, then
+  stops undispatched queries and preserves completed evidence. If no worker
+  holds the lease, cancellation finalizes the job immediately.
+- Each replica runs a bounded number of concurrent jobs
+  (`job_max_concurrent_jobs`); an idle worker polls Valkey every
+  `job_poll_interval_seconds` for claimable jobs.
+
+The topology is machine-discoverable via `slopsearx_get_service_status` /
+`slopsearx://health/summary` under `research_execution`:
+`mode` is `durable_leased` (Valkey connected), `single_worker` (job store
+available without Valkey), or `degraded_ephemeral` (no job store).
+
+Without Valkey, research jobs degrade to the single-process, non-durable mode:
+a job is accepted only for the local process and is explicitly flagged
+`degraded`/`ephemeral` in the start response.
 
 ### 6.14 Why there is no separate "advanced search" tool
 
@@ -714,6 +752,11 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
 
 - **Valkey is the only shared state.** Without it, searches degrade
   gracefully (no cache, no rate-limit enforcement, no snapshots, no jobs).
+- **Research execution topology.** With Valkey connected, research jobs are
+  durable across replicas via the lease-based claim model (see §6.13.1); the
+  `research_execution.mode` field in `slopsearx_get_service_status` reports
+  the effective mode. Without Valkey, research jobs are single-process and
+  non-durable (flagged `ephemeral` at start).
 - **Versioning.** `slopsearx_get_service_status` and `slopsearx://health/summary`
   report two versions: the package version (`importlib.metadata`, `0.2.0`)
   and the MCP contract version (`contract_version`), not the FastAPI app's

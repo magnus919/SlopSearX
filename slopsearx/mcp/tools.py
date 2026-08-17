@@ -14,7 +14,7 @@ from typing import Any
 
 from slopsearx.adapter import SearchResult
 from slopsearx.capabilities import INTENT_PROFILES, resolve_intent
-from slopsearx.mcp.state import McpState, get_state
+from slopsearx.mcp.state import McpState, current_tenant, get_state
 from slopsearx.ratelimit import ValkeySlidingWindow
 from slopsearx.research import (
     ResearchJob,
@@ -153,7 +153,8 @@ def _error(code: str, message: str, *, field: str | None = None, **extra: Any) -
 
 
 def _client_identifier(state: McpState) -> str:
-    return f"mcp:{state.tenant}"
+    del state
+    return f"mcp:{current_tenant()}"
 
 
 def _validate_query(query: str, state: McpState) -> dict[str, Any] | None:
@@ -527,7 +528,9 @@ async def _run_search(
     # then present the bounded page. ``total`` is the aggregate captured
     # count (meta.total), independent of the max_results page bound.
     total = len(response.results)
-    cursor = await state.snapshots.create(response.query, response.query_id, response.results, response.scope)
+    cursor = await state.snapshots.for_tenant(current_tenant()).create(
+        response.query, response.query_id, response.results, response.scope
+    )
     if cursor is None:
         warnings = warnings + ["snapshot store unavailable — pagination cursor not created"]
     if max_results is not None and max_results > 0:
@@ -1149,6 +1152,7 @@ def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str,
     snapshots_available = bool(state.snapshots.available)
     job_store_available = bool(state.job_store.available)
     engine_count = len(state.catalog.enabled())
+    durable_research = bool(state.job_store.durable)
 
     causes: list[str] = []
     if not valkey_connected:
@@ -1171,6 +1175,23 @@ def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str,
         "router_enabled": bool(ctx.router is not None and ctx.router.enabled),
         "engine_health": _engine_health_by_class(state),
         "grants": _enabled_grants(state),
+        "research_execution": {
+            "mode": (
+                "durable_leased"
+                if durable_research
+                else ("single_worker" if job_store_available else "degraded_ephemeral")
+            ),
+            "worker_id": state.runner.worker_id,
+            "lease_ttl_seconds": state.runner.lease_ttl,
+            "poll_interval_seconds": state.runner.poll_interval,
+            "max_concurrent_jobs": state.runner.max_concurrent_jobs,
+            "note": (
+                "research jobs are claimed under an exclusive Valkey lease and "
+                "reclaimed by another replica on lease expiry"
+                if durable_research
+                else "Valkey unavailable — research execution is not durable across replicas"
+            ),
+        },
         "policy_bounds": {
             "max_query_length": state.policy.max_query_length,
             "max_results": state.policy.max_results,
@@ -1179,6 +1200,9 @@ def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str,
             "job_max_engines_per_query": state.policy.job_max_engines_per_query,
             "job_max_results": state.policy.job_max_results,
             "job_default_deadline_seconds": state.policy.job_default_deadline_seconds,
+            "job_lease_ttl_seconds": state.policy.job_lease_ttl_seconds,
+            "job_poll_interval_seconds": state.policy.job_poll_interval_seconds,
+            "job_max_concurrent_jobs": state.policy.job_max_concurrent_jobs,
         },
         "degradation": {
             "operational": not causes,
@@ -1222,7 +1246,7 @@ async def slopsearx_read_results(
         return _error("invalid_input", "page must be >= 1", field="page")
 
     page_size = _bounded_max_results(state, max_results)
-    lookup = await state.snapshots.read(cursor)
+    lookup = await state.snapshots.for_tenant(current_tenant()).read(cursor)
     if lookup.unavailable:
         return _error("store_unavailable", "snapshot store is unavailable", field="cursor")
     if lookup.expired:
@@ -1275,7 +1299,7 @@ async def slopsearx_read_result(result_id: str) -> dict[str, Any]:
     if index < 0:
         return _error("invalid_result_id", "result index out of range", field="result_id")
 
-    lookup = await state.snapshots.read(snapshot_id)
+    lookup = await state.snapshots.for_tenant(current_tenant()).read(snapshot_id)
     if lookup.unavailable:
         return _error("store_unavailable", "snapshot store is unavailable", field="result_id")
     if lookup.expired:
@@ -1319,6 +1343,9 @@ async def slopsearx_start_research(
     if not state.policy.tool_enabled("research"):
         return _error("tool_disabled", "slopsearx_start_research requires the research grant (MCP_GRANT_RESEARCH=1)")
 
+    tenant = current_tenant()
+    store = state.job_store.for_tenant(tenant)
+
     if not question or not question.strip():
         return _error("invalid_input", "question is required", field="question")
     if len(question) > state.policy.max_query_length:
@@ -1336,7 +1363,7 @@ async def slopsearx_start_research(
         )
 
     if idempotency_key:
-        existing = await state.job_store.find_by_idempotency(idempotency_key)
+        existing = await store.find_by_idempotency(idempotency_key)
         if existing is not None:
             result = _job_summary(existing)
             result["note"] = "returned existing job for idempotency_key"
@@ -1369,14 +1396,14 @@ async def slopsearx_start_research(
         queries=queries,
         warnings=warnings,
         deadline=deadline_ts,
-        tenant=state.tenant,
+        tenant=tenant,
         idempotency_key=idempotency_key,
     )
-    await state.job_store.save(job)
-    state.runner.enqueue(job.job_id)
+    await store.save(job)
+    state.runner.enqueue(job.job_id, tenant=tenant)
 
     result = _job_summary(job)
-    if not state.job_store.available:
+    if not store.available:
         result["degraded"] = True
         result["ephemeral"] = True
         result["note"] = (
@@ -1408,9 +1435,10 @@ def _resolve_deadline(state: McpState, deadline: str | None) -> float | dict[str
 async def slopsearx_get_job(job_id: str) -> dict[str, Any]:
     """Return research job state, progress, and per-query cursors."""
     state = get_state()
-    if not state.job_store.available:
+    store = state.job_store.for_tenant(current_tenant())
+    if not store.available:
         return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
-    job = await state.job_store.load(job_id)
+    job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
     result = _job_summary(job)
@@ -1426,9 +1454,10 @@ async def slopsearx_cancel_job(job_id: str) -> dict[str, Any]:
     their evidence stays readable.
     """
     state = get_state()
-    if not state.job_store.available:
+    store = state.job_store.for_tenant(current_tenant())
+    if not store.available:
         return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
-    job = await state.job_store.load(job_id)
+    job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
 
@@ -1439,9 +1468,20 @@ async def slopsearx_cancel_job(job_id: str) -> dict[str, Any]:
             "note": "job already finished; completed evidence remains readable",
         }
 
-    job.cancel_requested = True
-    job.state = "cancelled"
-    await state.job_store.save(job)
+    result_state = await store.request_cancel(job_id)
+    if result_state == "running":
+        return {
+            "job_id": job.job_id,
+            "state": "running",
+            "note": "cancellation requested; the owning worker will stop undispatched "
+            "queries and preserve completed evidence",
+        }
+    if result_state != "cancelled":
+        return {
+            "job_id": job.job_id,
+            "state": result_state,
+            "note": "best-effort cancellation requested; completed evidence remains readable",
+        }
     return {
         "job_id": job.job_id,
         "state": "cancelled",
@@ -1462,9 +1502,11 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
     state = get_state()
     if not state.policy.tool_enabled("research"):
         return _error("tool_disabled", "slopsearx_retry_research requires the research grant (MCP_GRANT_RESEARCH=1)")
-    if not state.job_store.available:
+    tenant = current_tenant()
+    store = state.job_store.for_tenant(tenant)
+    if not store.available:
         return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
-    job = await state.job_store.load(job_id)
+    job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
 
@@ -1487,7 +1529,7 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
             field="job_id",
         )
 
-    job = await state.runner.retry(job_id)
+    job = await state.runner.retry(job_id, tenant=tenant)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
 
@@ -1496,8 +1538,7 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
         # Deadline gate: a deadline-passed retry finalizes to expired instead
         # of re-running and ending in partial/failed.
         result["note"] = (
-            "job deadline had already passed; retry finalized the job to expired "
-            "and re-executed no subqueries"
+            "job deadline had already passed; retry finalized the job to expired and re-executed no subqueries"
         )
     else:
         result["retried"] = [query.index for query in retryable]
@@ -1524,9 +1565,10 @@ async def slopsearx_extend_research(
     state = get_state()
     if not state.policy.tool_enabled("research"):
         return _error("tool_disabled", "slopsearx_extend_research requires the research grant (MCP_GRANT_RESEARCH=1)")
-    if not state.job_store.available:
+    store = state.job_store.for_tenant(current_tenant())
+    if not store.available:
         return _error("store_unavailable", "job store is unavailable; research jobs are not persisted", field="job_id")
-    job = await state.job_store.load(job_id)
+    job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
 
@@ -1585,7 +1627,7 @@ async def slopsearx_extend_research(
         engines=resolved_engines,
     )
     job.queries.append(new_query)
-    await state.job_store.save(job)
+    await store.save(job)
 
     job = await state.runner.run_pending(job)
     result = _job_summary(job)

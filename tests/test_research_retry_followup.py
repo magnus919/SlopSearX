@@ -503,13 +503,13 @@ class TestCancelAndExpiry:
         assert job.state == "expired"
 
     async def test_stale_running_cleanup_marks_expired(self, state: McpState) -> None:
-        """VAL-RESEARCH-011 — startup cleanup expires jobs left running by a dead process."""
+        """VAL-RESEARCH-011 — startup cleanup expires deadline-passed orphans only."""
         stale = ResearchJob(
             job_id="job-stale-cleanup",
             question="q",
             strategy="broad",
             state="running",
-            deadline=time.time() + 100,
+            deadline=time.time() - 10,
         )
         stale.queries = [ResearchQuery(index=0, query="q", intent="web", engines=["brave"])]
         await state.job_store.save(stale)
@@ -520,6 +520,23 @@ class TestCancelAndExpiry:
         assert loaded is not None
         assert loaded.state == "expired"
         assert all(q.state == "cancelled" for q in loaded.queries)
+
+    async def test_future_deadline_running_job_left_for_reclaim(self, state: McpState) -> None:
+        """VAL-RESEARCH-011 — a future-deadline orphan stays reclaimable."""
+        stale = ResearchJob(
+            job_id="job-reclaimable",
+            question="q",
+            strategy="broad",
+            state="running",
+            deadline=time.time() + 3600,
+        )
+        stale.queries = [ResearchQuery(index=0, query="q", intent="web", engines=["brave"])]
+        await state.job_store.save(stale)
+
+        assert await state.job_store.expire_stale_running() == 0
+        loaded = await state.job_store.load("job-reclaimable")
+        assert loaded is not None
+        assert loaded.state == "running"
 
 
 # ---------------------------------------------------------------------------

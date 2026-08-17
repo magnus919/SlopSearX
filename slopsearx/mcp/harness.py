@@ -80,6 +80,38 @@ class InMemoryStore:
         self._data[key] = value
         self.set_ttls.append(ttl)
 
+    async def keys(self, pattern: str) -> list[str]:
+        prefix = pattern.rstrip("*")
+        return [key for key in self._data if key.startswith(prefix)]
+
+    async def delete(self, key: str) -> None:
+        self._data.pop(key, None)
+
+    async def set_nx(self, key: str, value: dict[str, Any], ttl: int = 300) -> bool:
+        if key in self._data:
+            return False
+        self._data[key] = value
+        self.set_ttls.append(ttl)
+        return True
+
+    async def acquire_lease(self, key: str, token: str, ttl: int) -> bool:
+        return await self.set_nx(key, {"token": token}, ttl)
+
+    async def renew_lease(self, key: str, token: str, ttl: int) -> bool:
+        current = self._data.get(key)
+        if current is None or not isinstance(current, dict) or current.get("token") != token:
+            return False
+        self._data[key] = {"token": token}
+        self.set_ttls.append(ttl)
+        return True
+
+    async def release_lease(self, key: str, token: str) -> bool:
+        current = self._data.get(key)
+        if current is None or not isinstance(current, dict) or current.get("token") != token:
+            return False
+        self._data.pop(key, None)
+        return True
+
     async def close(self) -> None:
         # In-memory: nothing to release; kept so destroy_context works.
         return None

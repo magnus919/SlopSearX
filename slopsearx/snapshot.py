@@ -107,6 +107,12 @@ class SnapshotStore:
         """Whether snapshots can be created (Valkey connected)."""
         return self._store is not None and self._store.is_connected
 
+    def for_tenant(self, tenant: str) -> "SnapshotStore":
+        """Return a tenant-scoped view sharing the same backing store."""
+        if tenant == self._tenant:
+            return self
+        return SnapshotStore(self._store, tenant=tenant, ttl_seconds=self._ttl)
+
     def _key(self, snapshot_id: str) -> str:
         return f"{SNAPSHOT_KEY_PREFIX}:{self._tenant}:{snapshot_id}"
 

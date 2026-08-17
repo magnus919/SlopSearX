@@ -4,6 +4,13 @@
 
 ### Features
 
+* make research job execution durable across replicas: Valkey-backed lease
+  claim with ownership, visibility timeout, orphan recovery, cancellation
+  flags, idempotent duplicate-delivery, bounded per-replica concurrency, and
+  machine-discoverable `research_execution.mode` in `slopsearx_get_service_status`
+* derive MCP tenant identity per-request from the authenticated OAuth client
+  id (falling back to a single default tenant) so jobs, snapshots, and
+  rate-limit/audit identifiers never bleed across concurrent requests
 * add MCP server (`slopsearx-mcp`): 15 intent-level tools, capability
   discovery, scope explanation, snapshot pagination, research jobs (including
   selective retry and bounded follow-up), and
