@@ -32,6 +32,7 @@ rather than materializing as a fabricated ``null``.
 from __future__ import annotations
 
 import json
+import os
 from typing import Any, cast
 
 # ---------------------------------------------------------------------------
@@ -47,6 +48,15 @@ PAYLOAD_SCHEMA_VERSION = 1
 # omitted from compact output and stay available through the full-record read
 # path (MCP ``slopsearx_read_result``).
 PAYLOAD_INLINE_BYTES = 512
+
+# Persistence cap (bytes). The canonical cache/snapshot form stores a payload
+# only when its serialized size is at most this bound. It is deliberately
+# distinct from the 512-byte compact-disclosure cap above: compact surfaces
+# hide payloads to keep triage cards small, while this bound keeps the shared
+# Valkey cache and snapshots from growing without limit when an adapter
+# reports a very large structured payload. Overridable via the
+# ``PAYLOAD_MAX_PERSIST_BYTES`` environment variable.
+PAYLOAD_MAX_PERSIST_BYTES = 16_384
 
 # Stable domain-family identifiers. Families group payload types that share a
 # common shape so consumers can branch on the family without knowing every
@@ -70,18 +80,29 @@ DOMAIN_BIOMEDICAL = "biomedical"
 # deterministic string instead of recursing forever (RecursionError).
 _CIRCULAR_REF_MARKER = "<circular reference>"
 
+# Recursion bound for ``_json_safe``. Payloads nested deeper than this are
+# structurally pathological and would otherwise recurse until RecursionError;
+# the container at the bound is replaced with a deterministic marker instead.
+_JSON_SAFE_MAX_DEPTH = 100
+_DEPTH_LIMIT_MARKER = "<max depth exceeded>"
 
-def _json_safe(value: Any, _seen: set[int] | None = None) -> Any:
+
+def _json_safe(value: Any, _seen: set[int] | None = None, _depth: int = 0) -> Any:
     """Deep-convert a value to JSON-safe primitives.
 
     Dict keys are stringified; lists/tuples become lists (order preserved);
     sets/frozensets become deterministically sorted lists; ``None`` and scalar
     primitives are returned unchanged. Anything else (e.g. a stray datetime)
     is stringified as a deterministic last resort. Reference cycles are
-    replaced with ``<circular reference>`` rather than recursing forever.
+    replaced with ``<circular reference>`` and containers nested beyond
+    ``_JSON_SAFE_MAX_DEPTH`` with ``<max depth exceeded>`` rather than
+    recursing forever.
     """
     if _seen is None:
         _seen = set()
+
+    if _depth > _JSON_SAFE_MAX_DEPTH:
+        return _DEPTH_LIMIT_MARKER
 
     if isinstance(value, dict):
         marker = id(value)
@@ -89,7 +110,7 @@ def _json_safe(value: Any, _seen: set[int] | None = None) -> Any:
             return _CIRCULAR_REF_MARKER
         _seen.add(marker)
         try:
-            return {str(key): _json_safe(item, _seen) for key, item in value.items()}
+            return {str(key): _json_safe(item, _seen, _depth + 1) for key, item in value.items()}
         finally:
             _seen.discard(marker)
 
@@ -99,7 +120,7 @@ def _json_safe(value: Any, _seen: set[int] | None = None) -> Any:
             return _CIRCULAR_REF_MARKER
         _seen.add(marker)
         try:
-            return [_json_safe(item, _seen) for item in value]
+            return [_json_safe(item, _seen, _depth + 1) for item in value]
         finally:
             _seen.discard(marker)
 
@@ -109,7 +130,7 @@ def _json_safe(value: Any, _seen: set[int] | None = None) -> Any:
             return _CIRCULAR_REF_MARKER
         _seen.add(marker)
         try:
-            return [_json_safe(item, _seen) for item in sorted(value, key=repr)]
+            return [_json_safe(item, _seen, _depth + 1) for item in sorted(value, key=repr)]
         finally:
             _seen.discard(marker)
 
@@ -129,8 +150,50 @@ def payload_serialized_size(payload: dict[str, Any] | None) -> int | None:
         return None
     try:
         return len(json.dumps(payload, separators=(",", ":"), allow_nan=False).encode("utf-8"))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, RecursionError):
         return None
+
+
+def payload_max_persist_bytes() -> int:
+    """Return the effective payload persistence bound in bytes.
+
+    Honors the ``PAYLOAD_MAX_PERSIST_BYTES`` environment variable, falling
+    back to :data:`PAYLOAD_MAX_PERSIST_BYTES` when unset or invalid.
+    """
+    raw = os.environ.get("PAYLOAD_MAX_PERSIST_BYTES")
+    if raw is None:
+        return PAYLOAD_MAX_PERSIST_BYTES
+    try:
+        value = int(raw.strip())
+    except (TypeError, ValueError):
+        return PAYLOAD_MAX_PERSIST_BYTES
+    return value if value >= 0 else PAYLOAD_MAX_PERSIST_BYTES
+
+
+def payload_for_persistence(
+    payload: dict[str, Any] | None,
+    max_bytes: int | None = None,
+) -> dict[str, Any] | None:
+    """Return the canonical form of a payload to persist, or ``None``.
+
+    The persisted (cache/snapshot) form is bounded independently of the
+    512-byte compact-disclosure cap. The payload is canonicalized exactly once
+    through :func:`payload_to_dict` (sets/tuples → lists, JSON-safe
+    primitives, cycle/depth markers); then, if the canonical form's serialized
+    size exceeds ``max_bytes`` (default: :func:`payload_max_persist_bytes`),
+    it is omitted so the shared store never absorbs unbounded payloads. An
+    unserializable payload is omitted as well.
+    """
+    canonical = payload_to_dict(payload)
+    if canonical is None:
+        return None
+    size = payload_serialized_size(canonical)
+    if size is None:
+        return None
+    limit = payload_max_persist_bytes() if max_bytes is None else max_bytes
+    if size > limit:
+        return None
+    return canonical
 
 
 def build_payload(

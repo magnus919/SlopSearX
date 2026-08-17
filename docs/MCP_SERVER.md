@@ -683,9 +683,19 @@ Disclosure follows the same progressive model as content:
 
 - **Compact cards** inline a payload only when the caller passed
   `include=["payload"]` or the serialized payload is small enough to inline.
-- **`slopsearx_read_result`** always returns the complete available payload
-  (`payload`), so an agent never has to rediscover the source to reason over
+- **`slopsearx_read_result`** returns the complete available payload
+  (`payload`), or `null` when the result has none (or an unserializable
+  payload), so an agent never has to rediscover the source to reason over
   structured fields.
+
+The canonical cache/snapshot form also bounds what is persisted: a payload is
+stored only when its serialized size is ≤ `PAYLOAD_MAX_PERSIST_BYTES`
+(default 16384 = 16 KiB, overridable via the `PAYLOAD_MAX_PERSIST_BYTES`
+environment variable). This is distinct from the 512-byte compact-disclosure
+cap — the smaller cap keeps triage cards small, while the persistence bound
+prevents the shared Valkey cache and snapshots from absorbing unbounded
+payloads. A payload above the persistence bound is dropped from the persisted
+form and therefore reads back as `null` on `slopsearx_read_result`.
 
 **Payloads are source-derived evidence, not verification.** They are exactly
 what the adapter reported; SlopSearX did not fetch or verify the linked page,

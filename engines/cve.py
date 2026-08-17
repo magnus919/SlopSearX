@@ -35,6 +35,14 @@ _CVSS_VERSION_PRIORITY: dict[str, int] = {
     "cvssV2_0": 3,
 }
 
+# Human-facing version label reported in ``payload.data.cvss.version``.
+_CVSS_VERSION_LABEL: dict[str, str] = {
+    "cvssV4_0": "4.0",
+    "cvssV3_1": "3.1",
+    "cvssV3_0": "3.0",
+    "cvssV2_0": "2.0",
+}
+
 
 @register_engine
 class CVEAdapter(EngineAdapter):
@@ -187,27 +195,53 @@ class CVEAdapter(EngineAdapter):
                 return str(d.get("value", ""))
         return ""
 
-    def _extract_metrics(self, container: dict[str, Any]) -> str:
-        """Extract CVSS metrics text from a container."""
+    def _best_cvss(self, container: dict[str, Any]) -> tuple[str, dict[str, Any]] | None:
+        """Return the highest-priority ``(key, cvss)`` present in a container.
+
+        Scans every metric entry so a lower-priority version earlier in the
+        list never shadows a higher-priority one later
+        (cvssV4_0 > cvssV3_1 > cvssV3_0 > cvssV2_0). Entries with no
+        score/severity/vector fields are ignored. Returns ``None`` when no
+        usable metric is present.
+        """
         metrics_list = container.get("metrics", []) if container else []
-        parts = []
+        best: tuple[int, str, dict[str, Any]] | None = None
         for m in metrics_list:
-            if isinstance(m, dict):
-                for key in ("cvssV4_0", "cvssV3_1", "cvssV3_0", "cvssV2_0"):
-                    cvss = m.get(key, {})
-                    if isinstance(cvss, dict):
-                        vs = cvss.get("vectorString", "")
-                        bs = cvss.get("baseScore", "")
-                        if bs is not None and bs != "":
-                            parts.append(f"CVSS {bs}")
-                        if vs:
-                            parts.append(vs)
-                        if parts:
-                            break
-                if parts:
-                    # Only take the first metric set
-                    break
-        return " | ".join(parts) if parts else ""
+            if not isinstance(m, dict):
+                continue
+            for key in ("cvssV4_0", "cvssV3_1", "cvssV3_0", "cvssV2_0"):
+                cvss = m.get(key, {})
+                if not isinstance(cvss, dict):
+                    continue
+                score = cvss.get("baseScore")
+                severity = cvss.get("baseSeverity")
+                vector = cvss.get("vectorString")
+                if score is None and not severity and not vector:
+                    continue
+                priority = _CVSS_VERSION_PRIORITY[key]
+                if best is None or priority < best[0]:
+                    best = (priority, key, cvss)
+        return (best[1], best[2]) if best is not None else None
+
+    def _extract_metrics(self, container: dict[str, Any]) -> str:
+        """Extract the highest-priority CVSS metrics text from a container.
+
+        Uses the same best-priority scan as :meth:`_cvss_payload` so the
+        displayed CVSS and ``payload.data.cvss`` always agree, even when a
+        lower-priority version appears first in the metrics list.
+        """
+        best = self._best_cvss(container)
+        if best is None:
+            return ""
+        _key, cvss = best
+        parts = []
+        bs = cvss.get("baseScore", "")
+        if bs is not None and bs != "":
+            parts.append(f"CVSS {bs}")
+        vs = cvss.get("vectorString", "")
+        if vs:
+            parts.append(vs)
+        return " | ".join(parts)
 
     def _cvss_payload(self, container: dict[str, Any]) -> dict[str, Any] | None:
         """Extract structured CVSS fields from a CVE Record container.
@@ -218,34 +252,19 @@ class CVEAdapter(EngineAdapter):
         Returns ``None`` when no metric is present so the field stays absent
         rather than fabricating an empty object.
         """
-        metrics_list = container.get("metrics", []) if container else []
-        best: tuple[int, dict[str, Any]] | None = None
-        for m in metrics_list:
-            if not isinstance(m, dict):
-                continue
-            for key, version in (
-                ("cvssV4_0", "4.0"),
-                ("cvssV3_1", "3.1"),
-                ("cvssV3_0", "3.0"),
-                ("cvssV2_0", "2.0"),
-            ):
-                cvss = m.get(key, {})
-                if not isinstance(cvss, dict):
-                    continue
-                score = cvss.get("baseScore")
-                severity = cvss.get("baseSeverity")
-                vector = cvss.get("vectorString")
-                out: dict[str, Any] = {}
-                if score is not None:
-                    out["score"] = score
-                if severity:
-                    out["severity"] = severity
-                if vector:
-                    out["vector"] = vector
-                if not out:
-                    continue
-                out["version"] = version
-                priority = _CVSS_VERSION_PRIORITY[key]
-                if best is None or priority < best[0]:
-                    best = (priority, out)
-        return best[1] if best is not None else None
+        best = self._best_cvss(container)
+        if best is None:
+            return None
+        key, cvss = best
+        out: dict[str, Any] = {}
+        score = cvss.get("baseScore")
+        severity = cvss.get("baseSeverity")
+        vector = cvss.get("vectorString")
+        if score is not None:
+            out["score"] = score
+        if severity:
+            out["severity"] = severity
+        if vector:
+            out["vector"] = vector
+        out["version"] = _CVSS_VERSION_LABEL[key]
+        return out

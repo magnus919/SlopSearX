@@ -291,6 +291,37 @@ class TestCVEAdapter:
         assert payload["score"] == 9.8
         assert payload["severity"] == "CRITICAL"
 
+    def test_extract_metrics_matches_payload_for_lower_version_first(self, adapter):
+        """Displayed CVSS and payload CVSS agree when a lower version comes first."""
+        container = {
+            "metrics": [
+                {
+                    "cvssV2_0": {
+                        "baseScore": 7.5,
+                        "baseSeverity": "HIGH",
+                        "vectorString": "AV:N/AC:L/Au:N/C:P/I:P/A:P",
+                    },
+                },
+                {
+                    "cvssV3_1": {
+                        "baseScore": 9.8,
+                        "baseSeverity": "CRITICAL",
+                        "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                    },
+                },
+            ],
+        }
+
+        text = adapter._extract_metrics(container)
+        payload = adapter._cvss_payload(container)
+
+        assert payload is not None
+        assert payload["version"] == "3.1"
+        assert "CVSS 9.8" in text
+        assert "CVSS:3.1" in text
+        # The lower-priority v2 entry must not win the displayed metrics.
+        assert "7.5" not in text
+
     def test_parse_cve_record_sets_title(self, adapter, sample_cve_record):
         results = adapter._parse_cve_record(sample_cve_record, "CVE-2024-12345")
         assert len(results) == 1

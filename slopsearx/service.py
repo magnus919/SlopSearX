@@ -43,7 +43,7 @@ from slopsearx.capabilities import DEFAULT_SENSITIVE_ENGINES
 from slopsearx.config import load_config
 from slopsearx.logging import capture_exception
 from slopsearx.merger import PresenceRanker, extract_empty_scrape_engines
-from slopsearx.payload import payload_from_dict, payload_to_dict
+from slopsearx.payload import payload_for_persistence, payload_from_dict
 from slopsearx.ratelimit import LocalTokenBucket, RateLimiter, RateLimitStrategy, ValkeySlidingWindow
 from slopsearx.router import QueryRouter
 from slopsearx.stats import EngineStatsTracker
@@ -952,9 +952,11 @@ def search_result_to_dict(result: SearchResult) -> dict[str, Any]:
 
     Built field-by-field (no ``dataclasses.asdict`` deep copy) so the optional
     ``payload`` is canonicalized exactly once through
-    :func:`~slopsearx.payload.payload_to_dict`. ``engines`` (a ``set[str]``)
-    is canonicalized to a sorted list so the value survives ``json.dumps``
-    without being stringified to its repr.
+    :func:`~slopsearx.payload.payload_for_persistence` — which also enforces
+    the persistence bound so the canonical cache/snapshot form never stores an
+    unbounded payload. ``engines`` (a ``set[str]``) is canonicalized to a
+    sorted list so the value survives ``json.dumps`` without being stringified
+    to its repr.
     """
     return {
         "url": result.url,
@@ -969,7 +971,7 @@ def search_result_to_dict(result: SearchResult) -> dict[str, Any]:
         "thumbnail": result.thumbnail,
         "img_src": result.img_src,
         "tier": result.tier,
-        "payload": payload_to_dict(result.payload),
+        "payload": payload_for_persistence(result.payload),
     }
 
 

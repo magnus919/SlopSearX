@@ -27,9 +27,13 @@ from slopsearx.payload import (
     DOMAIN_PACKAGES,
     DOMAIN_SCIENCE,
     DOMAIN_SECURITY,
+    _json_safe,
     build_payload,
     is_valid_payload,
+    payload_for_persistence,
     payload_from_dict,
+    payload_max_persist_bytes,
+    payload_serialized_size,
     payload_to_dict,
 )
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
@@ -43,6 +47,17 @@ from slopsearx.service import (
 )
 from slopsearx.snapshot import SnapshotStore
 from tests.test_adapters import MockHTTP
+
+
+def _deeply_nested_payload(depth: int) -> dict[str, Any]:
+    """Build an acyclic dict chain ``depth`` levels deep."""
+    root: dict[str, Any] = {}
+    cursor = root
+    for _ in range(depth):
+        cursor["n"] = {}
+        cursor = cursor["n"]
+    return root
+
 
 # ---------------------------------------------------------------------------
 # Contract tests
@@ -157,6 +172,22 @@ class TestPayloadContract:
         assert is_valid_payload({"domain": "security"}) is False
         assert is_valid_payload({"domain": "security", "type": "vulnerability"}) is False
         assert is_valid_payload({"domain": "security", "type": "vulnerability", "schema_version": 1}) is False
+
+    def test_json_safe_bounds_recursion_depth(self) -> None:
+        """A pathologically deep payload is flattened, never a RecursionError."""
+        nested = _deeply_nested_payload(2_000)
+
+        safe = _json_safe(nested)
+        assert isinstance(safe, dict)
+        # The canonicalized result must be JSON-serializable and carry the
+        # depth marker instead of recursing to the interpreter limit.
+        serialized = json.dumps(safe, allow_nan=False)
+        assert "<max depth exceeded>" in serialized
+
+    def test_payload_serialized_size_returns_none_for_deeply_nested_payload(self) -> None:
+        """Deep nesting is treated as unserializable and omitted, not a crash."""
+        nested = _deeply_nested_payload(20_000)
+        assert payload_serialized_size(nested) is None
 
 
 # ---------------------------------------------------------------------------
@@ -293,6 +324,74 @@ class TestPayloadSerialization:
         assert snapshot is not None
         assert snapshot.results[0].payload == _result_with_payload().payload
 
+    def test_oversized_payload_omitted_from_persisted_form(self) -> None:
+        result = SearchResult(
+            url="https://example.com/result",
+            title="oversized payload",
+            content="content",
+            engine="arxiv",
+            engines={"arxiv"},
+            score=1.0,
+            position=1,
+            category="science",
+            payload=build_payload(
+                DOMAIN_SCIENCE,
+                "publication",
+                {"publication_id": "2401.00001", "abstract": "A" * 20_000},
+                engine="arxiv",
+            ),
+        )
+
+        persisted = search_result_to_dict(result)
+        # The canonical cache/snapshot form omits the payload above the
+        # persistence bound instead of storing it in full.
+        assert persisted["payload"] is None
+
+    async def test_snapshot_omits_oversized_payload(self) -> None:
+        from slopsearx.service import ScopeDecision
+
+        result = SearchResult(
+            url="https://example.com/result",
+            title="oversized payload",
+            content="content",
+            engine="arxiv",
+            engines={"arxiv"},
+            score=1.0,
+            position=1,
+            category="science",
+            payload=build_payload(
+                DOMAIN_SCIENCE,
+                "publication",
+                {"publication_id": "2401.00001", "abstract": "A" * 20_000},
+                engine="arxiv",
+            ),
+        )
+        store = _FakeStore()
+        snapshots = SnapshotStore(store, tenant="t1", ttl_seconds=120)
+        snapshot_id = await snapshots.create("paper", "ssx-1", [result], ScopeDecision(selected_engines=["arxiv"]))
+
+        snapshot = await snapshots.get(snapshot_id)
+        assert snapshot is not None
+        assert snapshot.results[0].payload is None
+
+    def test_payload_for_persistence_respects_configured_bound(self) -> None:
+        payload = build_payload(
+            DOMAIN_SCIENCE,
+            "publication",
+            {"publication_id": "2401.00001", "abstract": "A" * 100},
+            engine="arxiv",
+        )
+
+        assert payload_for_persistence(payload, max_bytes=10_000) == payload
+        assert payload_for_persistence(payload, max_bytes=50) is None
+
+    def test_payload_max_persist_bytes_env_override(self, monkeypatch) -> None:
+        monkeypatch.setenv("PAYLOAD_MAX_PERSIST_BYTES", "32")
+        try:
+            assert payload_max_persist_bytes() == 32
+        finally:
+            monkeypatch.delenv("PAYLOAD_MAX_PERSIST_BYTES", raising=False)
+
 
 # ---------------------------------------------------------------------------
 # MCP progressive disclosure
@@ -388,6 +487,21 @@ class TestPayloadDisclosure:
     async def test_unserializable_payload_does_not_crash_search_and_is_omitted(self) -> None:
         payload: dict[str, Any] = {"domain": "security", "type": "vulnerability", "data": {}}
         payload["self"] = payload  # circular reference — cannot be JSON-serialized
+
+        state = _mcp_state(_PayloadEngine("brave", payload))
+        set_state(state)
+        try:
+            result = await t.slopsearx_search("cve", engines=["brave"])
+            assert "error" not in result
+            assert len(result["results"]) == 1
+            assert result["results"][0]["title"] == "Payload result"
+            assert "payload" not in result["results"][0]
+        finally:
+            set_state(None)
+
+    async def test_deeply_nested_payload_does_not_crash_search_and_is_omitted(self) -> None:
+        """A pathologically deep payload must be omitted, never a 500/RecursionError."""
+        payload = _deeply_nested_payload(20_000)
 
         state = _mcp_state(_PayloadEngine("brave", payload))
         set_state(state)

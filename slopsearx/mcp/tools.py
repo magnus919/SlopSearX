@@ -15,7 +15,7 @@ from typing import Any
 from slopsearx.adapter import SearchResult
 from slopsearx.capabilities import INTENT_PROFILES, resolve_intent
 from slopsearx.mcp.state import McpState, get_state
-from slopsearx.payload import PAYLOAD_INLINE_BYTES, payload_serialized_size
+from slopsearx.payload import PAYLOAD_INLINE_BYTES, is_valid_payload, payload_serialized_size
 from slopsearx.ratelimit import ValkeySlidingWindow
 from slopsearx.research import (
     ResearchJob,
@@ -406,6 +406,20 @@ def _result_to_dict(
     return card
 
 
+def _payload_for_record(payload: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Return the payload to reveal on a full record, or ``None``.
+
+    The record reveals the complete payload only when it satisfies the
+    self-describing envelope contract and is JSON-serializable. A malformed or
+    unserializable payload is omitted rather than risking an invalid record.
+    """
+    if not is_valid_payload(payload):
+        return None
+    if payload_serialized_size(payload) is None:
+        return None
+    return payload
+
+
 def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: str) -> dict[str, Any]:
     """Build the full result record for ``slopsearx_read_result``.
 
@@ -424,7 +438,7 @@ def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: st
         "content_available": content_available,
         "thumbnail": result.thumbnail,
         "img_src": result.img_src,
-        "payload": result.payload if payload_serialized_size(result.payload) is not None else None,
+        "payload": _payload_for_record(result.payload),
         "source_engines": source_engines,
         "source_count": len(source_engines),
         "primary_engine": result.engine,

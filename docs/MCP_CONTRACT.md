@@ -66,7 +66,7 @@ Source: `slopsearx/adapter.py:78-91`. The internal normalized result dataclass.
 | `thumbnail` | `Optional[str]` | *(omitted)* | `thumbnail` | **Media is record-only** (design §4.4 / decision 4; `VAL-EXPAND-006`). Omitted from cards by deliberate choice. |
 | `img_src` | `Optional[str]` | *(omitted)* | `img_src` | **Media is record-only**. Omitted from cards by deliberate choice. |
 | `tier` | `int` (1 or 2) | `tier` | `tier` | PresenceRanker tier; 1 = broad, 2 = specialized. `meta.ranking` states `tier_then_cross_engine_presence`. |
-| `payload` | `Optional[dict]` | `payload` (conditionally) | `payload` (full) | Optional versioned domain payload (see §14). Cards inline it only when `include=["payload"]` was requested or the serialized payload is small enough (`PAYLOAD_INLINE_BYTES = 512`); otherwise it is omitted from cards. Records always carry the complete payload (or `null` when absent). |
+| `payload` | `Optional[dict]` | `payload` (conditionally) | `payload` (full) | Optional versioned domain payload (see §14). Cards inline it only when `include=["payload"]` was requested or the serialized payload is small enough (`PAYLOAD_INLINE_BYTES = 512`); otherwise it is omitted from cards. Records carry the complete payload, or `null` when the result has none (or an unserializable payload). |
 
 Additional record-only fields synthesized at the MCP boundary (not on the
 internal model, but derived from it):
@@ -401,8 +401,9 @@ fabricated `null`/`false`/empty value.
 - **Paginated card** (`slopsearx_read_results`): `payload` is inlined only
   when the serialized payload is ≤ `PAYLOAD_INLINE_BYTES` (512); this tool
   has no `include` parameter.
-- **Record** (`slopsearx_read_result`): `payload` is always present with the
-  complete payload, or `null` when the result has none.
+- **Record** (`slopsearx_read_result`): `payload` is present with the
+  complete payload, or `null` when the result has none (or an unserializable
+  payload).
 
 ### 14.3 Source-derived evidence
 
@@ -410,3 +411,20 @@ Payload `data` is exactly what the adapter reported. SlopSearX does not fetch
 or verify the linked page, does not fill in missing fields, and draws no
 domain-specific conclusions from payload fields — a reported CVSS score is the
 source's score, not an independent assessment.
+
+### 14.4 Persistence bound
+
+The canonical cache/snapshot form (`search_result_to_dict`,
+`slopsearx/payload.py::payload_for_persistence`) stores a payload only when
+its serialized size is ≤ `PAYLOAD_MAX_PERSIST_BYTES` (default 16384 = 16 KiB,
+overridable via the `PAYLOAD_MAX_PERSIST_BYTES` environment variable).
+Payloads above that bound are omitted from the persisted form, so the shared
+Valkey cache and snapshots never grow without limit when an adapter reports a
+very large structured payload.
+
+This is a distinct, coarser bound than the 512-byte compact-disclosure cap:
+the 512-byte cap keeps triage cards small, while the persistence bound caps
+memory amplification in shared state. Tradeoff: a payload between 512 bytes
+and `PAYLOAD_MAX_PERSIST_BYTES` is hidden on cards but fully preserved on
+`slopsearx_read_result`; a payload above the persistence bound is dropped from
+the persisted form and therefore reads back as `null` on `slopsearx_read_result`.
