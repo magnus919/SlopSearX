@@ -395,10 +395,12 @@ fabricated `null`/`false`/empty value.
 
 ### 14.2 Disclosure (progressive)
 
-- **Card** (`slopsearx_search` and friends, `slopsearx_read_results`): `payload`
-  is present only when the caller requested `include=["payload"]` or the
-  serialized payload is ≤ `PAYLOAD_INLINE_BYTES` (512). Otherwise the key is
-  omitted.
+- **Card** (`slopsearx_search` and friends): `payload` is present only when
+  the caller requested `include=["payload"]` or the serialized payload is ≤
+  `PAYLOAD_INLINE_BYTES` (512). Otherwise the key is omitted.
+- **Paginated card** (`slopsearx_read_results`): `payload` is inlined only
+  when the serialized payload is ≤ `PAYLOAD_INLINE_BYTES` (512); this tool
+  has no `include` parameter.
 - **Record** (`slopsearx_read_result`): `payload` is always present with the
   complete payload, or `null` when the result has none.
 

@@ -620,7 +620,7 @@ existing tools cover the same needs with no extra surface area:
 
 - **Field / detail selection.** `slopsearx_search(include=[...])` selects
   which envelope sections to return (`results`, `suggestions`,
-  `engine_status`, `diagnostics`). Detail is progressive: cards are compact
+  `engine_status`, `diagnostics`, `payload`). Detail is progressive: cards are compact
   and `slopsearx_read_result` expands a card into a full record (complete
   `content`, media, every contributing engine, provenance) without a new
   tool. `max_results` bounds the presented page.

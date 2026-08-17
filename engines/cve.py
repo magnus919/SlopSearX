@@ -27,6 +27,14 @@ from slopsearx.payload import DOMAIN_SECURITY, build_payload
 
 _CVE_ID_PATTERN = re.compile(r"(CVE-\d{4}-\d{4,})", re.IGNORECASE)
 
+# Lower value = higher priority when multiple CVSS versions are present.
+_CVSS_VERSION_PRIORITY: dict[str, int] = {
+    "cvssV4_0": 0,
+    "cvssV3_1": 1,
+    "cvssV3_0": 2,
+    "cvssV2_0": 3,
+}
+
 
 @register_engine
 class CVEAdapter(EngineAdapter):
@@ -204,10 +212,14 @@ class CVEAdapter(EngineAdapter):
     def _cvss_payload(self, container: dict[str, Any]) -> dict[str, Any] | None:
         """Extract structured CVSS fields from a CVE Record container.
 
+        Scans every metric entry and keeps the highest-priority version
+        (cvssV4_0 > cvssV3_1 > cvssV3_0 > cvssV2_0), so a lower-priority
+        entry earlier in the list never shadows a higher-priority one later.
         Returns ``None`` when no metric is present so the field stays absent
         rather than fabricating an empty object.
         """
         metrics_list = container.get("metrics", []) if container else []
+        best: tuple[int, dict[str, Any]] | None = None
         for m in metrics_list:
             if not isinstance(m, dict):
                 continue
@@ -230,7 +242,10 @@ class CVEAdapter(EngineAdapter):
                     out["severity"] = severity
                 if vector:
                     out["vector"] = vector
-                if out:
-                    out["version"] = version
-                    return out
-        return None
+                if not out:
+                    continue
+                out["version"] = version
+                priority = _CVSS_VERSION_PRIORITY[key]
+                if best is None or priority < best[0]:
+                    best = (priority, out)
+        return best[1] if best is not None else None

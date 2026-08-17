@@ -265,6 +265,30 @@ class TestFormatJson:
         response = format_json(results=[result], query="test")
         assert response["results"][0]["payload"] == small_payload
 
+    def test_json_hostile_payload_omitted(self) -> None:
+        """set/bytes/NaN payloads must be omitted, never crash strict JSON render."""
+        import json
+
+        hostile_payloads = [
+            {"domain": "security", "type": "vulnerability", "data": {"tags": {"a", "b"}}},
+            {"domain": "security", "type": "vulnerability", "data": {"raw": b"\x00\x01"}},
+            {"domain": "security", "type": "vulnerability", "data": {"score": float("nan")}},
+        ]
+
+        for payload in hostile_payloads:
+            result = SearchResult(
+                url="https://example.com",
+                title="X",
+                content="y",
+                engine="brave",
+                engines={"brave"},
+                payload=payload,
+            )
+            response = format_json(results=[result], query="test")
+            assert response["results"][0]["payload"] is None
+            # The full response must survive strict JSON serialization (no 500).
+            json.dumps(response, allow_nan=False)
+
 
 # ---------------------------------------------------------------------------
 # YAML+Markdown Formatter

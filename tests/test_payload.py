@@ -399,6 +399,38 @@ class TestPayloadDisclosure:
         finally:
             set_state(None)
 
+    async def test_json_hostile_payload_omitted_from_card_even_when_requested(self) -> None:
+        """set/bytes/NaN payloads are omitted from cards and never crash the MCP response."""
+        hostile_payloads = [
+            {"domain": "security", "type": "vulnerability", "data": {"tags": {"a", "b"}}},
+            {"domain": "security", "type": "vulnerability", "data": {"raw": b"\x00\x01"}},
+            {"domain": "security", "type": "vulnerability", "data": {"score": float("nan")}},
+        ]
+
+        for payload in hostile_payloads:
+            state = _mcp_state(_PayloadEngine("brave", payload))
+            set_state(state)
+            try:
+                # prefer_fresh forces the raw (un-canonicalized) payload path,
+                # which is exactly where a JSON-hostile payload must be omitted.
+                result = await t.slopsearx_search("cve", engines=["brave"], freshness="prefer_fresh")
+                assert "error" not in result
+                assert len(result["results"]) == 1
+                assert "payload" not in result["results"][0]
+
+                # Even an explicit include=["payload"] request must not crash
+                # or inline an unserializable payload.
+                requested = await t.slopsearx_search(
+                    "cve",
+                    engines=["brave"],
+                    include=["results", "payload"],
+                    freshness="prefer_fresh",
+                )
+                assert "error" not in requested
+                assert "payload" not in requested["results"][0]
+            finally:
+                set_state(None)
+
     async def test_read_result_returns_full_payload(self) -> None:
         payload = build_payload(
             DOMAIN_SCIENCE,

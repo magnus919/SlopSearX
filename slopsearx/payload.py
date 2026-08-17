@@ -223,7 +223,7 @@ def payload_serialized_size(payload: dict[str, Any] | None) -> int | None:
     if not isinstance(payload, dict):
         return None
     try:
-        return len(json.dumps(payload, separators=(",", ":"), default=str).encode("utf-8"))
+        return len(json.dumps(payload, separators=(",", ":"), allow_nan=False).encode("utf-8"))
     except (TypeError, ValueError):
         return None
 

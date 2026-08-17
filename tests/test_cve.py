@@ -265,6 +265,32 @@ class TestCVEAdapter:
         assert payload["version"] == "4.0"
         assert payload["vector"].startswith("CVSS:4.0")
 
+    def test_cvss_payload_prefers_higher_version_across_entries(self, adapter):
+        """A lower-priority entry earlier in the list must not shadow a higher one later."""
+        container = {
+            "metrics": [
+                {
+                    "cvssV2_0": {
+                        "baseScore": 7.5,
+                        "baseSeverity": "HIGH",
+                        "vectorString": "AV:N/AC:L/Au:N/C:P/I:P/A:P",
+                    },
+                },
+                {
+                    "cvssV3_1": {
+                        "baseScore": 9.8,
+                        "baseSeverity": "CRITICAL",
+                        "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                    },
+                },
+            ],
+        }
+        payload = adapter._cvss_payload(container)
+        assert payload is not None
+        assert payload["version"] == "3.1"
+        assert payload["score"] == 9.8
+        assert payload["severity"] == "CRITICAL"
+
     def test_parse_cve_record_sets_title(self, adapter, sample_cve_record):
         results = adapter._parse_cve_record(sample_cve_record, "CVE-2024-12345")
         assert len(results) == 1

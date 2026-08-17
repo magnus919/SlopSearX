@@ -91,7 +91,8 @@ class FredAdapter(EngineAdapter):
                     frequency = s.get("frequency", "")
                     seasonal_adjustment = s.get("seasonal_adjustment", "")
                     popularity = s.get("popularity", 0) or 0
-                    notes = (s.get("notes", "") or "")[:200]
+                    notes = s.get("notes", "") or ""
+                    notes_display = notes[:200]
 
                     content_parts = []
                     if frequency:
@@ -100,8 +101,8 @@ class FredAdapter(EngineAdapter):
                         content_parts.append(units)
                     if seasonal_adjustment:
                         content_parts.append(seasonal_adjustment)
-                    if notes:
-                        content_parts.append(notes)
+                    if notes_display:
+                        content_parts.append(notes_display)
                     content = " — ".join(content_parts) if content_parts else "Economic data series"
 
                     payload = build_payload(
