@@ -238,8 +238,9 @@ class TestUrlClassification:
         [
             ("https://example.com/page", "ok", "https"),
             ("http://example.com/page", "ok", "http"),
-            # A literal public IP host is still eligible — only
-            # loopback/private/link-local/reserved literal IPs are blocked.
+            # A literal public IP host is still eligible — only non-global
+            # literal IPs (loopback, private, CGNAT, link-local, reserved,
+            # documentation, unspecified) are blocked.
             ("http://8.8.8.8/", "ok", "http"),
             ("", "missing", None),
             ("   ", "missing", None),
@@ -298,7 +299,7 @@ class TestUrlClassification:
             (
                 "https://internal.example\\@public.com/",
                 "ambiguous",
-                "URL authority contains a backslash or control character; canonicalization is ambiguous",
+                "URL authority contains a backslash, whitespace, or control character; canonicalization is ambiguous",
             ),
             ("http://host:abc/", "ambiguous", "URL port is invalid; canonicalization is ambiguous"),
             # 99999 parses as a port out of Python's uint16 range, so .port
@@ -386,8 +387,9 @@ class TestUrlClassification:
         Loopback, private, link-local, and reserved literal IP hosts
         (including the cloud metadata IP) are classified ``ambiguous`` and
         the handoff URL is null, so a downstream retriever never fetches
-        them. Only literal IPs are checked (via ``ipaddress``, no DNS
-        resolution), so hostnames still classify normally.
+        them. Only literal IPs are checked (via ``ipaddress`` and
+        ``getaddrinfo`` with ``AI_NUMERICHOST`` — no DNS resolution), so
+        hostnames still classify normally.
         """
         state_obj = _build_state({"brave": _UrlEngine("brave", [url])})
         set_state(state_obj)
@@ -397,7 +399,126 @@ class TestUrlClassification:
             expanded = await t.slopsearx_read_result(card["result_id"])
             assert card["retrieval"]["url_status"] == "ambiguous"
             assert card["retrieval"]["url_reason"] == (
-                "URL host is a loopback/private/link-local/reserved address; not a safe fetch target"
+                "URL host is a non-global literal IP address; not a safe fetch target"
+            )
+            assert card["retrieval"]["eligible"] is False
+            assert expanded["retrieval"]["url"] is None
+        finally:
+            set_state(None)
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            # Numeric-IP-literal host encodings WHATWG clients resolve with no
+            # DNS: decimal/hex integer forms, octal and abbreviated dotted
+            # forms, a trailing dot, and a bare "0x" (Chromium -> 0.0.0.0).
+            # ipaddress.ip_address rejects all of these, so the guard must
+            # parse them the way a WHATWG client would.
+            "http://2130706433/",  # decimal integer -> 127.0.0.1
+            "http://127.1/",  # abbreviated dotted -> 127.0.0.1
+            "http://0177.0.0.1/",  # octal component -> 127.0.0.1
+            "http://0x7f000001/",  # hex integer -> 127.0.0.1
+            "http://0x7f.1/",  # hex component + abbreviated -> 127.0.0.1
+            "http://2852039166/",  # decimal integer -> 169.254.169.254
+            "http://0xa9fea9fe/",  # hex integer -> 169.254.169.254
+            "http://0x/",  # bare 0x -> 0.0.0.0 (unspecified)
+            "http://127.0.0.1./",  # trailing dot -> 127.0.0.1
+        ],
+    )
+    async def test_noncanonical_numeric_ip_literal_is_never_handed_off(self, url: str) -> None:
+        """A numeric IP literal in any encoding is never certified ``ok``.
+
+        ``http://2130706433/``, ``http://127.1/``, ``http://0177.0.0.1/``,
+        and ``http://0x7f000001/`` all resolve to 127.0.0.1; the metadata
+        forms ``http://2852039166/`` and ``http://0xa9fea9fe/`` resolve to
+        169.254.169.254. WHATWG clients resolve these host encodings without
+        DNS, so the guard must recognize every one and classify non-global
+        results ``ambiguous`` (CWE-918 literal-IP SSRF guard).
+        """
+        state_obj = _build_state({"brave": _UrlEngine("brave", [url])})
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("hello", engines=["brave"])
+            card = _first_card(result)
+            expanded = await t.slopsearx_read_result(card["result_id"])
+            assert card["retrieval"]["url_status"] == "ambiguous"
+            assert card["retrieval"]["url_reason"] == (
+                "URL host is a non-global literal IP address; not a safe fetch target"
+            )
+            assert card["retrieval"]["eligible"] is False
+            assert expanded["retrieval"]["url"] is None
+        finally:
+            set_state(None)
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            # Numeric encodings of a public address stay eligible, mirroring
+            # the dotted positive control ("http://8.8.8.8/" -> ok).
+            "http://134744072/",  # decimal integer -> 8.8.8.8
+            "http://0x08080808/",  # hex integer -> 8.8.8.8
+        ],
+    )
+    async def test_global_numeric_ip_literal_still_eligible(self, url: str) -> None:
+        """A numeric literal that resolves to a global IP is still ok."""
+        state_obj = _build_state({"brave": _UrlEngine("brave", [url])})
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("hello", engines=["brave"])
+            card = _first_card(result)
+            assert card["retrieval"]["url_status"] == "ok"
+            assert card["retrieval"]["eligible"] is True
+            assert card["retrieval"]["url_reason"] is None
+        finally:
+            set_state(None)
+
+    @pytest.mark.parametrize("url", ["http://100.64.0.1/", "http://100.100.100.100/"])
+    async def test_cgnat_ip_host_is_never_handed_off(self, url: str) -> None:
+        """RFC 6598 CGNAT space (100.64.0.0/10) is not a safe fetch target.
+
+        ``ipaddress`` marks these addresses as neither private nor reserved,
+        but ``is_global`` is False, so a global-only test is required to
+        reject them alongside loopback/private/link-local/reserved space.
+        """
+        state_obj = _build_state({"brave": _UrlEngine("brave", [url])})
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("hello", engines=["brave"])
+            card = _first_card(result)
+            expanded = await t.slopsearx_read_result(card["result_id"])
+            assert card["retrieval"]["url_status"] == "ambiguous"
+            assert card["retrieval"]["url_reason"] == (
+                "URL host is a non-global literal IP address; not a safe fetch target"
+            )
+            assert card["retrieval"]["eligible"] is False
+            assert expanded["retrieval"]["url"] is None
+        finally:
+            set_state(None)
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "http:// example.com/",  # leading space in the authority
+            "http://exa mple.com/",  # embedded space in the host
+            "http://example.com /path",  # space between authority and path
+        ],
+    )
+    async def test_ascii_whitespace_in_authority_is_never_handed_off(self, url: str) -> None:
+        """ASCII whitespace in the authority is never handed off.
+
+        The authority guard rejects control characters but previously let a
+        literal space (U+0020) through; a WHATWG client rejects or
+        mis-canonicalizes these URLs, so they are classified ``ambiguous``.
+        """
+        state_obj = _build_state({"brave": _UrlEngine("brave", [url])})
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("hello", engines=["brave"])
+            card = _first_card(result)
+            expanded = await t.slopsearx_read_result(card["result_id"])
+            assert card["retrieval"]["url_status"] == "ambiguous"
+            assert card["retrieval"]["url_reason"] == (
+                "URL authority contains a backslash, whitespace, or control character; canonicalization is ambiguous"
             )
             assert card["retrieval"]["eligible"] is False
             assert expanded["retrieval"]["url"] is None
@@ -407,7 +528,7 @@ class TestUrlClassification:
     async def test_userinfo_credentials_are_never_handed_off(self) -> None:
         """A URL with embedded credentials is never certified ``ok`` or handed off.
 
-        ``http://user:pass@example.com/`` would otherwise pass every check
+        ``****************************/`` would otherwise pass every check
         and be returned verbatim as ``retrieval.url``, persisting the
         credentials and causing downstream Basic-auth transmission. Any
         userinfo in the authority classifies the URL ``ambiguous`` with a

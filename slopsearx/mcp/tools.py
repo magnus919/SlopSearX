@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import ipaddress
+import socket
 import time
 from typing import Any
 from urllib.parse import urlparse
@@ -464,6 +465,110 @@ def _payload_inline(result: SearchResult, *, requested: bool) -> dict[str, Any] 
     return None
 
 
+def _ipv4_component_value(part: str) -> int:
+    """Parse one WHATWG IPv4 component (decimal/hex/octal) or raise ValueError.
+
+    WHATWG URL clients infer the component base from its prefix: ``0x``/``0X``
+    is hexadecimal, a leading ``0`` is octal (so ``0177`` is 127, not 177),
+    and everything else is decimal. Python's ``int``/``ipaddress`` do not
+    apply these rules, so a host like ``0177.0.0.1`` would otherwise evade a
+    literal-IP guard. A bare ``0x``/``0X`` component is treated as zero
+    (Chromium behavior), which keeps ``http://0x/`` (-> 0.0.0.0) inside the
+    guard.
+    """
+    if not part:
+        raise ValueError("empty IPv4 component")
+    if part[:2] in ("0x", "0X"):
+        digits = part[2:]
+        if not digits:
+            return 0
+        base = 16
+        allowed = "0123456789abcdefABCDEF"
+    elif part.startswith("0"):
+        digits = part
+        base = 8
+        allowed = "01234567"
+    else:
+        digits = part
+        base = 10
+        allowed = "0123456789"
+    if any(char not in allowed for char in digits):
+        raise ValueError("IPv4 component is not numeric in its base")
+    value = int(digits, base)
+    if value > 0xFFFFFFFF:
+        raise ValueError("IPv4 component exceeds 32 bits")
+    return value
+
+
+def _whatwg_ipv4_literal(host: str) -> ipaddress.IPv4Address | None:
+    """Resolve a host as a WHATWG-style IPv4 literal, or return ``None``.
+
+    Mirrors the WHATWG URL host parser's IPv4 rules (verified against
+    Chromium): at most four dot-separated components parsed as hex/octal/
+    decimal, abbreviated forms (``127.1``), a trailing dot, and a last
+    component that may carry the remaining 8-24 bits. Returns the address a
+    WHATWG client would resolve, or ``None`` when the host is not an IPv4
+    literal (a normal hostname). No DNS is performed.
+    """
+    parts = host.split(".")
+    if parts and parts[-1] == "":
+        parts = parts[:-1]
+    if not parts or len(parts) > 4:
+        return None
+    numbers: list[int] = []
+    for part in parts:
+        try:
+            numbers.append(_ipv4_component_value(part))
+        except ValueError:
+            return None
+    if len(numbers) == 1:
+        return ipaddress.IPv4Address(numbers[0])
+    if numbers[0] > 255:
+        return None
+    for number in numbers[1:-1]:
+        if number > 255:
+            return None
+    if numbers[-1] >= 256 ** (5 - len(numbers)):
+        return None
+    ipv4 = numbers[-1]
+    for index in range(len(numbers) - 2, -1, -1):
+        ipv4 += numbers[index] * (256 ** (3 - index))
+    return ipaddress.IPv4Address(ipv4)
+
+
+def _ip_literal_candidates(host: str) -> list[ipaddress.IPv4Address | ipaddress.IPv6Address]:
+    """Literal IP address(es) a host denotes, with no DNS resolution.
+
+    ``urlparse`` reports the host verbatim, but WHATWG clients (browsers,
+    HTTP stacks) accept numeric host forms that ``ipaddress.ip_address``
+    rejects: integer literals (``2130706433``), hex (``0x7f000001``), octal
+    (``0177.0.0.1``), and abbreviated dotted forms (``127.1``). Candidates
+    come from three deterministic sources: canonical ``ipaddress`` parsing,
+    the WHATWG-style IPv4 parser above, and ``getaddrinfo`` restricted to
+    ``AI_NUMERICHOST`` (a numeric-only flag that never triggers DNS). A host
+    that yields no candidates is not a numeric literal and classifies as a
+    normal hostname.
+    """
+    candidates: list[ipaddress.IPv4Address | ipaddress.IPv6Address] = []
+    try:
+        candidates.append(ipaddress.ip_address(host))
+    except ValueError:
+        pass
+    ipv4 = _whatwg_ipv4_literal(host)
+    if ipv4 is not None:
+        candidates.append(ipv4)
+    try:
+        infos = socket.getaddrinfo(host, None, type=socket.SOCK_STREAM, flags=socket.AI_NUMERICHOST)
+    except (socket.gaierror, ValueError, UnicodeError, OverflowError):
+        infos = []
+    for info in infos:
+        try:
+            candidates.append(ipaddress.ip_address(info[4][0]))
+        except ValueError:
+            continue
+    return list(dict.fromkeys(candidates))
+
+
 def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
     """Classify a result URL for downstream retrieval — never fetches it.
 
@@ -475,20 +580,21 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
     as a fetch target.
 
     - ``ok`` — absolute ``http``/``https`` URL with a well-formed authority
-      (non-empty host, no backslash/control characters, valid in-range
-      port); eligible, and the captured URL is handed off verbatim (never
-      canonicalized or rewritten).
+      (non-empty host, no backslash, whitespace, or control characters,
+      valid in-range port); eligible, and the captured URL is handed off
+      verbatim (never canonicalized or rewritten).
     - ``missing`` — no URL string on the result.
     - ``non_http`` — parses to a non-HTTP(S) scheme (e.g. ``mailto:``).
     - ``unsafe_scheme`` — a scheme an HTTP retriever must not fetch
       (``file:``, ``data:``, ``javascript:``, ...); see
       ``UNSAFE_RETRIEVAL_SCHEMES``.
     - ``ambiguous`` — not a safe fetch target: canonicalization-ambiguous
-      (no scheme, no host, a backslash or control character in the
-      authority, a percent-encoded or non-ASCII host, an invalid or
-      out-of-range port, or unparseable), a literal loopback/private/
-      link-local/reserved IP host, or an authority carrying userinfo
-      credentials; treated as ineligible rather than guessed at.
+      (no scheme, no host, a backslash, whitespace, or control character in
+      the authority, a percent-encoded or non-ASCII host, an invalid or
+      out-of-range port, or unparseable), a literal IP host — in any numeric
+      encoding, including decimal/hex/octal/abbreviated forms — that is not
+      globally routable, or an authority carrying userinfo credentials;
+      treated as ineligible rather than guessed at.
     """
     if not url or not url.strip():
         return RETRIEVAL_URL_STATUS_MISSING, "result has no URL to retrieve", None, None
@@ -514,16 +620,20 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
         if not parsed.hostname:
             return RETRIEVAL_URL_STATUS_AMBIGUOUS, "URL has no host; canonicalization is ambiguous", scheme, None
         # urlparse does not normalize backslashes and does not strip control
-        # characters, so the authority it reports is not necessarily the
-        # authority a WHATWG client (browser/HTTP stack) would resolve: e.g.
-        # "https://internal.example\@public.com/" parses with hostname
-        # "public.com" here but a WHATWG client connects to
-        # "internal.example". Never hand off a target whose authority cannot
-        # be canonicalized unambiguously (CWE-918 host-confusion guard).
-        if "\\" in parsed.netloc or any(ord(char) < 0x20 or ord(char) == 0x7F for char in parsed.netloc):
+        # characters or whitespace, so the authority it reports is not
+        # necessarily the authority a WHATWG client (browser/HTTP stack)
+        # would resolve: e.g. "https://internal.example\@public.com/" parses
+        # with hostname "public.com" here but a WHATWG client connects to
+        # "internal.example", and a literal space in the authority would
+        # otherwise certify "http:// example.com/" as fetchable. Never hand
+        # off a target whose authority cannot be canonicalized unambiguously
+        # (CWE-918 host-confusion guard).
+        if "\\" in parsed.netloc or any(
+            ord(char) < 0x20 or ord(char) == 0x7F or char.isspace() for char in parsed.netloc
+        ):
             return (
                 RETRIEVAL_URL_STATUS_AMBIGUOUS,
-                "URL authority contains a backslash or control character; canonicalization is ambiguous",
+                "URL authority contains a backslash, whitespace, or control character; canonicalization is ambiguous",
                 scheme,
                 None,
             )
@@ -552,23 +662,24 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
                 scheme,
                 None,
             )
-        # A literal loopback/private/link-local/reserved IP host is not a safe
-        # fetch target for a downstream retriever (SSRF: http://127.0.0.1/,
-        # http://[::1]/, http://10.0.0.1/, or the cloud metadata IP
-        # http://169.254.169.254/latest/meta-data/). Only literal IPs are
-        # checked here — no DNS resolution is performed — so hostnames still
-        # classify normally.
-        try:
-            ip = ipaddress.ip_address(parsed.hostname)
-        except ValueError:
-            ip = None
-        if ip is not None and (ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_reserved):
-            return (
-                RETRIEVAL_URL_STATUS_AMBIGUOUS,
-                "URL host is a loopback/private/link-local/reserved address; not a safe fetch target",
-                scheme,
-                None,
-            )
+        # A literal IP host — in any numeric encoding, not just canonical
+        # dotted-quad — is not a safe fetch target for a downstream retriever
+        # (SSRF: http://127.0.0.1/, http://[::1]/, http://10.0.0.1/, the cloud
+        # metadata IP http://169.254.169.254/latest/meta-data/, and
+        # non-canonical forms like http://2130706433/, http://127.1/,
+        # http://0177.0.0.1/, or http://0x7f000001/ that WHATWG clients
+        # resolve to loopback). Only literal IPs are checked — getaddrinfo is
+        # used solely with AI_NUMERICHOST, so no DNS resolution is performed —
+        # and any non-global address (loopback, private, CGNAT, link-local,
+        # reserved, documentation, or unspecified) is never handed off.
+        for ip in _ip_literal_candidates(parsed.hostname):
+            if not ip.is_global:
+                return (
+                    RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                    "URL host is a non-global literal IP address; not a safe fetch target",
+                    scheme,
+                    None,
+                )
         # A port that is not a parseable integer or is outside the sane TCP
         # range is not a fetchable target (http://host:abc/,
         # http://host:99999/, http://host:0/).

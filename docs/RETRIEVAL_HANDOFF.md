@@ -145,7 +145,7 @@ eligibility and fetch safety deterministically.
 | `missing` | The result has no URL string. | `false` |
 | `non_http` | Parses to a non-HTTP(S) scheme (e.g. `mailto:`, `tel:`). | `false` |
 | `unsafe_scheme` | A scheme an HTTP retriever must not fetch (`file:`, `data:`, `javascript:`, `vbscript:`, `gopher:`, `ftp:`). | `false` |
-| `ambiguous` | Canonicalization-ambiguous: no scheme, no host, or unparseable (e.g. a relative reference, a bare `https://`, a malformed bracketed host, a backslash or control character in the authority, or an invalid/out-of-range port). | `false` |
+| `ambiguous` | Canonicalization-ambiguous: no scheme, no host, or unparseable (e.g. a relative reference, a bare `https://`, a malformed bracketed host, a backslash, whitespace, or control character in the authority, an invalid/out-of-range port, a percent-encoded or non-ASCII host, a literal IP host that is not globally routable — including decimal/hex/octal/abbreviated numeric encodings — or userinfo credentials in the authority). | `false` |
 
 Only `ok` is eligible. Every other token is a machine-readable failure/warning
 reason; `url_reason` carries the corresponding prose.
@@ -215,12 +215,29 @@ side honors this handoff contract; neither depends on the other's internals.
   mint a fetch target; a retriever must skip it.
 - **Canonicalization-ambiguous URL** — `url_status: "ambiguous"`. SlopSearX
   never guesses a target; the retriever must treat it as ineligible. This
-  includes URLs whose authority cannot be canonicalized unambiguously: a
-  backslash or control character in the authority (Python's `urlparse` does
-  not normalize backslashes, so `https://internal.example\@public.com/` would
-  otherwise parse with host `public.com` while a WHATWG client connects to
-  `internal.example`), or a port that is not a parseable integer or is
-  outside the sane TCP range (`http://host:abc/`, `http://host:99999/`).
+  includes URLs whose authority cannot be canonicalized unambiguously:
+  - a backslash, whitespace, or control character in the authority —
+    Python's `urlparse` does not normalize backslashes, so
+    `https://internal.example\@public.com/` would otherwise parse with host
+    `public.com` while a WHATWG client connects to `internal.example`, and a
+    literal ASCII space (`http:// example.com/`) would otherwise certify an
+    unfetchable authority as `ok`;
+  - a port that is not a parseable integer or is outside the sane TCP range
+    (`http://host:abc/`, `http://host:99999/`);
+  - a percent-encoded or non-ASCII host — Python's `urlparse` neither
+    percent-decodes nor IDNA-maps the host, so `http://%31%32%37.0.0.1/`
+    would otherwise be certified `ok` while a WHATWG client decodes it to
+    `127.0.0.1` (metadata-IP SSRF);
+  - a literal IP host that is not globally routable, in any numeric encoding
+    — `http://127.0.0.1/`, `http://[::1]/`, `http://10.0.0.1/`,
+    `http://169.254.169.254/`, and the decimal/hex/octal/abbreviated forms
+    `http://2130706433/`, `http://0x7f000001/`, `http://0177.0.0.1/`, and
+    `http://127.1/` (all loopback) or `http://2852039166/` /
+    `http://0xa9fea9fe/` (the metadata IP). The check is literal-only: it
+    performs no DNS, so hostnames still classify normally;
+  - userinfo credentials in the authority (`http://user:pass@example.com/`),
+    which would otherwise persist credentials and trigger downstream
+    Basic-auth transmission.
   The search pipeline itself also survives such URLs: a result whose URL cannot be parsed
   is deduplicated by its raw value and classified `ambiguous` at the handoff
   boundary instead of failing the whole search.
