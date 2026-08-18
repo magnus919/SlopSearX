@@ -29,6 +29,7 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
 from slopsearx.adapter import EngineStatus
+from slopsearx.config import EngineEntry
 from slopsearx.mcp import harness as h
 from slopsearx.mcp.harness import (
     FakeEngine,
@@ -36,8 +37,10 @@ from slopsearx.mcp.harness import (
     InMemoryStore,
     build_fake_engines,
     build_fixture_context,
+    create_fixture_server,
     make_fixture_http_app,
 )
+from slopsearx.mcp.security import make_http_app
 from slopsearx.service import AppContext
 
 _FIXTURE_SPECS = [FakeEngineSpec(name="wikipedia", count=3), FakeEngineSpec(name="brave", count=2)]
@@ -198,9 +201,38 @@ class TestDeterministicSearchEnvelope:
                 res = await session.call_tool("slopsearx_search", {"query": "hello world"})
                 data = _payload(res)
                 assert "query" in data
-                assert data["scope"]["selected_engines"] == ["wikipedia", "brave"]
+                # The fixture harness pins its own keyless config, so automatic
+                # routing always excludes the keyless brave fake with a
+                # machine-readable reason (issue 192) — independent of ambient
+                # operator env — while explicit targeted searches can still
+                # reach it.
+                assert data["scope"]["selected_engines"] == ["wikipedia"]
+                excluded = {e["engine"]: e for e in data["scope"]["excluded_engines"]}
+                assert excluded["brave"]["stage"] == "auth"
+                assert "credentials" in excluded["brave"]["reason"]
+                assert data["scope"]["routing"]["fallback"] is False
+                assert data["scope"]["routing"]["applied"] is True
                 assert data["meta"]["cursor"]
-                assert len(data["results"]) == 5  # 3 + 2 deterministic results
+                assert len(data["results"]) == 3  # 3 deterministic wikipedia results
+
+    async def test_harness_routing_is_independent_of_ambient_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """The harness's own config (not ambient operator env) drives routing.
+
+        Even when the ambient environment configures ENGINE_BRAVE_API_KEY, the
+        fixture's fake brave engine is still treated as unauthenticated, so the
+        deterministic routing assertion cannot drift with the operator's env.
+        """
+        monkeypatch.setenv("ENGINE_BRAVE_API_KEY", "ambient-secret")
+        app = make_fixture_http_app(_FIXTURE_SPECS)
+        async with _serve(app) as url:
+            async with _session(url) as (session, _client):
+                await session.initialize()
+                res = await session.call_tool("slopsearx_search", {"query": "hello world"})
+                data = _payload(res)
+                assert data["scope"]["selected_engines"] == ["wikipedia"]
+                excluded = {e["engine"]: e for e in data["scope"]["excluded_engines"]}
+                assert excluded["brave"]["stage"] == "auth"
+                assert data["scope"]["routing"]["applied"] is True
 
     async def test_max_results_is_bounded_per_request(self) -> None:
         app = make_fixture_http_app(_FIXTURE_SPECS)
@@ -249,6 +281,54 @@ class TestDeterministicSearchEnvelope:
                 res = await session.call_tool("slopsearx_search", {"query": "q"})
                 data = _payload(res)
                 assert "enforcement" in data
+
+
+class TestLifespanSensitiveSync:
+    async def test_lifespan_syncs_sensitive_engines_from_policy(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """An operator-customized sensitive set is applied to BOTH the scope
+        preview and the automatic search — no divergence, no auto-dispatch.
+
+        The lifespan must sync ``ctx.sensitive_engines`` from the MCP policy
+        beside the catalog/budget wiring (issue 192 review): an injected
+        context built with the default ``{hibp, dehashed}`` sensitive set
+        must not leak a policy-designated engine (intelx) into automatic
+        dispatch while ``explain_search_scope`` reports it excluded with
+        ``stage: policy``.
+        """
+        monkeypatch.setenv("MCP_SENSITIVE_ENGINES", "hibp,dehashed,intelx")
+        specs = [FakeEngineSpec(name="wikipedia", count=2), FakeEngineSpec(name="intelx", count=2)]
+        cfg = h.fixture_config()
+        # Give intelx configured credentials so the routing pass keeps it
+        # auth-ready: without a key it would be excluded at stage ``auth``
+        # and mask the sensitive-set divergence under test.
+        cfg.engines["intelx"] = EngineEntry(api_key="fixture-key")
+
+        async def factory() -> AppContext:
+            # Simulate build_context(): the default sensitive set, intelx
+            # absent — the divergence the lifespan sync must close.
+            return build_fixture_context(specs, sensitive_engines={"hibp", "dehashed"})
+
+        server = create_fixture_server(specs, state_factory=factory, config=cfg)
+        app = make_http_app(server, "")
+        async with _serve(app) as url:
+            async with _session(url) as (session, _client):
+                await session.initialize()
+                preview = _payload(
+                    await session.call_tool("slopsearx_explain_search_scope", {"query": "darknet", "intent": "auto"})
+                )
+                search = _payload(await session.call_tool("slopsearx_search", {"query": "darknet", "intent": "auto"}))
+                assert "error" not in preview
+                assert "error" not in search
+                # The explain preview excludes the policy-designated engine...
+                excluded = {e["engine"]: e for e in preview["excluded_engines"]}
+                assert excluded["intelx"]["stage"] == "policy"
+                assert "intelx" not in preview["selected_engines"]
+                # ...and the automatic search does too (no auto-dispatch).
+                assert "intelx" not in search["scope"]["selected_engines"]
+                assert all(o["engine"] != "intelx" for o in search["engine_outcomes"])
+                # Preview and executed scope agree exactly (no divergence).
+                assert set(preview["selected_engines"]) == set(search["scope"]["selected_engines"])
+                assert set(preview["selected_engines"]) == {"wikipedia"}
 
 
 class TestAuthenticatedTransport:

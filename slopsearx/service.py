@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import hashlib
 import logging
 import os
 import time
@@ -42,7 +43,7 @@ from slopsearx.adapter import (
 )
 from slopsearx.audit import QueryAuditLogger
 from slopsearx.cache import SearchCache, _ttl_for_query, cache_key
-from slopsearx.capabilities import DEFAULT_SENSITIVE_ENGINES
+from slopsearx.capabilities import DEFAULT_SENSITIVE_ENGINES, CapabilityCatalog
 from slopsearx.config import load_config
 from slopsearx.filters import engine_filter_layer, filter_results_by_time_range
 from slopsearx.logging import capture_exception
@@ -50,6 +51,12 @@ from slopsearx.merger import PresenceRanker, extract_empty_scrape_engines
 from slopsearx.payload import payload_for_persistence, payload_from_dict
 from slopsearx.ratelimit import LocalTokenBucket, RateLimiter, RateLimitStrategy, ValkeySlidingWindow
 from slopsearx.router import QueryRouter
+from slopsearx.routing import (
+    RoutingBudget,
+    RoutingTradeoff,
+    load_routing_budget,
+    select_cost_coverage,
+)
 from slopsearx.stats import EngineStatsTracker
 from slopsearx.suggest import SuggestionService
 
@@ -115,6 +122,10 @@ class EngineExclusion:
 
     engine: str
     reason: str
+    # Machine-readable classification of why the engine was excluded (issue
+    # 192): policy | auth | health | budget. Kept a free string with a
+    # conservative default so legacy payloads rehydrate without loss.
+    stage: str = "unknown"
 
 
 @dataclass
@@ -127,6 +138,14 @@ class ScopeDecision:
     matched_topic: str | None = None
     warnings: list[str] = field(default_factory=list)
     excluded_engines: list[EngineExclusion] = field(default_factory=list)
+    # Issue 192 cost/coverage-aware routing explanation. ``routing_fallback``
+    # is True when no capability catalog was available and the deterministic
+    # fallback produced the scope. ``routing_budget_applied`` is True only
+    # when configured budget bounds actually excluded engines. Trade-offs
+    # report coverage traded for cost/availability.
+    routing_fallback: bool = False
+    routing_budget_applied: bool = False
+    routing_tradeoffs: list[RoutingTradeoff] = field(default_factory=list)
 
 
 @dataclass
@@ -204,6 +223,12 @@ class AppContext:
     tier1_engines: set[str] | frozenset[str] = field(default_factory=lambda: set(DEFAULT_TIER1_ENGINES))
     sensitive_engines: set[str] | frozenset[str] = field(default_factory=lambda: set(DEFAULT_SENSITIVE_ENGINES))
     empty_scrape_diagnostics_enabled: bool = False
+    # Issue 192: live capability catalog + operator routing bounds. When the
+    # catalog is present, automatic routing applies cost/coverage-aware
+    # selection (hard auth/health exclusions before dispatch, budget bounds
+    # when configured); when it is absent the deterministic fallback runs.
+    catalog: CapabilityCatalog | None = None
+    routing_budget: RoutingBudget | None = None
 
 
 async def build_context() -> AppContext:
@@ -277,6 +302,12 @@ async def build_context() -> AppContext:
     router_cfg = dataclasses.asdict(cfg.routing)
     router = QueryRouter(routing_config=router_cfg)
 
+    # Live capability catalog + routing bounds for the cost/coverage-aware
+    # automatic routing pass (issue 192). The catalog shares the runtime
+    # adapter instances, so observed health and circuit state stay live.
+    catalog = CapabilityCatalog(config=cfg, adapters=active_engines)
+    routing_budget = load_routing_budget(cfg)
+
     # Suggestion service (opt-in: defaults to off)
     suggestion_service: SuggestionService | None = None
     if cfg.enable_suggestions:
@@ -296,6 +327,8 @@ async def build_context() -> AppContext:
         engine_semaphore=engine_semaphore,
         client_rate_window=client_rate_window,
         empty_scrape_diagnostics_enabled=empty_scrape_diagnostics_enabled,
+        catalog=catalog,
+        routing_budget=routing_budget,
     )
 
 
@@ -348,6 +381,14 @@ class ScopeResolver:
     Sensitive engines (see ``sensitive_engines``) are never selected by
     category or unscoped routing — only an explicit ``engines`` list or
     a policy grant can reach them.
+
+    Automatic paths (2-5) additionally run the cost/coverage-aware routing
+    pass (issue 192) when a capability catalog is available: ineligible,
+    unauthenticated, and circuit-open engines are excluded *before*
+    dispatch with machine-readable reasons, and configured budget bounds
+    (cost class, per-intent engine count) shape the source mix with
+    reported trade-offs. Without a catalog the deterministic fallback
+    (the paths above, unchanged) is the routing decision.
     """
 
     def __init__(
@@ -356,11 +397,15 @@ class ScopeResolver:
         router: QueryRouter | None,
         tier1_engines: set[str] | frozenset[str] | None = None,
         sensitive_engines: set[str] | frozenset[str] | None = None,
+        catalog: CapabilityCatalog | None = None,
+        budget: RoutingBudget | None = None,
     ) -> None:
         self._active = active_engines
         self._router = router
         self._tier1 = set(tier1_engines) if tier1_engines is not None else set(DEFAULT_TIER1_ENGINES)
         self._sensitive = set(sensitive_engines) if sensitive_engines is not None else set(DEFAULT_SENSITIVE_ENGINES)
+        self._catalog = catalog
+        self._budget = budget
 
     def resolve(self, request: SearchRequest) -> ScopeDecision:
         """Resolve a request to a :class:`ScopeDecision`."""
@@ -375,7 +420,7 @@ class ScopeResolver:
             decision.selected_engines = known
             decision.routing_rule = "explicit engine"
             decision.excluded_engines = [
-                EngineExclusion(engine=name, reason="not an active engine") for name in sorted(unknown)
+                EngineExclusion(engine=name, reason="not an active engine", stage="policy") for name in sorted(unknown)
             ]
         else:
             cats = [c.strip() for c in (request.categories or []) if c.strip()]
@@ -383,9 +428,8 @@ class ScopeResolver:
                 selected = [
                     name for name, engine in self._active.items() if any(cat in engine.categories for cat in cats)
                 ]
-                decision.selected_engines = self._drop_sensitive(
-                    decision, selected, "sensitive engine excluded by policy"
-                )
+                selected = self._drop_sensitive(decision, selected, "sensitive engine excluded by policy")
+                decision.selected_engines = self._apply_routing(decision, selected)
                 decision.resolved_categories = cats
                 decision.routing_rule = "explicit category"
             elif request.media_type is not None and request.media_type in SUPPORTED_MEDIA_TYPES:
@@ -407,39 +451,42 @@ class ScopeResolver:
                 for name in self._active:
                     if name not in media_candidates:
                         decision.excluded_engines.append(
-                            EngineExclusion(engine=name, reason=f"does not advertise media type '{request.media_type}'")
+                            EngineExclusion(
+                                engine=name,
+                                reason=f"does not advertise media type '{request.media_type}'",
+                                stage="policy",
+                            )
                         )
                 if not media_candidates:
                     decision.warnings.append(f"no active engine advertises media type '{request.media_type}'")
-                decision.selected_engines = self._drop_sensitive(
-                    decision, media_candidates, "sensitive engine excluded by policy"
+                decision.selected_engines = self._apply_routing(
+                    decision,
+                    self._drop_sensitive(decision, media_candidates, "sensitive engine excluded by policy"),
                 )
                 decision.routing_rule = "media type"
             elif self._router is not None:
                 routed = self._router.route(request.query, cats)
                 if routed is not None:
                     selected = [name for name in routed if name in self._active]
-                    decision.selected_engines = self._drop_sensitive(
-                        decision, selected, "sensitive engine excluded by policy"
-                    )
+                    selected = self._drop_sensitive(decision, selected, "sensitive engine excluded by policy")
+                    decision.selected_engines = self._apply_routing(decision, selected)
                     decision.matched_topic = self._router.match_topic(request.query)
                     decision.routing_rule = "topic match"
                 else:
                     tier1 = [name for name in self._tier1 if name in self._active]
                     if tier1:
-                        decision.selected_engines = self._drop_sensitive(
-                            decision, tier1, "sensitive engine excluded by policy"
-                        )
+                        selected = self._drop_sensitive(decision, tier1, "sensitive engine excluded by policy")
+                        decision.selected_engines = self._apply_routing(decision, selected)
                         decision.routing_rule = "tier-1 fallback"
                     else:
-                        decision.selected_engines = self._drop_sensitive(
+                        selected = self._drop_sensitive(
                             decision, list(self._active), "sensitive engine excluded by policy"
                         )
+                        decision.selected_engines = self._apply_routing(decision, selected)
                         decision.routing_rule = "all active engines"
             else:
-                decision.selected_engines = self._drop_sensitive(
-                    decision, list(self._active), "sensitive engine excluded by policy"
-                )
+                selected = self._drop_sensitive(decision, list(self._active), "sensitive engine excluded by policy")
+                decision.selected_engines = self._apply_routing(decision, selected)
                 decision.routing_rule = "all active engines"
 
         decision.selected_engines = self._apply_media_filter(decision, decision.selected_engines, request.media_type)
@@ -454,12 +501,40 @@ class ScopeResolver:
         """
         return self.resolve(request)
 
+    def _apply_routing(self, decision: ScopeDecision, candidates: list[str]) -> list[str]:
+        """Apply the cost/coverage-aware routing pass to an automatic set.
+
+        Without a capability catalog (telemetry unavailable) this is the
+        conservative deterministic fallback: the candidate set is returned
+        unchanged and ``routing_fallback`` is recorded. When the catalog is
+        present, unauthenticated/circuit-open engines are excluded and the
+        configured budget shapes the mix — every exclusion and trade-off is
+        recorded on ``decision``.
+        """
+        if self._catalog is None:
+            decision.routing_fallback = True
+            return candidates
+        if not candidates:
+            return candidates
+        selection = select_cost_coverage(candidates, self._catalog, self._budget, tier1=self._tier1)
+        for exclusion in selection.exclusions:
+            decision.excluded_engines.append(
+                EngineExclusion(engine=exclusion.engine, reason=exclusion.reason, stage=exclusion.stage)
+            )
+        decision.routing_tradeoffs = list(selection.tradeoffs)
+        decision.routing_budget_applied = selection.budget_applied
+        if selection.tradeoffs:
+            decision.warnings.append(
+                "routing trade-off: " + "; ".join(f"{t.kind} — {t.detail}" for t in selection.tradeoffs)
+            )
+        return selection.selected
+
     def _drop_sensitive(self, decision: ScopeDecision, engines: list[str], reason: str) -> list[str]:
         """Remove sensitive engines from a candidate list, recording why."""
         kept = [name for name in engines if name not in self._sensitive]
         for name in engines:
             if name in self._sensitive:
-                decision.excluded_engines.append(EngineExclusion(engine=name, reason=reason))
+                decision.excluded_engines.append(EngineExclusion(engine=name, reason=reason, stage="policy"))
                 decision.warnings.append(
                     f"sensitive engine '{name}' requires an explicit engines list or a policy grant"
                 )
@@ -489,7 +564,11 @@ class ScopeResolver:
         for name in engines:
             if name not in kept:
                 decision.excluded_engines.append(
-                    EngineExclusion(engine=name, reason=f"does not advertise media type '{media_type}'")
+                    EngineExclusion(
+                        engine=name,
+                        reason=f"does not advertise media type '{media_type}'",
+                        stage="policy",
+                    )
                 )
         if engines and not kept:
             decision.warnings.append(f"no selected engine advertises media type '{media_type}'")
@@ -516,20 +595,25 @@ class SearchService:
     def _resolver_for(self) -> ScopeResolver:
         """Build (or refresh) the scope resolver for the live context.
 
-        Rebuilt when the active engine dict or router identity changes so
-        runtime overrides (test fixtures, config reloads) are honored.
+        Rebuilt when the active engine dict, router, capability catalog, or
+        routing-budget identity changes so runtime overrides (test fixtures,
+        config reloads) are honored.
         """
         resolver = self._resolver
         if (
             resolver is None
             or resolver._active is not self._ctx.active_engines  # noqa: SLF001
             or resolver._router is not self._ctx.router  # noqa: SLF001
+            or resolver._catalog is not self._ctx.catalog  # noqa: SLF001
+            or resolver._budget is not self._ctx.routing_budget  # noqa: SLF001
         ):
             resolver = ScopeResolver(
                 active_engines=self._ctx.active_engines,
                 router=self._ctx.router,
                 tier1_engines=self._ctx.tier1_engines,
                 sensitive_engines=self._ctx.sensitive_engines,
+                catalog=self._ctx.catalog,
+                budget=self._ctx.routing_budget,
             )
             self._resolver = resolver
         return resolver
@@ -549,6 +633,13 @@ class SearchService:
 
         scope = self._resolver_for().resolve(request)
 
+        # Routing inputs snapshot for the cache key: computed once here
+        # (pre-dispatch) so the read and write paths agree on the exact
+        # routing state the scope was derived from. A change in auth config,
+        # circuit state, catalog availability, or the routing budget
+        # invalidates the cache entry for this query.
+        routing_digest = _routing_cache_digest(self._ctx)
+
         if not scope.selected_engines:
             # No engines available at all — 503 with no dispatch.
             return SearchResponse(
@@ -567,7 +658,7 @@ class SearchService:
             if not allowed:
                 raise RateLimitExceededError()
 
-        cached = await self._read_cache(request)
+        cached = await self._read_cache(request, routing_digest)
         if cached is not None:
             return cached
 
@@ -746,7 +837,7 @@ class SearchService:
             empty_engines=empty_engines,
         )
 
-        await self._write_cache(request, canonical, all_unresponsive)
+        await self._write_cache(request, canonical, all_unresponsive, routing_digest)
 
         # Derive the requested include-filtered + max_results-sliced view.
         response = self._view_for_request(request, canonical)
@@ -766,13 +857,13 @@ class SearchService:
 
     # -- Cache ----------------------------------------------------------
 
-    async def _read_cache(self, request: SearchRequest) -> SearchResponse | None:
+    async def _read_cache(self, request: SearchRequest, routing_digest: str) -> SearchResponse | None:
         """Check the scoped search cache. Returns a cached response or None."""
         cache = self._ctx.cache
         if cache is None or not cache.is_connected or request.freshness == "prefer_fresh":
             return None
 
-        key = _scope_cache_key(request)
+        key = _scope_cache_key(request, routing_digest)
         payload = await cache.get(key)
         if payload is None:
             m.cache_hits.inc({"type": "miss"})
@@ -799,14 +890,16 @@ class SearchService:
         # so a cache hit never leaks fields from the populating request.
         return self._view_for_request(request, response)
 
-    async def _write_cache(self, request: SearchRequest, response: SearchResponse, all_unresponsive: bool) -> None:
+    async def _write_cache(
+        self, request: SearchRequest, response: SearchResponse, all_unresponsive: bool, routing_digest: str
+    ) -> None:
         """Persist a fresh response under the fully scoped cache key."""
         cache = self._ctx.cache
         if cache is None or not cache.is_connected or all_unresponsive:
             return
 
         payload = search_response_to_payload(response)
-        key = _scope_cache_key(request)
+        key = _scope_cache_key(request, routing_digest)
         ttl = _ttl_for_query(request.categories or [])
         await cache.set(key, payload, ttl)
 
@@ -1013,9 +1106,75 @@ def generate_query_id() -> str:
     return f"ssx-{uuid.uuid4().hex[:8]}"
 
 
-def _scope_cache_key(request: SearchRequest) -> str:
-    """Build the fully scoped search cache key for a request."""
-    return cache_key(
+def _routing_cache_digest(ctx: AppContext) -> str:
+    """Deterministic digest of the live routing inputs that shape a scope.
+
+    The routing pass makes the scope a function of dynamic state — catalog
+    availability, per-engine authentication readiness/cost class/live circuit
+    state, and the operator routing budget. A canonical cache key that omits
+    these inputs would serve a scope (and exclusion list) frozen at the
+    populating request's routing state — e.g. an engine excluded with
+    ``stage:"auth"`` stays excluded after it becomes authenticated, and the
+    always-fresh scope preview would diverge from the executed scope (issue
+    192 review).
+
+    The digest folds in catalog presence, the routing-relevant state of every
+    active engine (the only engines that can be selected for dispatch), and
+    the routing budget. Observed health is folded in only under the
+    engine-count bound: ``_priority_order`` — the sole consumer of the
+    observed-health signal (``last_known_status`` plus staleness — a stale
+    observation is treated as unknown, never as current ``ok``) — runs
+    solely when the budget sets ``max_engines > 0``. In the default
+    permissive budget (no engine-count cap) health never shapes the routed
+    scope, so folding it in would only shorten the cache lifetime to the
+    ~300s freshness window: a staleness flip would bust the 3600s cache
+    entry with zero routing benefit. Auth, cost, circuit, and budget parts
+    stay unconditional — those always shape the scope. Any change to a
+    folded routing input yields a different digest, so a cached response is
+    never reused under a different routing state. Computed once per search
+    (pre-dispatch) so the read and write paths agree on the exact state the
+    scope was derived from.
+    """
+    budget = ctx.routing_budget
+    # Observed health only shapes the routed scope under the engine-count
+    # bound: ``_priority_order`` (the only consumer of the health signal)
+    # runs solely when ``max_engines > 0``.
+    fold_health = budget is not None and budget.max_engines > 0
+    parts: list[str] = []
+    catalog = ctx.catalog
+    if catalog is None:
+        parts.append("catalog=none")
+    else:
+        for name in sorted(ctx.active_engines):
+            cap = catalog.get(name)
+            if cap is None or not cap.enabled:
+                continue
+            if fold_health:
+                parts.append(
+                    f"{name}:{cap.auth_class}:{int(cap.auth_configured)}:{cap.cost_class}:{int(cap.circuit_open)}:"
+                    f"{cap.last_known_status}:{int(cap.last_known_status_stale)}"
+                )
+            else:
+                parts.append(
+                    f"{name}:{cap.auth_class}:{int(cap.auth_configured)}:{cap.cost_class}:{int(cap.circuit_open)}"
+                )
+    if budget is None:
+        parts.append("budget=none")
+    else:
+        parts.append(f"budget={budget.max_engines}:{budget.max_cost_class}:{budget.coverage_target}")
+    digest = hashlib.sha256("\n".join(parts).encode()).hexdigest()[:16]
+    return f"routing:{digest}"
+
+
+def _scope_cache_key(request: SearchRequest, routing_digest: str) -> str:
+    """Build the fully scoped search cache key for a request.
+
+    The key folds in the live routing-inputs digest so the canonical cache
+    is never reused across a different routing state: the scope, exclusion
+    list, and dispatched engine set are a function of that state and must
+    not be served stale (issue 192 review).
+    """
+    base = cache_key(
         request.query,
         request.language,
         request.safesearch,
@@ -1025,6 +1184,7 @@ def _scope_cache_key(request: SearchRequest) -> str:
         time_range=request.time_range,
         media_type=request.media_type,
     )
+    return f"{base}:{routing_digest}"
 
 
 def build_response_meta(response: SearchResponse) -> dict[str, Any]:
@@ -1105,8 +1265,13 @@ def search_response_to_payload(response: SearchResponse) -> dict[str, Any]:
             "matched_topic": response.scope.matched_topic,
             "warnings": list(response.scope.warnings),
             "excluded_engines": [
-                {"engine": exclusion.engine, "reason": exclusion.reason}
+                {"engine": exclusion.engine, "reason": exclusion.reason, "stage": exclusion.stage}
                 for exclusion in response.scope.excluded_engines
+            ],
+            "routing_fallback": response.scope.routing_fallback,
+            "routing_budget_applied": response.scope.routing_budget_applied,
+            "routing_tradeoffs": [
+                {"kind": tradeoff.kind, "detail": tradeoff.detail} for tradeoff in response.scope.routing_tradeoffs
             ],
         },
         "engine_outcomes": [
@@ -1143,8 +1308,18 @@ def search_response_from_payload(payload: dict[str, Any]) -> SearchResponse:
         matched_topic=scope.get("matched_topic"),
         warnings=list(scope.get("warnings") or []),
         excluded_engines=[
-            EngineExclusion(engine=str(item.get("engine", "")), reason=str(item.get("reason", "")))
+            EngineExclusion(
+                engine=str(item.get("engine", "")),
+                reason=str(item.get("reason", "")),
+                stage=str(item.get("stage", "unknown")),
+            )
             for item in (scope.get("excluded_engines") or [])
+        ],
+        routing_fallback=bool(scope.get("routing_fallback", False)),
+        routing_budget_applied=bool(scope.get("routing_budget_applied", False)),
+        routing_tradeoffs=[
+            RoutingTradeoff(kind=str(item.get("kind", "")), detail=str(item.get("detail", "")))
+            for item in (scope.get("routing_tradeoffs") or [])
         ],
     )
     return SearchResponse(

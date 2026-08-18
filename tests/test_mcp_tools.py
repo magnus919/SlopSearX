@@ -363,21 +363,32 @@ class TestEnvelopeEvidence:
         assert env["meta"]["total"] == 7
 
     async def test_scope_surfaces_excluded_engines_with_reasons(self, state: McpState) -> None:
-        """VAL-SEARCH-009 — scope.excluded_engines carries engine + reason entries."""
+        """VAL-SEARCH-009 — scope.excluded_engines carries engine + reason + stage entries.
+
+        Issue 192: the machine-readable ``stage`` (policy|auth|health|budget)
+        is part of the excluded-engines contract so consumers can classify
+        why an engine was excluded without parsing prose.
+        """
         resp = SearchResponse(
             query="q",
             results=[],
             scope=ScopeDecision(
                 selected_engines=["brave"],
                 routing_rule="all active engines",
-                excluded_engines=[EngineExclusion(engine="hibp", reason="sensitive engine excluded")],
+                excluded_engines=[
+                    EngineExclusion(engine="hibp", reason="sensitive engine excluded", stage="policy"),
+                    EngineExclusion(engine="shodan", reason="no credentials configured", stage="auth"),
+                ],
             ),
             engine_outcomes=[EngineOutcome(engine="brave", status="ok", result_count=0)],
         )
         env = t._envelope(
             state, resp, requested_intent="auto", warnings=[], cursor=None, include_suggestions=False, total=0
         )
-        assert env["scope"]["excluded_engines"] == [{"engine": "hibp", "reason": "sensitive engine excluded"}]
+        assert env["scope"]["excluded_engines"] == [
+            {"engine": "hibp", "reason": "sensitive engine excluded", "stage": "policy"},
+            {"engine": "shodan", "reason": "no credentials configured", "stage": "auth"},
+        ]
 
 
 # ---------------------------------------------------------------------------

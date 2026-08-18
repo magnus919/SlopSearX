@@ -32,6 +32,7 @@ from slopsearx.logging import setup_logging
 from slopsearx.middleware import RequestIDMiddleware
 from slopsearx.ratelimit import RateLimiter, RateLimitStrategy, ValkeySlidingWindow
 from slopsearx.router import QueryRouter
+from slopsearx.routing import RoutingBudget, load_routing_budget
 
 # ---------------------------------------------------------------------------
 # Two-tier engine classification
@@ -120,6 +121,20 @@ app = FastAPI(title="SlopSearX", version="0.1.0", lifespan=lifespan)
 app.add_middleware(RequestIDMiddleware)
 
 
+def _routing_catalog() -> CapabilityCatalog | None:
+    """Return the capability catalog for scope resolution, or None on failure.
+
+    Reuses the memoized /health catalog (rebuilt when ``_active_engines`` is
+    rebound), so the resolver and the health probe share one live catalog
+    without extra registry walks per request. A catalog failure degrades the
+    resolver to its deterministic fallback (``routing_fallback``), never a 500.
+    """
+    try:
+        return _health_catalog()
+    except Exception:  # noqa: BLE001 — routing must degrade, never raise
+        return None
+
+
 def _current_context() -> AppContext:
     """Build an AppContext snapshot from the live module globals.
 
@@ -138,7 +153,14 @@ def _current_context() -> AppContext:
         client_rate_window=_client_rate_window,
         tier1_engines=_TIER1_ENGINES,
         empty_scrape_diagnostics_enabled=_empty_scrape_diagnostics_enabled,
+        catalog=_routing_catalog(),
+        routing_budget=_routing_budget_snapshot(),
     )
+
+
+def _routing_budget_snapshot() -> RoutingBudget:
+    """Return the operator routing budget from the memoized startup config."""
+    return load_routing_budget(_health_config())
 
 
 # ---------------------------------------------------------------------------

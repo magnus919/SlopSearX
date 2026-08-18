@@ -34,7 +34,7 @@ from slopsearx.capabilities import (
     load_mcp_policy,
     validate_intent_profiles,
 )
-from slopsearx.config import load_config
+from slopsearx.config import Config, load_config
 from slopsearx.mcp import prompts as _prompts
 from slopsearx.mcp import resources as _resources
 from slopsearx.mcp import tools as _tools
@@ -43,6 +43,7 @@ from slopsearx.mcp.oauth import oauth_settings_from_policy
 from slopsearx.mcp.security import make_http_app
 from slopsearx.mcp.state import McpState, set_state
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
+from slopsearx.routing import load_routing_budget
 from slopsearx.service import AppContext, SearchService, build_context, destroy_context
 from slopsearx.snapshot import SnapshotStore
 
@@ -87,6 +88,7 @@ async def _lifespan(
     server: FastMCP,
     oauth_provider: Any = None,
     state_factory: Callable[[], Awaitable[AppContext]] | None = None,
+    config: Config | None = None,
 ) -> AsyncIterator[McpState]:
     """Build and tear down the shared runtime for one server session.
 
@@ -96,6 +98,12 @@ async def _lifespan(
     (``slopsearx.mcp.harness``) uses it to inject deterministic fake engines
     and an in-memory cache/snapshot/job store so the real MCP server can be
     driven over streamable HTTP without a live network or Valkey.
+
+    ``config`` overrides the config the capability catalog and routing
+    budget are derived from; when omitted it falls back to the ambient
+    layered config (file + env). The fixture harness injects a pinned
+    keyless config so its routing behavior never depends on ambient operator
+    env (e.g. ``ENGINE_BRAVE_API_KEY``).
     """
     del server
     ctx = await (state_factory() if state_factory is not None else build_context())
@@ -104,7 +112,7 @@ async def _lifespan(
         # and registrations survive across replicas.
         oauth_provider.bind(ctx.cache)
     policy = load_mcp_policy()
-    cfg = load_config()
+    cfg = config or load_config()
     catalog = CapabilityCatalog(
         config=cfg,
         adapters=ctx.active_engines,
@@ -113,6 +121,19 @@ async def _lifespan(
     )
     for problem in validate_intent_profiles(catalog) + policy.validate(catalog):
         logger.warning("MCP startup problem: %s", problem)
+
+    # Wire the live catalog and operator routing budget into the shared
+    # context so the service's scope resolver (and the scope preview) apply
+    # cost/coverage-aware automatic routing with the exact same catalog
+    # (issue 192). Adapters are shared instances, so observed health stays
+    # live through the catalog's read boundary. The operator's sensitive set
+    # is synced here too: ``build_context()`` leaves ``ctx.sensitive_engines``
+    # at the default ``{hibp, dehashed}``, so without this a policy-designated
+    # engine would be reported excluded by the scope preview while an
+    # automatic search still auto-dispatched it.
+    ctx.catalog = catalog
+    ctx.routing_budget = load_routing_budget(cfg)
+    ctx.sensitive_engines = set(policy.sensitive_engines)
 
     service = SearchService(ctx)
     snapshots = SnapshotStore(ctx.cache, ttl_seconds=policy.snapshot_ttl_seconds)
@@ -184,6 +205,7 @@ def create_server(
     oauth: Any = None,
     oauth_provider: Any = None,
     state_factory: Callable[[], Awaitable[AppContext]] | None = None,
+    config: Config | None = None,
 ) -> FastMCP:
     """Build the configured FastMCP server with all tools/resources/prompts.
 
@@ -194,6 +216,10 @@ def create_server(
     ``state_factory`` overrides the runtime wiring with a caller-supplied
     :class:`AppContext` factory (used by the fixture harness); when omitted
     the server wires the live engines and Valkey-backed cache itself.
+
+    ``config`` overrides the config the capability catalog and routing
+    budget are derived from (see :func:`_lifespan`); when omitted the
+    ambient layered config is loaded.
     """
     kwargs: dict[str, Any] = {}
     if oauth is not None:
@@ -205,7 +231,9 @@ def create_server(
     mcp = FastMCP(
         "slopsearx",
         instructions=_INSTRUCTIONS,
-        lifespan=lambda server: _lifespan(server, oauth_provider=oauth_provider, state_factory=state_factory),
+        lifespan=lambda server: _lifespan(
+            server, oauth_provider=oauth_provider, state_factory=state_factory, config=config
+        ),
         host=host,
         port=port,
         **kwargs,
