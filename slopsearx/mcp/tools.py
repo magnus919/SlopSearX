@@ -2193,6 +2193,16 @@ async def slopsearx_extend_research(
             field="intent",
             grant=GRANT_ENV[required_grant],
         )
+    # Research subqueries carry no media_type/categories, so a media intent
+    # (images/videos) cannot be dispatched as a media search. Reject it
+    # explicitly rather than silently running a text search over the
+    # media-capable engines (VAL-RESEARCH-020).
+    if INTENT_PROFILES[intent].media_types:
+        return _error(
+            "invalid_intent",
+            f"intent '{intent}' selects a media type; research subqueries do not support media searches",
+            field="intent",
+        )
 
     # Resolve the follow-up engine scope through the shared policy gate.
     if engines:

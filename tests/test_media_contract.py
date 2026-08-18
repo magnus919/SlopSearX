@@ -8,6 +8,7 @@ the no-media/unsupported path.
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 import pytest
@@ -30,7 +31,13 @@ from slopsearx.formatter import format_json, format_yaml_markdown
 from slopsearx.mcp import resources as r
 from slopsearx.mcp import tools as t
 from slopsearx.mcp.state import McpState, set_state
-from slopsearx.research import ResearchJobRunner, ResearchJobStore
+from slopsearx.research import (
+    ResearchJob,
+    ResearchJobRunner,
+    ResearchJobStore,
+    ResearchQuery,
+    generate_job_id,
+)
 from slopsearx.service import (
     AppContext,
     ScopeDecision,
@@ -277,6 +284,27 @@ class TestAdapterMediaRecords:
         assert results[0].media.duration == 90
         assert results[1].media is None
 
+    def test_brave_image_parse_omits_media_without_image_source(self) -> None:
+        """An item with no thumbnail/image source must not fabricate a media record."""
+        adapter = discover_engines({"brave": {"enabled": True, "api_key": "k"}})["brave"]
+        results = adapter._parse_image_results(
+            [
+                {
+                    "title": "Text-only",
+                    "page_url": "https://page.example/text",
+                    "description": "no image source",
+                },
+                {
+                    "title": "Photo",
+                    "page_url": "https://page.example/photo",
+                    "thumbnail": {"src": "https://img.example/thumb.jpg"},
+                },
+            ]
+        )
+        assert results[0].media is None
+        assert results[1].media is not None
+        assert results[1].media.media_type == "image"
+
     def test_duckduckgo_image_parse_attaches_image_media(self) -> None:
         adapter = discover_engines({"duckduckgo": {"enabled": True}})["duckduckgo"]
         html = (
@@ -293,6 +321,19 @@ class TestAdapterMediaRecords:
         assert results[0].media.media_type == "image"
         assert results[0].media.url == "https://img.example/thumb.jpg"
         assert results[0].media.source == "https://page.example/full"
+
+    def test_duckduckgo_image_parse_omits_media_without_img_src(self) -> None:
+        """A tile with no <img> source must not fabricate a degenerate media record."""
+        adapter = discover_engines({"duckduckgo": {"enabled": True}})["duckduckgo"]
+        html = (
+            '<html><body><div class="tile--img">'
+            '<a href="https://page.example/full">Source only, no image</a>'
+            "</div></body></html>"
+        )
+        results = adapter._parse_image_html(html, "query", 10)
+        assert len(results) == 1
+        assert results[0].media is None
+        assert results[0].img_src is None
 
 
 # ---------------------------------------------------------------------------
@@ -376,6 +417,99 @@ class TestMediaIntentRouting:
         result = await t.slopsearx_search("cats", media_type="image", engines=["wikipedia"])
         assert result["error"]["code"] == "media_coverage_gap"
         assert result["error"]["media_type"] == "image"
+
+    async def test_media_intent_no_false_gap_when_topic_set_omits_media_engines(self) -> None:
+        """A media intent reaches media engines even when topic/tier-1 omit them.
+
+        Routing a media search through the topic router (or tier-1 fallback)
+        and only then intersecting with media-capable engines could yield an
+        empty selection and a false media_coverage_gap — the media type must
+        seed the candidate base directly.
+        """
+        from slopsearx.router import QueryRouter
+
+        state_obj = _build_state(
+            {
+                "brave": _MediaEngine("brave", media_types=("image",), media=IMAGE_MEDIA, count=1),
+                "duckduckgo": _MediaEngine("duckduckgo", media_types=("image",), media=IMAGE_MEDIA, count=1),
+                "wikipedia": _MediaEngine("wikipedia", media_types=(), media=None, count=1),
+            }
+        )
+        # Operator topic/tier-1 configuration that omits the media engines.
+        state_obj.ctx.router = QueryRouter(
+            routing_config={
+                "enabled": True,
+                "topics": {"code": {"keywords": ["python"], "engines": ["wikipedia"]}},
+                "fallback": ["wikipedia"],
+            }
+        )
+        state_obj.ctx.tier1_engines = {"wikipedia"}
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("python api", intent="images")
+            assert "error" not in result, result
+            assert set(result["scope"]["selected_engines"]) == {"brave", "duckduckgo"}
+            assert any("media" in card for card in result["results"])
+        finally:
+            set_state(None)
+
+    async def test_media_type_with_non_media_category_dispatches_media_not_text(self) -> None:
+        """media_type + explicit non-media category never silently runs a text search.
+
+        The dispatch category must be the media category translation
+        (``images``), not the caller's text category, so category-aware
+        adapters (Brave/DDG) reach their media endpoints.
+        """
+        captured: dict[str, Any] = {}
+
+        class _RecordingMediaEngine(_MediaEngine):
+            async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
+                captured["categories"] = (params or {}).get("categories")
+                return await super().search(query, params)
+
+        state_obj = _build_state(
+            {
+                "brave": _RecordingMediaEngine("brave", media_types=("image",), media=IMAGE_MEDIA, count=1),
+                "wikipedia": _MediaEngine("wikipedia", media_types=(), media=None, count=1),
+            }
+        )
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("cats", categories=["general"], media_type="image")
+            assert "error" not in result, result
+            assert set(result["scope"]["selected_engines"]) == {"brave"}
+            assert captured["categories"] == ["images"]
+            cards = result["results"]
+            assert cards and all("media" in card for card in cards)
+        finally:
+            set_state(None)
+
+    async def test_extend_research_rejects_media_intent(self, media_state: McpState) -> None:
+        """Extending research with a media intent errors clearly, never silently text.
+
+        Research subqueries carry no media_type, so a media intent must be
+        rejected explicitly rather than silently running a text search.
+        """
+        media_state.policy.enabled_tools["research"] = True
+        job = ResearchJob(
+            job_id=generate_job_id(),
+            question="q",
+            strategy="triangulate",
+            deadline=time.time() + 3600,
+            queries=[ResearchQuery(index=0, query="ok", intent="web", engines=["brave"])],
+        )
+        await media_state.job_store.save(job)
+
+        result = await t.slopsearx_extend_research(job.job_id, "more", intent="images")
+        assert result["error"]["code"] == "invalid_intent"
+        assert result["error"]["field"] == "intent"
+
+        loaded = await media_state.job_store.load(job.job_id)
+        assert loaded is not None
+        assert len(loaded.queries) == 1  # nothing appended, nothing executed
+
+        result = await t.slopsearx_extend_research(job.job_id, "more", intent="videos")
+        assert result["error"]["code"] == "invalid_intent"
 
     async def test_scope_preview_reports_media_type_and_exclusions(self, media_state: McpState) -> None:
         result = await t.slopsearx_explain_search_scope("cats", intent="images")

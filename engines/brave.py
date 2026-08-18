@@ -264,6 +264,20 @@ class BraveAdapter(EngineAdapter):
             width = image.get("width") if isinstance(image, dict) else None
             height = image.get("height") if isinstance(image, dict) else None
             page_url = item.get("page_url", item.get("url", ""))
+            # Attach a media record only when the item actually carries an
+            # image source; a news-shaped item with no thumbnail/image must
+            # never be fabricated into a degenerate image record (mirrors the
+            # guard in _parse_video_results).
+            media = None
+            if full_url or img_src:
+                media = build_media(
+                    "image",
+                    url=full_url or img_src,
+                    thumbnail=img_src,
+                    source=page_url or None,
+                    width=width if isinstance(width, int) else None,
+                    height=height if isinstance(height, int) else None,
+                )
             results.append(
                 SearchResult(
                     url=page_url,
@@ -273,14 +287,7 @@ class BraveAdapter(EngineAdapter):
                     position=i + 1,
                     thumbnail=img_src,
                     img_src=img_src,
-                    media=build_media(
-                        "image",
-                        url=full_url or img_src,
-                        thumbnail=img_src,
-                        source=page_url or None,
-                        width=width if isinstance(width, int) else None,
-                        height=height if isinstance(height, int) else None,
-                    ),
+                    media=media,
                 ),
             )
         return results

@@ -389,9 +389,13 @@ The MCP layer returns structured `{error: {code, message, ...}}` envelopes. The
 closed vocabulary (schema pin) is: `invalid_input`, `invalid_scope`,
 `invalid_result_id`, `invalid_cursor`, `expired_handle`, `tool_disabled`,
 `all_engines_failed`, `invalid_job_id`, `no_retryable_work`,
-`store_unavailable`, plus `job_budget_exceeded`, `deadline_exceeded`,
+`store_unavailable`, `invalid_job_state`, `media_coverage_gap`,
+`invalid_intent`, plus `job_budget_exceeded`, `deadline_exceeded`,
 `rate_limited`, and `safesearch_unenforced`. These are the error-side of the
-contract; every one is emitted from `_error` in `tools.py`.
+contract; every one is emitted from `_error` in `tools.py`. `invalid_intent`
+is used when an intent is valid generally but cannot be honored by the tool
+(for example a media intent such as `images`/`videos` on
+`slopsearx_extend_research`, whose subqueries carry no `media_type`).
 
 ---
 

@@ -325,6 +325,49 @@ class TestScopeResolver:
         assert decision.routing_rule == "all active engines"
         assert set(decision.selected_engines) == {"eng_a", "eng_b"}
 
+    def test_media_type_seeds_from_media_capable_engines_not_topic_set(self) -> None:
+        """A media-type request seeds from media-capable engines, never topic/tier-1.
+
+        When the operator's topic/tier-1 set omits the media engines, routing
+        first and filtering second would produce an empty selection and a
+        false coverage gap — the media type must instead seed the candidate
+        base directly (mirroring resolve_intent in capabilities.py).
+        """
+        brave, ddg, wiki = _OkEngine(), _OkEngine(), _OkEngine()
+        brave.name, ddg.name, wiki.name = "brave", "duckduckgo", "wikipedia"
+        brave.supported_media_types = ("image",)
+        ddg.supported_media_types = ("image",)
+        router = QueryRouter(
+            routing_config={
+                "enabled": True,
+                "topics": {"code": {"keywords": ["python"], "engines": ["wikipedia"]}},
+                "fallback": ["wikipedia"],
+            }
+        )
+        resolver = ScopeResolver(
+            active_engines={"brave": brave, "duckduckgo": ddg, "wikipedia": wiki},
+            router=router,
+            tier1_engines={"wikipedia"},
+        )
+
+        # Topic match routes to a non-media engine — the media type still wins.
+        decision = resolver.resolve(_req(query="python api", media_type="image"))
+        assert set(decision.selected_engines) == {"brave", "duckduckgo"}
+        assert decision.routing_rule == "media type"
+
+        # Tier-1 fallback (no topic match) also omits media engines — same result.
+        decision = resolver.resolve(_req(query="zzzz no topic here", media_type="image"))
+        assert set(decision.selected_engines) == {"brave", "duckduckgo"}
+        assert decision.routing_rule == "media type"
+
+        # Non-media engines are recorded as exclusions in a media scope.
+        assert any(ex.engine == "wikipedia" for ex in decision.excluded_engines)
+
+        # Without a media type the previous routing behavior is unchanged.
+        decision = resolver.resolve(_req(query="python api"))
+        assert decision.selected_engines == ["wikipedia"]
+        assert decision.routing_rule == "topic match"
+
 
 # ---------------------------------------------------------------------------
 # QueryRouter.match_topic

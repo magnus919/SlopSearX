@@ -222,6 +222,17 @@ class DuckDuckGoAdapter(ScrapeAdapter):
                 img_src = "https:" + img_src
 
             if url:
+                # Attach a media record only when the tile carries an image
+                # source; a tile with a link but no <img> must never yield a
+                # degenerate image record.
+                media = None
+                if img_src:
+                    media = build_media(
+                        "image",
+                        url=img_src,
+                        thumbnail=img_src,
+                        source=url,
+                    )
                 results.append(
                     SearchResult(
                         url=url,
@@ -231,12 +242,7 @@ class DuckDuckGoAdapter(ScrapeAdapter):
                         engine=self.name,
                         category="images",
                         position=i + 1,
-                        media=build_media(
-                            "image",
-                            url=img_src or None,
-                            thumbnail=img_src or None,
-                            source=url or None,
-                        ),
+                        media=media,
                     ),
                 )
 

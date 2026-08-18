@@ -388,6 +388,33 @@ class ScopeResolver:
                 )
                 decision.resolved_categories = cats
                 decision.routing_rule = "explicit category"
+            elif request.media_type is not None and request.media_type in SUPPORTED_MEDIA_TYPES:
+                # Media-intent search: seed the candidate base from engines
+                # that advertise the requested media type (mirroring
+                # resolve_intent in capabilities.py) instead of routing
+                # through the topic router / tier-1 set first and intersecting
+                # afterwards. A media search must reach the enabled media
+                # engines even when the operator's topic/tier-1 set omits them
+                # — routing first could otherwise produce an empty selection
+                # and a false media_coverage_gap. Engines that do not
+                # advertise the media type are recorded as exclusions so the
+                # scope preview stays explicit about why they were skipped.
+                media_candidates = [
+                    name
+                    for name, engine in self._active.items()
+                    if request.media_type in getattr(engine, "supported_media_types", ())
+                ]
+                for name in self._active:
+                    if name not in media_candidates:
+                        decision.excluded_engines.append(
+                            EngineExclusion(engine=name, reason=f"does not advertise media type '{request.media_type}'")
+                        )
+                if not media_candidates:
+                    decision.warnings.append(f"no active engine advertises media type '{request.media_type}'")
+                decision.selected_engines = self._drop_sensitive(
+                    decision, media_candidates, "sensitive engine excluded by policy"
+                )
+                decision.routing_rule = "media type"
             elif self._router is not None:
                 routed = self._router.route(request.query, cats)
                 if routed is not None:
@@ -545,13 +572,16 @@ class SearchService:
             return cached
 
         target = {name: self._ctx.active_engines[name] for name in scope.selected_engines}
-        # A media-intent search translates the media type to the SearXNG
-        # category the category-aware adapters understand (images/videos), so
-        # Brave and DDG route to their media endpoints. Explicit categories
-        # still win when the caller supplied them directly.
-        categories = request.categories or (
-            [_MEDIA_TYPE_CATEGORY[request.media_type]] if request.media_type in _MEDIA_TYPE_CATEGORY else ["general"]
-        )
+        # A media-intent search always dispatches with the media category
+        # translation (images/videos) that the category-aware adapters
+        # understand (Brave images/videos endpoints, DDG image search) —
+        # even when the caller also supplied categories. A caller-supplied
+        # text category must never silently downgrade a media search to the
+        # web/text endpoint.
+        if request.media_type in _MEDIA_TYPE_CATEGORY:
+            categories = [_MEDIA_TYPE_CATEGORY[request.media_type]]
+        else:
+            categories = request.categories or ["general"]
         search_params: dict[str, Any] = {
             "language": request.language,
             "safesearch": request.safesearch,
