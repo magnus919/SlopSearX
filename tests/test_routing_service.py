@@ -14,13 +14,14 @@ the MCP surface:
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 import pytest
 
 import engines  # noqa: F401 — triggers @register_engine to populate the registry
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult
-from slopsearx.capabilities import CapabilityCatalog, EngineCapability, load_mcp_policy
+from slopsearx.capabilities import CapabilityCatalog, EngineCapability, load_mcp_policy, observed_health_stale_seconds
 from slopsearx.config import Config, EngineEntry
 from slopsearx.mcp import tools as t
 from slopsearx.mcp.state import McpState, set_state
@@ -511,9 +512,103 @@ class TestCacheScopeNotStale:
         assert not any(e.engine == "brave" for e in second.scope.excluded_engines)
         assert any(o.engine == "brave" and o.status == "ok" for o in second.engine_outcomes)
 
+    async def test_scope_refreshes_after_observed_health_flip(self) -> None:
+        """A cached scope is never served stale when observed health changes.
+
+        Issue 192 review: the engine-count bound ranks engines by observed
+        health (``_health_rank``), so a flip from ``ok`` to ``error`` changes
+        which engines are selected under ``max_engines``. The routing-inputs
+        digest must fold that health signal in: search once with arxiv
+        observed healthy (selected under the count cap), flip its observed
+        status to error, then re-search the same query and assert the stale
+        cache entry is not served and the fresh scope reflects the health
+        change.
+        """
+        engines_map = {
+            "arxiv": _MockEngine("arxiv"),
+            "wikipedia": _MockEngine("wikipedia"),
+        }
+        cfg = _keyless_config(list(engines_map))
+        ctx = AppContext(
+            active_engines=engines_map,
+            router=None,
+            cache=_FakeStore(),
+            tier1_engines=set(),  # both tier-2: rank falls to health, then name
+            sensitive_engines=set(),
+            catalog=CapabilityCatalog(config=cfg, adapters=engines_map),
+            routing_budget=RoutingBudget(max_engines=1),
+        )
+        service = SearchService(ctx)
+        request = SearchRequest(query="q")
+
+        # Warm the cache with both engines health-unknown; the count cap
+        # prefers arxiv (stable name order breaks the health/cost tie), and
+        # dispatch records arxiv as observed ``ok``.
+        first = await service.search(request)
+        assert first.cached is False
+        assert first.scope.selected_engines == ["arxiv"]
+        assert engines_map["arxiv"].last_observed_status == "ok"
+
+        # Flip arxiv's observed status to error (fresh, not stale).
+        engines_map["arxiv"].record_observation(EngineStatus.ERROR, latency_ms=1.0, result_count=0)
+
+        # The routing-inputs digest now differs (observed health changed), so
+        # the cached entry is not reused: arxiv is ranked last by health and
+        # the count cap selects wikipedia instead.
+        second = await service.search(request)
+        assert second.cached is False
+        assert second.scope.selected_engines == ["wikipedia"]
+        assert any(e.engine == "arxiv" and e.stage == EXCLUSION_STAGE_BUDGET for e in second.scope.excluded_engines)
+
+    async def test_scope_refreshes_when_health_goes_stale(self) -> None:
+        """A stale observation invalidates the routing digest the same way.
+
+        ``_health_rank`` treats a stale observation as unknown — never as
+        current ``ok`` — so the digest must distinguish ``last_known_status``
+        plus its staleness. Search once with arxiv observed healthy, age the
+        observation past the freshness bound, re-search the same query, and
+        assert the cached scope is not served stale.
+        """
+        engines_map = {
+            "arxiv": _MockEngine("arxiv"),
+            "wikipedia": _MockEngine("wikipedia"),
+        }
+        cfg = _keyless_config(list(engines_map))
+        ctx = AppContext(
+            active_engines=engines_map,
+            router=None,
+            cache=_FakeStore(),
+            tier1_engines=set(),
+            sensitive_engines=set(),
+            catalog=CapabilityCatalog(config=cfg, adapters=engines_map),
+            routing_budget=RoutingBudget(max_engines=1),
+        )
+        service = SearchService(ctx)
+        request = SearchRequest(query="q")
+
+        first = await service.search(request)
+        assert first.cached is False
+        assert first.scope.selected_engines == ["arxiv"]
+        assert engines_map["arxiv"].last_observed_status == "ok"
+
+        # Age arxiv's observation beyond the freshness bound so it reports
+        # stale (treated as health-unknown, like wikipedia — name order then
+        # decides, keeping arxiv selected).
+        engines_map["arxiv"].last_observed_at = time.time() - observed_health_stale_seconds() - 1.0
+
+        second = await service.search(request)
+        assert second.cached is False
+        assert second.scope.selected_engines == ["arxiv"]
+
     async def test_cache_hit_serves_scope_when_routing_state_is_unchanged(self) -> None:
         """With stable routing inputs the same query does hit the cache, and
-        the served scope matches the routing state that produced it."""
+        the served scope matches the routing state that produced it.
+
+        The routing-inputs digest folds in observed health, so the health
+        state is pinned before the first search: dispatching would otherwise
+        record an observation (``unknown`` → ``ok``) that — as a routing-input
+        change — correctly invalidates the entry for the immediate re-search.
+        """
         engines_map = {"wikipedia": _MockEngine("wikipedia")}
         cfg = _keyless_config(list(engines_map))
         ctx = AppContext(
@@ -527,6 +622,11 @@ class TestCacheScopeNotStale:
         )
         service = SearchService(ctx)
         request = SearchRequest(query="q")
+
+        # Pin the observed-health signal so the first search's routing inputs
+        # already equal the post-dispatch state; the re-search then sees
+        # identical routing inputs and hits the cache.
+        engines_map["wikipedia"].record_observation(EngineStatus.OK, latency_ms=2.0, result_count=2)
 
         first = await service.search(request)
         second = await service.search(request)

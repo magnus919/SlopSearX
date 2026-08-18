@@ -62,7 +62,6 @@ _HEALTH_RANK: dict[str, int] = {
 }
 
 # Machine-readable exclusion-stage vocabulary (closed set).
-EXCLUSION_STAGE_POLICY = "policy"
 EXCLUSION_STAGE_AUTH = "auth"
 EXCLUSION_STAGE_HEALTH = "health"
 EXCLUSION_STAGE_BUDGET = "budget"
@@ -104,7 +103,6 @@ class RoutingSignal:
     cost_class: str
     health_status: str = "unknown"
     health_stale: bool = False
-    telemetry_missing: bool = False
 
 
 @dataclass
@@ -185,7 +183,6 @@ def build_routing_signals(names: list[str], catalog: CapabilityCatalog) -> dict[
                 auth_ready=True,
                 circuit_open=False,
                 cost_class="",
-                telemetry_missing=True,
             )
             continue
         signals[name] = RoutingSignal(
