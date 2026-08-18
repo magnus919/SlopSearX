@@ -683,6 +683,103 @@ class TestUrlClassification:
 
 
 # ---------------------------------------------------------------------------
+# IPv6 translation-prefix and deprecated site-local literals
+# ---------------------------------------------------------------------------
+
+
+class TestIPv6TranslationPrefixLiteral:
+    @pytest.mark.parametrize(
+        "url",
+        [
+            # RFC 6052 NAT64 well-known prefix (64:ff9b::/96). Python's
+            # ipaddress reports addresses in this range is_global=True (they
+            # are not in the private registry), so the globality-only guard
+            # certified them ok and handed them off as fetch targets even
+            # though they embed loopback/metadata/private IPv4 — a
+            # translation-prefix SSRF (CWE-918). The reserved-prefix check
+            # rejects them regardless of the IPv4 they embed.
+            "http://[64:ff9b::7f00:1]/",  # embeds 127.0.0.1 (loopback)
+            "http://[64:ff9b::a9fe:a9fe]/",  # embeds 169.254.169.254 (cloud metadata)
+            "http://[64:ff9b::169.254.169.254]/",  # embedded dotted metadata form
+            "http://[64:ff9b::c0a8:0001]/",  # embeds 192.168.0.1 (private)
+            # IPv4-translatable-range literal ::ffff:0:7f00:1 embedding a
+            # loopback octet: also is_global=True and must be rejected.
+            "http://[::ffff:0:7f00:1]/",
+            # IPv4-mapped literal (::ffff:0:0/96) embedding a non-global
+            # IPv4: the embedded loopback is never a safe fetch target.
+            "http://[::ffff:127.0.0.1]/",
+            # RFC 3879 deprecated site-local scope (fec0::/10): ipaddress
+            # classifies it neither reserved nor private, so it slips past
+            # both the globality check and is_reserved.
+            "http://[fec0::1]/",
+            # RFC 3056 6to4 prefix (2002::/16): the embedded IPv4 is in the
+            # low 32 bits, so these literals resolve to loopback and cloud
+            # metadata at fetch time. CPython only marked 2002::/16 private
+            # in 3.12.3, so on the 3.12.0-3.12.2 floor is_global=True and the
+            # globality check alone certifies them ok.
+            "http://[2002:7f00:1::1]/",  # 6to4 embeds 127.0.0.1 (loopback)
+            "http://[2002:a9fe:a9fe::]/",  # 6to4 embeds 169.254.169.254 (cloud metadata)
+        ],
+    )
+    async def test_ipv6_translation_prefix_and_site_local_literal_is_never_handed_off(self, url: str) -> None:
+        """A translation-prefix, site-local, 6to4, or non-global-embedding literal is ambiguous.
+
+        ``64:ff9b::/96`` (RFC 6052 NAT64), the IPv4-translatable
+        ``::ffff:0:0:0/96`` (``::ffff:0:7f00:1``), an IPv4-mapped literal
+        embedding a non-global IPv4 (``::ffff:127.0.0.1``), the deprecated
+        site-local ``fec0::/10``, and the RFC 3056 6to4 prefix ``2002::/16``
+        (``2002:7f00:1::1``, ``2002:a9fe:a9fe::``) all report
+        ``is_global=True`` on some supported CPython versions (they are not
+        in the private registry), so the globality-only guard previously
+        certified them ``ok`` and handed them off as fetch targets even
+        though they embed loopback/metadata/private IPv4 (CWE-918
+        translation-prefix SSRF). They must be classified ``ambiguous`` with
+        a null handoff URL and the reserved/translation-prefix reason.
+        """
+        state_obj = _build_state({"brave": _UrlEngine("brave", [url])})
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("hello", engines=["brave"])
+            card = _first_card(result)
+            expanded = await t.slopsearx_read_result(card["result_id"])
+            assert card["retrieval"]["url_status"] == "ambiguous"
+            assert card["retrieval"]["url_reason"] == (
+                "URL host is a reserved or translation-prefix IP address; not a safe fetch target"
+            )
+            assert card["retrieval"]["eligible"] is False
+            assert expanded["retrieval"]["url"] is None
+        finally:
+            set_state(None)
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            # Positive controls stay eligible after the reserved-prefix and
+            # site-local guards: a dotted public IPv4 literal, an IPv4-mapped
+            # literal embedding a public IPv4, and ordinary hostnames pass
+            # the literal-IP check unchanged.
+            "http://8.8.8.8/",
+            "http://[::ffff:8.8.8.8]/",  # IPv4-mapped literal of a public IPv4
+            "https://example.com/page",
+        ],
+    )
+    async def test_public_literals_and_hostnames_stay_ok(self, url: str) -> None:
+        """Public literal IPs and hostnames are unaffected by the new guards."""
+        state_obj = _build_state({"brave": _UrlEngine("brave", [url])})
+        set_state(state_obj)
+        try:
+            result = await t.slopsearx_search("hello", engines=["brave"])
+            card = _first_card(result)
+            expanded = await t.slopsearx_read_result(card["result_id"])
+            assert card["retrieval"]["url_status"] == "ok"
+            assert card["retrieval"]["eligible"] is True
+            assert card["retrieval"]["url_reason"] is None
+            assert expanded["retrieval"]["url"] == url
+        finally:
+            set_state(None)
+
+
+# ---------------------------------------------------------------------------
 # Contract fixtures: search -> handoff -> downstream capture provenance
 # ---------------------------------------------------------------------------
 

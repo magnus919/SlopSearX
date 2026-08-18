@@ -169,6 +169,24 @@ UNSAFE_RETRIEVAL_SCHEMES = frozenset({"file", "data", "javascript", "vbscript", 
 # excluded because it is not a connectable fetch target.
 RETRIEVAL_PORT_MAX = 65535
 
+# RFC 3879 deprecated the IPv6 site-local addressing scope (fec0::/10).
+# ``ipaddress`` classifies the range neither reserved nor private on modern
+# CPython, so a site-local literal reports is_global=True and would slip past
+# the globality guard. It is not globally routable, so any literal in this
+# prefix is never handed off as a fetch target.
+RETRIEVAL_DEPRECATED_SITE_LOCAL_V6 = ipaddress.ip_network("fec0::/10")
+
+# RFC 3056 6to4 embeds the IPv4 in the low 32 bits of every ``2002::/16``
+# address, so a 6to4 literal can resolve to loopback
+# (``http://[2002:7f00:1::1]/`` -> 127.0.0.1) or cloud metadata
+# (``http://[2002:a9fe:a9fe::]/`` -> 169.254.169.254) at fetch time.
+# CPython only added ``2002::/16`` to ``IPv6Address._private_networks`` in
+# 3.12.3, so on the ``>=3.12`` floor (3.12.0-3.12.2) a 6to4 literal reports
+# is_global=True and slips past the globality guard — a 6to4-embedded IPv4
+# SSRF (CWE-918). The prefix is not globally routable as a literal host, so
+# it is rejected explicitly on every version.
+RETRIEVAL_SIXTOFOUR_V6 = ipaddress.ip_network("2002::/16")
+
 JOBS_ADAPTERS = ("greenhouse", "ashby", "lever")
 
 JOBS_LIMITATION_NOTE = (
@@ -632,7 +650,11 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
       the authority, a percent-encoded or non-ASCII host, an invalid or
       out-of-range port, or unparseable), a literal IP host — in any numeric
       encoding, including decimal/hex/octal/abbreviated forms — that is not
-      globally routable, a dotted all-numeric host no literal-IP parser can
+      globally routable or that lives in a reserved or translation-prefix
+      class (RFC 6052 NAT64 ``64:ff9b::/96``, the IPv4-translatable
+      ``::ffff:0:0:0/96``, IPv4-mapped literals embedding a non-global IPv4,
+      the RFC 3879 deprecated site-local ``fec0::/10``, or the RFC 3056 6to4
+      ``2002::/16``), a dotted all-numeric host no literal-IP parser can
       decode (an empty or out-of-range octet, e.g. ``169..127.1`` or
       ``1.2.3.300``), or an authority carrying userinfo credentials; treated
       as ineligible rather than guessed at.
@@ -712,17 +734,73 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
         # resolve to loopback). Only literal IPs are checked — getaddrinfo is
         # used solely with AI_NUMERICHOST, so no DNS resolution is performed —
         # and any non-global address (loopback, private, CGNAT, link-local,
-        # reserved, documentation, or unspecified) is never handed off. A
-        # dotted all-numeric host that every candidate parser rejects (an
-        # empty or out-of-range octet, e.g. "169..127.1" or "1.2.3.300") is a
-        # failed IPv4 literal attempt, not a legitimate hostname — a WHATWG
-        # client would fail to canonicalize it, so it is never certified ok.
+        # reserved, documentation, or unspecified) is never handed off. Four
+        # additional classes are rejected because ``ipaddress.is_global``
+        # alone reports them global: reserved IPv6 prefixes with no embedded
+        # IPv4 (``ipv4_mapped is None`` — RFC 6052 NAT64 ``64:ff9b::/96``
+        # and the IPv4-translatable ``::ffff:0:0:0/96`` report is_global=True
+        # regardless of the IPv4 they embed), the RFC 3879 deprecated
+        # site-local scope (``fec0::/10``, neither reserved nor private), the
+        # RFC 3056 6to4 prefix (``2002::/16``, is_global=True on CPython
+        # 3.12.0-3.12.2 while the embedded IPv4 can still be loopback or
+        # metadata), and IPv4-mapped literals (``::ffff:0:0/96``) whose
+        # embedded IPv4 is not globally reachable. IPv4-mapped literals
+        # (``::ffff:0:0/96``) are judged by their embedded IPv4 instead: a
+        # public embedded address is eligible, while an embedded address that
+        # ``ipaddress`` does not classify as globally reachable (loopback,
+        # private, link-local, CGNAT, unspecified, reserved, documentation)
+        # is never handed off. A dotted all-numeric host that every candidate
+        # parser rejects (an empty or out-of-range octet, e.g. "169..127.1"
+        # or "1.2.3.300") is a failed IPv4 literal attempt, not a legitimate
+        # hostname — a WHATWG client would fail to canonicalize it, so it is
+        # never certified ok.
         ip_candidates = _ip_literal_candidates(parsed.hostname)
         for ip in ip_candidates:
+            # Reject the embed-agnostic classes first, each with a distinct
+            # reserved/translation-prefix reason: the RFC 3056 6to4 prefix
+            # (``2002::/16`` — is_global=True on CPython 3.12.0-3.12.2 while
+            # the embedded IPv4 can still be loopback or metadata), the RFC
+            # 3879 deprecated site-local scope (``fec0::/10``, is_global=True
+            # on every supported version), and IPv4-mapped literals
+            # (``::ffff:0:0/96``) whose embedded IPv4 is not globally
+            # reachable (loopback, private, link-local, CGNAT, unspecified,
+            # reserved, documentation). These are blocked for being reserved
+            # or translation prefixes (or embedding one), not for being
+            # non-global, so they must not be labelled with the non-global
+            # reason.
+            if (
+                (ip.version == 6 and ip in RETRIEVAL_SIXTOFOUR_V6)
+                or (ip.version == 6 and ip in RETRIEVAL_DEPRECATED_SITE_LOCAL_V6)
+                or (ip.version == 6 and ip.ipv4_mapped is not None and not ip.ipv4_mapped.is_global)
+            ):
+                return (
+                    RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                    "URL host is a reserved or translation-prefix IP address; not a safe fetch target",
+                    scheme,
+                    None,
+                )
+            # Genuinely non-global addresses (loopback, private, CGNAT,
+            # link-local, documentation, unspecified) keep the non-global
+            # reason. This branch runs before the reserved-prefix check so a
+            # loopback like ``::1`` — which ``ipaddress`` marks reserved too —
+            # is still reported as non-global.
             if not ip.is_global:
                 return (
                     RETRIEVAL_URL_STATUS_AMBIGUOUS,
                     "URL host is a non-global literal IP address; not a safe fetch target",
+                    scheme,
+                    None,
+                )
+            # Reserved IPv6 prefixes with no embedded IPv4 (``ipv4_mapped is
+            # None`` — RFC 6052 NAT64 ``64:ff9b::/96`` and the IPv4-translatable
+            # ``::ffff:0:0:0/96``) report is_global=True regardless of the
+            # IPv4 they embed, so only this reserved-prefix check catches
+            # them; they are blocked for being reserved prefixes, hence the
+            # reserved/translation-prefix reason.
+            if ip.version == 6 and ip.ipv4_mapped is None and ip.is_reserved:
+                return (
+                    RETRIEVAL_URL_STATUS_AMBIGUOUS,
+                    "URL host is a reserved or translation-prefix IP address; not a safe fetch target",
                     scheme,
                     None,
                 )
