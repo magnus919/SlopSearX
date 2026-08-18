@@ -29,6 +29,7 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
 from slopsearx.adapter import EngineStatus
+from slopsearx.config import EngineEntry
 from slopsearx.mcp import harness as h
 from slopsearx.mcp.harness import (
     FakeEngine,
@@ -36,8 +37,10 @@ from slopsearx.mcp.harness import (
     InMemoryStore,
     build_fake_engines,
     build_fixture_context,
+    create_fixture_server,
     make_fixture_http_app,
 )
+from slopsearx.mcp.security import make_http_app
 from slopsearx.service import AppContext
 
 _FIXTURE_SPECS = [FakeEngineSpec(name="wikipedia", count=3), FakeEngineSpec(name="brave", count=2)]
@@ -278,6 +281,54 @@ class TestDeterministicSearchEnvelope:
                 res = await session.call_tool("slopsearx_search", {"query": "q"})
                 data = _payload(res)
                 assert "enforcement" in data
+
+
+class TestLifespanSensitiveSync:
+    async def test_lifespan_syncs_sensitive_engines_from_policy(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """An operator-customized sensitive set is applied to BOTH the scope
+        preview and the automatic search — no divergence, no auto-dispatch.
+
+        The lifespan must sync ``ctx.sensitive_engines`` from the MCP policy
+        beside the catalog/budget wiring (issue 192 review): an injected
+        context built with the default ``{hibp, dehashed}`` sensitive set
+        must not leak a policy-designated engine (intelx) into automatic
+        dispatch while ``explain_search_scope`` reports it excluded with
+        ``stage: policy``.
+        """
+        monkeypatch.setenv("MCP_SENSITIVE_ENGINES", "hibp,dehashed,intelx")
+        specs = [FakeEngineSpec(name="wikipedia", count=2), FakeEngineSpec(name="intelx", count=2)]
+        cfg = h.fixture_config()
+        # Give intelx configured credentials so the routing pass keeps it
+        # auth-ready: without a key it would be excluded at stage ``auth``
+        # and mask the sensitive-set divergence under test.
+        cfg.engines["intelx"] = EngineEntry(api_key="fixture-key")
+
+        async def factory() -> AppContext:
+            # Simulate build_context(): the default sensitive set, intelx
+            # absent — the divergence the lifespan sync must close.
+            return build_fixture_context(specs, sensitive_engines={"hibp", "dehashed"})
+
+        server = create_fixture_server(specs, state_factory=factory, config=cfg)
+        app = make_http_app(server, "")
+        async with _serve(app) as url:
+            async with _session(url) as (session, _client):
+                await session.initialize()
+                preview = _payload(
+                    await session.call_tool("slopsearx_explain_search_scope", {"query": "darknet", "intent": "auto"})
+                )
+                search = _payload(await session.call_tool("slopsearx_search", {"query": "darknet", "intent": "auto"}))
+                assert "error" not in preview
+                assert "error" not in search
+                # The explain preview excludes the policy-designated engine...
+                excluded = {e["engine"]: e for e in preview["excluded_engines"]}
+                assert excluded["intelx"]["stage"] == "policy"
+                assert "intelx" not in preview["selected_engines"]
+                # ...and the automatic search does too (no auto-dispatch).
+                assert "intelx" not in search["scope"]["selected_engines"]
+                assert all(o["engine"] != "intelx" for o in search["engine_outcomes"])
+                # Preview and executed scope agree exactly (no divergence).
+                assert set(preview["selected_engines"]) == set(search["scope"]["selected_engines"])
+                assert set(preview["selected_engines"]) == {"wikipedia"}
 
 
 class TestAuthenticatedTransport:

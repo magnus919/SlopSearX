@@ -126,9 +126,14 @@ async def _lifespan(
     # context so the service's scope resolver (and the scope preview) apply
     # cost/coverage-aware automatic routing with the exact same catalog
     # (issue 192). Adapters are shared instances, so observed health stays
-    # live through the catalog's read boundary.
+    # live through the catalog's read boundary. The operator's sensitive set
+    # is synced here too: ``build_context()`` leaves ``ctx.sensitive_engines``
+    # at the default ``{hibp, dehashed}``, so without this a policy-designated
+    # engine would be reported excluded by the scope preview while an
+    # automatic search still auto-dispatched it.
     ctx.catalog = catalog
     ctx.routing_budget = load_routing_budget(cfg)
+    ctx.sensitive_engines = set(policy.sensitive_engines)
 
     service = SearchService(ctx)
     snapshots = SnapshotStore(ctx.cache, ttl_seconds=policy.snapshot_ttl_seconds)

@@ -163,6 +163,24 @@ FIXTURES: tuple[tuple[str, list[str], dict[str, EngineCapability], RoutingBudget
         RoutingBudget(max_cost_class="free"),
         "unknown-cost engines are circuit-open; only the free engine survives health + budget",
     ),
+    (
+        "health_excluded_below_target",
+        ["wikipedia", "arxiv", "sick_a"],
+        {
+            "wikipedia": _cap("wikipedia"),
+            "arxiv": _cap("arxiv"),
+            "sick_a": _cap("sick_a", circuit_open=True),
+        },
+        RoutingBudget(coverage_target=3),
+        "circuit-open engine shrinks the health-filtered baseline below the coverage target",
+    ),
+    (
+        "permissive_empty_cost",
+        ["wikipedia", "arxiv", "openalex", "duckduckgo"],
+        {n: _cap(n) for n in ["wikipedia", "arxiv", "openalex", "duckduckgo"]},
+        RoutingBudget(max_cost_class=""),
+        "empty max_cost_class is treated as unset/permissive, mirroring production",
+    ),
 )
 
 # The declared query-family → candidate mapping is context-equivalent to the
@@ -213,6 +231,17 @@ class TestRoutingEvaluation:
         routed = results[0]
         baseline = candidates  # context-equivalent deterministic fallback
 
+        # Auth/health-filtered baseline: the candidate set minus the engines
+        # the strategy's hard exclusions (auth/health) will always drop.
+        # Shared by the R5 cost and R6 coverage floors — comparing against
+        # the raw candidate list is unsound because an engine that can never
+        # be selected cannot contribute coverage or drag down average cost.
+        filtered_baseline = [
+            n
+            for n in baseline
+            if not (caps[n].auth_class == "required" and not caps[n].auth_configured) and not caps[n].circuit_open
+        ]
+
         report: dict[str, Any] = {
             "fixture": name,
             "note": note,
@@ -240,8 +269,12 @@ class TestRoutingEvaluation:
         # R2 — configured bounds are respected.
         if budget.max_engines > 0:
             assert len(routed.selected) <= budget.max_engines
+        # Empty/unknown ``max_cost_class`` is permissive (production's
+        # ``_budget_max_rank`` normalization): it can never become the most
+        # restrictive bound, which would exclude every declared-cost engine.
+        effective_max = _COST_RANK.get(budget.max_cost_class) or _COST_RANK["paid"]
         for engine in routed.selected:
-            assert _COST_RANK.get(caps[engine].cost_class, 0) <= _COST_RANK[budget.max_cost_class]
+            assert _COST_RANK.get(caps[engine].cost_class, 0) <= effective_max
         rubric["bounds_respected"] = True
 
         # R3 — no ineligible (unauthenticated/circuit-open) engine is selected.
@@ -264,11 +297,6 @@ class TestRoutingEvaluation:
         # constraining (filtered baseline already within budget), no cost
         # improvement is claimed — the strategy only narrows scope, so it may
         # remove cheap unhealthy engines and leave pricier healthy ones.
-        filtered_baseline = [
-            n
-            for n in baseline
-            if not (caps[n].auth_class == "required" and not caps[n].auth_configured) and not caps[n].circuit_open
-        ]
         baseline_max_cost = max((_COST_RANK.get(caps[n].cost_class, 0) for n in filtered_baseline), default=0)
         if _COST_RANK[budget.max_cost_class] < baseline_max_cost:
             assert _avg_cost(caps, routed.selected) <= _avg_cost(caps, filtered_baseline) + 1e-9
@@ -276,9 +304,12 @@ class TestRoutingEvaluation:
         else:
             rubric["cost_not_worse_than_baseline"] = "n/a (cost bound not constraining)"
 
-        # R6 — coverage is not reduced below the budget floor.
+        # R6 — coverage is not reduced below the budget floor. The floor is
+        # the health-filtered baseline: an engine excluded by auth/health can
+        # never contribute coverage, so requiring the strategy to select it
+        # would fail a correctly-routed scope (issue 192 review).
         if budget.coverage_target > 0:
-            assert len(routed.selected) >= min(len(baseline), budget.coverage_target)
+            assert len(routed.selected) >= min(len(filtered_baseline), budget.coverage_target)
         rubric["coverage_floor"] = True
 
         assert all(rubric.values()), report
@@ -328,3 +359,51 @@ class TestRoutingEvaluation:
         baseline_max_cost = max((_COST_RANK.get(caps[n].cost_class, 0) for n in filtered_baseline), default=0)
         assert _COST_RANK[budget.max_cost_class] < baseline_max_cost
         assert _avg_cost(caps, routed.selected) <= _avg_cost(caps, filtered_baseline) + 1e-9
+
+    def test_r6_uses_auth_health_filtered_baseline(self) -> None:
+        """R6 must floor coverage against the auth/health-filtered baseline,
+        not the raw candidate list: an engine excluded by auth/health can
+        never contribute coverage, so the floor cannot require the strategy
+        to select it (issue 192 review).
+
+        Reviewer arithmetic: candidates ``[wikipedia, arxiv, sick_a
+        (circuit-open)]`` with ``coverage_target=3`` — the strategy correctly
+        selects the two healthy engines; the raw-baseline floor (3) would
+        wrongly fail while the health-filtered floor (2) passes."""
+        candidates = ["wikipedia", "arxiv", "sick_a"]
+        caps = {
+            "wikipedia": _cap("wikipedia"),
+            "arxiv": _cap("arxiv"),
+            "sick_a": _cap("sick_a", circuit_open=True),
+        }
+        catalog = _EvalCatalog(caps)
+        budget = RoutingBudget(coverage_target=3)
+
+        routed = select_cost_coverage(candidates, catalog, budget)
+        assert routed.selected == ["wikipedia", "arxiv"]
+
+        filtered_baseline = [
+            n
+            for n in candidates
+            if not (caps[n].auth_class == "required" and not caps[n].auth_configured) and not caps[n].circuit_open
+        ]
+        assert set(filtered_baseline) == {"wikipedia", "arxiv"}
+        assert len(routed.selected) >= min(len(filtered_baseline), budget.coverage_target)
+
+    def test_r2_treats_empty_cost_class_as_permissive(self) -> None:
+        """R2 must apply production's ``_budget_max_rank`` normalization: an
+        empty ``max_cost_class`` means "no cost bound" (permissive), so a
+        directly-constructed budget can never become the most restrictive
+        bound, which would exclude every declared-cost engine (issue 192
+        review)."""
+        candidates = ["wikipedia", "arxiv", "openalex", "duckduckgo"]
+        caps = {n: _cap(n) for n in candidates}
+        catalog = _EvalCatalog(caps)
+        budget = RoutingBudget(max_cost_class="")
+
+        routed = select_cost_coverage(candidates, catalog, budget)
+        assert routed.selected == candidates
+
+        effective_max = _COST_RANK.get(budget.max_cost_class) or _COST_RANK["paid"]
+        for engine in routed.selected:
+            assert _COST_RANK.get(caps[engine].cost_class, 0) <= effective_max
