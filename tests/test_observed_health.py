@@ -175,7 +175,7 @@ class TestObservationRecording:
         await _service(engine).search(_request())
         assert engine.last_observed_status == "ok"
         assert engine.last_observed_latency_ms is None
-        record = build_engine_health("latencyless", engine)
+        record = build_engine_health(engine)
         assert record["last_observed_latency_ms"] is None
 
 
@@ -187,7 +187,7 @@ class TestObservationRecording:
 class TestHealthSignals:
     def test_never_observed_is_unknown_not_ok(self) -> None:
         engine = _FakeEngine(EngineStatus.OK)
-        record = build_engine_health("wikipedia", engine)
+        record = build_engine_health(engine)
         assert record["status"] == "unknown"
         assert record["status_at"] is None
         assert record["stale"] is False
@@ -201,12 +201,12 @@ class TestHealthSignals:
         """
         engine = _FakeEngine(EngineStatus.OK)
 
-        never = build_engine_health("wikipedia", engine)
+        never = build_engine_health(engine)
         assert never["last_observed_latency_ms"] is None
         assert never["last_observed_result_count"] is None
 
         engine.record_observation(EngineStatus.OK, latency_ms=11.5, result_count=4)
-        observed = build_engine_health("wikipedia", engine)
+        observed = build_engine_health(engine)
         assert observed["last_observed_latency_ms"] == 11.5
         assert observed["last_observed_result_count"] == 4
         assert observed["status"] == "ok"
@@ -217,7 +217,7 @@ class TestHealthSignals:
         engine.last_observed_status = "ok"
         engine.last_observed_at = now - 400.0
 
-        record = build_engine_health("wikipedia", engine, now=now, stale_after=300.0)
+        record = build_engine_health(engine, now=now, stale_after=300.0)
 
         assert record["status"] == "ok"
         assert record["stale"] is True
@@ -226,14 +226,14 @@ class TestHealthSignals:
         assert abs(parsed.timestamp() - engine.last_observed_at) < 1.0
 
     def test_stale_and_unknown_cannot_be_presented_as_fresh_healthy(self) -> None:
-        fresh = build_engine_health("wikipedia", None, now=time.time(), stale_after=300.0)
+        fresh = build_engine_health(None, now=time.time(), stale_after=300.0)
         assert fresh["status"] == "unknown"
         assert fresh["stale"] is False
 
         engine = _FakeEngine(EngineStatus.OK)
         engine.last_observed_status = "ok"
         engine.last_observed_at = time.time() - 10_000.0
-        stale = build_engine_health("wikipedia", engine, now=time.time(), stale_after=300.0)
+        stale = build_engine_health(engine, now=time.time(), stale_after=300.0)
         assert stale["status"] == "ok"
         assert stale["stale"] is True
 
@@ -242,7 +242,7 @@ class TestHealthSignals:
         engine.circuit_open_until = time.time() + 60.0
         engine.consecutive_errors = 5
 
-        record = build_engine_health("wikipedia", engine)
+        record = build_engine_health(engine)
 
         # Circuit is open even though no observation exists yet.
         assert record["circuit_open"] is True
@@ -260,7 +260,7 @@ class TestHealthSignals:
         engine = _FakeEngine(EngineStatus.OK)
         # capability=None models the memoized catalog failing; the adapter is
         # still the running engine, so ``configured`` stays honest.
-        record = build_engine_health("brave", engine)
+        record = build_engine_health(engine)
         assert record["configured"] is True
         assert record["auth_class"] is None
         assert record["auth_configured"] is None
@@ -272,7 +272,7 @@ class TestHealthSignals:
         cap = catalog.get("brave")
         assert cap is not None
 
-        record = build_engine_health("brave", None, cap)
+        record = build_engine_health(None, cap)
 
         assert record["auth_class"] == "required"
         assert record["auth_configured"] is False
@@ -384,7 +384,7 @@ class TestDeadlineSyntheticLatency:
         assert engine.last_observed_latency_ms is None
         assert engine.last_observed_result_count == 0
         # The observed-health record agrees: latency stays null.
-        record = build_engine_health("fakeeng", engine)
+        record = build_engine_health(engine)
         assert record["last_observed_latency_ms"] is None
         assert record["last_observed_result_count"] == 0
 
@@ -527,7 +527,6 @@ class TestHealthEndpointObserved:
 
                 # /health and the shared builder agree on the record fields.
                 expected = build_engine_health(
-                    "wikipedia",
                     engine,
                     CapabilityCatalog(config=load_config(), adapters={"wikipedia": engine}).get("wikipedia"),
                 )

@@ -256,7 +256,7 @@ async def health() -> dict[str, Any]:
             capability = catalog.get(name) if catalog is not None else None
         except Exception:  # noqa: BLE001 — one bad engine must not 500 the probe
             capability = None
-        engine_health[name] = build_engine_health(name, adapter, capability)
+        engine_health[name] = build_engine_health(adapter, capability)
 
     # Check Valkey connectivity for rate limiting
     valkey_connected: bool = False

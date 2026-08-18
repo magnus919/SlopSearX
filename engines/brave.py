@@ -308,9 +308,12 @@ class BraveAdapter(EngineAdapter):
             media = None
             if thumb_src:
                 duration = item.get("duration")
+                # The video endpoint exposes no direct media-file URL, so
+                # ``url`` stays unset — never mislabel the landing page as the
+                # media file URL. ``source`` carries the landing page.
                 media = build_media(
                     "video",
-                    url=item.get("url") or None,
+                    url=None,
                     thumbnail=thumb_src,
                     source=item.get("url") or None,
                     duration=duration if isinstance(duration, (int, float)) else None,

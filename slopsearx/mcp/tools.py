@@ -28,6 +28,7 @@ from slopsearx.payload import (
     is_valid_payload,
     payload_max_persist_bytes,
     payload_serialized_size,
+    payload_to_dict,
 )
 from slopsearx.ratelimit import ValkeySlidingWindow
 from slopsearx.research import (
@@ -479,19 +480,27 @@ def _payload_inline(result: SearchResult, *, requested: bool) -> dict[str, Any] 
     Compact cards carry a payload only when the caller requested it
     (``include=["payload"]``) or the payload is small enough to inline — and,
     in both cases, only when it is within the persistence bound, so a card
-    never shows a payload the record path would return as ``null``. An
+    never shows a payload the record path would return as ``null``. The
+    disclosure gates measure and emit the **same canonical form** the
+    persistence boundary stores (``payload_to_dict``), so a fresh hit and a
+    cache hit can never diverge (a set/bytes-bearing or depth-truncated
+    payload is treated identically on both paths) and a card never discloses
+    more than the expanded record (progressive disclosure). An
     unserializable payload is always omitted, even when requested, so the MCP
     response itself never fails to serialize.
     """
     if result.payload is None:
         return None
-    size = _payload_size(result.payload)
+    canonical = payload_to_dict(result.payload)
+    if canonical is None:
+        return None
+    size = _payload_size(canonical)
     if size is None:
         return None
     if requested:
-        return result.payload if size <= payload_max_persist_bytes() else None
+        return canonical if size <= payload_max_persist_bytes() else None
     if size <= PAYLOAD_INLINE_BYTES:
-        return result.payload
+        return canonical if size <= payload_max_persist_bytes() else None
     return None
 
 
@@ -1870,7 +1879,7 @@ def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str,
     engine_details: dict[str, Any] = {}
     for cap in state.catalog.enabled():
         adapter = ctx.active_engines.get(cap.name)
-        engine_details[cap.name] = build_engine_health(cap.name, adapter, cap)
+        engine_details[cap.name] = build_engine_health(adapter, cap)
 
     causes: list[str] = []
     if not valkey_connected:

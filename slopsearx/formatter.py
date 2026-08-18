@@ -12,7 +12,12 @@ from typing import Any
 import yaml
 
 from slopsearx.adapter import SearchResult, media_to_dict
-from slopsearx.payload import PAYLOAD_INLINE_BYTES, payload_serialized_size
+from slopsearx.payload import (
+    PAYLOAD_INLINE_BYTES,
+    payload_max_persist_bytes,
+    payload_serialized_size,
+    payload_to_dict,
+)
 
 # ---------------------------------------------------------------------------
 # JSON Formatter — SearXNG-compatible
@@ -24,16 +29,25 @@ def _payload_for_output(payload: dict[str, Any] | None) -> dict[str, Any] | None
 
     The public, unauthenticated HTTP ``/search`` surface mirrors the MCP
     compact-card disclosure model: payloads are omitted unless their
-    serialized form is ``<= PAYLOAD_INLINE_BYTES``. Larger payloads are not
-    emitted here (there is no HTTP equivalent of ``slopsearx_read_result``),
-    and an unserializable payload is always omitted.
+    serialized form is ``<= PAYLOAD_INLINE_BYTES`` **and** within the
+    configured persistence bound (``payload_max_persist_bytes()``). Larger
+    payloads are not emitted here (there is no HTTP equivalent of
+    ``slopsearx_read_result``), and an unserializable payload is always
+    omitted. The gate measures and emits the **same canonical form** the
+    persistence boundary stores (``payload_to_dict``), so the HTTP output
+    never disagrees with the cached/record form of the payload (finding 4) —
+    in particular, a payload above the persistence bound is omitted on both
+    the fresh and the cache-hit response (finding 3).
     """
     if payload is None:
         return None
-    size = payload_serialized_size(payload)
-    if size is None or size > PAYLOAD_INLINE_BYTES:
+    canonical = payload_to_dict(payload)
+    if canonical is None:
         return None
-    return payload
+    size = payload_serialized_size(canonical)
+    if size is None or size > PAYLOAD_INLINE_BYTES or size > payload_max_persist_bytes():
+        return None
+    return canonical
 
 
 def _result_to_searxng(result: SearchResult) -> dict[str, Any]:

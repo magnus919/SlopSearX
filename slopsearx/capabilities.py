@@ -296,7 +296,6 @@ def _iso_timestamp(epoch_seconds: float) -> str:
 
 
 def build_engine_health(
-    name: str,
     adapter: EngineAdapter | None,
     capability: EngineCapability | None = None,
     *,
@@ -306,8 +305,10 @@ def build_engine_health(
     """Build the canonical per-engine health record (issue 190).
 
     Shared by the HTTP ``/health`` endpoint and the MCP status surface so
-    both agree on status vocabulary and freshness semantics. The distinct
-    concepts are exposed as separate fields:
+    both agree on status vocabulary and freshness semantics. Records are
+    keyed by engine name at the call sites, so the builder itself takes only
+    the adapter and its capability. The distinct concepts are exposed as
+    separate fields:
 
     - ``status`` — observed search health (``unknown`` when never observed);
     - ``status_at`` — ISO 8601 timestamp of the last observation (null if never);

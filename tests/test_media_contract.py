@@ -299,6 +299,30 @@ class TestAdapterMediaRecords:
         assert results[0].media.duration == 90
         assert results[1].media is None
 
+    def test_brave_video_media_url_is_unset_not_landing_page(self) -> None:
+        """The video endpoint exposes no direct media-file URL, so ``media.url``
+        is never mislabeled as the landing page URL; ``source`` carries the
+        landing page and is distinct from ``url`` (issue finding 1).
+        """
+        adapter = discover_engines({"brave": {"enabled": True, "api_key": "k"}})["brave"]
+        results = adapter._parse_video_results(
+            [
+                {
+                    "url": "https://video.example/clip",
+                    "title": "Clip",
+                    "description": "a video",
+                    "thumbnail": {"src": "https://video.example/thumb.jpg"},
+                    "duration": 90,
+                }
+            ]
+        )
+        media = results[0].media
+        assert media is not None
+        assert media.media_type == "video"
+        assert media.url is None
+        assert media.source == "https://video.example/clip"
+        assert media.thumbnail == "https://video.example/thumb.jpg"
+
     def test_brave_image_parse_omits_media_without_image_source(self) -> None:
         """An item with no thumbnail/image source must not fabricate a media record."""
         adapter = discover_engines({"brave": {"enabled": True, "api_key": "k"}})["brave"]

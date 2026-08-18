@@ -304,14 +304,18 @@ class TestSearchEndpoint:
         assert response.status_code == 200
 
     def test_lone_surrogate_payload_does_not_500(self, client: TestClient) -> None:
-        """A payload with a lone surrogate is omitted from JSON, never a 500."""
+        """A payload with a lone surrogate is sanitized to the canonical form
+        (U+FFFD replacement, matching the persistence boundary) and emitted —
+        never a 500."""
         import slopsearx.server as server_mod
+        from slopsearx.payload import payload_to_dict
 
         server_mod._active_engines = {"surrogatepayload": _SurrogatePayloadEngine()}
         response = client.get("/search", params={"q": "surrogate", "engines": "surrogatepayload"})
         assert response.status_code == 200
         data = response.json()
-        assert data["results"][0]["payload"] is None
+        raw = {"domain": "security", "type": "vulnerability", "data": {"note": "\ud800"}}
+        assert data["results"][0]["payload"] == payload_to_dict(raw)
 
 
 # ---------------------------------------------------------------------------

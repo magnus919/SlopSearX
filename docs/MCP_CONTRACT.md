@@ -66,7 +66,7 @@ Source: `slopsearx/adapter.py:78-91`. The internal normalized result dataclass.
 | `position` | `int` | `position` | `position` | Rank position (0-based, matches snapshot-absolute indexing). |
 | `category` | `str` | `category` | `category` | SearXNG-compatible category tag. |
 | `published_date` | `Optional[str]` | `published_at` | `published_at` | ISO-8601 string or `None`; round-trips as exact value (`VAL-CORRECT-005`). |
-| `thumbnail` | `Optional[str]` | *(omitted)* | `thumbnail` | **Media is record-only** (design §4.4 / decision 4; `VAL-EXPAND-006`). Omitted from cards by deliberate choice. |
+| `thumbnail` | `Optional[str]` | *(omitted)* | `thumbnail` | **Media is record-only** (design §4.4 / decision 4; `VAL-EXPAND-006`). Omitted from cards by deliberate choice — with one exception: the compact `media` triage summary on a media card carries the thumbnail (media-triage exception, issue 188), while the plain `thumbnail` field stays record-only. |
 | `img_src` | `Optional[str]` | *(omitted)* | `img_src` | **Media is record-only**. Omitted from cards by deliberate choice. |
 | `media` | `Optional[MediaInfo]` | `media` (triage summary) | `media` (complete record) | Structured image/video media record (issue 188). Cards carry only the triage summary — `media_type`, `thumbnail`, `width`, `height`, `duration` where present; the complete record (adding `url` and `source` attribution) is returned by `slopsearx_read_result`. Text results omit `media` entirely. |
 | `tier` | `int` (1 or 2) | `tier` | `tier` | PresenceRanker tier; 1 = broad, 2 = specialized. `meta.ranking` states `tier_then_cross_engine_presence`. |
@@ -430,7 +430,7 @@ serialization boundary must round-trip exactly. Documented guarantees
 | Internal field | MCP status | Rationale |
 |---|---|---|
 | `SearchResult.content` (full) on cards | Omitted (truncated to `snippet`) | Progressive disclosure; full content on records only. |
-| `SearchResult.thumbnail`, `img_src` on cards | Omitted | Media is record-only by design (decision 4). |
+| `SearchResult.thumbnail`, `img_src` on cards | Omitted | Media is record-only by design (decision 4) — except the compact `media` triage summary on a media card, which carries `thumbnail` (media-triage exception, issue 188). |
 | `SearchResponse.scope.matched_topic` on execution | Present in preview only | Execution doesn't need the topic echo; preview uses it for plan-vs-execute comparability. |
 | `EngineCapability.auth` when `include_auth_requirements=false` | Omitted | Explicit request to drop auth info. |
 | `EngineCapability.cost_class` when empty | `null` | Explicit unknown — no fabricated cost/latency estimates. |

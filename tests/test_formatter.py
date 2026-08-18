@@ -6,8 +6,15 @@ import yaml
 
 from slopsearx.adapter import SearchResult
 from slopsearx.formatter import (
+    _payload_for_output,
     format_json,
     format_yaml_markdown,
+)
+from slopsearx.payload import (
+    DOMAIN_SCIENCE,
+    PAYLOAD_INLINE_BYTES,
+    build_payload,
+    payload_serialized_size,
 )
 
 
@@ -265,17 +272,72 @@ class TestFormatJson:
         response = format_json(results=[result], query="test")
         assert response["results"][0]["payload"] == small_payload
 
-    def test_json_hostile_payload_omitted(self) -> None:
-        """set/bytes/NaN payloads must be omitted, never crash strict JSON render."""
+    def test_nan_payload_omitted_never_crashes_render(self) -> None:
+        """NaN payloads stay unserializable after canonicalization and must be
+        omitted, never crashing strict JSON render."""
         import json
 
-        hostile_payloads = [
+        payload = {"domain": "security", "type": "vulnerability", "data": {"score": float("nan")}}
+        result = SearchResult(
+            url="https://example.com",
+            title="X",
+            content="y",
+            engine="brave",
+            engines={"brave"},
+            payload=payload,
+        )
+        response = format_json(results=[result], query="test")
+        assert response["results"][0]["payload"] is None
+        # The full response must survive strict JSON serialization (no 500).
+        json.dumps(response, allow_nan=False)
+
+    def test_set_bytes_payload_canonicalized_before_size_gate(self) -> None:
+        """set/bytes payloads are canonicalized (set -> sorted list, bytes ->
+        stringified repr) before the disclosure gate measures them, so the
+        HTTP output emits the same JSON-safe form the cache/record path stores
+        (finding 4)."""
+        from slopsearx.payload import payload_to_dict
+
+        for payload in (
             {"domain": "security", "type": "vulnerability", "data": {"tags": {"a", "b"}}},
             {"domain": "security", "type": "vulnerability", "data": {"raw": b"\x00\x01"}},
-            {"domain": "security", "type": "vulnerability", "data": {"score": float("nan")}},
-        ]
+        ):
+            result = SearchResult(
+                url="https://example.com",
+                title="X",
+                content="y",
+                engine="brave",
+                engines={"brave"},
+                payload=payload,
+            )
+            response = format_json(results=[result], query="test")
+            assert response["results"][0]["payload"] == payload_to_dict(payload)
 
-        for payload in hostile_payloads:
+    def test_payload_between_inline_and_persist_bounds_omitted(self, monkeypatch) -> None:
+        """A payload within the 512-byte inline cap but above the configured
+        persistence bound is omitted from the HTTP output, matching the
+        persisted (cache/snapshot) form — so a fresh response and a cache-hit
+        response never diverge (finding 3:
+        PAYLOAD_MAX_PERSIST_BYTES=256, ~321-byte payload)."""
+        from slopsearx.payload import payload_for_persistence
+
+        monkeypatch.setenv("PAYLOAD_MAX_PERSIST_BYTES", "256")
+        try:
+            payload = build_payload(
+                DOMAIN_SCIENCE,
+                "publication",
+                {"publication_id": "2401.00001", "abstract": "A" * 85},
+                engine="arxiv",
+            )
+            size = payload_serialized_size(payload)
+            assert size is not None
+            assert 256 < size <= PAYLOAD_INLINE_BYTES
+
+            # The persisted form omits it...
+            assert payload_for_persistence(payload) is None
+            # ...so the HTTP /search output must too (no fresh-vs-cached split).
+            assert _payload_for_output(payload) is None
+
             result = SearchResult(
                 url="https://example.com",
                 title="X",
@@ -286,8 +348,8 @@ class TestFormatJson:
             )
             response = format_json(results=[result], query="test")
             assert response["results"][0]["payload"] is None
-            # The full response must survive strict JSON serialization (no 500).
-            json.dumps(response, allow_nan=False)
+        finally:
+            monkeypatch.delenv("PAYLOAD_MAX_PERSIST_BYTES", raising=False)
 
 
 # ---------------------------------------------------------------------------
