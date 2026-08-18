@@ -1215,21 +1215,38 @@ def _resolve_scope(
     Returns (categories, engines, media_type, requested_intent, warnings); a
     dict as the first element signals an error envelope.
     """
+    # Media intents (images/videos) advertise their media type on the intent
+    # profile. An explicit media_type wins; otherwise the intent's media type
+    # carries through the explicit-engine and explicit-category branches so a
+    # media intent never silently degrades into a text search when combined
+    # with an explicit scope (issue-188 review).
+    profile = INTENT_PROFILES.get(intent)
+    resolved_media_type = (
+        media_type
+        if media_type is not None
+        else (profile.media_types[0] if profile is not None and profile.media_types else None)
+    )
+
     if engines:
         error = _validate_engines(state, engines)
         if error:
-            return error, None, media_type, intent, []
-        return None, engines, media_type, intent, []
+            return error, None, resolved_media_type, intent, []
+        return None, engines, resolved_media_type, intent, []
 
     if categories:
-        return categories, None, media_type, intent, []
+        return categories, None, resolved_media_type, intent, []
 
     if intent == "auto":
-        return None, None, media_type, "auto", []
+        return None, None, resolved_media_type, "auto", []
 
-    profile = INTENT_PROFILES.get(intent)
     if profile is None:
-        return _error("invalid_input", f"unknown intent '{intent}'", field="intent"), None, media_type, intent, []
+        return (
+            _error("invalid_input", f"unknown intent '{intent}'", field="intent"),
+            None,
+            resolved_media_type,
+            intent,
+            [],
+        )
     required_grant = INTENT_GRANTS.get(intent)
     if required_grant is not None and not state.policy.tool_enabled(required_grant):
         return (
@@ -1240,15 +1257,14 @@ def _resolve_scope(
                 grant=GRANT_ENV[required_grant],
             ),
             None,
-            media_type,
+            resolved_media_type,
             intent,
             [],
         )
     if profile.engines:
         engines_list = [name for name in profile.engines if name in state.catalog.known_names()]
-        return None, engines_list, media_type, intent, [f"intent profile '{intent}' selected explicit engines"]
+        return None, engines_list, resolved_media_type, intent, [f"intent profile '{intent}' selected explicit engines"]
     if profile.media_types:
-        resolved_media_type = media_type if media_type is not None else profile.media_types[0]
         return (
             None,
             None,
@@ -1256,7 +1272,7 @@ def _resolve_scope(
             intent,
             [f"intent profile '{intent}' selected media type '{resolved_media_type}'"],
         )
-    return profile.categories, None, media_type, intent, [f"intent profile '{intent}' selected categories"]
+    return profile.categories, None, resolved_media_type, intent, [f"intent profile '{intent}' selected categories"]
 
 
 def _bounded_max_results(state: McpState, requested: int | None) -> int:

@@ -484,6 +484,45 @@ class TestMediaIntentRouting:
         finally:
             set_state(None)
 
+    async def test_images_intent_with_explicit_media_engine_dispatches_media(self, media_state: McpState) -> None:
+        """intent=images + explicit media-capable engine stays a media search.
+
+        An explicit engines list must not discard the intent profile's media
+        type: brave advertises images, so the search dispatches media cards
+        instead of silently running a text search.
+        """
+        result = await t.slopsearx_search("cats", intent="images", engines=["brave"])
+        assert "error" not in result, result
+        assert result["scope"]["selected_engines"] == ["brave"]
+        cards = result["results"]
+        assert cards and all("media" in card for card in cards)
+        assert all(card["media"]["media_type"] == "image" for card in cards)
+
+    async def test_images_intent_with_non_media_engine_reports_coverage_gap(self, media_state: McpState) -> None:
+        """intent=images + explicit non-media engine fails closed on a gap.
+
+        wikipedia advertises no media type, so the media-intent scope
+        resolves to no engines and must report an explicit
+        media_coverage_gap rather than silently running a text search.
+        """
+        result = await t.slopsearx_search("cats", intent="images", engines=["wikipedia"])
+        assert result["error"]["code"] == "media_coverage_gap"
+        assert result["error"]["media_type"] == "image"
+        assert result["error"]["field"] == "media_type"
+
+    async def test_images_intent_with_explicit_category_dispatches_media_not_text(self, media_state: McpState) -> None:
+        """intent=images + explicit categories stays a media search.
+
+        An explicit category list must not discard the intent profile's media
+        type: general-category engines that advertise images dispatch media
+        cards, and media-incapable engines are filtered from the scope.
+        """
+        result = await t.slopsearx_search("cats", intent="images", categories=["general"])
+        assert "error" not in result, result
+        assert set(result["scope"]["selected_engines"]) == {"brave", "duckduckgo"}
+        cards = result["results"]
+        assert cards and all("media" in card for card in cards)
+
     async def test_extend_research_rejects_media_intent(self, media_state: McpState) -> None:
         """Extending research with a media intent errors clearly, never silently text.
 
