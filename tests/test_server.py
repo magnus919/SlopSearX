@@ -376,3 +376,45 @@ class TestEngineConfigPropagation:
         # Brave config should have the API key
         assert "brave" in engine_configs
         assert engine_configs["brave"]["api_key"] == "test-key-12345"
+
+
+class TestRoutingBudgetFrozen:
+    """The HTTP routing budget is resolved once at startup and frozen.
+
+    The MCP lifespan resolves its budget once at startup (``build_context``
+    reads the ``ROUTING_*`` env vars a single time); the HTTP route must
+    freeze the same value instead of re-reading ``os.environ`` on every
+    ``/search`` request, or the two surfaces' routed scopes and cache
+    digests would diverge mid-run (routing-coherence followup).
+    """
+
+    def test_runtime_env_change_does_not_alter_budget(self, monkeypatch) -> None:
+        """A ROUTING_* env change after startup must not change the budget
+        the HTTP routed scope/digest use."""
+        import slopsearx.server as server_mod
+
+        # Pin the startup env before the lifespan runs.
+        server_mod._routing_budget_cache = None
+        monkeypatch.setenv("ROUTING_MAX_ENGINES_PER_INTENT", "5")
+        monkeypatch.setenv("ROUTING_MAX_COST_CLASS", "free")
+        monkeypatch.setenv("ROUTING_COVERAGE_TARGET", "2")
+
+        try:
+            with TestClient(app):
+                # The lifespan (``_startup``) resolved the budget from the
+                # pinned env; capture that frozen value.
+                frozen = server_mod._routing_budget_snapshot()
+                assert frozen.max_engines == 5
+                assert frozen.max_cost_class == "free"
+                assert frozen.coverage_target == 2
+
+                # A runtime ROUTING_* change must not leak into the HTTP
+                # routing budget or the per-request AppContext.
+                monkeypatch.setenv("ROUTING_MAX_ENGINES_PER_INTENT", "1")
+                monkeypatch.setenv("ROUTING_MAX_COST_CLASS", "paid")
+                monkeypatch.setenv("ROUTING_COVERAGE_TARGET", "0")
+
+                assert server_mod._routing_budget_snapshot() == frozen
+                assert server_mod._current_context().routing_budget == frozen
+        finally:
+            server_mod._routing_budget_cache = None

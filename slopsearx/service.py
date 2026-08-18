@@ -1119,8 +1119,14 @@ def _routing_cache_digest(ctx: AppContext) -> str:
     192 review).
 
     The digest folds in catalog presence, the routing-relevant state of every
-    active engine (the only engines that can be selected for dispatch), and
-    the routing budget. Observed health is folded in only under the
+    active engine (the only engines that can be selected for dispatch), the
+    sensitive and tier-1 engine sets, and the routing budget. The sensitive
+    set shapes ``_drop_sensitive`` (which engines may never be auto-selected)
+    and the tier-1 set shapes ``_priority_order`` (tier-1 ranking under the
+    engine-count bound) plus the tier-1 fallback candidate base — a change
+    to either must invalidate the cached scope, so a newly-sensitive engine
+    is never served from a cache entry populated while it was reachable.
+    Observed health is folded in only under the
     engine-count bound: ``_priority_order`` — the sole consumer of the
     observed-health signal (``last_known_status`` plus staleness — a stale
     observation is treated as unknown, never as current ``ok``) — runs
@@ -1128,12 +1134,12 @@ def _routing_cache_digest(ctx: AppContext) -> str:
     permissive budget (no engine-count cap) health never shapes the routed
     scope, so folding it in would only shorten the cache lifetime to the
     ~300s freshness window: a staleness flip would bust the 3600s cache
-    entry with zero routing benefit. Auth, cost, circuit, and budget parts
-    stay unconditional — those always shape the scope. Any change to a
-    folded routing input yields a different digest, so a cached response is
-    never reused under a different routing state. Computed once per search
-    (pre-dispatch) so the read and write paths agree on the exact state the
-    scope was derived from.
+    entry with zero routing benefit. Auth, cost, circuit, budget, sensitive,
+    and tier-1 parts stay unconditional — those always shape the scope. Any
+    change to a folded routing input yields a different digest, so a cached
+    response is never reused under a different routing state. Computed once
+    per search (pre-dispatch) so the read and write paths agree on the exact
+    state the scope was derived from.
     """
     budget = ctx.routing_budget
     # Observed health only shapes the routed scope under the engine-count
@@ -1158,6 +1164,8 @@ def _routing_cache_digest(ctx: AppContext) -> str:
                 parts.append(
                     f"{name}:{cap.auth_class}:{int(cap.auth_configured)}:{cap.cost_class}:{int(cap.circuit_open)}"
                 )
+    parts.append("sensitive=" + ",".join(sorted(ctx.sensitive_engines)))
+    parts.append("tier1=" + ",".join(sorted(ctx.tier1_engines)))
     if budget is None:
         parts.append("budget=none")
     else:

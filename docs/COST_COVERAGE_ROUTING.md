@@ -119,12 +119,13 @@ Stale health observations are treated as unknown, never as current `ok`.
 
 `tests/test_routing_eval.py` measures the strategy against the
 context-equivalent deterministic baseline (the candidate set the fallback
-would dispatch) under declared fixtures and budgets. R1–R4 and R6 compare
-the routed mix to the raw candidate set; R5 compares it against the
+would dispatch) under declared fixtures and budgets. R1–R4 compare the
+routed mix to the raw candidate set; R5 and R6 compare it against the
 **auth/health-filtered candidate set** — the subset of candidates that
 survives the hard auth/health exclusions — because a raw-candidate
 comparison is an unsound proxy when those exclusions remove cheap or
-unknown-cost engines. The rubric asserts:
+unknown-cost engines (R5) or engines that can never contribute coverage
+(R6). The rubric asserts:
 
 - R1 the routed scope is a subset of the baseline (routing never adds
   engines);
@@ -133,8 +134,10 @@ unknown-cost engines. The rubric asserts:
 - R4 determinism across repeated runs;
 - R5 when the cost bound actually excludes engines, the routed mix is never
   more expensive on average than the auth/health-filtered candidate set
-  (when the cost bound is not constraining, no cost claim is made);
-- R6 coverage is not reduced below the budget floor.
+  (an empty/unset `max_cost_class` is normalized to the permissive `paid`
+  bound, so it is never constraining and no cost claim is made);
+- R6 coverage is not reduced below the budget floor (floored against the
+  same auth/health-filtered baseline as R5).
 
 **Scope of this evaluation** — it covers the declared fixtures (healthy /
 degraded, authenticated / unauthenticated, cheap / expensive, high / low

@@ -181,6 +181,20 @@ FIXTURES: tuple[tuple[str, list[str], dict[str, EngineCapability], RoutingBudget
         RoutingBudget(max_cost_class=""),
         "empty max_cost_class is treated as unset/permissive, mirroring production",
     ),
+    (
+        "permissive_empty_cost_capped",
+        ["wikipedia", "arxiv", "openalex", "duckduckgo", "intelx", "dehashed"],
+        {
+            "wikipedia": _cap("wikipedia"),
+            "arxiv": _cap("arxiv"),
+            "openalex": _cap("openalex"),
+            "duckduckgo": _cap("duckduckgo"),
+            "intelx": _cap("intelx", cost_class="freemium"),
+            "dehashed": _cap("dehashed", cost_class="paid"),
+        },
+        RoutingBudget(max_engines=2, max_cost_class=""),
+        "empty max_cost_class stays permissive even when max_engines caps the mix",
+    ),
 )
 
 # The declared query-family → candidate mapping is context-equivalent to the
@@ -197,6 +211,19 @@ def _avg_cost(caps: dict[str, EngineCapability], names: list[str]) -> float:
     if not names:
         return 0.0
     return sum(_COST_RANK.get(caps[name].cost_class, 0) for name in names) / len(names)
+
+
+def _r5_cost_bound_constraining(budget: RoutingBudget, baseline_max_cost: int) -> bool:
+    """Whether R5's cost claim applies: the normalized cost bound must be
+    below the auth/health-filtered baseline's max cost class.
+
+    An empty/unset ``max_cost_class`` normalizes to the permissive "paid"
+    rank (the same normalization R2 applies via production's
+    ``_budget_max_rank``), so an empty bound is never constraining — a
+    ``max_engines`` cap alone records no cost claim (routing-coherence
+    followup)."""
+    effective_max = _COST_RANK.get(budget.max_cost_class) or _COST_RANK["paid"]
+    return effective_max < baseline_max_cost
 
 
 def eval_scope() -> dict[str, Any]:
@@ -297,12 +324,24 @@ class TestRoutingEvaluation:
         # constraining (filtered baseline already within budget), no cost
         # improvement is claimed — the strategy only narrows scope, so it may
         # remove cheap unhealthy engines and leave pricier healthy ones.
+        # An empty/unset ``max_cost_class`` is normalized to the permissive
+        # "paid" rank (the same normalization R2 applies via
+        # ``_budget_max_rank``), so it can never be constraining — a
+        # ``max_engines`` cap alone records no cost claim (routing-coherence
+        # followup).
         baseline_max_cost = max((_COST_RANK.get(caps[n].cost_class, 0) for n in filtered_baseline), default=0)
-        if _COST_RANK[budget.max_cost_class] < baseline_max_cost:
+        if _r5_cost_bound_constraining(budget, baseline_max_cost):
             assert _avg_cost(caps, routed.selected) <= _avg_cost(caps, filtered_baseline) + 1e-9
             rubric["cost_not_worse_than_baseline"] = True
         else:
             rubric["cost_not_worse_than_baseline"] = "n/a (cost bound not constraining)"
+
+        # An empty/unset ``max_cost_class`` is permissive (normalized to the
+        # "paid" rank like R2), so R5 must never record a boolean cost claim —
+        # the rubric entry stays the "n/a" marker even when ``max_engines``
+        # caps the mix (routing-coherence followup).
+        if not budget.max_cost_class:
+            assert rubric["cost_not_worse_than_baseline"] is not True
 
         # R6 — coverage is not reduced below the budget floor. The floor is
         # the health-filtered baseline: an engine excluded by auth/health can
@@ -407,3 +446,40 @@ class TestRoutingEvaluation:
         effective_max = _COST_RANK.get(budget.max_cost_class) or _COST_RANK["paid"]
         for engine in routed.selected:
             assert _COST_RANK.get(caps[engine].cost_class, 0) <= effective_max
+
+    def test_r5_empty_cost_bound_with_cap_records_no_cost_claim(self) -> None:
+        """R5 must normalize an empty ``max_cost_class`` to the permissive
+        "paid" rank (the same normalization R2 applies), so an empty cost
+        bound is never constraining and no cost claim is recorded — even when
+        a ``max_engines`` cap narrows the mix (routing-coherence followup).
+
+        Reviewer arithmetic: candidates ``[wikipedia, arxiv, openalex,
+        duckduckgo (free), intelx (freemium), dehashed (paid)]`` with
+        ``max_engines=2`` and ``max_cost_class=""`` — the strategy routes to
+        the two cheapest healthy engines; the empty cost bound normalizes to
+        the permissive paid rank, so the R5 guard must not fire and no
+        ``cost_not_worse_than_baseline`` claim is made."""
+        candidates = ["wikipedia", "arxiv", "openalex", "duckduckgo", "intelx", "dehashed"]
+        caps = {n: _cap(n) for n in candidates}
+        caps["intelx"] = _cap("intelx", cost_class="freemium")
+        caps["dehashed"] = _cap("dehashed", cost_class="paid")
+        catalog = _EvalCatalog(caps)
+        budget = RoutingBudget(max_engines=2, max_cost_class="")
+
+        routed = select_cost_coverage(candidates, catalog, budget)
+        assert len(routed.selected) == 2  # the max_engines cap bites
+        assert set(routed.selected) == {"arxiv", "duckduckgo"}  # two cheapest, name-stable
+
+        filtered_baseline = [
+            n
+            for n in candidates
+            if not (caps[n].auth_class == "required" and not caps[n].auth_configured) and not caps[n].circuit_open
+        ]
+        assert set(filtered_baseline) == set(candidates)
+
+        baseline_max_cost = max((_COST_RANK.get(caps[n].cost_class, 0) for n in filtered_baseline), default=0)
+        # The empty bound normalizes to the permissive paid rank, so the cost
+        # bound is never constraining and R5 records no cost claim — the
+        # ``permissive_empty_cost_capped`` fixture exercises the same path
+        # through the declared rubric.
+        assert _r5_cost_bound_constraining(budget, baseline_max_cost) is False
