@@ -63,12 +63,14 @@ class _MockEngine(EngineAdapter):
         status: EngineStatus = EngineStatus.OK,
         count: int = 2,
         categories: list[str] | None = None,
+        media_types: tuple[str, ...] = (),
     ) -> None:
         super().__init__()
         self.name = name
         self._status = status
         self._count = count
         self.categories = list(categories or ["general"])
+        self.supported_media_types = tuple(media_types)
         self.calls = 0
 
     async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
@@ -246,6 +248,126 @@ class TestResolverAutomaticRouting:
         )
         request = SearchRequest(query="q")
         assert resolver.explain(request).selected_engines == resolver.resolve(request).selected_engines
+
+
+class _MediaRoutingEngine(EngineAdapter):
+    """Mock engine advertising media types for the media routing path."""
+
+    def __init__(self, name: str, media_types: tuple[str, ...] = ()) -> None:
+        super().__init__()
+        self.name = name
+        self.categories = ["general"]
+        self.supported_media_types = tuple(media_types)
+
+    async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
+        del query, params
+        return AdapterResponse(results=[], status=EngineStatus.OK, latency_ms=1.0)
+
+
+class TestMediaRoutingPath:
+    """Issue 192 review: media-intent searches run the routing pass too.
+
+    Image/video scopes seed from media-advertising engines and must then go
+    through the same cost/coverage-aware selection pass as the sibling
+    automatic paths: unauthenticated and circuit-open media engines are
+    excluded before dispatch, and configured budget bounds shape the mix.
+    """
+
+    def test_media_search_excludes_unauthenticated_media_engine(self) -> None:
+        resolver = ScopeResolver(
+            active_engines={
+                "image_a": _MediaRoutingEngine("image_a", ("image",)),
+                "image_b": _MediaRoutingEngine("image_b", ("image",)),
+                "wikipedia": _MockEngine("wikipedia"),
+            },
+            router=None,
+            catalog=_FakeCatalog(
+                {
+                    "image_a": _cap("image_a"),
+                    "image_b": _cap("image_b", auth_class="required", auth_configured=False),
+                    "wikipedia": _cap("wikipedia"),
+                }
+            ),
+        )
+        decision = resolver.resolve(SearchRequest(query="q", media_type="image"))
+        assert decision.routing_rule == "media type"
+        assert decision.selected_engines == ["image_a"]
+        stages = {e.engine: e.stage for e in decision.excluded_engines}
+        assert stages["image_b"] == EXCLUSION_STAGE_AUTH
+        # Media-fit exclusions carry a closed-vocabulary stage, never "unknown".
+        assert stages["wikipedia"] == "policy"
+
+    def test_media_search_excludes_circuit_open_media_engine(self) -> None:
+        resolver = ScopeResolver(
+            active_engines={
+                "video_a": _MediaRoutingEngine("video_a", ("video",)),
+                "video_b": _MediaRoutingEngine("video_b", ("video",)),
+            },
+            router=None,
+            catalog=_FakeCatalog(
+                {
+                    "video_a": _cap("video_a", circuit_open=True),
+                    "video_b": _cap("video_b"),
+                }
+            ),
+        )
+        decision = resolver.resolve(SearchRequest(query="q", media_type="video"))
+        assert decision.routing_rule == "media type"
+        assert decision.selected_engines == ["video_b"]
+        assert any(e.engine == "video_a" and e.stage == EXCLUSION_STAGE_HEALTH for e in decision.excluded_engines)
+
+    def test_media_search_respects_budget_bound(self) -> None:
+        resolver = ScopeResolver(
+            active_engines={
+                "image_a": _MediaRoutingEngine("image_a", ("image",)),
+                "image_b": _MediaRoutingEngine("image_b", ("image",)),
+                "image_c": _MediaRoutingEngine("image_c", ("image",)),
+            },
+            router=None,
+            catalog=_FakeCatalog(
+                {
+                    "image_a": _cap("image_a", cost_class="free"),
+                    "image_b": _cap("image_b", cost_class="free"),
+                    "image_c": _cap("image_c", cost_class="free"),
+                }
+            ),
+            budget=RoutingBudget(max_engines=1),
+        )
+        decision = resolver.resolve(SearchRequest(query="q", media_type="image"))
+        assert decision.routing_rule == "media type"
+        assert len(decision.selected_engines) == 1
+        assert decision.routing_budget_applied is True
+        assert any(e.stage == EXCLUSION_STAGE_BUDGET for e in decision.excluded_engines)
+
+    async def test_media_search_never_dispatches_excluded_engine(self) -> None:
+        """An unauthenticated media engine is excluded before dispatch: it is
+        absent from both the scope and the per-engine outcome rows."""
+        engines_map = {
+            "brave": _MockEngine("brave", media_types=("image",)),
+            "duckduckgo": _MockEngine("duckduckgo", media_types=("image",)),
+            "wikipedia": _MockEngine("wikipedia"),
+        }
+        ctx = AppContext(
+            active_engines=engines_map,
+            router=None,
+            cache=_FakeStore(),
+            tier1_engines=set(engines_map),
+            sensitive_engines=set(),
+            catalog=_FakeCatalog(
+                {
+                    "brave": _cap("brave", auth_class="required", auth_configured=False),
+                    "duckduckgo": _cap("duckduckgo"),
+                    "wikipedia": _cap("wikipedia"),
+                }
+            ),
+            routing_budget=RoutingBudget(),
+        )
+        service = SearchService(ctx)
+        response = await service.search(SearchRequest(query="q", media_type="image"))
+        assert "brave" not in response.scope.selected_engines
+        assert all(o.engine != "brave" for o in response.engine_outcomes)
+        stages = {e.engine: e.stage for e in response.scope.excluded_engines}
+        assert stages["brave"] == EXCLUSION_STAGE_AUTH
 
 
 # ---------------------------------------------------------------------------
@@ -468,3 +590,24 @@ class TestMcpRoutingSurface:
         result = await t.slopsearx_search_targeted("hello", engines=["brave"])
         assert "error" not in result
         assert result["scope"]["selected_engines"] == ["brave"]
+
+    async def test_explicit_targeted_envelope_marks_routing_bypassed(self) -> None:
+        """Explicit-engine scopes mark the routing pass as bypassed
+        (``applied: false``) instead of emitting a fallback/budget block that
+        would misread as "the budget was evaluated and did not bite"."""
+        state_obj = _build_mcp_state(budget=RoutingBudget(max_engines=1))
+        set_state(state_obj)
+        result = await t.slopsearx_search_targeted("hello", engines=["brave"])
+        assert "error" not in result
+        assert result["scope"]["routing_reason"] == "explicit engine"
+        assert result["scope"]["routing"] == {"applied": False}
+
+    async def test_automatic_envelope_marks_routing_applied(self) -> None:
+        """Automatic scopes report the full routing block plus ``applied: true``."""
+        state_obj = _build_mcp_state(budget=RoutingBudget(max_engines=2))
+        set_state(state_obj)
+        result = await t.slopsearx_search("hello")
+        assert "error" not in result
+        assert result["scope"]["routing"]["applied"] is True
+        assert result["scope"]["routing"]["fallback"] is False
+        assert isinstance(result["scope"]["routing"]["tradeoffs"], list)

@@ -192,6 +192,27 @@ class TestBudgetBounds:
         # tie-broken by name order ("other" < "stale_ok").
         assert result.selected == ["fresh_ok", "other"]
 
+    def test_max_engines_cap_prefers_declared_free_over_unknown_cost(self) -> None:
+        """An unassessed (unknown-cost) engine is never preferred over a
+        declared-free one under the engine-count cap (issue 192 review)."""
+        catalog = _catalog(
+            _cap("wikipedia", cost_class="free"),
+            _cap("no_such", cost_class=""),
+        )
+        budget = RoutingBudget(max_engines=1)
+        result = select_cost_coverage(["wikipedia", "no_such"], catalog, budget)
+        assert result.selected == ["wikipedia"]
+        assert result.exclusions[0].stage == EXCLUSION_STAGE_BUDGET
+
+    def test_unknown_cost_still_survives_the_cost_bound(self) -> None:
+        """The ordering fix must not change cost-bound semantics: an unassessed
+        engine is still kept under ``max_cost_class`` (never penalized)."""
+        catalog = _catalog(_cap("no_such", cost_class=""), _cap("dehashed", cost_class="paid"))
+        budget = RoutingBudget(max_cost_class="free")
+        result = select_cost_coverage(["no_such", "dehashed"], catalog, budget)
+        assert result.selected == ["no_such"]
+        assert result.exclusions[0].engine == "dehashed"
+
     def test_permissive_default_budget_is_inert(self) -> None:
         catalog = _catalog(_cap("wikipedia"), _cap("dehashed", cost_class="paid"))
         budget = RoutingBudget()  # unlimited count, paid allowed

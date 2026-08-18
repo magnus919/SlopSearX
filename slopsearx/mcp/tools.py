@@ -932,8 +932,17 @@ def _routing_scope_block(scope: ScopeDecision) -> dict[str, Any]:
     health | budget), and ``routing`` reports whether the deterministic
     fallback ran, whether configured budget bounds shaped the mix, and any
     coverage-for-cost/availability trade-offs.
+
+    On explicit-engine scopes the cost/coverage pass is bypassed by design
+    (issue 192: explicit source scope is preserved verbatim), so the block
+    carries only ``applied: false``. Without that discriminator a
+    ``fallback: false, budget_applied: false`` block would misread as "the
+    budget was evaluated and did not bite".
     """
+    if scope.routing_rule == "explicit engine":
+        return {"applied": False}
     return {
+        "applied": True,
         "fallback": bool(scope.routing_fallback),
         "budget_applied": bool(scope.routing_budget_applied),
         "tradeoffs": [{"kind": t.kind, "detail": t.detail} for t in scope.routing_tradeoffs],

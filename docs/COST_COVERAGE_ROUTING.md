@@ -67,8 +67,10 @@ routing:
 Defaults are permissive: no engine-count cap, all cost classes allowed, no
 coverage target. A typo can never invent a bound — invalid values are
 ignored. Cost classes are the audited `COST_CLASSES` vocabulary
-(`free` < `freemium` < `paid`; unknown sorts cheapest so an unassessed
-engine is never penalized).
+(`free` < `freemium` < `paid`). An unknown (unassessed) cost class is never
+excluded by the `max_cost_class` bound, but under the engine-count cap a
+declared class is preferred over an unassessed engine — the cap never
+chooses an unassessed engine over a declared-free one.
 
 ## Explainability
 
@@ -77,7 +79,11 @@ result metadata:
 
 - **`excluded_engines`** — each entry carries `{engine, reason, stage}` where
   `stage` is one of `policy | auth | health | budget`.
-- **`routing`** — `{fallback, budget_applied, tradeoffs}`:
+- **`routing`** — `{applied, fallback, budget_applied, tradeoffs}`:
+  - `applied: false` marks an explicit-engine scope, where the pass is
+    bypassed by design (explicit source scope is preserved verbatim) and no
+    fallback/budget fields are emitted — a consumer can distinguish "the
+    pass never ran" from "the pass ran and did not bite";
   - `fallback: true` when no capability catalog was available and the
     deterministic fallback produced the scope;
   - `budget_applied: true` only when configured budget bounds actually
@@ -85,6 +91,11 @@ result metadata:
   - `tradeoffs: [{kind, detail}]` reports coverage traded for `cost`
     (budget) or `availability` (health), plus `coverage` shortfalls against
     the configured target.
+
+Automatic paths (explicit category, media type, topic match, tier-1
+fallback, all active engines) all run the pass — including media-intent
+searches, so unauthenticated or circuit-open media engines are excluded
+before dispatch and media scopes honor the configured budget.
 
 These surface on `slopsearx_explain_search_scope` (dry-run preview) and on
 every search envelope's `scope` block, and they survive the cache round-trip

@@ -42,9 +42,11 @@ from typing import Any
 from slopsearx.capabilities import AUTH_REQUIRED, CapabilityCatalog
 from slopsearx.config import Config, load_config
 
-# Cost-class ordering for deterministic comparisons. ``""`` (unknown) sorts
-# first so an unassessed engine is never penalized over a declared class,
-# and "free" < "freemium" < "paid".
+# Cost-class ordering for deterministic comparisons. ``""`` (unknown) maps
+# to 0 so the ``max_cost_class`` exclusion never penalizes an unassessed
+# engine; the engine-count-cap ordering remaps it above "paid" (see
+# ``_priority_order``) so the cap never prefers an unassessed engine over a
+# declared-cheaper one. Declared classes: "free" < "freemium" < "paid".
 _COST_RANK: dict[str, int] = {"": 0, "free": 1, "freemium": 2, "paid": 3}
 
 # Observed-health ordering for deterministic prioritization. An engine with
@@ -319,12 +321,16 @@ def _priority_order(
 
     Prefers (in order): tier-1 breadth, healthier observation (a stale
     observation is treated as unknown, never as current ``ok``), cheaper
-    cost class, then stable name order.
+    declared cost class, then stable name order. An unassessed
+    (unknown-cost) engine sorts after every declared class under this cap:
+    the count bound must never prefer an unassessed engine over a
+    declared-free one, while the ``max_cost_class`` exclusion still keeps
+    unknown-cost engines.
     """
 
     def _key(name: str) -> tuple[int, int, int, str]:
         sig = signals[name]
-        return (0 if name in tier1 else 1, _health_rank(sig), _cost_rank(sig.cost_class), name)
+        return (0 if name in tier1 else 1, _health_rank(sig), _cost_rank(sig.cost_class) or 4, name)
 
     return sorted(names, key=_key)
 

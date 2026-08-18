@@ -37,6 +37,7 @@ import uvicorn
 
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult
 from slopsearx.capabilities import load_mcp_policy
+from slopsearx.config import Config, EngineEntry
 from slopsearx.mcp.security import make_http_app
 from slopsearx.mcp.server import create_server
 from slopsearx.router import QueryRouter
@@ -180,6 +181,23 @@ def build_fake_engines(specs: list[FakeEngineSpec]) -> dict[str, EngineAdapter]:
     return {spec.name: FakeEngine(spec) for spec in specs}
 
 
+def fixture_config() -> Config:
+    """A pinned, keyless :class:`Config` for the fixture deployment.
+
+    The automatic routing pass derives authentication readiness from the
+    config, so the harness must not inherit the ambient operator config
+    (``load_config()`` reads ``ENGINE_*`` env vars): a host with e.g.
+    ``ENGINE_BRAVE_API_KEY`` set would make the fixture's keyless fake brave
+    engine look authenticated and flip routing assertions. This builds the
+    exact config the catalog reads — every fake engine with an explicit
+    empty key — so fixture routing is deterministic in any environment.
+    """
+    cfg = Config()
+    for name in DEFAULT_FAKE_ENGINES:
+        cfg.engines[name] = EngineEntry(api_key="")
+    return cfg
+
+
 def build_fixture_context(
     specs: list[FakeEngineSpec] | None = None,
     *,
@@ -228,6 +246,7 @@ def create_fixture_server(
     port: int = 8105,
     oauth: Any = None,
     oauth_provider: Any = None,
+    config: Config | None = None,
 ) -> Any:
     """Build the real MCP server with the fixture context injected.
 
@@ -235,6 +254,10 @@ def create_fixture_server(
     wiring) whose lifespan uses the fixture context instead of live engines
     and Valkey. The optional ``store`` is captured by the factory so it is
     shared across sessions (cross-session cursor stability).
+
+    ``config`` defaults to :func:`fixture_config` (a pinned keyless config)
+    so routing behavior is deterministic regardless of ambient operator env;
+    pass an explicit config to override.
     """
 
     def factory() -> Awaitable[AppContext]:
@@ -246,6 +269,7 @@ def create_fixture_server(
         oauth=oauth,
         oauth_provider=oauth_provider,
         state_factory=factory,
+        config=config if config is not None else fixture_config(),
     )
 
 
@@ -269,14 +293,15 @@ def make_fixture_http_app(
     token: str = "",
     host: str = "127.0.0.1",
     port: int = 8105,
+    config: Config | None = None,
 ) -> Any:
     """Build the streamable-HTTP ASGI app over the fixture-injected server.
 
     When ``token`` is non-empty, every HTTP request must carry
     ``Authorization: Bearer <token>`` (401 otherwise), matching production
-    auth behavior.
+    auth behavior. ``config`` defaults to :func:`fixture_config`.
     """
-    server = create_fixture_server(specs, store=store, router=router, host=host, port=port)
+    server = create_fixture_server(specs, store=store, router=router, config=config, host=host, port=port)
     return make_http_app(server, token)
 
 

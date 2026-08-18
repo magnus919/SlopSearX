@@ -450,12 +450,17 @@ class ScopeResolver:
                 for name in self._active:
                     if name not in media_candidates:
                         decision.excluded_engines.append(
-                            EngineExclusion(engine=name, reason=f"does not advertise media type '{request.media_type}'")
+                            EngineExclusion(
+                                engine=name,
+                                reason=f"does not advertise media type '{request.media_type}'",
+                                stage="policy",
+                            )
                         )
                 if not media_candidates:
                     decision.warnings.append(f"no active engine advertises media type '{request.media_type}'")
-                decision.selected_engines = self._drop_sensitive(
-                    decision, media_candidates, "sensitive engine excluded by policy"
+                decision.selected_engines = self._apply_routing(
+                    decision,
+                    self._drop_sensitive(decision, media_candidates, "sensitive engine excluded by policy"),
                 )
                 decision.routing_rule = "media type"
             elif self._router is not None:
@@ -558,7 +563,11 @@ class ScopeResolver:
         for name in engines:
             if name not in kept:
                 decision.excluded_engines.append(
-                    EngineExclusion(engine=name, reason=f"does not advertise media type '{media_type}'")
+                    EngineExclusion(
+                        engine=name,
+                        reason=f"does not advertise media type '{media_type}'",
+                        stage="policy",
+                    )
                 )
         if engines and not kept:
             decision.warnings.append(f"no selected engine advertises media type '{media_type}'")

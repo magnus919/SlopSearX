@@ -26,7 +26,7 @@ from slopsearx.adapter import (
     media_to_dict,
 )
 from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, load_mcp_policy
-from slopsearx.config import load_config
+from slopsearx.config import Config, EngineEntry, load_config
 from slopsearx.formatter import format_json, format_yaml_markdown
 from slopsearx.mcp import resources as r
 from slopsearx.mcp import tools as t
@@ -109,6 +109,21 @@ class _MediaEngine(EngineAdapter):
         return AdapterResponse(results=results, status=EngineStatus.OK, latency_ms=2.0)
 
 
+def _media_fixture_config() -> Config:
+    """Pinned config for media contract tests.
+
+    The automatic routing pass now runs on media-intent searches too (issue
+    192 review), so the fixture's brave media engine needs a configured key
+    to stay in scope. Pinning the config (instead of ``load_config()``)
+    keeps the media-contract assertions independent of ambient operator env
+    (e.g. ``ENGINE_BRAVE_API_KEY``).
+    """
+    cfg = Config()
+    for name in ("brave", "duckduckgo", "wikipedia"):
+        cfg.engines[name] = EngineEntry(api_key="test-key" if name == "brave" else "")
+    return cfg
+
+
 def _build_state(
     engine_map: dict[str, EngineAdapter],
     *,
@@ -124,7 +139,7 @@ def _build_state(
         sensitive_engines=policy.sensitive_engines,
     )
     catalog = catalog or CapabilityCatalog(
-        config=load_config(),
+        config=_media_fixture_config(),
         adapters=engine_map,
         sensitive_engines=policy.sensitive_engines,
     )
