@@ -770,7 +770,12 @@ class TestCache:
         request = _req()
         # Negative entries are stored under the fully scoped key (query scope
         # plus the routing-inputs digest), so pre-populate that exact key.
-        key = _scope_cache_key(request, _routing_cache_digest(AppContext(active_engines={})))
+        # The digest folds in the sensitive/tier-1 sets, so the context must
+        # match the service's (empty sets in ``_context``).
+        key = _scope_cache_key(
+            request,
+            _routing_cache_digest(AppContext(active_engines={}, tier1_engines=set(), sensitive_engines=set())),
+        )
         cache._data[key] = {"_error": True}
         service = _service(engines={"okeng": _OkEngine()}, cache=cache)
 
@@ -778,6 +783,72 @@ class TestCache:
 
         assert response.cached_error is True
         assert response.cached is True
+
+    async def test_digest_folds_sensitive_and_tier1_sets(self) -> None:
+        """The routing-inputs digest must fold in the sensitive and tier-1
+        engine sets (routing-coherence followup).
+
+        ``_drop_sensitive`` and ``_priority_order`` (tier-1 ranking) both
+        shape the selected/excluded engine set, so a change to either set
+        must invalidate the cached scope — a newly-sensitive engine must not
+        be served from a cache entry populated while it was reachable.
+        """
+        base = _routing_cache_digest(AppContext(active_engines={}, tier1_engines=set(), sensitive_engines=set()))
+        with_sensitive = _routing_cache_digest(
+            AppContext(active_engines={}, tier1_engines=set(), sensitive_engines={"hibp"})
+        )
+        with_tier1 = _routing_cache_digest(
+            AppContext(active_engines={}, tier1_engines={"brave"}, sensitive_engines=set())
+        )
+        assert base != with_sensitive
+        assert base != with_tier1
+        assert with_sensitive != with_tier1
+
+    async def test_cache_busted_when_sensitive_set_changes(self) -> None:
+        """A change to the sensitive set is a routing-input change: the cached
+        scope must not be reused, so a newly-sensitive engine is no longer
+        served from cache (routing-coherence followup).
+
+        Both contexts resolve the same explicit-engine scope; only the
+        sensitive set differs, so the digest (not the scope) is what
+        invalidates the entry.
+        """
+        cache = _FakeCache()
+        engine = _OkEngine(count=1)
+        engine.name = "eng_a"
+        engine.categories = ["general", "security"]
+
+        service_a = SearchService(_context(engines={"eng_a": engine}, cache=cache, sensitive={"eng_a"}))
+        service_b = SearchService(_context(engines={"eng_a": engine}, cache=cache, sensitive={"eng_a", "eng_b"}))
+
+        first = await service_a.search(_req(engines=["eng_a"]))
+        assert first.cached is False
+
+        second = await service_b.search(_req(engines=["eng_a"]))
+        assert second.cached is False  # sensitive-set change busts the cache
+        assert len(cache._data) == 2
+
+    async def test_cache_busted_when_tier1_set_changes(self) -> None:
+        """A change to the tier-1 set is a routing-input change: the cached
+        scope must not be reused (routing-coherence followup).
+
+        Tier-1 membership shapes ``_priority_order`` ranking under an
+        engine-count budget and the tier-1 fallback candidate base, so the
+        digest must distinguish it.
+        """
+        cache = _FakeCache()
+        engine = _OkEngine(count=1)
+        engine.name = "eng_a"
+
+        service_a = SearchService(_context(engines={"eng_a": engine}, cache=cache, tier1={"eng_a"}))
+        service_b = SearchService(_context(engines={"eng_a": engine}, cache=cache, tier1=set()))
+
+        first = await service_a.search(_req(engines=["eng_a"]))
+        assert first.cached is False
+
+        second = await service_b.search(_req(engines=["eng_a"]))
+        assert second.cached is False  # tier1-set change busts the cache
+        assert len(cache._data) == 2
 
     async def test_scoped_requests_do_not_cross_contaminate(self) -> None:
         cache = _FakeCache()

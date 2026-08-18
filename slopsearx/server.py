@@ -85,6 +85,7 @@ async def _startup() -> None:
     global _engine_semaphore, _client_rate_window  # noqa: PLW0603
     global _empty_scrape_diagnostics_enabled  # noqa: PLW0603
     global _router, _suggestion_service, _stats_tracker, _audit_logger  # noqa: PLW0603
+    global _routing_budget_cache  # noqa: PLW0603
 
     ctx = await build_context()
 
@@ -101,6 +102,10 @@ async def _startup() -> None:
     _engine_semaphore = ctx.engine_semaphore
     _client_rate_window = ctx.client_rate_window
     _empty_scrape_diagnostics_enabled = ctx.empty_scrape_diagnostics_enabled
+    # Freeze the routing budget from the startup context (resolved once,
+    # beside the config/catalog snapshot) so the HTTP routed scope/digest
+    # never track a runtime ``ROUTING_*`` env change.
+    _routing_budget_cache = ctx.routing_budget
 
 
 async def _shutdown() -> None:
@@ -159,8 +164,19 @@ def _current_context() -> AppContext:
 
 
 def _routing_budget_snapshot() -> RoutingBudget:
-    """Return the operator routing budget from the memoized startup config."""
-    return load_routing_budget(_health_config())
+    """Return the operator routing budget, frozen at startup (memoized).
+
+    ``load_routing_budget`` re-reads the ``ROUTING_*`` env vars on every
+    call. The memo captures the value once — seeded by ``_startup`` from the
+    startup context, beside the memoized config/catalog — so a runtime env
+    change cannot silently alter the HTTP routed scope/digest and
+    desynchronize it from the MCP lifespan budget, which resolves the same
+    env a single time at startup (routing-coherence followup).
+    """
+    global _routing_budget_cache  # noqa: PLW0603
+    if _routing_budget_cache is None:
+        _routing_budget_cache = load_routing_budget(_health_config())
+    return _routing_budget_cache
 
 
 # ---------------------------------------------------------------------------
@@ -177,6 +193,12 @@ def _routing_budget_snapshot() -> RoutingBudget:
 _health_config_cache: Config | None = None
 _health_catalog_cache: CapabilityCatalog | None = None
 _health_catalog_engines: dict[str, EngineAdapter] | None = None
+
+# Startup-frozen routing budget. ``load_routing_budget`` reads ``ROUTING_*``
+# env vars, so it is resolved once beside the config/catalog snapshot
+# (seeded in ``_startup``) instead of per request — the routed scope and its
+# cache digest must freeze at startup exactly like the MCP lifespan budget.
+_routing_budget_cache: RoutingBudget | None = None
 
 
 def _health_config() -> Config:
