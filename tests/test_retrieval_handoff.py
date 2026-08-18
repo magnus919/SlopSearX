@@ -712,20 +712,29 @@ class TestIPv6TranslationPrefixLiteral:
             # classifies it neither reserved nor private, so it slips past
             # both the globality check and is_reserved.
             "http://[fec0::1]/",
+            # RFC 3056 6to4 prefix (2002::/16): the embedded IPv4 is in the
+            # low 32 bits, so these literals resolve to loopback and cloud
+            # metadata at fetch time. CPython only marked 2002::/16 private
+            # in 3.12.3, so on the 3.12.0-3.12.2 floor is_global=True and the
+            # globality check alone certifies them ok.
+            "http://[2002:7f00:1::1]/",  # 6to4 embeds 127.0.0.1 (loopback)
+            "http://[2002:a9fe:a9fe::]/",  # 6to4 embeds 169.254.169.254 (cloud metadata)
         ],
     )
     async def test_ipv6_translation_prefix_and_site_local_literal_is_never_handed_off(self, url: str) -> None:
-        """A translation-prefix, site-local, or non-global-embedding literal is ambiguous.
+        """A translation-prefix, site-local, 6to4, or non-global-embedding literal is ambiguous.
 
         ``64:ff9b::/96`` (RFC 6052 NAT64), the IPv4-translatable
         ``::ffff:0:0:0/96`` (``::ffff:0:7f00:1``), an IPv4-mapped literal
-        embedding a non-global IPv4 (``::ffff:127.0.0.1``), and the
-        deprecated site-local ``fec0::/10`` all report ``is_global=True`` on
-        modern CPython (they are not in the private registry), so the
-        globality-only guard previously certified them ``ok`` and handed them
-        off as fetch targets even though they embed loopback/metadata/private
-        IPv4 (CWE-918 translation-prefix SSRF). They must be classified
-        ``ambiguous`` with a null handoff URL.
+        embedding a non-global IPv4 (``::ffff:127.0.0.1``), the deprecated
+        site-local ``fec0::/10``, and the RFC 3056 6to4 prefix ``2002::/16``
+        (``2002:7f00:1::1``, ``2002:a9fe:a9fe::``) all report
+        ``is_global=True`` on some supported CPython versions (they are not
+        in the private registry), so the globality-only guard previously
+        certified them ``ok`` and handed them off as fetch targets even
+        though they embed loopback/metadata/private IPv4 (CWE-918
+        translation-prefix SSRF). They must be classified ``ambiguous`` with
+        a null handoff URL and the reserved/translation-prefix reason.
         """
         state_obj = _build_state({"brave": _UrlEngine("brave", [url])})
         set_state(state_obj)
@@ -735,7 +744,7 @@ class TestIPv6TranslationPrefixLiteral:
             expanded = await t.slopsearx_read_result(card["result_id"])
             assert card["retrieval"]["url_status"] == "ambiguous"
             assert card["retrieval"]["url_reason"] == (
-                "URL host is a non-global literal IP address; not a safe fetch target"
+                "URL host is a reserved or translation-prefix IP address; not a safe fetch target"
             )
             assert card["retrieval"]["eligible"] is False
             assert expanded["retrieval"]["url"] is None
