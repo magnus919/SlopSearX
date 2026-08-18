@@ -132,7 +132,6 @@ class RoutingSelection:
     exclusions: list[RoutingExclusion] = field(default_factory=list)
     tradeoffs: list[RoutingTradeoff] = field(default_factory=list)
     budget_applied: bool = False
-    fallback: bool = False
 
 
 def routing_inputs() -> list[str]:
@@ -308,7 +307,6 @@ def select_cost_coverage(
         exclusions=exclusions,
         tradeoffs=tradeoffs,
         budget_applied=budget_applied,
-        fallback=False,
     )
 
 

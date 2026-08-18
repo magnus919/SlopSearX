@@ -21,7 +21,7 @@ import pytest
 import engines  # noqa: F401 — triggers @register_engine to populate the registry
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult
 from slopsearx.capabilities import CapabilityCatalog, EngineCapability, load_mcp_policy
-from slopsearx.config import load_config
+from slopsearx.config import Config, EngineEntry
 from slopsearx.mcp import tools as t
 from slopsearx.mcp.state import McpState, set_state
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
@@ -375,6 +375,23 @@ class TestMediaRoutingPath:
 # ---------------------------------------------------------------------------
 
 
+def _keyless_config(engine_names: list[str]) -> Config:
+    """A pinned, keyless :class:`Config` for the routing tests.
+
+    Mirrors ``slopsearx/mcp/harness.py::fixture_config()``: the routing pass
+    derives authentication readiness from the config, so these tests must not
+    inherit the ambient operator config (``load_config()`` reads ``ENGINE_*``
+    env vars). A host with e.g. ``ENGINE_BRAVE_API_KEY`` set would make the
+    fake brave engine look authenticated and flip routing assertions. Every
+    fake engine gets an explicit empty key so fixture routing is
+    deterministic in any environment.
+    """
+    cfg = Config()
+    for name in engine_names:
+        cfg.engines[name] = EngineEntry(api_key="")
+    return cfg
+
+
 def _build_service(
     engine_names: list[str],
     *,
@@ -388,7 +405,9 @@ def _build_service(
         cache=_FakeStore(),
         tier1_engines=set(engine_names),
         sensitive_engines=set(),
-        catalog=catalog if catalog is not None else CapabilityCatalog(config=load_config(), adapters=engines_map),
+        catalog=catalog
+        if catalog is not None
+        else CapabilityCatalog(config=_keyless_config(engine_names), adapters=engines_map),
         routing_budget=budget,
     )
     return SearchService(ctx), ctx
@@ -436,6 +455,84 @@ class TestServiceEndToEnd:
         assert response.scope.selected_engines == ["brave"]
         assert response.scope.routing_rule == "explicit engine"
         assert response.scope.routing_budget_applied is False
+
+
+# ---------------------------------------------------------------------------
+# Cache scope freshness w.r.t. live routing state
+# ---------------------------------------------------------------------------
+
+
+class TestCacheScopeNotStale:
+    """A cached scope is never reused under a different routing state.
+
+    Issue 192 review: routing makes the scope a function of dynamic state
+    (auth configuration, circuit state, catalog availability, routing
+    budget), so the canonical cache key must fold those inputs in. Search
+    once with an unauthenticated engine excluded (stage auth), flip the
+    engine to authenticated, then search the same query again: the stale
+    cache entry must not be served, and the fresh scope/results must reflect
+    live routing.
+    """
+
+    async def test_scope_refreshes_after_auth_flip(self) -> None:
+        engines_map = {
+            "wikipedia": _MockEngine("wikipedia"),
+            "brave": _MockEngine("brave"),
+        }
+        cfg = _keyless_config(list(engines_map))
+        ctx = AppContext(
+            active_engines=engines_map,
+            router=None,
+            cache=_FakeStore(),
+            tier1_engines=set(engines_map),
+            sensitive_engines=set(),
+            catalog=CapabilityCatalog(config=cfg, adapters=engines_map),
+            routing_budget=RoutingBudget(),
+        )
+        service = SearchService(ctx)
+        request = SearchRequest(query="q")
+
+        # Warm the cache with brave unauthenticated: excluded (stage auth).
+        first = await service.search(request)
+        assert first.cached is False
+        assert "brave" not in first.scope.selected_engines
+        assert any(e.engine == "brave" and e.stage == EXCLUSION_STAGE_AUTH for e in first.scope.excluded_engines)
+
+        # Flip brave to authenticated and rebuild the catalog (a new catalog
+        # object also rebuilds the scope resolver).
+        cfg.engines["brave"].api_key = "secret"
+        ctx.catalog = CapabilityCatalog(config=cfg, adapters=engines_map)
+
+        # The routing-inputs digest changed, so the cached entry is no longer
+        # reused: the fresh scope includes brave and results are live.
+        second = await service.search(request)
+        assert second.cached is False
+        assert "brave" in second.scope.selected_engines
+        assert not any(e.engine == "brave" for e in second.scope.excluded_engines)
+        assert any(o.engine == "brave" and o.status == "ok" for o in second.engine_outcomes)
+
+    async def test_cache_hit_serves_scope_when_routing_state_is_unchanged(self) -> None:
+        """With stable routing inputs the same query does hit the cache, and
+        the served scope matches the routing state that produced it."""
+        engines_map = {"wikipedia": _MockEngine("wikipedia")}
+        cfg = _keyless_config(list(engines_map))
+        ctx = AppContext(
+            active_engines=engines_map,
+            router=None,
+            cache=_FakeStore(),
+            tier1_engines=set(engines_map),
+            sensitive_engines=set(),
+            catalog=CapabilityCatalog(config=cfg, adapters=engines_map),
+            routing_budget=RoutingBudget(),
+        )
+        service = SearchService(ctx)
+        request = SearchRequest(query="q")
+
+        first = await service.search(request)
+        second = await service.search(request)
+
+        assert second.cached is True
+        assert first.scope.selected_engines == second.scope.selected_engines
 
 
 # ---------------------------------------------------------------------------
@@ -513,7 +610,7 @@ def _build_mcp_state(
         tier1_engines=set(engine_names),
         sensitive_engines=policy.sensitive_engines,
     )
-    catalog = CapabilityCatalog(config=load_config(), adapters=engines_map)
+    catalog = CapabilityCatalog(config=_keyless_config(engine_names), adapters=engines_map)
     ctx.catalog = catalog
     ctx.routing_budget = budget
     service = SearchService(ctx)

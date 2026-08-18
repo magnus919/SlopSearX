@@ -33,6 +33,8 @@ from slopsearx.service import (
     SearchRequest,
     SearchResponse,
     SearchService,
+    _routing_cache_digest,
+    _scope_cache_key,
     engine_outcome_from_dict,
     search_response_from_payload,
     search_response_to_payload,
@@ -765,10 +767,14 @@ class TestCache:
 
     async def test_negative_cache_hit(self) -> None:
         cache = _FakeCache()
-        cache._data[cache_key("test query", "en", 0)] = {"_error": True}
+        request = _req()
+        # Negative entries are stored under the fully scoped key (query scope
+        # plus the routing-inputs digest), so pre-populate that exact key.
+        key = _scope_cache_key(request, _routing_cache_digest(AppContext(active_engines={})))
+        cache._data[key] = {"_error": True}
         service = _service(engines={"okeng": _OkEngine()}, cache=cache)
 
-        response = await service.search(_req())
+        response = await service.search(request)
 
         assert response.cached_error is True
         assert response.cached is True

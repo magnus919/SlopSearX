@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import hashlib
 import logging
 import os
 import time
@@ -632,6 +633,13 @@ class SearchService:
 
         scope = self._resolver_for().resolve(request)
 
+        # Routing inputs snapshot for the cache key: computed once here
+        # (pre-dispatch) so the read and write paths agree on the exact
+        # routing state the scope was derived from. A change in auth config,
+        # circuit state, catalog availability, or the routing budget
+        # invalidates the cache entry for this query.
+        routing_digest = _routing_cache_digest(self._ctx)
+
         if not scope.selected_engines:
             # No engines available at all — 503 with no dispatch.
             return SearchResponse(
@@ -650,7 +658,7 @@ class SearchService:
             if not allowed:
                 raise RateLimitExceededError()
 
-        cached = await self._read_cache(request)
+        cached = await self._read_cache(request, routing_digest)
         if cached is not None:
             return cached
 
@@ -829,7 +837,7 @@ class SearchService:
             empty_engines=empty_engines,
         )
 
-        await self._write_cache(request, canonical, all_unresponsive)
+        await self._write_cache(request, canonical, all_unresponsive, routing_digest)
 
         # Derive the requested include-filtered + max_results-sliced view.
         response = self._view_for_request(request, canonical)
@@ -849,13 +857,13 @@ class SearchService:
 
     # -- Cache ----------------------------------------------------------
 
-    async def _read_cache(self, request: SearchRequest) -> SearchResponse | None:
+    async def _read_cache(self, request: SearchRequest, routing_digest: str) -> SearchResponse | None:
         """Check the scoped search cache. Returns a cached response or None."""
         cache = self._ctx.cache
         if cache is None or not cache.is_connected or request.freshness == "prefer_fresh":
             return None
 
-        key = _scope_cache_key(request)
+        key = _scope_cache_key(request, routing_digest)
         payload = await cache.get(key)
         if payload is None:
             m.cache_hits.inc({"type": "miss"})
@@ -882,14 +890,16 @@ class SearchService:
         # so a cache hit never leaks fields from the populating request.
         return self._view_for_request(request, response)
 
-    async def _write_cache(self, request: SearchRequest, response: SearchResponse, all_unresponsive: bool) -> None:
+    async def _write_cache(
+        self, request: SearchRequest, response: SearchResponse, all_unresponsive: bool, routing_digest: str
+    ) -> None:
         """Persist a fresh response under the fully scoped cache key."""
         cache = self._ctx.cache
         if cache is None or not cache.is_connected or all_unresponsive:
             return
 
         payload = search_response_to_payload(response)
-        key = _scope_cache_key(request)
+        key = _scope_cache_key(request, routing_digest)
         ttl = _ttl_for_query(request.categories or [])
         await cache.set(key, payload, ttl)
 
@@ -1096,9 +1106,53 @@ def generate_query_id() -> str:
     return f"ssx-{uuid.uuid4().hex[:8]}"
 
 
-def _scope_cache_key(request: SearchRequest) -> str:
-    """Build the fully scoped search cache key for a request."""
-    return cache_key(
+def _routing_cache_digest(ctx: AppContext) -> str:
+    """Deterministic digest of the live routing inputs that shape a scope.
+
+    The routing pass makes the scope a function of dynamic state — catalog
+    availability, per-engine authentication readiness/cost class/live circuit
+    state, and the operator routing budget. A canonical cache key that omits
+    these inputs would serve a scope (and exclusion list) frozen at the
+    populating request's routing state — e.g. an engine excluded with
+    ``stage:"auth"`` stays excluded after it becomes authenticated, and the
+    always-fresh scope preview would diverge from the executed scope (issue
+    192 review).
+
+    The digest folds in catalog presence, the routing-relevant state of every
+    active engine (the only engines that can be selected for dispatch), and
+    the routing budget. Any change to a routing input yields a different
+    digest, so a cached response is never reused under a different routing
+    state. Computed once per search (pre-dispatch) so the read and write
+    paths agree on the exact state the scope was derived from.
+    """
+    parts: list[str] = []
+    catalog = ctx.catalog
+    if catalog is None:
+        parts.append("catalog=none")
+    else:
+        for name in sorted(ctx.active_engines):
+            cap = catalog.get(name)
+            if cap is None or not cap.enabled:
+                continue
+            parts.append(f"{name}:{cap.auth_class}:{int(cap.auth_configured)}:{cap.cost_class}:{int(cap.circuit_open)}")
+    budget = ctx.routing_budget
+    if budget is None:
+        parts.append("budget=none")
+    else:
+        parts.append(f"budget={budget.max_engines}:{budget.max_cost_class}:{budget.coverage_target}")
+    digest = hashlib.sha256("\n".join(parts).encode()).hexdigest()[:16]
+    return f"routing:{digest}"
+
+
+def _scope_cache_key(request: SearchRequest, routing_digest: str) -> str:
+    """Build the fully scoped search cache key for a request.
+
+    The key folds in the live routing-inputs digest so the canonical cache
+    is never reused across a different routing state: the scope, exclusion
+    list, and dispatched engine set are a function of that state and must
+    not be served stale (issue 192 review).
+    """
+    base = cache_key(
         request.query,
         request.language,
         request.safesearch,
@@ -1108,6 +1162,7 @@ def _scope_cache_key(request: SearchRequest) -> str:
         time_range=request.time_range,
         media_type=request.media_type,
     )
+    return f"{base}:{routing_digest}"
 
 
 def build_response_meta(response: SearchResponse) -> dict[str, Any]:
