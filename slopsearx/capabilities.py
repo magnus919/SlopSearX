@@ -27,6 +27,7 @@ from slopsearx.adapter import (
     FAILURE_CLASS_TOKENS,
     OBSERVED_STATUS_VOCAB,
     SUPPORTED_FILTER_KEYS,
+    SUPPORTED_MEDIA_TYPES,
     SUPPORTED_RESULT_TYPES,
     EngineAdapter,
     list_engines,
@@ -101,6 +102,9 @@ class EngineCapability:
         default_factory=lambda: {key: None for key in SUPPORTED_FILTER_KEYS}
     )
     supported_result_types: list[str] = field(default_factory=lambda: ["text"])
+    # Dedicated image/video search capability (issue 188). Empty means the
+    # engine does not advertise image/video search.
+    supported_media_types: list[str] = field(default_factory=list)
     failure_classes: list[str] = field(
         default_factory=lambda: ["rate_limited", "blocked", "error", "timeout", "auth_required", "unavailable"]
     )
@@ -172,6 +176,7 @@ class CapabilityCatalog:
                 supported_filters=_normalize_supported_filters(cls, adapter),
                 enforced_filters=_normalize_enforced_filters(cls, adapter),
                 supported_result_types=_normalize_result_types(cls, adapter),
+                supported_media_types=_normalize_media_types(cls, adapter),
                 failure_classes=_normalize_failure_classes(cls, adapter),
                 cost_class=_normalize_cost_class(cls, adapter),
                 last_known_status="unknown",
@@ -231,6 +236,17 @@ class CapabilityCatalog:
         return [
             cap.name for cap in self._by_name.values() if cap.enabled and any(cat in wanted for cat in cap.categories)
         ]
+
+    def engines_for_media_type(self, media_type: str) -> list[str]:
+        """Enabled engine names that advertise the given media type.
+
+        Returns an empty list for a media type outside the closed
+        :data:`SUPPORTED_MEDIA_TYPES` vocabulary — the caller surfaces that
+        as an explicit coverage gap rather than fabricating a match.
+        """
+        if media_type not in SUPPORTED_MEDIA_TYPES:
+            return []
+        return [cap.name for cap in self._by_name.values() if cap.enabled and media_type in cap.supported_media_types]
 
     def known_names(self) -> set[str]:
         """All registered engine names (enabled or not)."""
@@ -348,6 +364,10 @@ class IntentProfile:
     description: str
     categories: list[str] = field(default_factory=list)
     engines: list[str] = field(default_factory=list)  # explicit override
+    # Dedicated image/video search: when set, the intent routes to engines
+    # that advertise one of these media types (OR) via the live catalog,
+    # rather than through categories/engines.
+    media_types: list[str] = field(default_factory=list)
     sensitive: bool = False  # contains sensitive engines → needs a grant
 
 
@@ -437,6 +457,19 @@ INTENT_PROFILES: dict[str, IntentProfile] = {
         description="Music, movies, and books.",
         categories=["music", "movies", "entertainment", "books"],
     ),
+    # Dedicated image/video search intents (issue 188). These route through
+    # the live media-type capability declarations, not categories, so a media
+    # search only reaches engines that advertise the requested media type.
+    "images": IntentProfile(
+        intent="images",
+        description="Image search across media-capable engines.",
+        media_types=["image"],
+    ),
+    "videos": IntentProfile(
+        intent="videos",
+        description="Video search across media-capable engines.",
+        media_types=["video"],
+    ),
     "legal": IntentProfile(
         intent="legal",
         description="Court cases and legal references.",
@@ -470,6 +503,16 @@ def resolve_intent(
         missing = [name for name in profile.engines if name not in known]
         warnings = [f"intent '{intent}' references unknown engines: {', '.join(sorted(missing))}"] if missing else []
         return engines, warnings
+    if profile.media_types:
+        media_engines: list[str] = []
+        for media_type in profile.media_types:
+            for name in catalog.engines_for_media_type(media_type):
+                if name not in media_engines:
+                    media_engines.append(name)
+        warnings = []
+        if not media_engines:
+            warnings.append(f"intent '{intent}' has media types {profile.media_types} matching no enabled engines")
+        return media_engines, warnings
     return catalog.engines_for_categories(profile.categories), []
 
 
@@ -485,6 +528,14 @@ def validate_intent_profiles(catalog: CapabilityCatalog) -> list[str]:
             missing = [name for name in profile.engines if name not in catalog.known_names()]
             if missing:
                 problems.append(f"intent '{intent}' references unknown engines: {', '.join(sorted(missing))}")
+        elif profile.media_types:
+            matched: list[str] = []
+            for media_type in profile.media_types:
+                for name in catalog.engines_for_media_type(media_type):
+                    if name not in matched:
+                        matched.append(name)
+            if not matched:
+                problems.append(f"intent '{intent}' has media types matching no enabled engines: {profile.media_types}")
         else:
             matched = catalog.engines_for_categories(profile.categories)
             if not matched:
@@ -783,6 +834,15 @@ def _normalize_result_types(
     declared = getattr(adapter if adapter is not None else cls, "supported_result_types", None) or ("text",)
     values = [value for value in declared if value in SUPPORTED_RESULT_TYPES]
     return values or ["text"]
+
+
+def _normalize_media_types(
+    cls: type[EngineAdapter],
+    adapter: EngineAdapter | None,
+) -> list[str]:
+    """Normalize declared supported_media_types to the closed media vocabulary."""
+    declared = getattr(adapter if adapter is not None else cls, "supported_media_types", None) or ()
+    return [value for value in declared if value in SUPPORTED_MEDIA_TYPES]
 
 
 def _normalize_failure_classes(

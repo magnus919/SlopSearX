@@ -21,6 +21,7 @@ from slopsearx.adapter import (
     EngineStatus,
     ScrapeAdapter,
     SearchResult,
+    build_media,
     register_engine,
 )
 
@@ -35,6 +36,7 @@ class DuckDuckGoAdapter(ScrapeAdapter):
 
     # -- Declared capability metadata (audited, issue 185) --
     supported_result_types = ("text", "media")
+    supported_media_types = ("image",)
     failure_classes = ("rate_limited", "blocked", "error", "timeout")
     cost_class = "free"
 
@@ -220,6 +222,17 @@ class DuckDuckGoAdapter(ScrapeAdapter):
                 img_src = "https:" + img_src
 
             if url:
+                # Attach a media record only when the tile carries an image
+                # source; a tile with a link but no <img> must never yield a
+                # degenerate image record.
+                media = None
+                if img_src:
+                    media = build_media(
+                        "image",
+                        url=img_src,
+                        thumbnail=img_src,
+                        source=url,
+                    )
                 results.append(
                     SearchResult(
                         url=url,
@@ -229,6 +242,7 @@ class DuckDuckGoAdapter(ScrapeAdapter):
                         engine=self.name,
                         category="images",
                         position=i + 1,
+                        media=media,
                     ),
                 )
 

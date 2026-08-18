@@ -38,6 +38,11 @@ _SENSITIVE_QUERY_PARAMS: set[str] = {
 # catalog normalizes and fills stable defaults so every entry is complete.
 SUPPORTED_FILTER_KEYS: tuple[str, ...] = ("language", "time_range", "safesearch", "pagination")
 SUPPORTED_RESULT_TYPES: tuple[str, ...] = ("text", "answers", "corrections", "infoboxes", "media", "structured")
+# Fine-grained media-type vocabulary for the dedicated image/video media
+# contract (issue 188). Distinct from the coarse ``media`` result type above:
+# ``media`` signals "may carry thumbnails/posters", while these tokens signal
+# "performs image or video search and returns a structured media record".
+SUPPORTED_MEDIA_TYPES: tuple[str, ...] = ("image", "video")
 FAILURE_CLASS_TOKENS: tuple[str, ...] = (
     "ok",
     "rate_limited",
@@ -102,6 +107,104 @@ def sanitize_url(url: str) -> str:
 
 
 @dataclass
+class MediaInfo:
+    """Structured media record for image/video results (issue 188).
+
+    The dedicated media result contract: safe URLs (the media file and its
+    thumbnail), source attribution (the page the media was found on),
+    dimensions (``width``/``height``) and ``duration`` (seconds) where the
+    adapter observed them, and the closed ``media_type`` vocabulary.
+
+    Absent/unknown fields stay ``None`` and are dropped at the serialization
+    boundary so an adapter never fabricates a dimension or duration it did
+    not actually receive from its source.
+    """
+
+    media_type: str  # "image" | "video"
+    url: Optional[str] = None  # safe media file URL
+    thumbnail: Optional[str] = None  # safe thumbnail URL
+    source: Optional[str] = None  # source attribution (page URL)
+    width: Optional[int] = None
+    height: Optional[int] = None
+    duration: Optional[float] = None  # seconds
+
+
+def build_media(
+    media_type: str,
+    *,
+    url: Optional[str] = None,
+    thumbnail: Optional[str] = None,
+    source: Optional[str] = None,
+    width: Optional[int] = None,
+    height: Optional[int] = None,
+    duration: Optional[float] = None,
+) -> Optional[MediaInfo]:
+    """Build a validated :class:`MediaInfo`, sanitizing every URL.
+
+    Returns ``None`` for a media type outside the closed
+    :data:`SUPPORTED_MEDIA_TYPES` vocabulary so a typo can never fabricate a
+    media record. URLs are passed through :func:`sanitize_url` so no
+    credential-bearing query parameter can leak into a persisted/serialized
+    media record.
+    """
+    if media_type not in SUPPORTED_MEDIA_TYPES:
+        return None
+    return MediaInfo(
+        media_type=media_type,
+        url=sanitize_url(url) if url else None,
+        thumbnail=sanitize_url(thumbnail) if thumbnail else None,
+        source=sanitize_url(source) if source else None,
+        width=width,
+        height=height,
+        duration=duration,
+    )
+
+
+def media_to_dict(media: MediaInfo | None) -> dict[str, Any] | None:
+    """Serialize a :class:`MediaInfo` to a JSON-safe dict, or ``None``.
+
+    ``None`` values are dropped (never materialized as ``null``) so the
+    canonical cache/snapshot form carries only the fields the adapter
+    actually reported.
+    """
+    if media is None:
+        return None
+    data: dict[str, Any] = {"media_type": media.media_type}
+    for key in ("url", "thumbnail", "source"):
+        value = getattr(media, key)
+        if value:
+            data[key] = value
+    for key in ("width", "height", "duration"):
+        value = getattr(media, key)
+        if value is not None:
+            data[key] = value
+    return data
+
+
+def media_from_dict(value: Any) -> MediaInfo | None:
+    """Rehydrate a :class:`MediaInfo` from a serialized value, or ``None``.
+
+    Accepts a dict; anything else (missing, malformed) yields ``None`` so a
+    broken media record never crashes the read path. A media type outside the
+    closed vocabulary is rejected rather than rehydrated.
+    """
+    if not isinstance(value, dict):
+        return None
+    media_type = value.get("media_type")
+    if media_type not in SUPPORTED_MEDIA_TYPES:
+        return None
+    return MediaInfo(
+        media_type=media_type,
+        url=value.get("url"),
+        thumbnail=value.get("thumbnail"),
+        source=value.get("source"),
+        width=value.get("width"),
+        height=value.get("height"),
+        duration=value.get("duration"),
+    )
+
+
+@dataclass
 class SearchResult:
     """Internal normalized result dataclass. Decoupled from wire format."""
 
@@ -117,6 +220,10 @@ class SearchResult:
     thumbnail: Optional[str] = None
     img_src: Optional[str] = None
     tier: int = 1  # 1 = primary (broad), 2 = secondary (specialized)
+    # Optional structured media record (image/video contract, issue 188).
+    # ``None`` for text/non-media results. ``thumbnail``/``img_src`` remain
+    # the legacy flat fields for backward compatibility.
+    media: Optional[MediaInfo] = None
     # Optional versioned, JSON-safe domain payload (see slopsearx.payload).
     # None means the result has no domain-specific structured payload and the
     # common envelope is the complete representation.
@@ -215,6 +322,12 @@ class EngineAdapter(ABC):
     # enforces any filter today, so the enforcement report stays honest.
     enforced_filters: dict[str, str] = {}  # filter name -> "upstream" | "local"
     supported_result_types: tuple[str, ...] = ("text",)  # subset of SUPPORTED_RESULT_TYPES
+    # Dedicated image/video search capability (issue 188): which media types
+    # this adapter can actively search and return structured media records
+    # for. Empty means "no dedicated image/video search" — it does not claim
+    # image/video routing even if the adapter may attach a thumbnail to text
+    # results. Subset of SUPPORTED_MEDIA_TYPES.
+    supported_media_types: tuple[str, ...] = ()
     failure_classes: tuple[str, ...] = (
         "rate_limited",
         "blocked",

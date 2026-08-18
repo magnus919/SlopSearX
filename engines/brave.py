@@ -14,6 +14,7 @@ from slopsearx.adapter import (
     EngineAdapter,
     EngineStatus,
     SearchResult,
+    build_media,
     register_engine,
 )
 
@@ -64,6 +65,7 @@ class BraveAdapter(EngineAdapter):
 
     # -- Declared capability metadata (audited, issue 185) --
     supported_result_types = ("text", "answers", "media")
+    supported_media_types = ("image", "video")
     failure_classes = ("rate_limited", "blocked", "error", "timeout")
     cost_class = "freemium"
 
@@ -146,8 +148,11 @@ class BraveAdapter(EngineAdapter):
                 elif endpoint == "images":
                     raw = data.get("results", [])
                     results = self._parse_image_results(raw)
+                elif endpoint == "videos":
+                    raw = data.get("results", [])
+                    results = self._parse_video_results(raw)
                 else:
-                    # news, videos — results at top level
+                    # news — results at top level
                     raw = data.get("results", [])
                     results = self._parse_web_results(raw)
 
@@ -220,11 +225,11 @@ class BraveAdapter(EngineAdapter):
         return answers
 
     def _parse_web_results(self, raw: list[dict[str, Any]]) -> list[SearchResult]:
-        """Parse web/news/video result items into SearchResult objects.
+        """Parse web/news result items into SearchResult objects.
 
-        Used for both web endpoint (``data.web.results``) and
-        news/video endpoints (``data.results``), which share the
-        same item field schema.
+        Used for both the web endpoint (``data.web.results``) and the
+        news endpoint (``data.results``), which share the same item field
+        schema.
         """
         results: list[SearchResult] = []
         for i, item in enumerate(raw):
@@ -244,22 +249,81 @@ class BraveAdapter(EngineAdapter):
     def _parse_image_results(self, raw: list[dict[str, Any]]) -> list[SearchResult]:
         """Parse image result items into SearchResult objects.
 
-        Image items use ``page_url`` for the link and ``thumbnail.src``
-        for the image source. The ``title`` field carries alt-text.
+        Image items use ``page_url`` for the source page and
+        ``thumbnail.src`` for the image source. The ``title`` field carries
+        alt-text. A structured image media record is attached when the item
+        carries an image source; dimensions come from the ``image`` object
+        when present.
         """
         results: list[SearchResult] = []
         for i, item in enumerate(raw):
             thumbnail = item.get("thumbnail", {})
             img_src = thumbnail.get("src") if isinstance(thumbnail, dict) else None
+            image = item.get("image", {})
+            full_url = image.get("src") if isinstance(image, dict) else None
+            width = image.get("width") if isinstance(image, dict) else None
+            height = image.get("height") if isinstance(image, dict) else None
+            page_url = item.get("page_url", item.get("url", ""))
+            # Attach a media record only when the item actually carries an
+            # image source; a news-shaped item with no thumbnail/image must
+            # never be fabricated into a degenerate image record (mirrors the
+            # guard in _parse_video_results).
+            media = None
+            if full_url or img_src:
+                media = build_media(
+                    "image",
+                    url=full_url or img_src,
+                    thumbnail=img_src,
+                    source=page_url or None,
+                    width=width if isinstance(width, int) else None,
+                    height=height if isinstance(height, int) else None,
+                )
             results.append(
                 SearchResult(
-                    url=item.get("page_url", item.get("url", "")),
+                    url=page_url,
                     title=item.get("title", ""),
                     content=item.get("description", ""),
                     engine=self.name,
                     position=i + 1,
                     thumbnail=img_src,
                     img_src=img_src,
+                    media=media,
+                ),
+            )
+        return results
+
+    def _parse_video_results(self, raw: list[dict[str, Any]]) -> list[SearchResult]:
+        """Parse video result items into SearchResult objects.
+
+        Video items share the news-item schema (``url``/``title``/
+        ``description``) and add a ``thumbnail`` plus an optional
+        ``duration``. A structured video media record is attached only when
+        an item actually carries a thumbnail, so a news-shaped payload is
+        never mislabeled as a video.
+        """
+        results: list[SearchResult] = []
+        for i, item in enumerate(raw):
+            thumbnail = item.get("thumbnail", {})
+            thumb_src = thumbnail.get("src") if isinstance(thumbnail, dict) else None
+            media = None
+            if thumb_src:
+                duration = item.get("duration")
+                media = build_media(
+                    "video",
+                    url=item.get("url") or None,
+                    thumbnail=thumb_src,
+                    source=item.get("url") or None,
+                    duration=duration if isinstance(duration, (int, float)) else None,
+                )
+            results.append(
+                SearchResult(
+                    url=item.get("url", ""),
+                    title=item.get("title", ""),
+                    content=item.get("description", ""),
+                    engine=self.name,
+                    position=i + 1,
+                    thumbnail=thumb_src,
+                    media=media,
                 ),
             )
         return results
