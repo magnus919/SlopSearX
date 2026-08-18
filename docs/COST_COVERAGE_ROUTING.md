@@ -68,9 +68,12 @@ Defaults are permissive: no engine-count cap, all cost classes allowed, no
 coverage target. A typo can never invent a bound — invalid values are
 ignored. Cost classes are the audited `COST_CLASSES` vocabulary
 (`free` < `freemium` < `paid`). An unknown (unassessed) cost class is never
-excluded by the `max_cost_class` bound, but under the engine-count cap a
-declared class is preferred over an unassessed engine — the cap never
-chooses an unassessed engine over a declared-free one.
+excluded by the `max_cost_class` bound. Under the engine-count cap, cost
+class only breaks ties among engines of comparable health and tier
+(`_priority_order` ranks tier and observed health above cost): a declared
+cost class is preferred over an unassessed engine only within the same
+health/tier band, so a healthier unassessed engine can still outrank a
+declared-free one that is degraded or lower-tier.
 
 ## Explainability
 
@@ -116,7 +119,12 @@ Stale health observations are treated as unknown, never as current `ok`.
 
 `tests/test_routing_eval.py` measures the strategy against the
 context-equivalent deterministic baseline (the candidate set the fallback
-would dispatch) under declared fixtures and budgets. The rubric asserts:
+would dispatch) under declared fixtures and budgets. R1–R4 and R6 compare
+the routed mix to the raw candidate set; R5 compares it against the
+**auth/health-filtered candidate set** — the subset of candidates that
+survives the hard auth/health exclusions — because a raw-candidate
+comparison is an unsound proxy when those exclusions remove cheap or
+unknown-cost engines. The rubric asserts:
 
 - R1 the routed scope is a subset of the baseline (routing never adds
   engines);
@@ -124,8 +132,8 @@ would dispatch) under declared fixtures and budgets. The rubric asserts:
 - R3 no ineligible (unauthenticated / circuit-open) engine is selected;
 - R4 determinism across repeated runs;
 - R5 when the cost bound actually excludes engines, the routed mix is never
-  more expensive on average than the baseline (when the cost bound is not
-  constraining, no cost claim is made);
+  more expensive on average than the auth/health-filtered candidate set
+  (when the cost bound is not constraining, no cost claim is made);
 - R6 coverage is not reduced below the budget floor.
 
 **Scope of this evaluation** — it covers the declared fixtures (healthy /

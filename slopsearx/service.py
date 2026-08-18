@@ -1120,17 +1120,26 @@ def _routing_cache_digest(ctx: AppContext) -> str:
 
     The digest folds in catalog presence, the routing-relevant state of every
     active engine (the only engines that can be selected for dispatch), and
-    the routing budget. The per-engine state includes the observed-health
-    signal the engine-count bound ranks by (``last_known_status`` plus
-    whether it is stale — ``_priority_order`` treats a stale observation as
-    unknown, never as current ``ok``), so a health change or a staleness
-    flip invalidates the cache instead of serving a scope frozen at the
-    populating request's health state. Any change to a routing input yields
-    a different digest, so a cached response is never reused under a
-    different routing state. Computed once per search (pre-dispatch) so the
-    read and write paths agree on the exact state the scope was derived
-    from.
+    the routing budget. Observed health is folded in only under the
+    engine-count bound: ``_priority_order`` — the sole consumer of the
+    observed-health signal (``last_known_status`` plus staleness — a stale
+    observation is treated as unknown, never as current ``ok``) — runs
+    solely when the budget sets ``max_engines > 0``. In the default
+    permissive budget (no engine-count cap) health never shapes the routed
+    scope, so folding it in would only shorten the cache lifetime to the
+    ~300s freshness window: a staleness flip would bust the 3600s cache
+    entry with zero routing benefit. Auth, cost, circuit, and budget parts
+    stay unconditional — those always shape the scope. Any change to a
+    folded routing input yields a different digest, so a cached response is
+    never reused under a different routing state. Computed once per search
+    (pre-dispatch) so the read and write paths agree on the exact state the
+    scope was derived from.
     """
+    budget = ctx.routing_budget
+    # Observed health only shapes the routed scope under the engine-count
+    # bound: ``_priority_order`` (the only consumer of the health signal)
+    # runs solely when ``max_engines > 0``.
+    fold_health = budget is not None and budget.max_engines > 0
     parts: list[str] = []
     catalog = ctx.catalog
     if catalog is None:
@@ -1140,11 +1149,15 @@ def _routing_cache_digest(ctx: AppContext) -> str:
             cap = catalog.get(name)
             if cap is None or not cap.enabled:
                 continue
-            parts.append(
-                f"{name}:{cap.auth_class}:{int(cap.auth_configured)}:{cap.cost_class}:{int(cap.circuit_open)}:"
-                f"{cap.last_known_status}:{int(cap.last_known_status_stale)}"
-            )
-    budget = ctx.routing_budget
+            if fold_health:
+                parts.append(
+                    f"{name}:{cap.auth_class}:{int(cap.auth_configured)}:{cap.cost_class}:{int(cap.circuit_open)}:"
+                    f"{cap.last_known_status}:{int(cap.last_known_status_stale)}"
+                )
+            else:
+                parts.append(
+                    f"{name}:{cap.auth_class}:{int(cap.auth_configured)}:{cap.cost_class}:{int(cap.circuit_open)}"
+                )
     if budget is None:
         parts.append("budget=none")
     else:

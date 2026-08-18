@@ -634,6 +634,48 @@ class TestCacheScopeNotStale:
         assert second.cached is True
         assert first.scope.selected_engines == second.scope.selected_engines
 
+    async def test_cache_hit_survives_health_staleness_without_count_cap(self) -> None:
+        """Without an engine-count cap, a health staleness flip does not bust
+        the cache.
+
+        Issue 192 review: observed health only shapes the routed scope under
+        ``max_engines > 0`` (``_priority_order`` is the sole consumer), so in
+        the default permissive budget the routing-inputs digest must not fold
+        the health/staleness signal in — folding it would invalidate the
+        3600s cache entry every ~300s (the staleness window) with zero
+        routing benefit. Search once, age the observation past the freshness
+        bound so the only routing input that changed is the staleness flag,
+        then re-search the same query: the cache entry must still hit.
+        """
+        engines_map = {
+            "arxiv": _MockEngine("arxiv"),
+            "wikipedia": _MockEngine("wikipedia"),
+        }
+        cfg = _keyless_config(list(engines_map))
+        ctx = AppContext(
+            active_engines=engines_map,
+            router=None,
+            cache=_FakeStore(),
+            tier1_engines=set(engines_map),
+            sensitive_engines=set(),
+            catalog=CapabilityCatalog(config=cfg, adapters=engines_map),
+            routing_budget=RoutingBudget(),  # default: no engine-count cap
+        )
+        service = SearchService(ctx)
+        request = SearchRequest(query="q")
+
+        first = await service.search(request)
+        assert first.cached is False
+        assert engines_map["arxiv"].last_observed_status == "ok"
+
+        # Age the observation past the freshness bound so the catalog reports
+        # it stale — the only routing input that changed between the searches.
+        engines_map["arxiv"].last_observed_at = time.time() - observed_health_stale_seconds() - 1.0
+
+        second = await service.search(request)
+        assert second.cached is True
+        assert second.scope.selected_engines == first.scope.selected_engines
+
 
 # ---------------------------------------------------------------------------
 # Cache round-trip of the routing explanation

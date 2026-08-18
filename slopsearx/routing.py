@@ -45,8 +45,9 @@ from slopsearx.config import Config, load_config
 # Cost-class ordering for deterministic comparisons. ``""`` (unknown) maps
 # to 0 so the ``max_cost_class`` exclusion never penalizes an unassessed
 # engine; the engine-count-cap ordering remaps it above "paid" (see
-# ``_priority_order``) so the cap never prefers an unassessed engine over a
-# declared-cheaper one. Declared classes: "free" < "freemium" < "paid".
+# ``_priority_order``) so a declared-cheaper class wins only among engines
+# of comparable health and tier — never across a health/tier gap. Declared
+# classes: "free" < "freemium" < "paid".
 # On the budget side the same lookup is *not* used directly: an empty/unset
 # ``max_cost_class`` is normalized by ``_budget_max_rank`` to the permissive
 # "paid" rank, so an unset bound can never become maximally restrictive.
@@ -321,11 +322,11 @@ def _priority_order(
 
     Prefers (in order): tier-1 breadth, healthier observation (a stale
     observation is treated as unknown, never as current ``ok``), cheaper
-    declared cost class, then stable name order. An unassessed
-    (unknown-cost) engine sorts after every declared class under this cap:
-    the count bound must never prefer an unassessed engine over a
-    declared-free one, while the ``max_cost_class`` exclusion still keeps
-    unknown-cost engines.
+    declared cost class, then stable name order. Cost class only breaks
+    ties among engines of comparable health and tier (health and tier
+    outrank cost): a declared cost class is preferred over an unassessed
+    (unknown-cost) engine within the same health/tier band, while the
+    ``max_cost_class`` exclusion still keeps unknown-cost engines.
     """
 
     def _key(name: str) -> tuple[int, int, int, str]:
