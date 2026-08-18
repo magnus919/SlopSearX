@@ -265,17 +265,36 @@ class TestFormatJson:
         response = format_json(results=[result], query="test")
         assert response["results"][0]["payload"] == small_payload
 
-    def test_json_hostile_payload_omitted(self) -> None:
-        """set/bytes/NaN payloads must be omitted, never crash strict JSON render."""
+    def test_nan_payload_omitted_never_crashes_render(self) -> None:
+        """NaN payloads stay unserializable after canonicalization and must be
+        omitted, never crashing strict JSON render."""
         import json
 
-        hostile_payloads = [
+        payload = {"domain": "security", "type": "vulnerability", "data": {"score": float("nan")}}
+        result = SearchResult(
+            url="https://example.com",
+            title="X",
+            content="y",
+            engine="brave",
+            engines={"brave"},
+            payload=payload,
+        )
+        response = format_json(results=[result], query="test")
+        assert response["results"][0]["payload"] is None
+        # The full response must survive strict JSON serialization (no 500).
+        json.dumps(response, allow_nan=False)
+
+    def test_set_bytes_payload_canonicalized_before_size_gate(self) -> None:
+        """set/bytes payloads are canonicalized (set -> sorted list, bytes ->
+        stringified repr) before the disclosure gate measures them, so the
+        HTTP output emits the same JSON-safe form the cache/record path stores
+        (finding 4)."""
+        from slopsearx.payload import payload_to_dict
+
+        for payload in (
             {"domain": "security", "type": "vulnerability", "data": {"tags": {"a", "b"}}},
             {"domain": "security", "type": "vulnerability", "data": {"raw": b"\x00\x01"}},
-            {"domain": "security", "type": "vulnerability", "data": {"score": float("nan")}},
-        ]
-
-        for payload in hostile_payloads:
+        ):
             result = SearchResult(
                 url="https://example.com",
                 title="X",
@@ -285,9 +304,7 @@ class TestFormatJson:
                 payload=payload,
             )
             response = format_json(results=[result], query="test")
-            assert response["results"][0]["payload"] is None
-            # The full response must survive strict JSON serialization (no 500).
-            json.dumps(response, allow_nan=False)
+            assert response["results"][0]["payload"] == payload_to_dict(payload)
 
 
 # ---------------------------------------------------------------------------

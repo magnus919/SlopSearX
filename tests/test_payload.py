@@ -27,6 +27,7 @@ from slopsearx.payload import (
     DOMAIN_PACKAGES,
     DOMAIN_SCIENCE,
     DOMAIN_SECURITY,
+    PAYLOAD_INLINE_BYTES,
     _json_safe,
     build_payload,
     is_valid_payload,
@@ -514,9 +515,15 @@ class TestPayloadDisclosure:
         finally:
             set_state(None)
 
-    async def test_unserializable_payload_does_not_crash_search_and_is_omitted(self) -> None:
-        payload: dict[str, Any] = {"domain": "security", "type": "vulnerability", "data": {}}
-        payload["self"] = payload  # circular reference — cannot be JSON-serialized
+    async def test_circular_payload_is_canonicalized_not_crashed(self) -> None:
+        """A circular payload is canonicalized to a deterministic marker and
+        inlined identically on cards and records (the same form the persistence
+        boundary stores), never crashing the MCP response."""
+        payload = build_payload(DOMAIN_SECURITY, "vulnerability", {}, engine="brave")
+        payload["self"] = payload  # circular reference — canonicalized to a marker
+        expected = payload_to_dict(payload)
+        assert expected is not None
+        assert expected["self"] == "<circular reference>"
 
         state = _mcp_state(_PayloadEngine("brave", payload))
         set_state(state)
@@ -525,7 +532,10 @@ class TestPayloadDisclosure:
             assert "error" not in result
             assert len(result["results"]) == 1
             assert result["results"][0]["title"] == "Payload result"
-            assert "payload" not in result["results"][0]
+            assert result["results"][0]["payload"] == expected
+
+            expanded = await t.slopsearx_read_result(result["results"][0]["result_id"])
+            assert expanded["payload"] == expected
         finally:
             set_state(None)
 
@@ -544,37 +554,140 @@ class TestPayloadDisclosure:
         finally:
             set_state(None)
 
-    async def test_json_hostile_payload_omitted_from_card_even_when_requested(self) -> None:
-        """set/bytes/NaN payloads are omitted from cards and never crash the MCP response."""
-        hostile_payloads = [
-            {"domain": "security", "type": "vulnerability", "data": {"tags": {"a", "b"}}},
-            {"domain": "security", "type": "vulnerability", "data": {"raw": b"\x00\x01"}},
-            {"domain": "security", "type": "vulnerability", "data": {"score": float("nan")}},
-        ]
+    async def test_nan_payload_omitted_from_card_even_when_requested(self) -> None:
+        """NaN payloads stay unserializable after canonicalization and are
+        omitted from cards (and records), never crashing the MCP response.
+        set/bytes payloads are no longer hostile — they canonicalize to
+        JSON-safe forms and inline (covered by the fresh/cached parity test).
+        """
+        payload = {"domain": "security", "type": "vulnerability", "data": {"score": float("nan")}}
 
-        for payload in hostile_payloads:
+        state = _mcp_state(_PayloadEngine("brave", payload))
+        set_state(state)
+        try:
+            # prefer_fresh forces the raw (un-canonicalized) payload path,
+            # which is exactly where an unserializable payload must be omitted.
+            result = await t.slopsearx_search("cve", engines=["brave"], freshness="prefer_fresh")
+            assert "error" not in result
+            assert len(result["results"]) == 1
+            assert "payload" not in result["results"][0]
+
+            # Even an explicit include=["payload"] request must not crash
+            # or inline an unserializable payload.
+            requested = await t.slopsearx_search(
+                "cve",
+                engines=["brave"],
+                include=["results", "payload"],
+                freshness="prefer_fresh",
+            )
+            assert "error" not in requested
+            assert "payload" not in requested["results"][0]
+
+            expanded = await t.slopsearx_read_result(requested["results"][0]["result_id"])
+            assert expanded["payload"] is None
+        finally:
+            set_state(None)
+
+    async def test_set_bytes_payload_treated_identically_fresh_and_cached(self) -> None:
+        """A set/bytes-bearing payload is canonicalized BEFORE the disclosure
+        gates measure it, so fresh and cache-hit paths inline the SAME form —
+        no fresh-omits-but-cached-inlines divergence (finding 4).
+        """
+        raw_payload = {
+            "domain": "security",
+            "type": "vulnerability",
+            "schema_version": 1,
+            "data": {"tags": {"a", "b"}, "raw": b"\x00\x01"},
+        }
+        expected = payload_to_dict(raw_payload)
+        assert expected is not None
+        assert expected["data"]["tags"] == ["a", "b"]  # set -> sorted list
+
+        state = _mcp_state(_PayloadEngine("brave", raw_payload))
+        set_state(state)
+        try:
+            fresh = await t.slopsearx_search("cve", engines=["brave"], freshness="prefer_fresh")
+            fresh_card = fresh["results"][0]
+            assert fresh_card["payload"] == expected
+
+            cached = await t.slopsearx_search("cve", engines=["brave"], freshness="prefer_cache")
+            cached_card = cached["results"][0]
+            assert cached_card["payload"] == expected
+            assert cached_card["payload"] == fresh_card["payload"]
+        finally:
+            set_state(None)
+
+    async def test_deep_payload_not_inlined_in_full_matches_record(self) -> None:
+        """A payload nested beyond ``_JSON_SAFE_MAX_DEPTH`` is never inlined in
+        full on cards: the card and the record both expose the depth-truncated
+        canonical form the persistence boundary stores (finding 4).
+        """
+        raw_payload = {
+            "domain": "security",
+            "type": "vulnerability",
+            "schema_version": 1,
+            "data": {"deep": _deeply_nested_payload(150)},
+        }
+        canonical = payload_to_dict(raw_payload)
+        assert canonical is not None
+        assert json.dumps(canonical).count("max depth exceeded") >= 1
+        # The canonical (truncated) form is measured by the gates; it exceeds
+        # the inline cap, so the full raw payload must never appear on a card.
+        assert payload_serialized_size(canonical) > PAYLOAD_INLINE_BYTES
+
+        state = _mcp_state(_PayloadEngine("brave", raw_payload))
+        set_state(state)
+        try:
+            # Not requested: the depth-truncated form is too big to inline.
+            result = await t.slopsearx_search("cve", engines=["brave"], freshness="prefer_fresh")
+            assert "payload" not in result["results"][0]
+
+            # Requested: inlined in the SAME depth-truncated canonical form the
+            # record returns — never the raw full-depth payload.
+            requested = await t.slopsearx_search(
+                "cve",
+                engines=["brave"],
+                include=["results", "payload"],
+                freshness="prefer_fresh",
+            )
+            card_payload = requested["results"][0]["payload"]
+            assert card_payload == canonical
+            assert json.dumps(card_payload).count("max depth exceeded") >= 1
+
+            expanded = await t.slopsearx_read_result(requested["results"][0]["result_id"])
+            assert expanded["payload"] == canonical
+            assert json.dumps(expanded["payload"]).count("max depth exceeded") >= 1
+        finally:
+            set_state(None)
+
+    async def test_payload_between_inline_and_persist_bounds_not_inlined(self, monkeypatch) -> None:
+        """A card never inlines a payload above the persistence bound, even
+        when it is under the 512-byte inline cap — the record returns null too
+        (finding 3: PAYLOAD_MAX_PERSIST_BYTES=256, ~321-byte payload)."""
+        monkeypatch.setenv("PAYLOAD_MAX_PERSIST_BYTES", "256")
+        try:
+            payload = build_payload(
+                DOMAIN_SCIENCE,
+                "publication",
+                {"publication_id": "2401.00001", "abstract": "A" * 85},
+                engine="brave",
+            )
+            size = payload_serialized_size(payload)
+            assert size is not None
+            assert 256 < size <= PAYLOAD_INLINE_BYTES
+
             state = _mcp_state(_PayloadEngine("brave", payload))
             set_state(state)
             try:
-                # prefer_fresh forces the raw (un-canonicalized) payload path,
-                # which is exactly where a JSON-hostile payload must be omitted.
-                result = await t.slopsearx_search("cve", engines=["brave"], freshness="prefer_fresh")
-                assert "error" not in result
-                assert len(result["results"]) == 1
+                result = await t.slopsearx_search("paper", engines=["brave"])
                 assert "payload" not in result["results"][0]
 
-                # Even an explicit include=["payload"] request must not crash
-                # or inline an unserializable payload.
-                requested = await t.slopsearx_search(
-                    "cve",
-                    engines=["brave"],
-                    include=["results", "payload"],
-                    freshness="prefer_fresh",
-                )
-                assert "error" not in requested
-                assert "payload" not in requested["results"][0]
+                expanded = await t.slopsearx_read_result(result["results"][0]["result_id"])
+                assert expanded["payload"] is None
             finally:
                 set_state(None)
+        finally:
+            monkeypatch.delenv("PAYLOAD_MAX_PERSIST_BYTES", raising=False)
 
     async def test_read_result_returns_full_payload(self) -> None:
         payload = build_payload(
@@ -812,6 +925,45 @@ class TestSciencePayload:
         assert payload["data"]["authors"] == ["Alice", "Bob"]
         # esummary provides no abstract — absent, not fabricated.
         assert "abstract" not in payload["data"]
+
+    async def test_pubmed_payload_carries_all_authors(self) -> None:
+        """A PubMed result with 5+ authors keeps EVERY author in the payload,
+        while the display content string stays capped at the first three
+        (finding 5: payload fidelity vs display truncation)."""
+        from slopsearx.adapter import discover_engines
+
+        adapter = discover_engines({"pubmed": {"enabled": True}})["pubmed"]
+        author_names = ["Alice", "Bob", "Carol", "Dave", "Erin", "Frank"]
+
+        def _handler(r):
+            if "esearch" in str(r.url):
+                return httpx.Response(200, json={"esearchresult": {"idlist": ["99999"]}})
+            return httpx.Response(
+                200,
+                json={
+                    "result": {
+                        "99999": {
+                            "title": "A multi-author biomedical study",
+                            "source": "Nature",
+                            "pubdate": "2024-05-01",
+                            "authors": [{"name": name} for name in author_names],
+                        }
+                    }
+                },
+            )
+
+        async with MockHTTP(_handler):
+            result = await adapter.search("biomedical")
+
+        payload = result.results[0].payload
+        assert payload is not None
+        assert payload["data"]["authors"] == author_names
+
+        display = result.results[0].content
+        assert display is not None
+        assert display.startswith("Nature — Alice, Bob, Carol")
+        assert "Dave" not in display
+        assert "Erin" not in display
 
 
 class TestPackagesPayload:

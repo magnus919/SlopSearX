@@ -98,8 +98,10 @@ class PubMedAdapter(EngineAdapter):
                     source = article.get("source", "")
                     pub_date = article.get("pubdate", "")
                     authors = article.get("authors", [])
-                    author_names = [a.get("name", "") for a in authors[:3]]
-                    author_str = ", ".join(author_names)
+                    # The payload carries the FULL author list (fidelity); the
+                    # display content string stays capped at the first three.
+                    author_names = [a.get("name", "") for a in authors]
+                    author_str = ", ".join(author_names[:3])
                     content_parts = [source]
                     if author_str:
                         content_parts.append(author_str)
