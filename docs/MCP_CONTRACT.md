@@ -39,9 +39,12 @@ The MCP layer exposes one underlying result at two disclosure levels (design §4
 - **Card** (`slopsearx_search`, `slopsearx_search_targeted`,
   `slopsearx_search_jobs`, `slopsearx_search_security`,
   `slopsearx_search_science`, `slopsearx_read_results`): compact triage fields.
-  Media and full content are **never** on a card.
+  Full content and the complete media record (media file URL, source
+  attribution) are **never** on a card; a media result's card carries only a
+  compact `media` triage summary.
 - **Record** (`slopsearx_read_result`): the full evidence for one result —
-  complete `content`, media fields, provenance, and the non-verification note.
+  complete `content`, the complete media record, provenance, and the
+  non-verification note.
 
 `SearchResult` is the single shared source for both. The sections below list
 each field once and note where it appears (card, record, or neither).
@@ -65,6 +68,7 @@ Source: `slopsearx/adapter.py:78-91`. The internal normalized result dataclass.
 | `published_date` | `Optional[str]` | `published_at` | `published_at` | ISO-8601 string or `None`; round-trips as exact value (`VAL-CORRECT-005`). |
 | `thumbnail` | `Optional[str]` | *(omitted)* | `thumbnail` | **Media is record-only** (design §4.4 / decision 4; `VAL-EXPAND-006`). Omitted from cards by deliberate choice. |
 | `img_src` | `Optional[str]` | *(omitted)* | `img_src` | **Media is record-only**. Omitted from cards by deliberate choice. |
+| `media` | `Optional[MediaInfo]` | `media` (triage summary) | `media` (complete record) | Structured image/video media record (issue 188). Cards carry only the triage summary — `media_type`, `thumbnail`, `width`, `height`, `duration` where present; the complete record (adding `url` and `source` attribution) is returned by `slopsearx_read_result`. Text results omit `media` entirely. |
 | `tier` | `int` (1 or 2) | `tier` | `tier` | PresenceRanker tier; 1 = broad, 2 = specialized. `meta.ranking` states `tier_then_cross_engine_presence`. |
 | `payload` | `Optional[dict]` | `payload` (conditionally) | `payload` (full) | Optional versioned domain payload (see §14). Cards inline it only when `include=["payload"]` was requested or the serialized payload is small enough (`PAYLOAD_INLINE_BYTES = 512`) — and, in both cases, only when it is within `PAYLOAD_MAX_PERSIST_BYTES`; otherwise it is omitted from cards. Records carry the complete payload when it is within `PAYLOAD_MAX_PERSIST_BYTES`, or `null` when the result has none, the payload is unserializable, or it exceeds the persistence bound. |
 
@@ -255,6 +259,7 @@ reads the live registry, never prose.
 | `supported_filters` | `supported_filters` | Object keyed by `language`, `time_range`, `safesearch`, `pagination`, each a boolean. Audited: **no adapter consumes any filter parameter today**, so every entry is `false`. A declaration is a capability hint, never an enforcement claim — the enforcement report resolves against the dispatched scope at search time. |
 | `enforced_filters` | `enforced_filters` | Object keyed by `language`, `time_range`, `safesearch`, `pagination`, each `null` (not enforced), `"upstream"`, or `"local"` (service post-filter). Audited separately from `supported_filters`: this is the enforcement layer the report derives from. Audited: **no adapter enforces any filter today**, so every entry is `null`, matching the `unsupported` enforcement status. |
 | `supported_result_types` | `supported_result_types` | List drawn from `text` / `answers` / `corrections` / `infoboxes` / `media` / `structured` (`SUPPORTED_RESULT_TYPES`). Audited per adapter: e.g. Brave declares `answers`+`media`, Wikipedia declares `corrections`+`infoboxes`+`media`, TMDB/openlibrary/Reddit/DDG declare `media`. `structured` is intentionally unused until typed domain payloads ship (tracked separately). |
+| `supported_media_types` | `supported_media_types` | List drawn from `image` / `video` (`SUPPORTED_MEDIA_TYPES`, issue 188). Dedicated image/video **search** capability, distinct from the coarse `media` result type. Audited per adapter: Brave declares `image`+`video`, DuckDuckGo declares `image`; adapters that only attach thumbnails to text results (Wikipedia, TMDB, openlibrary, Reddit) declare none. Empty list means no dedicated media search. |
 | `failure_classes` | `failure_classes` | List drawn from the stable token set `ok`, `rate_limited`, `blocked`, `error`, `timeout`, `auth_required`, `unavailable`. Audited per adapter to the statuses its `search()` can actually emit (e.g. `openalex`/`internetarchive` classify everything as `error`; most keyed API adapters emit `rate_limited`/`blocked`/`error`/`timeout`). |
 | `cost_class` | `cost_class` | One of `free` / `freemium` / `paid` (`COST_CLASSES`); audited per adapter from its access model. Empty string is emitted as `null` (explicit unknown — no fabricated estimates). |
 | `last_known_status` | `last_known_status` | One of `ok` / `rate_limited` / `blocked` / `error` / `timeout` / `unavailable` / `unknown`. Observed passively through classified search outcomes; defaults to `unknown` and is never fabricated from registration or configuration. |
@@ -269,6 +274,7 @@ Defined in `adapter.py` and used verbatim:
 
 - `SUPPORTED_FILTER_KEYS = (language, time_range, safesearch, pagination)`
 - `SUPPORTED_RESULT_TYPES = (text, answers, corrections, infoboxes, media, structured)`
+- `SUPPORTED_MEDIA_TYPES = (image, video)`
 - `FAILURE_CLASS_TOKENS = (ok, rate_limited, blocked, error, timeout, auth_required, unavailable)`
 - `COST_CLASSES = (free, freemium, paid)` — `""` = unknown (emitted as `null`)
 
@@ -383,9 +389,13 @@ The MCP layer returns structured `{error: {code, message, ...}}` envelopes. The
 closed vocabulary (schema pin) is: `invalid_input`, `invalid_scope`,
 `invalid_result_id`, `invalid_cursor`, `expired_handle`, `tool_disabled`,
 `all_engines_failed`, `invalid_job_id`, `no_retryable_work`,
-`store_unavailable`, plus `job_budget_exceeded`, `deadline_exceeded`,
+`store_unavailable`, `invalid_job_state`, `media_coverage_gap`,
+`invalid_intent`, plus `job_budget_exceeded`, `deadline_exceeded`,
 `rate_limited`, and `safesearch_unenforced`. These are the error-side of the
-contract; every one is emitted from `_error` in `tools.py`.
+contract; every one is emitted from `_error` in `tools.py`. `invalid_intent`
+is used when an intent is valid generally but cannot be honored by the tool
+(for example a media intent such as `images`/`videos` on
+`slopsearx_extend_research`, whose subqueries carry no `media_type`).
 
 ---
 

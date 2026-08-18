@@ -512,9 +512,10 @@ Intent-based search — the primary entry point.
 | Parameter | Type | Notes |
 |---|---|---|
 | `query` | string, required | ≤ `max_query_length` chars |
-| `intent` | string | `auto` (default), `web`, `news`, `science`, `reference`, `code`, `social`, `historical`, `jobs`, `security`, `medical`, `finance`, `packages`, `media`, `legal`, `geography` |
+| `intent` | string | `auto` (default), `web`, `news`, `science`, `reference`, `code`, `social`, `historical`, `jobs`, `security`, `medical`, `finance`, `packages`, `media`, `images`, `videos`, `legal`, `geography`. `images`/`videos` are the dedicated image/video search intents. |
 | `categories` | string[] | OR filter; overridden by `engines` |
 | `engines` | string[] | explicit override; must be known engines |
+| `media_type` | string | `image` \| `video`. Constrains the dispatched scope to engines that advertise the media type; a scope with no coverage returns `media_coverage_gap`. |
 | `language` | string | `en` default — **not enforced by adapters** (warning returned) |
 | `time_range` | string | `day`/`month`/`year` — **not enforced by adapters** (warning returned) |
 | `safesearch` | string | `off` (default), `moderate`, `strict`. **Strict fails closed**: no adapter enforces it |
@@ -683,11 +684,12 @@ existing tools cover the same needs with no extra surface area:
   tool. `max_results` bounds the presented page.
 - **`requires_*` evaluation.** `slopsearx_list_capabilities` exposes each
   engine's `supported_result_types` (text/answers/corrections/infoboxes/
-  media/structured) and `supported_filters`, generated from the live
-  registry. An agent that "requires answers" or "requires media" reads the
-  catalog to select engines that declare the result type, then dispatches
-  with `engines`/`intent`/`categories` — the "require" check is delegated to
-  the catalog, not a new tool.
+  media/structured), `supported_media_types` (image/video), and
+  `supported_filters`, generated from the live registry. An agent that
+  "requires answers" or "requires media" reads the catalog to select engines
+  that declare the result type, then dispatches with
+  `engines`/`intent`/`categories` (or `media_type` for image/video search) —
+  the "require" check is delegated to the catalog, not a new tool.
 - **Explicit source boundaries.** `slopsearx_search_targeted` (and the
   specialist tools) already provide deliberate, auditable engine selection
   when a precise source set is required.

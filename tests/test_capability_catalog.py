@@ -43,6 +43,7 @@ REQUIRED_CAP_FIELDS = {
     "supported_filters",
     "enforced_filters",
     "supported_result_types",
+    "supported_media_types",
     "failure_classes",
     "cost_class",
     "last_known_status",
@@ -51,6 +52,7 @@ REQUIRED_CAP_FIELDS = {
 }
 SUPPORTED_FILTER_KEYS = {"language", "time_range", "safesearch", "pagination"}
 RESULT_TYPE_VOCAB = {"text", "answers", "corrections", "infoboxes", "media", "structured"}
+MEDIA_TYPE_VOCAB = {"image", "video"}
 FAILURE_CLASS_VOCAB = {"ok", "rate_limited", "blocked", "error", "timeout", "auth_required", "unavailable"}
 AUTH_CLASSES = {"none", "optional", "required", "unknown"}
 ENFORCEMENT_STATUSES = {"enforced", "partially_enforced", "unsupported", "rejected"}
@@ -178,6 +180,8 @@ def _assert_cap_entry(entry: dict[str, Any]) -> None:
     assert all(v is None or v in ("upstream", "local") for v in ef.values())
     assert entry["supported_result_types"], entry
     assert set(entry["supported_result_types"]) <= RESULT_TYPE_VOCAB, entry
+    assert isinstance(entry["supported_media_types"], list), entry
+    assert set(entry["supported_media_types"]) <= MEDIA_TYPE_VOCAB, entry
     assert entry["failure_classes"], entry
     assert set(entry["failure_classes"]) <= FAILURE_CLASS_VOCAB, entry
     assert entry["cost_class"] is None or isinstance(entry["cost_class"], str)

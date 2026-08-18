@@ -26,6 +26,9 @@ def render_capabilities() -> str:
         lines.append(f"- sensitive: {cap.sensitive}")
         lines.append(f"- supported filters: {_render_supported_filters(cap.supported_filters)}")
         lines.append(f"- supported result types: {', '.join(cap.supported_result_types)}")
+        lines.append(
+            f"- supported media types: {', '.join(cap.supported_media_types) if cap.supported_media_types else 'none'}"
+        )
         lines.append(f"- failure classes: {', '.join(cap.failure_classes)}")
         lines.append(f"- cost class: {cap.cost_class or 'unknown'}")
         lines.append(f"- last known status: {cap.last_known_status}")
@@ -65,6 +68,7 @@ def render_engine_capability(engine: str) -> str:
         f"- sensitive: {cap.sensitive}",
         f"- supported filters: {_render_supported_filters(cap.supported_filters)}",
         f"- supported result types: {', '.join(cap.supported_result_types)}",
+        f"- supported media types: {', '.join(cap.supported_media_types) if cap.supported_media_types else 'none'}",
         f"- failure classes: {', '.join(cap.failure_classes)}",
         f"- cost class: {cap.cost_class or 'unknown'}",
         f"- last known status: {cap.last_known_status}",
@@ -98,6 +102,8 @@ def render_routing_profiles() -> str:
             lines.append(f"- categories: {', '.join(profile.categories)}")
         if profile.engines:
             lines.append(f"- engines: {', '.join(profile.engines)}")
+        if profile.media_types:
+            lines.append(f"- media types: {', '.join(profile.media_types)}")
         if profile.sensitive:
             lines.append("- sensitive: requires MCP_GRANT_SECURITY=1")
         lines.append("")

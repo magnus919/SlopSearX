@@ -45,13 +45,14 @@ def cache_key(
     engines: list[str] | None = None,
     pageno: int = 1,
     time_range: str | None = None,
+    media_type: str | None = None,
 ) -> str:
     """Build deterministic cache key from normalized query tuple.
 
     The key includes every result-affecting input. Categories, engines,
-    page, and time range were previously excluded, which could serve a
-    cached response that did not represent the requested filters — two
-    semantically different searches could share one entry. Scope inputs
+    page, time range, and media type were previously excluded, which could
+    serve a cached response that did not represent the requested filters —
+    two semantically different searches could share one entry. Scope inputs
     are sorted so equivalent requests produce identical keys.
     """
     norm_query = normalize_query(query)
@@ -61,6 +62,7 @@ def cache_key(
             ",".join(sorted(engines)) if engines else "-",
             str(pageno),
             time_range or "-",
+            media_type or "-",
         ]
     )
     norm = f"{norm_query}|{language}|{safesearch}|{scope}"
