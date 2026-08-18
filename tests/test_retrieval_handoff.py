@@ -705,6 +705,9 @@ class TestIPv6TranslationPrefixLiteral:
             # IPv4-translatable-range literal ::ffff:0:7f00:1 embedding a
             # loopback octet: also is_global=True and must be rejected.
             "http://[::ffff:0:7f00:1]/",
+            # IPv4-mapped literal (::ffff:0:0/96) embedding a non-global
+            # IPv4: the embedded loopback is never a safe fetch target.
+            "http://[::ffff:127.0.0.1]/",
             # RFC 3879 deprecated site-local scope (fec0::/10): ipaddress
             # classifies it neither reserved nor private, so it slips past
             # both the globality check and is_reserved.
@@ -712,9 +715,11 @@ class TestIPv6TranslationPrefixLiteral:
         ],
     )
     async def test_ipv6_translation_prefix_and_site_local_literal_is_never_handed_off(self, url: str) -> None:
-        """A translation-prefix or deprecated site-local IPv6 literal is ambiguous.
+        """A translation-prefix, site-local, or non-global-embedding literal is ambiguous.
 
-        ``64:ff9b::/96`` (RFC 6052 NAT64), ``::ffff:0:7f00:1``, and the
+        ``64:ff9b::/96`` (RFC 6052 NAT64), the IPv4-translatable
+        ``::ffff:0:0:0/96`` (``::ffff:0:7f00:1``), an IPv4-mapped literal
+        embedding a non-global IPv4 (``::ffff:127.0.0.1``), and the
         deprecated site-local ``fec0::/10`` all report ``is_global=True`` on
         modern CPython (they are not in the private registry), so the
         globality-only guard previously certified them ``ok`` and handed them
@@ -741,9 +746,11 @@ class TestIPv6TranslationPrefixLiteral:
         "url",
         [
             # Positive controls stay eligible after the reserved-prefix and
-            # site-local guards: a dotted public IPv4 literal and ordinary
-            # hostnames pass the literal-IP check unchanged.
+            # site-local guards: a dotted public IPv4 literal, an IPv4-mapped
+            # literal embedding a public IPv4, and ordinary hostnames pass
+            # the literal-IP check unchanged.
             "http://8.8.8.8/",
+            "http://[::ffff:8.8.8.8]/",  # IPv4-mapped literal of a public IPv4
             "https://example.com/page",
         ],
     )

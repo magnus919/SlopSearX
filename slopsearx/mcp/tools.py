@@ -721,19 +721,40 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
         # and any non-global address (loopback, private, CGNAT, link-local,
         # reserved, documentation, or unspecified) is never handed off. Two
         # additional classes are rejected because ``ipaddress.is_global``
-        # alone reports them global: reserved-prefix literals (``ip.is_reserved``
-        # — RFC 6052 NAT64 ``64:ff9b::/96`` and the IPv4-translatable
-        # ``::ffff:0:0:0/96`` report is_global=True regardless of the IPv4
-        # they embed, which can be loopback/metadata/private) and the RFC 3879
-        # deprecated site-local scope (``fec0::/10``, neither reserved nor
-        # private). A dotted all-numeric host that every candidate parser
+        # alone reports them global: reserved IPv6 prefixes with no embedded
+        # IPv4 (``ipv4_mapped is None`` — RFC 6052 NAT64 ``64:ff9b::/96``
+        # and the IPv4-translatable ``::ffff:0:0:0/96`` report is_global=True
+        # regardless of the IPv4 they embed) and the RFC 3879 deprecated
+        # site-local scope (``fec0::/10``, neither reserved nor private).
+        # IPv4-mapped literals (``::ffff:0:0/96``) are judged by their
+        # embedded IPv4 instead: a public embedded address is eligible, while
+        # an embedded address that ``ipaddress`` does not classify as
+        # globally reachable (loopback, private, link-local, CGNAT,
+        # unspecified, reserved, documentation) is never handed off. A
+        # dotted all-numeric host that every candidate parser
         # rejects (an empty or out-of-range octet, e.g. "169..127.1" or
         # "1.2.3.300") is a failed IPv4 literal attempt, not a legitimate
         # hostname — a WHATWG client would fail to canonicalize it, so it is
         # never certified ok.
         ip_candidates = _ip_literal_candidates(parsed.hostname)
         for ip in ip_candidates:
-            if ip.is_reserved or not ip.is_global or (ip.version == 6 and ip in RETRIEVAL_DEPRECATED_SITE_LOCAL_V6):
+            # Reject anything non-global plus the two embed-agnostic classes
+            # that ``ipaddress.is_global`` alone reports global: reserved
+            # IPv6 prefixes with no embedded IPv4 (``ipv4_mapped is None`` —
+            # RFC 6052 NAT64 ``64:ff9b::/96`` and the IPv4-translatable
+            # ``::ffff:0:0:0/96``) and the RFC 3879 deprecated site-local
+            # scope (``fec0::/10``). An IPv4-mapped literal (``::ffff:0:0/96``
+            # with ``ipv4_mapped`` set) is judged by its embedded IPv4: a
+            # public embedded address stays eligible while an embedded
+            # address that ``ipaddress`` does not classify as globally
+            # reachable (loopback, private, link-local, CGNAT, unspecified,
+            # reserved, documentation) is never handed off.
+            if (
+                not ip.is_global
+                or (ip.version == 6 and ip.ipv4_mapped is None and ip.is_reserved)
+                or (ip.version == 6 and ip.ipv4_mapped is not None and not ip.ipv4_mapped.is_global)
+                or (ip.version == 6 and ip in RETRIEVAL_DEPRECATED_SITE_LOCAL_V6)
+            ):
                 return (
                     RETRIEVAL_URL_STATUS_AMBIGUOUS,
                     "URL host is a non-global literal IP address; not a safe fetch target",
