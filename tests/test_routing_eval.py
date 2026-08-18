@@ -149,6 +149,20 @@ FIXTURES: tuple[tuple[str, list[str], dict[str, EngineCapability], RoutingBudget
         RoutingBudget(max_engines=5, max_cost_class="freemium", coverage_target=4),
         "everything at once: healthy/degraded, authed/unauth, cheap/expensive",
     ),
+    (
+        "cheap_only_after_health",
+        ["u1", "u2", "u3", "u4", "free_ok", "paid_ok"],
+        {
+            "u1": _cap("u1", cost_class="", circuit_open=True),
+            "u2": _cap("u2", cost_class="", circuit_open=True),
+            "u3": _cap("u3", cost_class="", circuit_open=True),
+            "u4": _cap("u4", cost_class="", circuit_open=True),
+            "free_ok": _cap("free_ok"),
+            "paid_ok": _cap("paid_ok", cost_class="paid"),
+        },
+        RoutingBudget(max_cost_class="free"),
+        "unknown-cost engines are circuit-open; only the free engine survives health + budget",
+    ),
 )
 
 # The declared query-family → candidate mapping is context-equivalent to the
@@ -241,13 +255,23 @@ class TestRoutingEvaluation:
         rubric["deterministic"] = True
 
         # R5 — when the cost bound actually excludes engines, the routed mix
-        # is never more expensive on average than the baseline. When the cost
-        # bound is not constraining (baseline already within budget), no cost
+        # is never more expensive on average than the auth/health-filtered
+        # baseline (only budget exclusions may narrow it further). Comparing
+        # against the raw candidate set is an unsound proxy: auth/health
+        # exclusions can remove the cheap or unknown-cost engines, so the cost
+        # bound may be satisfiable even when the raw baseline average is below
+        # every in-budget engine's cost. When the cost bound is not
+        # constraining (filtered baseline already within budget), no cost
         # improvement is claimed — the strategy only narrows scope, so it may
         # remove cheap unhealthy engines and leave pricier healthy ones.
-        baseline_max_cost = max((_COST_RANK.get(caps[n].cost_class, 0) for n in baseline), default=0)
+        filtered_baseline = [
+            n
+            for n in baseline
+            if not (caps[n].auth_class == "required" and not caps[n].auth_configured) and not caps[n].circuit_open
+        ]
+        baseline_max_cost = max((_COST_RANK.get(caps[n].cost_class, 0) for n in filtered_baseline), default=0)
         if _COST_RANK[budget.max_cost_class] < baseline_max_cost:
-            assert _avg_cost(caps, routed.selected) <= _avg_cost(caps, baseline) + 1e-9
+            assert _avg_cost(caps, routed.selected) <= _avg_cost(caps, filtered_baseline) + 1e-9
             rubric["cost_not_worse_than_baseline"] = True
         else:
             rubric["cost_not_worse_than_baseline"] = "n/a (cost bound not constraining)"
@@ -272,3 +296,35 @@ class TestRoutingEvaluation:
         unbounded = select_cost_coverage(candidates, catalog, RoutingBudget())
         assert set(unbounded.selected) == set(candidates)
         assert unbounded.budget_applied is False
+
+    def test_r5_uses_auth_health_filtered_baseline(self) -> None:
+        """R5 must compare against the auth/health-filtered baseline, not the
+        raw candidate set: auth/health exclusions can remove the cheap or
+        unknown-cost engines, so the cost bound may be satisfiable even when
+        the raw baseline average is below every in-budget engine's cost
+        (issue 192 review).
+
+        Reviewer arithmetic: candidates ``[u1..u4 (unknown cost,
+        circuit-open), free_ok (free), paid_ok (paid)]`` with
+        ``max_cost_class="free"`` — the strategy correctly routes to
+        ``free_ok`` only, and R5 must pass (raw-baseline comparison would
+        wrongly fail: 1.0 > (0+0+0+0+1+3)/6)."""
+        candidates = ["u1", "u2", "u3", "u4", "free_ok", "paid_ok"]
+        caps = {f"u{i}": _cap(f"u{i}", cost_class="", circuit_open=True) for i in range(1, 5)}
+        caps["free_ok"] = _cap("free_ok")
+        caps["paid_ok"] = _cap("paid_ok", cost_class="paid")
+        catalog = _EvalCatalog(caps)
+        budget = RoutingBudget(max_cost_class="free")
+
+        routed = select_cost_coverage(candidates, catalog, budget)
+        assert routed.selected == ["free_ok"]
+
+        filtered_baseline = [
+            n
+            for n in candidates
+            if not (caps[n].auth_class == "required" and not caps[n].auth_configured) and not caps[n].circuit_open
+        ]
+        assert set(filtered_baseline) == {"free_ok", "paid_ok"}
+        baseline_max_cost = max((_COST_RANK.get(caps[n].cost_class, 0) for n in filtered_baseline), default=0)
+        assert _COST_RANK[budget.max_cost_class] < baseline_max_cost
+        assert _avg_cost(caps, routed.selected) <= _avg_cost(caps, filtered_baseline) + 1e-9

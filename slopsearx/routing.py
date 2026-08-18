@@ -47,6 +47,9 @@ from slopsearx.config import Config, load_config
 # engine; the engine-count-cap ordering remaps it above "paid" (see
 # ``_priority_order``) so the cap never prefers an unassessed engine over a
 # declared-cheaper one. Declared classes: "free" < "freemium" < "paid".
+# On the budget side the same lookup is *not* used directly: an empty/unset
+# ``max_cost_class`` is normalized by ``_budget_max_rank`` to the permissive
+# "paid" rank, so an unset bound can never become maximally restrictive.
 _COST_RANK: dict[str, int] = {"": 0, "free": 1, "freemium": 2, "paid": 3}
 
 # Observed-health ordering for deterministic prioritization. An engine with
@@ -82,8 +85,9 @@ class RoutingBudget:
     """Operator-configured bounds for the automatic source mix.
 
     Every bound is permissive by default: ``max_engines`` 0 means no
-    engine-count cap, ``max_cost_class`` ``"paid"`` allows every declared
-    cost class, and ``coverage_target`` 0 disables coverage reporting.
+    engine-count cap, ``max_cost_class`` ``"paid"`` (or an empty string,
+    which is treated as unset) allows every declared cost class, and
+    ``coverage_target`` 0 disables coverage reporting.
     Bounds only bite when the operator configures them — autonomous
     spending or hidden provider preference is never inferred (out of scope).
     """
@@ -243,9 +247,10 @@ def select_cost_coverage(
 
     budget_applied = False
     if budget is not None:
+        budget_max_rank = _budget_max_rank(budget.max_cost_class)
         kept: list[str] = []
         for name in selected:
-            if _cost_rank(signals[name].cost_class) > _cost_rank(budget.max_cost_class):
+            if _cost_rank(signals[name].cost_class) > budget_max_rank:
                 exclusions.append(
                     RoutingExclusion(
                         engine=name,
@@ -334,6 +339,20 @@ def _cost_rank(cost_class: str) -> int:
     return _COST_RANK.get(cost_class, 0)
 
 
+def _budget_max_rank(max_cost_class: str) -> int:
+    """The effective cost rank of a budget's ``max_cost_class`` bound.
+
+    An empty/unset bound means "no cost bound" (permissive), and a value
+    outside the declared vocabulary is treated the same way — the loader
+    ignores invalid values, so a directly-constructed budget must never
+    accidentally become the most restrictive bound, which would exclude
+    every declared-cost engine (issue 192 review).
+    """
+    if not max_cost_class or max_cost_class not in _COST_RANK:
+        return _COST_RANK["paid"]
+    return _COST_RANK[max_cost_class]
+
+
 def _health_rank(sig: RoutingSignal) -> int:
     status = "unknown" if sig.health_stale else (sig.health_status if sig.health_status in _HEALTH_RANK else "unknown")
     return _HEALTH_RANK.get(status, 1)
@@ -356,6 +375,6 @@ def _coerce_cost_class(value: Any, env_var: str) -> str:
     raw = os.environ.get(env_var, "").strip()
     if raw:
         value = raw
-    if isinstance(value, str) and value in _COST_RANK:
+    if isinstance(value, str) and value and value in _COST_RANK:
         return value
     return "paid"

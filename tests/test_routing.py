@@ -220,6 +220,33 @@ class TestBudgetBounds:
         assert result.selected == ["wikipedia", "dehashed"]
         assert result.budget_applied is False
 
+    def test_empty_cost_class_bound_is_permissive(self) -> None:
+        """An empty ``max_cost_class`` means no cost bound (permissive), never
+        the most restrictive bound: under ``max_cost_class=""`` a ``paid``
+        engine must still be selectable (issue 192 review)."""
+        catalog = _catalog(
+            _cap("wikipedia", cost_class="free"),
+            _cap("dehashed", cost_class="paid"),
+        )
+        budget = RoutingBudget(max_cost_class="")
+        result = select_cost_coverage(["wikipedia", "dehashed"], catalog, budget)
+        assert result.selected == ["wikipedia", "dehashed"]
+        assert result.exclusions == []
+        assert result.budget_applied is False
+
+    def test_explicit_free_bound_still_excludes_pricier_engines(self) -> None:
+        """The permissive-empty fix must not change explicit bounds: ``"free"``
+        still excludes ``freemium``/``paid`` (documented behavior)."""
+        catalog = _catalog(
+            _cap("wikipedia", cost_class="free"),
+            _cap("brave", cost_class="freemium"),
+            _cap("dehashed", cost_class="paid"),
+        )
+        budget = RoutingBudget(max_cost_class="free")
+        result = select_cost_coverage(["wikipedia", "brave", "dehashed"], catalog, budget)
+        assert result.selected == ["wikipedia"]
+        assert [e.engine for e in result.exclusions if e.stage == EXCLUSION_STAGE_BUDGET] == ["brave", "dehashed"]
+
 
 class TestTradeoffs:
     def test_cost_tradeoff_reported(self) -> None:
@@ -307,6 +334,15 @@ class TestLoadRoutingBudget:
         monkeypatch.setenv("ROUTING_MAX_COST_CLASS", "not-a-class")
         budget = load_routing_budget(config)
         assert budget.max_engines == 0
+        assert budget.max_cost_class == "paid"
+
+    def test_empty_string_max_cost_class_is_permissive_default(self) -> None:
+        """An empty ``max_cost_class`` in the YAML budget loads as the
+        permissive default (``paid``), not ``""`` — an empty string would sort
+        as the lowest (most restrictive) cost rank and exclude every
+        declared-cost engine (issue 192 review)."""
+        config = Config(routing=RoutingConfig(budget={"max_cost_class": ""}))
+        budget = load_routing_budget(config)
         assert budget.max_cost_class == "paid"
 
     def test_zero_engines_means_unlimited(self) -> None:
