@@ -169,6 +169,13 @@ UNSAFE_RETRIEVAL_SCHEMES = frozenset({"file", "data", "javascript", "vbscript", 
 # excluded because it is not a connectable fetch target.
 RETRIEVAL_PORT_MAX = 65535
 
+# RFC 3879 deprecated the IPv6 site-local addressing scope (fec0::/10).
+# ``ipaddress`` classifies the range neither reserved nor private on modern
+# CPython, so a site-local literal reports is_global=True and would slip past
+# the globality guard. It is not globally routable, so any literal in this
+# prefix is never handed off as a fetch target.
+RETRIEVAL_DEPRECATED_SITE_LOCAL_V6 = ipaddress.ip_network("fec0::/10")
+
 JOBS_ADAPTERS = ("greenhouse", "ashby", "lever")
 
 JOBS_LIMITATION_NOTE = (
@@ -712,14 +719,21 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
         # resolve to loopback). Only literal IPs are checked — getaddrinfo is
         # used solely with AI_NUMERICHOST, so no DNS resolution is performed —
         # and any non-global address (loopback, private, CGNAT, link-local,
-        # reserved, documentation, or unspecified) is never handed off. A
-        # dotted all-numeric host that every candidate parser rejects (an
-        # empty or out-of-range octet, e.g. "169..127.1" or "1.2.3.300") is a
-        # failed IPv4 literal attempt, not a legitimate hostname — a WHATWG
-        # client would fail to canonicalize it, so it is never certified ok.
+        # reserved, documentation, or unspecified) is never handed off. Two
+        # additional classes are rejected because ``ipaddress.is_global``
+        # alone reports them global: reserved-prefix literals (``ip.is_reserved``
+        # — RFC 6052 NAT64 ``64:ff9b::/96`` and the IPv4-translatable
+        # ``::ffff:0:0:0/96`` report is_global=True regardless of the IPv4
+        # they embed, which can be loopback/metadata/private) and the RFC 3879
+        # deprecated site-local scope (``fec0::/10``, neither reserved nor
+        # private). A dotted all-numeric host that every candidate parser
+        # rejects (an empty or out-of-range octet, e.g. "169..127.1" or
+        # "1.2.3.300") is a failed IPv4 literal attempt, not a legitimate
+        # hostname — a WHATWG client would fail to canonicalize it, so it is
+        # never certified ok.
         ip_candidates = _ip_literal_candidates(parsed.hostname)
         for ip in ip_candidates:
-            if not ip.is_global:
+            if ip.is_reserved or not ip.is_global or (ip.version == 6 and ip in RETRIEVAL_DEPRECATED_SITE_LOCAL_V6):
                 return (
                     RETRIEVAL_URL_STATUS_AMBIGUOUS,
                     "URL host is a non-global literal IP address; not a safe fetch target",
