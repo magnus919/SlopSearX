@@ -712,9 +712,15 @@ class SearchService:
             self._resolve_engine_timeout_s(engine) for engine in target.values() if engine.circuit_allowed()
         ]
         # The deadline covers semaphore acquisition as well as engine work.
-        # Use the sum, rather than the maximum, so serialized dispatch can give
-        # every selected engine its configured execution budget.
-        dispatch_deadline_s = max(DEFAULT_SEARCH_TIMEOUT_S, sum(engine_timeouts))
+        # Cap the sum so the overall guard remains reachable while serialized
+        # dispatch still receives a bounded budget for its selected engines.
+        # Preserve the slowest selected engine's configured timeout so the
+        # search-wide deadline never truncates a valid per-engine budget.
+        dispatch_deadline_s = max(
+            DEFAULT_SEARCH_TIMEOUT_S,
+            max(engine_timeouts, default=DEFAULT_SEARCH_TIMEOUT_S),
+            min(sum(engine_timeouts), DEFAULT_SEARCH_TIMEOUT_S * 3),
+        )
 
         dispatch_results = await self._gather_with_deadline(tasks, engine_names, dispatch_deadline_s, started_engines)
 
