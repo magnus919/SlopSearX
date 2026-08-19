@@ -610,9 +610,7 @@ class TestDispatch:
 
         assert engine.consecutive_errors == 4
 
-    async def test_search_deadline_caps_serialized_timeout_budget(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    async def test_search_deadline_caps_serialized_timeout_budget(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """The derived fan-out deadline remains a reachable bounded guard."""
         engines = {f"eng{i}": _OkEngine() for i in range(4)}
         for engine in engines.values():
@@ -636,6 +634,30 @@ class TestDispatch:
         await service.search(_req())
 
         assert observed == [30.0]
+
+    async def test_search_deadline_preserves_longest_selected_timeout(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A targeted engine timeout above the aggregate cap remains honored."""
+        engine = _OkEngine()
+        engine.config = {"timeout_ms": 45_000}
+        service = _service(engines={"okeng": engine})
+        observed: list[float] = []
+
+        async def _fake_gather(
+            tasks: list[asyncio.Task[AdapterResponse]],
+            engine_names: list[str],
+            deadline_s: float,
+            started_engines: set[str],
+        ) -> list[AdapterResponse]:
+            observed.append(deadline_s)
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            return [AdapterResponse(results=[], status=EngineStatus.OK) for _ in engine_names]
+
+        monkeypatch.setattr(service, "_gather_with_deadline", _fake_gather)
+        await service.search(_req())
+
+        assert observed == [45.0]
 
     async def test_overall_deadline_drains_cancelled_tasks(self) -> None:
         """Deadline cancellation drains child tasks before returning the response."""

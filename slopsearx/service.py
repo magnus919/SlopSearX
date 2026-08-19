@@ -714,8 +714,11 @@ class SearchService:
         # The deadline covers semaphore acquisition as well as engine work.
         # Cap the sum so the overall guard remains reachable while serialized
         # dispatch still receives a bounded budget for its selected engines.
+        # Preserve the slowest selected engine's configured timeout so the
+        # search-wide deadline never truncates a valid per-engine budget.
         dispatch_deadline_s = max(
             DEFAULT_SEARCH_TIMEOUT_S,
+            max(engine_timeouts, default=DEFAULT_SEARCH_TIMEOUT_S),
             min(sum(engine_timeouts), DEFAULT_SEARCH_TIMEOUT_S * 3),
         )
 
