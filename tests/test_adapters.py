@@ -72,7 +72,10 @@ class TestBraveAdapter:
         }
 
     async def test_search_returns_results(self, adapter, sample_response):
+        captured_url: list[httpx.URL] = []
+
         def _handler(r):
+            captured_url.append(r.url)
             return httpx.Response(200, json=sample_response)
 
         async with MockHTTP(_handler):
@@ -82,6 +85,7 @@ class TestBraveAdapter:
         assert result.results[0].url == "https://example.com/page1"
         assert result.results[0].thumbnail == "https://example.com/thumb1.jpg"
         assert result.results[1].url == "https://example.com/page2"
+        assert captured_url[0].params["count"] == "20"
 
     async def test_search_rate_limited(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(429)):

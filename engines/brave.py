@@ -97,7 +97,7 @@ class BraveAdapter(EngineAdapter):
                 api_key = env_key
         base_url = cfg.get("base_url", "https://api.search.brave.com/res/v1/web/search")
         timeout_ms = cfg.get("timeout_ms", 5_000)
-        max_results = cfg.get("max_results", 10)
+        max_results = cfg.get("max_results", 20)
 
         if not api_key:
             return AdapterResponse(
