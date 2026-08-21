@@ -48,7 +48,7 @@ class MockHTTP:
 class TestBraveAdapter:
     @pytest.fixture
     def adapter(self):
-        instances = discover_engines({"brave": {**_DEFAULT_ENGINES["brave"], "enabled": True, "api_key": "test-key"}})
+        instances = discover_engines({"brave": {"enabled": True, "api_key": "test-key"}})
         return instances["brave"]
 
     @pytest.fixture
