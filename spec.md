@@ -490,7 +490,7 @@ engines:
     base_url: "https://api.search.brave.com/res/v1/web/search"
     rate_limit: 15  # requests per second
     timeout_ms: 5000
-    max_results: 10
+    max_results: 20
     weight: 1.0  # V2 trust score initial value
 
   duckduckgo:

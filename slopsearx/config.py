@@ -96,7 +96,7 @@ _DEFAULT_ENGINES: dict[str, dict[str, Any]] = {
         "base_url": "https://api.search.brave.com/res/v1/web/search",
         "type": "api",
         "timeout_ms": 5_000,
-        "max_results": 10,
+        "max_results": 20,
         "rate_limit": 15,
         "weight": 1.0,
     },

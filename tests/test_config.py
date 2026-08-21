@@ -62,6 +62,7 @@ class TestLoadConfig:
         """With no config file and no env overrides, should return built-in defaults."""
         config = load_config()
         assert "brave" in config.engines
+        assert config.engines["brave"].max_results == 20
         assert config.engines["brave"].base_url == "https://api.search.brave.com/res/v1/web/search"
         assert config.cache.ttl_seconds == 300
 
