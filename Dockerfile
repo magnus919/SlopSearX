@@ -8,8 +8,11 @@ LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /app
 
-# System deps for lxml
-RUN apt-get update && apt-get install -y --no-install-recommends libxml2 libxslt1.1 && rm -rf /var/lib/apt/lists/*
+# System deps for lxml; also apply security updates to packages inherited from the base image.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends libxml2 libxslt1.1 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Python deps
 COPY pyproject.toml .
