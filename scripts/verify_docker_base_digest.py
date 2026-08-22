@@ -15,7 +15,7 @@ FROM_RE = re.compile(
     r"^\s*FROM\s+python:(?P<tag>[^@\s]+)@(?P<digest>sha256:[0-9a-f]{64})(?:\s+AS\s+\S+)?\s*$",
     re.IGNORECASE | re.MULTILINE,
 )
-ALL_FROM_RE = re.compile(r"^\s*FROM\s+\S+(?:\s+AS\s+\S+)?\s*$", re.IGNORECASE | re.MULTILINE)
+ALL_FROM_RE = re.compile(r"^\s*FROM\b.*$", re.IGNORECASE | re.MULTILINE)
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 MAX_ATTEMPTS = 3
 RETRYABLE_HTTP_STATUS = frozenset({429, 500, 502, 503, 504})

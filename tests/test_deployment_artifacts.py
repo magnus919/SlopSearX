@@ -34,6 +34,21 @@ def test_pinned_base_parser_rejects_multiple_from_lines() -> None:
         verify._pinned_python_base(dockerfile)
 
 
+@pytest.mark.parametrize(
+    "second_from",
+    [
+        "FROM --platform=linux/amd64 python:3.12-slim",
+        "FROM python:3.12-slim  # runtime stage",
+    ],
+)
+def test_pinned_base_parser_rejects_unrecognized_from_lines(second_from: str) -> None:
+    digest = "a" * 64
+    dockerfile = f"FROM python:3.12-slim@sha256:{digest}\n{second_from}\n"
+
+    with pytest.raises(SystemExit, match="exactly one FROM"):
+        verify._pinned_python_base(dockerfile)
+
+
 def test_registry_lookup_retries_transient_failures(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[object] = []
 
