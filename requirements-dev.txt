@@ -8,7 +8,7 @@ annotated-doc==0.0.4
     # via fastapi
 annotated-types==0.7.0
     # via pydantic
-anyio==4.14.1
+anyio==4.14.2
     # via
     #   httpx
     #   starlette
@@ -17,7 +17,7 @@ ast-serialize==0.6.0
     # via mypy
 boolean-py==5.0
     # via license-expression
-build==1.5.0
+build==1.5.1
     # via pip-tools
 cachecontrol[filecache]==0.14.4
     # via
@@ -31,7 +31,7 @@ certifi==2026.6.17
     #   sentry-sdk
 cfgv==3.5.0
     # via pre-commit
-charset-normalizer==3.4.7
+charset-normalizer==3.4.9
     # via requests
 click==8.4.2
     # via
@@ -41,7 +41,7 @@ click==8.4.2
     #   uvicorn
 colorama==0.4.6
     # via radon
-coverage[toml]==7.15.0
+coverage[toml]==7.15.1
     # via pytest-cov
 cssselect==1.4.0
     # via slopsearx (pyproject.toml)
@@ -55,7 +55,7 @@ distlib==0.4.3
     # via virtualenv
 fastapi==0.139.0
     # via slopsearx (pyproject.toml)
-filelock==3.29.5
+filelock==3.29.7
     # via
     #   cachecontrol
     #   python-discovery
@@ -83,7 +83,7 @@ import-linter==2.13
     # via slopsearx (pyproject.toml)
 iniconfig==2.3.0
     # via pytest
-librt==0.12.0
+librt==0.13.0
     # via mypy
 license-expression==30.4.4
     # via cyclonedx-python-lib
@@ -97,7 +97,7 @@ mdurl==0.1.2
     # via markdown-it-py
 msgpack==1.2.1
     # via cachecontrol
-mypy==2.1.0
+mypy==2.2.0
     # via slopsearx (pyproject.toml)
 mypy-extensions==1.1.0
     # via mypy
@@ -181,7 +181,7 @@ rich==15.0.0
     # via
     #   import-linter
     #   pip-audit
-ruff==0.15.20
+ruff==0.15.21
     # via slopsearx (pyproject.toml)
 sentry-sdk==2.64.0
     # via slopsearx (pyproject.toml)
@@ -216,13 +216,13 @@ urllib3==2.7.0
     # via
     #   requests
     #   sentry-sdk
-uvicorn[standard]==0.50.1
+uvicorn[standard]==0.51.0
     # via slopsearx (pyproject.toml)
 uvloop==0.22.1
     # via uvicorn
 valkey==6.1.1
     # via slopsearx (pyproject.toml)
-virtualenv==21.5.1
+virtualenv==21.6.1
     # via pre-commit
 vulture==2.16
     # via slopsearx (pyproject.toml)
