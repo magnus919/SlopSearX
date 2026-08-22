@@ -61,7 +61,7 @@ Incident response procedures are documented in `docs/runbooks.md`. Key scenarios
 1. Check Valkey: `docker compose exec valkey redis-cli PING`
 2. Restart Valkey if unresponsive
 3. Verify engine API keys
-4. Full restart: `DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose build && docker compose up -d`
+4. Full restart: `DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose build && docker compose down && docker compose up -d --no-build`
 
 ### Rate limit triage
 
