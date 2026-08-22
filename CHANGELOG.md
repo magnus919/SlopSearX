@@ -88,6 +88,21 @@
   `lever`); correct the cache-scoping, sensitive-engine-grant, and snapshot
   error-mapping claims to match the implemented behavior
 
+## [0.3.1](https://github.com/magnus919/SlopSearX/compare/v0.3.0...v0.3.1) (2026-08-22)
+
+
+### Bug Fixes
+
+* **test:** drop hardcoded version literal from VAL-DIAG-002 ([426df20](https://github.com/magnus919/SlopSearX/commit/426df20d10a21973f87045dc52446fe610f611b6))
+* **test:** drop hardcoded version literal from VAL-DIAG-002 ([eea5ba3](https://github.com/magnus919/SlopSearX/commit/eea5ba35a867269cad5f3a4920c13354e948d6fd))
+* **test:** drop hardcoded version literal from VAL-DIAG-002 ([#213](https://github.com/magnus919/SlopSearX/issues/213)) ([426df20](https://github.com/magnus919/SlopSearX/commit/426df20d10a21973f87045dc52446fe610f611b6))
+
+
+### Documentation
+
+* add MCP full-strength access PRD ([fb60312](https://github.com/magnus919/SlopSearX/commit/fb60312c91657f2c986c7449ababa9d5e4780542))
+* add MCP full-strength access PRD ([#212](https://github.com/magnus919/SlopSearX/issues/212)) ([fb60312](https://github.com/magnus919/SlopSearX/commit/fb60312c91657f2c986c7449ababa9d5e4780542))
+
 ## [0.3.0](https://github.com/magnus919/SlopSearX/compare/v0.2.0...v0.3.0) (2026-08-22)
 
 
