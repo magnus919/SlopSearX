@@ -27,7 +27,8 @@ graph TD
 ### Pre-built images
 
 Available from GitHub Container Registry:
-- `ghcr.io/magnus919/slopsearx:latest` — latest main
+- `ghcr.io/magnus919/slopsearx@sha256:1cd1d05cac718662fd46a324d12fb085e719aba07739329847246b1881d81c7a` — promoted artifact from main commit `851090f`
+- `ghcr.io/magnus919/slopsearx:latest` — mutable convenience pointer
 - `ghcr.io/magnus919/slopsearx:unstable` — latest main (alias)
 - `ghcr.io/magnus919/slopsearx:stable` — latest release
 - `ghcr.io/magnus919/slopsearx:X.Y.Z` — specific version
@@ -44,15 +45,13 @@ docker run -d --name slopsearx -p 8080:8080 \
 
 ### Docker Compose
 
+The default Compose file consumes the promoted, immutable GHCR artifact:
+
 ```yaml
 # docker-compose.yml
 services:
   slopsearx:
-    build:
-      context: .
-      args:
-        DEBIAN_SECURITY_REFRESH: "${DEBIAN_SECURITY_REFRESH:-}"
-    image: slopsearx:0.1.0
+    image: ghcr.io/magnus919/slopsearx@sha256:1cd1d05cac718662fd46a324d12fb085e719aba07739329847246b1881d81c7a
     ports:
       - "8080"
     env_file:
@@ -67,10 +66,10 @@ networks:
     external: true
 ```
 
-Build and start from a fresh checkout with a unique Debian security-refresh value:
+To build from local source, use the explicit override. It requires a unique security-refresh value:
 
 ```bash
-DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose up -d --build
+DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
 ```
 
 ## Kubernetes
@@ -108,7 +107,7 @@ Replace SearXNG in the GroktoCrawl stack:
 ```yaml
 # docker-compose.yml (GroktoCrawl)
 slopsearx:
-  image: ghcr.io/magnus919/slopsearx:latest
+  image: ghcr.io/magnus919/slopsearx@sha256:1cd1d05cac718662fd46a324d12fb085e719aba07739329847246b1881d81c7a
   environment:
     - VALKEY_URL=redis://valkey:6379
     - ENGINE_BRAVE_API_KEY=${BRAVE_API_KEY}
@@ -147,6 +146,7 @@ Update `SEARXNG_URL` in agent-svc to point to `slopsearx:8080`. The response for
 | File | Description |
 |---|---|
 | `Dockerfile` | Production image build |
-| `docker-compose.yml` | Docker Compose orchestration |
+| `docker-compose.yml` | Digest-pinned pre-built image orchestration |
+| `docker-compose.build.yml` | Explicit local source-build override |
 | `k8s/` | Kubernetes manifests |
 | `docker/healthcheck.py` | Container health check script |

@@ -16,7 +16,9 @@ spec:
     spec:
       containers:
         - name: slopsearx
-          image: slopsearx:0.1.0
+          # GHCR artifact from main commit 851090f, built and Trivy-scanned by run 32548589659.
+          image: ghcr.io/magnus919/slopsearx@sha256:1cd1d05cac718662fd46a324d12fb085e719aba07739329847246b1881d81c7a
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
               name: http

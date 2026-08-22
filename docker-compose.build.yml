@@ -1,0 +1,11 @@
+# Explicit local source-build override.
+# Use with: DEBIAN_SECURITY_REFRESH="$(date +%s)" \
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+
+services:
+  slopsearx:
+    build:
+      context: .
+      args:
+        DEBIAN_SECURITY_REFRESH: "${DEBIAN_SECURITY_REFRESH:?Set DEBIAN_SECURITY_REFRESH to a unique value before building}"
+    image: slopsearx:0.1.0-dev

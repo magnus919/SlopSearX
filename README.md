@@ -210,12 +210,20 @@ generic MCP clients), and agent usage guidance:
 
 ## Quick Start
 
-### Build from source
+### Run the verified image
 
-The Dockerfile requires a unique security-refresh value so cached builds cannot silently reuse an old Debian package layer:
+The default Compose file uses the immutable GHCR artifact promoted from main commit `851090f`. It does not build from the moving `latest` tag:
 
 ```bash
-DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose build
+docker compose up -d
+```
+
+### Build from source
+
+The Dockerfile requires a unique security-refresh value so cached builds cannot silently reuse an old Debian package layer. Use the explicit build override when you need a local source build:
+
+```bash
+DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose -f docker-compose.yml -f docker-compose.build.yml build
 ```
 
 ### VPN and proxy deployments
@@ -234,7 +242,7 @@ warnings rather than failures because a search can legitimately have no matches.
 FEATURE_EMPTY_SCRAPE_DIAGNOSTICS=true
 ```
 
-Pre-built Docker images are available from GitHub Container Registry. Builds run automatically on every push to `main` (`latest`, `unstable`) and on version tags (`stable`, `X`, `X.Y`, `X.Y.Z`).
+Pre-built Docker images are available from GitHub Container Registry. Builds run automatically on every push to `main` (`latest`, `unstable`) and on version tags (`stable`, `X`, `X.Y`, `X.Y.Z`). The `latest` tag is a convenience pointer; the default Compose file and Kubernetes manifests use immutable image digests and must be updated together when a new artifact is promoted.
 
 ```bash
 # Pull and run with Valkey for caching and rate limiting

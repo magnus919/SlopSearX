@@ -24,11 +24,17 @@ curl 'http://localhost:8080/search?q=hello+world&format=json'
 
 ## Docker Compose
 
+The default Compose file starts the digest-pinned GHCR artifact:
+
 ```bash
-DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose up -d --build
+docker compose up -d
 ```
 
-This starts SlopSearX + Valkey on the GroktoCrawl network. The service is internal-only by default.
+This starts SlopSearX + Valkey on the GroktoCrawl network. To build from local source instead, use the explicit override and refresh argument:
+
+```bash
+DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+```
 
 ## Development setup
 

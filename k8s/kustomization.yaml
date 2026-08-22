@@ -10,3 +10,7 @@ resources:
 commonLabels:
   app.kubernetes.io/name: slopsearx
   app.kubernetes.io/version: "0.1.0"
+
+commonAnnotations:
+  slopsearx.org/source-revision: "851090f246802097bc6f460923351c325bd688f3"
+  slopsearx.org/image-digest: "sha256:1cd1d05cac718662fd46a324d12fb085e719aba07739329847246b1881d81c7a"

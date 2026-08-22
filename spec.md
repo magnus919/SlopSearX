@@ -831,7 +831,8 @@ spec:
     spec:
       containers:
         - name: slopsearx
-          image: slopsearx:0.1.0
+          image: ghcr.io/magnus919/slopsearx@sha256:1cd1d05cac718662fd46a324d12fb085e719aba07739329847246b1881d81c7a
+          imagePullPolicy: IfNotPresent
           env:
             - name: VALKEY_URL
               value: redis://valkey-cluster:6379
@@ -888,7 +889,7 @@ Replace the current SearXNG service in `docker-compose.yml`:
 
 # New (SlopSearX):
 slopsearx:
-  image: slopsearx:0.1.0
+  image: ghcr.io/magnus919/slopsearx@sha256:1cd1d05cac718662fd46a324d12fb085e719aba07739329847246b1881d81c7a
   environment:
     - VALKEY_URL=redis://valkey:6379
     - ENGINE_BRAVE_API_KEY=${BRAVE_API_KEY}
