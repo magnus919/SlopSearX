@@ -25,7 +25,7 @@ curl 'http://localhost:8080/search?q=hello+world&format=json'
 ## Docker Compose
 
 ```bash
-docker compose up -d
+DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose up -d --build
 ```
 
 This starts SlopSearX + Valkey on the GroktoCrawl network. The service is internal-only by default.
