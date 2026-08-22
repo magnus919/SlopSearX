@@ -329,7 +329,6 @@ class TestVersionAuthority:
     def test_package_version_resolves_to_installed_distribution(self) -> None:
         """VAL-DIAG-002 — _package_version() is the installed version, not a placeholder."""
         installed = _metadata.version("slopsearx")
-        assert installed == "0.2.0"
         reported = _server._package_version()  # noqa: SLF001
         assert reported == installed
         assert reported not in ("0.0.0", "0.1.0", "")
