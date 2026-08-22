@@ -210,6 +210,14 @@ generic MCP clients), and agent usage guidance:
 
 ## Quick Start
 
+### Build from source
+
+The Dockerfile requires a unique security-refresh value so cached builds cannot silently reuse an old Debian package layer:
+
+```bash
+DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose build
+```
+
 ### VPN and proxy deployments
 
 Google and DuckDuckGo are best-effort HTML-scrape adapters. VPN, proxy, and

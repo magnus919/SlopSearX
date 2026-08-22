@@ -48,7 +48,10 @@ docker run -d --name slopsearx -p 8080:8080 \
 # docker-compose.yml
 services:
   slopsearx:
-    build: .
+    build:
+      context: .
+      args:
+        DEBIAN_SECURITY_REFRESH: "${DEBIAN_SECURITY_REFRESH:-}"
     image: slopsearx:0.1.0
     ports:
       - "8080"
@@ -62,6 +65,12 @@ networks:
   default:
     name: groktocrawl_default
     external: true
+```
+
+Build and start from a fresh checkout with a unique Debian security-refresh value:
+
+```bash
+DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose up -d --build
 ```
 
 ## Kubernetes
