@@ -9,7 +9,7 @@ Incident response procedures for SlopSearX operators.
 1. Check Valkey connectivity: `docker compose exec valkey redis-cli PING`
 2. Restart Valkey if unresponsive: `docker compose restart valkey`
 3. Verify engine API keys are valid (check env vars / K8s secrets)
-4. Full restart: `docker compose pull slopsearx && docker compose up -d --force-recreate slopsearx`
+4. Full restart: `DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose build && docker compose down && docker compose up -d --no-build`
 
 ## Rate Limit Triage
 

@@ -1,13 +1,14 @@
 # SlopSearX — drop-in replacement for SearXNG in GroktoCrawl stack
 # Runs on the groktocrawl stack's network so agent-svc can reach it.
 # No host port — internal-only for the stack.
-#
-# This default uses the immutable GHCR artifact promoted from main commit 851090f.
-# For a local source build, use docker-compose.build.yml explicitly.
 
 services:
   slopsearx:
-    image: ghcr.io/magnus919/slopsearx@sha256:1cd1d05cac718662fd46a324d12fb085e719aba07739329847246b1881d81c7a
+    build:
+      context: .
+      args:
+        DEBIAN_SECURITY_REFRESH: "${DEBIAN_SECURITY_REFRESH:-}"
+    image: slopsearx:0.1.0
     ports:
       - "8080"
     env_file:
