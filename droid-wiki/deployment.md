@@ -67,6 +67,12 @@ networks:
     external: true
 ```
 
+Build and start from a fresh checkout with a unique Debian security-refresh value:
+
+```bash
+DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose up -d --build
+```
+
 ## Kubernetes
 
 Kustomize manifests in `k8s/`:
