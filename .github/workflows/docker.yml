@@ -6,7 +6,9 @@ on:
     tags: ["v*"]
   pull_request:
     branches: [main]
-
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ghcr.io/magnus919/slopsearx
@@ -41,6 +43,9 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=,suffix=,format=short
+
+      - name: Verify pinned Docker base digest
+        run: python3 scripts/verify_docker_base_digest.py
 
       - name: Build and load image
         uses: docker/build-push-action@v7
@@ -78,14 +83,14 @@ jobs:
           docker rm slopsearx-smoke
 
       - name: Push to registry
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'push'
         run: |
           echo "${{ steps.meta.outputs.tags }}" | while read -r tag; do
             docker push "$tag"
           done
 
       - name: Prune untagged versions
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'push'
         shell: bash
         run: |
           echo "Pruning untagged versions of slopsearx"
