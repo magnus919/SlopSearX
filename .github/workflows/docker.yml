@@ -54,7 +54,7 @@ jobs:
           cache-to: type=gha,mode=max
           pull: true
           build-args: |
-            DEBIAN_SECURITY_REFRESH=${{ github.run_id }}
+            DEBIAN_SECURITY_REFRESH=${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Get primary image tag
         id: tag
