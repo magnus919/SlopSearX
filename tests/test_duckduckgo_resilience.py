@@ -121,6 +121,11 @@ def _hosts(seen: list[httpx.Request]) -> list[str]:
     return [(r.url.host or "") for r in seen]
 
 
+HTML_HOST = "html.duckduckgo.com"
+LITE_HOST = "lite.duckduckgo.com"
+HOME_HOST = "duckduckgo.com"
+
+
 class TestDuckDuckGoResilience:
     @pytest.fixture
     def adapter(self):
@@ -135,11 +140,11 @@ class TestDuckDuckGoResilience:
         def _handler(r):
             seen.append(r)
             host = r.url.host or ""
-            if host == "duckduckgo.com":
+            if host == HOME_HOST:
                 return httpx.Response(200, content=HOME_HTML)
-            if "html.duckduckgo.com" in host:
+            if host == HTML_HOST:
                 return httpx.Response(200, content=CHALLENGE_HTML)
-            if "lite.duckduckgo.com" in host:
+            if host == LITE_HOST:
                 return httpx.Response(200, content=LITE_RESULTS_HTML)
             return httpx.Response(500)
 
@@ -152,8 +157,8 @@ class TestDuckDuckGoResilience:
             "https://example.net/b",
         ]
         hosts = _hosts(seen)
-        assert any("html.duckduckgo.com" in h for h in hosts)
-        assert any("lite.duckduckgo.com" in h for h in hosts)
+        assert HTML_HOST in hosts
+        assert LITE_HOST in hosts
 
     async def test_blocked_primary_403_falls_back_to_lite(self, adapter):
         seen: list[httpx.Request] = []
@@ -161,11 +166,11 @@ class TestDuckDuckGoResilience:
         def _handler(r):
             seen.append(r)
             host = r.url.host or ""
-            if host == "duckduckgo.com":
+            if host == HOME_HOST:
                 return httpx.Response(200, content=HOME_HTML)
-            if "html.duckduckgo.com" in host:
+            if host == HTML_HOST:
                 return httpx.Response(403)
-            if "lite.duckduckgo.com" in host:
+            if host == LITE_HOST:
                 return httpx.Response(200, content=LITE_RESULTS_HTML)
             return httpx.Response(500)
 
@@ -174,12 +179,12 @@ class TestDuckDuckGoResilience:
 
         assert resp.status == EngineStatus.OK
         assert len(resp.results) == 2
-        assert any("lite.duckduckgo.com" in h for h in _hosts(seen))
+        assert LITE_HOST in _hosts(seen)
 
     async def test_both_endpoints_challenged_report_blocked(self, adapter):
         def _wall(r):
             host = r.url.host or ""
-            if host == "duckduckgo.com":
+            if host == HOME_HOST:
                 return httpx.Response(200, content=HOME_HTML)
             return httpx.Response(200, content=CHALLENGE_HTML)
 
@@ -199,7 +204,7 @@ class TestDuckDuckGoResilience:
         def _handler(r):
             seen.append(r)
             host = r.url.host or ""
-            if host == "duckduckgo.com":
+            if host == HOME_HOST:
                 return httpx.Response(200, content=HOME_HTML)
             return httpx.Response(429)
 
@@ -207,7 +212,7 @@ class TestDuckDuckGoResilience:
             resp = await adapter.search("q")
 
         assert resp.status == EngineStatus.RATE_LIMITED
-        assert not any("lite.duckduckgo.com" in h for h in _hosts(seen))
+        assert LITE_HOST not in _hosts(seen)
 
     async def test_timeout_does_not_fall_back(self, adapter):
         seen: list[httpx.Request] = []
@@ -221,7 +226,7 @@ class TestDuckDuckGoResilience:
 
         assert resp.status == EngineStatus.TIMEOUT
         assert resp.results == []
-        assert not any("lite.duckduckgo.com" in h for h in _hosts(seen))
+        assert LITE_HOST not in _hosts(seen)
 
     async def test_legitimate_no_results_marker_skips_lite(self, adapter):
         seen: list[httpx.Request] = []
@@ -229,7 +234,7 @@ class TestDuckDuckGoResilience:
         def _handler(r):
             seen.append(r)
             host = r.url.host or ""
-            if host == "duckduckgo.com":
+            if host == HOME_HOST:
                 return httpx.Response(200, content=HOME_HTML)
             return httpx.Response(200, content=NO_RESULTS_HTML)
 
@@ -238,7 +243,7 @@ class TestDuckDuckGoResilience:
 
         assert resp.status == EngineStatus.OK
         assert resp.results == []
-        assert not any("lite.duckduckgo.com" in h for h in _hosts(seen))
+        assert LITE_HOST not in _hosts(seen)
 
     async def test_structurally_empty_primary_triggers_lite(self, adapter):
         seen: list[httpx.Request] = []
@@ -246,11 +251,11 @@ class TestDuckDuckGoResilience:
         def _handler(r):
             seen.append(r)
             host = r.url.host or ""
-            if host == "duckduckgo.com":
+            if host == HOME_HOST:
                 return httpx.Response(200, content=HOME_HTML)
-            if "html.duckduckgo.com" in host:
+            if host == HTML_HOST:
                 return httpx.Response(200, content=EMPTY_HTML)
-            if "lite.duckduckgo.com" in host:
+            if host == LITE_HOST:
                 return httpx.Response(200, content=LITE_RESULTS_HTML)
             return httpx.Response(500)
 
@@ -259,12 +264,12 @@ class TestDuckDuckGoResilience:
 
         assert resp.status == EngineStatus.OK
         assert len(resp.results) == 2
-        assert any("lite.duckduckgo.com" in h for h in _hosts(seen))
+        assert LITE_HOST in _hosts(seen)
 
     async def test_all_endpoints_structurally_empty_reports_error(self, adapter):
         def _handler(r):
             host = r.url.host or ""
-            if host == "duckduckgo.com":
+            if host == HOME_HOST:
                 return httpx.Response(200, content=HOME_HTML)
             return httpx.Response(200, content=EMPTY_HTML)
 
@@ -285,7 +290,7 @@ class TestDuckDuckGoResilience:
         def _handler(r):
             seen.append(r)
             host = r.url.host or ""
-            if host == "duckduckgo.com":
+            if host == HOME_HOST:
                 return httpx.Response(200, content=HOME_HTML)
             return httpx.Response(200, content=HTML_RESULTS_HTML)
 
@@ -298,7 +303,7 @@ class TestDuckDuckGoResilience:
         assert "Chrome" in post.headers.get("user-agent", "")
         assert post.headers.get("sec-fetch-mode") == "navigate"
         assert post.headers.get("sec-fetch-dest") == "document"
-        assert "duckduckgo.com" in (post.headers.get("referer") or "")
+        assert (post.headers.get("referer") or "").startswith("https://" + HOME_HOST + "/")
         assert "text/html" in post.headers.get("accept", "")
 
     async def test_homepage_bootstrap_precedes_search_post(self, adapter):
@@ -307,7 +312,7 @@ class TestDuckDuckGoResilience:
         def _handler(r):
             seen.append(r)
             host = r.url.host or ""
-            if host == "duckduckgo.com":
+            if host == HOME_HOST:
                 return httpx.Response(200, content=HOME_HTML)
             return httpx.Response(200, content=HTML_RESULTS_HTML)
 
@@ -315,15 +320,15 @@ class TestDuckDuckGoResilience:
             await adapter.search("q")
 
         hosts = _hosts(seen)
-        assert "duckduckgo.com" in hosts
-        search_idx = min(i for i, h in enumerate(hosts) if h.endswith("duckduckgo.com") and i > 0)
-        home_idx = hosts.index("duckduckgo.com")
+        assert HOME_HOST in hosts
+        search_idx = min(i for i, h in enumerate(hosts) if i > 0)
+        home_idx = hosts.index(HOME_HOST)
         assert home_idx < search_idx
 
     async def test_bootstrap_failure_does_not_break_search(self, adapter):
         def _handler(r):
             host = r.url.host or ""
-            if host == "duckduckgo.com":
+            if host == HOME_HOST:
                 raise httpx.ConnectError("bootstrap refused")
             return httpx.Response(200, content=HTML_RESULTS_HTML)
 
@@ -375,7 +380,7 @@ class TestDuckDuckGoResilience:
         def _handler(r):
             seen.append(r)
             host = r.url.host or ""
-            if host == "duckduckgo.com":
+            if host == HOME_HOST:
                 return httpx.Response(200, content=HOME_HTML)
             return httpx.Response(200, content=CHALLENGE_HTML)
 
@@ -384,4 +389,4 @@ class TestDuckDuckGoResilience:
 
         assert resp.status == EngineStatus.BLOCKED
         # lite.duckduckgo.com serves no tile layout for image searches.
-        assert not any("lite.duckduckgo.com" in h for h in _hosts(seen))
+        assert LITE_HOST not in _hosts(seen)
