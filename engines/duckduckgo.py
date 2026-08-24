@@ -1,17 +1,29 @@
 """DuckDuckGo HTML scrape adapter.
 
 ⚠️  Legal notice: DuckDuckGo does not provide a public search API.
-This adapter scrapes the HTML search results page (https://html.duckduckgo.com/).
+This adapter scrapes the HTML search results pages (https://html.duckduckgo.com/
+with https://lite.duckduckgo.com/lite/ as a fallback frontend).
 Use of this adapter may be subject to DuckDuckGo's Terms of Service.
 This adapter is best-effort with no SLA — HTML structure changes,
 CAPTCHA walls, and rate limiting may break it at any time.
+
+Resilience measures (best-effort mitigations, not guarantees):
+- A realistic browser-like session (Chrome UA, Sec-Fetch headers, homepage
+  bootstrap visit so cookie state looks organic) lowers the chance of an
+  anonymous-scrape wall.
+- When the primary ``html`` frontend is blocked or serves an unusable page,
+  text searches fall back to the lightweight ``lite`` frontend, which runs
+  separate infrastructure and is frequently still reachable.
+- Blocked/CAPTCHA walls are classified as ``EngineStatus.BLOCKED`` (part of
+  the adapter's declared ``failure_classes``) instead of masquerading as
+  "success with zero results".
 """
 
 from __future__ import annotations
 
 import time
 import urllib.parse
-from typing import Any
+from typing import Any, NamedTuple
 
 import httpx
 from lxml import html
@@ -50,6 +62,7 @@ class DuckDuckGoAdapter(ScrapeAdapter):
 
         cfg = self.config
         base_url = cfg.get("base_url", "https://html.duckduckgo.com/html/")
+        fallback_url = cfg.get("fallback_base_url", "https://lite.duckduckgo.com/lite/")
         timeout_ms = cfg.get("timeout_ms", 10_000)
         max_results = cfg.get("max_results", 10)
 
@@ -60,7 +73,7 @@ class DuckDuckGoAdapter(ScrapeAdapter):
         data: dict[str, str] = {"q": query}
         if is_image_search:
             data["iar"] = "images"
-        headers = self.request_headers
+
         proxy = self._get_proxy()
         client_kwargs: dict[str, Any] = {
             "timeout": timeout_ms / 1000.0,
@@ -70,29 +83,102 @@ class DuckDuckGoAdapter(ScrapeAdapter):
             client_kwargs["proxies"] = proxy
 
         start_time = time.monotonic()
+
+        def _latency() -> float:
+            return (time.monotonic() - start_time) * 1000
+
         try:
             async with httpx.AsyncClient(**client_kwargs) as client:
-                resp = await client.post(base_url, data=data, headers=headers)
-                latency = (time.monotonic() - start_time) * 1000
+                # Warm the session (cookies / anti-bot state) before searching.
+                await self._bootstrap_session(client)
 
-                if resp.status_code == 429:
-                    self._report_proxy_failure(proxy)
-                    return AdapterResponse(results=[], status=EngineStatus.RATE_LIMITED, latency_ms=latency)
-                if resp.status_code in (403, 503):
-                    self._report_proxy_failure(proxy)
-                    return AdapterResponse(results=[], status=EngineStatus.BLOCKED, latency_ms=latency)
-                resp.raise_for_status()
+                outcome = await self._search_via(
+                    client,
+                    base_url,
+                    data,
+                    query,
+                    max_results,
+                    is_image_search,
+                    proxy,
+                    parser="html",
+                )
+                if not outcome.retriable:
+                    return AdapterResponse(
+                        results=outcome.results,
+                        status=outcome.status,
+                        error_message=outcome.error_message,
+                        latency_ms=_latency(),
+                    )
 
-                if self._is_challenge_page(resp.text):
-                    self._report_proxy_failure(proxy)
-                    return AdapterResponse(results=[], status=EngineStatus.BLOCKED, latency_ms=latency)
-
-                self._report_proxy_success(proxy)
+                # The primary frontend could not serve the query. Only the
+                # text layout has a lite twin (lite carries no image tiles).
                 if is_image_search:
-                    results = self._parse_image_html(resp.text, query, max_results)
-                else:
-                    results = self._parse_html(resp.text, query, max_results)
-                return AdapterResponse(results=results, status=EngineStatus.OK, latency_ms=latency)
+                    return AdapterResponse(
+                        results=[],
+                        status=outcome.status,
+                        error_message=outcome.error_message,
+                        latency_ms=_latency(),
+                    )
+
+                fb = await self._search_via(
+                    client,
+                    fallback_url,
+                    data,
+                    query,
+                    max_results,
+                    False,
+                    proxy,
+                    parser="lite",
+                )
+                if fb.status is EngineStatus.OK and fb.results:
+                    return AdapterResponse(
+                        results=fb.results,
+                        status=EngineStatus.OK,
+                        latency_ms=_latency(),
+                    )
+
+                # Both endpoints failed — classify honestly via failure_classes.
+                if outcome.status is EngineStatus.BLOCKED or fb.status is EngineStatus.BLOCKED:
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.BLOCKED,
+                        error_message=(
+                            f"DuckDuckGo blocked or challenge-walled on all endpoints: "
+                            f"{base_url} ({outcome.error_message or 'unusable response'}); "
+                            f"{fallback_url} ({fb.error_message or 'unusable response'})"
+                        ),
+                        latency_ms=_latency(),
+                    )
+                if fb.status is EngineStatus.RATE_LIMITED:
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.RATE_LIMITED,
+                        error_message=(
+                            f"{base_url} unusable ({outcome.error_message or 'unusable response'}); "
+                            f"{fallback_url} rate-limited this session"
+                        ),
+                        latency_ms=_latency(),
+                    )
+                if fb.status is EngineStatus.TIMEOUT:
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.TIMEOUT,
+                        error_message=(
+                            f"{base_url} unusable ({outcome.error_message or 'unusable response'}); "
+                            f"{fallback_url} timed out"
+                        ),
+                        latency_ms=_latency(),
+                    )
+                return AdapterResponse(
+                    results=[],
+                    status=fb.status if fb.status is not EngineStatus.OK else EngineStatus.ERROR,
+                    error_message=(
+                        f"DuckDuckGo served no parsable results on any endpoint: "
+                        f"{base_url} ({outcome.error_message or 'empty'}); "
+                        f"{fallback_url} ({fb.error_message or 'empty'})"
+                    ),
+                    latency_ms=_latency(),
+                )
 
         except httpx.TimeoutException:
             latency = (time.monotonic() - start_time) * 1000
@@ -104,6 +190,136 @@ class DuckDuckGoAdapter(ScrapeAdapter):
                 status=EngineStatus.ERROR,
                 error_message=str(exc),
                 latency_ms=latency,
+            )
+
+    async def _bootstrap_session(self, client: httpx.AsyncClient) -> None:
+        """Visit the DuckDuckGo homepage so the session carries organic cookie state.
+
+        Best-effort by design: any failure here is swallowed — the search
+        itself must proceed even when the bootstrap visit is refused.
+        """
+        bootstrap_url = self.config.get("bootstrap_url", "https://duckduckgo.com/")
+        try:
+            await client.get(bootstrap_url, headers=self._session_headers())
+        except Exception:  # noqa: BLE001 — never fail the search for a warm-up visit
+            pass
+
+    def _session_headers(self) -> dict[str, str]:
+        """Browser-realistic headers for the homepage bootstrap visit."""
+        return {
+            "User-Agent": self.request_headers["User-Agent"],
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Upgrade-Insecure-Requests": "1",
+        }
+
+    def _search_headers(self, url: str) -> dict[str, str]:
+        """Browser-realistic headers for a search submission from the homepage form."""
+        return {
+            "User-Agent": self.request_headers["User-Agent"],
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Referer": "https://duckduckgo.com/",
+            "Origin": "https://duckduckgo.com",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "same-origin",
+            "Upgrade-Insecure-Requests": "1",
+        }
+
+    async def _search_via(
+        self,
+        client: httpx.AsyncClient,
+        endpoint_url: str,
+        data: dict[str, str],
+        query: str,
+        max_results: int,
+        is_image_search: bool,
+        proxy: dict[str, str] | None,
+        parser: str = "html",
+    ) -> _EndpointOutcome:
+        """Attempt one DuckDuckGo frontend and classify the outcome.
+
+        ``parser`` selects the layout to parse (``"html"`` for the primary
+        results markup, ``"lite"`` for the lite table layout).
+        ``retriable=True`` marks outcomes where a second frontend may still
+        serve the query (blocks, walls, unparsable bodies). Rate limits and
+        timeouts are terminal for the request — retrying would only deepen
+        the throttling or double the latency budget.
+        """
+        try:
+            resp = await client.post(
+                endpoint_url,
+                data=data,
+                headers=self._search_headers(endpoint_url),
+            )
+
+            if resp.status_code == 429:
+                self._report_proxy_failure(proxy)
+                return _EndpointOutcome(EngineStatus.RATE_LIMITED, [])
+            if resp.status_code in (403, 503):
+                self._report_proxy_failure(proxy)
+                return _EndpointOutcome(
+                    EngineStatus.BLOCKED,
+                    [],
+                    f"{endpoint_url} answered {resp.status_code}",
+                    retriable=True,
+                )
+            resp.raise_for_status()
+
+            body = resp.text
+            if self._is_challenge_page(body):
+                self._report_proxy_failure(proxy)
+                return _EndpointOutcome(
+                    EngineStatus.BLOCKED,
+                    [],
+                    f"{endpoint_url} served a CAPTCHA/challenge wall",
+                    retriable=True,
+                )
+
+            if is_image_search:
+                # Image tiles live only on the JS-heavy frontends; the lite
+                # page mirrors none of that layout, so a tile-free page is
+                # treated as a genuine zero-result answer, not a wall.
+                results = self._parse_image_html(body, query, max_results)
+                self._report_proxy_success(proxy)
+                return _EndpointOutcome(EngineStatus.OK, results)
+
+            results = (
+                self._parse_lite_html(body, query, max_results)
+                if parser == "lite"
+                else self._parse_html(body, query, max_results)
+            )
+            if results:
+                self._report_proxy_success(proxy)
+                return _EndpointOutcome(EngineStatus.OK, results)
+
+            if self._looks_like_legitimate_empty(body):
+                self._report_proxy_success(proxy)
+                return _EndpointOutcome(EngineStatus.OK, [])
+
+            # Structurally empty: no wall markers, no results — likely a soft
+            # block or a layout change. Another endpoint may still answer.
+            return _EndpointOutcome(
+                EngineStatus.ERROR,
+                [],
+                f"{endpoint_url} returned no parsable results",
+                retriable=True,
+            )
+
+        except httpx.TimeoutException:
+            self._report_proxy_failure(proxy)
+            return _EndpointOutcome(EngineStatus.TIMEOUT, [])
+        except Exception as exc:  # noqa: BLE001 — network/HTTP layer failure
+            self._report_proxy_failure(proxy)
+            return _EndpointOutcome(
+                EngineStatus.ERROR,
+                [],
+                f"{endpoint_url}: {exc}",
+                retriable=True,
             )
 
     def _is_challenge_page(self, raw_html: str) -> bool:
@@ -118,9 +334,71 @@ class DuckDuckGoAdapter(ScrapeAdapter):
             "cf-browser-verification",
             "ddg_sl_",
             "data-challenge",
+            "bots use duckduckgo",
+            "anomaly detected",
         ]
         lower = raw_html.lower()
         return any(ind in lower for ind in indicators)
+
+    def _looks_like_legitimate_empty(self, raw_html: str) -> bool:
+        """True when DDG served a real zero-results page rather than a wall."""
+        markers = [
+            'class="no-results"',
+            "no results</div>",
+            "no results for",
+            "did not match any documents",
+        ]
+        lower = raw_html.lower()
+        return any(marker in lower for marker in markers)
+
+    @staticmethod
+    def _strip_ddg_redirect(url: str) -> str:
+        """Unwrap DuckDuckGo's ``/l/?uddg=<encoded-target>`` redirect wrapper."""
+        if "//duckduckgo.com/l/" not in url:
+            return url
+        parsed = urllib.parse.urlparse(url)
+        qs = urllib.parse.parse_qs(parsed.query)
+        unwrapped = qs.get("uddg", [""])[0]
+        return unwrapped or url
+
+    def _parse_lite_html(self, raw_html: str, query: str, max_results: int) -> list[SearchResult]:
+        """Parse the lite.duckduckgo.com/lite/ table layout.
+
+        The lite frontend renders results as alternating ``<tr>`` rows: a
+        row carrying ``<a class="result-link">``, followed by a snippet row
+        and a domain/date row. Links are wrapped in DDG redirects.
+        """
+        if self._is_challenge_page(raw_html):
+            return []
+
+        results: list[SearchResult] = []
+        doc = html.fromstring(raw_html)
+
+        for link in doc.cssselect("a.result-link"):
+            if len(results) >= max_results:
+                break
+
+            url = self._strip_ddg_redirect(link.get("href", ""))
+            title = link.text_content().strip()
+            if not url or not title:
+                continue
+
+            snippet_rows = link.xpath(
+                './ancestor::tr[1]/following-sibling::tr[1]//td[contains(@class,"result-snippet")]',
+            )
+            content = snippet_rows[0].text_content().strip() if isinstance(snippet_rows, list) and snippet_rows else ""
+
+            results.append(
+                SearchResult(
+                    url=url,
+                    title=title,
+                    content=content,
+                    engine=self.name,
+                    position=len(results) + 1,
+                ),
+            )
+
+        return results
 
     def _parse_html(self, raw_html: str, query: str, max_results: int) -> list[SearchResult]:
         """Parse DuckDuckGo HTML search results.
@@ -247,3 +525,14 @@ class DuckDuckGoAdapter(ScrapeAdapter):
                 )
 
         return results
+
+
+class _EndpointOutcome(NamedTuple):
+    """Classified result of a single-endpoint search attempt."""
+
+    status: EngineStatus
+    results: list[SearchResult]
+    error_message: str | None = None
+    # True when a second frontend may still serve the query (blocks, walls,
+    # unparsable bodies). Rate limits and timeouts are terminal.
+    retriable: bool = False
