@@ -137,38 +137,43 @@ class DuckDuckGoAdapter(ScrapeAdapter):
                         latency_ms=_latency(),
                     )
 
-                # Both endpoints failed — classify honestly via failure_classes.
-                if outcome.status is EngineStatus.BLOCKED or fb.status is EngineStatus.BLOCKED:
+                # The fallback answered with a definitive non-OK state of its
+                # own (rate limit / timeout / walled) — surface THAT honestly
+                # instead of folding it into the primary's outcome.
+                if fb.status in (EngineStatus.RATE_LIMITED, EngineStatus.TIMEOUT):
+                    return AdapterResponse(
+                        results=[],
+                        status=fb.status,
+                        error_message=(
+                            f"{base_url} unusable ({outcome.error_message or 'unusable response'}); "
+                            f"{fallback_url}: {fb.error_message}"
+                        ),
+                        latency_ms=_latency(),
+                    )
+                if fb.status is EngineStatus.BLOCKED:
                     return AdapterResponse(
                         results=[],
                         status=EngineStatus.BLOCKED,
                         error_message=(
                             f"DuckDuckGo blocked or challenge-walled on all endpoints: "
                             f"{base_url} ({outcome.error_message or 'unusable response'}); "
-                            f"{fallback_url} ({fb.error_message or 'unusable response'})"
+                            f"{fallback_url}: {fb.error_message}"
                         ),
                         latency_ms=_latency(),
                     )
-                if fb.status is EngineStatus.RATE_LIMITED:
+                if outcome.status is EngineStatus.BLOCKED and fb.status is EngineStatus.OK:
+                    # Lite served a well-formed page but genuinely had no
+                    # results for the query; the primary was walled. Report
+                    # an honest empty result set with the wall detail.
                     return AdapterResponse(
                         results=[],
-                        status=EngineStatus.RATE_LIMITED,
+                        status=EngineStatus.BLOCKED,
                         error_message=(
-                            f"{base_url} unusable ({outcome.error_message or 'unusable response'}); "
-                            f"{fallback_url} rate-limited this session"
+                            f"{base_url} blocked/challenge-walled; {fallback_url} served no results for this query"
                         ),
                         latency_ms=_latency(),
                     )
-                if fb.status is EngineStatus.TIMEOUT:
-                    return AdapterResponse(
-                        results=[],
-                        status=EngineStatus.TIMEOUT,
-                        error_message=(
-                            f"{base_url} unusable ({outcome.error_message or 'unusable response'}); "
-                            f"{fallback_url} timed out"
-                        ),
-                        latency_ms=_latency(),
-                    )
+                # Neither endpoint produced parsable results.
                 return AdapterResponse(
                     results=[],
                     status=fb.status if fb.status is not EngineStatus.OK else EngineStatus.ERROR,
@@ -196,11 +201,15 @@ class DuckDuckGoAdapter(ScrapeAdapter):
         """Visit the DuckDuckGo homepage so the session carries organic cookie state.
 
         Best-effort by design: any failure here is swallowed — the search
-        itself must proceed even when the bootstrap visit is refused.
+        itself must proceed even when the bootstrap visit is refused. The
+        visit carries its own short timeout so a hung homepage can never
+        consume the engine's dispatch budget needed for the actual search
+        (and the lite fallback).
         """
         bootstrap_url = self.config.get("bootstrap_url", "https://duckduckgo.com/")
+        bootstrap_budget = min(float(self.config.get("bootstrap_timeout_ms", 2_500)), 5.0) / 1000.0
         try:
-            await client.get(bootstrap_url, headers=self._session_headers())
+            await client.get(bootstrap_url, headers=self._session_headers(), timeout=bootstrap_budget)
         except Exception:  # noqa: BLE001 — never fail the search for a warm-up visit
             pass
 
@@ -217,16 +226,37 @@ class DuckDuckGoAdapter(ScrapeAdapter):
         }
 
     def _search_headers(self, url: str) -> dict[str, str]:
-        """Browser-realistic headers for a search submission from the homepage form."""
+        """Browser-realistic headers for a search submission.
+
+        ``Origin``/``Referer``/``Sec-Fetch-Site`` are derived from the actual
+        target host so the fingerprint stays internally consistent: a form
+        submission from duckduckgo.com to one of its own search frontends is
+        same-site; anything else would be cross-site.
+        """
+        target = urllib.parse.urlparse(url)
+        target_host = (target.hostname or "").lower()
+        home_host = (
+            urllib.parse.urlparse(self.config.get("bootstrap_url", "https://duckduckgo.com/")).hostname or ""
+        ).lower()
+        scheme = target.scheme or "https"
+        if target_host == home_host:
+            sec_fetch_site = "same-origin"
+        elif target_host.endswith("." + home_host):
+            # Another host of the same site (e.g. the html./lite. frontends).
+            sec_fetch_site = "same-site"
+        else:
+            sec_fetch_site = "cross-site"
         return {
             "User-Agent": self.request_headers["User-Agent"],
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.9",
-            "Referer": "https://duckduckgo.com/",
-            "Origin": "https://duckduckgo.com",
+            "Referer": f"{scheme}://{home_host}/",
+            "Origin": f"{scheme}://{home_host}",
             "Sec-Fetch-Dest": "document",
             "Sec-Fetch-Mode": "navigate",
-            "Sec-Fetch-Site": "same-origin",
+            # A browser navigating from the homepage to another host of the
+            # same site sends "same-site", never "same-origin".
+            "Sec-Fetch-Site": sec_fetch_site,
             "Upgrade-Insecure-Requests": "1",
         }
 

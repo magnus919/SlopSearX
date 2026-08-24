@@ -194,8 +194,8 @@ class TestDuckDuckGoResilience:
         assert resp.status == EngineStatus.BLOCKED
         assert resp.results == []
         # Honest surfacing: the detail names both attempted endpoints.
-        assert "html.duckduckgo.com" in (resp.error_message or "")
-        assert "lite.duckduckgo.com" in (resp.error_message or "")
+        assert HTML_HOST in (resp.error_message or "")
+        assert LITE_HOST in (resp.error_message or "")
         assert "blocked" in adapter.failure_classes
 
     async def test_rate_limited_short_circuits_without_lite(self, adapter):
@@ -303,7 +303,11 @@ class TestDuckDuckGoResilience:
         assert "Chrome" in post.headers.get("user-agent", "")
         assert post.headers.get("sec-fetch-mode") == "navigate"
         assert post.headers.get("sec-fetch-dest") == "document"
+        # The search POST leaves the homepage host, so a real browser marks
+        # it same-site (never same-origin).
         assert (post.headers.get("referer") or "").startswith("https://" + HOME_HOST + "/")
+        assert post.headers.get("origin") == "https://" + HOME_HOST
+        assert post.headers.get("sec-fetch-site") == "same-site"
         assert "text/html" in post.headers.get("accept", "")
 
     async def test_homepage_bootstrap_precedes_search_post(self, adapter):
