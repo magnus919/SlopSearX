@@ -4,10 +4,19 @@
 #
 # The default service pulls the CI-built, Trivy-scanned GHCR artifact pinned by
 # digest, so deployments run exactly the image CI verified (issue #210).
+# .github/workflows/image-promotion.yml republishes that digest when CI
+# produces a newer verified artifact.
+#
 # A local source build remains available behind the `build` profile:
 #
 #   DEBIAN_SECURITY_REFRESH="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
 #     docker compose --profile build up -d slopsearx-build
+#
+# Notes:
+# - slopsearx-build keeps the "slopsearx" DNS alias so downstream services
+#   can always reach the app at http://slopsearx:8080 regardless of variant.
+# - Start exactly one variant at a time; `--profile build up -d` without a
+#   service name starts both and will fail on the shared alias/port.
 
 x-slopsearx-runtime: &slopsearx-runtime
   ports:
@@ -25,6 +34,10 @@ services:
 
   slopsearx-build:
     <<: *slopsearx-runtime
+    networks:
+      default:
+        aliases:
+          - slopsearx
     build:
       context: .
       args:
