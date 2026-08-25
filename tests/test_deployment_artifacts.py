@@ -89,14 +89,44 @@ def test_registry_lookup_classifies_permanent_http_failure(monkeypatch: pytest.M
     assert len(calls) == 1
 
 
+GHCR_DIGEST_PIN = "ghcr.io/magnus919/slopsearx@sha256:91194d146d205b1cf4688c1989da8f5f6b599a9627be23fd1ee7a4e488fda5b7"
+
+
 def test_existing_compose_source_build_remains_fail_closed() -> None:
     compose = yaml.safe_load((ROOT / "docker-compose.yml").read_text())
     service = compose["services"]["slopsearx"]
 
-    assert service["build"]["context"] == "."
-    refresh_arg = service["build"]["args"]["DEBIAN_SECURITY_REFRESH"]
+    # The default service must consume the CI-scanned artifact, pinned by
+    # digest — never a mutable tag (issue #210).
+    assert service["image"] == GHCR_DIGEST_PIN
+
+    build = compose["services"]["slopsearx-build"]
+    assert build["build"]["context"] == "."
+    refresh_arg = build["build"]["args"]["DEBIAN_SECURITY_REFRESH"]
     assert refresh_arg == "${DEBIAN_SECURITY_REFRESH:-}"
-    assert service["image"] == "slopsearx:0.1.0"
+    assert build["image"] == "slopsearx:local"
+    assert "build" in build.get("profiles", [])
+
+
+def test_kubernetes_consumes_pinned_ghcr_artifact() -> None:
+    deployment = yaml.safe_load((ROOT / "k8s/deployment.yaml").read_text())
+    container = deployment["spec"]["template"]["spec"]["containers"][0]
+    assert container["image"] == GHCR_DIGEST_PIN
+
+
+def test_compose_default_service_has_no_build_block() -> None:
+    """A digest ref cannot carry a build context; the pull-through default
+    service must stay declarative so the scanned artifact is authoritative."""
+    compose_text = (ROOT / "docker-compose.yml").read_text()
+    compose = yaml.safe_load(compose_text)
+    assert "build" not in compose["services"]["slopsearx"]
+    assert GHCR_DIGEST_PIN in compose_text
+
+
+def test_spec_examples_use_the_pinned_ghcr_artifact() -> None:
+    spec = (ROOT / "spec.md").read_text()
+    assert "slopsearx:0.1.0" not in spec
+    assert spec.count(GHCR_DIGEST_PIN) >= 2
 
 
 def test_dependabot_tracks_docker_digest_updates() -> None:

@@ -1,21 +1,39 @@
 # SlopSearX — drop-in replacement for SearXNG in GroktoCrawl stack
 # Runs on the groktocrawl stack's network so agent-svc can reach it.
 # No host port — internal-only for the stack.
+#
+# The default service pulls the CI-built, Trivy-scanned GHCR artifact pinned by
+# digest, so deployments run exactly the image CI verified (issue #210).
+# A local source build remains available behind the `build` profile:
+#
+#   DEBIAN_SECURITY_REFRESH="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+#     docker compose --profile build up -d slopsearx-build
+
+x-slopsearx-runtime: &slopsearx-runtime
+  ports:
+    - "8080"
+  env_file:
+    - ../.env
+  environment:
+    - VALKEY_URL=redis://valkey:6379/0
+  restart: unless-stopped
 
 services:
   slopsearx:
+    <<: *slopsearx-runtime
+    image: ghcr.io/magnus919/slopsearx@sha256:91194d146d205b1cf4688c1989da8f5f6b599a9627be23fd1ee7a4e488fda5b7
+
+  slopsearx-build:
+    <<: *slopsearx-runtime
     build:
       context: .
       args:
+        # Fail-closed guard inside the Dockerfile: the build refuses to run
+        # without an explicit Debian security-refresh stamp.
         DEBIAN_SECURITY_REFRESH: "${DEBIAN_SECURITY_REFRESH:-}"
-    image: slopsearx:0.1.0
-    ports:
-      - "8080"
-    env_file:
-      - ../.env
-    environment:
-      - VALKEY_URL=redis://valkey:6379/0
-    restart: unless-stopped
+    image: slopsearx:local
+    profiles:
+      - build
 
 networks:
   default:

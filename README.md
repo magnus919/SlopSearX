@@ -236,6 +236,12 @@ FEATURE_EMPTY_SCRAPE_DIAGNOSTICS=true
 
 Pre-built Docker images are available from GitHub Container Registry. Builds run automatically on every push to `main` (`latest`, `unstable`) and on version tags (`stable`, `X`, `X.Y`, `X.Y.Z`).
 
+The repository's own deployment surfaces (`docker-compose.yml`, `k8s/deployment.yaml`) pin the image **by digest**, so they always run exactly the artifact that CI built, Trivy-scanned, and smoke-tested. To deploy the same verified artifact as a given commit, resolve its short-SHA tag to the current digest:
+
+```bash
+docker buildx imagetools inspect ghcr.io/magnus919/slopsearx:<short-sha> --format '{{json .Manifest.Digest}}'
+```
+
 ```bash
 # Pull and run with Valkey for caching and rate limiting
 docker run -d --name valkey valkey/valkey:8-alpine

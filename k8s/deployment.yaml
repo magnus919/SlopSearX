@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: slopsearx
-          image: slopsearx:0.1.0
+          image: ghcr.io/magnus919/slopsearx@sha256:91194d146d205b1cf4688c1989da8f5f6b599a9627be23fd1ee7a4e488fda5b7
           ports:
             - containerPort: 8080
               name: http
