@@ -89,19 +89,27 @@ jobs:
             docker push "$tag"
           done
 
-      - name: Prune untagged versions
+      - name: Prune untagged versions past retention
         if: github.event_name == 'push'
         shell: bash
         run: |
-          echo "Pruning untagged versions of slopsearx"
+          # Deployment manifests pin the image by digest (issue #210). A
+          # re-run of this workflow for the same commit produces a new digest
+          # under the same short-SHA tag, briefly orphaning the pinned one.
+          # Retention keeps orphaned digests alive long enough for the
+          # scheduled image-promotion workflow (or a human) to heal the pin.
+          echo "Pruning untagged slopsearx versions older than ${RETENTION_DAYS} days"
+          cutoff="$(date -u -d "-${RETENTION_DAYS} days" +%Y-%m-%dT%H:%M:%SZ)"
+          query=".[] | select((.metadata.container.tags == null or (.metadata.container.tags | length) == 0) and (.created_at < \"${cutoff}\")) | .id"
           gh api \
             --method GET \
             "/users/magnus919/packages/container/slopsearx/versions?per_page=100" \
-            --jq '.[] | select(.metadata.container.tags == null or .metadata.container.tags == []) | .id' \
-            | while read version_id; do
+            --jq "$query" \
+            | while read -r version_id; do
               echo "  Deleting version $version_id"
               gh api --method DELETE \
                 "/users/magnus919/packages/container/slopsearx/versions/$version_id" --silent
-          done
+            done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RETENTION_DAYS: "14"
