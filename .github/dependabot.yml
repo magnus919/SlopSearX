@@ -6,13 +6,19 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 10
-    stability-days: 3
     labels:
       - "dependencies"
       - "automated"
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      # pydantic hard-pins its exact companion core version; bumping
+      # pydantic-core alone yields an uninstallable lockfile. Group the
+      # pair so future bumps move together.
+      pydantic:
+        patterns:
+          - "pydantic*"
     ignore:
       # mando is constrained by radon (>=0.6,<0.8). No newer radon exists.
       # Dependabot keeps opening unmergeable PRs bumping mando past 0.7.x.
