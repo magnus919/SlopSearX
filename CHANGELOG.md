@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.3.1](https://github.com/magnus919/SlopSearX/compare/v0.3.0...v0.3.1) (2026-08-26)
+
+
+### Bug Fixes
+
+* **deps:** restore pydantic-core 2.46.4 for lockfile coherence with pydantic 2.13.4 ([d17a847](https://github.com/magnus919/SlopSearX/commit/d17a84715571d0dfbd995a864ae45ad2082507b3))
+* **duckduckgo:** add lite fallback, realistic session, honest block classification ([e68448f](https://github.com/magnus919/SlopSearX/commit/e68448f8c851b081da117840f92089fdef8090a8))
+* **duckduckgo:** add lite fallback, realistic session, honest block classification ([a3b1c3a](https://github.com/magnus919/SlopSearX/commit/a3b1c3abf956ed75f447be921dd27a47d11b3601))
+* **duckduckgo:** per-origin Sec-Fetch headers, bounded bootstrap, honest fallback detail ([b6c142e](https://github.com/magnus919/SlopSearX/commit/b6c142e310119bb390fb2f8e3a2d4170cf57dce3))
+* guard image digest pin lifecycle per review findings ([bd4bb85](https://github.com/magnus919/SlopSearX/commit/bd4bb85d97d750ae8794b54e9d4c0f506be53f6e))
+* pin compose and k8s deployments to CI-published GHCR digest ([28c4ace](https://github.com/magnus919/SlopSearX/commit/28c4ace0f675006edf1e0805b1594428f96fee6a))
+* pin compose and k8s deployments to CI-published GHCR digest ([372328f](https://github.com/magnus919/SlopSearX/commit/372328f5c39580d1fad86fe11ad251cf539b9eb3))
+* **test:** drop hardcoded version literal from VAL-DIAG-002 ([426df20](https://github.com/magnus919/SlopSearX/commit/426df20d10a21973f87045dc52446fe610f611b6))
+* **test:** drop hardcoded version literal from VAL-DIAG-002 ([eea5ba3](https://github.com/magnus919/SlopSearX/commit/eea5ba35a867269cad5f3a4920c13354e948d6fd))
+* **test:** drop hardcoded version literal from VAL-DIAG-002 ([#213](https://github.com/magnus919/SlopSearX/issues/213)) ([426df20](https://github.com/magnus919/SlopSearX/commit/426df20d10a21973f87045dc52446fe610f611b6))
+
+
+### Documentation
+
+* add MCP full-strength access PRD ([fb60312](https://github.com/magnus919/SlopSearX/commit/fb60312c91657f2c986c7449ababa9d5e4780542))
+* add MCP full-strength access PRD ([#212](https://github.com/magnus919/SlopSearX/issues/212)) ([fb60312](https://github.com/magnus919/SlopSearX/commit/fb60312c91657f2c986c7449ababa9d5e4780542))
+* drop stale Unreleased changelog section (content shipped in v0.3.0) ([2d97c97](https://github.com/magnus919/SlopSearX/commit/2d97c970fe06217fe6a5d9181e92b851785b4165))
+
 ## [0.3.0](https://github.com/magnus919/SlopSearX/compare/v0.2.0...v0.3.0) (2026-08-22)
 
 
