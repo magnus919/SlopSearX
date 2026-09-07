@@ -30,6 +30,18 @@ pip install -e ".[dev]"
 - Verify conventional commit format on all commits
 - If this is an agent-authored PR, mention `@droid` in a PR comment to request automated review
 
+## Real Valkey integration tests
+
+CI runs cache and research ownership contracts against a disposable Valkey service.
+To run them locally, start a separate test instance and set
+`SLOPSEARX_TEST_VALKEY_URL=redis://127.0.0.1:16379/0`, then run
+`pytest --no-cov -q tests/test_cache_integration.py`.
+A Unix socket URL (`unix:///absolute/path/server.sock`) is also supported.
+The suite deliberately ignores the application `VALKEY_URL`, uses random test
+namespaces, and deletes only its own records; it never calls `FLUSHDB`.
+Tests cover actual expiry, competing claims, lease recovery, stale-owner fencing,
+cancellation, tenant isolation, and async connection lifecycle.
+
 ## Adding a New Engine Adapter
 
 See `docs/ENGINE_ADAPTERS.md` for the full reference — contract rules, data types, lifecycle hooks, and the built-in adapter table. Quick checklist:

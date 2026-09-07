@@ -75,6 +75,30 @@ jobs:
       - name: Unused dependency check with deptry
         run: deptry . --per-rule-ignores "DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|fastmcp,DEP003=starlette"
 
+  valkey-integration:
+    runs-on: ubuntu-latest
+    services:
+      valkey:
+        image: valkey/valkey:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      SLOPSEARX_TEST_VALKEY_URL: redis://127.0.0.1:6379/0
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Real Valkey cache and durable ownership contracts
+        run: pytest --no-cov -q tests/test_cache_integration.py
+
   test:
     runs-on: ubuntu-latest
     strategy:
