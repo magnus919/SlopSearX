@@ -97,7 +97,7 @@ jobs:
           cache: pip
       - run: pip install -e ".[dev]"
       - name: Real Valkey cache and durable ownership contracts
-        run: pytest --no-cov -q tests/test_cache_integration.py
+        run: pytest --no-cov -q tests/test_cache_integration.py tests/test_research_queue_integration.py
 
   test:
     runs-on: ubuntu-latest

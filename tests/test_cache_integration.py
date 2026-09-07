@@ -15,6 +15,7 @@ from collections.abc import AsyncIterator
 
 import pytest
 
+from slopsearx import research
 from slopsearx.cache import SearchCache
 from slopsearx.research import ResearchJob, ResearchJobStore
 
@@ -34,8 +35,9 @@ async def cache() -> AsyncIterator[SearchCache]:
 
 
 @pytest.fixture
-async def namespace(cache: SearchCache) -> AsyncIterator[str]:
+async def namespace(cache: SearchCache, monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[str]:
     name = f"integration-{uuid.uuid4().hex}"
+    monkeypatch.setattr(research, "READY_PREFIX", f"{name}:ready")
     try:
         yield name
     finally:
