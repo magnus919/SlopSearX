@@ -723,8 +723,11 @@ slopsearx_engine_queries_total{engine="duckduckgo"} 8920
 
 # HELP slopsearx_engine_latency_seconds Query latency per engine
 # TYPE slopsearx_engine_latency_seconds histogram
-slopsearx_engine_latency_seconds{engine="brave",quantile="0.5"} 0.34
-slopsearx_engine_latency_seconds{engine="brave",quantile="0.99"} 1.2
+slopsearx_engine_latency_seconds_bucket{engine="brave",le="0.5"} 10
+slopsearx_engine_latency_seconds_bucket{engine="brave",le="5"} 12
+slopsearx_engine_latency_seconds_bucket{engine="brave",le="+Inf"} 12
+slopsearx_engine_latency_seconds_sum{engine="brave"} 5.8
+slopsearx_engine_latency_seconds_count{engine="brave"} 12
 
 # HELP slopsearx_engine_status Engine status (0=ok, 1=degraded, 2=down)
 # TYPE slopsearx_engine_status gauge

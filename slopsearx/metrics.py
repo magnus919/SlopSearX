@@ -1,12 +1,14 @@
-"""OpenMetrics instrumentation (stdlib-only, no prometheus-client dependency).
+"""Prometheus text instrumentation (stdlib-only, no prometheus-client dependency).
 
 Exposes per-engine counters, latency histogram, status gauges,
-and cache hit/miss counters in standard OpenMetrics text format.
+and cache hit/miss counters in Prometheus text format 0.0.4.
 """
 
 from __future__ import annotations
 
+import math
 from collections import defaultdict
+from dataclasses import dataclass
 
 
 class _Metric:
@@ -60,35 +62,50 @@ class Gauge(_Metric):
         return "\n".join(lines) + "\n"
 
 
+@dataclass
+class _HistogramState:
+    buckets: list[int]
+    count: int = 0
+    total: float = 0.0
+
+
 class Histogram(_Metric):
-    """Client-side histogram with configurable quantiles.
+    """Fixed cumulative buckets: memory and scrape work depend on series, not traffic."""
 
-    Stores all observed values, computes quantiles on render.
-    Suitable for low-to-moderate cardinality (per-engine latency).
-    """
-
-    def __init__(self, name: str, help_text: str, quantiles: list[float] | None = None) -> None:
+    def __init__(self, name: str, help_text: str, buckets: tuple[float, ...] | None = None) -> None:
         super().__init__(name, help_text, "histogram")
-        self.quantiles = quantiles or [0.5, 0.9, 0.99]
-        self._values: dict[str, list[float]] = defaultdict(list)
+        self.buckets = (
+            buckets if buckets is not None else (0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60)
+        )
+        if any(not math.isfinite(v) or v < 0 for v in self.buckets) or tuple(sorted(set(self.buckets))) != self.buckets:
+            raise ValueError("Histogram buckets must be finite, nonnegative, and strictly increasing")
+        self._values: dict[str, _HistogramState] = {}
 
     def observe(self, labels: dict[str, str], value: float) -> None:
+        # Invalid adapter telemetry must not corrupt counters or break search.
+        if not math.isfinite(value) or value < 0:
+            return
+        if "le" in labels:
+            raise ValueError("le is reserved for histogram bucket boundaries")
         key = _labels_key(labels)
-        self._values[key].append(value)
+        if key not in self._values:
+            self._values[key] = _HistogramState([0] * len(self.buckets))
+        state = self._values[key]
+        state.count += 1
+        state.total += value
+        for i, bound in enumerate(self.buckets):
+            if value <= bound:
+                state.buckets[i] += 1
 
     def render(self) -> str:
         lines = self._header_lines()
-        for key in sorted(self._values.keys()):
-            vals = sorted(self._values[key])
-            if not vals:
-                continue
-            for q in self.quantiles:
-                qval = _quantile(vals, q)
-                # Append quantile label
-                qkey = key.rstrip("}") + f',quantile="{q}")'
-                lines.append(f"{self.name}{{{qkey}}} {_format_val(qval)}")
-            lines.append(f"{self.name}_sum{{{key}}} {_format_val(sum(vals))}")
-            lines.append(f"{self.name}_count{{{key}}} {len(vals)}")
+        for key, state in sorted(self._values.items()):
+            prefix = f"{key}," if key else ""
+            for bound, count in zip(self.buckets, state.buckets):
+                lines.append(f'{self.name}_bucket{{{prefix}le="{_format_val(bound)}"}} {count}')
+            lines.append(f'{self.name}_bucket{{{prefix}le="+Inf"}} {state.count}')
+            lines.append(f"{self.name}_sum{{{key}}} {_format_val(state.total)}")
+            lines.append(f"{self.name}_count{{{key}}} {state.count}")
         return "\n".join(lines) + "\n"
 
 
@@ -97,27 +114,21 @@ class Histogram(_Metric):
 
 def _labels_key(labels: dict[str, str]) -> str:
     """Render label dict as key=value,val pairs."""
-    parts = ",".join(f'{k}="{v}"' for k, v in sorted(labels.items()))
+    parts = ",".join(f'{k}="{_escape_label(v)}"' for k, v in sorted(labels.items()))
     return parts
 
 
 def _format_val(val: float) -> str:
     """Format metric value, using integer representation when whole."""
+    if not math.isfinite(val):
+        return "NaN" if math.isnan(val) else ("+Inf" if val > 0 else "-Inf")
     if val == int(val):
         return str(int(val))
     return f"{val:.6g}"
 
 
-def _quantile(sorted_vals: list[float], q: float) -> float:
-    """Compute quantile from sorted values using linear interpolation."""
-    if not sorted_vals:
-        return 0.0
-    n = len(sorted_vals)
-    idx = q * (n - 1)
-    lo = int(idx)
-    hi = min(lo + 1, n - 1)
-    frac = idx - lo
-    return sorted_vals[lo] * (1 - frac) + sorted_vals[hi] * frac
+def _escape_label(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
 
 
 # --- Global metric instances ---
@@ -125,6 +136,11 @@ def _quantile(sorted_vals: list[float], q: float) -> float:
 engine_queries = Counter(
     "slopsearx_engine_queries_total",
     "Total queries dispatched per engine",
+)
+
+engine_errors = Counter(
+    "slopsearx_engine_errors_total",
+    "Failed engine outcomes, excluding successful empty results",
 )
 
 engine_latency = Histogram(
@@ -188,9 +204,10 @@ mcp_tool_latency = Histogram(
 
 
 def render_metrics() -> str:
-    """Render all registered metrics in OpenMetrics text format."""
+    """Render all registered metrics in Prometheus text format 0.0.4."""
     parts = [
         engine_queries.render(),
+        engine_errors.render(),
         engine_latency.render(),
         engine_status.render(),
         cache_hits.render(),

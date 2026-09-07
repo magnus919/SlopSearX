@@ -1,0 +1,91 @@
+rule_files:
+- rules.yml
+evaluation_interval: 1m
+tests:
+- name: failed
+  interval: 1m
+  input_series:
+  - series: slopsearx_engine_queries_total{engine="failed"}
+    values: 0+100x15
+  - series: slopsearx_engine_errors_total{engine="failed"}
+    values: 0+30x15
+  alert_rule_test:
+  - eval_time: 12m
+    alertname: HighErrorRatio
+    exp_alerts:
+    - exp_labels:
+        engine: failed
+        severity: warning
+      exp_annotations:
+        summary: High error ratio on failed
+        description: More than 25% of engine outcomes failed over 5 minutes.
+- name: healthy
+  interval: 1m
+  input_series:
+  - series: slopsearx_engine_queries_total{engine="healthy"}
+    values: 0+100x15
+  - series: slopsearx_engine_errors_total{engine="healthy"}
+    values: 0+1x15
+  alert_rule_test:
+  - eval_time: 12m
+    alertname: HighErrorRatio
+    exp_alerts: []
+- name: idle
+  interval: 1m
+  input_series:
+  - series: slopsearx_engine_queries_total{engine="idle"}
+    values: 0+0x15
+  - series: slopsearx_engine_errors_total{engine="idle"}
+    values: 0+0x15
+  alert_rule_test:
+  - eval_time: 12m
+    alertname: HighErrorRatio
+    exp_alerts: []
+- name: reset
+  interval: 1m
+  input_series:
+  - series: slopsearx_engine_queries_total{engine="reset"}
+    values: 0+100x7 0+100x7
+  - series: slopsearx_engine_errors_total{engine="reset"}
+    values: 0+1x7 0+1x7
+  alert_rule_test:
+  - eval_time: 12m
+    alertname: HighErrorRatio
+    exp_alerts: []
+- name: slow
+  interval: 1m
+  input_series:
+  - series: slopsearx_engine_latency_seconds_bucket{engine="slow",le="1"}
+    values: 0+0x15
+  - series: slopsearx_engine_latency_seconds_bucket{engine="slow",le="5"}
+    values: 0+0x15
+  - series: slopsearx_engine_latency_seconds_bucket{engine="slow",le="10"}
+    values: 0+100x15
+  - series: slopsearx_engine_latency_seconds_bucket{engine="slow",le="+Inf"}
+    values: 0+100x15
+  alert_rule_test:
+  - eval_time: 12m
+    alertname: HighLatency
+    exp_alerts:
+    - exp_labels:
+        engine: slow
+        severity: warning
+      exp_annotations:
+        summary: P95 latency > 5s on slow
+        description: Engine is responding slowly. Consider increasing rate limits
+          or adding proxies.
+- name: fast
+  interval: 1m
+  input_series:
+  - series: slopsearx_engine_latency_seconds_bucket{engine="fast",le="1"}
+    values: 0+100x15
+  - series: slopsearx_engine_latency_seconds_bucket{engine="fast",le="5"}
+    values: 0+100x15
+  - series: slopsearx_engine_latency_seconds_bucket{engine="fast",le="10"}
+    values: 0+100x15
+  - series: slopsearx_engine_latency_seconds_bucket{engine="fast",le="+Inf"}
+    values: 0+100x15
+  alert_rule_test:
+  - eval_time: 12m
+    alertname: HighLatency
+    exp_alerts: []

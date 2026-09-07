@@ -1122,6 +1122,7 @@ class SearchService:
     def _record_engine_metrics(self, name: str, result: AdapterResponse) -> None:
         """Record per-engine Prometheus counters and gauges."""
         m.engine_queries.inc({"engine": name})
+        m.engine_errors.inc({"engine": name}, int(result.status != EngineStatus.OK))
         m.engine_latency.observe({"engine": name}, result.latency_ms / 1000.0)
         degraded = (EngineStatus.TIMEOUT, EngineStatus.RATE_LIMITED)
         status_code = 0 if result.status == EngineStatus.OK else (1 if result.status in degraded else 2)

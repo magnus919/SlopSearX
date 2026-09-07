@@ -128,3 +128,12 @@ jobs:
         with:
           name: coverage-report-${{ matrix.python-version }}
           path: htmlcov/
+
+  monitoring-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate Prometheus rules and firing behavior
+        run: |
+          docker run --rm --entrypoint /bin/promtool -v "$PWD/docs/alerting:/rules:ro" prom/prometheus:v3.2.1 check rules /rules/rules.yml
+          docker run --rm --entrypoint /bin/promtool -v "$PWD/docs/alerting:/rules:ro" prom/prometheus:v3.2.1 test rules /rules/rules.test.yml

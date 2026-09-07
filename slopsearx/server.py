@@ -13,7 +13,6 @@ resolution, ranking, deduplication, caching, and failure semantics.
 from __future__ import annotations
 
 import asyncio
-import re
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator
 
@@ -343,9 +342,11 @@ async def search(
     """
     # Increment request counters
     m.server_requests.inc({})
-    m.server_requests_by_format.inc({"format": _safe_metric_label(format)})
-    for cat in (c.strip() for c in categories.split(",") if c.strip()):
-        m.server_requests_by_category.inc({"category": _safe_metric_label(cat)})
+    m.server_requests_by_format.inc({"format": format if format in {"json", "yaml"} else "other"})
+    known_categories = {cat for engine in _active_engines.values() for cat in engine.categories}
+    requested_categories = {c.strip() for c in categories.split(",") if c.strip()}
+    for cat in {c if c in known_categories else "other" for c in requested_categories}:
+        m.server_requests_by_category.inc({"category": cat})
 
     service = SearchService(_current_context())
     search_request = SearchRequest(
@@ -435,21 +436,3 @@ async def search(
     )
 
     return JSONResponse(status_code=status_code, content=response_data)
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-_MAX_METRIC_LABEL_LEN = 100
-_METRIC_LABEL_SAFE = re.compile(r"[^a-zA-Z0-9_./-]")
-
-
-def _safe_metric_label(value: str) -> str:
-    """Sanitize a user-supplied string for use as a Prometheus label value.
-
-    Truncates to 100 chars and replaces unsafe characters with underscores
-    to prevent OpenMetrics format corruption and cardinality explosion.
-    """
-    safe = _METRIC_LABEL_SAFE.sub("_", value)[:_MAX_METRIC_LABEL_LEN]
-    return safe or "unknown"

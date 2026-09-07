@@ -19,7 +19,7 @@
       "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
       "targets": [
         {
-          "expr": "slopsearx_engine_latency_seconds{quantile=\"0.5\"}",
+          "expr": "histogram_quantile(0.5, rate(slopsearx_engine_latency_seconds_bucket[5m]))",
           "legendFormat": "{{engine}}"
         }
       ]
@@ -30,7 +30,7 @@
       "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
       "targets": [
         {
-          "expr": "slopsearx_engine_latency_seconds{quantile=\"0.99\"}",
+          "expr": "histogram_quantile(0.99, rate(slopsearx_engine_latency_seconds_bucket[5m]))",
           "legendFormat": "{{engine}}"
         }
       ]

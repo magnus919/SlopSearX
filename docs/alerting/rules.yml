@@ -22,7 +22,7 @@ groups:
           severity: critical
         annotations:
           summary: "SlopSearX instance {{ $labels.instance }} is down"
-          description: "The /health endpoint has been unreachable for 1 minute."
+          description: "The Prometheus scrape endpoint has been unreachable for 1 minute."
 
       # --- Engine health ---
 
@@ -36,18 +36,18 @@ groups:
           description: "Engine status gauge is non-zero. Value 1=degraded, 2=down."
 
       - alert: HighErrorRatio
-        expr: rate(slopsearx_engine_queries_total[5m]) > 0 and rate(slopsearx_engine_queries_total[5m]) / (rate(slopsearx_engine_queries_total[5m]) + rate(slopsearx_engine_queries_total[5m] offset 5m)) > 0.25
+        expr: rate(slopsearx_engine_errors_total[5m]) / rate(slopsearx_engine_queries_total[5m]) > 0.25
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "High query growth on {{ $labels.engine }}"
-          description: "Query rate increased >25% in 5 minutes. Check for traffic anomaly."
+          summary: "High error ratio on {{ $labels.engine }}"
+          description: "More than 25% of engine outcomes failed over 5 minutes."
 
       # --- Latency ---
 
       - alert: HighLatency
-        expr: slopsearx_engine_latency_seconds{quantile="0.95"} > 5
+        expr: histogram_quantile(0.95, rate(slopsearx_engine_latency_seconds_bucket[5m])) > 5
         for: 5m
         labels:
           severity: warning
