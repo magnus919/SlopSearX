@@ -1,20 +1,19 @@
 """Valkey-backed response cache.
 
-Cache key: search:{sha256(normalized_query + language + safesearch)}
+Cache key: search:v2:{sha256(JSON query and scope tuple)}
 Default TTL: 3600s for general queries, 300s for news. Graceful degradation:
 Valkey unavailable -> skip cache.
 """
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import logging
 import os
-import re
 import time
 from typing import Any, cast
-from urllib.parse import unquote_plus
 
 logger = logging.getLogger(__name__)
 
@@ -22,18 +21,10 @@ logger = logging.getLogger(__name__)
 def normalize_query(query: str) -> str:
     """Normalize a search query for deterministic cache key construction.
 
-    Steps:
-        1. URL-decode the query (unquote_plus)
-        2. Strip leading/trailing whitespace
-        3. Strip trailing punctuation: . ! ? , ; :
-        4. Collapse multiple whitespace characters into one
-        5. Lower-case and strip leading/trailing whitespace (final safeguard)
+    The transport already decoded the query. Preserve punctuation and literal
+    percent escapes, which can distinguish programming languages and operators.
     """
-    norm = unquote_plus(query)
-    norm = norm.strip()
-    norm = norm.rstrip(".!?,;:")
-    norm = re.sub(r"\s+", " ", norm)
-    return norm.lower().strip()
+    return query.strip()
 
 
 def cache_key(
@@ -56,25 +47,29 @@ def cache_key(
     are sorted so equivalent requests produce identical keys.
     """
     norm_query = normalize_query(query)
-    scope = "|".join(
+    norm = json.dumps(
         [
-            ",".join(sorted(categories)) if categories else "-",
-            ",".join(sorted(engines)) if engines else "-",
-            str(pageno),
-            time_range or "-",
-            media_type or "-",
-        ]
+            norm_query,
+            language,
+            safesearch,
+            sorted(categories or []),
+            sorted(engines or []),
+            pageno,
+            time_range,
+            media_type,
+        ],
+        ensure_ascii=False,
+        separators=(",", ":"),
     )
-    norm = f"{norm_query}|{language}|{safesearch}|{scope}"
     digest = hashlib.sha256(norm.encode()).hexdigest()
-    return f"search:{digest}"
+    return f"search:v2:{digest}"
 
 
 def _answer_cache_key(query: str) -> str:
     """Build answer-level cache key from normalized query (no language/safesearch)."""
     norm_query = normalize_query(query)
     digest = hashlib.sha256(norm_query.encode()).hexdigest()
-    return "answer:{}".format(digest)
+    return "answer:v2:{}".format(digest)
 
 
 def _ttl_for_query(categories: list[str] | None = None) -> int:
@@ -99,40 +94,60 @@ class SearchCache:
         self._url = valkey_url or os.environ.get("VALKEY_URL", "")
         self._client: Any = None
         self._connected = False
+        self._connect_lock = asyncio.Lock()
+        self._retry_at = 0.0
+        self._closed = False
         self._default_ttl = int(os.environ.get("SEARCH_CACHE_TTL_SECONDS", "3600"))
         self._negative_ttl = int(os.environ.get("SEARCH_CACHE_NEGATIVE_TTL_SECONDS", "60"))
         self._answer_ttl = int(os.environ.get("SEARCH_CACHE_TTL_SECONDS", "3600"))
 
     async def connect(self) -> None:
         """Establish async Valkey connection."""
-        if self._client is not None:
+        if self._connected or not self._url or self._closed or time.monotonic() < self._retry_at:
             return
-        if not self._url:
-            return
-        try:
+        async with self._connect_lock:
+            if self._connected or self._closed or time.monotonic() < self._retry_at:
+                return
             import valkey.asyncio
 
-            self._client = valkey.asyncio.Valkey.from_url(self._url)
-            await self._client.ping()
+            client = None
+            try:
+                client = valkey.asyncio.Valkey.from_url(
+                    self._url,
+                    socket_connect_timeout=1,
+                    socket_timeout=1,
+                )
+                await client.ping()
+            except (Exception, asyncio.CancelledError) as exc:
+                self._retry_at = time.monotonic() + 5
+                if client is not None:
+                    try:
+                        await client.aclose()
+                    except Exception:
+                        pass
+                if isinstance(exc, asyncio.CancelledError):
+                    raise
+                logger.warning("SearchCache: Valkey unavailable, retrying later: %s", exc)
+                return
+            self._client = client
             self._connected = True
             logger.info("SearchCache connected to Valkey")
-        except Exception as e:
-            self._connected = False
-            self._client = None
-            logger.warning("SearchCache: Valkey unavailable, caching disabled: %s", e)
 
     async def close(self) -> None:
         """Close the Valkey connection."""
-        if self._client is not None:
-            try:
-                await self._client.close()
-            except Exception:
-                pass
-            self._client = None
-            self._connected = False
+        self._closed = True
+        async with self._connect_lock:
+            if self._client is not None:
+                try:
+                    await self._client.aclose()
+                except Exception:
+                    pass
+                self._client = None
+                self._connected = False
 
     async def get(self, key: str) -> dict[str, Any] | None:
         """Retrieve cached result set by key. Returns None on miss or error."""
+        await self.connect()
         if not self._connected or self._client is None:
             return None
         try:
@@ -146,10 +161,11 @@ class SearchCache:
 
     async def set(self, key: str, value: dict[str, Any], ttl: int = 300) -> None:
         """Store result set in cache with TTL."""
+        await self.connect()
         if not self._connected or self._client is None:
             return
         try:
-            serialized = json.dumps(value, default=str)
+            serialized = json.dumps(value)
             await self._client.setex(key, ttl, serialized)
         except Exception as e:
             logger.debug("Cache set error: %s", e)

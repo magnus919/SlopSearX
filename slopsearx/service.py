@@ -20,6 +20,7 @@ HTTP wire behavior (SearXNG JSON/YAML) is preserved by the route layer.
 from __future__ import annotations
 
 import asyncio
+import copy
 import dataclasses
 import hashlib
 import logging
@@ -203,6 +204,14 @@ class RateLimitExceededError(ServiceError):
 
 
 @dataclass
+class SearchFlights:
+    """Transient coordination for concurrent callers in one runtime/event loop."""
+
+    tasks: dict[str, asyncio.Task[tuple[SearchResponse, dict[str, AdapterResponse]]]] = field(default_factory=dict)
+    waiters: dict[str, int] = field(default_factory=dict)
+
+
+@dataclass
 class AppContext:
     """Wiring shared between the HTTP server and the MCP server.
 
@@ -212,6 +221,7 @@ class AppContext:
     """
 
     active_engines: dict[str, EngineAdapter]
+    search_flights: SearchFlights = field(default_factory=SearchFlights)
     cache: SearchCache | None = None
     rate_limiter: RateLimiter | None = None
     router: QueryRouter | None = None
@@ -593,6 +603,8 @@ class SearchService:
         self._ctx = context
         self._ranker = create_ranker(context.ranking_strategy)
         self._resolver: ScopeResolver | None = None
+        self._inflight = context.search_flights.tasks
+        self._waiters = context.search_flights.waiters
 
     def _resolver_for(self) -> ScopeResolver:
         """Build (or refresh) the scope resolver for the live context.
@@ -664,6 +676,54 @@ class SearchService:
         if cached is not None:
             return cached
 
+        # Only identical dispatch inputs share work. Policy and client limits
+        # have already run for every caller. Fresh requests never join a flight.
+        key = _scope_cache_key(request, routing_digest)
+        # Scope order and concrete adapters must agree even during runtime rewiring.
+        key += repr([(name, id(self._ctx.active_engines[name])) for name in scope.selected_engines])
+        if request.freshness == "prefer_fresh":
+            key += ":" + query_id
+        task = self._inflight.get(key)
+        if task is None:
+            task = asyncio.create_task(self._execute_search(request, scope, routing_digest, query_id, t_start))
+            self._inflight[key] = task
+            self._waiters[key] = 0
+        self._waiters[key] += 1
+        try:
+            canonical, responses = await asyncio.shield(task)
+            response = self._view_for_request(request, copy.deepcopy(canonical))
+            response.query_id = query_id
+            response.query = request.query
+            response.scope = scope
+            response.response_time_ms = round((time.monotonic() - t_start) * 1000)
+            if self._ctx.audit_logger is not None:
+                asyncio.create_task(
+                    self._ctx.audit_logger.record_query(
+                        query=request.query,
+                        client_ip=request.client_identifier or "unknown",
+                        engine_results=responses,
+                        latency_ms=response.response_time_ms,
+                    )
+                )
+            return response
+        finally:
+            self._waiters[key] -= 1
+            if self._waiters[key] == 0:
+                del self._waiters[key]
+                del self._inflight[key]
+                if not task.done():
+                    task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+
+    async def _execute_search(
+        self,
+        request: SearchRequest,
+        scope: ScopeDecision,
+        routing_digest: str,
+        query_id: str,
+        t_start: float,
+    ) -> tuple[SearchResponse, dict[str, AdapterResponse]]:
+        """Produce a canonical response shared only while callers are waiting."""
         target = {name: self._ctx.active_engines[name] for name in scope.selected_engines}
         # A media-intent search always dispatches with the media category
         # translation (images/videos) that the category-aware adapters
@@ -724,7 +784,15 @@ class SearchService:
             min(sum(engine_timeouts), DEFAULT_SEARCH_TIMEOUT_S * 3),
         )
 
-        dispatch_results = await self._gather_with_deadline(tasks, engine_names, dispatch_deadline_s, started_engines)
+        try:
+            dispatch_results = await self._gather_with_deadline(
+                tasks, engine_names, dispatch_deadline_s, started_engines
+            )
+        except BaseException:
+            if suggestions_task is not None:
+                suggestions_task.cancel()
+                await asyncio.gather(suggestions_task, return_exceptions=True)
+            raise
 
         # Collect results and metadata
         responses: dict[str, AdapterResponse] = {}
@@ -847,28 +915,14 @@ class SearchService:
 
         await self._write_cache(request, canonical, all_unresponsive, routing_digest)
 
-        # Derive the requested include-filtered + max_results-sliced view.
-        response = self._view_for_request(request, canonical)
-
-        # Record audit trail (fire-and-forget)
-        if self._ctx.audit_logger is not None:
-            asyncio.create_task(
-                self._ctx.audit_logger.record_query(
-                    query=request.query,
-                    client_ip=request.client_identifier or "unknown",
-                    engine_results=responses,
-                    latency_ms=elapsed_ms,
-                )
-            )
-
-        return response
+        return canonical, responses
 
     # -- Cache ----------------------------------------------------------
 
     async def _read_cache(self, request: SearchRequest, routing_digest: str) -> SearchResponse | None:
         """Check the scoped search cache. Returns a cached response or None."""
         cache = self._ctx.cache
-        if cache is None or not cache.is_connected or request.freshness == "prefer_fresh":
+        if cache is None or request.freshness == "prefer_fresh":
             return None
 
         key = _scope_cache_key(request, routing_digest)

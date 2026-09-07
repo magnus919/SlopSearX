@@ -11,31 +11,12 @@ from slopsearx.cache import SearchCache, _answer_cache_key, _ttl_for_query, cach
 
 
 class TestNormalizeQuery:
-    """Query normalization for deterministic cache keys."""
+    def test_strip_boundary_whitespace(self) -> None:
+        assert normalize_query("  Hello World  ") == "Hello World"
 
-    def test_lower_and_strip(self) -> None:
-        assert normalize_query("  Hello World  ") == "hello world"
-
-    def test_url_decode(self) -> None:
-        assert normalize_query("hello+world") == "hello world"
-        assert normalize_query("search%20query") == "search query"
-        assert normalize_query("a%2Bb") == "a+b"  # %2B → +
-
-    def test_trailing_punctuation_stripped(self) -> None:
-        assert normalize_query("hello.") == "hello"
-        assert normalize_query("hello!") == "hello"
-        assert normalize_query("hello?") == "hello"
-        assert normalize_query("hello,") == "hello"
-        assert normalize_query("hello;") == "hello"
-        assert normalize_query("hello:") == "hello"
-        assert normalize_query("hello?!.") == "hello"
-
-    def test_collapse_spaces(self) -> None:
-        assert normalize_query("hello    world") == "hello world"
-        assert normalize_query("  hello   world  ") == "hello world"
-
-    def test_full_normalization_chain(self) -> None:
-        assert normalize_query("  Hello+World%21  ") == "hello world"
+    @pytest.mark.parametrize("query", ["C++", "C#", "hello?", "a%2Bb", "a+b", '"a  b"', "Hello"])
+    def test_preserve_query_syntax(self, query: str) -> None:
+        assert normalize_query(query) == query
 
 
 class TestCacheKey:
@@ -47,10 +28,10 @@ class TestCacheKey:
         assert k1 == k2
         assert k1.startswith("search:")
 
-    def test_case_insensitive(self) -> None:
+    def test_case_preserved(self) -> None:
         k1 = cache_key("Hello World", "en", 0)
         k2 = cache_key("hello world", "en", 0)
-        assert k1 == k2
+        assert k1 != k2
 
     def test_different_language(self) -> None:
         k1 = cache_key("test", "en", 0)
@@ -62,23 +43,23 @@ class TestCacheKey:
         k2 = cache_key("test", "en", 1)
         assert k1 != k2
 
-    def test_normalized_equivalence(self) -> None:
-        """Queries that differ only in casing/punctuation produce the same key."""
+    def test_punctuation_preserved(self) -> None:
+        """Case and punctuation can carry engine-specific meaning."""
         k1 = cache_key("Hello World!", "en", 0)
         k2 = cache_key("hello world", "en", 0)
-        assert k1 == k2
+        assert k1 != k2
 
-    def test_url_encoded_equivalence(self) -> None:
-        """URL-encoded and decoded forms produce the same key."""
+    def test_url_encoding_preserved(self) -> None:
+        """Queries reach the cache after transport decoding."""
         k1 = cache_key("hello+world", "en", 0)
         k2 = cache_key("hello world", "en", 0)
-        assert k1 == k2
+        assert k1 != k2
 
-    def test_trailing_punctuation_equivalence(self) -> None:
-        """Same query with/without trailing punctuation produces the same key."""
+    def test_trailing_punctuation_preserved(self) -> None:
+        """Preserve trailing operator syntax."""
         k1 = cache_key("python programming.", "en", 0)
         k2 = cache_key("python programming", "en", 0)
-        assert k1 == k2
+        assert k1 != k2
 
 
 class TestAnswerCacheKey:
@@ -91,7 +72,7 @@ class TestAnswerCacheKey:
     def test_normalized(self) -> None:
         k1 = _answer_cache_key("Hello World!")
         k2 = _answer_cache_key("hello world")
-        assert k1 == k2
+        assert k1 != k2
 
     def test_no_language_dependence(self) -> None:
         """Answer key only depends on query, not language."""
@@ -117,7 +98,7 @@ class TestTTL:
         assert _ttl_for_query([]) == 3600
         assert _ttl_for_query(None) == 3600
 
-    def test_case_insensitive(self) -> None:
+    def test_case_preserved(self) -> None:
         assert _ttl_for_query(["News"]) == 300
         assert _ttl_for_query(["NEWS"]) == 300
 
@@ -316,3 +297,39 @@ class TestSearchCacheMocked:
         mock_client.setex.side_effect = RuntimeError("Valkey error")
         await cache.set_answer("test query", {"data": "test"})
         # No exception is success
+
+
+@pytest.mark.parametrize(
+    "left,right", [("C++", "C"), ("C#", "C"), ("a+b", "a b"), ("%20", " "), ("C?", "C"), ('"a  b"', '"a b"')]
+)
+def test_meaningful_queries_do_not_collide(left: str, right: str) -> None:
+    assert cache_key(left) != cache_key(right)
+    assert _answer_cache_key(left) != _answer_cache_key(right)
+
+
+def test_version_and_unambiguous_scope_encoding() -> None:
+    assert cache_key("C++").startswith("search:v2:")
+    assert cache_key("x", categories=["a,b"]) != cache_key("x", categories=["a", "b"])
+
+
+async def test_failed_startup_retries_once_after_backoff(monkeypatch) -> None:
+    import valkey.asyncio
+
+    broken = AsyncMock()
+    broken.ping.side_effect = ConnectionError("offline")
+    recovered = AsyncMock()
+    recovered.get.return_value = '{"ok": true}'
+    factory = MagicMock(side_effect=[broken, recovered])
+    monkeypatch.setattr(valkey.asyncio.Valkey, "from_url", factory)
+    cache = SearchCache("redis://unused:6379")
+    await cache.connect()
+    assert not cache.is_connected
+    broken.aclose.assert_awaited_once()
+    assert await cache.get("key") is None
+    assert factory.call_count == 1
+    cache._retry_at = 0
+    assert await cache.get("key") == {"ok": True}
+    assert factory.call_count == 2
+    await cache.close()
+    assert await cache.get("key") is None
+    assert factory.call_count == 2

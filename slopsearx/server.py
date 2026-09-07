@@ -48,6 +48,7 @@ from slopsearx.service import (
     AppContext,
     QueryValidationError,
     RateLimitExceededError,
+    SearchFlights,
     SearchRequest,
     SearchService,
     build_context,
@@ -60,6 +61,7 @@ from slopsearx.suggest import SuggestionService
 
 # Populated at startup
 _active_engines: dict[str, EngineAdapter] = {}
+_search_flights = SearchFlights()
 _cache: SearchCache | None = None
 _rate_limiter: RateLimiter | None = None
 _router: QueryRouter | None = None
@@ -148,6 +150,7 @@ def _current_context() -> AppContext:
     """
     return AppContext(
         active_engines=_active_engines,
+        search_flights=_search_flights,
         cache=_cache,
         rate_limiter=_rate_limiter,
         router=_router,
