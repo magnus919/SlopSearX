@@ -525,14 +525,21 @@ def _envelope(
     if response.all_unresponsive:
         return _error(
             "all_engines_failed",
-            "every selected engine failed to respond",
+            "interactive deadline reached before any engine responded"
+            if response.deadline_exceeded
+            else "every selected engine failed to respond",
+            deadline_exceeded=response.deadline_exceeded,
             query_id=response.query_id,
             scope=scope,
             engine_outcomes=[
                 {"engine": o.engine, "status": o.status, "result_count": o.result_count, "message": o.message}
                 for o in response.engine_outcomes
             ],
-            retry_guidance="check the engine outcomes, adjust scope, and retry",
+            retry_guidance=(
+                "increase or omit interactive_timeout_ms and retry"
+                if response.deadline_exceeded
+                else "check the engine outcomes, adjust scope, and retry"
+            ),
         )
     return {
         "query": response.query,
@@ -566,6 +573,7 @@ def _envelope(
             "cached_error": response.cached_error,
             "response_time_ms": response.response_time_ms,
             "partial": response.partial,
+            "deadline_exceeded": response.deadline_exceeded,
             "ranking": response.ranking_explanation,
             "cursor": cursor,
             "suggestions": response.suggestions if include_suggestions else [],
@@ -665,6 +673,7 @@ async def slopsearx_search(
     max_results: int | None = None,
     include: list[str] | None = None,
     freshness: str = "no_preference",
+    interactive_timeout_ms: int | None = None,
 ) -> dict[str, Any]:
     """Search across SlopSearX engines with intent-based routing.
 
@@ -679,6 +688,8 @@ async def slopsearx_search(
       advertises it, the coverage gap is reported explicitly.
     - safesearch: off | moderate | strict. strict fails closed because no
       adapter enforces it.
+    - interactive_timeout_ms: optional 1–30000 ms engine/suggestion wait budget;
+      may return incomplete coverage. Omit for full configured engine deadlines.
     - freshness: prefer_cache | prefer_fresh | no_preference.
     - include: subset of results, suggestions, engine_status, diagnostics,
       payload. When ``payload`` is included, compact result cards inline the
@@ -689,6 +700,14 @@ async def slopsearx_search(
     Returns results, scope, engine outcomes, and a pagination cursor.
     """
     state = get_state()
+    if interactive_timeout_ms is not None and (
+        type(interactive_timeout_ms) is not int or not 1 <= interactive_timeout_ms <= 30000
+    ):
+        return _error(
+            "invalid_input",
+            "interactive_timeout_ms must be an integer between 1 and 30000",
+            field="interactive_timeout_ms",
+        )
 
     if intent != "auto" and intent not in VALID_INTENTS:
         return _error(
@@ -758,6 +777,7 @@ async def slopsearx_search(
 
     request = SearchRequest(
         query=query,
+        interactive_timeout_ms=interactive_timeout_ms,
         categories=resolved_categories,
         engines=resolved_engines,
         language=language,

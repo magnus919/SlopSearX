@@ -194,6 +194,29 @@ class TestSearchEndpoint:
 
         assert response.status_code == 400
 
+    @pytest.mark.parametrize("output_format", ["json", "yaml"])
+    def test_interactive_deadline(self, client: TestClient, monkeypatch, output_format) -> None:
+        import asyncio
+
+        import slopsearx.server as server_mod
+        from slopsearx.mcp.harness import InMemoryStore
+
+        monkeypatch.setattr(server_mod, "_cache", InMemoryStore())
+        original = _MockEngine.search
+
+        async def delayed(engine, query, params=None):
+            await asyncio.sleep(1)
+            return await original(engine, query, params)
+
+        monkeypatch.setattr(_MockEngine, "search", delayed)
+        response = client.get(
+            "/search", params={"q": "deadline", "format": output_format, "interactive_timeout_ms": 10}
+        )
+        assert response.status_code == 503
+        data = response.json() if output_format == "json" else yaml.safe_load(response.text.split("\n---\n", 1)[0])
+        assert data["meta"]["deadline_exceeded"]
+        assert client.get("/search", params={"q": "deadline", "interactive_timeout_ms": 0}).status_code == 422
+
     def test_yaml_format(self, client: TestClient) -> None:
         """format=yaml returns YAML+Markdown response."""
         response = client.get("/search", params={"q": "test", "format": "yaml"})

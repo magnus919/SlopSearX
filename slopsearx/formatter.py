@@ -203,6 +203,8 @@ def format_yaml_markdown(
         yaml_section["meta"] = {
             "response_time_ms": meta.get("response_time_ms", 0),
             "cached": meta.get("cached", False),
+            "partial": meta.get("partial", False),
+            "deadline_exceeded": meta.get("deadline_exceeded", False),
             "query_id": meta.get("query_id", ""),
         }
         # Count responsive engines from engine_status

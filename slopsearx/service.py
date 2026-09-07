@@ -114,6 +114,7 @@ class SearchRequest:
     # HTTP client IP or MCP tenant identifier; used for per-client rate
     # limiting and the audit trail.
     client_identifier: str | None = None
+    interactive_timeout_ms: int | None = None
 
 
 @dataclass
@@ -175,6 +176,7 @@ class SearchResponse:
     cached: bool = False
     response_time_ms: int = 0
     partial: bool = False
+    deadline_exceeded: bool = False
     all_unresponsive: bool = False
     empty_engines: list[list[str]] = field(default_factory=list)
     cached_error: bool = False
@@ -646,6 +648,11 @@ class SearchService:
         if not request.query or not request.query.strip():
             raise QueryValidationError("query is required")
 
+        if request.interactive_timeout_ms is not None and (
+            type(request.interactive_timeout_ms) is not int or not 1 <= request.interactive_timeout_ms <= 30_000
+        ):
+            raise ValueError("interactive_timeout_ms must be an integer between 1 and 30000")
+
         scope = self._resolver_for().resolve(request)
 
         # Routing inputs snapshot for the cache key: computed once here
@@ -699,6 +706,10 @@ class SearchService:
             response.query_id = query_id
             response.query = request.query
             response.scope = scope
+            if response.deadline_exceeded and not any("Interactive deadline" in w for w in scope.warnings):
+                scope.warnings.append(
+                    "Interactive deadline reached; captured results or suggestions may be incomplete."
+                )
             response.response_time_ms = round((time.monotonic() - t_start) * 1000)
             if self._ctx.audit_logger is not None:
                 asyncio.create_task(
@@ -788,9 +799,18 @@ class SearchService:
             min(sum(engine_timeouts), DEFAULT_SEARCH_TIMEOUT_S * 3),
         )
 
+        interactive = request.interactive_timeout_ms is not None
+        if request.interactive_timeout_ms is not None:
+            dispatch_deadline_s = min(dispatch_deadline_s, request.interactive_timeout_ms / 1000)
+        dispatch_started = time.monotonic()
+
         try:
             dispatch_results = await self._gather_with_deadline(
-                tasks, engine_names, dispatch_deadline_s, started_engines
+                tasks,
+                engine_names,
+                dispatch_deadline_s,
+                started_engines,
+                **({"interactive": True} if interactive else {}),
             )
         except BaseException:
             if suggestions_task is not None:
@@ -806,7 +826,8 @@ class SearchService:
             # scheduler timeout count as an upstream engine failure, and never
             # record a never-started engine as an observed outcome (issue 190).
             engine = target[name]
-            if name in started_engines:
+            caller_cancelled = interactive and result.synthetic and result.status == EngineStatus.UNAVAILABLE
+            if name in started_engines and not caller_cancelled:
                 # Synthetic outcomes (deadline timeouts the adapter never
                 # returned from) carry a fabricated latency bound; never store
                 # it as an observed latency (issue 190). The AdapterResponse
@@ -838,10 +859,11 @@ class SearchService:
             for sr in result.results:
                 sr.tier = tier
 
-            self._record_engine_metrics(name, result)
+            if not caller_cancelled:
+                self._record_engine_metrics(name, result)
 
             # Per-engine quality telemetry in Valkey (non-blocking)
-            if self._ctx.stats_tracker is not None:
+            if self._ctx.stats_tracker is not None and not caller_cancelled:
                 avg_score = sum(r.score for r in result.results) / len(result.results) if result.results else 0.0
                 asyncio.create_task(
                     self._ctx.stats_tracker.record_query(
@@ -883,7 +905,27 @@ class SearchService:
         all_unresponsive = all(resp.status != EngineStatus.OK for resp in responses.values())
         non_ok = sum(1 for resp in responses.values() if resp.status != EngineStatus.OK)
 
-        suggestions = await suggestions_task if suggestions_task is not None else []
+        deadline_exceeded = interactive and any(
+            result.synthetic and result.status == EngineStatus.UNAVAILABLE for result in dispatch_results
+        )
+        suggestions = []
+        if suggestions_task is not None:
+            try:
+                if interactive:
+                    remaining = max(0.0, dispatch_deadline_s - (time.monotonic() - dispatch_started))
+                    done, _ = await asyncio.wait([suggestions_task], timeout=remaining)
+                    if not done:
+                        deadline_exceeded = True
+                    else:
+                        suggestions = suggestions_task.result()
+                else:
+                    suggestions = await suggestions_task
+            finally:
+                if not suggestions_task.done():
+                    suggestions_task.cancel()
+                    await asyncio.gather(suggestions_task, return_exceptions=True)
+        if deadline_exceeded:
+            scope.warnings.append("Interactive deadline reached; captured results or suggestions may be incomplete.")
 
         # Aggregate answers, corrections, and infoboxes from all engine responses
         all_answers: list[dict[str, Any]] = []
@@ -912,13 +954,15 @@ class SearchService:
             infoboxes=all_infoboxes,
             query_id=query_id,
             response_time_ms=round(elapsed_ms),
-            partial=not all_unresponsive and non_ok > 0,
+            partial=not all_unresponsive and (non_ok > 0 or deadline_exceeded),
+            deadline_exceeded=deadline_exceeded,
             all_unresponsive=all_unresponsive,
             empty_engines=empty_engines,
             ranking_explanation=self._ranking_explanation,
         )
 
-        await self._write_cache(request, canonical, all_unresponsive, routing_digest)
+        if not deadline_exceeded:
+            await self._write_cache(request, canonical, all_unresponsive, routing_digest)
 
         return canonical, responses
 
@@ -1054,6 +1098,8 @@ class SearchService:
         engine_names: list[str],
         deadline_s: float = DEFAULT_SEARCH_TIMEOUT_S,
         started_engines: set[str] | None = None,
+        *,
+        interactive: bool = False,
     ) -> list[Any]:
         """Gather engine dispatch tasks under an overall deadline.
 
@@ -1100,9 +1146,11 @@ class SearchService:
                 started = started_engines is None or name in started_engines
                 results[name] = AdapterResponse(
                     results=[],
-                    status=EngineStatus.TIMEOUT if started else EngineStatus.UNAVAILABLE,
+                    status=EngineStatus.TIMEOUT if started and not interactive else EngineStatus.UNAVAILABLE,
                     error_message=(
-                        f"timed out after {deadline_s}s" if started else "not started before the search deadline"
+                        "interactive deadline reached"
+                        if interactive
+                        else (f"timed out after {deadline_s}s" if started else "not started before the search deadline")
                     ),
                     latency_ms=deadline_s * 1000 if started else 0.0,
                     # Synthetic: the adapter never returned, so the latency is
@@ -1261,7 +1309,8 @@ def _scope_cache_key(request: SearchRequest, routing_digest: str) -> str:
         time_range=request.time_range,
         media_type=request.media_type,
     )
-    return f"{base}:{routing_digest}"
+    budget = f":interactive:{request.interactive_timeout_ms}" if request.interactive_timeout_ms is not None else ""
+    return f"{base}:{routing_digest}{budget}"
 
 
 def build_response_meta(response: SearchResponse) -> dict[str, Any]:
@@ -1279,6 +1328,8 @@ def build_response_meta(response: SearchResponse) -> dict[str, Any]:
             for outcome in response.engine_outcomes
         },
     }
+    meta["partial"] = response.partial
+    meta["deadline_exceeded"] = response.deadline_exceeded
     if response.empty_engines:
         meta["empty_engines"] = response.empty_engines
     return meta
@@ -1370,6 +1421,7 @@ def search_response_to_payload(response: SearchResponse) -> dict[str, Any]:
         "ranking_explanation": response.ranking_explanation,
         "response_time_ms": response.response_time_ms,
         "partial": response.partial,
+        "deadline_exceeded": response.deadline_exceeded,
         "all_unresponsive": response.all_unresponsive,
         "empty_engines": [list(entry) for entry in response.empty_engines],
         "cached_error": response.cached_error,
@@ -1413,6 +1465,7 @@ def search_response_from_payload(payload: dict[str, Any]) -> SearchResponse:
         cached=bool(payload.get("cached", False)),
         response_time_ms=int(payload.get("response_time_ms", 0)),
         partial=bool(payload.get("partial", False)),
+        deadline_exceeded=bool(payload.get("deadline_exceeded", False)),
         all_unresponsive=bool(payload.get("all_unresponsive", False)),
         empty_engines=[[str(item) for item in entry] for entry in (payload.get("empty_engines") or [])],
         cached_error=bool(payload.get("cached_error", False)),

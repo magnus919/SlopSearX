@@ -127,6 +127,37 @@ def state() -> McpState:
 
 
 class TestSearchTool:
+    async def test_interactive_budget(self, state: McpState, monkeypatch) -> None:
+        import asyncio
+
+        original = _MockEngine.search
+
+        async def delayed(engine, query, params=None):
+            if engine.name == "brave":
+                await asyncio.sleep(1)
+            return await original(engine, query, params)
+
+        monkeypatch.setattr(_MockEngine, "search", delayed)
+        result = await t.slopsearx_search("probe", interactive_timeout_ms=10)
+        assert result["results"]
+        assert result["meta"]["deadline_exceeded"]
+        assert result["meta"]["partial"]
+        assert any("Interactive deadline" in warning for warning in result["warnings"])
+        invalid = await t.slopsearx_search("probe", interactive_timeout_ms=0)
+        assert invalid["error"]["code"] == "invalid_input"
+
+    async def test_interactive_all_expired(self, state: McpState, monkeypatch) -> None:
+        import asyncio
+
+        async def delayed(engine, query, params=None):
+            await asyncio.sleep(1)
+
+        monkeypatch.setattr(_MockEngine, "search", delayed)
+        result = await t.slopsearx_search("probe", interactive_timeout_ms=10)
+        assert result["error"]["code"] == "all_engines_failed"
+        assert result["error"]["deadline_exceeded"]
+        assert "interactive_timeout_ms" in result["error"]["retry_guidance"]
+
     async def test_basic_search(self, state: McpState) -> None:
         result = await t.slopsearx_search("hello world")
 

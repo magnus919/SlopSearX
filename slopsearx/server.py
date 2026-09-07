@@ -330,6 +330,9 @@ async def search(
     language: str = Query(default="en", description="Language code"),
     pageno: int = Query(default=1, ge=1, description="Page number"),
     time_range: str = Query(default="", description="Time range: day, month, year"),
+    interactive_timeout_ms: int | None = Query(
+        default=None, ge=1, le=30000, description="Optional engine-wait budget in milliseconds"
+    ),
     safesearch: int = Query(default=0, ge=0, le=2, description="SafeSearch: 0=off, 1=moderate, 2=strict"),
 ) -> Any:
     """Execute a search across all enabled engines.
@@ -350,6 +353,7 @@ async def search(
     service = SearchService(_current_context())
     search_request = SearchRequest(
         query=q,
+        interactive_timeout_ms=interactive_timeout_ms,
         categories=[c.strip() for c in categories.split(",") if c.strip()],
         engines=[e.strip() for e in engines_param.split(",") if e.strip()],
         language=language,
