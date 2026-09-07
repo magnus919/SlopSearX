@@ -15,8 +15,9 @@ from __future__ import annotations
 import asyncio
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator
+from urllib.parse import parse_qs
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 import engines  # noqa: F401 — triggers @register_engine to populate registry
@@ -293,6 +294,13 @@ async def metrics() -> PlainTextResponse:
     return PlainTextResponse(content=m.render_metrics(), media_type="text/plain; version=0.0.4")
 
 
+@app.get("/healthz")
+async def healthz() -> PlainTextResponse:
+    """SearXNG-compatible readiness response."""
+
+    return PlainTextResponse(content="OK")
+
+
 # ---------------------------------------------------------------------------
 # /config
 # ---------------------------------------------------------------------------
@@ -319,21 +327,7 @@ async def config() -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-@app.get("/search")
-async def search(
-    request: Request,
-    q: str = Query(default="", description="Search query"),
-    format: str = Query(default="json", description="Response format: json, yaml"),
-    categories: str = Query(default="", description="Comma-separated category filter"),
-    engines_param: str = Query(default="", alias="engines", description="Comma-separated engine filter"),
-    language: str = Query(default="en", description="Language code"),
-    pageno: int = Query(default=1, ge=1, description="Page number"),
-    time_range: str = Query(default="", description="Time range: day, month, year"),
-    interactive_timeout_ms: int | None = Query(
-        default=None, ge=1, le=30000, description="Optional engine-wait budget in milliseconds"
-    ),
-    safesearch: int = Query(default=0, ge=0, le=2, description="SafeSearch: 0=off, 1=moderate, 2=strict"),
-) -> Any:
+async def _search_endpoint(request: Request) -> Any:
     """Execute a search across all enabled engines.
 
     Accepts all standard SearXNG query parameters. Returns JSON by
@@ -343,9 +337,36 @@ async def search(
     response. Failing engines are reported in ``unresponsive_engines``
     and their results are omitted.
     """
+    params = dict(request.query_params)
+    if request.method == "POST":
+        content_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+        if content_type == "application/x-www-form-urlencoded":
+            body = await request.body()
+            form = parse_qs(body.decode("utf-8", errors="replace"), keep_blank_values=True)
+            params.update({key: values[-1] for key, values in form.items() if values})
+
+    q = params.get("q", "")
+    output_format = params.get("format", "json")
+    categories = params.get("categories", "")
+    engines_param = params.get("engines", "")
+    language = params.get("language", "en")
+    time_range = params.get("time_range", "")
+    try:
+        pageno = int(params.get("pageno", "1"))
+        safesearch = int(params.get("safesearch", "0"))
+        timeout_raw = params.get("interactive_timeout_ms")
+        interactive_timeout_ms = None if timeout_raw is None or timeout_raw == "" else int(timeout_raw)
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"detail": "Invalid search parameter"})
+
+    if pageno < 1 or safesearch not in {0, 1, 2} or (
+        interactive_timeout_ms is not None and not 1 <= interactive_timeout_ms <= 30000
+    ):
+        return JSONResponse(status_code=422, content={"detail": "Invalid search parameter"})
+
     # Increment request counters
     m.server_requests.inc({})
-    m.server_requests_by_format.inc({"format": format if format in {"json", "yaml"} else "other"})
+    m.server_requests_by_format.inc({"format": output_format if output_format in {"json", "yaml"} else "other"})
     known_categories = {cat for engine in _active_engines.values() for cat in engine.categories}
     requested_categories = {c.strip() for c in categories.split(",") if c.strip()}
     for cat in {c if c in known_categories else "other" for c in requested_categories}:
@@ -419,7 +440,7 @@ async def search(
 
     status_code = 503 if response.all_unresponsive else 200
 
-    if format == "yaml":
+    if output_format == "yaml":
         engine_count = len(response.scope.selected_engines)
         responsive_count = sum(1 for o in response.engine_outcomes if o.status == "ok")
         yaml_output = format_yaml_markdown(
@@ -445,3 +466,17 @@ async def search(
     )
 
     return JSONResponse(status_code=status_code, content=response_data)
+
+
+@app.api_route("/", methods=["GET", "POST"])
+async def root_search(request: Request) -> Any:
+    """SearXNG-compatible root search endpoint."""
+
+    return await _search_endpoint(request)
+
+
+@app.api_route("/search", methods=["GET", "POST"])
+async def search(request: Request) -> Any:
+    """SearXNG-compatible search endpoint."""
+
+    return await _search_endpoint(request)

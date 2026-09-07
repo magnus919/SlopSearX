@@ -172,6 +172,20 @@ class TestSearchEndpoint:
         assert len(data["results"]) == 3
         assert "meta" in data
 
+    @pytest.mark.parametrize("path", ["/", "/search"])
+    @pytest.mark.parametrize("method", ["get", "post"])
+    def test_searxng_routes_and_methods(self, client: TestClient, path: str, method: str) -> None:
+        """SearXNG clients can use either search route and GET or form POST."""
+        request = getattr(client, method)
+        kwargs = {"params": {"q": "route compatibility"}}
+        if method == "post":
+            kwargs = {"data": {"q": "route compatibility"}}
+
+        response = request(path, **kwargs)
+
+        assert response.status_code == 200
+        assert response.json()["query"] == "route compatibility"
+
     def test_missing_query(self, client: TestClient) -> None:
         """Missing q parameter returns 400."""
         response = client.get("/search")
@@ -407,6 +421,13 @@ class TestHealthEndpoint:
         assert "auth_configured" in record
         assert record["circuit_open"] is False
         assert record["circuit_consecutive_errors"] == 0
+
+    def test_healthz_is_searxng_compatible(self, client: TestClient) -> None:
+        response = client.get("/healthz")
+
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/plain")
+        assert response.text == "OK"
 
     def test_health_no_engines(self) -> None:
         """Health works even with no engines registered."""
