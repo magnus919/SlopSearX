@@ -40,5 +40,6 @@ To prepare new evidence for review, add `--capture-dir /tmp/upstream-captures`.
 Only successful probes write allowlisted payloads. Inspect that directory before
 copying fixtures into `tests/fixtures/upstream_contracts`; review source schema
 changes and ensure no unnecessary personal fields were retained. Fixture
-sanitization intentionally omits abstracts, popularity metadata, and other fields,
-so ordinary unit tests remain necessary for those adapter branches.
+sanitization intentionally omits abstracts and npm popularity metadata; crates
+download counts are retained because its parser uses them. Ordinary unit tests
+remain necessary for adapter branches whose fields were omitted.
