@@ -24,10 +24,13 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 
 | Endpoint | Description |
 |---|---|
+| `GET /?q=...` or `POST /` | SearXNG-compatible search routes; POST accepts form-encoded parameters |
 | `GET /search?q=...&format=json` | SearXNG-compatible JSON (default) |
+| `POST /search` | SearXNG-compatible form-encoded search |
 | `GET /search?q=...&format=yaml` | YAML+Markdown agent-native output |
 | `GET /search?q=...&categories=science,news` | Filter by category (OR semantics) |
 | `GET /search?q=...&engines=brave,wikipedia` | Explicit engine selection |
+| `GET /healthz` | SearXNG-compatible process readiness probe (`OK`); does not assert engine health |
 | `GET /health` | Per-engine health check with status |
 | `GET /metrics` | OpenMetrics for Prometheus scraping |
 | `GET /config` | Categories→engines mapping for runtime discovery |

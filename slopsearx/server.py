@@ -15,8 +15,9 @@ from __future__ import annotations
 import asyncio
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator
+from urllib.parse import parse_qs
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 import engines  # noqa: F401 — triggers @register_engine to populate registry
@@ -281,6 +282,18 @@ async def health() -> dict[str, Any]:
     }
 
 
+@app.get("/healthz")
+async def healthz() -> PlainTextResponse:
+    """SearXNG-compatible process readiness probe.
+
+    Readiness means that this HTTP process can accept requests. It does not
+    claim that external engines or optional Valkey-backed features are
+    healthy; those operational details remain available from ``/health``.
+    """
+
+    return PlainTextResponse(content="OK", media_type="text/plain")
+
+
 # ---------------------------------------------------------------------------
 # /metrics
 # ---------------------------------------------------------------------------
@@ -319,20 +332,18 @@ async def config() -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-@app.get("/search")
-async def search(
+async def _execute_search(
     request: Request,
-    q: str = Query(default="", description="Search query"),
-    format: str = Query(default="json", description="Response format: json, yaml"),
-    categories: str = Query(default="", description="Comma-separated category filter"),
-    engines_param: str = Query(default="", alias="engines", description="Comma-separated engine filter"),
-    language: str = Query(default="en", description="Language code"),
-    pageno: int = Query(default=1, ge=1, description="Page number"),
-    time_range: str = Query(default="", description="Time range: day, month, year"),
-    interactive_timeout_ms: int | None = Query(
-        default=None, ge=1, le=30000, description="Optional engine-wait budget in milliseconds"
-    ),
-    safesearch: int = Query(default=0, ge=0, le=2, description="SafeSearch: 0=off, 1=moderate, 2=strict"),
+    *,
+    q: str,
+    format: str,
+    categories: str,
+    engines_param: str,
+    language: str,
+    pageno: int,
+    time_range: str,
+    interactive_timeout_ms: int | None,
+    safesearch: int,
 ) -> Any:
     """Execute a search across all enabled engines.
 
@@ -445,3 +456,110 @@ async def search(
     )
 
     return JSONResponse(status_code=status_code, content=response_data)
+
+
+@app.get("/")
+@app.get("/search")
+async def search(
+    request: Request,
+    q: str = Query(default="", description="Search query"),
+    format: str = Query(default="json", description="Response format: json, yaml"),
+    categories: str = Query(default="", description="Comma-separated category filter"),
+    engines_param: str = Query(default="", alias="engines", description="Comma-separated engine filter"),
+    language: str = Query(default="en", description="Language code"),
+    pageno: int = Query(default=1, ge=1, description="Page number"),
+    time_range: str = Query(default="", description="Time range: day, month, year"),
+    interactive_timeout_ms: int | None = Query(
+        default=None, ge=1, le=30000, description="Optional engine-wait budget in milliseconds"
+    ),
+    safesearch: int = Query(default=0, ge=0, le=2, description="SafeSearch: 0=off, 1=moderate, 2=strict"),
+) -> Any:
+    """Execute a GET search on either SearXNG-compatible endpoint."""
+
+    return await _execute_search(
+        request,
+        q=q,
+        format=format,
+        categories=categories,
+        engines_param=engines_param,
+        language=language,
+        pageno=pageno,
+        time_range=time_range,
+        interactive_timeout_ms=interactive_timeout_ms,
+        safesearch=safesearch,
+    )
+
+
+def _post_form_value(params: dict[str, str], name: str, default: str) -> str:
+    """Return one decoded URL-form value, using the endpoint default."""
+
+    return params.get(name, default)
+
+
+def _post_form_int(
+    params: dict[str, str],
+    name: str,
+    *,
+    default: int,
+    minimum: int | None = None,
+    maximum: int | None = None,
+) -> int:
+    """Parse a POST form integer with FastAPI-compatible validation status."""
+
+    raw_value = params.get(name)
+    if raw_value is None:
+        return default
+    try:
+        value = int(raw_value)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=f"Invalid value for '{name}'") from exc
+    if (minimum is not None and value < minimum) or (maximum is not None and value > maximum):
+        raise HTTPException(status_code=422, detail=f"Invalid value for '{name}'")
+    return value
+
+
+async def _post_form_params(request: Request) -> dict[str, str]:
+    """Decode an ``application/x-www-form-urlencoded`` POST body.
+
+    SearXNG search forms use URL encoding, which can be parsed without the
+    optional multipart dependency that Starlette otherwise requires for
+    ``Request.form()``. The caller merges these values over any query-string
+    values so form submissions behave like ordinary form controls.
+    """
+
+    content_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+    if content_type not in {"", "application/x-www-form-urlencoded"}:
+        return {}
+    try:
+        body = (await request.body()).decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise HTTPException(status_code=400, detail="Form body must be UTF-8") from exc
+    parsed = parse_qs(body, keep_blank_values=True)
+    return {key: values[-1] for key, values in parsed.items() if values}
+
+
+@app.post("/")
+@app.post("/search")
+async def search_post(request: Request) -> Any:
+    """Execute a form-encoded POST search on either SearXNG endpoint."""
+
+    params = dict(request.query_params)
+    params.update(await _post_form_params(request))
+    interactive_timeout_raw = params.get("interactive_timeout_ms")
+    interactive_timeout_ms = (
+        None
+        if interactive_timeout_raw is None
+        else _post_form_int(params, "interactive_timeout_ms", default=0, minimum=1, maximum=30000)
+    )
+    return await _execute_search(
+        request,
+        q=_post_form_value(params, "q", ""),
+        format=_post_form_value(params, "format", "json"),
+        categories=_post_form_value(params, "categories", ""),
+        engines_param=_post_form_value(params, "engines", ""),
+        language=_post_form_value(params, "language", "en"),
+        pageno=_post_form_int(params, "pageno", default=1, minimum=1),
+        time_range=_post_form_value(params, "time_range", ""),
+        interactive_timeout_ms=interactive_timeout_ms,
+        safesearch=_post_form_int(params, "safesearch", default=0, minimum=0, maximum=2),
+    )

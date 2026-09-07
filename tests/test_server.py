@@ -161,6 +161,33 @@ def client() -> TestClient:
 class TestSearchEndpoint:
     """GET /search endpoint."""
 
+    @pytest.mark.parametrize("route", ["/", "/search"])
+    def test_get_search_compatibility_routes(self, client: TestClient, route: str) -> None:
+        """Both SearXNG GET search routes execute the normal pipeline."""
+        response = client.get(route, params={"q": f"get route {route}"})
+
+        assert response.status_code == 200
+        assert response.json()["query"] == f"get route {route}"
+
+    @pytest.mark.parametrize("route", ["/", "/search"])
+    def test_form_post_search_compatibility_routes(self, client: TestClient, route: str) -> None:
+        """Both SearXNG routes accept application/x-www-form-urlencoded data."""
+        response = client.post(
+            route,
+            data={
+                "q": f"post route {route}",
+                "format": "json",
+                "engines": "mocktest",
+                "pageno": "1",
+                "safesearch": "1",
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["query"] == f"post route {route}"
+        assert data["number_of_results"] == 3
+
     def test_basic_search(self, client: TestClient) -> None:
         """Basic search returns JSON with results."""
         response = client.get("/search", params={"q": "test query"})
@@ -386,6 +413,28 @@ class TestSearchEndpoint:
 
 class TestHealthEndpoint:
     """GET /health endpoint."""
+
+    def test_healthz_is_plain_text_process_readiness(self, client: TestClient) -> None:
+        """The SearXNG readiness endpoint reports that the HTTP process is ready."""
+        response = client.get("/healthz")
+
+        assert response.status_code == 200
+        assert response.text == "OK"
+        assert response.headers["content-type"].startswith("text/plain")
+
+    def test_healthz_remains_ready_when_health_is_degraded(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Optional dependency degradation belongs to /health, not process readiness."""
+        import slopsearx.server as server_mod
+        from slopsearx.ratelimit import ValkeySlidingWindow
+
+        monkeypatch.setattr(server_mod, "_client_rate_window", ValkeySlidingWindow(fail_closed=True))
+
+        assert client.get("/health").json()["status"] == "degraded"
+        response = client.get("/healthz")
+        assert response.status_code == 200
+        assert response.text == "OK"
 
     def test_health_ok(self, client: TestClient) -> None:
         """Health check returns liveness plus observed (never fabricated) engine health."""
