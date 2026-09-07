@@ -33,6 +33,10 @@ pip install -e ".[dev]"
 ## Real Valkey integration tests
 
 CI runs cache and research ownership contracts against a disposable Valkey service.
+
+The `searxng-api-contract` CI job runs the deterministic SearXNG compatibility
+suite on every pull request. See [`docs/SEARXNG_API_CONTRACT.md`](docs/SEARXNG_API_CONTRACT.md)
+for the pinned reference version and update procedure.
 To run them locally, start a separate test instance and set
 `SLOPSEARX_TEST_VALKEY_URL=redis://127.0.0.1:16379/0`, then run
 `pytest --no-cov -q tests/test_cache_integration.py`.

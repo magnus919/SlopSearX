@@ -99,6 +99,19 @@ jobs:
       - name: Real Valkey cache and durable ownership contracts
         run: pytest --no-cov -q tests/test_cache_integration.py tests/test_research_queue_integration.py
 
+  searxng-api-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+      - name: Check pinned SearXNG API contract
+        run: pytest --no-cov -q tests/test_searxng_api_contract.py
+
   test:
     runs-on: ubuntu-latest
     strategy:
