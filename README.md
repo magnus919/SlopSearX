@@ -9,7 +9,7 @@
 
 SlopSearX is a horizontally scalable, stateless meta search engine designed for AI agent consumption. It replaces SearXNG in the GroktoCrawl stack with:
 
-- **JSON output by default** — structured responses designed for programmatic consumption
+- **HTML output by default** — SearXNG-compatible browser responses with JSON/CSV/RSS negotiation
 - **YAML+Markdown native output** — structured + readable for AI agent contexts via `format=yaml`
 - **SearXNG-compatible API** — drop-in replacement for existing consumers
 - **Plugin engine adapters** — one file per engine, `@register_engine`, zero orchestrator changes
@@ -24,7 +24,10 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 
 | Endpoint | Description |
 |---|---|
-| `GET /search?q=...&format=json` | SearXNG-compatible JSON (default) |
+| `GET /search?q=...` | SearXNG-compatible HTML (default; Accept-aware) |
+| `GET /search?q=...&format=json` | SearXNG-compatible JSON |
+| `GET /search?q=...&format=csv` | CSV results when enabled in `search.formats` |
+| `GET /search?q=...&format=rss` | RSS results when enabled in `search.formats` |
 | `GET /search?q=...&format=yaml` | YAML+Markdown agent-native output |
 | `GET /search?q=...&categories=science,news` | Filter by category (OR semantics) |
 | `GET /search?q=...&engines=brave,wikipedia` | Explicit engine selection |
@@ -253,6 +256,11 @@ docker run -d --name slopsearx -p 8080:8080 \
 # Try it
 curl 'http://localhost:8080/search?q=hello+world&format=json'
 ```
+
+Standard HTML, CSV, JSON, and RSS formats are controlled by `search.formats`
+in `config.yaml` (or `SEARCH_FORMATS=html,json`). YAML is an additive
+SlopSearX format and is always available. A requested standard format that is
+not enabled returns HTTP 403; malformed search parameters return HTTP 400.
 
 ## License
 

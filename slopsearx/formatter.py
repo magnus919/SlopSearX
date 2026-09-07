@@ -6,9 +6,13 @@ Formatters map between the internal model and output serialization.
 
 from __future__ import annotations
 
+import csv
 import datetime
+import html as html_lib
+import io
 from typing import Any
 from urllib.parse import urlparse
+from xml.etree import ElementTree
 
 import yaml
 
@@ -180,6 +184,80 @@ def format_json(
         response["meta"] = meta
 
     return response
+
+
+def format_html(
+    results: list[SearchResult],
+    query: str,
+    *,
+    meta: dict[str, Any] | None = None,
+    unresponsive_engines: list[list[str]] | None = None,
+) -> str:
+    """Format a small, safe HTML search-results page.
+
+    This is intentionally theme-neutral: the compatibility contract requires
+    HTML output, while the JSON and YAML formatters remain the richer machine
+    interfaces for clients that do not need a browser page.
+    """
+    escaped_query = html_lib.escape(query, quote=True)
+    result_items: list[str] = []
+    for result in results:
+        title = html_lib.escape(result.title or result.url, quote=True)
+        url = html_lib.escape(result.url, quote=True)
+        content = html_lib.escape(result.content or "")
+        result_items.append(
+            '<article class="result">'
+            f'<h2><a href="{url}">{title}</a></h2>'
+            f'<p class="url">{url}</p>'
+            f"<p>{content}</p>"
+            f'<p class="engine">{html_lib.escape(result.engine, quote=True)}</p>'
+            "</article>"
+        )
+
+    body = "\n".join(result_items) or '<p class="no-results">No results found.</p>'
+    if unresponsive_engines:
+        failures = ", ".join(html_lib.escape(str(engine), quote=True) for engine, _ in unresponsive_engines)
+        body += f'<p class="unresponsive">Unavailable engines: {failures}</p>'
+    elapsed = int((meta or {}).get("response_time_ms", 0))
+    return (
+        "<!doctype html>\n"
+        '<html lang="en"><head><meta charset="utf-8">'
+        f"<title>Search results for {escaped_query}</title></head>\n"
+        "<body>\n"
+        '<form action="/search" method="get">'
+        f'<input name="q" value="{escaped_query}">'
+        '<button type="submit">Search</button></form>\n'
+        f"<h1>Search results for {escaped_query}</h1>\n"
+        f'<p class="summary">{len(results)} results in {elapsed} ms.</p>\n'
+        f"{body}\n"
+        "</body></html>"
+    )
+
+
+def format_csv(results: list[SearchResult]) -> str:
+    """Format results as a deterministic CSV document."""
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(["title", "url", "content", "engine", "publishedDate"])
+    for result in results:
+        writer.writerow([result.title, result.url, result.content, result.engine, result.published_date or ""])
+    return output.getvalue()
+
+
+def format_rss(results: list[SearchResult], query: str) -> str:
+    """Format results as an RSS 2.0 document."""
+    rss = ElementTree.Element("rss", {"version": "2.0"})
+    channel = ElementTree.SubElement(rss, "channel")
+    ElementTree.SubElement(channel, "title").text = f"SlopSearX results for {query}"
+    ElementTree.SubElement(channel, "description").text = f"Search results for {query}"
+    for result in results:
+        item = ElementTree.SubElement(channel, "item")
+        ElementTree.SubElement(item, "title").text = result.title
+        ElementTree.SubElement(item, "link").text = result.url
+        ElementTree.SubElement(item, "description").text = result.content or ""
+        if result.published_date:
+            ElementTree.SubElement(item, "pubDate").text = result.published_date
+    return ElementTree.tostring(rss, encoding="unicode", xml_declaration=True)
 
 
 # ---------------------------------------------------------------------------

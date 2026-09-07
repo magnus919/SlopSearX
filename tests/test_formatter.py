@@ -1,4 +1,4 @@
-"""Tests for response formatters — JSON and YAML+Markdown."""
+"""Tests for response formatters — JSON, HTML, CSV, RSS, and YAML+Markdown."""
 
 from __future__ import annotations
 

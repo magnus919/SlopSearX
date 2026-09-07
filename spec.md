@@ -117,7 +117,8 @@ All replicas are identical, interchangeable, and scaled behind a single load bal
    c. Cross-engine ranking (see Section 5)
 7. Record per-engine quality signals in Valkey (latency, result count, error type)
 8. Cache merged result set in Valkey with per-engine-aware TTL
-9. Format response (JSON or YAML+Markdown depending on Accept header or format param)
+9. Negotiate and format response (HTML, JSON, CSV, RSS, or additive YAML+Markdown)
+   depending on the `Accept` header or `format` parameter
 10. Return with cache-control headers
 ```
 
@@ -132,7 +133,7 @@ The service responds to `GET /search` and accepts all standard SearXNG query par
 | Parameter | Default | Description |
 |---|---|---|
 | `q` | required | Search query string |
-| `format` | `json` | Response format: `json`, `yaml`, `markdown`, or `html` (legacy, minimized) |
+| `format` | omitted | Response format: `html`, `json`, `csv`, `rss`, or additive `yaml`; omitted selects HTML and `Accept` may negotiate the format |
 | `categories` | `general` | Comma-separated category filter |
 | `engines` | all active | Comma-separated engine filter |
 | `language` | `en` | Language code |
