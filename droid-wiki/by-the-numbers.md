@@ -61,7 +61,7 @@
 |---|---|---|
 | SlopSearxDown | critical | `/health` unreachable for 1m |
 | EngineDegraded | warning | Engine status > 0 for 5m |
-| HighErrorRatio | warning | Query growth > 25% in 5m |
+| HighErrorRatio | warning | Engine failure ratio > 25% over 5m |
 | HighLatency | warning | P95 latency > 5s for 5m |
 | RateLimitSaturation | info | Request rate > 100/s for 5m |
 | ServerErrorSpike | warning | Error rate > 0.1/s for 5m |
