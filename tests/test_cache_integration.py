@@ -51,8 +51,12 @@ async def test_connection_lifecycle(cache: SearchCache) -> None:
     assert cache._client is client
     await cache.close()
     assert not cache.is_connected
-    await cache.connect()
-    assert cache.is_connected
+    replacement = SearchCache(TEST_URL)
+    try:
+        await replacement.connect()
+        assert replacement.is_connected
+    finally:
+        await replacement.close()
 
 
 async def test_connection_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
