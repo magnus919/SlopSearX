@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.4.0](https://github.com/magnus919/SlopSearX/compare/v0.3.1...v0.4.0) (2026-09-07)
+
+
+### Features
+
+* add opt-in interactive search deadlines ([#268](https://github.com/magnus919/SlopSearX/issues/268)) ([f20a6bc](https://github.com/magnus919/SlopSearX/commit/f20a6bc5f14f2574ac8cda2a42d025411f7ff1aa))
+* add opt-in reciprocal rank fusion with judged evaluation ([#249](https://github.com/magnus919/SlopSearX/issues/249)) ([e72e05f](https://github.com/magnus919/SlopSearX/commit/e72e05f11a207887a662789bf8ff110af8415851))
+* enforce audited OpenAlex publication date constraints ([#270](https://github.com/magnus919/SlopSearX/issues/270)) ([37cdc23](https://github.com/magnus919/SlopSearX/commit/37cdc2357dce2f46df74d016c782b7aae3b53453))
+
+
+### Bug Fixes
+
+* bound degraded search cache lifetimes ([#266](https://github.com/magnus919/SlopSearX/issues/266)) ([7146bf8](https://github.com/magnus919/SlopSearX/commit/7146bf81854a9a58979c59baccf659500ad190ac))
+* bound metrics storage and validate monitoring contracts ([#267](https://github.com/magnus919/SlopSearX/issues/267)) ([70aad1e](https://github.com/magnus919/SlopSearX/commit/70aad1ed7be4519ad6c2734b25dcb2b588e34f1a))
+* correct OpenAlex links timing and relevance ([#260](https://github.com/magnus919/SlopSearX/issues/260)) ([1fc5ced](https://github.com/magnus919/SlopSearX/commit/1fc5cedd7123a7d1138e2a3e45f6a93f129147c3))
+* honor HTTP response format on cache hits ([#259](https://github.com/magnus919/SlopSearX/issues/259)) ([0e4ff88](https://github.com/magnus919/SlopSearX/commit/0e4ff88c039a2057151f519919f989ae53771895))
+* preserve cache identity and coalesce concurrent searches ([#252](https://github.com/magnus919/SlopSearX/issues/252)) ([a4df993](https://github.com/magnus919/SlopSearX/commit/a4df993f38d8d2fa7bde8c8661265823cdd98e0d))
+* retain actual ranking provenance in cached results and snapshots ([#255](https://github.com/magnus919/SlopSearX/issues/255)) ([3a693d6](https://github.com/magnus919/SlopSearX/commit/3a693d6a1e01f4882977171aa2c9a52f336d6b7a))
+
+
+### Performance Improvements
+
+* reuse bounded adapter HTTP connection pools ([#250](https://github.com/magnus919/SlopSearX/issues/250)) ([eee52d2](https://github.com/magnus919/SlopSearX/commit/eee52d23c5cdf893333faf52ed7ad16480daa5a2))
+* schedule research jobs through durable ready indexes ([#253](https://github.com/magnus919/SlopSearX/issues/253)) ([955ba74](https://github.com/magnus919/SlopSearX/commit/955ba74bc8fa00e3d96eb0b2667900d584f6988f))
+
 ## [0.3.1](https://github.com/magnus919/SlopSearX/compare/v0.3.0...v0.3.1) (2026-08-26)
 
 
