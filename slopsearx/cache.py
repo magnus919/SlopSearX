@@ -72,15 +72,26 @@ def _answer_cache_key(query: str) -> str:
     return "answer:v2:{}".format(digest)
 
 
-def _ttl_for_query(categories: list[str] | None = None) -> int:
-    """Determine TTL based on query category.
+def _cache_ttl_setting(name: str, default: int, maximum: int | None = None) -> int:
+    """Read a positive whole-second lifetime, rejecting unsafe configuration."""
+    try:
+        value = int(os.environ.get(name, str(default)))
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a positive integer in seconds") from exc
+    if value <= 0 or (maximum is not None and value > maximum):
+        bound = f" between 1 and {maximum}" if maximum is not None else " greater than zero"
+        raise ValueError(f"{name} must be an integer{bound}")
+    return value
 
-    News/time-sensitive queries get shorter TTL (300s).
-    General queries get default TTL (3600s).
-    """
+
+def _ttl_for_query(categories: list[str] | None = None, *, partial: bool = False) -> int:
+    """Honor the configured lifetime, with shorter news and degraded bounds."""
+    ttl = _cache_ttl_setting("SEARCH_CACHE_TTL_SECONDS", 3600)
     if categories and any("news" in c.lower() for c in categories):
-        return 300
-    return 3600
+        ttl = min(ttl, 300)
+    if partial:
+        ttl = min(ttl, _cache_ttl_setting("SEARCH_CACHE_PARTIAL_TTL_SECONDS", 30, maximum=300))
+    return ttl
 
 
 class SearchCache:
@@ -97,9 +108,10 @@ class SearchCache:
         self._connect_lock = asyncio.Lock()
         self._retry_at = 0.0
         self._closed = False
-        self._default_ttl = int(os.environ.get("SEARCH_CACHE_TTL_SECONDS", "3600"))
+        self._default_ttl = _cache_ttl_setting("SEARCH_CACHE_TTL_SECONDS", 3600)
+        _cache_ttl_setting("SEARCH_CACHE_PARTIAL_TTL_SECONDS", 30, maximum=300)
         self._negative_ttl = int(os.environ.get("SEARCH_CACHE_NEGATIVE_TTL_SECONDS", "60"))
-        self._answer_ttl = int(os.environ.get("SEARCH_CACHE_TTL_SECONDS", "3600"))
+        self._answer_ttl = self._default_ttl
 
     async def connect(self) -> None:
         """Establish async Valkey connection."""

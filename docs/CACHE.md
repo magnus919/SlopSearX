@@ -32,3 +32,16 @@ not a production latency or throughput benchmark.
 HTTP output formatting happens after cache lookup: the same cached response
 supports both JSON and YAML+Markdown, according to each request. Both formats
 return HTTP 503 when all selected engines are unresponsive.
+
+Normal search writes honor `SEARCH_CACHE_TTL_SECONDS` (default 3600 seconds).
+News categories cap this lifetime at 300 seconds. Partial responses, including
+upstream errors, blocked engines, and timeouts, use the smaller of that normal
+lifetime and `SEARCH_CACHE_PARTIAL_TTL_SECONDS` (default 30 seconds, allowed range
+1–300). A recovered upstream is retried after this short entry expires without
+requiring routing changes. Complete responses with genuinely empty engines retain
+the normal lifetime; all-unresponsive responses are not written by this path.
+Both settings require positive whole seconds; invalid values fail startup with
+an explicit setting name. Existing records retain their original expiration;
+changing a setting does not retroactively shorten entries already in Valkey.
+`prefer_fresh` still bypasses reads, and cache keys, canonical payloads, policy
+checks, and per-request view derivation are unchanged.

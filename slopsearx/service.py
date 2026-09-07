@@ -968,7 +968,7 @@ class SearchService:
 
         payload = search_response_to_payload(response)
         key = _scope_cache_key(request, routing_digest)
-        ttl = _ttl_for_query(request.categories or [])
+        ttl = _ttl_for_query(request.categories or [], partial=response.partial)
         await cache.set(key, payload, ttl)
 
     # -- Dispatch -------------------------------------------------------

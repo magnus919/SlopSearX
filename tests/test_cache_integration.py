@@ -161,3 +161,47 @@ async def test_unowned_cancellation_and_deadline(cache: SearchCache, namespace: 
     assert await store.claim("expired", "worker", 30) is None
     expired = await store.load("expired")
     assert expired is not None and expired.state == "expired"
+
+
+async def test_partial_search_expires_and_recovers(cache, namespace, monkeypatch):
+    """An upstream recovers while routing stays identical; Valkey expiry exposes it."""
+    from slopsearx.adapter import AdapterResponse, EngineStatus
+    from slopsearx.service import AppContext, SearchRequest, SearchService, _routing_cache_digest, _scope_cache_key
+    from tests.test_service import _OkEngine
+
+    monkeypatch.setenv("SEARCH_CACHE_TTL_SECONDS", "60")
+    monkeypatch.setenv("SEARCH_CACHE_PARTIAL_TTL_SECONDS", "1")
+
+    class RecoveringEngine(_OkEngine):
+        name = "recovering"
+        failing = True
+
+        async def search(self, query, params=None):
+            if self.failing:
+                self.calls += 1
+                return AdapterResponse(results=[], status=EngineStatus.TIMEOUT)
+            return await super().search(query, params)
+
+    good, recovering = _OkEngine(), RecoveringEngine()
+    ctx = AppContext(active_engines={good.name: good, recovering.name: recovering}, cache=cache)
+    service = SearchService(ctx)
+    request = SearchRequest(query=namespace)
+    key = _scope_cache_key(request, _routing_cache_digest(ctx))
+    try:
+        first = await service.search(request)
+        assert first.partial and not first.cached
+        assert 0 < await cache._client.pttl(key) <= 1000
+        recovering.failing = False
+        warm = await service.search(request)
+        assert warm.cached and warm.partial
+        assert good.calls == recovering.calls == 1
+        await asyncio.sleep(1.1)
+        recovered = await service.search(request)
+        assert not recovered.cached and not recovered.partial
+        assert len(recovered.results) == 6
+        assert len(first.results) == len(warm.results) == 3
+        assert good.calls == recovering.calls == 2
+        assert 58000 < await cache._client.pttl(key) <= 60000
+        assert (await service.search(request)).cached
+    finally:
+        await cache._client.delete(key)

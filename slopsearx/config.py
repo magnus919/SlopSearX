@@ -375,7 +375,13 @@ def _apply_env_overrides(config: Config, overrides: dict[str, str]) -> Config:
                         typed_value = _coerce_type(value, type(getattr(config.engines[engine_name], setting, str)))
                     setattr(config.engines[engine_name], setting, typed_value)
         elif key == "search_cache_ttl_seconds" and hasattr(config.cache, "ttl_seconds"):
-            config.cache.ttl_seconds = int(value)
+            try:
+                ttl = int(value)
+            except ValueError as exc:
+                raise ValueError("SEARCH_CACHE_TTL_SECONDS must be a positive integer in seconds") from exc
+            if ttl <= 0:
+                raise ValueError("SEARCH_CACHE_TTL_SECONDS must be a positive integer in seconds")
+            config.cache.ttl_seconds = ttl
         elif key == "search_log_level":
             config.log_level = value.upper()
         elif key == "search_default_engines":

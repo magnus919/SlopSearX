@@ -333,3 +333,46 @@ async def test_failed_startup_retries_once_after_backoff(monkeypatch) -> None:
     await cache.close()
     assert await cache.get("key") is None
     assert factory.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "normal,partial,categories,expected",
+    [
+        (900, 30, [], 900),
+        (900, 30, ["news"], 300),
+        (10, 30, ["news"], 10),
+    ],
+)
+def test_configured_normal_ttl(monkeypatch, normal, partial, categories, expected):
+    monkeypatch.setenv("SEARCH_CACHE_TTL_SECONDS", str(normal))
+    monkeypatch.setenv("SEARCH_CACHE_PARTIAL_TTL_SECONDS", str(partial))
+    assert _ttl_for_query(categories) == expected
+    assert _ttl_for_query(categories, partial=True) == min(expected, partial)
+
+
+@pytest.mark.parametrize(
+    "name,value",
+    [
+        ("SEARCH_CACHE_TTL_SECONDS", "0"),
+        ("SEARCH_CACHE_TTL_SECONDS", "-1"),
+        ("SEARCH_CACHE_TTL_SECONDS", "garbage"),
+        ("SEARCH_CACHE_TTL_SECONDS", "1.5"),
+        ("SEARCH_CACHE_PARTIAL_TTL_SECONDS", "0"),
+        ("SEARCH_CACHE_PARTIAL_TTL_SECONDS", "-1"),
+        ("SEARCH_CACHE_PARTIAL_TTL_SECONDS", "301"),
+        ("SEARCH_CACHE_PARTIAL_TTL_SECONDS", "garbage"),
+    ],
+)
+def test_invalid_cache_ttl_rejected_at_startup(monkeypatch, name, value):
+    monkeypatch.setenv(name, value)
+    with pytest.raises(ValueError, match=name):
+        SearchCache()
+
+
+@pytest.mark.parametrize("value", ["0", "-1", "bad", "1.5"])
+def test_invalid_global_ttl_rejected_by_config(monkeypatch, value):
+    from slopsearx.config import load_config
+
+    monkeypatch.setenv("SEARCH_CACHE_TTL_SECONDS", value)
+    with pytest.raises(ValueError, match="SEARCH_CACHE_TTL_SECONDS"):
+        load_config()
