@@ -1326,3 +1326,16 @@ async def test_coalesced_callers_each_acquire_rate_limit() -> None:
     assert isinstance(results[1], RateLimitExceededError)
     assert limiter.acquire.await_count == 2
     assert engine.calls == 1
+
+
+async def test_prefer_fresh_can_reconnect_cache_on_write() -> None:
+    from unittest.mock import AsyncMock
+
+    engine = _OkEngine()
+    cache = _FakeCache()
+    cache.is_connected = False
+    cache.set = AsyncMock()
+    service = _service(engines={"okeng": engine}, cache=cache)
+    response = await service.search(_req(freshness="prefer_fresh"))
+    assert response.results
+    cache.set.assert_awaited_once()

@@ -20,7 +20,6 @@ HTTP wire behavior (SearXNG JSON/YAML) is preserved by the route layer.
 from __future__ import annotations
 
 import asyncio
-import copy
 import dataclasses
 import hashlib
 import logging
@@ -691,7 +690,9 @@ class SearchService:
         self._waiters[key] += 1
         try:
             canonical, responses = await asyncio.shield(task)
-            response = self._view_for_request(request, copy.deepcopy(canonical))
+            response = self._view_for_request(
+                request, search_response_from_payload(search_response_to_payload(canonical))
+            )
             response.query_id = query_id
             response.query = request.query
             response.scope = scope
@@ -957,7 +958,7 @@ class SearchService:
     ) -> None:
         """Persist a fresh response under the fully scoped cache key."""
         cache = self._ctx.cache
-        if cache is None or not cache.is_connected or all_unresponsive:
+        if cache is None or all_unresponsive:
             return
 
         payload = search_response_to_payload(response)
