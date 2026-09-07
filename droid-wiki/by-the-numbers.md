@@ -39,7 +39,7 @@
 |---|---|
 | `GET /search` | Execute search (JSON or YAML+Markdown) |
 | `GET /health` | Server liveness and Valkey connectivity |
-| `GET /metrics` | OpenMetrics for Prometheus scraping |
+| `GET /metrics` | Prometheus text format 0.0.4 |
 | `GET /config` | Categories-to-engines mapping |
 
 ## Observability
@@ -47,7 +47,7 @@
 | Metric | Type | Labels |
 |---|---|---|
 | `slopsearx_engine_queries_total` | Counter | `engine` |
-| `slopsearx_engine_latency_seconds` | Histogram | `engine`, `quantile` (0.5, 0.9, 0.99) |
+| `slopsearx_engine_latency_seconds` | Histogram | `engine`; `le` on `_bucket` series |
 | `slopsearx_engine_status` | Gauge | `engine` (0=ok, 1=degraded, 2=down) |
 | `slopsearx_cache_hit_total` | Counter | `type` (hit/miss) |
 | `slopsearx_server_requests_total` | Counter | (no labels) |

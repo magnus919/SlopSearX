@@ -12,8 +12,8 @@ Prometheus Alertmanager rules are defined in `docs/alerting/rules.yml`. These ru
 |---|---|---|---|---|
 | **SlopSearxDown** | critical | `up{job="slopsearx"} == 0` | 1m | Instance unreachable |
 | **EngineDegraded** | warning | `slopsearx_engine_status > 0` | 5m | Engine status non-zero (degraded or down) |
-| **HighErrorRatio** | warning | Query growth > 25% in 5m | 5m | Rapid traffic increase; check for anomaly |
-| **HighLatency** | warning | `slopsearx_engine_latency_seconds{quantile="0.95"} > 5` | 5m | P95 latency exceeds 5 seconds |
+| **HighErrorRatio** | warning | `rate(slopsearx_engine_errors_total[5m]) / rate(slopsearx_engine_queries_total[5m]) > 0.25` | 5m | More than 25% of engine outcomes failed |
+| **HighLatency** | warning | `histogram_quantile(0.95, rate(slopsearx_engine_latency_seconds_bucket[5m])) > 5` | 5m | P95 latency exceeds 5 seconds |
 | **RateLimitSaturation** | info | `rate(slopsearx_server_requests_total[5m]) > 100` | 5m | Server handling >100 req/s |
 | **ServerErrorSpike** | warning | `rate(slopsearx_server_errors_total[5m]) > 0.1` | 5m | Error rate exceeds 0.1/s |
 

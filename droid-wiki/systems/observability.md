@@ -4,7 +4,7 @@ Active contributors: Magnus Hedemark
 
 ## Purpose
 
-Three-layered observability stack: (1) OpenMetrics instrumentation for Prometheus scraping, (2) structlog-based structured JSON logging with optional Sentry error tracking, and (3) X-Request-ID middleware for distributed tracing. Plus Valkey-stored quality telemetry and audit trails.
+Three-layered observability stack: (1) Prometheus instrumentation for Prometheus scraping, (2) structlog-based structured JSON logging with optional Sentry error tracking, and (3) X-Request-ID middleware for distributed tracing. Plus Valkey-stored quality telemetry and audit trails.
 
 ## Key abstractions
 
@@ -14,17 +14,17 @@ Three-layered observability stack: (1) OpenMetrics instrumentation for Prometheu
 |---|---|
 | `Counter` | Monotonically increasing counter with labeled dimensions |
 | `Gauge` | Point-in-time value with labeled dimensions |
-| `Histogram` | Client-side histogram with configurable quantiles, sum, and count |
-| `render_metrics()` | Concatenates all metric renders into OpenMetrics text format |
+| `Histogram` | Classic histogram with fixed cumulative buckets, sum, and count; bounded memory per label set |
+| `render_metrics()` | Concatenates all metric renders into Prometheus text format 0.0.4 |
 
-All metrics are stdlib-only — no prometheus-client dependency.
+Runtime metrics are stdlib-only; the development suite uses prometheus-client to validate exposition.
 
 **Global metrics:**
 
 | Metric | Type | Labels |
 |---|---|---|
 | `slopsearx_engine_queries_total` | Counter | `engine` |
-| `slopsearx_engine_latency_seconds` | Histogram | `engine`, `quantile` (0.5, 0.9, 0.99) |
+| `slopsearx_engine_latency_seconds` | Histogram | `engine`; `le` on `_bucket` series |
 | `slopsearx_engine_status` | Gauge | `engine` (0=ok, 1=degraded, 2=down) |
 | `slopsearx_cache_hit_total` | Counter | `type` (hit/miss) |
 | `slopsearx_server_requests_total` | Counter | (no labels) |
