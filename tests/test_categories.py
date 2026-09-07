@@ -121,12 +121,12 @@ class TestCategoryFiltering:
         try:
             with TestClient(app) as client:
                 # Science category — only catb (cata filtered out)
-                resp = client.get("/search", params={"q": "test", "categories": "science"})
+                resp = client.get("/search", params={"q": "test", "categories": "science", "format": "json"})
                 # 503 because catb returns ERROR (all engines unresponsive)
                 assert resp.status_code == 503
 
                 # News category — only cata (catb filtered out)
-                resp = client.get("/search", params={"q": "test", "categories": "news"})
+                resp = client.get("/search", params={"q": "test", "categories": "news", "format": "json"})
                 assert resp.status_code == 503
         finally:
             server_mod._active_engines = original
@@ -157,7 +157,10 @@ class TestCategoryFiltering:
         try:
             with TestClient(app) as client:
                 # Query with categories=nosuch — but engines=catonly overrides
-                resp = client.get("/search", params={"q": "test", "categories": "nosuch", "engines": "catonly"})
+                resp = client.get(
+                    "/search",
+                    params={"q": "test", "categories": "nosuch", "engines": "catonly", "format": "json"},
+                )
                 assert resp.status_code == 200
         finally:
             server_mod._active_engines = original
