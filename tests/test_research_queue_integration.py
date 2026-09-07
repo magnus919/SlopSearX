@@ -169,3 +169,44 @@ async def test_actual_lease_expiry_is_discovered_without_scan(backend: Store, mo
         scoped_patch.setattr(backend._client, "scan", forbid_scan)
         recovered = await store.claim_next_any_tenant("new", 60)
         assert recovered and recovered.lease_token != first.lease_token
+
+
+async def test_index_failure_does_not_break_authoritative_writes(backend: Store, monkeypatch: Any) -> None:
+    store = r.ResearchJobStore(backend, "a")
+    item = job()
+    item.idempotency_key = "same-request"
+    original_eval = backend._client.eval
+
+    async def fail_index(script: str, *args: Any, **kwargs: Any) -> Any:
+        if script == r._READY_REFRESH_SCRIPT:
+            raise RuntimeError("derived index unavailable")
+        return await original_eval(script, *args, **kwargs)
+
+    with monkeypatch.context() as scoped_patch:
+        scoped_patch.setattr(backend._client, "eval", fail_index)
+        await store.save(item)
+        duplicate = await store.find_by_idempotency("same-request")
+        assert duplicate and duplicate.job_id == item.job_id
+        claimed = await store.claim(item.job_id, "owner", 60)
+        assert claimed and claimed.lease_token
+        assert await store.renew(item.job_id, claimed.lease_token, 120)
+        assert await backend._client.ttl(store._lease_key(item.job_id)) > 100
+        claimed.state = "succeeded"
+        assert await store.save_if_owned(claimed)
+        persisted = await store.load(item.job_id)
+        assert persisted and persisted.state == "succeeded"
+        await store.release(item.job_id, claimed.lease_token)
+    await store._refresh_ready(item.job_id)
+    assert await backend._client.zcard(f"{r.READY_PREFIX}:tenant:a") == 0
+
+
+async def test_index_refresh_preserves_cancellation(backend: Store, monkeypatch: Any) -> None:
+    store = r.ResearchJobStore(backend, "a")
+
+    async def cancelled(*args: Any, **kwargs: Any) -> Any:
+        raise asyncio.CancelledError
+
+    with monkeypatch.context() as scoped_patch:
+        scoped_patch.setattr(backend._client, "eval", cancelled)
+        with pytest.raises(asyncio.CancelledError):
+            await store._refresh_ready("job")

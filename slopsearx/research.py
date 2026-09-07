@@ -885,16 +885,19 @@ class ResearchJobStore:
         client = self._ready_client()
         if client is None:
             return
-        await client.eval(
-            _READY_REFRESH_SCRIPT,
-            4,
-            self._key(job_id),
-            self._lease_key(job_id),
-            f"{READY_PREFIX}:tenant:{self._tenant}",
-            f"{READY_PREFIX}:tenants",
-            self._tenant,
-            job_id,
-        )
+        try:
+            await client.eval(
+                _READY_REFRESH_SCRIPT,
+                4,
+                self._key(job_id),
+                self._lease_key(job_id),
+                f"{READY_PREFIX}:tenant:{self._tenant}",
+                f"{READY_PREFIX}:tenants",
+                self._tenant,
+                job_id,
+            )
+        except Exception as exc:  # Derived state cannot invalidate an authoritative write/lease.
+            logger.warning("Research ready-index refresh failed (%s); reconciliation will retry", type(exc).__name__)
 
     async def _reconcile_ready(self) -> None:
         """At most one SCAN page per shared interval, not one scan per worker.
