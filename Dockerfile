@@ -18,12 +18,6 @@ RUN apt-get update \
 COPY pyproject.toml .
 RUN pip install --no-cache-dir -e .
 
-# The Python 3.14 image ships vulnerable versions of transitive Python
-# packages. Refresh them to versions with the fixes reported by Trivy.
-RUN python -m pip install --no-cache-dir --upgrade \
-    "setuptools>=78.1.1" \
-    "msgpack>=1.2.1"
-
 # Apply base-image security updates after dependency installation so the
 # per-build refresh does not invalidate the expensive pip layer.
 ARG DEBIAN_SECURITY_REFRESH
@@ -32,6 +26,15 @@ RUN : "${DEBIAN_SECURITY_REFRESH:?set a unique DEBIAN_SECURITY_REFRESH build arg
     && apt-get update \
     && apt-get dist-upgrade -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
+
+# pip is needed only while building. Remove it from the runtime image so its
+# vendored libraries cannot reintroduce vulnerable build-time dependencies.
+RUN rm -rf \
+    /usr/local/lib/python3.14/site-packages/pip \
+    /usr/local/lib/python3.14/site-packages/pip-*.dist-info \
+    /usr/local/bin/pip \
+    /usr/local/bin/pip3 \
+    /usr/local/bin/pip3.14
 
 # Application code
 COPY slopsearx/ slopsearx/
