@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import datetime as _dt
 import hashlib
 import logging
 import os
@@ -45,7 +46,13 @@ from slopsearx.audit import QueryAuditLogger
 from slopsearx.cache import SearchCache, _ttl_for_query, cache_key
 from slopsearx.capabilities import DEFAULT_SENSITIVE_ENGINES, CapabilityCatalog
 from slopsearx.config import load_config
-from slopsearx.filters import engine_filter_layer, filter_results_by_time_range
+from slopsearx.filters import (
+    DateFilterError,
+    engine_filter_layer,
+    filter_results_by_time_range,
+    publication_date_bounds,
+    time_range_window,
+)
 from slopsearx.logging import capture_exception
 from slopsearx.merger import create_ranker, extract_empty_scrape_engines, ranking_explanation
 from slopsearx.payload import _json_safe, payload_for_persistence, payload_from_dict
@@ -115,6 +122,10 @@ class SearchRequest:
     # limiting and the audit trail.
     client_identifier: str | None = None
     interactive_timeout_ms: int | None = None
+    date_from: str | None = None
+    date_to: str | None = None
+    # Freeze the relative calendar window for cache identity and post-filtering.
+    _time_range_anchor: _dt.date | None = field(default=None, init=False, repr=False, compare=False)
 
 
 @dataclass
@@ -193,7 +204,11 @@ class ServiceError(Exception):
 
 
 class QueryValidationError(ServiceError):
-    """The query is empty or whitespace-only."""
+    """A search query or its result-affecting constraints are invalid."""
+
+    def __init__(self, message: str, field: str = "query") -> None:
+        super().__init__(message)
+        self.field = field
 
 
 class RateLimitExceededError(ServiceError):
@@ -652,8 +667,23 @@ class SearchService:
             type(request.interactive_timeout_ms) is not int or not 1 <= request.interactive_timeout_ms <= 30_000
         ):
             raise ValueError("interactive_timeout_ms must be an integer between 1 and 30000")
+        request = dataclasses.replace(request)
+        relative_window = time_range_window(request.time_range) if request.time_range else None
+        request._time_range_anchor = relative_window[1] if relative_window else None
+        try:
+            publication_date_bounds(request.date_from, request.date_to)
+        except DateFilterError as exc:
+            raise QueryValidationError(str(exc), exc.field) from exc
 
         scope = self._resolver_for().resolve(request)
+        if (
+            request.time_range
+            and relative_window is None
+            and any(
+                engine_filter_layer(self._ctx.active_engines[name], "time_range") for name in scope.selected_engines
+            )
+        ):
+            raise QueryValidationError("time_range must be day, week, month, or year", "time_range")
 
         # Routing inputs snapshot for the cache key: computed once here
         # (pre-dispatch) so the read and write paths agree on the exact
@@ -755,6 +785,8 @@ class SearchService:
             "safesearch": request.safesearch,
             "pageno": request.page,
             "time_range": request.time_range,
+            "date_from": request.date_from,
+            "date_to": request.date_to,
             "categories": categories,
             "media_type": request.media_type,
         }
@@ -852,7 +884,9 @@ class SearchService:
             # only the adapter-provided published_date field — never inferred
             # from other result fields.
             if request.time_range and engine_filter_layer(engine, "time_range") == "local":
-                result.results = filter_results_by_time_range(result.results, request.time_range)
+                result.results = filter_results_by_time_range(
+                    result.results, request.time_range, now=request._time_range_anchor
+                )
 
             # Annotate each result with its tier for unscoped searches
             tier = 1 if name in self._ctx.tier1_engines else 2
@@ -1308,7 +1342,10 @@ def _scope_cache_key(request: SearchRequest, routing_digest: str) -> str:
         engines=request.engines,
         pageno=request.page,
         time_range=request.time_range,
+        date_from=request.date_from,
+        date_to=request.date_to,
         media_type=request.media_type,
+        time_range_anchor=request._time_range_anchor,
     )
     budget = f":interactive:{request.interactive_timeout_ms}" if request.interactive_timeout_ms is not None else ""
     return f"{base}:{routing_digest}{budget}"

@@ -366,7 +366,12 @@ async def search(
 
     try:
         response = await service.search(search_request)
-    except QueryValidationError:
+    except QueryValidationError as exc:
+        if exc.field != "query":
+            return JSONResponse(
+                status_code=400,
+                content={"error": "invalid_filter", "field": exc.field, "message": str(exc)},
+            )
         return JSONResponse(
             status_code=400,
             content={

@@ -227,3 +227,63 @@ async def test_rate_limiter_failure_never_raises(adapter):
     response = await adapter.search("test")
     assert response.status == EngineStatus.ERROR
     assert response.latency_ms > 0
+
+
+@pytest.mark.parametrize(
+    "bounds,expected",
+    [
+        ({"date_from": "2024-02-29"}, "from_publication_date:2024-02-29"),
+        ({"date_to": "2024-02-29"}, "to_publication_date:2024-02-29"),
+        (
+            {"date_from": "2024-02-29", "date_to": "2024-02-29"},
+            "from_publication_date:2024-02-29,to_publication_date:2024-02-29",
+        ),
+    ],
+)
+async def test_inclusive_date_filters_and_unproven_dates(adapter, bounds, expected):
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(
+            200,
+            json={
+                "results": [
+                    {"id": f"https://openalex.org/W{i}", "publication_date": date}
+                    for i, date in enumerate(["2024-02-28", "2024-02-29", "2024-03-01", None, "2024", "bad"])
+                ]
+            },
+        )
+
+    async with MockHTTP(handler):
+        result = await adapter.search("C++ & climate", bounds)
+    assert result.status == EngineStatus.OK
+    assert seen[0].url.params["filter"] == expected
+    assert seen[0].url.params["search"] == "C++ & climate"
+    dates = [r.published_date for r in result.results]
+    assert "2024-02-29" in dates
+    assert None not in dates and "2024" not in dates and "bad" not in dates
+    if "date_from" in bounds:
+        assert "2024-02-28" not in dates
+    if "date_to" in bounds:
+        assert "2024-03-01" not in dates
+
+
+@pytest.mark.parametrize(
+    "bounds",
+    [
+        {"date_from": "2023-02-29"},
+        {"date_to": "2024-13-01"},
+        {"date_from": "20240101"},
+        {"date_from": ""},
+        {"date_from": "2024-01-01,publication_year:2020"},
+        {"date_from": "2024-03-01", "date_to": "2024-02-01"},
+        {"time_range": "all"},
+    ],
+)
+async def test_invalid_date_constraints_never_dispatch(adapter, bounds):
+    seen = []
+    async with MockHTTP(lambda request: seen.append(request)):
+        result = await adapter.search("climate", bounds)
+    assert result.status == EngineStatus.ERROR
+    assert seen == []

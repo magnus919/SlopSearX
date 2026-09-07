@@ -170,7 +170,8 @@ contract between tool inputs and the `SearchResponse`.
 | `categories` | `categories` | OR semantics; overridden by `engines`. |
 | `engines` | `engines` / `sources` / `engines` (specialist) | Explicit engine list wins over categories and intent. Passed through the shared policy gate. |
 | `language` | `language` (default `en`) | Never consumed by any adapter → `enforcement.language.status == "unsupported"` (`VAL-FILTER-003`). |
-| `time_range` | `time_range` | Never consumed by any adapter → `enforcement.time_range.status == "unsupported"` (`VAL-FILTER-002`). |
+| `time_range` | `time_range` | OpenAlex applies the service-local publication-date window; other adapters are unsupported, so mixed scopes are partially enforced. |
+| `date_from`, `date_to` | science date bounds | Inclusive `YYYY-MM-DD`; OpenAlex applies upstream filters. Invalid or reversed bounds reject before dispatch. |
 | `safesearch` | `safesearch` (`off`/`moderate`/`strict`) | `moderate` → `unsupported`; `strict` → **rejected** (fails closed) because no adapter enforces it (`VAL-FILTER-004/005`). |
 | `page` | `page` on `read_results` | 1-based pagination over the snapshot. |
 | `max_results` | `max_results` | Bounded by policy; a presentation bound only — never truncates the captured snapshot. |
@@ -256,8 +257,8 @@ reads the live registry, never prose.
 | Internal field | MCP key | Vocabulary / semantics |
 |---|---|---|
 | `sensitive` | `sensitive` | Boolean; `true` means reaching the engine requires `MCP_TARGETED_SENSITIVE_ALLOWED`. Fail-closed by default. |
-| `supported_filters` | `supported_filters` | Object keyed by `language`, `time_range`, `safesearch`, `pagination`, each a boolean. Audited: **no adapter consumes any filter parameter today**, so every entry is `false`. A declaration is a capability hint, never an enforcement claim — the enforcement report resolves against the dispatched scope at search time. |
-| `enforced_filters` | `enforced_filters` | Object keyed by `language`, `time_range`, `safesearch`, `pagination`, each `null` (not enforced), `"upstream"`, or `"local"` (service post-filter). Audited separately from `supported_filters`: this is the enforcement layer the report derives from. Audited: **no adapter enforces any filter today**, so every entry is `null`, matching the `unsupported` enforcement status. |
+| `supported_filters` | `supported_filters` | Object keyed by `language`, `time_range`, `safesearch`, `pagination`, `date_from`, `date_to`, each a boolean. OpenAlex declares its date filters; undeclared entries are `false`. A declaration is a capability hint, never an enforcement claim — the enforcement report resolves against the dispatched scope at search time. |
+| `enforced_filters` | `enforced_filters` | Object keyed by `language`, `time_range`, `safesearch`, `pagination`, `date_from`, `date_to`, each `null` (not enforced), `"upstream"`, or `"local"` (service post-filter). Audited separately from `supported_filters`: this is the enforcement layer the report derives from. OpenAlex declares upstream absolute dates and local relative dates; other undeclared entries remain `null`. |
 | `supported_result_types` | `supported_result_types` | List drawn from `text` / `answers` / `corrections` / `infoboxes` / `media` / `structured` (`SUPPORTED_RESULT_TYPES`). Audited per adapter: e.g. Brave declares `answers`+`media`, Wikipedia declares `corrections`+`infoboxes`+`media`, TMDB/openlibrary/Reddit/DDG declare `media`. `structured` is intentionally unused until typed domain payloads ship (tracked separately). |
 | `supported_media_types` | `supported_media_types` | List drawn from `image` / `video` (`SUPPORTED_MEDIA_TYPES`, issue 188). Dedicated image/video **search** capability, distinct from the coarse `media` result type. Audited per adapter: Brave declares `image`+`video`, DuckDuckGo declares `image`; adapters that only attach thumbnails to text results (Wikipedia, TMDB, openlibrary, Reddit) declare none. Empty list means no dedicated media search. |
 | `failure_classes` | `failure_classes` | List drawn from the stable token set `ok`, `rate_limited`, `blocked`, `error`, `timeout`, `auth_required`, `unavailable`. Audited per adapter to the statuses its `search()` can actually emit (e.g. `openalex`/`internetarchive` classify everything as `error`; most keyed API adapters emit `rate_limited`/`blocked`/`error`/`timeout`). |
@@ -272,7 +273,7 @@ reads the live registry, never prose.
 
 Defined in `adapter.py` and used verbatim:
 
-- `SUPPORTED_FILTER_KEYS = (language, time_range, safesearch, pagination)`
+- `SUPPORTED_FILTER_KEYS = (language, time_range, safesearch, pagination, date_from, date_to)`
 - `SUPPORTED_RESULT_TYPES = (text, answers, corrections, infoboxes, media, structured)`
 - `SUPPORTED_MEDIA_TYPES = (image, video)`
 - `FAILURE_CLASS_TOKENS = (ok, rate_limited, blocked, error, timeout, auth_required, unavailable)`
@@ -282,7 +283,7 @@ The filter-enforcement report (`enforcement`) is consistent with the catalog:
 an adapter that does not declare an enforcement layer yields `unsupported`; a
 strict `safesearch` yields `rejected` (fail-closed before dispatch). This is
 the explicit-unsupported state the feature requires: the MCP layer carries
-the filter parameter but honestly reports that no adapter enforces it.
+the filter parameter but reports unsupported when no selected adapter enforces it.
 Declaring a filter in `supported_filters` (parameter consumption) never marks
 the request as enforced — enforcement is derived from the audited
 `enforced_filters` layer of the **dispatched** engine scope.
@@ -369,12 +370,12 @@ only from the audited `enforced_filters` adapter declaration; `supported_filters
 | Filter | Reported status today | Rationale |
 |---|---|---|
 | `language` | `unsupported` | No adapter enforces it. |
-| `time_range` | `unsupported` | No adapter enforces it (no local post-filter declared). |
+| `time_range` | scope-dependent | OpenAlex enforces locally using `published_date`; mixed scopes are partial. Unknown values reject when the scope advertises enforcement. |
 | `safesearch` (moderate) | `unsupported` | No adapter enforces it. |
 | `safesearch` (strict) | `rejected` | Fail-closed before dispatch: no engine can guarantee strict filtering. |
 | `pagination` | *(modeled; not requested on MCP tools)* | Snapshot cursors handle MCP pagination; the shared resolver classifies it identically. |
 | `location`, `employment_type` (jobs) | `unsupported` | Not consumed by current ATS adapters. |
-| `date_from`, `date_to` (science) | `unsupported` | Not consumed; pointer to `time_range` in the reason. |
+| `date_from`, `date_to` (science) | scope-dependent | OpenAlex applies inclusive upstream publication-date filters; mixed scopes are partial and other-only scopes unsupported. Invalid/reversed bounds reject before dispatch. |
 
 This report is the machine-readable replacement for prose-only filter warnings
 (`VAL-FILTER-001`). The research path persists the same report per subquery

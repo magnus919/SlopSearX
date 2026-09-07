@@ -1,7 +1,7 @@
 """OpenAlex adapter — 250M+ scholarly works, authors, institutions.
 
 Free, open REST API. No auth required. Polite usage: 100K/day.
-API docs: https://docs.openalex.org/api-entities/works/search-works
+API docs: https://help.openalex.org/api/filtering/
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ from typing import Any
 import httpx
 
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult, register_engine
+from slopsearx.filters import publication_date_bounds, publication_date_in_bounds, time_range_window
 
 
 @register_engine
@@ -29,6 +30,10 @@ class OpenAlexAdapter(EngineAdapter):
     supported_result_types = ("text",)
     failure_classes = ("rate_limited", "error", "timeout")
     cost_class = "free"
+    supported_filters = {"date_from": True, "date_to": True, "time_range": True}
+    # OpenAlex applies inclusive publication-date range queries upstream.
+    # Relative windows use the service's audited published_date post-filter.
+    enforced_filters = {"date_from": "upstream", "date_to": "upstream", "time_range": "local"}
 
     async def search(
         self,
@@ -38,6 +43,10 @@ class OpenAlexAdapter(EngineAdapter):
 
         started = time.monotonic()
         try:
+            params = params or {}
+            date_from, date_to = publication_date_bounds(params.get("date_from"), params.get("date_to"))
+            if params.get("time_range") and time_range_window(params["time_range"]) is None:
+                raise ValueError("time_range must be day, week, month, or year")
             if early := await self._check_rate_limit():
                 early.latency_ms = (time.monotonic() - started) * 1000
                 return early
@@ -48,6 +57,13 @@ class OpenAlexAdapter(EngineAdapter):
             base_url = cfg.get("base_url", "https://api.openalex.org")
             # OpenAlex text searches default to descending relevance_score.
             url = f"{base_url}/works?search={urllib.parse.quote(query)}&per_page={max_results}"
+            date_filters = []
+            if date_from is not None:
+                date_filters.append(f"from_publication_date:{date_from.isoformat()}")
+            if date_to is not None:
+                date_filters.append(f"to_publication_date:{date_to.isoformat()}")
+            if date_filters:
+                url += "&filter=" + urllib.parse.quote(",".join(date_filters))
             async with self.http_client(timeout=timeout_ms / 1000) as client:
                 resp = await client.get(url)
                 resp.raise_for_status()
@@ -55,6 +71,10 @@ class OpenAlexAdapter(EngineAdapter):
 
             results = []
             for work in data.get("results", [])[:max_results]:
+                # Guard against malformed/upstream-inconsistent records; never
+                # infer dates from publication_year, identifiers, or titles.
+                if date_filters and not publication_date_in_bounds(work.get("publication_date"), date_from, date_to):
+                    continue
                 doi = work.get("doi")
                 url = _work_url(doi, work.get("id", ""))
                 content = _reconstruct_abstract(work.get("abstract_inverted_index"))

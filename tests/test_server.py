@@ -483,3 +483,18 @@ class TestRoutingBudgetFrozen:
                 assert server_mod._current_context().routing_budget == frozen
         finally:
             server_mod._routing_budget_cache = None
+
+
+def test_invalid_date_window_reports_filter_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    import slopsearx.server as server_module
+
+    engine = _MockEngine()
+    engine.enforced_filters = {"time_range": "local"}
+    monkeypatch.setattr(server_module, "_active_engines", {engine.name: engine})
+    with TestClient(app, raise_server_exceptions=True) as client:
+        monkeypatch.setattr(server_module, "_active_engines", {engine.name: engine})
+        response = client.get("/search", params={"q": "climate", "engines": engine.name, "time_range": "all"})
+    assert response.status_code == 400
+    assert response.json()["error"] == "invalid_filter"
+    assert response.json()["field"] == "time_range"
+    assert "q" not in response.json()["message"].split()

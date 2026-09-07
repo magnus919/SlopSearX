@@ -544,9 +544,8 @@ class TestLocalTimeRangePostFilter:
     async def test_out_of_vocabulary_time_range_not_reported_enforced(self, state: McpState) -> None:
         """A local time_range declaration only enforces the closed vocabulary.
 
-        ``time_range="all"`` passes the post-filter through unchanged, so it
-        must report ``unsupported`` (never ``enforced``) and the results must
-        stay unfiltered, consistent with the report.
+        A scope advertising enforcement rejects an unknown relative window
+        before dispatch instead of returning unfiltered results.
         """
         today = _dt.date.today()
         state.ctx.active_engines = {
@@ -564,11 +563,10 @@ class TestLocalTimeRangePostFilter:
         result = await t.slopsearx_search_targeted("hello", engines=["arxiv"], time_range="all")
 
         entry = result["enforcement"]["time_range"]
-        assert entry["status"] == "unsupported"
-        assert entry["status"] != "enforced"
+        assert entry["status"] == "rejected"
         assert entry["enforced_by"] == []
-        # Consistent with the report: out-of-vocabulary results are unfiltered.
-        assert len(result["results"]) == 3
+        assert result["error"]["field"] == "time_range"
+        assert state.ctx.active_engines["arxiv"].calls == 0
         # An in-vocabulary value on the same scope still reports enforced.
         result_week = await t.slopsearx_search_targeted("hello", engines=["arxiv"], time_range="week")
         assert result_week["enforcement"]["time_range"]["status"] == "enforced"
@@ -641,3 +639,140 @@ class TestEnforcementTruthAcrossPaths:
                 safesearch="off",
             )["time_range"]
             assert entry == expected
+
+
+class TestAuditedOpenAlexDates:
+    async def test_science_dates_real_adapter_mixed_scope_and_cache(self, state: McpState) -> None:
+        import httpx
+
+        from engines.openalex import OpenAlexAdapter
+        from tests.test_adapters import MockHTTP
+
+        state.policy.enabled_tools["science"] = True
+        state.ctx.active_engines = {"openalex": OpenAlexAdapter(), "arxiv": _MockEngine("arxiv", count=1)}
+        seen: list[str] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            seen.append(str(request.url))
+            date = "2024-02-29" if "2024-02-29" in request.url.params["filter"] else "2023-01-01"
+            return httpx.Response(200, json={"results": [{"id": "https://openalex.org/W1", "publication_date": date}]})
+
+        async with MockHTTP(handler):
+            first = await t.slopsearx_search_science(
+                "climate", engines=["openalex"], date_from="2024-02-29", date_to="2024-02-29"
+            )
+            cached = await t.slopsearx_search_science(
+                "climate", engines=["openalex"], date_from="2024-02-29", date_to="2024-02-29"
+            )
+            other_date = await t.slopsearx_search_science(
+                "climate", engines=["openalex"], date_from="2023-01-01", date_to="2023-01-01"
+            )
+            mixed = await t.slopsearx_search_science("climate", engines=["openalex", "arxiv"], date_from="2024-02-29")
+        assert len(seen) == 3
+        assert cached["meta"]["cached"] is True
+        assert first["enforcement"] == cached["enforcement"]
+        assert first["results"][0]["published_at"] == "2024-02-29"
+        assert other_date["results"][0]["published_at"] == "2023-01-01"
+        for key in ("date_from", "date_to"):
+            assert first["enforcement"][key]["status"] == "enforced"
+            assert first["enforcement"][key]["enforced_by"] == ["upstream:openalex"]
+        assert mixed["enforcement"]["date_from"]["status"] == "partially_enforced"
+        assert mixed["enforcement"]["date_from"]["enforced_by"] == ["upstream:openalex"]
+        assert any("date_from" in warning for warning in mixed["warnings"])
+        assert any(result["primary_engine"] == "arxiv" for result in mixed["results"])
+
+    @pytest.mark.parametrize(
+        "bounds",
+        [
+            {"date_from": "not-a-date"},
+            {"date_to": "2024-02-30"},
+            {"date_from": ""},
+            {"date_from": "2024-03-01", "date_to": "2024-02-01"},
+        ],
+    )
+    async def test_science_invalid_dates_reject_whole_scope(self, state: McpState, bounds: dict[str, str]) -> None:
+        state.policy.enabled_tools["science"] = True
+        engine = _MockEngine("arxiv")
+        state.ctx.active_engines = {"arxiv": engine}
+        result = await t.slopsearx_search_science("climate", engines=["arxiv"], **bounds)
+        assert result["error"]["code"] == "invalid_input"
+        assert engine.calls == 0
+        assert all(entry["status"] == "rejected" for entry in result["enforcement"].values())
+
+    async def test_real_openalex_relative_window_drops_missing_and_old_dates(self, state: McpState) -> None:
+        import httpx
+
+        from engines.openalex import OpenAlexAdapter
+        from tests.test_adapters import MockHTTP
+
+        today = _dt.date.today()
+        start = today - _dt.timedelta(days=7)
+        dates = [start.isoformat(), today.isoformat(), (start - _dt.timedelta(days=1)).isoformat(), None, "bad"]
+        state.ctx.active_engines = {"openalex": OpenAlexAdapter()}
+        payload = {
+            "results": [{"id": f"https://openalex.org/W{i}", "publication_date": date} for i, date in enumerate(dates)]
+        }
+        async with MockHTTP(lambda request: httpx.Response(200, json=payload)):
+            result = await t.slopsearx_search_targeted("climate", engines=["openalex"], time_range="week")
+        assert [r["published_at"] for r in result["results"]] == dates[:2]
+        assert result["enforcement"]["time_range"]["status"] == "enforced"
+        assert result["enforcement"]["time_range"]["enforced_by"] == ["local:openalex"]
+        assert result["enforcement"].get("language", {}).get("status", "unsupported") == "unsupported"
+
+    async def test_absolute_and_relative_bounds_intersect(self, state: McpState) -> None:
+        import httpx
+
+        from engines.openalex import OpenAlexAdapter
+        from tests.test_adapters import MockHTTP
+
+        today = _dt.date.today()
+        older = today - _dt.timedelta(days=20)
+        state.ctx.active_engines = {"openalex": OpenAlexAdapter()}
+        payload = {
+            "results": [
+                {"id": "https://openalex.org/W1", "publication_date": today.isoformat()},
+                {"id": "https://openalex.org/W2", "publication_date": older.isoformat()},
+            ]
+        }
+        async with MockHTTP(lambda request: httpx.Response(200, json=payload)):
+            response = await state.service.search(
+                SearchRequest(
+                    query="climate",
+                    engines=["openalex"],
+                    date_from=older.isoformat(),
+                    date_to=today.isoformat(),
+                    time_range="week",
+                )
+            )
+        assert [r.published_date for r in response.results] == [today.isoformat()]
+
+
+async def test_relative_window_is_frozen_across_midnight(monkeypatch: pytest.MonkeyPatch) -> None:
+    from slopsearx import cache as cache_module
+    from slopsearx import service as service_module
+
+    current_day = [_dt.date(2024, 1, 8)]
+
+    def window(value: str, now: _dt.date | None = None) -> tuple[_dt.date, _dt.date]:
+        end = now if now is not None else current_day[0]
+        return end - _dt.timedelta(days=7), end
+
+    class MidnightEngine(_MockEngine):
+        async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
+            current_day[0] = _dt.date(2024, 1, 9)
+            return await super().search(query, params)
+
+    monkeypatch.setattr(service_module, "time_range_window", window)
+    monkeypatch.setattr(cache_module, "time_range_window", window)
+    engine = MidnightEngine(
+        "openalex", count=1, enforced_filters={"time_range": "local"}, published_dates=["2024-01-01"]
+    )
+    service = SearchService(AppContext(active_engines={"openalex": engine}, cache=_FakeStore()))
+    request = SearchRequest(query="climate", engines=["openalex"], time_range="week")
+    before_midnight = await service.search(request)
+    after_midnight = await service.search(request)
+    assert len(before_midnight.results) == 1
+    assert after_midnight.results == []
+    assert not after_midnight.cached
+    assert engine.calls == 2
+    assert request._time_range_anchor is None  # caller's reusable request was not mutated

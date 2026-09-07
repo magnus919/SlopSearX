@@ -4,6 +4,8 @@ Search keys use the `search:v2:` namespace and hash an unambiguous JSON tuple
 of query and scope inputs. Answer keys use `answer:v2:`. Queries arrive after
 transport decoding: literal plus signs, percent escapes, case, punctuation and
 interior whitespace remain significant. Only boundary whitespace is stripped.
+Publication-date bounds have distinct identities, and relative windows include
+their resolved calendar day so cached windows cannot cross a date rollover.
 Older entries expire normally and are never reused under the new semantics.
 
 A failed initial Valkey connection is retried lazily on cache access, at most

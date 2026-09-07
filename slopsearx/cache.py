@@ -8,12 +8,15 @@ Valkey unavailable -> skip cache.
 from __future__ import annotations
 
 import asyncio
+import datetime as _dt
 import hashlib
 import json
 import logging
 import os
 import time
 from typing import Any, cast
+
+from slopsearx.filters import time_range_window
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +40,9 @@ def cache_key(
     pageno: int = 1,
     time_range: str | None = None,
     media_type: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    time_range_anchor: _dt.date | None = None,
 ) -> str:
     """Build deterministic cache key from normalized query tuple.
 
@@ -57,6 +63,11 @@ def cache_key(
             pageno,
             time_range,
             media_type,
+            date_from,
+            date_to,
+            [bound.isoformat() for bound in time_range_window(time_range, now=time_range_anchor) or ()]
+            if time_range
+            else None,
         ],
         ensure_ascii=False,
         separators=(",", ":"),

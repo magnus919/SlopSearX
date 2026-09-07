@@ -225,3 +225,49 @@ def filter_results_by_time_range(
         if verdict is True:
             kept.append(result)
     return kept
+
+
+class DateFilterError(ValueError):
+    """A malformed or contradictory publication date constraint."""
+
+    def __init__(self, message: str, field: str) -> None:
+        super().__init__(message)
+        self.field = field
+
+
+def publication_date_bounds(
+    date_from: str | None,
+    date_to: str | None,
+) -> tuple[_dt.date | None, _dt.date | None]:
+    """Validate explicit inclusive ISO calendar dates without inventing bounds."""
+    bounds: list[_dt.date | None] = []
+    for field, value in (("date_from", date_from), ("date_to", date_to)):
+        if value is None:
+            bounds.append(None)
+            continue
+        try:
+            parsed = _dt.date.fromisoformat(value)
+            if parsed.isoformat() != value:
+                raise ValueError
+        except (ValueError, TypeError):
+            raise DateFilterError(f"{field} must be a valid YYYY-MM-DD calendar date", field) from None
+        bounds.append(parsed)
+    start, end = bounds
+    if start is not None and end is not None and start > end:
+        raise DateFilterError("date_from must be on or before date_to", "date_from")
+    return start, end
+
+
+def publication_date_in_bounds(
+    value: Any,
+    start: _dt.date | None,
+    end: _dt.date | None,
+) -> bool:
+    """Only a supplied, valid publication date can satisfy an explicit bound."""
+    try:
+        parsed = _dt.date.fromisoformat(value)
+        if parsed.isoformat() != value:
+            return False
+    except (TypeError, ValueError):
+        return False
+    return (start is None or parsed >= start) and (end is None or parsed <= end)

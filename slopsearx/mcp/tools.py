@@ -15,8 +15,10 @@ from typing import Any
 from slopsearx.adapter import OBSERVED_STATUS_VOCAB, SUPPORTED_MEDIA_TYPES
 from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, resolve_intent
 from slopsearx.filters import (
+    DateFilterError,
     enforcement_entry,
     engine_filter_layer,
+    publication_date_bounds,
     resolve_filter_enforcement,
 )
 from slopsearx.mcp.result_serialization import (
@@ -610,12 +612,26 @@ async def _run_search(
     try:
         response = await state.service.search(request)
     except QueryValidationError as exc:
-        return _error("invalid_input", str(exc), field="query")
+        rejected = _error("invalid_input", str(exc), field=exc.field)
+        if exc.field != "query":
+            rejected["enforcement"] = {exc.field: enforcement_entry(getattr(request, exc.field), "rejected", str(exc))}
+        return rejected
     except RateLimitExceededError:
         return _error("rate_limited", "too many requests; please retry later")
 
     if enforcement is None and core_filters is not None:
         enforcement = _core_filter_enforcement(state, response.scope.selected_engines, **core_filters)
+
+    if request.date_from is not None or request.date_to is not None:
+        enforcement = dict(enforcement or {})
+        for name, value in (("date_from", request.date_from), ("date_to", request.date_to)):
+            if value is not None:
+                entry = resolve_filter_enforcement(
+                    response.scope.selected_engines, name, value, state.ctx.active_engines
+                )
+                enforcement[name] = entry
+                if entry["status"] != "enforced":
+                    warnings = warnings + [entry["reason"]]
 
     # Capture the full ranked set as an immutable snapshot for pagination,
     # then present the bounded page. ``total`` is the aggregate captured
@@ -1132,27 +1148,25 @@ async def slopsearx_search_science(
     if policy_error:
         return policy_error
 
-    warnings = [SCIENCE_LIMITATION_NOTE, f"resolved source_types: {', '.join(source_types)}"]
-    if date_from or date_to:
-        warnings.append("date_from/date_to are not consumed by current adapters; use time_range in slopsearx_search")
+    try:
+        publication_date_bounds(date_from, date_to)
+    except DateFilterError as exc:
+        rejected = {
+            name: enforcement_entry(value, "rejected", str(exc))
+            for name, value in (("date_from", date_from), ("date_to", date_to))
+            if value is not None
+        }
+        error_response = _error("invalid_input", str(exc), field=exc.field)
+        error_response["enforcement"] = rejected
+        return error_response
 
-    # Structured filter-enforcement report for science date filters.
+    warnings = [SCIENCE_LIMITATION_NOTE, f"resolved source_types: {', '.join(source_types)}"]
     enforcement: dict[str, Any] = {}
-    if date_from:
-        enforcement["date_from"] = enforcement_entry(
-            date_from,
-            "unsupported",
-            "date_from is not consumed by current adapters; use time_range in slopsearx_search",
-        )
-    if date_to:
-        enforcement["date_to"] = enforcement_entry(
-            date_to,
-            "unsupported",
-            "date_to is not consumed by current adapters; use time_range in slopsearx_search",
-        )
 
     request = SearchRequest(
         query=query,
+        date_from=date_from,
+        date_to=date_to,
         engines=selected,
         include={"results", "engine_status"},
         client_identifier=_client_identifier(state),

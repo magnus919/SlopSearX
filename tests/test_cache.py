@@ -376,3 +376,26 @@ def test_invalid_global_ttl_rejected_by_config(monkeypatch, value):
     monkeypatch.setenv("SEARCH_CACHE_TTL_SECONDS", value)
     with pytest.raises(ValueError, match="SEARCH_CACHE_TTL_SECONDS"):
         load_config()
+
+
+def test_absolute_date_bounds_have_independent_cache_identity() -> None:
+    assert cache_key("q", date_from="2024-01-01") != cache_key("q", date_from="2023-01-01")
+    assert cache_key("q", date_to="2024-01-01") != cache_key("q", date_to="2023-01-01")
+    assert cache_key("q", date_from="2024-01-01") != cache_key("q", date_to="2024-01-01")
+
+
+def test_relative_window_cache_identity_changes_with_day(monkeypatch) -> None:
+    import datetime as dt
+
+    import slopsearx.cache as cache_module
+
+    monkeypatch.setattr(
+        cache_module, "time_range_window", lambda value, now=None: (dt.date(2024, 1, 1), dt.date(2024, 1, 8))
+    )
+    before = cache_key("q", time_range="week")
+    timeless = cache_key("q")
+    monkeypatch.setattr(
+        cache_module, "time_range_window", lambda value, now=None: (dt.date(2024, 1, 2), dt.date(2024, 1, 9))
+    )
+    assert cache_key("q", time_range="week") != before
+    assert cache_key("q") == timeless

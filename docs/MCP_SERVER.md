@@ -567,6 +567,13 @@ Research search. `source_types` (`papers`, `scholarly_index`, `biomedical`,
 Provenance and coverage are reported, but peer-review status and study
 quality are never inferred from search results.
 
+`date_from` and `date_to` accept inclusive `YYYY-MM-DD` publication dates.
+OpenAlex sends these filters upstream; select `engines=["openalex"]` for a
+fully date-enforced scope. Other sources retain their results and report
+unsupported or partial enforcement. Invalid or reversed bounds reject the
+whole request before dispatch. Missing/unparseable publication dates are
+excluded by OpenAlex when a bound is requested. See [date semantics](DATE_FILTERS.md).
+
 ### 6.6 `slopsearx_list_capabilities`
 
 Generated from the live registry — never from prose. Filters: `family`,
@@ -805,8 +812,9 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
   `safesearch`, plus specialist params such as jobs `location`/`employment_type`
   and science `date_from`/`date_to`), each entry `{requested, status, reason,
   enforced_by}`. `status` is one of `enforced`/`partially_enforced`/`unsupported`/
-  `rejected`. No adapter enforces `language`, `time_range`, or `moderate`
-  safesearch, so those report `unsupported`; strict SafeSearch is `rejected`
+  `rejected`. OpenAlex enforces absolute publication dates upstream and relative
+  `time_range` locally; mixed scopes report partial enforcement. No adapter
+  enforces `language` or `moderate` safesearch; strict SafeSearch is `rejected`
   (fails closed). Read the `status` field, not the warning strings, to decide
   how a filter was applied.
 - **Specialist workflows need grants.** Jobs, security, science, and

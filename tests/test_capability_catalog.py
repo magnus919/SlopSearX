@@ -50,7 +50,7 @@ REQUIRED_CAP_FIELDS = {
     "last_known_status_at",
     "auth",
 }
-SUPPORTED_FILTER_KEYS = {"language", "time_range", "safesearch", "pagination"}
+SUPPORTED_FILTER_KEYS = {"language", "time_range", "safesearch", "pagination", "date_from", "date_to"}
 RESULT_TYPE_VOCAB = {"text", "answers", "corrections", "infoboxes", "media", "structured"}
 MEDIA_TYPE_VOCAB = {"image", "video"}
 FAILURE_CLASS_VOCAB = {"ok", "rate_limited", "blocked", "error", "timeout", "auth_required", "unavailable"}

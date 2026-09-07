@@ -54,7 +54,7 @@ _SENSITIVE_QUERY_PARAMS: set[str] = {
 # These are the canonical, closed sets the live capability catalog and the
 # filter-enforcement report derive from. Adapters declare membership; the
 # catalog normalizes and fills stable defaults so every entry is complete.
-SUPPORTED_FILTER_KEYS: tuple[str, ...] = ("language", "time_range", "safesearch", "pagination")
+SUPPORTED_FILTER_KEYS: tuple[str, ...] = ("language", "time_range", "safesearch", "pagination", "date_from", "date_to")
 SUPPORTED_RESULT_TYPES: tuple[str, ...] = ("text", "answers", "corrections", "infoboxes", "media", "structured")
 # Fine-grained media-type vocabulary for the dedicated image/video media
 # contract (issue 188). Distinct from the coarse ``media`` result type above:
@@ -324,11 +324,9 @@ class EngineAdapter(ABC):
     # Capability-audit convention (issue 185): every registered adapter
     # declares the capability surface it actually provides. ``sensitive``,
     # ``supported_result_types``, ``failure_classes``, and ``cost_class``
-    # are audited per adapter. ``supported_filters`` stays at the base
-    # default for every adapter: no adapter consumes the
-    # ``language``/``time_range``/``safesearch``/``pagination`` parameter
-    # bag today, so claiming support would be dishonest (the filter
-    # enforcement report derives ``unsupported`` from exactly this).
+    # are audited per adapter. ``supported_filters`` describes consumption;
+    # only ``enforced_filters`` establishes actual enforcement. OpenAlex
+    # advertises publication date bounds and the service's relative window.
     sensitive: bool = False  # reaching this engine requires the sensitive-engine grant
     supported_filters: dict[str, bool] = {}  # keys from SUPPORTED_FILTER_KEYS
     # Audited enforcement layer per filter (issue 187). Unlike
@@ -336,8 +334,8 @@ class EngineAdapter(ABC):
     # the parameter bag), this records the layer that actually *enforces* the
     # filter: ``"upstream"`` (the upstream source applies it) or ``"local"``
     # (the service post-filters this adapter's results). An absent key means
-    # the adapter does not enforce the filter. Defaults to ``{}``: no adapter
-    # enforces any filter today, so the enforcement report stays honest.
+    # the adapter does not enforce the filter. The empty base declaration
+    # prevents unreviewed adapters from claiming enforcement.
     enforced_filters: dict[str, str] = {}  # filter name -> "upstream" | "local"
     supported_result_types: tuple[str, ...] = ("text",)  # subset of SUPPORTED_RESULT_TYPES
     # Dedicated image/video search capability (issue 188): which media types

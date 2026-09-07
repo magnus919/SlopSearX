@@ -106,7 +106,14 @@ class TestCatalogFeatureMatrix:
     def test_supported_filters_always_has_all_four_keys(self) -> None:
         catalog = _catalog()
         for cap in catalog.all():
-            assert set(cap.supported_filters) == {"language", "time_range", "safesearch", "pagination"}
+            assert set(cap.supported_filters) == {
+                "language",
+                "time_range",
+                "safesearch",
+                "pagination",
+                "date_from",
+                "date_to",
+            }
             assert all(isinstance(v, bool) for v in cap.supported_filters.values())
 
     def test_supported_result_types_and_failure_classes_in_vocab(self) -> None:
@@ -257,11 +264,26 @@ class TestCatalogFeatureMatrix:
         """
         catalog = _catalog()
         for cap in catalog.all():
-            assert set(cap.supported_filters) == {"language", "time_range", "safesearch", "pagination"}
+            assert set(cap.supported_filters) == {
+                "language",
+                "time_range",
+                "safesearch",
+                "pagination",
+                "date_from",
+                "date_to",
+            }
             assert all(isinstance(v, bool) for v in cap.supported_filters.values())
-            # No adapter consumes any filter parameter today (audited), so no
-            # entry may claim a filter it cannot enforce.
-            assert not any(cap.supported_filters.values())
+            if cap.name == "openalex":
+                assert {key for key, supported in cap.supported_filters.items() if supported} == {
+                    "time_range",
+                    "date_from",
+                    "date_to",
+                }
+                assert cap.enforced_filters["time_range"] == "local"
+                assert cap.enforced_filters["date_from"] == "upstream"
+                assert cap.enforced_filters["date_to"] == "upstream"
+            else:
+                assert not any(cap.supported_filters.values())
 
 
 class TestIntentProfiles:
