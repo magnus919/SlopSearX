@@ -69,7 +69,7 @@ Source: `slopsearx/adapter.py:78-91`. The internal normalized result dataclass.
 | `thumbnail` | `Optional[str]` | *(omitted)* | `thumbnail` | **Media is record-only** (design §4.4 / decision 4; `VAL-EXPAND-006`). Omitted from cards by deliberate choice — with one exception: the compact `media` triage summary on a media card carries the thumbnail (media-triage exception, issue 188), while the plain `thumbnail` field stays record-only. |
 | `img_src` | `Optional[str]` | *(omitted)* | `img_src` | **Media is record-only**. Omitted from cards by deliberate choice. |
 | `media` | `Optional[MediaInfo]` | `media` (triage summary) | `media` (complete record) | Structured image/video media record (issue 188). Cards carry only the triage summary — `media_type`, `thumbnail`, `width`, `height`, `duration` where present; the complete record (adding `url` and `source` attribution) is returned by `slopsearx_read_result`. Text results omit `media` entirely. |
-| `tier` | `int` (1 or 2) | `tier` | `tier` | PresenceRanker tier; 1 = broad, 2 = specialized. `meta.ranking` states `tier_then_cross_engine_presence`. |
+| `tier` | `int` (1 or 2) | `tier` | `tier` | Ranking tier; 1 = broad, 2 = specialized. Both strategies preserve tier priority; `meta.ranking` identifies the effective algorithm. |
 | `payload` | `Optional[dict]` | `payload` (conditionally) | `payload` (full) | Optional versioned domain payload (see §14). Cards inline it only when `include=["payload"]` was requested or the serialized payload is small enough (`PAYLOAD_INLINE_BYTES = 512`) — and, in both cases, only when it is within `PAYLOAD_MAX_PERSIST_BYTES`; otherwise it is omitted from cards. Records carry the complete payload when it is within `PAYLOAD_MAX_PERSIST_BYTES`, or `null` when the result has none, the payload is unserializable, or it exceeds the persistence bound. |
 
 Additional record-only fields synthesized at the MCP boundary (not on the
@@ -150,7 +150,7 @@ Source: `slopsearx/service.py:128-147`. Built by `_envelope` in `tools.py`.
 | MCP key | Meaning |
 |---|---|
 | `meta.query_id`, `meta.cached`, `meta.cached_error`, `meta.response_time_ms`, `meta.partial` | Direct mirrors of the `SearchResponse` fields above. |
-| `meta.ranking` | Fixed string `tier_then_cross_engine_presence` (`RANKING_EXPLANATION`), documenting how results were ordered. |
+| `meta.ranking` | Effective ordering: `tier_then_cross_engine_presence` by default, or `tier_then_reciprocal_rank_fusion_k60` when enabled. Persisted with cached responses and snapshots; expanded records use the captured value in `provenance.rank_explanation`. Scores are ranking weights, never confidence. |
 | `meta.cursor` | Snapshot handle; non-empty on every successful search when the snapshot store is available; `null`/absent only when the store is unavailable (with a pagination warning). |
 | `meta.suggestions` | Gated by `include` as described above. |
 | `meta.total` | Aggregate count of the full captured (unsliced) result set. |

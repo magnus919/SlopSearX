@@ -149,7 +149,7 @@ The recommended deployment is a co-located orchestration MCP server that uses th
 
 The MCP layer should introduce immutable search snapshots and opaque handles. Pagination must read from a captured merged snapshot, not translate directly into the HTTP `pageno` parameter. This prevents a later page from silently rerunning the query against changing engines and gives the agent a stable evidence set.
 
-SlopSearX's merged `score` is a cross-engine presence signal, not relevance confidence. MCP output should expose `source_count` and a textual ranking explanation such as `tier_then_cross_engine_presence`, never call that score confidence, truth, or evidence quality.
+SlopSearX's merged `score` is a ranking weight, never relevance confidence, truth, or evidence quality. MCP exposes `source_count` and the effective ranking explanation: `tier_then_cross_engine_presence` by default or `tier_then_reciprocal_rank_fusion_k60` when enabled. Cached responses and snapshots preserve the original explanation, including on later expanded-record reads.
 
 The current HTTP parameters also overstate enforcement: `pageno`, `language`, `time_range`, and `safesearch` are placed in the adapter parameter bag, but several adapters do not consume them. GitHub currently hardcodes page 1, and Brave currently hardcodes SafeSearch off. MCP must either verify enforcement per selected engine or return an explicit unsupported-filter warning. Strict SafeSearch should fail closed when policy enforcement is unavailable rather than silently claim compliance.
 

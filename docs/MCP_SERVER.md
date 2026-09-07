@@ -780,8 +780,10 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
   absence of the thing searched.
 - **Treat results as leads, not facts.** SlopSearX returns titles, URLs, and
   snippets. It never fetches or verifies page bodies. The `score` is a
-  cross-engine presence signal (`tier_then_cross_engine_presence`), not
-  relevance confidence. Structured `payload` fields are source-derived
+  ranking weight, never relevance confidence. `meta.ranking` identifies
+  `tier_then_cross_engine_presence` (default) or
+  `tier_then_reciprocal_rank_fusion_k60` (opt-in); snapshot records retain
+  their original explanation. Structured `payload` fields are source-derived
   evidence — exactly what the adapter reported — not verification or
   analysis.
 - **Hand retrieval off through the handoff record.** Every result card and

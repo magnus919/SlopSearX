@@ -39,7 +39,7 @@ the originating search result and snapshot.
 |---|---|---|
 | Discover candidate pages | Yes | No |
 | Return snippet / title / URL / metadata / provenance | Yes | No |
-| Rank and deduplicate by cross-engine presence | Yes | No |
+| Rank by tier and configured strategy; deduplicate URLs | Yes | No |
 | Capture stable result snapshots (opaque cursors) | Yes | No |
 | Fetch the linked page | **No** | Yes |
 | Extract / parse the page body | **No** | Yes |
@@ -47,9 +47,10 @@ the originating search result and snapshot.
 | Resolve redirects / canonicalize the live URL | **No** | Yes |
 | Verify the page or its claims | **No** | Yes (and even then, per its own policy) |
 
-SlopSearX's `score` is a cross-engine presence signal
-(`tier_then_cross_engine_presence`), never relevance confidence or a
-verification verdict. A snippet or a structured payload field is exactly what
+SlopSearX's `score` is a ranking weight, never relevance confidence or a
+verification verdict. The explanation identifies `tier_then_cross_engine_presence`
+(default) or `tier_then_reciprocal_rank_fusion_k60` (opt-in). Snapshot provenance
+retains the algorithm used when the results were captured. A snippet or a structured payload field is exactly what
 the adapter reported — not an independent assessment.
 
 ## 3. The handoff record
