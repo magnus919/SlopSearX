@@ -1558,6 +1558,7 @@ class ResearchJobRunner:
             response.query_id,
             response.results,
             response.scope,
+            ranking_explanation=response.ranking_explanation,
         )
         # Persist per-engine coverage and the disjoint bucket summary.
         query.engine_coverage = self._build_query_coverage(query, response)

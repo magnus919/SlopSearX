@@ -44,3 +44,10 @@ Before enabling broadly, collect representative general/code/science queries wit
 captured engine responses, judge pooled results independently, and compare paired
 nDCG@10 and coverage within the same tier policy. Include disagreement and sparse
 feeds, audit per-domain regressions, and measure end-to-end latency separately.
+
+Search metadata reports the effective ranking algorithm, including fallback to
+presence for unknown legacy names. Cache entries and snapshots persist the
+explanation used to produce their results. Reading a snapshot after configuration
+changes preserves that historical explanation; legacy snapshots lacking the new
+field retain the presence default. Direct searches and research subquery captures
+use the same provenance field (issue #254).

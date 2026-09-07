@@ -47,7 +47,7 @@ from slopsearx.capabilities import DEFAULT_SENSITIVE_ENGINES, CapabilityCatalog
 from slopsearx.config import load_config
 from slopsearx.filters import engine_filter_layer, filter_results_by_time_range
 from slopsearx.logging import capture_exception
-from slopsearx.merger import create_ranker, extract_empty_scrape_engines
+from slopsearx.merger import create_ranker, extract_empty_scrape_engines, ranking_explanation
 from slopsearx.payload import _json_safe, payload_for_persistence, payload_from_dict
 from slopsearx.ratelimit import LocalTokenBucket, RateLimiter, RateLimitStrategy, ValkeySlidingWindow
 from slopsearx.router import QueryRouter
@@ -178,6 +178,7 @@ class SearchResponse:
     all_unresponsive: bool = False
     empty_engines: list[list[str]] = field(default_factory=list)
     cached_error: bool = False
+    ranking_explanation: str = "tier_then_cross_engine_presence"
 
 
 # ---------------------------------------------------------------------------
@@ -601,6 +602,7 @@ class SearchService:
     def __init__(self, context: AppContext) -> None:
         self._ctx = context
         self._ranker = create_ranker(context.ranking_strategy)
+        self._ranking_explanation = ranking_explanation(context.ranking_strategy)
         self._resolver: ScopeResolver | None = None
         self._inflight = context.search_flights.tasks
         self._waiters = context.search_flights.waiters
@@ -663,6 +665,7 @@ class SearchService:
                 query_id=query_id,
                 response_time_ms=round((time.monotonic() - t_start) * 1000),
                 all_unresponsive=True,
+                ranking_explanation=self._ranking_explanation,
             )
 
         # Per-client rate limiting — checked before cache and dispatch
@@ -912,6 +915,7 @@ class SearchService:
             partial=not all_unresponsive and non_ok > 0,
             all_unresponsive=all_unresponsive,
             empty_engines=empty_engines,
+            ranking_explanation=self._ranking_explanation,
         )
 
         await self._write_cache(request, canonical, all_unresponsive, routing_digest)
@@ -943,6 +947,7 @@ class SearchService:
                 query_id=generate_query_id(),
                 cached=True,
                 cached_error=True,
+                ranking_explanation=self._ranking_explanation,
             )
 
         m.cache_hits.inc({"type": "hit"})
@@ -1228,7 +1233,7 @@ def _routing_cache_digest(ctx: AppContext) -> str:
                     f"{name}:{cap.auth_class}:{int(cap.auth_configured)}:{cap.cost_class}:{int(cap.circuit_open)}"
                 )
     parts.append("sensitive=" + ",".join(sorted(ctx.sensitive_engines)))
-    parts.append("ranking=" + ctx.ranking_strategy)
+    parts.append("ranking=v2:" + ctx.ranking_strategy)
     parts.append("tier1=" + ",".join(sorted(ctx.tier1_engines)))
     if budget is None:
         parts.append("budget=none")
@@ -1362,6 +1367,7 @@ def search_response_to_payload(response: SearchResponse) -> dict[str, Any]:
         "infoboxes": _json_safe(response.infoboxes),
         "query_id": response.query_id,
         "cached": False,
+        "ranking_explanation": response.ranking_explanation,
         "response_time_ms": response.response_time_ms,
         "partial": response.partial,
         "all_unresponsive": response.all_unresponsive,
@@ -1410,6 +1416,7 @@ def search_response_from_payload(payload: dict[str, Any]) -> SearchResponse:
         all_unresponsive=bool(payload.get("all_unresponsive", False)),
         empty_engines=[[str(item) for item in entry] for entry in (payload.get("empty_engines") or [])],
         cached_error=bool(payload.get("cached_error", False)),
+        ranking_explanation=str(payload.get("ranking_explanation", "tier_then_cross_engine_presence")),
     )
 
 

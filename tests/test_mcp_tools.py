@@ -887,3 +887,52 @@ class TestFastMCPIntegration:
         assert "slopsearx_mcp_tool_calls_total" in rendered
         assert "slopsearx_mcp_tool_errors_total" in rendered
         assert "slopsearx_mcp_tool_latency_seconds" in rendered
+
+
+@pytest.mark.parametrize(
+    "strategy,explanation",
+    [
+        ("presence", "tier_then_cross_engine_presence"),
+        ("reciprocal_rank_fusion", "tier_then_reciprocal_rank_fusion_k60"),
+        ("unknown-legacy", "tier_then_cross_engine_presence"),
+    ],
+)
+async def test_ranking_metadata_survives_cache_and_configuration_changes(state, strategy, explanation):
+    state.ctx.ranking_strategy = strategy
+    state.service = SearchService(state.ctx)
+    first = await t.slopsearx_search("ranking metadata")
+    assert first["meta"]["ranking"] == explanation
+    second = await t.slopsearx_search("ranking metadata")
+    assert second["meta"]["cached"]
+    assert second["meta"]["ranking"] == explanation
+    cursor = first["meta"]["cursor"]
+    result_id = first["results"][0]["result_id"]
+    # Read historical evidence after an operator changes the active algorithm.
+    state.ctx.ranking_strategy = "presence"
+    state.service = SearchService(state.ctx)
+    page = await t.slopsearx_read_results(cursor)
+    record = await t.slopsearx_read_result(result_id)
+    assert page["meta"]["ranking"] == explanation
+    assert record["provenance"]["rank_explanation"] == explanation
+
+
+async def test_legacy_snapshot_ranking_defaults_to_presence(state):
+    first = await t.slopsearx_search("legacy snapshot")
+    cursor = first["meta"]["cursor"]
+    payload = await state.snapshots._store.get(state.snapshots._key(cursor))
+    payload.pop("ranking_explanation")
+    record = await t.slopsearx_read_result(first["results"][0]["result_id"])
+    assert record["provenance"]["rank_explanation"] == "tier_then_cross_engine_presence"
+
+
+async def test_research_snapshot_captures_actual_ranking(state):
+    from slopsearx.research import ResearchJob, ResearchQuery
+
+    state.ctx.ranking_strategy = "reciprocal_rank_fusion"
+    state.runner._service = SearchService(state.ctx)
+    query = ResearchQuery(index=0, intent="web", query_id="q1", query="evidence", engines=["wikipedia"])
+    job = ResearchJob(job_id="ranking-job", question="evidence", strategy="triangulate", queries=[query])
+    await state.runner._execute_query(job, query)
+    assert query.cursor
+    snapshot = await state.snapshots.get(query.cursor)
+    assert snapshot and snapshot.ranking_explanation == "tier_then_reciprocal_rank_fusion_k60"

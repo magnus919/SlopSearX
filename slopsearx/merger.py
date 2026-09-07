@@ -119,6 +119,13 @@ class ReciprocalRankFusionRanker:
         return [result for _, result in ranked]
 
 
+def ranking_explanation(strategy: str) -> str:
+    """Describe the effective algorithm, including legacy strategy fallback."""
+    if strategy == "reciprocal_rank_fusion":
+        return "tier_then_reciprocal_rank_fusion_k60"
+    return "tier_then_cross_engine_presence"
+
+
 def create_ranker(strategy: str) -> PresenceRanker | ReciprocalRankFusionRanker:
     """Select the opt-in fusion strategy; retain legacy fallback semantics."""
     if strategy == "reciprocal_rank_fusion":

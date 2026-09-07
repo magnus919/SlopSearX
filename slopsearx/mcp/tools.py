@@ -993,7 +993,7 @@ def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: st
         "provenance": {
             "query": snapshot.query,
             "query_id": snapshot.query_id,
-            "rank_explanation": RANKING_EXPLANATION,
+            "rank_explanation": snapshot.ranking_explanation,
             "source_engines": source_engines,
         },
         "snapshot": {
@@ -1113,7 +1113,7 @@ def _envelope(
             "cached_error": response.cached_error,
             "response_time_ms": response.response_time_ms,
             "partial": response.partial,
-            "ranking": RANKING_EXPLANATION,
+            "ranking": response.ranking_explanation,
             "cursor": cursor,
             "suggestions": response.suggestions if include_suggestions else [],
             "total": total,
@@ -1161,7 +1161,11 @@ async def _run_search(
     # count (meta.total), independent of the max_results page bound.
     total = len(response.results)
     cursor = await state.snapshots.for_tenant(current_tenant()).create(
-        response.query, response.query_id, response.results, response.scope
+        response.query,
+        response.query_id,
+        response.results,
+        response.scope,
+        ranking_explanation=response.ranking_explanation,
     )
     if cursor is None:
         warnings = warnings + ["snapshot store unavailable — pagination cursor not created"]
@@ -1998,6 +2002,7 @@ async def slopsearx_read_results(
         ],
         "meta": {
             "total": snapshot.total,
+            "ranking": snapshot.ranking_explanation,
             "has_more": end < snapshot.total,
             "query_id": snapshot.query_id,
         },

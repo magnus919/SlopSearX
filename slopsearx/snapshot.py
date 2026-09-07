@@ -56,6 +56,7 @@ class SearchSnapshot:
     tenant: str
     created_at: float = field(default_factory=time.time)
     expires_at: float | None = None
+    ranking_explanation: str = "tier_then_cross_engine_presence"
 
 
 @dataclass
@@ -122,6 +123,8 @@ class SnapshotStore:
         query_id: str,
         results: list[SearchResult],
         scope: ScopeDecision,
+        *,
+        ranking_explanation: str = "tier_then_cross_engine_presence",
     ) -> str | None:
         """Capture a result set and return its opaque snapshot ID.
 
@@ -137,6 +140,7 @@ class SnapshotStore:
             "snapshot_id": snapshot_id,
             "query": query,
             "query_id": query_id,
+            "ranking_explanation": ranking_explanation,
             "results": [search_result_to_dict(result) for result in results],
             "scope": dataclasses.asdict(scope),
             "total": len(results),
@@ -206,4 +210,5 @@ def _snapshot_from_payload(payload: dict[str, Any]) -> SearchSnapshot:
         tenant=str(payload.get("tenant", "")),
         created_at=created_at,
         expires_at=expires_at,
+        ranking_explanation=str(payload.get("ranking_explanation", "tier_then_cross_engine_presence")),
     )
