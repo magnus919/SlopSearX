@@ -45,6 +45,59 @@ DEFAULT_JOB_LEASE_TTL_SECONDS = 60
 DEFAULT_JOB_POLL_INTERVAL_SECONDS = 1.0
 
 
+# Ready indexes are derived state; job records and lease tokens remain authority.
+READY_PREFIX = "mcp:ready:v1"
+_RECONCILE_INTERVAL = 10
+_RECONCILE_BATCH = 128
+_READY_REFRESH_SCRIPT = """
+local raw = redis.call('GET', KEYS[1])
+local now = redis.call('TIME')
+local due = tonumber(now[1]) + tonumber(now[2]) / 1000000
+local active = false
+if raw then
+    local ok, job = pcall(cjson.decode, raw)
+    active = ok and type(job) == "table" and job.tenant == ARGV[1] and
+        (job.state == 'queued' or job.state == 'running')
+end
+if active then
+    local ttl = redis.call('PTTL', KEYS[2])
+    if ttl > 0 then due = due + ttl / 1000 end
+    redis.call('ZADD', KEYS[3], due, ARGV[2])
+    redis.call('ZADD', KEYS[4], 'NX', 0, ARGV[1])
+else
+    redis.call('ZREM', KEYS[3], ARGV[2])
+    if redis.call('ZCARD', KEYS[3]) == 0 then
+        redis.call('ZREM', KEYS[4], ARGV[1])
+    end
+end
+return 1
+"""
+
+_READY_TAKE_SCRIPT = """
+local now = redis.call('TIME')
+local due = tonumber(now[1]) + tonumber(now[2]) / 1000000
+for i = 1, 16 do
+    local tenants = redis.call('ZRANGE', KEYS[1], 0, 0)
+    if #tenants == 0 then return {} end
+    local tenant = tenants[1]
+    local ready = ARGV[1] .. ':tenant:' .. tenant
+    local jobs = redis.call('ZRANGEBYSCORE', ready, '-inf', due, 'LIMIT', 0, 1)
+    if redis.call('ZCARD', ready) == 0 then
+        redis.call('ZREM', KEYS[1], tenant)
+    else
+        redis.call('ZADD', KEYS[1], redis.call('INCR', KEYS[2]), tenant)
+    end
+    if #jobs > 0 then
+        -- Reservation is non-destructive: worker death before lease acquisition
+        -- makes this candidate visible again without waiting for reconciliation.
+        redis.call('ZADD', ready, due + 5, jobs[1])
+        return {tenant, jobs[1]}
+    end
+end
+return {}
+"""
+
+
 class LeaseLostError(Exception):
     """Raised when a worker loses ownership of a job mid-execution.
 
@@ -428,6 +481,7 @@ class ResearchJobStore:
             return
         payload = _job_to_payload(job)
         await store.set(self._key(job.job_id), payload, JOB_RETENTION_SECONDS)
+        await self._refresh_ready(job.job_id)
         if job.idempotency_key:
             await store.set(
                 self._idem_key(job.idempotency_key),
@@ -477,6 +531,8 @@ class ResearchJobStore:
             )
         except Exception:  # noqa: BLE001 — lease loss / transient store error
             return False
+        if result:
+            await self._refresh_ready(job.job_id)
         return bool(result)
 
     async def load(self, job_id: str) -> ResearchJob | None:
@@ -818,8 +874,83 @@ class ResearchJobStore:
         await self.save(current)
         return current
 
+    def _ready_client(self) -> Any:
+        """Real sorted-set backend; simple injected stores keep their scan seam."""
+        client = getattr(self._store, "_client", None)
+        if client is not None and all(hasattr(client, name) for name in ("eval", "scan", "zrangebyscore")):
+            return client
+        return None
+
+    async def _refresh_ready(self, job_id: str) -> None:
+        client = self._ready_client()
+        if client is None:
+            return
+        await client.eval(
+            _READY_REFRESH_SCRIPT,
+            4,
+            self._key(job_id),
+            self._lease_key(job_id),
+            f"{READY_PREFIX}:tenant:{self._tenant}",
+            f"{READY_PREFIX}:tenants",
+            self._tenant,
+            job_id,
+        )
+
+    async def _reconcile_ready(self) -> None:
+        """At most one SCAN page per shared interval, not one scan per worker.
+
+        Persist the cursor after indexing so a crash repeats rather than skips
+        records. The throttle is advisory: refresh is idempotent and reads the
+        authoritative record atomically, making duplicate reconciliation safe.
+        """
+        client = self._ready_client()
+        if client is None or not await client.set(
+            f"{READY_PREFIX}:reconcile-lock", "1", nx=True, ex=_RECONCILE_INTERVAL
+        ):
+            return
+        cursor = await client.get(f"{READY_PREFIX}:cursor") or 0
+        next_cursor, keys = await client.scan(cursor=cursor, match=f"{JOB_KEY_PREFIX}:*", count=_RECONCILE_BATCH)
+        prefix = f"{JOB_KEY_PREFIX}:"
+        for raw in keys:
+            key = raw.decode() if isinstance(raw, bytes) else str(raw)
+            if not key.startswith(prefix) or ":" not in key[len(prefix) :]:
+                continue
+            tenant, job_id = key[len(prefix) :].rsplit(":", 1)
+            await self.for_tenant(tenant)._refresh_ready(job_id)
+        await client.set(f"{READY_PREFIX}:cursor", str(next_cursor))
+
+    async def _claim_ready(self, owner_id: str, lease_ttl: int) -> ResearchJob | None:
+        client = self._ready_client()
+        await self._reconcile_ready()
+        candidate = await client.eval(
+            _READY_TAKE_SCRIPT, 2, f"{READY_PREFIX}:tenants", f"{READY_PREFIX}:turn", READY_PREFIX
+        )
+        if not candidate:
+            return None
+        tenant, job_id = (value.decode() if isinstance(value, bytes) else str(value) for value in candidate)
+        scoped = self.for_tenant(tenant)
+        job = await scoped.claim(job_id, owner_id, lease_ttl)
+        await scoped._refresh_ready(job_id)
+        return job
+
     async def claim_next(self, owner_id: str, lease_ttl: int) -> ResearchJob | None:
         """Claim the next claimable job for this store's tenant."""
+        client = self._ready_client()
+        if client is not None:
+            await self._reconcile_ready()
+            # Scoped callers never claim a different tenant's work.
+            now = await client.time()
+            due = int(now[0]) + int(now[1]) / 1_000_000
+            candidates = await client.zrangebyscore(
+                f"{READY_PREFIX}:tenant:{self._tenant}", "-inf", due, start=0, num=16
+            )
+            for raw in candidates:
+                job_id = raw.decode() if isinstance(raw, bytes) else str(raw)
+                job = await self.claim(job_id, owner_id, lease_ttl)
+                await self._refresh_ready(job_id)
+                if job is not None:
+                    return job
+            return None
         for job_id in await self._scan_job_ids():
             job = await self.claim(job_id, owner_id, lease_ttl)
             if job is not None:
@@ -828,6 +959,8 @@ class ResearchJobStore:
 
     async def claim_next_any_tenant(self, owner_id: str, lease_ttl: int) -> ResearchJob | None:
         """Claim the next claimable job across all tenant namespaces."""
+        if self._ready_client() is not None:
+            return await self._claim_ready(owner_id, lease_ttl)
         for tenant in await self.scan_tenants():
             job = await self.for_tenant(tenant).claim_next(owner_id, lease_ttl)
             if job is not None:
@@ -838,13 +971,17 @@ class ResearchJobStore:
         """Extend the lease on ``job_id`` if ``token`` still owns it."""
         if not token:
             return False
-        return await self._lease_renew(self._lease_key(job_id), token, lease_ttl)
+        renewed = await self._lease_renew(self._lease_key(job_id), token, lease_ttl)
+        if renewed:
+            await self._refresh_ready(job_id)
+        return renewed
 
     async def release(self, job_id: str, token: str | None) -> None:
         """Release the lease on ``job_id`` if ``token`` still owns it."""
         if not token:
             return
         await self._lease_release(self._lease_key(job_id), token)
+        await self._refresh_ready(job_id)
 
     async def request_cancel(self, job_id: str) -> str:
         """Record a durable cancellation request and finalize if unowned.
