@@ -42,6 +42,13 @@ namespaces, and deletes only its own records; it never calls `FLUSHDB`.
 Tests cover actual expiry, competing claims, lease recovery, stale-owner fencing,
 cancellation, tenant isolation, and async connection lifecycle.
 
+## Upstream contract checks
+
+Routine tests replay captured upstream fixtures without network access. For the
+bounded, opt-in live probe and fixture refresh workflow, see
+[Upstream contract validation](docs/UPSTREAM_CONTRACTS.md). Live results distinguish
+availability failures from parser/contract failures and do not measure relevance.
+
 ## Adding a New Engine Adapter
 
 See `docs/ENGINE_ADAPTERS.md` for the full reference — contract rules, data types, lifecycle hooks, and the built-in adapter table. Quick checklist:

@@ -1,0 +1,32 @@
+{
+  "engine": "openalex",
+  "query": "Attention Is All You Need",
+  "captured_at": "2026-09-07T01:51:36.864826+00:00",
+  "source": "https://api.openalex.org/works",
+  "sanitization": "allowlisted public parser fields; top three; no headers or personal author fields",
+  "payload": {
+    "results": [
+      {
+        "id": "https://openalex.org/W2626778328",
+        "doi": "https://doi.org/10.65215/2q58a426",
+        "title": "Attention Is All You Need",
+        "publication_date": "2025-08-23",
+        "relevance_score": 15626.1455
+      },
+      {
+        "id": "https://openalex.org/W3163652268",
+        "doi": "https://doi.org/10.1109/icassp39728.2021.9413901",
+        "title": "Attention Is All You Need In Speech Separation",
+        "publication_date": "2021-05-13",
+        "relevance_score": 4296.062
+      },
+      {
+        "id": "https://openalex.org/W4390678101",
+        "doi": "https://doi.org/10.1093/bib/bbad467",
+        "title": "Attention is all you need: utilizing attention in AI-enabled drug discovery",
+        "publication_date": "2023-11-22",
+        "relevance_score": 2882.9272
+      }
+    ]
+  }
+}

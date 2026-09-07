@@ -1,0 +1,25 @@
+name: Upstream contracts (opt-in)
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 8 * * 1'
+permissions:
+  contents: read
+jobs:
+  live-contracts:
+    if: github.event_name == 'workflow_dispatch' || vars.LIVE_UPSTREAM_CONTRACTS == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: pip install -e .
+      - name: Probe three public upstreams
+        run: python -m scripts.upstream_contracts --output upstream-report.json
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: upstream-contract-report
+          path: upstream-report.json
