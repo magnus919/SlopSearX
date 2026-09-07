@@ -2,7 +2,7 @@
 cache:
   ttl_seconds: 300
 ranking:
-  strategy: presence
+  strategy: presence  # opt-in alternative: reciprocal_rank_fusion
 routing:
   enabled: true
 

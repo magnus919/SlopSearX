@@ -160,6 +160,7 @@ def _current_context() -> AppContext:
         empty_scrape_diagnostics_enabled=_empty_scrape_diagnostics_enabled,
         catalog=_routing_catalog(),
         routing_budget=_routing_budget_snapshot(),
+        ranking_strategy=_health_config().ranking.strategy,
     )
 
 

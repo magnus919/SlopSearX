@@ -1,11 +1,11 @@
 """Result merging, deduplication and ranking.
 
-V1: Presence-weighted ranking (honest baseline).
-V2 (future): Weighted-fusion with per-engine trust scores.
+Presence ranking remains the default; reciprocal rank fusion is opt-in.
 """
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any, Optional
 
 from slopsearx.adapter import AdapterResponse, EngineStatus, SearchResult
@@ -83,6 +83,49 @@ class PresenceRanker:
         return ranked
 
 
+class ReciprocalRankFusionRanker:
+    """Fuse feed order using sum(1 / (60 + rank)), within mandatory tiers.
+
+    Each engine contributes once per normalized URL. Feed list order is the
+    upstream rank; engine score scales and position fields are not comparable.
+    Inputs remain untouched, including their mutable provenance sets.
+    """
+
+    def rank(
+        self,
+        engine_results: dict[str, list[SearchResult]],
+        query: str,
+        params: dict[str, Any] | None = None,
+    ) -> list[SearchResult]:
+        seen: dict[str, SearchResult] = {}
+        for engine_name in sorted(engine_results):
+            contributed: set[str] = set()
+            for rank, result in enumerate(engine_results[engine_name], start=1):
+                url = _normalise_url(result.url)
+                if url in contributed:
+                    continue
+                contributed.add(url)
+                contribution = 1.0 / (60 + rank)
+                if url in seen:
+                    existing = seen[url]
+                    existing.score += contribution
+                    existing.engines.add(engine_name)
+                    existing.tier = min(existing.tier, result.tier)
+                else:
+                    seen[url] = replace(result, engine=engine_name, engines={engine_name}, score=contribution)
+        ranked = sorted(seen.items(), key=lambda item: (item[1].tier, -item[1].score, item[0]))
+        for position, (_, result) in enumerate(ranked, start=1):
+            result.position = position
+        return [result for _, result in ranked]
+
+
+def create_ranker(strategy: str) -> PresenceRanker | ReciprocalRankFusionRanker:
+    """Select the opt-in fusion strategy; retain legacy fallback semantics."""
+    if strategy == "reciprocal_rank_fusion":
+        return ReciprocalRankFusionRanker()
+    return PresenceRanker()
+
+
 # ---------------------------------------------------------------------------
 # Convenience function (backward compat with existing stub)
 # ---------------------------------------------------------------------------
@@ -99,14 +142,13 @@ def merge_results(
 
     Args:
         engine_results: Engine name → list of SearchResult.
-        strategy: Deprecated ranking strategy identifier. Presence ranking
-            is the only supported strategy.
+        strategy: "presence" or "reciprocal_rank_fusion". Unknown legacy
+            strategy names retain the presence fallback.
 
     Returns:
         Ranked, deduplicated list of SearchResult.
     """
-    del strategy
-    return PresenceRanker().rank(engine_results, "")
+    return create_ranker(strategy).rank(engine_results, "")
 
 
 # ---------------------------------------------------------------------------

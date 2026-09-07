@@ -30,7 +30,7 @@ class CacheConfig:
 
 @dataclass
 class RankingConfig:
-    strategy: str = "presence"  # "presence" | "weighted_fusion" | "learning_to_rank"
+    strategy: str = "presence"  # "presence" | "reciprocal_rank_fusion"
 
 
 @dataclass

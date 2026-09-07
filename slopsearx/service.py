@@ -47,7 +47,7 @@ from slopsearx.capabilities import DEFAULT_SENSITIVE_ENGINES, CapabilityCatalog
 from slopsearx.config import load_config
 from slopsearx.filters import engine_filter_layer, filter_results_by_time_range
 from slopsearx.logging import capture_exception
-from slopsearx.merger import PresenceRanker, extract_empty_scrape_engines
+from slopsearx.merger import create_ranker, extract_empty_scrape_engines
 from slopsearx.payload import payload_for_persistence, payload_from_dict
 from slopsearx.ratelimit import LocalTokenBucket, RateLimiter, RateLimitStrategy, ValkeySlidingWindow
 from slopsearx.router import QueryRouter
@@ -229,6 +229,7 @@ class AppContext:
     # when configured); when it is absent the deterministic fallback runs.
     catalog: CapabilityCatalog | None = None
     routing_budget: RoutingBudget | None = None
+    ranking_strategy: str = "presence"
 
 
 async def build_context() -> AppContext:
@@ -329,6 +330,7 @@ async def build_context() -> AppContext:
         empty_scrape_diagnostics_enabled=empty_scrape_diagnostics_enabled,
         catalog=catalog,
         routing_budget=routing_budget,
+        ranking_strategy=cfg.ranking.strategy,
     )
 
 
@@ -589,7 +591,7 @@ class SearchService:
 
     def __init__(self, context: AppContext) -> None:
         self._ctx = context
-        self._ranker = PresenceRanker()
+        self._ranker = create_ranker(context.ranking_strategy)
         self._resolver: ScopeResolver | None = None
 
     def _resolver_for(self) -> ScopeResolver:
@@ -1171,6 +1173,7 @@ def _routing_cache_digest(ctx: AppContext) -> str:
                     f"{name}:{cap.auth_class}:{int(cap.auth_configured)}:{cap.cost_class}:{int(cap.circuit_open)}"
                 )
     parts.append("sensitive=" + ",".join(sorted(ctx.sensitive_engines)))
+    parts.append("ranking=" + ctx.ranking_strategy)
     parts.append("tier1=" + ",".join(sorted(ctx.tier1_engines)))
     if budget is None:
         parts.append("budget=none")
