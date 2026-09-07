@@ -15,7 +15,7 @@ from collections.abc import AsyncIterator
 
 import pytest
 
-from slopsearx import research
+from slopsearx import research_store as research
 from slopsearx.cache import SearchCache
 from slopsearx.research import ResearchJob, ResearchJobStore
 

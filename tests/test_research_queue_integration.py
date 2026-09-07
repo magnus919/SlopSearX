@@ -14,6 +14,7 @@ import pytest
 import valkey.asyncio as valkey
 
 from slopsearx import research as r
+from slopsearx import research_store as storage
 
 pytestmark = pytest.mark.skipif(not os.environ.get("SLOPSEARX_TEST_VALKEY_URL"), reason="explicit test Valkey required")
 
@@ -38,7 +39,7 @@ class Store:
 async def backend(monkeypatch: Any) -> Any:
     prefix = f"test-ready-{uuid.uuid4().hex}"
     for constant in ("JOB_KEY_PREFIX", "LEASE_KEY_PREFIX", "CANCEL_KEY_PREFIX", "IDEMPOTENCY_PREFIX", "READY_PREFIX"):
-        monkeypatch.setattr(r, constant, f"{prefix}:{constant}")
+        monkeypatch.setattr(storage, constant, f"{prefix}:{constant}")
     client = valkey.from_url(os.environ["SLOPSEARX_TEST_VALKEY_URL"])
     await client.ping()
     store = Store(client)
@@ -62,7 +63,7 @@ def job(tenant: str = "a", state: str = "queued") -> r.ResearchJob:
 
 
 async def test_ready_claim_race_fencing_renewal_and_orphan(backend: Store) -> None:
-    store = r.ResearchJobStore(backend, "a")
+    store = storage.ResearchJobStore(backend, "a")
     item = job()
     await store.save(item)
     claims = await asyncio.gather(*(store.claim_next_any_tenant(str(i), 60) for i in range(8)))
@@ -70,7 +71,7 @@ async def test_ready_claim_race_fencing_renewal_and_orphan(backend: Store) -> No
     assert len(owned) == 1
     old = owned[0]
     assert await store.renew(item.job_id, old.lease_token or "", 120)
-    score = await backend._client.zscore(f"{r.READY_PREFIX}:tenant:a", item.job_id)
+    score = await backend._client.zscore(f"{storage.READY_PREFIX}:tenant:a", item.job_id)
     assert score > time.time() + 100
     # Simulate worker death and lease expiry without sleep or wall-clock races.
     await backend._client.delete(store._lease_key(item.job_id))
@@ -84,11 +85,11 @@ async def test_ready_claim_race_fencing_renewal_and_orphan(backend: Store) -> No
     assert await store._lease_get(store._lease_key(item.job_id)) == reclaimed.lease_token
     reclaimed.state = "succeeded"
     assert await store.save_if_owned(reclaimed)
-    assert await backend._client.zcard(f"{r.READY_PREFIX}:tenant:a") == 0
+    assert await backend._client.zcard(f"{storage.READY_PREFIX}:tenant:a") == 0
 
 
 async def test_tenant_rotation_and_cancel(backend: Store) -> None:
-    root = r.ResearchJobStore(backend)
+    root = storage.ResearchJobStore(backend)
     for tenant in ("busy", "oauth:quiet"):
         for _ in range(4 if tenant == "busy" else 1):
             await root.for_tenant(tenant).save(job(tenant))
@@ -99,21 +100,25 @@ async def test_tenant_rotation_and_cancel(backend: Store) -> None:
     await scoped.save(cancelled)
     await scoped.request_cancel(cancelled.job_id)
     assert await scoped.claim_next("worker", 60) is None
-    assert await backend._client.zcard(f"{r.READY_PREFIX}:tenant:cancel") == 0
+    assert await backend._client.zcard(f"{storage.READY_PREFIX}:tenant:cancel") == 0
 
 
 async def test_reconciliation_repairs_save_gap_and_reservation_crash(backend: Store, monkeypatch: Any) -> None:
-    store = r.ResearchJobStore(backend, "a")
+    store = storage.ResearchJobStore(backend, "a")
     item = job()
     # Legacy save / crash after record persistence but before index refresh.
     await backend.set(store._key(item.job_id), r._job_to_payload(item))
     await store._reconcile_ready()
     candidate = await backend._client.eval(
-        r._READY_TAKE_SCRIPT, 2, f"{r.READY_PREFIX}:tenants", f"{r.READY_PREFIX}:turn", r.READY_PREFIX
+        storage._READY_TAKE_SCRIPT,
+        2,
+        f"{storage.READY_PREFIX}:tenants",
+        f"{storage.READY_PREFIX}:turn",
+        storage.READY_PREFIX,
     )
     assert candidate == [b"a", item.job_id.encode()]
     # Simulate expiry of the non-destructive five-second reservation.
-    await backend._client.zadd(f"{r.READY_PREFIX}:tenant:a", {item.job_id: 0})
+    await backend._client.zadd(f"{storage.READY_PREFIX}:tenant:a", {item.job_id: 0})
     claimed = await store.claim_next_any_tenant("replacement", 60)
     assert claimed and claimed.job_id == item.job_id
     # Late refresh reads terminal authority instead of re-adding stale queued state.
@@ -124,7 +129,7 @@ async def test_reconciliation_repairs_save_gap_and_reservation_crash(backend: St
 
 
 async def test_idle_poll_does_not_read_retained_history(backend: Store, monkeypatch: Any) -> None:
-    store = r.ResearchJobStore(backend, "a")
+    store = storage.ResearchJobStore(backend, "a")
     for _ in range(1000):
         await store.save(job(state="succeeded"))
     await store._reconcile_ready()
@@ -143,7 +148,7 @@ async def test_idle_poll_does_not_read_retained_history(backend: Store, monkeypa
     assert counts == {"SET": 20, "EVAL": 20}
     print(f"1000 terminal records, 20 idle polls: {dict(counts)}, record reads={backend.reads}")
 
-    class LegacyScanStore(r.ResearchJobStore):
+    class LegacyScanStore(storage.ResearchJobStore):
         def _ready_client(self) -> Any:
             return None
 
@@ -155,7 +160,7 @@ async def test_idle_poll_does_not_read_retained_history(backend: Store, monkeypa
 
 
 async def test_actual_lease_expiry_is_discovered_without_scan(backend: Store, monkeypatch: Any) -> None:
-    store = r.ResearchJobStore(backend, "a")
+    store = storage.ResearchJobStore(backend, "a")
     item = job()
     await store.save(item)
     first = await store.claim_next_any_tenant("lost", 1)
@@ -172,13 +177,13 @@ async def test_actual_lease_expiry_is_discovered_without_scan(backend: Store, mo
 
 
 async def test_index_failure_does_not_break_authoritative_writes(backend: Store, monkeypatch: Any) -> None:
-    store = r.ResearchJobStore(backend, "a")
+    store = storage.ResearchJobStore(backend, "a")
     item = job()
     item.idempotency_key = "same-request"
     original_eval = backend._client.eval
 
     async def fail_index(script: str, *args: Any, **kwargs: Any) -> Any:
-        if script == r._READY_REFRESH_SCRIPT:
+        if script == storage._READY_REFRESH_SCRIPT:
             raise RuntimeError("derived index unavailable")
         return await original_eval(script, *args, **kwargs)
 
@@ -197,11 +202,11 @@ async def test_index_failure_does_not_break_authoritative_writes(backend: Store,
         assert persisted and persisted.state == "succeeded"
         await store.release(item.job_id, claimed.lease_token)
     await store._refresh_ready(item.job_id)
-    assert await backend._client.zcard(f"{r.READY_PREFIX}:tenant:a") == 0
+    assert await backend._client.zcard(f"{storage.READY_PREFIX}:tenant:a") == 0
 
 
 async def test_index_refresh_preserves_cancellation(backend: Store, monkeypatch: Any) -> None:
-    store = r.ResearchJobStore(backend, "a")
+    store = storage.ResearchJobStore(backend, "a")
 
     async def cancelled(*args: Any, **kwargs: Any) -> Any:
         raise asyncio.CancelledError

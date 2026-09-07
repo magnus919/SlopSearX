@@ -21,6 +21,7 @@ import pytest
 
 import engines  # noqa: F401 — populates the engine registry
 from slopsearx import research as research_mod
+from slopsearx import research_store as research_store_mod
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult
 from slopsearx.capabilities import CapabilityCatalog, load_mcp_policy
 from slopsearx.config import load_config
@@ -1264,6 +1265,7 @@ class TestDirectRunReconciliation:
         # the direct run reaches _claim_prepared the deadline has lapsed.
         real_now = time.time()
         monkeypatch.setattr(research_mod, "time", _FrozenClock(real_now + 7200))
+        monkeypatch.setattr(research_store_mod, "time", _FrozenClock(real_now + 7200))
 
         appended: list[int] = []
 
@@ -1303,6 +1305,7 @@ class TestDirectRunReconciliation:
 
             real_now = time.time()
             monkeypatch.setattr(research_mod, "time", _FrozenClock(real_now + 7200))
+            monkeypatch.setattr(research_store_mod, "time", _FrozenClock(real_now + 7200))
 
             result = await t.slopsearx_extend_research(job.job_id, "followup", intent="web", engines=["wikipedia"])
 
