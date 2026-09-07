@@ -194,9 +194,9 @@ class TestCatalogFeatureMatrix:
     def test_declared_failure_classes_match_adapter_behavior(self) -> None:
         """Failure classes are trimmed to what each adapter can actually emit."""
         catalog = _catalog()
-        # Single-class failures: these adapters classify every upstream error
-        # as a generic ERROR (no 429/403/timeout handling in the code path).
-        assert catalog.get("openalex").failure_classes == ["error"]  # type: ignore[union-attr]
+        # OpenAlex distinguishes upstream/local throttling, timeouts, and errors.
+        assert catalog.get("openalex").failure_classes == ["rate_limited", "error", "timeout"]  # type: ignore[union-attr]
+        # Internet Archive classifies upstream errors as a generic ERROR.
         assert catalog.get("internetarchive").failure_classes == ["error"]  # type: ignore[union-attr]
         # Two-class failures.
         assert catalog.get("hackernews").failure_classes == ["error", "timeout"]  # type: ignore[union-attr]

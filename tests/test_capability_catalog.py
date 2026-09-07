@@ -275,7 +275,7 @@ class TestAuditedCapabilityDeclarations:
         assert by_name["virustotal"]["cost_class"] == "freemium"
         # Science: free scholarly indexes with honest failure classes.
         assert by_name["openalex"]["cost_class"] == "free"
-        assert by_name["openalex"]["failure_classes"] == ["error"]
+        assert by_name["openalex"]["failure_classes"] == ["rate_limited", "error", "timeout"]
         # Media: TMDB returns media thumbnails and needs a key.
         assert "media" in by_name["tmdb"]["supported_result_types"]
         assert by_name["tmdb"]["cost_class"] == "freemium"
