@@ -1339,3 +1339,50 @@ async def test_prefer_fresh_can_reconnect_cache_on_write() -> None:
     response = await service.search(_req(freshness="prefer_fresh"))
     assert response.results
     cache.set.assert_awaited_once()
+
+
+async def test_coalesced_nested_answer_and_infobox_views_are_independent() -> None:
+    class RichEngine(_OkEngine):
+        async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
+            result = await super().search(query, params)
+            result.answers = [{"nested": {"value": "original"}}]
+            result.infoboxes = [{"urls": [{"title": "original"}]}]
+            return result
+
+    engine = RichEngine(delay=0.03)
+    cache = _FakeCache()
+    service = _service(engines={"okeng": engine}, cache=cache)
+    first, second = await asyncio.gather(service.search(_req()), service.search(_req()))
+    first.answers[0]["nested"]["value"] = "mutated"
+    first.infoboxes[0]["urls"][0]["title"] = "mutated"
+    assert second.answers[0]["nested"]["value"] == "original"
+    assert second.infoboxes[0]["urls"][0]["title"] == "original"
+    cached = await service.search(_req())
+    assert cached.answers[0]["nested"]["value"] == "original"
+    assert cached.infoboxes[0]["urls"][0]["title"] == "original"
+    cached.answers[0]["nested"]["value"] = "cached mutation"
+    assert (await service.search(_req())).answers[0]["nested"]["value"] == "original"
+    assert engine.calls == 1
+
+
+async def test_deep_and_cyclic_answer_values_are_bounded() -> None:
+    import json
+
+    nested: dict[str, Any] = {}
+    for _ in range(2000):
+        nested = {"child": nested}
+    cyclic: dict[str, Any] = {}
+    cyclic["self"] = cyclic
+
+    class RichEngine(_OkEngine):
+        async def search(self, query: str, params: dict[str, Any] | None = None) -> AdapterResponse:
+            result = await super().search(query, params)
+            result.answers = [nested]
+            result.infoboxes = [cyclic]
+            return result
+
+    service = _service(engines={"okeng": RichEngine(delay=0.03)}, cache=_FakeCache())
+    responses = await asyncio.gather(service.search(_req()), service.search(_req()))
+    for response in responses:
+        assert "<max depth exceeded>" in json.dumps(response.answers)
+        assert response.infoboxes == [{"self": "<circular reference>"}]

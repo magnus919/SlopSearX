@@ -48,7 +48,7 @@ from slopsearx.config import load_config
 from slopsearx.filters import engine_filter_layer, filter_results_by_time_range
 from slopsearx.logging import capture_exception
 from slopsearx.merger import create_ranker, extract_empty_scrape_engines
-from slopsearx.payload import payload_for_persistence, payload_from_dict
+from slopsearx.payload import _json_safe, payload_for_persistence, payload_from_dict
 from slopsearx.ratelimit import LocalTokenBucket, RateLimiter, RateLimitStrategy, ValkeySlidingWindow
 from slopsearx.router import QueryRouter
 from slopsearx.routing import (
@@ -1357,9 +1357,9 @@ def search_response_to_payload(response: SearchResponse) -> dict[str, Any]:
             for outcome in response.engine_outcomes
         ],
         "suggestions": list(response.suggestions),
-        "answers": list(response.answers),
+        "answers": _json_safe(response.answers),
         "corrections": list(response.corrections),
-        "infoboxes": list(response.infoboxes),
+        "infoboxes": _json_safe(response.infoboxes),
         "query_id": response.query_id,
         "cached": False,
         "response_time_ms": response.response_time_ms,
@@ -1400,9 +1400,9 @@ def search_response_from_payload(payload: dict[str, Any]) -> SearchResponse:
         scope=decision,
         engine_outcomes=[engine_outcome_from_dict(item) for item in (payload.get("engine_outcomes") or [])],
         suggestions=[str(item) for item in (payload.get("suggestions") or [])],
-        answers=list(payload.get("answers") or []),
+        answers=_json_safe(payload.get("answers") or []),
         corrections=[str(item) for item in (payload.get("corrections") or [])],
-        infoboxes=list(payload.get("infoboxes") or []),
+        infoboxes=_json_safe(payload.get("infoboxes") or []),
         query_id=str(payload.get("query_id", "")),
         cached=bool(payload.get("cached", False)),
         response_time_ms=int(payload.get("response_time_ms", 0)),
