@@ -28,3 +28,7 @@ The deterministic concurrency regression sends 20 simultaneous identical
 requests with different views and observes one adapter call, separate IDs and
 independent results. This demonstrates dispatch reduction under overlap; it is
 not a production latency or throughput benchmark.
+
+HTTP output formatting happens after cache lookup: the same cached response
+supports both JSON and YAML+Markdown, according to each request. Both formats
+return HTTP 503 when all selected engines are unresponsive.

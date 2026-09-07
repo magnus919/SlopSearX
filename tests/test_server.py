@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 
 import pytest
+import yaml
 from fastapi.testclient import TestClient
 
 import engines  # noqa: F401 — triggers @register_engine
@@ -201,6 +202,43 @@ class TestSearchEndpoint:
         assert "text/vnd.yaml+markdown" in response.headers["content-type"]
         assert "test" in response.text
         assert "## Results Summary" in response.text
+
+    @pytest.mark.parametrize("formats", [("yaml", "yaml"), ("json", "yaml"), ("yaml", "json"), ("json", "json")])
+    def test_cached_format(self, client: TestClient, monkeypatch, formats) -> None:
+        """A shared canonical cache honors each caller's output format."""
+        import slopsearx.server as server_mod
+        from slopsearx.mcp.harness import InMemoryStore
+
+        monkeypatch.setattr(server_mod, "_cache", InMemoryStore())
+        calls = 0
+        original = _MockEngine.search
+
+        async def counted_search(self, query, params=None):
+            nonlocal calls
+            calls += 1
+            return await original(self, query, params)
+
+        monkeypatch.setattr(_MockEngine, "search", counted_search)
+        urls = []
+        for index, output_format in enumerate(formats):
+            response = client.get("/search", params={"q": "format regression", "format": output_format})
+            assert response.status_code == 200
+            if output_format == "yaml":
+                assert "text/vnd.yaml+markdown" in response.headers["content-type"]
+                assert "## Results Summary" in response.text
+                data = yaml.safe_load(response.text.split("\n---\n", 1)[0])
+            else:
+                assert "application/json" in response.headers["content-type"]
+                data = response.json()
+            assert data["meta"]["cached"] is bool(index)
+            urls.append([result["url"] for result in data["results"]])
+        assert urls[0] == urls[1]
+        assert calls == 1
+
+    def test_yaml_all_engines_failed(self, client: TestClient) -> None:
+        response = client.get("/search", params={"q": "error", "format": "yaml"})
+        assert response.status_code == 503
+        assert "text/vnd.yaml+markdown" in response.headers["content-type"]
 
     def test_json_format_default(self, client: TestClient) -> None:
         """format=json is the default."""

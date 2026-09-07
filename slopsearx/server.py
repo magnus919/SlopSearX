@@ -407,20 +407,7 @@ async def search(
     unresponsive = unresponsive_from_outcomes(response.engine_outcomes)
     meta = build_response_meta(response)
 
-    if response.cached:
-        # Preserve existing behavior: cache hits return the JSON
-        # representation regardless of the requested format.
-        response_data = format_json(
-            results=response.results,
-            query=q,
-            answers=response.answers,
-            corrections=response.corrections,
-            infoboxes=response.infoboxes,
-            suggestions=response.suggestions,
-            unresponsive_engines=unresponsive,
-            meta=meta,
-        )
-        return JSONResponse(status_code=200, content=response_data)
+    status_code = 503 if response.all_unresponsive else 200
 
     if format == "yaml":
         engine_count = len(response.scope.selected_engines)
@@ -433,7 +420,7 @@ async def search(
             responsive_count=responsive_count,
             unresponsive_engines=unresponsive,
         )
-        return PlainTextResponse(content=yaml_output, media_type="text/vnd.yaml+markdown")
+        return PlainTextResponse(content=yaml_output, media_type="text/vnd.yaml+markdown", status_code=status_code)
 
     # Default: JSON
     response_data = format_json(
@@ -447,7 +434,6 @@ async def search(
         meta=meta,
     )
 
-    status_code = 503 if response.all_unresponsive else 200
     return JSONResponse(status_code=status_code, content=response_data)
 
 
