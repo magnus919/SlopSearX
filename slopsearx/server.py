@@ -13,7 +13,10 @@ resolution, ranking, deduplication, caching, and failure semantics.
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from contextlib import asynccontextmanager
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as package_version
 from typing import Any, AsyncIterator
 
 from fastapi import FastAPI, Query, Request
@@ -125,6 +128,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="SlopSearX", version="0.1.0", lifespan=lifespan)
 app.add_middleware(RequestIDMiddleware)
+
+
+def _service_version() -> str:
+    """Return the installed package version without exposing configuration."""
+    try:
+        return package_version("slopsearx")
+    except PackageNotFoundError:
+        return "0.0.0"
 
 
 def _routing_catalog() -> CapabilityCatalog | None:
@@ -302,16 +313,72 @@ async def metrics() -> PlainTextResponse:
 async def config() -> dict[str, Any]:
     """SearXNG-compatible config endpoint.
 
-    Returns available categories and their engines. Built from
-    instantiated engines (respects config overrides).
+    The standard fields are intentionally kept at the top level so existing
+    SearXNG clients can consume this response.  SlopSearX capability details
+    and the historical category-to-engine mapping are additive fields.
     """
-    from collections import defaultdict
-
     cats: dict[str, list[str]] = defaultdict(list)
+    engines_out: list[dict[str, Any]] = []
+    try:
+        catalog = _health_catalog()
+    except Exception:  # noqa: BLE001 — discovery must never break /config
+        catalog = None
+
     for name, engine in _active_engines.items():
         for cat in engine.categories:
-            cats[cat].append(name)
-    return {"categories": dict(cats)}
+            if name not in cats[cat]:
+                cats[cat].append(name)
+
+        record: dict[str, Any] = {
+            "categories": list(engine.categories),
+            "enabled": True,
+            "name": name,
+            # Adapters do not declare SearXNG shortcuts; the stable engine
+            # name is the least surprising interoperable fallback.
+            "shortcut": name,
+            "display_name": engine.display_name or name,
+            "type": engine.engine_type,
+        }
+        if catalog is not None:
+            try:
+                capability = catalog.get(name)
+            except Exception:  # noqa: BLE001 — one bad catalog entry is local
+                capability = None
+            if capability is not None:
+                record.update(
+                    {
+                        "sensitive": capability.sensitive,
+                        "supported_filters": capability.supported_filters,
+                        "enforced_filters": capability.enforced_filters,
+                        "supported_result_types": capability.supported_result_types,
+                        "supported_media_types": capability.supported_media_types,
+                        "failure_classes": capability.failure_classes,
+                        "cost_class": capability.cost_class or None,
+                        "auth": {
+                            "class": capability.auth_class,
+                            "configured": capability.auth_configured,
+                        },
+                        "scope_hints": capability.scope_hints,
+                        "caveats": capability.caveats,
+                    }
+                )
+        engines_out.append(record)
+
+    category_engines = {category: names for category, names in sorted(cats.items())}
+    return {
+        "autocomplete": "",
+        "categories": sorted(category_engines),
+        "default_locale": "en",
+        "default_theme": "simple",
+        "engines": engines_out,
+        "instance_name": "SlopSearX",
+        "locales": {"en": "English"},
+        "plugins": [],
+        "safe_search": 0,
+        "version": _service_version(),
+        "brand": "SlopSearX",
+        "category_engines": category_engines,
+    }
 
 
 # ---------------------------------------------------------------------------

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import datetime
 from typing import Any
+from urllib.parse import urlparse
 
 import yaml
 
@@ -79,11 +80,29 @@ def _result_to_searxng(result: SearchResult) -> dict[str, Any]:
         "author": None,
         "metadata": None,
         "template": "default.html",
-        "parsed_url": None,
+        "parsed_url": _parsed_url(result.url),
         "open_group": False,
         "close_group": False,
         "priority": "",
     }
+
+
+def _parsed_url(url: str | None) -> list[str] | None:
+    """Return SearXNG's JSON-safe six-part URL parse result.
+
+    Search results should normally contain absolute URLs.  Keep malformed or
+    absent values from breaking the whole response and make the tuple-like
+    ``ParseResult`` explicit as a JSON array at this boundary.
+    """
+    if not url:
+        return None
+    try:
+        parsed = urlparse(url)
+    except (TypeError, ValueError):
+        return None
+    if not parsed.scheme or not parsed.netloc:
+        return None
+    return [parsed.scheme, parsed.netloc, parsed.path, parsed.params, parsed.query, parsed.fragment]
 
 
 def _iso_to_epoch(iso_str: str | None) -> int | None:

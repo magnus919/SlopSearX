@@ -105,10 +105,33 @@ class TestFormatJson:
         assert r["author"] is None
         assert r["metadata"] is None
         assert r["template"] == "default.html"
-        assert r["parsed_url"] is None
+        assert r["parsed_url"] == ["https", "example.com", "", "", "", ""]
         assert r["open_group"] is False
         assert r["close_group"] is False
         assert r["priority"] == ""
+
+    def test_parsed_url_preserves_query_fragment_and_params(self) -> None:
+        result = _make_result("https://example.com/path;param?q=one#section", "Example")
+
+        response = format_json(results=[result], query="test")
+
+        assert response["results"][0]["parsed_url"] == [
+            "https",
+            "example.com",
+            "/path",
+            "param",
+            "q=one",
+            "section",
+        ]
+
+    def test_parsed_url_omits_absent_or_malformed_urls(self) -> None:
+        absent = _make_result("", "Absent")
+        malformed = _make_result("http://[invalid", "Malformed")
+
+        response = format_json(results=[absent, malformed], query="test")
+
+        assert response["results"][0]["parsed_url"] is None
+        assert response["results"][1]["parsed_url"] is None
 
     def test_multi_engine_result(self) -> None:
         """Multi-engine result shows all engines in 'engines' array."""

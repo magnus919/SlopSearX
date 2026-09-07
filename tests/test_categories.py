@@ -60,8 +60,8 @@ class TestAdapterCategories:
 class TestConfigEndpoint:
     """GET /config endpoint."""
 
-    def test_returns_categories(self) -> None:
-        """Config endpoint returns categories->engines mapping."""
+    def test_returns_searxng_shape_and_additive_catalog(self) -> None:
+        """Config exposes SearXNG fields and retains SlopSearX discovery data."""
         import slopsearx.server as server_mod
 
         original = dict(server_mod._active_engines)
@@ -81,9 +81,47 @@ class TestConfigEndpoint:
                 response = client.get("/config")
                 assert response.status_code == 200
                 data = response.json()
-                assert "categories" in data
-                assert "general" in data["categories"]
-                assert "configtest" in data["categories"]["general"]
+                assert data["categories"] == ["general", "news", "science"]
+                assert data["category_engines"] == {
+                    "general": ["configtest"],
+                    "news": ["configtest"],
+                    "science": ["configtest"],
+                }
+                assert {
+                    "autocomplete",
+                    "default_locale",
+                    "default_theme",
+                    "engines",
+                    "instance_name",
+                    "locales",
+                    "plugins",
+                    "safe_search",
+                    "version",
+                } <= data.keys()
+                assert data["instance_name"] == "SlopSearX"
+                assert data["version"]
+                assert len(data["engines"]) == 1
+                engine = data["engines"][0]
+                assert engine["categories"] == ["general", "news", "science"]
+                assert engine["enabled"] is True
+                assert engine["name"] == "configtest"
+                assert engine["shortcut"] == "configtest"
+                assert engine["display_name"] == "configtest"
+                assert engine["type"] == "api"
+                assert set(engine) >= {
+                    "sensitive",
+                    "supported_filters",
+                    "enforced_filters",
+                    "supported_result_types",
+                    "supported_media_types",
+                    "failure_classes",
+                    "cost_class",
+                    "auth",
+                    "scope_hints",
+                    "caveats",
+                }
+                assert "api_key" not in engine
+                assert "secret" not in str(engine).lower()
         finally:
             server_mod._active_engines = original
             from slopsearx.adapter import _ENGINE_REGISTRY
