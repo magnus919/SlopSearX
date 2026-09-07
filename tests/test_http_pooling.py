@@ -146,3 +146,29 @@ async def test_no_proxy_alone_does_not_disable_pooling(monkeypatch):
     async with adapter.http_client():
         assert len(adapter._http_pools) == 1
     await adapter.shutdown()
+
+
+@pytest.mark.parametrize("options", [{"trust_env": False}, {"verify": False}])
+async def test_explicit_tls_options_are_not_silently_ignored(monkeypatch, options):
+    # An inherited bogus CA path would fail during default transport creation.
+    # Both overrides tell HTTPX not to load it, including when a pool exists.
+    monkeypatch.setattr("slopsearx.adapter.getproxies", lambda: {})
+    adapter = WikipediaAdapter()
+    async with adapter.http_client():
+        pass
+    monkeypatch.setenv("SSL_CERT_FILE", "/nonexistent-slopsearx-test-ca.pem")
+    async with adapter.http_client(**options) as client:
+        assert not client.is_closed
+    assert len(adapter._http_pools) == 1
+    await adapter.shutdown()
+
+
+async def test_explicit_pool_limits_are_forwarded():
+    from unittest.mock import patch
+
+    limits = httpx.Limits(max_connections=1)
+    adapter = WikipediaAdapter()
+    with patch("slopsearx.adapter.httpx.AsyncClient") as factory:
+        adapter.http_client(limits=limits, http1=False, http2=True)
+    factory.assert_called_once_with(proxy=None, limits=limits, http1=False, http2=True)
+    assert not adapter._http_pools

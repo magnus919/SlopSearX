@@ -480,6 +480,13 @@ class EngineAdapter(ABC):
             kwargs["proxy"] = endpoints.pop()
         proxy = kwargs.pop("proxy", None)
         limits = httpx.Limits(max_connections=20, max_keepalive_connections=10, keepalive_expiry=5.0)
+        # Transport construction settings cannot be applied to an existing pool.
+        # Preserve HTTPX semantics for explicit overrides without retaining an
+        # unbounded matrix of TLS/protocol/mount configurations.
+        transport_options = {"verify", "cert", "http1", "http2", "trust_env", "limits", "transport", "mounts"}
+        if transport_options.intersection(kwargs):
+            kwargs.setdefault("limits", limits)
+            return httpx.AsyncClient(proxy=proxy, **kwargs)
         if self._http_transport is not None:
             return httpx.AsyncClient(transport=_BorrowedTransport(self._http_transport), **kwargs)
         environment_proxy = kwargs.get("trust_env", True) and any(
