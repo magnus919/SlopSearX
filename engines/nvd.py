@@ -79,7 +79,7 @@ class NVDAdapter(EngineAdapter):
 
         start_time = time.monotonic()
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
+            async with self.http_client(timeout=timeout_ms / 1000.0) as client:
                 resp = await client.get(base_url, params=params_dict, headers=request_headers)
                 latency = (time.monotonic() - start_time) * 1000
 

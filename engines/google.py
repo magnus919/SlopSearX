@@ -63,7 +63,7 @@ class GoogleAdapter(ScrapeAdapter):
 
         start_time = time.monotonic()
         try:
-            async with httpx.AsyncClient(**client_kwargs) as client:
+            async with self.http_client(**client_kwargs) as client:
                 resp = await client.get(base_url, params=params_dict, headers=headers)
                 latency = (time.monotonic() - start_time) * 1000
 

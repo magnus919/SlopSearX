@@ -52,7 +52,7 @@ class CratesAdapter(EngineAdapter):
         start_time = time.monotonic()
 
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
+            async with self.http_client(timeout=timeout_ms / 1000.0) as client:
                 resp = await client.get(
                     base_url,
                     params={"q": query, "per_page": max_results},

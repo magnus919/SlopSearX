@@ -60,7 +60,7 @@ class MitreAttackAdapter(EngineAdapter):
 
         start_time = time.monotonic()
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0, follow_redirects=True) as client:
+            async with self.http_client(timeout=timeout_ms / 1000.0, follow_redirects=True) as client:
                 headers = {
                     "User-Agent": (
                         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "

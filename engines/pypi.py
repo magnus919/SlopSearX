@@ -48,7 +48,7 @@ class PyPIAdapter(EngineAdapter):
 
         try:
             # Fetch package JSON directly for the query as a package name
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0, follow_redirects=True) as client:
+            async with self.http_client(timeout=timeout_ms / 1000.0, follow_redirects=True) as client:
                 resp = await client.get(
                     f"{base_url}/pypi/{query}/json",
                     headers=headers,
@@ -104,7 +104,7 @@ class PyPIAdapter(EngineAdapter):
         from lxml import html
 
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
+            async with self.http_client(timeout=timeout_ms / 1000.0) as client:
                 resp = await client.get(
                     f"{base_url}/simple/",
                     headers=headers,

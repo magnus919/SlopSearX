@@ -75,7 +75,7 @@ class AshbyAdapter(EngineAdapter):
         start_time = time.monotonic()
 
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
+            async with self.http_client(timeout=timeout_ms / 1000.0) as client:
                 resp = await client.post(
                     url,
                     json={"operationName": "ApiJobBoardWithTeams", "variables": {}, "query": _ASHBY_QUERY},

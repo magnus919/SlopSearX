@@ -58,7 +58,7 @@ class URLhausAdapter(EngineAdapter):
 
         start_time = time.monotonic()
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
+            async with self.http_client(timeout=timeout_ms / 1000.0) as client:
                 # Determine query type
                 url_match = _URL_PATTERN.search(query)
                 ip_match = _IP_PATTERN.match(query)

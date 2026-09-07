@@ -11,6 +11,7 @@ returned in AdapterResponse.status.
 
 from __future__ import annotations
 
+import asyncio
 import enum
 import os
 import time
@@ -18,6 +19,23 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Optional
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
+from urllib.request import getproxies
+
+import httpx
+
+
+class _BorrowedTransport(httpx.AsyncBaseTransport):
+    """A search borrows a pool; only adapter shutdown closes its sockets."""
+
+    def __init__(self, transport: httpx.AsyncBaseTransport) -> None:
+        self.transport = transport
+
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        return await self.transport.handle_async_request(request)
+
+    async def aclose(self) -> None:
+        pass
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -344,6 +362,9 @@ class EngineAdapter(ABC):
 
     def __init__(self, config: dict[str, Any] | None = None, rate_limiter: Any = None) -> None:
         self.config = config or {}
+        self._http_pools: dict[str | None, httpx.AsyncBaseTransport] = {}
+        self._http_transport: httpx.AsyncBaseTransport | None = None
+        self._http_closed = False
         self.rate_limiter = rate_limiter  # injected by server at startup
         # Use the adapter's declared categories unless config replaces them.
         self._merge_categories()
@@ -430,11 +451,54 @@ class EngineAdapter(ABC):
                     return EngineStatus.ERROR
         return EngineStatus.OK
 
+    def set_http_transport(self, transport: httpx.AsyncBaseTransport) -> None:
+        """Inject a caller-owned transport before first use (e.g. MockTransport).
+
+        The caller closes injected transports. Production pools belong to the
+        adapter and are closed by shutdown after in-flight searches drain.
+        """
+        if self._http_pools or self._http_closed:
+            raise RuntimeError("Transport must be injected before adapter use")
+        self._http_transport = transport
+
+    def http_client(self, **kwargs: Any) -> httpx.AsyncClient:
+        """Create an isolated search session backed by bounded reusable pools.
+
+        Cookies, headers, authentication and redirect policy remain search-local.
+        A maximum of eight proxy pools per adapter prevents unbounded retention;
+        excess proxies and environment-proxy configurations use ordinary ephemeral
+        clients so HTTPX continues to honor NO_PROXY and platform proxy settings.
+        """
+        if self._http_closed:
+            raise RuntimeError("Adapter has been shut down")
+        proxies = kwargs.pop("proxies", None)
+        if proxies:
+            # ProxyPool supplies the same endpoint for both schemes.
+            endpoints = set(proxies.values())
+            if len(endpoints) != 1:
+                raise ValueError("An adapter session requires one proxy endpoint")
+            kwargs["proxy"] = endpoints.pop()
+        proxy = kwargs.pop("proxy", None)
+        limits = httpx.Limits(max_connections=20, max_keepalive_connections=10, keepalive_expiry=5.0)
+        if self._http_transport is not None:
+            return httpx.AsyncClient(transport=_BorrowedTransport(self._http_transport), **kwargs)
+        environment_proxy = kwargs.get("trust_env", True) and any(
+            getproxies().get(scheme) for scheme in ("http", "https", "all")
+        )
+        if (proxy is None and environment_proxy) or (proxy not in self._http_pools and len(self._http_pools) >= 8):
+            return httpx.AsyncClient(proxy=proxy, limits=limits, **kwargs)
+        if proxy not in self._http_pools:
+            self._http_pools[proxy] = httpx.AsyncHTTPTransport(proxy=proxy, limits=limits)
+        return httpx.AsyncClient(transport=_BorrowedTransport(self._http_pools[proxy]), **kwargs)
+
     async def warmup(self) -> None:
         """Optional lifecycle hook — called at startup."""
 
     async def shutdown(self) -> None:
-        """Optional lifecycle hook — called at graceful shutdown."""
+        """Close owned pools after active searches have drained; safe to repeat."""
+        self._http_closed = True
+        pools, self._http_pools = self._http_pools, {}
+        await asyncio.gather(*(pool.aclose() for pool in pools.values()), return_exceptions=True)
 
     def _merge_categories(self) -> None:
         """Apply an optional category override to this adapter instance."""
@@ -558,13 +622,11 @@ class ScrapeAdapter(EngineAdapter, ABC):
 
     async def health(self) -> EngineStatus:
         """Probe: can we reach the engine's homepage?"""
-        import httpx
-
         base_url = self.config.get("base_url", "")
         if not base_url:
             return EngineStatus.ERROR
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with self.http_client(timeout=5.0) as client:
                 resp = await client.get(base_url, headers=self.request_headers)
                 return EngineStatus.OK if resp.status_code == 200 else EngineStatus.ERROR
         except Exception:  # noqa: BLE001

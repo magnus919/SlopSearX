@@ -64,7 +64,7 @@ class StackExchangeAdapter(EngineAdapter):
             request_headers["X-API-Key"] = api_key
 
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000) as client:
+            async with self.http_client(timeout=timeout_ms / 1000) as client:
                 resp = await client.get(url, headers=request_headers)
                 if resp.status_code == 400:
                     return AdapterResponse(

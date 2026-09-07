@@ -88,7 +88,7 @@ class DuckDuckGoAdapter(ScrapeAdapter):
             return (time.monotonic() - start_time) * 1000
 
         try:
-            async with httpx.AsyncClient(**client_kwargs) as client:
+            async with self.http_client(**client_kwargs) as client:
                 # Warm the session (cookies / anti-bot state) before searching.
                 await self._bootstrap_session(client)
 

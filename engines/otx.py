@@ -70,7 +70,7 @@ class OTXAdapter(EngineAdapter):
 
         start_time = time.monotonic()
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
+            async with self.http_client(timeout=timeout_ms / 1000.0) as client:
                 # Detect indicator type
                 ip_match = _IP_PATTERN.search(query)
                 hash_match = _HASH_PATTERN.search(query)

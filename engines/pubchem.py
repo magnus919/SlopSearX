@@ -52,7 +52,7 @@ class PubChemAdapter(EngineAdapter):
         start_time = time.monotonic()
 
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
+            async with self.http_client(timeout=timeout_ms / 1000.0) as client:
                 # Search by name/query
                 url = f"{base_url}/compound/name/{urllib.parse.quote(query)}/cids/JSON"
                 resp = await client.get(url)

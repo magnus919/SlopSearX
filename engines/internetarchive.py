@@ -58,8 +58,6 @@ class InternetArchiveAdapter(EngineAdapter):
         if early := await self._check_rate_limit():
             return early
 
-        import httpx
-
         cfg = self.config
         timeout_ms = cfg.get("timeout_ms", 10_000)
         max_results = cfg.get("max_results", 10)
@@ -75,7 +73,7 @@ class InternetArchiveAdapter(EngineAdapter):
         )
 
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000) as client:
+            async with self.http_client(timeout=timeout_ms / 1000) as client:
                 resp = await client.get(url)
                 resp.raise_for_status()
                 raw = resp.json()
@@ -118,8 +116,6 @@ class InternetArchiveAdapter(EngineAdapter):
         if early := await self._check_rate_limit():
             return early
 
-        import httpx
-
         cfg = self.config
         timeout_ms = cfg.get("timeout_ms", 10_000)
         max_results = cfg.get("max_results", 10)
@@ -128,7 +124,7 @@ class InternetArchiveAdapter(EngineAdapter):
         url = f"{base_url}/advancedsearch.php?q={urllib.parse.quote(query)}&output=json&rows={max_results}"
 
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000) as client:
+            async with self.http_client(timeout=timeout_ms / 1000) as client:
                 resp = await client.get(url)
                 resp.raise_for_status()
                 data = resp.json()

@@ -32,7 +32,6 @@ class OpenAlexAdapter(EngineAdapter):
         query: str,
         params: dict[str, Any] | None = None,
     ) -> AdapterResponse:
-        import httpx
 
         if early := await self._check_rate_limit():
             return early
@@ -45,7 +44,7 @@ class OpenAlexAdapter(EngineAdapter):
         url = f"{base_url}/works?search={urllib.parse.quote(query)}&sort=cited_by_count:desc&per_page={max_results}"
 
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000) as client:
+            async with self.http_client(timeout=timeout_ms / 1000) as client:
                 resp = await client.get(url)
                 resp.raise_for_status()
                 data = resp.json()

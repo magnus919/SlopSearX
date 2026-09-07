@@ -60,7 +60,7 @@ class ShodanAdapter(EngineAdapter):
 
         start_time = time.monotonic()
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
+            async with self.http_client(timeout=timeout_ms / 1000.0) as client:
                 resp = await client.get(
                     f"{base_url}/shodan/host/search",
                     params={"query": query, "limit": max_results},

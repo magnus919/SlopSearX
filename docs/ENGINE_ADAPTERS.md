@@ -129,7 +129,7 @@ class AdapterResponse:
 
 ## Lifecycle Hooks
 
-Optional — override for setup/teardown:
+Override for engine-specific setup/teardown; an overridden `shutdown()` must call `await super().shutdown()` to release HTTP pools:
 
 ```python
 async def warmup(self) -> None:    # called at server startup
@@ -137,7 +137,11 @@ async def shutdown(self) -> None:   # called at graceful shutdown
 async def health(self) -> EngineStatus:  # lightweight probe
 ```
 
-The default `health()` sends a minimal query. Override for engine-specific probes (e.g., checking homepage reachability for scrape engines).
+The default API `health()` checks configuration without network access; scrape engines probe their homepage.
+
+Use `async with self.http_client(timeout=...) as client:` inside a search's error-handling boundary. Each search receives its own cookies, headers and redirect settings, while TCP/TLS connections are reused across searches. Pools are created lazily, with 20 connections and 10 idle connections each, and closed by `shutdown()` after active searches drain. An adapter retains at most eight pools partitioned by proxy endpoint. Additional proxies use ephemeral clients. Environment proxy configurations also use ephemeral clients so HTTPX continues to honor platform proxy and `NO_PROXY` behavior.
+
+For deterministic tests, call `adapter.set_http_transport(httpx.MockTransport(handler))` before first use. Injected transports are caller-owned; close them separately. Do not share adapters across event loops or dispatch searches after shutdown. The loopback probe in `tests/test_http_pooling.py` compares identical adapter searches and asserts 20 fresh TCP connections versus one reused connection; its printed p50/p95 timings describe local HTTP behavior, not upstream or production latency.
 
 ## Adapter Registry
 

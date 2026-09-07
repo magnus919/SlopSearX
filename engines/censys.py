@@ -64,7 +64,7 @@ class CensysAdapter(EngineAdapter):
 
         start_time = time.monotonic()
         try:
-            async with httpx.AsyncClient(timeout=timeout_ms / 1000.0) as client:
+            async with self.http_client(timeout=timeout_ms / 1000.0) as client:
                 resp = await client.get(
                     f"{base_url}/hosts/search",
                     headers=headers,
