@@ -1,5 +1,49 @@
 # Changelog
 
+## [0.5.0](https://github.com/magnus919/SlopSearX/compare/v0.4.0...v0.5.0) (2026-09-11)
+
+
+### Features
+
+* add authenticated workflow console ([#370](https://github.com/magnus919/SlopSearX/issues/370)) ([086ea41](https://github.com/magnus919/SlopSearX/commit/086ea4189c89c57637263aba4f7822436cb6bfad))
+* add bounded staged search workflow ([#344](https://github.com/magnus919/SlopSearX/issues/344)) ([65e9547](https://github.com/magnus919/SlopSearX/commit/65e9547475b9ee572b33ffc2b404c736a1b98e42))
+* add caller-directed adaptive research continuations ([#334](https://github.com/magnus919/SlopSearX/issues/334)) ([9a28979](https://github.com/magnus919/SlopSearX/commit/9a28979e86651e6d548a397a5cc2caa8e99ec838))
+* add durable workflow metrics ([#363](https://github.com/magnus919/SlopSearX/issues/363)) ([c6203b0](https://github.com/magnus919/SlopSearX/commit/c6203b027c592515a4c43f762afab78789b6c788))
+* add human search portal foundation ([#333](https://github.com/magnus919/SlopSearX/issues/333)) ([56ea21b](https://github.com/magnus919/SlopSearX/commit/56ea21b982e49111dff13b362b73ad6464c5e1d3))
+* add opt-in snapshot entity groups ([#314](https://github.com/magnus919/SlopSearX/issues/314)) ([e2df0b5](https://github.com/magnus919/SlopSearX/commit/e2df0b581109dd8ecdac9236cca97472682183e9))
+* add retrieval receipts and research manifests ([#341](https://github.com/magnus919/SlopSearX/issues/341)) ([006c7c4](https://github.com/magnus919/SlopSearX/commit/006c7c4b7f4aa130318e173f038c41dac42f050d))
+* add saved-search event outbox ([#369](https://github.com/magnus919/SlopSearX/issues/369)) ([d645fd9](https://github.com/magnus919/SlopSearX/commit/d645fd9d6f1c6346ec30c63149095d1da1e079f3))
+* add scheduled saved-search change reports ([#339](https://github.com/magnus919/SlopSearX/issues/339)) ([16aa80e](https://github.com/magnus919/SlopSearX/commit/16aa80ea02277837b6e7675109efc5ea23ce16b7))
+* add SearXNG format negotiation and 400 validation ([#302](https://github.com/magnus919/SlopSearX/issues/302)) ([ea95e23](https://github.com/magnus919/SlopSearX/commit/ea95e23913a37490d8a64b82a3ad0bda175ce2e9))
+* add shared artifact lineage contracts ([#364](https://github.com/magnus919/SlopSearX/issues/364)) ([661ecc8](https://github.com/magnus919/SlopSearX/commit/661ecc88c5a138f40e08689b89c35a8bc6a3a112))
+* add source-linked dependency dossiers ([#345](https://github.com/magnus919/SlopSearX/issues/345)) ([2b5469a](https://github.com/magnus919/SlopSearX/commit/2b5469aac14c06d3fc6368f45cbcdd681be2d338))
+* complete portal search experience ([e9d530f](https://github.com/magnus919/SlopSearX/commit/e9d530f050d2560d44350071a2054abda5d70abd))
+* compose workflows from artifacts ([#366](https://github.com/magnus919/SlopSearX/issues/366)) ([6c5d3a4](https://github.com/magnus919/SlopSearX/commit/6c5d3a49fc4b1e5d3c0e3146afd3408168d032a2))
+* enrich portal search result presentation ([a5b32c2](https://github.com/magnus919/SlopSearX/commit/a5b32c2c6fa10138e4d774f257a06ec5d041ae58))
+* explain portal search results ([#367](https://github.com/magnus919/SlopSearX/issues/367)) ([9b2fb68](https://github.com/magnus919/SlopSearX/commit/9b2fb680da416c092cfbcd35cd95e8b4c5518475))
+* extend entity grouping identities ([#368](https://github.com/magnus919/SlopSearX/issues/368)) ([6267dab](https://github.com/magnus919/SlopSearX/commit/6267dab02a9dfab00ccf6fb93dc09c09b4693d6d))
+* harden portal policy and contribution gates ([#340](https://github.com/magnus919/SlopSearX/issues/340)) ([bd03748](https://github.com/magnus919/SlopSearX/commit/bd03748ee32003f88d61c4704b92f3a8823a8a5b))
+* support SearXNG routes and healthz ([#301](https://github.com/magnus919/SlopSearX/issues/301)) ([db09277](https://github.com/magnus919/SlopSearX/commit/db09277600fce0509c219234a84db4687f7ab082))
+
+
+### Bug Fixes
+
+* align SearXNG config and parsed URLs ([#299](https://github.com/magnus919/SlopSearX/issues/299)) ([987e936](https://github.com/magnus919/SlopSearX/commit/987e936407bd430bb18c2f1c993faa6bca602181))
+* **ci:** route Droid reviews through gpuslut ([#336](https://github.com/magnus919/SlopSearX/issues/336)) ([9a1a01b](https://github.com/magnus919/SlopSearX/commit/9a1a01b2c75da50e3098fb893dc404a68ea22d35))
+* **ci:** route Droid wiki through gpuslut ([#337](https://github.com/magnus919/SlopSearX/issues/337)) ([9d0f594](https://github.com/magnus919/SlopSearX/commit/9d0f594bf4297cf04005b069cecd34ee6510010e))
+* clarify portal navigation ([ccad0d5](https://github.com/magnus919/SlopSearX/commit/ccad0d5950a596ad5986ab15b1d5c8bdd12cb16d))
+* improve portal trust and scanability ([1d8daaa](https://github.com/magnus919/SlopSearX/commit/1d8daaaf2b8cf5aa436b757519bb36fbf02a107d))
+* make portal pagination honest ([171532a](https://github.com/magnus919/SlopSearX/commit/171532a5c8bfbb7cdafdde82e5bbf460e30c3d44))
+* remove build-only pip from runtime image ([9e2574e](https://github.com/magnus919/SlopSearX/commit/9e2574e8934aa3c0d86b4e81c85604aa91849c7d))
+
+
+### Documentation
+
+* define browser identity and tenant isolation ([#361](https://github.com/magnus919/SlopSearX/issues/361)) ([6399772](https://github.com/magnus919/SlopSearX/commit/6399772a558a1e3b7cbaed6d787b8d9b13482b71))
+* establish portal decisions and release gates ([53cdadf](https://github.com/magnus919/SlopSearX/commit/53cdadf044dac6f6655ff0e9d6ab9236ecde0dbd))
+* evaluate retrieval quality metadata ([#365](https://github.com/magnus919/SlopSearX/issues/365)) ([f4c7f96](https://github.com/magnus919/SlopSearX/commit/f4c7f960f09a1b2ce931d1e0bd2bf1a171cb5222))
+* package and verify portal release ([#342](https://github.com/magnus919/SlopSearX/issues/342)) ([5622a90](https://github.com/magnus919/SlopSearX/commit/5622a902563f0d6206aac282dddb283704d8b28d))
+
 ## [0.4.0](https://github.com/magnus919/SlopSearX/compare/v0.3.1...v0.4.0) (2026-09-07)
 
 
