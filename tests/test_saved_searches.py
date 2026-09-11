@@ -76,6 +76,13 @@ async def test_crud_schedule_and_coverage_aware_events(saved_state):
     assert (await t.slopsearx_get_saved_search(created["search_id"]))["error"]["code"] == "invalid_search_id"
 
 
+@pytest.mark.parametrize("revision", [0, -1])
+async def test_pause_rejects_non_positive_revision(saved_state, revision):
+    created = await create()
+    outcome = await t.slopsearx_pause_saved_search(created["search_id"], revision)
+    assert outcome["error"]["code"] == "invalid_input"
+
+
 async def test_scope_update_resets_baseline_and_enforces_policy(saved_state):
     state, now = saved_state
     created = await create()

@@ -63,6 +63,51 @@ async def test_atomic_quota_and_revision_conflict(backend):
     assert (await store.load(winner.search_id, now=1001)).query == "first update"
 
 
+async def test_atomic_quota_uses_authoritative_records_when_index_is_missing(backend):
+    store = SavedSearchStore(backend, "tenant")
+    assert await store.create(definition("saved-first"), 1, now=1000) == "created"
+    await backend._client.delete(store._definition_index())
+    assert await store.create(definition("saved-second"), 1, now=1000) == "quota_exceeded"
+
+
+async def test_authoritative_quota_scan_treats_tenant_glob_characters_literally(backend):
+    tenant = "tenant*[]?"
+    store = SavedSearchStore(backend, tenant)
+    first = definition("saved-first")
+    first.tenant = tenant
+    second = definition("saved-second")
+    second.tenant = tenant
+    assert await store.create(first, 1, now=1000) == "created"
+    await backend._client.delete(store._definition_index())
+    assert await store.create(second, 1, now=1000) == "quota_exceeded"
+
+
+async def test_quota_reconciliation_fails_closed_when_one_bounded_scan_cannot_finish(backend):
+    store = SavedSearchStore(backend, "tenant")
+    assert await store.create(definition("saved-first"), 2, now=1000) == "created"
+    await backend._client.delete(store._definition_index(), store._definition_count(), store._tenant_index())
+    for index in range(1000):
+        await backend._client.set(f"{storage.PREFIX}:noise:{index}", "x", ex=900)
+    assert await store.create(definition("saved-second"), 2, now=1000) == "unavailable"
+
+
+async def test_delete_never_reconstructs_authoritative_count_from_missing_index(backend):
+    store = SavedSearchStore(backend, "tenant")
+    first, second, third = definition("saved-first"), definition("saved-second"), definition("saved-third")
+    assert await store.create(first, 2, now=1000) == "created"
+    assert await store.create(second, 2, now=1000) == "created"
+    await backend._client.delete(store._definition_index())
+    await store.delete(first.search_id, 1, now=1001)
+    assert await backend._client.exists(store._definition_count()) == 0
+    assert await store.create(third, 1, now=1001) == "quota_exceeded"
+
+
+async def test_quota_reconciliation_fails_closed_on_malformed_authoritative_record(backend):
+    store = SavedSearchStore(backend, "tenant")
+    await backend._client.set(f"{storage.PREFIX}:definition:tenant:saved-corrupt", "not-json", ex=900)
+    assert await store.create(definition("saved-new"), 2, now=1000) == "unavailable"
+
+
 async def test_duplicate_claim_stale_owner_and_bounded_reports(backend):
     store = SavedSearchStore(backend, "tenant")
     item = definition("saved-race")
@@ -99,6 +144,31 @@ async def test_duplicate_claim_stale_owner_and_bounded_reports(backend):
         )
     assert [entry["run_id"] for entry in await store.reports(item.search_id, now=1190)] == ["run-3", "run-2"]
     assert await backend._client.exists(store._report_key(item.search_id, "run-authority")) == 0
+
+
+async def test_report_order_and_retention_use_completion_time_when_expiry_ties(backend):
+    store = SavedSearchStore(backend, "tenant")
+    item = definition("saved-order")
+    await store.create(item, 20, now=1000)
+    runs = (("run-z-old", 1, 1010), ("run-a-new", 2, 1070), ("run-m-newest", 3, 1130))
+    for run_id, slot, finished_at in runs:
+        claimed = await store.claim(item.search_id, now=1000 + (slot - 1) * 60)
+        assert claimed
+        value = report(run_id, slot, finished_at)
+        value["expires_at"] = 1500
+        assert await store.commit(
+            claimed,
+            value,
+            None,
+            now=finished_at,
+            next_due=1000 + slot * 60,
+            policy_fingerprint="policy",
+        )
+    assert [entry["run_id"] for entry in await store.reports(item.search_id, now=1140)] == [
+        "run-m-newest",
+        "run-a-new",
+    ]
+    assert await backend._client.exists(store._report_key(item.search_id, "run-z-old")) == 0
 
 
 @pytest.mark.parametrize("mutation", ["pause", "delete"])

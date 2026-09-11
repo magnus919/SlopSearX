@@ -2263,7 +2263,7 @@ async def slopsearx_pause_saved_search(
     if isinstance(resolved, dict):
         return resolved
     store, _runner = resolved
-    if type(expected_revision) is not int or type(paused) is not bool:
+    if type(expected_revision) is not int or expected_revision < 1 or type(paused) is not bool:
         return _error("invalid_input", "expected_revision and paused have invalid types")
     definition = await store.load(search_id)
     if definition is None:
