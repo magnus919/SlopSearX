@@ -79,8 +79,20 @@ jobs:
           docker run -d --name slopsearx-smoke -p 8080:8080 ${{ steps.tag.outputs.ref }}
           sleep 3
           curl -f --retry 5 --retry-delay 2 http://localhost:8080/health
+          python3 scripts/portal_release_smoke.py --base-url http://localhost:8080 --expected-theme dark
           docker stop slopsearx-smoke
           docker rm slopsearx-smoke
+
+      - name: Smoke test configured Darker default
+        run: |
+          docker run -d --name slopsearx-smoke-darker -p 8081:8080 \
+            -e SLOPSEARX_PORTAL_DEFAULT_THEME=darker \
+            ${{ steps.tag.outputs.ref }}
+          sleep 3
+          curl -f --retry 5 --retry-delay 2 http://localhost:8081/health
+          python3 scripts/portal_release_smoke.py --base-url http://localhost:8081 --expected-theme darker
+          docker stop slopsearx-smoke-darker
+          docker rm slopsearx-smoke-darker
 
       - name: Push to registry
         if: github.event_name == 'push'

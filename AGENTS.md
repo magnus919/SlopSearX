@@ -126,6 +126,7 @@ class MyEngine(EngineAdapter):
 - `spec.md` — full architecture spec, API contract, deployment topology, caching strategy
 - `CONTRIBUTING.md` — contribution workflow
 - `docs/PORTAL_UX_SPEC.md`, `docs/PORTAL_VISUAL_SYSTEM.md`, and `docs/PORTAL_ACCEPTANCE.md` — portal behavior, visual, and release contracts
+- `docs/PORTAL_DEPLOYMENT.md` — operator URL, access, smoke, rollout, rollback, and troubleshooting runbook
 
 ## graphify
 
