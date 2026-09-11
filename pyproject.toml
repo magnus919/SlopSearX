@@ -112,6 +112,7 @@ layers = [
     "slopsearx.mcp",
     "slopsearx.research",
     "slopsearx.saved_runner",
+    "slopsearx.research_budget",
     "slopsearx.research_store",
     "slopsearx.saved_store",
     "slopsearx.research_models",
@@ -143,6 +144,7 @@ type = "forbidden"
 source_modules = [
     "slopsearx.mcp.result_serialization",
     "slopsearx.mcp.retrieval_url",
+    "slopsearx.mcp.entity_projection",
 ]
 forbidden_modules = [
     "slopsearx.mcp.tools",

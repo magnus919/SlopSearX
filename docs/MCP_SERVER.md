@@ -1,5 +1,9 @@
 # SlopSearX MCP Server
 
+For optional CVE and npm/PyPI release grouping over existing snapshots, use
+`slopsearx_read_entities`; see [Entity grouping](ENTITY_GROUPING.md) for the
+versioned contract, member references, and entity pagination semantics.
+
 The Model Context Protocol (MCP) server exposes SlopSearX to AI agents as
 intent-level tools. Agents can search across 51 engines without knowing URL
 query strings, discover what can be searched, preview routing before spending
@@ -638,7 +642,7 @@ canonicalization-ambiguous) are **never** handed off as fetch targets.
 Result cards carry the same eligibility summary in compact form (`retrieval`),
 so a card-only consumer can decide whether to fetch without expanding.
 
-### 6.11–6.13 Research jobs (grant: `MCP_GRANT_RESEARCH`)
+### 6.11–6.16 Research jobs (grant: `MCP_GRANT_RESEARCH`)
 
 - `slopsearx_start_research(question, strategy, max_queries, max_engines_per_query, deadline, idempotency_key)` — strategies:
   - `triangulate` — same question across independent source families
@@ -664,6 +668,12 @@ so a card-only consumer can decide whether to fetch without expanding.
 Jobs are idempotent (caller-supplied `idempotency_key`), budget-bounded,
 and expire after 24h. Completed queries are immutable — their cursors remain
 readable across retry and cancel.
+
+Caller-directed plans, linked continuations, cumulative budgets and progress
+updates are described in [Adaptive research](ADAPTIVE_RESEARCH.md), including a
+model-independent tool-call example. `slopsearx_update_research` records the
+caller's resolved/unresolved subquestions and optional completion declaration.
+Successful searches never automatically resolve a subquestion.
 
 ### 6.13.1 Durable execution across replicas
 

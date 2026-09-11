@@ -46,6 +46,16 @@ class _FakeStore:
         del ttl
         self._data[key] = value
 
+    async def save_if_lease_owner(
+        self, lease_key: str, token: str, record_key: str, value: dict[str, Any], ttl: int
+    ) -> bool:
+        del ttl
+        current = self._data.get(lease_key)
+        if not isinstance(current, dict) or current.get("token") != token:
+            return False
+        self._data[record_key] = value
+        return True
+
 
 class _FakeClient:
     """Minimal client exposing keys(pattern) for the stale-job scan."""

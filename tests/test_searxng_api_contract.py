@@ -46,6 +46,12 @@ class _ContractEngine(EngineAdapter):
         )
 
 
+@pytest.fixture(params=["0", "1"], autouse=True)
+def research_grant(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The ordinary HTTP contract is invariant with research enabled or disabled."""
+    monkeypatch.setenv("MCP_GRANT_RESEARCH", request.param)
+
+
 @pytest.fixture
 def client(monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
     """Run the HTTP surface with one deterministic local adapter."""

@@ -36,6 +36,16 @@ class _FakeStore:
         del ttl
         self._data[key] = value
 
+    async def save_if_lease_owner(
+        self, lease_key: str, token: str, record_key: str, value: dict[str, Any], ttl: int
+    ) -> bool:
+        del ttl
+        current = self._data.get(lease_key)
+        if not isinstance(current, dict) or current.get("token") != token:
+            return False
+        self._data[record_key] = value
+        return True
+
 
 class _MockEngine(EngineAdapter):
     """Parameterizable mock engine with a real registry name."""
@@ -957,13 +967,19 @@ async def test_legacy_snapshot_ranking_defaults_to_presence(state):
 
 
 async def test_research_snapshot_captures_actual_ranking(state):
+    import time
+
     from slopsearx.research import ResearchJob, ResearchQuery
 
     state.ctx.ranking_strategy = "reciprocal_rank_fusion"
     state.runner._service = SearchService(state.ctx)
     query = ResearchQuery(index=0, intent="web", query_id="q1", query="evidence", engines=["wikipedia"])
-    job = ResearchJob(job_id="ranking-job", question="evidence", strategy="triangulate", queries=[query])
-    await state.runner._execute_query(job, query)
+    job = ResearchJob(
+        job_id="ranking-job", question="evidence", strategy="triangulate", queries=[query], deadline=time.time() + 60
+    )
+    await state.job_store.save(job)
+    completed = await state.runner.run_direct(job)
+    query = completed.queries[0]
     assert query.cursor
     snapshot = await state.snapshots.get(query.cursor)
     assert snapshot and snapshot.ranking_explanation == "tier_then_reciprocal_rank_fusion_k60"

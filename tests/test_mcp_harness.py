@@ -188,8 +188,9 @@ class TestFirstVisitReachability:
             async with _session(url) as (session, _client):
                 await session.initialize()
                 tools = await session.list_tools()
-                # The harness serves the same 13-tool surface as production.
-                assert len(tools.tools) == 21
+                # The harness exposes the combined entity-projection,
+                # adaptive-research, and saved-search production surface.
+                assert len(tools.tools) == 23
 
 
 class TestDeterministicSearchEnvelope:
@@ -347,7 +348,7 @@ class TestAuthenticatedTransport:
                 res = await session.call_tool("slopsearx_search", {"query": "hello"})
                 assert "results" in _payload(res)
                 tools = await session.list_tools()
-                assert len(tools.tools) == 21
+                assert len(tools.tools) == 23
 
     async def test_wrong_token_is_rejected(self) -> None:
         app = make_fixture_http_app(_FIXTURE_SPECS, token="s3cret")
