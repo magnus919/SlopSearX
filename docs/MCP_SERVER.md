@@ -543,6 +543,20 @@ answered and which failed), a structured `enforcement` report (per-filter
 `meta` (query id, cache status, partial flag, rank explanation, pagination
 cursor, warnings).
 
+The public tool inventory is declared once in
+`slopsearx/mcp/tool_registry.py`. Each entry binds the callable and stable name
+to its contract version, operator grants, shared-state requirement, mutation
+classification, sensitive-engine policy behavior, documentation, and transport
+coverage. Server construction and the deterministic fixture harness use this
+ordered registry. Tool implementations still own their input schemas and
+business logic, and all search-capable paths continue to enforce engine policy
+through the shared fail-closed gate before dispatch.
+
+When adding a tool, add its implementation and one registry entry, update the
+bounded inventory in `README.md`, and provide the referenced contract and
+transport coverage. Registry invariant tests reject unregistered exports,
+duplicates, incomplete metadata, and accidental renames.
+
 ### 6.1 `slopsearx_search`
 
 Intent-based search — the primary entry point.

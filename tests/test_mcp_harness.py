@@ -41,6 +41,7 @@ from slopsearx.mcp.harness import (
     make_fixture_http_app,
 )
 from slopsearx.mcp.security import make_http_app
+from slopsearx.mcp.tool_registry import tool_names
 from slopsearx.service import AppContext
 
 _FIXTURE_SPECS = [FakeEngineSpec(name="wikipedia", count=3), FakeEngineSpec(name="brave", count=2)]
@@ -188,10 +189,9 @@ class TestFirstVisitReachability:
             async with _session(url) as (session, _client):
                 await session.initialize()
                 tools = await session.list_tools()
-                # The harness exposes the combined entity-projection,
-                # adaptive-research, saved-search, receipt, staged-search,
-                # and dependency-dossier surface.
-                assert len(tools.tools) == 32
+                # The production server and its deterministic harness expose
+                # the exact declarative inventory in stable order.
+                assert tuple(tool.name for tool in tools.tools) == tool_names()
 
 
 class TestDeterministicSearchEnvelope:
