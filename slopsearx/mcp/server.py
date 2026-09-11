@@ -35,9 +35,7 @@ from slopsearx.capabilities import (
     validate_intent_profiles,
 )
 from slopsearx.config import Config, load_config
-from slopsearx.mcp import dependency_tools as _dependency_tools
 from slopsearx.mcp import prompts as _prompts
-from slopsearx.mcp import receipt_tools as _receipt_tools
 from slopsearx.mcp import resources as _resources
 from slopsearx.mcp import staged_tools as _staged_tools
 from slopsearx.mcp import tools as _tools
@@ -45,6 +43,7 @@ from slopsearx.mcp.gateway import create_gateway
 from slopsearx.mcp.oauth import oauth_settings_from_policy
 from slopsearx.mcp.security import make_http_app
 from slopsearx.mcp.state import McpState, set_state
+from slopsearx.mcp.tool_registry import TOOL_DEFINITIONS
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
 from slopsearx.retrieval_receipts import ReceiptStore
 from slopsearx.routing import load_routing_budget
@@ -280,38 +279,8 @@ def create_server(
     )
 
     # --- tools ---------------------------------------------------------
-    mcp.tool()(_instrumented(_tools.slopsearx_search))
-    mcp.tool()(_instrumented(_tools.slopsearx_search_targeted))
-    mcp.tool()(_instrumented(_tools.slopsearx_search_jobs))
-    mcp.tool()(_instrumented(_tools.slopsearx_search_security))
-    mcp.tool()(_instrumented(_tools.slopsearx_search_science))
-    mcp.tool()(_instrumented(_tools.slopsearx_list_capabilities))
-    mcp.tool()(_instrumented(_tools.slopsearx_explain_search_scope))
-    mcp.tool()(_instrumented(_tools.slopsearx_get_service_status))
-    mcp.tool()(_instrumented(_tools.slopsearx_read_results))
-    mcp.tool()(_instrumented(_tools.slopsearx_read_result))
-    mcp.tool()(_instrumented(_tools.slopsearx_read_entities))
-    mcp.tool()(_instrumented(_tools.slopsearx_start_research))
-    mcp.tool()(_instrumented(_tools.slopsearx_get_job))
-    mcp.tool()(_instrumented(_tools.slopsearx_cancel_job))
-    mcp.tool()(_instrumented(_tools.slopsearx_retry_research))
-    mcp.tool()(_instrumented(_tools.slopsearx_extend_research))
-    mcp.tool()(_instrumented(_tools.slopsearx_update_research))
-    mcp.tool()(_instrumented(_tools.slopsearx_create_saved_search))
-    mcp.tool()(_instrumented(_tools.slopsearx_get_saved_search))
-    mcp.tool()(_instrumented(_tools.slopsearx_update_saved_search))
-    mcp.tool()(_instrumented(_tools.slopsearx_pause_saved_search))
-    mcp.tool()(_instrumented(_tools.slopsearx_delete_saved_search))
-    mcp.tool()(_instrumented(_tools.slopsearx_read_saved_search_reports))
-    mcp.tool()(_instrumented(_receipt_tools.slopsearx_submit_retrieval_receipt))
-    mcp.tool()(_instrumented(_receipt_tools.slopsearx_read_retrieval_receipts))
-    mcp.tool()(_instrumented(_receipt_tools.slopsearx_export_research_manifest))
-    mcp.tool()(_instrumented(_staged_tools.slopsearx_preview_staged_search))
-    mcp.tool()(_instrumented(_staged_tools.slopsearx_search_staged))
-    mcp.tool()(_instrumented(_staged_tools.slopsearx_get_staged_search))
-    mcp.tool()(_instrumented(_staged_tools.slopsearx_retry_staged_search))
-    mcp.tool()(_instrumented(_dependency_tools.slopsearx_start_dependency_dossier))
-    mcp.tool()(_instrumented(_dependency_tools.slopsearx_get_dependency_dossier))
+    for definition in TOOL_DEFINITIONS:
+        mcp.tool()(_instrumented(definition.callable))
 
     # --- resources ------------------------------------------------------
     mcp.resource(
