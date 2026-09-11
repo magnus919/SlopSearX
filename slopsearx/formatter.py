@@ -15,6 +15,7 @@ import csv
 import datetime
 import html as html_lib
 import io
+import re
 from typing import Any
 from urllib.parse import urlencode, urlparse
 from xml.etree import ElementTree
@@ -274,13 +275,13 @@ a { color: inherit; }
 .result-source-line { display: inline-flex; align-items: center; min-width: 0; max-width: 100%; color: var(--signal); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .result-source-line::before { content: ""; width: .4rem; height: .4rem; flex: 0 0 auto; margin-right: .45rem; border-radius: 50%; background: var(--signal); box-shadow: 0 0 .55rem rgba(167,215,197,.5); }
 .result-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--quiet); }
-.result-pill { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 99px; padding: .22rem .48rem; color: var(--muted); background: rgba(11,12,11,.18); font: 600 .59rem/1 "SFMono-Regular", Consolas, monospace; letter-spacing: .04em; text-transform: uppercase; }
+.result-pill { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 99px; padding: .24rem .5rem; color: var(--muted); background: rgba(11,12,11,.18); font: 600 .64rem/1 "SFMono-Regular", Consolas, monospace; letter-spacing: .04em; text-transform: uppercase; }
 .result-pill.type { color: var(--accent); border-color: rgba(229,181,103,.34); }
 .result-pill.consensus { color: var(--signal); border-color: rgba(167,215,197,.35); }
 .result-link { display: inline; color: var(--ink); text-decoration: none; font: 500 clamp(1.18rem, 2.1vw, 1.58rem)/1.12 Georgia, serif; letter-spacing: -.025em; }
 .result-link:hover { color: var(--accent-strong); }
-.result-content { max-width: 72ch; margin: .65rem 0 0; color: var(--muted); font-size: .91rem; line-height: 1.62; }
-.result-meta { display: flex; flex-wrap: wrap; gap: .45rem .9rem; margin-top: .9rem; color: var(--quiet); font: .64rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; letter-spacing: .04em; }
+.result-content { display: -webkit-box; max-width: 72ch; margin: .65rem 0 0; overflow: hidden; color: var(--muted); font-size: .91rem; line-height: 1.62; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.result-meta { display: flex; flex-wrap: wrap; gap: .45rem .9rem; margin-top: .9rem; color: var(--muted); font: .7rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; letter-spacing: .04em; }
 .result-meta span + span::before { content: "•"; margin-right: .9rem; color: var(--accent); }
 .result-actions { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1rem; padding-top: .8rem; border-top: 1px solid rgba(244,240,232,.08); }
 .result-action { color: var(--muted); text-decoration: none; font: 700 .62rem "SFMono-Regular", Consolas, monospace; letter-spacing: .06em; text-transform: uppercase; }
@@ -290,17 +291,23 @@ a { color: inherit; }
 .rail-label { margin: 0 0 .8rem; color: var(--accent); font: 700 .63rem "SFMono-Regular", Consolas, monospace; letter-spacing: .12em; text-transform: uppercase; }
 .rail-count { display: block; color: var(--ink); font: 500 3.4rem/.9 Georgia, serif; letter-spacing: -.07em; }
 .rail-copy { margin: .55rem 0 0; color: var(--muted); font-size: .78rem; }
-.rail-detail { display: flex; justify-content: space-between; gap: .5rem; margin-top: .9rem; padding-top: .75rem; border-top: 1px solid var(--line); color: var(--quiet); font: .61rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; }
+.rail-detail { display: flex; justify-content: space-between; gap: .5rem; margin-top: .9rem; padding-top: .75rem; border-top: 1px solid var(--line); color: var(--muted); font: .68rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; }
 .rail-sources { display: grid; gap: .55rem; margin: 0; padding: 0; list-style: none; }
 .rail-source { display: flex; align-items: center; justify-content: space-between; gap: .7rem; color: var(--muted); font: .7rem "SFMono-Regular", Consolas, monospace; }
 .rail-source-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rail-source-count { color: var(--signal); }
+.rail-source-unavailable { color: #e8b0a8; }
+.rail-source-unavailable .rail-source-count { color: #e8b0a8; font-size: .62rem; text-align: right; }
+.rail-source-empty { color: var(--muted); }
+.rail-source-empty .rail-source-count { color: var(--muted); font-size: .62rem; text-align: right; }
 .rail-link { display: inline-flex; margin-top: 1rem; color: var(--accent); text-decoration: none; font: 700 .62rem "SFMono-Regular", Consolas, monospace; letter-spacing: .06em; text-transform: uppercase; }
 .rail-link:hover { color: var(--accent-strong); }
 .notice { margin: 1.5rem 0; padding: .8rem 1rem; border: 1px solid rgba(229,181,103,.45); color: var(--muted); background: rgba(229,181,103,.07); font-size: .82rem; }
+.notice strong { color: var(--ink); }
 .notice[data-kind="error"] { border-color: rgba(226,126,126,.65); background: rgba(226,126,126,.08); }
 .scope-panel { margin: 1rem 0 2.2rem; padding: 1rem; border: 1px solid var(--line); background: rgba(34,35,31,.58); }
-.scope-panel summary { cursor: pointer; color: var(--ink); font: 700 .72rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; letter-spacing: .08em; }
+.scope-panel summary { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; cursor: pointer; color: var(--ink); font: 700 .72rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; letter-spacing: .08em; }
+.scope-summary { color: var(--muted); font-size: .65rem; font-weight: 500; letter-spacing: .03em; text-transform: none; }
 .scope-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 1fr)) auto; gap: .8rem; margin-top: 1rem; }
 .scope-field { display: grid; gap: .35rem; color: var(--muted); font: .68rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; letter-spacing: .05em; }
 .scope-field select { width: 100%; border: 1px solid var(--line); border-radius: .2rem; color: var(--ink); background: var(--paper-lift); padding: .7rem .75rem; font: .85rem "Avenir Next", "Segoe UI", sans-serif; }
@@ -343,7 +350,11 @@ _PORTAL_SCRIPT = """
   const button = document.querySelector("[data-theme-toggle]");
   const update = function () {
     const darker = root.dataset.theme === "darker";
-    if (button) { button.textContent = darker ? "Darker · on" : "Darker · off"; button.setAttribute("aria-pressed", String(darker)); }
+    if (button) {
+      button.textContent = darker ? "Dark mode" : "Darker mode";
+      button.setAttribute("aria-label", darker ? "Use dark mode" : "Use darker mode");
+      button.setAttribute("aria-pressed", String(darker));
+    }
   };
   update();
   if (button) button.addEventListener("click", function () {
@@ -351,6 +362,8 @@ _PORTAL_SCRIPT = """
     try { window.localStorage.setItem("slopsearx-theme", root.dataset.theme); } catch (_) { /* storage is optional */ }
     update();
   });
+  const scopePanel = document.querySelector(".scope-panel");
+  if (scopePanel && window.matchMedia && window.matchMedia("(max-width: 900px)").matches) scopePanel.removeAttribute("open");
   const input = document.querySelector(".search-input");
   const resultCards = Array.from(document.querySelectorAll("[data-result-card]"));
   let activeResult = -1;
@@ -391,6 +404,28 @@ def _safe_href(url: str | None) -> str:
     return url if parsed.scheme in {"http", "https"} and parsed.netloc else "#"
 
 
+def _portal_content_markup(content: str | None) -> str:
+    """Escape result snippets while preserving the engines' plain highlights.
+
+    Scrape adapters commonly return ``<strong>`` around query matches.  The
+    portal must not trust arbitrary upstream markup, but showing those tags as
+    literal text makes otherwise valid snippets look broken.  Escape first and
+    then restore only exact, attribute-free highlight tags from the tiny
+    allowlist used by the portal.
+    """
+    source = content or ""
+    allowed = re.compile(r"<(strong|em|mark)>(.*?)</\1>", re.IGNORECASE | re.DOTALL)
+    pieces: list[str] = []
+    cursor = 0
+    for match in allowed.finditer(source):
+        pieces.append(html_lib.escape(source[cursor : match.start()]))
+        tag = match.group(1).lower()
+        pieces.append(f"<{tag}>{html_lib.escape(match.group(2))}</{tag}>")
+        cursor = match.end()
+    pieces.append(html_lib.escape(source[cursor:]))
+    return "".join(pieces)
+
+
 def _portal_document(*, body: str, title: str, default_theme: str = "dark") -> str:
     """Build the browser document with the portal's self-contained shell."""
     safe_theme = default_theme if default_theme in {"dark", "darker"} else "dark"
@@ -413,7 +448,7 @@ def format_landing_page(*, default_theme: str = "dark") -> str:
     """Render the human-facing portal landing page for a bare root visit."""
     body = """
 <main class="portal">
-  <header class="masthead"><a class="brand" href="/"><span class="brand-mark"><span>⌁</span></span><span>SLOPSEARX</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Darker · off</button></header>
+  <header class="masthead"><a class="brand" href="/"><span class="brand-mark"><span>⌁</span></span><span>SLOPSEARX</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Darker mode</button></header>
   <section class="hero" aria-labelledby="hero-title">
     <div><div class="eyebrow">Search</div><h1 id="hero-title">Search <em>SlopSearX.</em></h1><p class="hero-copy">Search across the web and specialist sources configured for this instance.</p></div>
     <aside class="hero-note"><strong>Configured sources</strong>Results identify their source. If an engine cannot answer, the page says so.</aside>
@@ -568,9 +603,16 @@ def _portal_scope_panel(state: dict[str, Any] | None) -> str:
     status_markup = f'<div class="scope-status" aria-live="polite">{"".join(status_bits)}</div>' if status_bits else ""
     note = html_lib.escape(str(_portal_state_value(state, "scope_note", "")))
     note_markup = f'<p class="scope-note">{note}</p>' if note else ""
+    scope_summary = " · ".join(
+        [
+            categories.replace(":", " / ").replace("_", " ").title() if categories else "All sources",
+            next((label for value, label in time_options if value == selected_time_range), "Any time"),
+            f"SafeSearch: {next((label for value, label in safe_options if value == selected_safesearch), 'Off')}",
+        ]
+    )
     return f"""
-<details class="scope-panel">
-  <summary>Scope and filters</summary>
+<details class="scope-panel" open>
+  <summary><span>Scope and filters</span><span class="scope-summary">{html_lib.escape(scope_summary)}</span></summary>
   <form action="/search" method="get">
     {_portal_hidden_inputs(state, exclude={"categories", "time_range", "safesearch", "pageno"}, page=1)}
     <div class="scope-grid">
@@ -597,7 +639,7 @@ def format_error_html(
     field_hint = f'<p class="scope-note">Field: {html_lib.escape(field, quote=True)}</p>' if field else ""
     body = f"""
 <main class="portal">
-  <header class="masthead"><a class="brand" href="/"><span class="brand-mark"><span>⌁</span></span><span>SLOPSEARX</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Darker · off</button></header>
+  <header class="masthead"><a class="brand" href="/"><span class="brand-mark"><span>⌁</span></span><span>SLOPSEARX</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Darker mode</button></header>
   <section class="results-shell" aria-labelledby="error-title">
     <div class="eyebrow">Search request</div><h1 id="error-title">{escaped_error}</h1>
     <div class="notice" data-kind="error" role="alert"><strong>{escaped_message}</strong>{field_hint}</div>
@@ -629,7 +671,7 @@ def format_html(
         parsed_result_url = urlparse(raw_url) if raw_url != "#" else None
         domain = html_lib.escape(parsed_result_url.netloc if parsed_result_url else "unknown source", quote=True)
         result_path = html_lib.escape((parsed_result_url.path or "/") if parsed_result_url else "", quote=True)
-        content = html_lib.escape(result.content or "")
+        content = _portal_content_markup(result.content)
         category_value = str(result.category or "web")
         category = html_lib.escape(category_value, quote=True)
         published = html_lib.escape((result.published_date or "").split("T", 1)[0], quote=True)
@@ -691,19 +733,42 @@ def format_html(
             )
             body += f'<div class="suggestions" aria-label="Suggestions">{suggestion_links}</div>'
         body += "</div>"
-    if unresponsive_engines:
-        failures = ", ".join(
-            f"{html_lib.escape(str(engine), quote=True)} ({html_lib.escape(str(reason), quote=True)})"
-            for engine, reason in unresponsive_engines
-        )
-        body += f'<p class="scope-note">Unavailable sources: {failures}</p>'
+    source_failures = [
+        (str(engine), str(reason))
+        for entry in (unresponsive_engines or [])
+        if len(entry) >= 2
+        for engine, reason in [entry[:2]]
+    ]
+    empty_sources = [
+        (str(engine), str(reason))
+        for entry in (meta or {}).get("empty_engines", [])
+        if len(entry) >= 2
+        for engine, reason in [entry[:2]]
+    ]
+    unavailable_labels = ", ".join(
+        f"{html_lib.escape(_portal_engine_label(engine), quote=True)} ({html_lib.escape(reason, quote=True)})"
+        for engine, reason in source_failures
+    )
+    empty_labels = ", ".join(
+        f"{html_lib.escape(_portal_engine_label(engine), quote=True)} ({html_lib.escape(reason, quote=True)})"
+        for engine, reason in empty_sources
+    )
     elapsed = int((meta or {}).get("response_time_ms", 0))
     all_unresponsive = bool(_portal_state_value(portal_state, "all_unresponsive", False))
-    partial = bool((meta or {}).get("partial", False)) or bool(unresponsive_engines)
-    if all_unresponsive or (unresponsive_engines and not results):
-        unavailable = '<div class="notice" data-kind="error" role="alert">No configured source returned a result. You can retry this search.</div>'
+    partial = bool((meta or {}).get("partial", False)) or bool(source_failures)
+    if all_unresponsive or (source_failures and not results):
+        detail = f" Unavailable: {unavailable_labels}." if unavailable_labels else ""
+        unavailable = f'<div class="notice" data-kind="error" role="alert"><strong>No configured source returned a result.</strong> You can retry this search.{detail}</div>'
     elif partial:
-        unavailable = '<div class="notice" role="status">Some sources could not answer this search. The results below are still usable.</div>'
+        details = []
+        if unavailable_labels:
+            details.append(f"Unavailable: {unavailable_labels}.")
+        if empty_labels:
+            details.append(f"No results: {empty_labels}.")
+        detail = f" {' '.join(details)}" if details else ""
+        unavailable = f'<div class="notice" role="status"><strong>Some sources could not answer this search.</strong>{detail} The results below are still usable.</div>'
+    elif empty_labels:
+        unavailable = f'<div class="notice" role="status"><strong>No results from some sources.</strong> No results: {empty_labels}. Other results remain usable.</div>'
     else:
         unavailable = ""
     scope_label = html_lib.escape(str(_portal_state_value(state, "scope_label", "All sources")), quote=True)
@@ -735,8 +800,19 @@ def format_html(
         f'<span class="rail-source-count">{count}</span></li>'
         for engine, count in source_counts[:7]
     )
+    unavailable_rows = "".join(
+        f'<li class="rail-source rail-source-unavailable"><span class="rail-source-name">{html_lib.escape(_portal_engine_label(engine), quote=True)}</span>'
+        f'<span class="rail-source-count">{html_lib.escape(reason, quote=True)}</span></li>'
+        for engine, reason in source_failures
+    )
+    empty_rows = "".join(
+        f'<li class="rail-source rail-source-empty"><span class="rail-source-name">{html_lib.escape(_portal_engine_label(engine), quote=True)}</span>'
+        f'<span class="rail-source-count">no results</span></li>'
+        for engine, _reason in empty_sources
+    )
     if not source_rows:
         source_rows = '<li class="rail-source"><span class="rail-source-name">No responding sources</span></li>'
+    source_rows += unavailable_rows + empty_rows
     json_link = (
         f'<a class="rail-link" href="{html_lib.escape(_portal_format_url(state, "json"), quote=True)}">Open JSON view ↗</a>'
         if json_enabled
@@ -751,14 +827,14 @@ def format_html(
     <div class="rail-detail"><span>{responded_count} sources answered</span><span>{elapsed} ms</span></div>
   </section>
   <section class="rail-card">
-    <p class="rail-label">Sources in view</p>
+  <p class="rail-label">Source status</p>
     <ul class="rail-sources">{source_rows}</ul>
     {json_link}
   </section>
 </aside>"""
     content = f"""
 <main class="portal">
-  <header class="masthead"><a class="brand" href="/"><span class="brand-mark"><span>⌁</span></span><span>SLOPSEARX</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Darker · off</button></header>
+  <header class="masthead"><a class="brand" href="/"><span class="brand-mark"><span>⌁</span></span><span>SLOPSEARX</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Darker mode</button></header>
   <section class="results-shell" aria-labelledby="results-title">
     <div class="results-top"><div><div class="eyebrow">Search results</div><h1 id="results-title">{escaped_query}</h1></div><p class="summary">{len(results)} results · {elapsed} ms<br>{scope_note}</p></div>
     <section class="search-panel" aria-label="Refine search"><form class="search-form" action="/search" method="get"><label class="sr-only" for="portal-query">Search SlopSearX</label><input class="search-input" id="portal-query" name="q" type="search" value="{escaped_query}" required>{search_hidden}<button class="search-button" type="submit">Search ↗</button></form></section>
