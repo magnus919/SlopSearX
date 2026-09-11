@@ -140,7 +140,9 @@ prometheus-client==0.26.0
 py-serializable==2.1.0
     # via cyclonedx-python-lib
 pydantic==2.13.4
-    # via fastapi
+    # via
+    #   fastapi
+    #   slopsearx (pyproject.toml)
 pydantic-core==2.46.4
     # via pydantic
 pygments==2.21.0

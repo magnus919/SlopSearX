@@ -17,8 +17,12 @@ from typing import Any, Iterator
 
 from slopsearx.capabilities import CapabilityCatalog, MCPPolicy
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
+from slopsearx.retrieval_receipts import ReceiptStore
+from slopsearx.saved_runner import SavedSearchRunner
+from slopsearx.saved_store import SavedSearchStore
 from slopsearx.service import AppContext, SearchService
 from slopsearx.snapshot import SnapshotStore
+from slopsearx.staged import StagedSearchRunner, StagedSearchStore
 
 # Request-scoped tenant override. Used by tests and by transports that set
 # an explicit tenant per request; production HTTP/OAuth derives the tenant
@@ -38,16 +42,35 @@ class McpState:
     job_store: ResearchJobStore
     runner: ResearchJobRunner
     version: str
+    staged_store: StagedSearchStore | None = None
+    staged_runner: StagedSearchRunner | None = None
+    receipt_store: ReceiptStore | None = None
+    saved_store: SavedSearchStore | None = None
+    saved_runner: SavedSearchRunner | None = None
 
 
 _state: McpState | None = None
+_state_override: ContextVar[McpState | None] = ContextVar("slopsearx_state_override", default=None)
 
 
 def get_state() -> McpState:
     """Return the live MCP state, or raise if not initialized."""
+    override = _state_override.get()
+    if override is not None:
+        return override
     if _state is None:
         raise RuntimeError("MCP server state is not initialized")
     return _state
+
+
+@contextmanager
+def state_scope(state: McpState) -> Iterator[None]:
+    """Install request-local shared state without changing the MCP process state."""
+    token = _state_override.set(state)
+    try:
+        yield
+    finally:
+        _state_override.reset(token)
 
 
 def set_state(state: McpState | None) -> None:

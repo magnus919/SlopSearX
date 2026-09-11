@@ -16,10 +16,14 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from time import monotonic
 from typing import Any, Callable
 
-from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, resolve_intent
+from slopsearx import metrics as m
+from slopsearx.artifacts import artifact_ref, composite_artifact_id
+from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, engine_policy_rejection, resolve_intent
 from slopsearx.filters import resolve_filter_enforcement
+from slopsearx.research_budget import finish_attempt, initialize_budget, reserve_attempt
 
 # Compatibility exports preserve the historical research module API.
 from slopsearx.research_models import (
@@ -144,9 +148,11 @@ from slopsearx.research_store import (
 )
 from slopsearx.service import (
     QueryValidationError,
-    RateLimitExceededError,
     SearchRequest,
     SearchService,
+)
+from slopsearx.service import (
+    RateLimitExceededError as RateLimitExceededError,
 )
 from slopsearx.snapshot import SnapshotStore
 
@@ -259,6 +265,7 @@ class ResearchJobRunner:
         lease_ttl: int = DEFAULT_JOB_LEASE_TTL_SECONDS,
         poll_interval: float = DEFAULT_JOB_POLL_INTERVAL_SECONDS,
         max_concurrent_jobs: int = 1,
+        dispatch_validator: Callable[[ResearchQuery], str | None] | None = None,
     ) -> None:
         self._service = service
         self._jobs = job_store
@@ -271,6 +278,7 @@ class ResearchJobRunner:
         self._max_concurrent_jobs = max(1, max_concurrent_jobs)
         self._default_tenant = job_store._tenant
         self._queue: asyncio.Queue[tuple[str, str]] = asyncio.Queue()
+        self.dispatch_validator = dispatch_validator
 
     @property
     def worker_id(self) -> str:
@@ -312,23 +320,40 @@ class ResearchJobRunner:
         Returns the final job.
         """
         store = self._jobs_for(job.tenant)
+        initialize_budget(job, self._policy)
+        job.stop_reason = None
+        if not await store.save_if_owned(job):
+            raise LeaseLostError(job.job_id)
         for index in range(len(job.queries)):
             # Reload to observe cancellation or deadline changes that landed
             # from another request (e.g. the cancel tool) mid-run.
             fresh = await store.load(job.job_id)
             if fresh is not None:
-                if fresh.owner_id is not None and fresh.owner_id != self._owner_id:
+                if fresh.lease_token != job.lease_token or (
+                    fresh.owner_id is not None and fresh.owner_id != self._owner_id
+                ):
                     raise LeaseLostError(job.job_id)
                 job = fresh
+            initialize_budget(job, self._policy)
             query = job.queries[index]
             if query.state in ("done", "failed", "cancelled"):
                 continue
             if job.cancel_requested:
                 query.state = "cancelled"
-                await store.save(job)
+                if not await store.save_if_owned(job):
+                    raise LeaseLostError(job.job_id)
                 continue
             if time.time() >= job.deadline:
                 break
+            workflow_error = self._workflow_dispatch_error(job)
+            if workflow_error:
+                query.state = "failed"
+                query.error = workflow_error
+                query.engine_coverage = [classify_coverage(engine=name, dispatched=False) for name in query.engines]
+                query.attempts.append(_attempt_from_query(query))
+                if not await store.save_if_owned(job):
+                    raise LeaseLostError(job.job_id)
+                continue
             if job.lease_token:
                 lease_token: str = job.lease_token
                 if not await store.renew(job.job_id, lease_token, self._lease_ttl):
@@ -354,28 +379,58 @@ class ResearchJobRunner:
                         pass
             else:
                 await self._execute_query(job, query)
+            if job.stop_reason and job.stop_reason.endswith("budget_exhausted"):
+                break
 
         # Reload to observe any cancellation/deadline that landed mid-run.
-        job = await store.load(job.job_id) or job
+        fresh = await store.load(job.job_id)
+        if fresh is not None:
+            if fresh.lease_token != job.lease_token:
+                raise LeaseLostError(job.job_id)
+            job = fresh
         completed = sum(1 for query in job.queries if query.state == "done")
         if job.cancel_requested:
             for query in job.queries:
                 if query.state in ("pending", "running"):
                     query.state = "cancelled"
             job.state = "cancelled"
+            job.stop_reason = "cancelled"
         elif time.time() >= job.deadline:
             for query in job.queries:
                 if query.state in ("pending", "running"):
                     query.state = "cancelled"
             job.state = "partial" if completed else "failed"
+            job.stop_reason = "deadline_expired"
         elif all(query.state == "done" for query in job.queries):
             job.state = "succeeded"
         elif any(query.state == "done" for query in job.queries):
             job.state = "partial"
         else:
             job.state = "failed"
-        await store.save(job)
+        if job.stop_reason is None:
+            job.stop_reason = "plan_executed" if job.state == "succeeded" else "execution_failed"
+        if not await store.save_if_owned(job):
+            raise LeaseLostError(job.job_id)
         return job
+
+    def _workflow_dispatch_error(self, job: ResearchJob) -> str | None:
+        """Recheck workflow authority and cumulative budget before dispatch."""
+        if job.workflow.get("kind") != "dependency_dossier":
+            return None
+        for grant in ("dependency_dossier", "research", "security"):
+            if not self._policy.tool_enabled(grant):
+                return f"policy_rejected: {grant} grant revoked"
+        engines = [engine for query in job.queries for engine in query.engines]
+        if rejection := engine_policy_rejection(self._catalog, self._policy, engines):
+            return f"policy_rejected: {rejection['message']}"
+        budget = job.workflow.get("budget") or {}
+        used_calls = int(budget.get("used_adapter_calls", 0))
+        if used_calls >= int(budget.get("max_adapter_calls", len(job.queries))):
+            return "budget_exceeded: adapter call budget exhausted"
+        captured_results = int(budget.get("captured_results", 0))
+        if captured_results >= int(budget.get("max_results", self._policy.job_max_results)):
+            return "budget_exceeded: result budget exhausted"
+        return None
 
     async def _raise_if_live_owned(self, job: ResearchJob) -> None:
         """Raise :class:`JobStillRunningError` if ``job`` is live-lease-owned.
@@ -396,80 +451,36 @@ class ResearchJobRunner:
         job: ResearchJob,
         *,
         mutate: Callable[[ResearchJob], None] | None = None,
+        execute: bool = True,
     ) -> ResearchJob:
-        """Run a loaded job directly, claiming it first when claimable.
+        """Apply a mutation and optionally execute while holding a fenced lease.
 
-        ``retry``/``extend`` load a job that may still carry lease fields from
-        a prior ``claim``/``release`` cycle: ``release`` deletes the Valkey
-        lease key but not the record fields. A claimable job (``queued`` or
-        ``running``) is claimed under a fresh lease before execution so a
-        concurrent durable worker excludes it (exactly-one-owner). Terminal
-        jobs are not claimable and still run lease-free exactly as before.
-
-        ``mutate``, when given, is the caller's intended direct-run mutation
-        (reset-to-pending retry queries or an appended follow-up). It is
-        applied to the freshly loaded record — never the caller's in-memory
-        copy — so a record that a durable worker finalized between the
-        caller's load and this call is reconciled, not clobbered.
-
-        A job that is still ``running`` under a *live* owner must not be
-        cleared or run here: that would race the owner's execution. Liveness
-        is checked against the lease key — not the record fields, which survive
-        a released/expired lease — so a lease-expired orphan is resumed rather
-        than refused. Live-owner calls raise :class:`JobStillRunningError` so
-        the tool can surface "job still running".
+        Completed jobs use the same exclusion boundary as running jobs. Never
+        apply a stale caller copy or write after releasing lease ownership.
         """
         store = self._jobs_for(job.tenant)
-        fresh = await store.load(job.job_id) or job
-
-        await self._raise_if_live_owned(fresh)
-
-        claimed = await store._claim_prepared(fresh, self._owner_id, self._lease_ttl, mutate=mutate)
-        if claimed is not None:
-            try:
-                result = await self.run_pending(claimed)
-            finally:
-                await store.release(job.job_id, claimed.lease_token)
-            result.owner_id = None
-            result.lease_token = None
-            result.lease_expires_at = 0.0
-            await store.save(result)
-            return result
-
-        # Claim returned None. A claimable job that lost the lease race is now
-        # owned by another worker; running lease-free would double-execute.
-        current = await store.load(job.job_id)
-        if current is not None and current.state in ("queued", "running"):
+        claimed = await store._claim_prepared(job, self._owner_id, self._lease_ttl, mutate=mutate)
+        if claimed is None:
             raise JobStillRunningError(job.job_id)
-
-        # Terminal or non-claimable job: reconcile with the freshly loaded
-        # record (never the caller's stale copy) and re-apply the caller's
-        # intended mutation before persisting, so completed evidence written
-        # by a concurrently finalizing worker is preserved.
-        base = current if current is not None else fresh
-        if time.time() >= base.deadline:
-            # A deadline-passed job can no longer make progress: finalize it to
-            # ``expired`` (matching the claim/retry deadline finalization)
-            # instead of re-applying the caller's mutation and executing it.
-            # Running here would append a follow-up that can never run and let
-            # run_pending's mid-run deadline branch re-classify the record as
-            # ``partial``/``failed``, losing the ``expired`` terminal state.
-            for query in base.queries:
-                if query.state in ("pending", "running"):
-                    query.state = "cancelled"
-            base.state = "expired"
-            base.owner_id = None
-            base.lease_token = None
-            base.lease_expires_at = 0.0
-            await store.save(base)
-            return base
-        if mutate is not None:
-            mutate(base)
-        base.owner_id = None
-        base.lease_token = None
-        base.lease_expires_at = 0.0
-        await store.save(base)
-        return await self.run_pending(base)
+        token = claimed.lease_token
+        started_running = claimed.state == "running"
+        started = monotonic()
+        try:
+            if not execute or claimed.state in ("cancelled", "expired") or claimed.caller_completed:
+                result = claimed
+            else:
+                result = await self.run_pending(claimed)
+            if not await store.clear_ownership(result):
+                raise LeaseLostError(job.job_id)
+            workflow: m.WorkflowKind = (
+                "dependency_dossier" if result.workflow.get("kind") == "dependency_dossier" else "research"
+            )
+            if started_running and result.state in m.WORKFLOW_OUTCOMES:
+                m.transition_workflow(workflow, "running", result.state)
+                m.record_workflow_terminal(workflow, result.state, monotonic() - started)
+            return result
+        finally:
+            await store.release(job.job_id, token)
 
     async def retry(self, job_id: str, tenant: str | None = None) -> ResearchJob | None:
         """Re-run only failed/empty subqueries (VAL-RESEARCH-008).
@@ -492,7 +503,7 @@ class ResearchJobRunner:
         if job is None:
             return None
         # Terminal-state gate: never resurrect a cancelled or expired job.
-        if job.state in ("cancelled", "expired"):
+        if job.state in ("cancelled", "expired") or job.caller_completed:
             return job
         retryable = [query for query in job.queries if is_retryable_query(query)]
         if not retryable:
@@ -504,16 +515,6 @@ class ResearchJobRunner:
         # live job surfaces JobStillRunningError instead of being rewritten to
         # ``expired`` mid-run.
         await self._raise_if_live_owned(job)
-        # Deadline gate: a deadline-passed retry finalizes to expired, not
-        # partial/failed (the run_pending deadline branch would otherwise
-        # classify a re-run that breaks on the deadline as partial/failed).
-        if time.time() >= job.deadline:
-            for query in job.queries:
-                if query.state in ("pending", "running"):
-                    query.state = "cancelled"
-            job.state = "expired"
-            await store.save(job)
-            return job
         # The retry mutation is applied to the freshly loaded record inside
         # run_direct's claim (exactly-one-owner), never persisted ahead of
         # time. This avoids stripping a concurrently-claiming worker's
@@ -618,8 +619,19 @@ class ResearchJobRunner:
 
     async def _execute_claimed(self, job: ResearchJob) -> None:
         """Execute a claimed job and always release its lease afterwards."""
+        started = monotonic()
         try:
-            await self.run_pending(job)
+            result = await self.run_pending(job)
+            workflow: m.WorkflowKind = (
+                "dependency_dossier" if result.workflow.get("kind") == "dependency_dossier" else "research"
+            )
+            if result.state in m.WORKFLOW_OUTCOMES:
+                m.transition_workflow(workflow, "running", result.state)
+                m.record_workflow_terminal(workflow, result.state, monotonic() - started)
+            if workflow == "dependency_dossier":
+                m.workflow_admitted_results.observe(
+                    {"workflow": workflow}, float(result.workflow.get("budget", {}).get("captured_results", 0))
+                )
         except LeaseLostError:
             logger.warning("ResearchJobRunner: lost lease for job %s; abandoning execution", job.job_id)
         finally:
@@ -661,24 +673,57 @@ class ResearchJobRunner:
         """
         store = self._jobs_for(job.tenant)
         snapshots = self._snapshots_for(job.tenant)
-        query.state = "running"
-        await store.save(job)
+        if reserve_attempt(job, query) is None:
+            if not await store.save_if_owned(job):
+                raise LeaseLostError(job.job_id)
+            return
+        if job.workflow.get("kind") == "dependency_dossier":
+            budget = job.workflow.setdefault("budget", {})
+            used_calls = int(budget.get("used_adapter_calls", 0))
+            call_cost = len(query.engines)
+            if used_calls + call_cost > int(budget.get("max_adapter_calls", len(job.queries))):
+                query.state = "failed"
+                query.error = "budget_exceeded: adapter call budget exhausted"
+                if not await store.save_if_owned(job):
+                    raise LeaseLostError(job.job_id)
+                return
+            # Persist the charge before dispatch. If the worker dies after the
+            # upstream call, recovery retains this uncertain charge instead of
+            # silently spending it again.
+            budget["used_adapter_calls"] = used_calls + call_cost
+        if not await store.save_if_owned(job):
+            raise LeaseLostError(job.job_id)
         request = SearchRequest(
             query=query.query,
-            engines=query.engines or None,
+            engines=query.engines,
             time_range=query.time_range,
             include={"results", "engine_status"},
             client_identifier=f"mcp-job:{job.job_id}",
         )
         try:
+            if not query.engines:
+                raise QueryValidationError("Research query has no permitted engines")
+            if self.dispatch_validator is not None:
+                rejection = self.dispatch_validator(query)
+                if rejection:
+                    raise QueryValidationError(rejection)
             response = await self._service.search(request)
-        except (QueryValidationError, RateLimitExceededError) as exc:
+        except Exception as exc:  # noqa: BLE001 — persist unexpected execution failures for recovery
             query.state = "failed"
             query.error = str(exc)
-            query.attempts.append(_attempt_from_query(query))
+            finish_attempt(job, query)
             if not await store.save_if_owned(job):
                 raise LeaseLostError(job.job_id)
             return
+
+        if job.workflow.get("kind") == "dependency_dossier":
+            budget = job.workflow.setdefault("budget", {})
+            already_captured = int(budget.get("captured_results", 0))
+            remaining = max(0, int(budget.get("max_results", self._policy.job_max_results)) - already_captured)
+            admitted = min(len(response.results), remaining)
+            budget["captured_results"] = already_captured + admitted
+            admitted_results = budget.setdefault("admitted_results", {})
+            admitted_results[str(query.index)] = admitted
 
         query.query_id = response.query_id
         query.result_count = len(response.results)
@@ -688,6 +733,12 @@ class ResearchJobRunner:
             response.results,
             response.scope,
             ranking_explanation=response.ranking_explanation,
+            derived_from=[
+                artifact_ref(
+                    "research_attempt",
+                    composite_artifact_id(job.job_id, query.attempts[-1].attempt_id),
+                )
+            ],
         )
         # Persist per-engine coverage and the disjoint bucket summary.
         query.engine_coverage = self._build_query_coverage(query, response)
@@ -707,6 +758,6 @@ class ResearchJobRunner:
             query.error = "some engines failed and none returned results"
         else:
             query.state = "done"
-        query.attempts.append(_attempt_from_query(query))
+        finish_attempt(job, query, response)
         if not await store.save_if_owned(job):
             raise LeaseLostError(job.job_id)

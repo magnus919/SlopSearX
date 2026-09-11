@@ -112,7 +112,7 @@ Present on every expanded result record, in addition to the card fields:
 
 ### 3.3 Example
 
-```json
+```jsonc
 {
   "contract": "slopsearx.retrieval_handoff",
   "version": 1,
@@ -218,6 +218,50 @@ This document names GroktoCrawl as a **composition option**. It is not an
 undocumented runtime integration: SlopSearX ships no code that calls
 GroktoCrawl, and GroktoCrawl is not required for SlopSearX to function. Each
 side honors this handoff contract; neither depends on the other's internals.
+
+### 7.1 Returning an attributed receipt
+
+When `MCP_GRANT_RETRIEVAL_RECEIPTS=1`, a downstream reader can return a
+versioned observation through dedicated MCP tools. Supplied URLs, references,
+passages, and error text are stored as untrusted data and are never fetched.
+The retriever label is caller supplied attribution; it is not an identity
+proof or verification verdict.
+
+```json
+// 1. slopsearx_search then slopsearx_read_result produce this handoff
+{"result_id":"snap-abc123def456:2","verified":false,
+ "provenance":{"snapshot_cursor":"snap-abc123def456","query_id":"ssx-3f9a1c2b"}}
+
+// 2. slopsearx_submit_retrieval_receipt arguments
+{"result_id":"snap-abc123def456:2","retriever":"example-reader",
+ "idempotency_key":"capture-42","status":"succeeded",
+ "captured_at":"2026-09-11T04:00:00Z",
+ "final_url":"https://nvd.nist.gov/vuln/detail/CVE-2024-1234",
+ "content_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+ "capture_ref":"capture://example/42",
+ "passage_refs":[{"ref":"passage-7","label":"affected versions"}]}
+
+// A separate failure is retained beside the success; neither wins
+{"result_id":"snap-abc123def456:2","retriever":"backup-reader",
+ "idempotency_key":"capture-43","status":"failed",
+ "failure_code":"upstream_blocked","failure_message":"capture refused"}
+
+// 3. slopsearx_read_retrieval_receipts returns newest-first observations
+{"result_id":"snap-abc123def456:2","source_snapshot_status":"live",
+ "total":2,"returned":2,"has_more":false,"observations_verified":false}
+
+// 4. slopsearx_export_research_manifest joins up to 25 explicit result IDs
+{"result_ids":["snap-abc123def456:2"]}
+```
+
+New receipts require a live tenant-scoped snapshot. Identical idempotent
+replays remain available for the fixed 24-hour receipt horizon even if the
+snapshot later expires; changed or new observations then receive
+`idempotency_conflict` or `expired_handle`. A manifest preserves the
+server-derived discovery copy and keeps both `verified:false` disclosures:
+SlopSearX did not verify the search result, and it did not verify the
+retriever's attributed observation. Receipts never alter the original search
+snapshot, ranking, result count, or SearXNG HTTP response.
 
 ## 8. Failure and warning semantics
 

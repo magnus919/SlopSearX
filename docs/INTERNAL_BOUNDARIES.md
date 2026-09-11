@@ -6,9 +6,11 @@ They delegate result presentation to two modules:
 
 - `slopsearx/mcp/result_serialization.py` builds compact cards and expanded
   records, preserving payload limits, provenance and progressive disclosure.
-- `slopsearx/mcp/retrieval_url.py` classifies URL syntax and literal addresses
+- `slopsearx/retrieval_url.py` classifies URL syntax and literal addresses
   for downstream handoff. It does not resolve DNS or fetch content; downstream
-  retrievers remain responsible for post-resolution SSRF protection.
+  retrievers remain responsible for post-resolution SSRF protection. It lives
+  in the core package so HTML and MCP projections share one classifier without
+  either presentation layer depending on the other.
 
 These projections cannot import tool handlers or MCP runtime state; the
 `mcp-result-projections` import-linter contract enforces that direction. Existing

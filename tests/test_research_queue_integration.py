@@ -88,6 +88,44 @@ async def test_ready_claim_race_fencing_renewal_and_orphan(backend: Store) -> No
     assert await backend._client.zcard(f"{storage.READY_PREFIX}:tenant:a") == 0
 
 
+async def test_idempotent_creation_is_atomic_across_store_instances(backend: Store) -> None:
+    first_store = storage.ResearchJobStore(backend, "a")
+    second_store = storage.ResearchJobStore(backend, "a")
+    first = job()
+    first.idempotency_key = "same-admission"
+    second = job()
+    second.idempotency_key = "same-admission"
+
+    outcomes = await asyncio.gather(
+        first_store.create_idempotent(first),
+        second_store.create_idempotent(second),
+    )
+
+    assert sum(1 for _, created in outcomes if created) == 1
+    admitted_ids = {admitted.job_id for admitted, _ in outcomes if admitted is not None}
+    assert len(admitted_ids) == 1
+
+
+async def test_fenced_predispatch_charge_survives_recovery(backend: Store) -> None:
+    store = storage.ResearchJobStore(backend, "a")
+    item = job()
+    item.workflow = {
+        "kind": "dependency_dossier",
+        "budget": {"max_adapter_calls": 2, "used_adapter_calls": 0},
+    }
+    await store.save(item)
+    claimed = await store.claim(item.job_id, "first", 60)
+    assert claimed is not None
+    claimed.workflow["budget"]["used_adapter_calls"] = 1
+    assert await store.save_if_owned(claimed)
+
+    await backend._client.delete(store._lease_key(item.job_id))
+    recovered = await store.claim(item.job_id, "replacement", 60)
+
+    assert recovered is not None
+    assert recovered.workflow["budget"]["used_adapter_calls"] == 1
+
+
 async def test_tenant_rotation_and_cancel(backend: Store) -> None:
     root = storage.ResearchJobStore(backend)
     for tenant in ("busy", "oauth:quiet"):

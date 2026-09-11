@@ -14,6 +14,7 @@ from slopsearx.adapter import (
     SearchResult,
     register_engine,
 )
+from slopsearx.payload import DOMAIN_SCIENCE, build_payload
 
 
 @register_engine
@@ -93,7 +94,8 @@ class SemanticScholarAdapter(EngineAdapter):
             abstract = paper.get("abstract") or ""
             citation_count = paper.get("citationCount", 0)
             pub_date = paper.get("publicationDate") or None
-            external_ids = paper.get("externalIds") or {}
+            raw_external_ids = paper.get("externalIds")
+            external_ids = raw_external_ids if isinstance(raw_external_ids, dict) else {}
             authors_raw = paper.get("authors", []) or []
             author_names = [a.get("name", "") for a in authors_raw if isinstance(a, dict)]
             author_str = ", ".join(author_names[:3])
@@ -125,6 +127,16 @@ class SemanticScholarAdapter(EngineAdapter):
                     position=idx + 1,
                     score=float(citation_count),
                     published_date=pub_date,
+                    payload=build_payload(
+                        DOMAIN_SCIENCE,
+                        "publication",
+                        {
+                            "doi": external_ids.get("DOI") or None,
+                            "pmid": external_ids.get("PubMed") or None,
+                            "pmcid": external_ids.get("PubMedCentral") or None,
+                        },
+                        engine=self.name,
+                    ),
                 ),
             )
 
