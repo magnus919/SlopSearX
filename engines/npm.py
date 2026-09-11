@@ -67,6 +67,7 @@ class NpmAdapter(EngineAdapter):
                 objects = data.get("objects", [])
                 for idx, obj in enumerate(objects[:max_results]):
                     pkg = obj.get("package", {})
+                    links = pkg.get("links") if isinstance(pkg.get("links"), dict) else {}
                     name = pkg.get("name", "")
                     version = pkg.get("version", "")
                     description = pkg.get("description", "") or ""
@@ -84,6 +85,7 @@ class NpmAdapter(EngineAdapter):
                             "name": name or None,
                             "version": version or None,
                             "summary": description or None,
+                            "repository_url": links.get("repository") or None,
                         },
                         engine=self.name,
                     )

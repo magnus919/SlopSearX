@@ -158,6 +158,18 @@ class PyPIAdapter(EngineAdapter):
 
     def _package_payload(self, info: dict[str, Any], name: str) -> dict[str, Any]:
         """Build the ``packages/package`` payload from a PyPI ``info`` object."""
+        raw_project_urls = info.get("project_urls")
+        project_urls = raw_project_urls if isinstance(raw_project_urls, dict) else {}
+        repository_url = next(
+            (
+                value
+                for label, value in project_urls.items()
+                if isinstance(label, str)
+                and isinstance(value, str)
+                and any(token in label.casefold() for token in ("source", "repository", "code"))
+            ),
+            None,
+        )
         return build_payload(
             DOMAIN_PACKAGES,
             "package",
@@ -167,6 +179,7 @@ class PyPIAdapter(EngineAdapter):
                 "summary": info.get("summary") or None,
                 "license": info.get("license") or None,
                 "homepage": info.get("home_page") or None,
+                "repository_url": repository_url,
             },
             engine=self.name,
         )

@@ -99,6 +99,55 @@ jobs:
       - name: Real Valkey cache and durable ownership contracts
         run: pytest --no-cov -q tests/test_cache_integration.py tests/test_research_queue_integration.py
 
+  searxng-api-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+      - name: Check pinned SearXNG API contract
+        run: pytest --no-cov -q tests/test_searxng_api_contract.py
+
+  portal-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+      - name: Check portal route and formatter contracts
+        run: pytest --no-cov -q tests/test_formatter.py tests/test_server.py
+      - name: Check portal contract typing and lint
+        run: |
+          ruff check slopsearx/formatter.py slopsearx/server.py tests/test_formatter.py tests/test_server.py
+          mypy slopsearx/formatter.py slopsearx/server.py
+
+  portal-browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+      - name: Install browser smoke runner
+        run: pip install "playwright>=1.50"
+      - name: Install deterministic Chromium runtime
+        run: python -m playwright install --with-deps chromium
+      - name: Run portal browser journeys
+        env:
+          PORTAL_BROWSER_SMOKE: "1"
+        run: pytest --no-cov -q tests/test_portal_browser.py
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -120,7 +169,42 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Test with pytest and coverage
-        run: pytest -v --durations=10 --cov=slopsearx --cov=engines --cov-report=term-missing --cov-report=html --cov-fail-under=80
+        run: |
+          # Live loopback servers can leave event-loop resources pending when
+          # several transport modules share one hosted-runner process. Run each
+          # such module in a fresh process and combine their coverage below.
+          isolated_tests=(
+            tests/test_adaptive_transport.py
+            tests/test_entity_transport.py
+            tests/test_http_pooling.py
+            tests/test_mcp_gateway.py
+            tests/test_mcp_harness.py
+            tests/test_mcp_oauth.py
+            tests/test_mcp_oauth_client.py
+            tests/test_retrieval_receipts_transport.py
+            tests/test_saved_events_transport.py
+            tests/test_saved_transport.py
+            tests/test_workflow_composition_transport.py
+          )
+
+          pytest -v -o addopts='' -o faulthandler_timeout=60 \
+            --cov=slopsearx --cov=engines --cov-report= --cov-fail-under=0 \
+            "${isolated_tests[0]}"
+
+          for test_file in "${isolated_tests[@]:1}"; do
+            pytest -v -o addopts='' -o faulthandler_timeout=60 \
+              --cov=slopsearx --cov=engines --cov-append \
+              --cov-report= --cov-fail-under=0 "$test_file"
+          done
+
+          ignore_args=()
+          for test_file in "${isolated_tests[@]}"; do
+            ignore_args+=("--ignore=$test_file")
+          done
+          pytest -v -o addopts='' -o faulthandler_timeout=60 --durations=10 \
+            "${ignore_args[@]}" \
+            --cov=slopsearx --cov=engines --cov-append \
+            --cov-report=term-missing --cov-report=html --cov-fail-under=80
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v7

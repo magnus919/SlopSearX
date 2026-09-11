@@ -379,3 +379,8 @@ def _retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
         # urlparse is lenient but can raise for malformed bracketed hosts
         # (e.g. "http://[::1"); access to .hostname can also raise.
         return RETRIEVAL_URL_STATUS_AMBIGUOUS, "URL cannot be parsed unambiguously", None, None
+
+
+def classify_retrieval_url(url: str) -> tuple[str, str | None, str | None, str | None]:
+    """Expose the shared structural handoff classification to non-MCP views."""
+    return _retrieval_url(url)

@@ -112,6 +112,7 @@ class PubMedAdapter(EngineAdapter):
                         "publication",
                         {
                             "publication_id": pmid or None,
+                            "pmid": pmid or None,
                             "journal": source or None,
                             "authors": author_names or None,
                         },
