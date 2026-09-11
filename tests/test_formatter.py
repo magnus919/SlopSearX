@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import yaml
 
-from slopsearx.adapter import SearchResult
+from slopsearx.adapter import MediaInfo, SearchResult
 from slopsearx.formatter import (
     _payload_for_output,
+    format_error_html,
     format_html,
     format_json,
     format_landing_page,
@@ -543,3 +544,62 @@ class TestPortalHtml:
         assert "&lt;img src=x onerror=alert(1)&gt;" in output
         assert 'href="#"' in output
         assert "javascript:" not in output
+
+    def test_result_page_preserves_filters_and_explains_scope(self) -> None:
+        result = _make_result("https://example.com", "A result")
+        output = format_html(
+            [result],
+            "valkey",
+            portal_state={
+                "query": "valkey",
+                "categories": "packages",
+                "language": "en",
+                "time_range": "month",
+                "safesearch": 1,
+                "page": 2,
+                "category_options": ["general", "packages"],
+                "scope_label": "packages",
+                "selected_engine_count": 2,
+                "responsive_engine_count": 1,
+                "filter_enforcement": {
+                    "time_range": {"requested": "month", "status": "unsupported", "reason": "not enforced"},
+                    "safesearch": {"requested": 1, "status": "partially_enforced", "reason": "one source"},
+                },
+            },
+        )
+
+        assert 'option value="packages" selected' in output
+        assert 'name="time_range"' in output
+        assert "Past month" in output
+        assert "packages · 1 of 2 sources answered" in output
+        assert "partially enforced" in output
+        assert "pageno=1" in output
+        assert "pageno=3" in output
+
+    def test_browser_error_uses_portal_shell(self) -> None:
+        output = format_error_html("invalid_filter", "The filter is invalid.", field="safesearch")
+
+        assert 'role="alert"' in output
+        assert "Field: safesearch" in output
+        assert "Return to search" in output
+
+    def test_specialist_and_media_results_keep_safe_compact_metadata(self) -> None:
+        result = _make_result("https://example.com", "Vulnerability result")
+        result.media = MediaInfo(
+            media_type="image",
+            thumbnail="https://cdn.example.com/thumb.jpg",
+            source="https://example.com/source",
+        )
+        result.payload = build_payload(
+            "security",
+            "vulnerability",
+            {"cve_id": "CVE-2026-0001"},
+            engine="nvd",
+        )
+
+        output = format_html([result], "cve")
+
+        assert "image result" in output
+        assert "security / vulnerability" in output
+        assert 'src="https://cdn.example.com/thumb.jpg"' in output
+        assert 'alt="Vulnerability result"' in output

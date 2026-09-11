@@ -308,6 +308,27 @@ class TestSearchEndpoint:
         assert response.status_code == 200
         assert 'data-default-theme="darker"' in response.text
 
+    def test_html_results_expose_capability_aware_scope_and_pagination(self, client: TestClient) -> None:
+        response = client.get(
+            "/search",
+            params={"q": "test", "categories": "general", "pageno": 2, "time_range": "month"},
+        )
+
+        assert response.status_code == 200
+        assert "Scope and filters" in response.text
+        assert 'name="categories"' in response.text
+        assert 'value="general"' in response.text
+        assert "Past month" in response.text
+        assert "← Previous" in response.text
+        assert "Next →" in response.text
+
+    def test_strict_safesearch_is_rejected_before_dispatch(self, client: TestClient) -> None:
+        response = client.get("/search", params={"q": "test", "safesearch": 2, "format": "json"})
+
+        assert response.status_code == 400
+        assert response.json()["error"] == "invalid_filter"
+        assert response.json()["field"] == "safesearch"
+
     def test_yaml_format(self, client: TestClient) -> None:
         """format=yaml returns YAML+Markdown response."""
         response = client.get("/search", params={"q": "test", "format": "yaml"})

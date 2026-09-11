@@ -14,7 +14,6 @@ resolution, ranking, deduplication, caching, and failure semantics.
 from __future__ import annotations
 
 import asyncio
-import html as html_lib
 import os
 from collections import defaultdict
 from contextlib import asynccontextmanager
@@ -34,8 +33,10 @@ from slopsearx.audit import QueryAuditLogger
 from slopsearx.cache import SearchCache
 from slopsearx.capabilities import CapabilityCatalog, build_engine_health
 from slopsearx.config import Config, load_config
+from slopsearx.filters import resolve_filter_enforcement
 from slopsearx.formatter import (
     format_csv,
+    format_error_html,
     format_html,
     format_json,
     format_landing_page,
@@ -64,6 +65,7 @@ from slopsearx.service import (
     RateLimitExceededError,
     SearchFlights,
     SearchRequest,
+    SearchResponse,
     SearchService,
     build_context,
     build_response_meta,
@@ -466,6 +468,63 @@ def _format_from_accept(accept: str) -> str:
     return "html"
 
 
+def _portal_state(
+    *,
+    query: str,
+    categories: str,
+    engine_selection: str,
+    language: str,
+    time_range: str,
+    safesearch: int,
+    page: int,
+    response: SearchResponse,
+) -> dict[str, Any]:
+    """Build the redacted, capability-aware state used by the HTML portal."""
+    try:
+        catalog = _health_catalog()
+    except Exception:  # noqa: BLE001 — the portal still renders without metadata
+        catalog = None
+    category_options: set[str] = set()
+    for name, engine in _active_engines.items():
+        capability = None
+        if catalog is not None:
+            try:
+                capability = catalog.get(name)
+            except Exception:  # noqa: BLE001 — one bad catalog entry is local
+                capability = None
+        if capability is not None and capability.sensitive:
+            continue
+        category_options.update(
+            str(category) for category in getattr(engine, "categories", ()) if str(category).strip()
+        )
+
+    selected = list(response.scope.selected_engines)
+    enforcement: dict[str, dict[str, Any]] = {}
+    if time_range:
+        enforcement["time_range"] = resolve_filter_enforcement(selected, "time_range", time_range, _active_engines)
+    if safesearch:
+        enforcement["safesearch"] = resolve_filter_enforcement(selected, "safesearch", safesearch, _active_engines)
+    warnings = [str(warning) for warning in response.scope.warnings if str(warning).strip()]
+    scope_label = ", ".join(part.strip() for part in categories.split(",") if part.strip()) or "All sources"
+    return {
+        "query": query,
+        "categories": categories,
+        "engines": engine_selection,
+        "language": language,
+        "time_range": time_range,
+        "safesearch": safesearch,
+        "page": page,
+        "category_options": sorted(category_options),
+        "scope_label": scope_label,
+        "scope_note": warnings[0] if warnings else "",
+        "selected_engine_count": len(selected),
+        "responsive_engine_count": sum(1 for outcome in response.engine_outcomes if outcome.status == "ok"),
+        "filter_enforcement": enforcement,
+        "suggestions": list(response.suggestions),
+        "all_unresponsive": response.all_unresponsive,
+    }
+
+
 def _format_error_response(
     output_format: str,
     status_code: int,
@@ -483,11 +542,7 @@ def _format_error_response(
         payload.update(extra)
     if output_format == "html":
         return HTMLResponse(
-            content=(
-                '<!doctype html><html lang="en"><head><meta charset="utf-8">'
-                f"<title>{html_lib.escape(error)}</title></head><body><h1>{html_lib.escape(error)}</h1>"
-                f"<p>{html_lib.escape(message)}</p></body></html>"
-            ),
+            content=format_error_html(error, message, field=field, default_theme=_portal_default_theme()),
             status_code=status_code,
         )
     if output_format == "csv":
@@ -548,6 +603,7 @@ def _render_search_response(
     meta: dict[str, Any] | None = None,
     engine_count: int | None = None,
     responsive_count: int | None = None,
+    portal_state: dict[str, Any] | None = None,
 ) -> Response:
     """Render one normalized search response in the requested format."""
     if output_format == "html":
@@ -557,6 +613,7 @@ def _render_search_response(
                 query,
                 meta=meta,
                 unresponsive_engines=unresponsive_engines,
+                portal_state=portal_state,
                 default_theme=_portal_default_theme(),
             ),
             status_code=status_code,
@@ -772,6 +829,16 @@ async def _search_endpoint(request: Request) -> Any:
                 "query_id": response.query_id,
                 "engine_status": {},
             },
+            portal_state=_portal_state(
+                query=q,
+                categories=categories,
+                engine_selection=engines_param,
+                language=language,
+                time_range=time_range,
+                safesearch=parsed_safesearch,
+                page=parsed_page,
+                response=response,
+            ),
         )
 
     unresponsive = unresponsive_from_outcomes(response.engine_outcomes)
@@ -792,6 +859,16 @@ async def _search_endpoint(request: Request) -> Any:
         meta=meta,
         engine_count=len(response.scope.selected_engines),
         responsive_count=sum(1 for o in response.engine_outcomes if o.status == "ok"),
+        portal_state=_portal_state(
+            query=q,
+            categories=categories,
+            engine_selection=engines_param,
+            language=language,
+            time_range=time_range,
+            safesearch=parsed_safesearch,
+            page=parsed_page,
+            response=response,
+        ),
     )
 
 
