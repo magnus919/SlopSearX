@@ -21,11 +21,12 @@ machine-readable `retrieval` handoff record (see `docs/RETRIEVAL_HANDOFF.md`)
 so a downstream reader such as GroktoCrawl can capture pages and link them
 back to the originating result and snapshot.
 
-- **Tools (26):** intent search, targeted search, jobs, security, science,
+- **Tools (30):** intent search, targeted search, jobs, security, science,
   capability listing, scope explanation, service status, snapshot reads,
   research jobs (start/get/cancel/retry/extend/update), saved searches
   (create/get/update/pause/delete/read reports), and retrieval receipts
-  (submit/read/export manifest).
+  (submit/read/export manifest), and staged search
+  (preview/start/get/retry).
 - **Resources:** `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`.
 - **Prompts (4):** repeatable agent workflows that compose the tools.
@@ -139,6 +140,9 @@ mcp:
 | `MCP_GRANT_SECURITY` | unset (false) | enables `slopsearx_search_security` and `intent=security` |
 | `MCP_GRANT_SCIENCE` | unset (false) | enables `slopsearx_search_science` |
 | `MCP_GRANT_RESEARCH` | unset (false) | enables research jobs |
+| `MCP_GRANT_STAGED_SEARCH` | unset (false) | enables bounded staged search operations |
+| `MCP_STAGED_MAX_DEADLINE_MS` | `30000` | maximum staged operation deadline |
+| `MCP_STAGED_MAX_ENGINE_CALLS` | `64` | maximum reserved adapter calls per operation |
 | `MCP_GRANT_SAVED_SEARCHES` | unset (false) | enables scheduled saved searches and change reports |
 | `MCP_GRANT_RETRIEVAL_RECEIPTS` | unset (false) | enables receipt ingestion, reads, and research-manifest export |
 | `MCP_TARGETED_SENSITIVE_ALLOWED` | unset (false) | lets `slopsearx_search_targeted` query sensitive engines (`hibp`, `dehashed`); otherwise they are rejected with `tool_disabled` |

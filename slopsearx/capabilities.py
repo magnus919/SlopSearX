@@ -560,6 +560,7 @@ class MCPPolicy:
             "security": False,
             "science": False,
             "research": False,
+            "staged_search": False,
             "retrieval_receipts": False,
             "saved_searches": False,
         }
@@ -578,6 +579,8 @@ class MCPPolicy:
     job_lease_ttl_seconds: int = 60
     job_poll_interval_seconds: float = 1.0
     job_max_concurrent_jobs: int = 1
+    staged_max_deadline_ms: int = 30000
+    staged_max_engine_calls: int = 64
     saved_max_definitions: int = 20
     saved_max_engines: int = 5
     saved_max_results: int = 100
@@ -677,6 +680,8 @@ def _apply_mcp_section(policy: MCPPolicy, section: dict[str, Any]) -> None:
         ("job_default_deadline_seconds", 600),
         ("job_lease_ttl_seconds", 60),
         ("job_max_concurrent_jobs", 1),
+        ("staged_max_deadline_ms", 30000),
+        ("staged_max_engine_calls", 64),
         ("saved_max_definitions", 20),
         ("saved_max_engines", 5),
         ("saved_max_results", 100),
@@ -729,6 +734,7 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
         "MCP_GRANT_SECURITY": "security",
         "MCP_GRANT_SCIENCE": "science",
         "MCP_GRANT_RESEARCH": "research",
+        "MCP_GRANT_STAGED_SEARCH": "staged_search",
         "MCP_GRANT_RETRIEVAL_RECEIPTS": "retrieval_receipts",
         "MCP_GRANT_SAVED_SEARCHES": "saved_searches",
     }
@@ -749,6 +755,8 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
         "MCP_JOB_DEFAULT_DEADLINE_SECONDS": "job_default_deadline_seconds",
         "MCP_JOB_LEASE_TTL_SECONDS": "job_lease_ttl_seconds",
         "MCP_JOB_MAX_CONCURRENT_JOBS": "job_max_concurrent_jobs",
+        "MCP_STAGED_MAX_DEADLINE_MS": "staged_max_deadline_ms",
+        "MCP_STAGED_MAX_ENGINE_CALLS": "staged_max_engine_calls",
         "MCP_SAVED_MAX_DEFINITIONS": "saved_max_definitions",
         "MCP_SAVED_MAX_ENGINES": "saved_max_engines",
         "MCP_SAVED_MAX_RESULTS": "saved_max_results",
