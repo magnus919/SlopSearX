@@ -71,7 +71,7 @@ class TestGateway:
             names = [tool.name for tool in tools.tools]
             assert "slopsearx_search" in names
             assert "slopsearx_get_service_status" in names
-            assert len(tools.tools) == 23
+            assert len(tools.tools) == 26
 
             # Tool call is proxied to the remote server
             result = await client.call_tool("slopsearx_get_service_status", {})

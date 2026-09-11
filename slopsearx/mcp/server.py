@@ -36,6 +36,7 @@ from slopsearx.capabilities import (
 )
 from slopsearx.config import Config, load_config
 from slopsearx.mcp import prompts as _prompts
+from slopsearx.mcp import receipt_tools as _receipt_tools
 from slopsearx.mcp import resources as _resources
 from slopsearx.mcp import tools as _tools
 from slopsearx.mcp.gateway import create_gateway
@@ -43,6 +44,7 @@ from slopsearx.mcp.oauth import oauth_settings_from_policy
 from slopsearx.mcp.security import make_http_app
 from slopsearx.mcp.state import McpState, set_state
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
+from slopsearx.retrieval_receipts import ReceiptStore
 from slopsearx.routing import load_routing_budget
 from slopsearx.saved_runner import SavedSearchRunner
 from slopsearx.saved_store import SavedSearchStore
@@ -69,9 +71,9 @@ How to search correctly:
   of the thing you searched for.
 - Pagination: use the cursor from a search with slopsearx_read_results;
   pages come from a captured snapshot and never re-run the query.
-- Specialist tools (jobs, security, science, research) are disabled until
+- Specialist tools (jobs, security, science, research, retrieval receipts) are disabled until
   the operator grants them (MCP_GRANT_JOBS / MCP_GRANT_SECURITY /
-  MCP_GRANT_SCIENCE / MCP_GRANT_RESEARCH).
+  MCP_GRANT_SCIENCE / MCP_GRANT_RESEARCH / MCP_GRANT_RETRIEVAL_RECEIPTS).
 - Capabilities, routing profiles, and health are available as resources
   (slopsearx://capabilities, slopsearx://routing-profiles,
   slopsearx://health/summary) — read them instead of guessing engine names.
@@ -140,6 +142,7 @@ async def _lifespan(
     service = SearchService(ctx)
     snapshots = SnapshotStore(ctx.cache, ttl_seconds=policy.snapshot_ttl_seconds)
     job_store = ResearchJobStore(ctx.cache)
+    receipt_store = ReceiptStore(ctx.cache)
     expired = await job_store.expire_stale_running()
     if expired:
         logger.warning("MCP startup: expired %d stale running research job(s)", expired)
@@ -170,6 +173,7 @@ async def _lifespan(
         job_store=job_store,
         runner=runner,
         version=_package_version(),
+        receipt_store=receipt_store,
         saved_store=saved_store,
         saved_runner=saved_runner,
     )
@@ -283,6 +287,9 @@ def create_server(
     mcp.tool()(_instrumented(_tools.slopsearx_pause_saved_search))
     mcp.tool()(_instrumented(_tools.slopsearx_delete_saved_search))
     mcp.tool()(_instrumented(_tools.slopsearx_read_saved_search_reports))
+    mcp.tool()(_instrumented(_receipt_tools.slopsearx_submit_retrieval_receipt))
+    mcp.tool()(_instrumented(_receipt_tools.slopsearx_read_retrieval_receipts))
+    mcp.tool()(_instrumented(_receipt_tools.slopsearx_export_research_manifest))
 
     # --- resources ------------------------------------------------------
     mcp.resource(

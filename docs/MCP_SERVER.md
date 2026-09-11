@@ -8,7 +8,8 @@ The Model Context Protocol (MCP) server exposes SlopSearX to AI agents as
 intent-level tools. Agents can search across 51 engines without knowing URL
 query strings, discover what can be searched, preview routing before spending
 rate limits, page through stable result snapshots, run bounded multi-query
-research jobs, and schedule bounded change detection.
+research jobs, schedule bounded change detection, and record attributed
+downstream retrieval observations.
 
 The MCP server runs the **same pipeline** as the HTTP API
 (`slopsearx.service.SearchService`): identical scope resolution, ranking,
@@ -20,10 +21,11 @@ machine-readable `retrieval` handoff record (see `docs/RETRIEVAL_HANDOFF.md`)
 so a downstream reader such as GroktoCrawl can capture pages and link them
 back to the originating result and snapshot.
 
-- **Tools (21):** intent search, targeted search, jobs, security, science,
+- **Tools (26):** intent search, targeted search, jobs, security, science,
   capability listing, scope explanation, service status, snapshot reads,
-  research jobs (start/get/cancel/retry/extend), and saved searches
-  (create/get/update/pause/delete/read reports).
+  research jobs (start/get/cancel/retry/extend/update), saved searches
+  (create/get/update/pause/delete/read reports), and retrieval receipts
+  (submit/read/export manifest).
 - **Resources:** `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`.
 - **Prompts (4):** repeatable agent workflows that compose the tools.
@@ -68,6 +70,7 @@ mcp:
     security: false
     science: false
     research: false
+    retrieval_receipts: false
     saved_searches: false
   # Engines that generic routing must never reach accidentally. Only an
   # explicit engines list (with the targeted grant) or the security tool
@@ -137,6 +140,7 @@ mcp:
 | `MCP_GRANT_SCIENCE` | unset (false) | enables `slopsearx_search_science` |
 | `MCP_GRANT_RESEARCH` | unset (false) | enables research jobs |
 | `MCP_GRANT_SAVED_SEARCHES` | unset (false) | enables scheduled saved searches and change reports |
+| `MCP_GRANT_RETRIEVAL_RECEIPTS` | unset (false) | enables receipt ingestion, reads, and research-manifest export |
 | `MCP_TARGETED_SENSITIVE_ALLOWED` | unset (false) | lets `slopsearx_search_targeted` query sensitive engines (`hibp`, `dehashed`); otherwise they are rejected with `tool_disabled` |
 | `MCP_MAX_QUERY_LENGTH` | `500` | max query characters |
 | `MCP_MAX_RESULTS` | `50` | presentation bound on result pages |
@@ -707,7 +711,26 @@ and the worker cannot claim the locally enqueued job, so it is dropped rather
 than run. `slopsearx_start_research` still returns a handle, but it is flagged
 `degraded`/`ephemeral` and the job is never persisted or executed.
 
-### 6.13.2 Saved searches (grant: `MCP_GRANT_SAVED_SEARCHES`)
+### 6.13.2 Retrieval receipts (grant: `MCP_GRANT_RETRIEVAL_RECEIPTS`)
+
+- `slopsearx_submit_retrieval_receipt` accepts a success or failure statement
+  about a server-issued result ID. Discovery provenance comes from the live
+  tenant-scoped snapshot; caller URLs, hashes, references, passage labels, and
+  messages remain attributed, unverified data and trigger no network access.
+- `slopsearx_read_retrieval_receipts` returns at most 20 newest-first records
+  plus `total`, `returned`, and `has_more`.
+- `slopsearx_export_research_manifest` joins receipts for 1–25 explicit result
+  IDs into a versioned manifest capped at 1 MiB.
+
+Receipts use a fixed 24-hour Valkey horizon, a maximum of 20 observations per
+result, and result-scoped idempotency. Identical retries return the original
+receipt; changed content under the same key returns `idempotency_conflict`.
+Success and failure reports can coexist and SlopSearX selects no winner.
+New ingestion requires a live snapshot, while an identical retained replay or
+manifest can outlive that snapshot and reports its source state explicitly.
+The complete flow is documented in `docs/RETRIEVAL_HANDOFF.md` §7.1.
+
+### 6.13.3 Saved searches (grant: `MCP_GRANT_SAVED_SEARCHES`)
 
 Saved searches repeatedly observe a fixed first-page result window and emit
 machine-readable change reports. They require an explicit engine list and use
@@ -964,7 +987,7 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
 | Gateway `--oauth` never prints an authorize URL | Callback port already in use by another process — pick a free one with `--oauth-callback-port`; verify the remote is in OAuth mode and reachable |
 | Gateway `--oauth` prints the URL but authorization times out | The browser never hit the callback (loopback port blocked or URL opened on a different host); use `--oauth-no-browser` and complete the redirect on the agent host |
 | Gateway re-authorizes on every run | The token file was not persisted — pass `--oauth-token-file FILE` (or `MCP_REMOTE_TOKEN_FILE`) to a stable path |
-| Tool returns `tool_disabled` | Grant missing: set the matching `MCP_GRANT_JOBS/SECURITY/SCIENCE/RESEARCH/SAVED_SEARCHES=1` |
+| Tool returns `tool_disabled` | Grant missing: set the matching `MCP_GRANT_JOBS/SECURITY/SCIENCE/RESEARCH/SAVED_SEARCHES/RETRIEVAL_RECEIPTS=1` |
 | Any search tool returns `tool_disabled` naming `hibp`/`dehashed` | Sensitive engines need the uniform grant: `MCP_TARGETED_SENSITIVE_ALLOWED=1` (or `mcp.targeted_sensitive_allowed: true`) — deliberate policy boundary, not a bug |
 | `invalid_scope` with alternatives | Engine name typo or engine disabled in config |
 | `safesearch_unenforced` | No adapter enforces SafeSearch; use `moderate`/`off` |

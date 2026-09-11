@@ -17,6 +17,7 @@ from typing import Any, Iterator
 
 from slopsearx.capabilities import CapabilityCatalog, MCPPolicy
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
+from slopsearx.retrieval_receipts import ReceiptStore
 from slopsearx.saved_runner import SavedSearchRunner
 from slopsearx.saved_store import SavedSearchStore
 from slopsearx.service import AppContext, SearchService
@@ -40,6 +41,7 @@ class McpState:
     job_store: ResearchJobStore
     runner: ResearchJobRunner
     version: str
+    receipt_store: ReceiptStore | None = None
     saved_store: SavedSearchStore | None = None
     saved_runner: SavedSearchRunner | None = None
 

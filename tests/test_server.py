@@ -190,10 +190,16 @@ class TestSearchEndpoint:
         assert response.json()["query"] == "route compatibility"
 
     @pytest.mark.parametrize("saved_grant", ["0", "1"])
-    def test_saved_search_grant_does_not_change_searxng_json(
-        self, client: TestClient, monkeypatch, saved_grant: str
+    @pytest.mark.parametrize("receipt_grant", ["0", "1"])
+    def test_additive_mcp_grants_do_not_change_searxng_json(
+        self,
+        client: TestClient,
+        monkeypatch,
+        saved_grant: str,
+        receipt_grant: str,
     ) -> None:
         monkeypatch.setenv("MCP_GRANT_SAVED_SEARCHES", saved_grant)
+        monkeypatch.setenv("MCP_GRANT_RETRIEVAL_RECEIPTS", receipt_grant)
         response = client.get("/search", params={"q": "compatibility", "format": "json"})
         assert response.status_code == 200
         data = response.json()

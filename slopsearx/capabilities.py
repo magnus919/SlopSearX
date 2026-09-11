@@ -560,6 +560,7 @@ class MCPPolicy:
             "security": False,
             "science": False,
             "research": False,
+            "retrieval_receipts": False,
             "saved_searches": False,
         }
     )
@@ -728,6 +729,7 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
         "MCP_GRANT_SECURITY": "security",
         "MCP_GRANT_SCIENCE": "science",
         "MCP_GRANT_RESEARCH": "research",
+        "MCP_GRANT_RETRIEVAL_RECEIPTS": "retrieval_receipts",
         "MCP_GRANT_SAVED_SEARCHES": "saved_searches",
     }
     for env_var, tool in grant_map.items():

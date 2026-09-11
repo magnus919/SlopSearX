@@ -328,6 +328,7 @@ class TestMCPPolicy:
         assert policy.tool_enabled("security") is False
         assert policy.tool_enabled("science") is False
         assert policy.tool_enabled("research") is False
+        assert policy.tool_enabled("retrieval_receipts") is False
         assert policy.tool_enabled("saved_searches") is False
         assert policy.sensitive_engines == set(DEFAULT_SENSITIVE_ENGINES)
         assert policy.max_results == 50
@@ -367,12 +368,14 @@ mcp:
         config_file.write_text("mcp:\n  enabled_tools:\n    jobs: true\n")
         monkeypatch.setenv("MCP_GRANT_JOBS", "0")
         monkeypatch.setenv("MCP_MAX_RESULTS", "100")
+        monkeypatch.setenv("MCP_GRANT_RETRIEVAL_RECEIPTS", "1")
         monkeypatch.setenv("MCP_GRANT_SAVED_SEARCHES", "1")
         monkeypatch.setenv("MCP_SAVED_MAX_RESULTS", "75")
         policy = load_mcp_policy(config_path=config_file)
         assert policy.tool_enabled("jobs") is False  # env wins
         assert policy.max_results == 100
         assert policy.tool_enabled("saved_searches") is True
+        assert policy.tool_enabled("retrieval_receipts") is True
         assert policy.saved_max_results == 75
 
     def test_invalid_env_values_ignored(self, monkeypatch) -> None:
