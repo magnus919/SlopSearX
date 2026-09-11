@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import yaml
 
-from slopsearx.adapter import SearchResult
+from slopsearx.adapter import MediaInfo, SearchResult
 from slopsearx.formatter import (
     _payload_for_output,
+    format_error_html,
+    format_html,
     format_json,
+    format_landing_page,
     format_yaml_markdown,
 )
 from slopsearx.payload import (
@@ -513,3 +516,119 @@ class TestFormatYamlMarkdown:
         parsed = yaml.safe_load(output.split("---\n", 1)[0])
 
         assert parsed["results"][0]["payload"] is None
+
+
+class TestPortalHtml:
+    """Human-facing portal rendering remains safe and theme-aware."""
+
+    def test_landing_page_contains_search_and_theme_controls(self) -> None:
+        output = format_landing_page(default_theme="darker")
+
+        assert 'data-default-theme="darker"' in output
+        assert 'action="/search"' in output
+        assert "data-theme-toggle" in output
+        assert "Search <em>SlopSearX.</em>" in output
+        assert "let stored = null" in output
+        assert "storage is optional" in output
+
+    def test_result_page_escapes_content_and_rejects_unsafe_links(self) -> None:
+        result = _make_result(
+            "javascript:alert(1)",
+            '<script>alert("x")</script>',
+            content="<img src=x onerror=alert(1)>",
+        )
+
+        output = format_html([result], "<query>", default_theme="dark")
+
+        assert "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;" in output
+        assert "&lt;img src=x onerror=alert(1)&gt;" in output
+        assert 'href="#"' in output
+        assert "javascript:" not in output
+
+    def test_result_page_preserves_filters_and_explains_scope(self) -> None:
+        result = _make_result("https://example.com", "A result")
+        output = format_html(
+            [result],
+            "valkey",
+            portal_state={
+                "query": "valkey",
+                "categories": "packages",
+                "language": "en",
+                "time_range": "month",
+                "safesearch": 1,
+                "page": 2,
+                "category_options": ["general", "packages"],
+                "scope_label": "packages",
+                "selected_engine_count": 2,
+                "responsive_engine_count": 1,
+                "filter_enforcement": {
+                    "time_range": {"requested": "month", "status": "unsupported", "reason": "not enforced"},
+                    "safesearch": {"requested": 1, "status": "partially_enforced", "reason": "one source"},
+                },
+            },
+        )
+
+        assert 'option value="packages" selected' in output
+        assert 'name="time_range"' in output
+        assert "Past month" in output
+        assert "packages · 1 of 2 sources answered" in output
+        assert "partially enforced" in output
+        assert "pageno=1" in output
+        assert "pageno=3" in output
+
+    def test_result_page_surfaces_provenance_consensus_and_machine_view(self) -> None:
+        result = _make_result("https://docs.example.com/guide", "A useful guide")
+        result.category = "science"
+        result.engine = "brave"
+        result.engines = {"brave", "wikipedia"}
+
+        output = format_html(
+            [result],
+            "climate",
+            portal_state={"query": "climate", "page": 1, "responsive_engine_count": 2},
+        )
+
+        assert "Matched 2 sources" in output
+        assert "Research" in output
+        assert "Brave" in output and "Wikipedia" in output
+        assert "Open result ↗" in output
+        assert "Open JSON view ↗" in output
+        assert "format=json" in output
+        assert "Sources in view" in output
+        assert "data-result-card" in output
+
+        disabled_output = format_html(
+            [result],
+            "climate",
+            portal_state={"query": "climate", "json_enabled": False},
+        )
+        assert "Open JSON view ↗" not in disabled_output
+        assert "format=json" not in disabled_output
+
+    def test_browser_error_uses_portal_shell(self) -> None:
+        output = format_error_html("invalid_filter", "The filter is invalid.", field="safesearch")
+
+        assert 'role="alert"' in output
+        assert "Field: safesearch" in output
+        assert "Return to search" in output
+
+    def test_specialist_and_media_results_keep_safe_compact_metadata(self) -> None:
+        result = _make_result("https://example.com", "Vulnerability result")
+        result.media = MediaInfo(
+            media_type="image",
+            thumbnail="https://cdn.example.com/thumb.jpg",
+            source="https://example.com/source",
+        )
+        result.payload = build_payload(
+            "security",
+            "vulnerability",
+            {"cve_id": "CVE-2026-0001"},
+            engine="nvd",
+        )
+
+        output = format_html([result], "cve")
+
+        assert "image result" in output
+        assert "security / vulnerability" in output
+        assert 'src="https://cdn.example.com/thumb.jpg"' in output
+        assert 'alt="Vulnerability result"' in output

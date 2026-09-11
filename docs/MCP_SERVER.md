@@ -1,5 +1,9 @@
 # SlopSearX MCP Server
 
+For optional CVE and npm/PyPI release grouping over existing snapshots, use
+`slopsearx_read_entities`; see [Entity grouping](ENTITY_GROUPING.md) for the
+versioned contract, member references, and entity pagination semantics.
+
 The Model Context Protocol (MCP) server exposes SlopSearX to AI agents as
 intent-level tools. Agents can search across 51 engines without knowing URL
 query strings, discover what can be searched, preview routing before spending

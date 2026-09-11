@@ -14,7 +14,7 @@ resolution, ranking, deduplication, caching, and failure semantics.
 from __future__ import annotations
 
 import asyncio
-import html as html_lib
+import os
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from importlib.metadata import PackageNotFoundError
@@ -31,9 +31,18 @@ from slopsearx import metrics as m
 from slopsearx.adapter import EngineAdapter
 from slopsearx.audit import QueryAuditLogger
 from slopsearx.cache import SearchCache
-from slopsearx.capabilities import CapabilityCatalog, build_engine_health
+from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, build_engine_health, load_mcp_policy
 from slopsearx.config import Config, load_config
-from slopsearx.formatter import format_csv, format_html, format_json, format_rss, format_yaml_markdown
+from slopsearx.filters import resolve_filter_enforcement
+from slopsearx.formatter import (
+    format_csv,
+    format_error_html,
+    format_html,
+    format_json,
+    format_landing_page,
+    format_rss,
+    format_yaml_markdown,
+)
 from slopsearx.logging import setup_logging
 from slopsearx.middleware import RequestIDMiddleware
 from slopsearx.ratelimit import RateLimiter, RateLimitStrategy, ValkeySlidingWindow
@@ -56,6 +65,7 @@ from slopsearx.service import (
     RateLimitExceededError,
     SearchFlights,
     SearchRequest,
+    SearchResponse,
     SearchService,
     build_context,
     build_response_meta,
@@ -75,6 +85,7 @@ _suggestion_service: SuggestionService | None = None
 _stats_tracker: EngineStatsTracker | None = None
 _audit_logger: QueryAuditLogger | None = None
 _empty_scrape_diagnostics_enabled = False
+_portal_policy: MCPPolicy | None = None
 
 # Concurrency and per-client rate limiting
 _engine_semaphore: asyncio.Semaphore | None = None
@@ -93,6 +104,7 @@ async def _startup() -> None:
     global _engine_semaphore, _client_rate_window  # noqa: PLW0603
     global _empty_scrape_diagnostics_enabled  # noqa: PLW0603
     global _router, _suggestion_service, _stats_tracker, _audit_logger  # noqa: PLW0603
+    global _portal_policy  # noqa: PLW0603
     global _routing_budget_cache  # noqa: PLW0603
 
     ctx = await build_context()
@@ -110,6 +122,9 @@ async def _startup() -> None:
     _engine_semaphore = ctx.engine_semaphore
     _client_rate_window = ctx.client_rate_window
     _empty_scrape_diagnostics_enabled = ctx.empty_scrape_diagnostics_enabled
+    # Freeze the browser policy beside the startup capability/config snapshot
+    # so an environment change cannot alter access mid-process.
+    _portal_policy = load_mcp_policy()
     # Freeze the routing budget from the startup context (resolved once,
     # beside the config/catalog snapshot) so the HTTP routed scope/digest
     # never track a runtime ``ROUTING_*`` env change.
@@ -140,6 +155,43 @@ def _service_version() -> str:
         return package_version("slopsearx")
     except PackageNotFoundError:
         return "0.0.0"
+
+
+def _portal_default_theme() -> str:
+    """Return the configured human-portal theme, defaulting to dark."""
+    configured = os.getenv("SLOPSEARX_PORTAL_DEFAULT_THEME", "dark").strip().lower()
+    return configured if configured in {"dark", "darker"} else "dark"
+
+
+def _portal_policy_snapshot() -> MCPPolicy:
+    """Return the startup-frozen policy used by the browser portal."""
+    global _portal_policy  # noqa: PLW0603
+    if _portal_policy is None:
+        _portal_policy = load_mcp_policy()
+    return _portal_policy
+
+
+def _portal_security_headers(response: Response) -> Response:
+    """Apply the portal's browser boundary headers to an HTML response."""
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; base-uri 'self'; connect-src 'none'; "
+        "form-action 'self'; frame-ancestors 'none'; object-src 'none'; "
+        "script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: http: https:"
+    )
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
+
+
+def _portal_restricted_engines(engine_selection: str) -> list[str]:
+    """Return explicitly requested sensitive engines without the operator grant."""
+    policy = _portal_policy_snapshot()
+    if policy.targeted_sensitive_allowed:
+        return []
+    requested = {name.strip() for name in engine_selection.split(",") if name.strip()}
+    return sorted(requested & policy.sensitive_engines)
 
 
 def _routing_catalog() -> CapabilityCatalog | None:
@@ -452,6 +504,64 @@ def _format_from_accept(accept: str) -> str:
     return "html"
 
 
+def _portal_state(
+    *,
+    query: str,
+    categories: str,
+    engine_selection: str,
+    language: str,
+    time_range: str,
+    safesearch: int,
+    page: int,
+    response: SearchResponse,
+) -> dict[str, Any]:
+    """Build the redacted, capability-aware state used by the HTML portal."""
+    try:
+        catalog = _health_catalog()
+    except Exception:  # noqa: BLE001 — the portal still renders without metadata
+        catalog = None
+    category_options: set[str] = set()
+    for name, engine in _active_engines.items():
+        capability = None
+        if catalog is not None:
+            try:
+                capability = catalog.get(name)
+            except Exception:  # noqa: BLE001 — one bad catalog entry is local
+                capability = None
+        if capability is not None and capability.sensitive:
+            continue
+        category_options.update(
+            str(category) for category in getattr(engine, "categories", ()) if str(category).strip()
+        )
+
+    selected = list(response.scope.selected_engines)
+    enforcement: dict[str, dict[str, Any]] = {}
+    if time_range:
+        enforcement["time_range"] = resolve_filter_enforcement(selected, "time_range", time_range, _active_engines)
+    if safesearch:
+        enforcement["safesearch"] = resolve_filter_enforcement(selected, "safesearch", safesearch, _active_engines)
+    warnings = [str(warning) for warning in response.scope.warnings if str(warning).strip()]
+    scope_label = ", ".join(part.strip() for part in categories.split(",") if part.strip()) or "All sources"
+    return {
+        "query": query,
+        "categories": categories,
+        "engines": engine_selection,
+        "language": language,
+        "time_range": time_range,
+        "safesearch": safesearch,
+        "page": page,
+        "category_options": sorted(category_options),
+        "scope_label": scope_label,
+        "scope_note": warnings[0] if warnings else "",
+        "selected_engine_count": len(selected),
+        "responsive_engine_count": sum(1 for outcome in response.engine_outcomes if outcome.status == "ok"),
+        "filter_enforcement": enforcement,
+        "suggestions": list(response.suggestions),
+        "all_unresponsive": response.all_unresponsive,
+        "json_enabled": "json" in _configured_search_formats(),
+    }
+
+
 def _format_error_response(
     output_format: str,
     status_code: int,
@@ -468,13 +578,11 @@ def _format_error_response(
     if extra:
         payload.update(extra)
     if output_format == "html":
-        return HTMLResponse(
-            content=(
-                '<!doctype html><html lang="en"><head><meta charset="utf-8">'
-                f"<title>{html_lib.escape(error)}</title></head><body><h1>{html_lib.escape(error)}</h1>"
-                f"<p>{html_lib.escape(message)}</p></body></html>"
-            ),
-            status_code=status_code,
+        return _portal_security_headers(
+            HTMLResponse(
+                content=format_error_html(error, message, field=field, default_theme=_portal_default_theme()),
+                status_code=status_code,
+            )
         )
     if output_format == "csv":
         return PlainTextResponse(
@@ -534,12 +642,22 @@ def _render_search_response(
     meta: dict[str, Any] | None = None,
     engine_count: int | None = None,
     responsive_count: int | None = None,
+    portal_state: dict[str, Any] | None = None,
 ) -> Response:
     """Render one normalized search response in the requested format."""
     if output_format == "html":
-        return HTMLResponse(
-            content=format_html(results, query, meta=meta, unresponsive_engines=unresponsive_engines),
-            status_code=status_code,
+        return _portal_security_headers(
+            HTMLResponse(
+                content=format_html(
+                    results,
+                    query,
+                    meta=meta,
+                    unresponsive_engines=unresponsive_engines,
+                    portal_state=portal_state,
+                    default_theme=_portal_default_theme(),
+                ),
+                status_code=status_code,
+            )
         )
     if output_format == "yaml":
         yaml_output = format_yaml_markdown(
@@ -643,6 +761,18 @@ async def _search_endpoint(request: Request) -> Any:
             output_format, 400, error="invalid_filter", field=field, message=f"Invalid value for '{field}'."
         )
 
+    # A human visiting the bare root gets the portal landing page. Keep the
+    # SearXNG-compatible missing-query error on /search and for machine
+    # formats, so API clients retain their existing contract.
+    if request.url.path == "/" and request.method == "GET" and not q.strip():
+        output_format, format_error = _select_format(request, requested_format)
+        if format_error is not None:
+            return format_error
+        if output_format == "html":
+            return _portal_security_headers(
+                HTMLResponse(content=format_landing_page(default_theme=_portal_default_theme()))
+            )
+
     # Increment request counters
     # Count every compatibility request, including malformed and unsupported
     # requests, without creating unbounded labels from user input.
@@ -663,6 +793,17 @@ async def _search_endpoint(request: Request) -> Any:
     output_format, format_error = _select_format(request, requested_format)
     if format_error is not None:
         return format_error
+
+    restricted_engines = _portal_restricted_engines(engines_param)
+    if restricted_engines:
+        return _format_error_response(
+            output_format,
+            403,
+            error="engine_restricted",
+            field="engines",
+            message="Explicit selection of one or more sensitive sources requires operator authorization.",
+            extra={"engines": restricted_engines},
+        )
 
     def parse_int(
         value: str | int, field: str, *, minimum: int | None = None, maximum: int | None = None
@@ -742,6 +883,16 @@ async def _search_endpoint(request: Request) -> Any:
                 "query_id": response.query_id,
                 "engine_status": {},
             },
+            portal_state=_portal_state(
+                query=q,
+                categories=categories,
+                engine_selection=engines_param,
+                language=language,
+                time_range=time_range,
+                safesearch=parsed_safesearch,
+                page=parsed_page,
+                response=response,
+            ),
         )
 
     unresponsive = unresponsive_from_outcomes(response.engine_outcomes)
@@ -762,6 +913,16 @@ async def _search_endpoint(request: Request) -> Any:
         meta=meta,
         engine_count=len(response.scope.selected_engines),
         responsive_count=sum(1 for o in response.engine_outcomes if o.status == "ok"),
+        portal_state=_portal_state(
+            query=q,
+            categories=categories,
+            engine_selection=engines_param,
+            language=language,
+            time_range=time_range,
+            safesearch=parsed_safesearch,
+            page=parsed_page,
+            response=response,
+        ),
     )
 
 

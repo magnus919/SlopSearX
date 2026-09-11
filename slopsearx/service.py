@@ -51,6 +51,7 @@ from slopsearx.filters import (
     engine_filter_layer,
     filter_results_by_time_range,
     publication_date_bounds,
+    resolve_filter_enforcement,
     time_range_window,
 )
 from slopsearx.logging import capture_exception
@@ -676,6 +677,18 @@ class SearchService:
             raise QueryValidationError(str(exc), exc.field) from exc
 
         scope = self._resolver_for().resolve(request)
+        if request.safesearch == 2:
+            safe_report = resolve_filter_enforcement(
+                scope.selected_engines,
+                "safesearch",
+                request.safesearch,
+                self._ctx.active_engines,
+            )
+            if safe_report["status"] != "enforced":
+                raise QueryValidationError(
+                    "strict SafeSearch cannot be guaranteed by every selected source",
+                    "safesearch",
+                )
         if (
             request.time_range
             and relative_window is None
