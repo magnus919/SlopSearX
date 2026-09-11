@@ -123,6 +123,19 @@ class AtomicStore:
         self._expiry.pop(key, None)
         return True
 
+    async def save_if_lease_owner(
+        self, lease_key: str, token: str, record_key: str, value: dict[str, Any], ttl: int
+    ) -> bool:
+        """Atomically persist a record only while this in-memory lease is held."""
+        self._purge(lease_key)
+        current = self._data.get(lease_key)
+        if not isinstance(current, dict) or current.get("token") != token:
+            return False
+        self._data[record_key] = value
+        self._expiry[record_key] = time.time() + ttl
+        self.set_ttls.append(ttl)
+        return True
+
 
 class _ValkeyLikeClient:
     """Minimal async client mirroring the valkey-py surface used by leases."""
@@ -194,6 +207,19 @@ class ValkeyLikeStore:
 
     async def set(self, key: str, value: dict[str, Any], ttl: int = 300) -> None:
         await self._client.set(key, json.dumps(value, default=str), ex=ttl)
+
+    async def save_if_lease_owner(
+        self, lease_key: str, token: str, record_key: str, value: dict[str, Any], ttl: int
+    ) -> bool:
+        """Provide an atomic CAS seam for this in-process Valkey stand-in."""
+        if self._client._expired(lease_key):
+            self._client._data.pop(lease_key, None)
+            self._client._ttl.pop(lease_key, None)
+        if self._client._data.get(lease_key) != token.encode():
+            return False
+        self._client._data[record_key] = json.dumps(value, default=str).encode()
+        self._client._ttl[record_key] = time.time() + ttl
+        return True
 
 
 class _LuaEvalClient(_ValkeyLikeClient):
@@ -598,6 +624,48 @@ class TestLeasePrimitives:
         assert await job_store._lease_release(_lease_key("default", job.job_id), "wrong-token") is False
         await job_store.release(job.job_id, token)
         assert await job_store._lease_get(_lease_key("default", job.job_id)) is None
+
+    async def test_clear_ownership_uses_atomic_backend_compare_and_set(self) -> None:
+        _, store = _build_state()
+        job_store = ResearchJobStore(store)
+        job = _job()
+        await job_store.save(job)
+        claimed = await job_store.claim(job.job_id, "w1", 60)
+        assert claimed is not None and claimed.lease_token
+
+        assert await job_store.clear_ownership(claimed) is True
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.owner_id is None and loaded.lease_token is None
+
+    async def test_clear_ownership_fails_closed_without_atomic_backend_hook(self, monkeypatch) -> None:
+        _, store = _build_state()
+        job_store = ResearchJobStore(store)
+        job = _job()
+        await job_store.save(job)
+        claimed = await job_store.claim(job.job_id, "w1", 60)
+        assert claimed is not None and claimed.lease_token
+        monkeypatch.setattr(store, "save_if_lease_owner", None)
+
+        assert await job_store.clear_ownership(claimed) is False
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.lease_token == claimed.lease_token
+
+    async def test_save_if_owned_fails_closed_without_atomic_backend_hook(self, monkeypatch) -> None:
+        _, store = _build_state()
+        job_store = ResearchJobStore(store)
+        job = _job()
+        await job_store.save(job)
+        claimed = await job_store.claim(job.job_id, "w1", 60)
+        assert claimed is not None and claimed.lease_token
+        claimed.state = "succeeded"
+        monkeypatch.setattr(store, "save_if_lease_owner", None)
+
+        assert await job_store.save_if_owned(claimed) is False
+        loaded = await job_store.load(job.job_id)
+        assert loaded is not None
+        assert loaded.state == "running"
 
     async def test_claim_next_and_scan_tenants(self) -> None:
         _, store = _build_state()

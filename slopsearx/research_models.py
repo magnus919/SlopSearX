@@ -117,6 +117,11 @@ class ResearchQueryAttempt:
     state: str = "done"
     attempted_at: float = field(default_factory=time.time)
     engine_coverage: list[EngineCoverage] = field(default_factory=list)
+    attempt_id: str = ""
+    finished_at: float | None = None
+    enforcement: dict[str, Any] = field(default_factory=dict)
+    admitted_result_ids: list[str] = field(default_factory=list)
+    new_lead_ids: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -143,6 +148,12 @@ class ResearchQuery:
     # path preserves the same enforcement truth as generic/targeted/specialist
     # searches.
     enforcement: dict[str, Any] = field(default_factory=dict)
+    subquestion_id: str | None = None
+    rationale: str | None = None
+    parent_attempt_id: str | None = None
+    continuation_key: str | None = None
+    continuation_digest: str | None = None
+    requires_intent_grant: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -289,6 +300,13 @@ class ResearchJob:
     owner_id: str | None = None
     lease_token: str | None = None
     lease_expires_at: float = 0.0
+    subquestions: dict[str, dict[str, str]] = field(default_factory=dict)
+    budget_limits: dict[str, int] = field(default_factory=dict)
+    budget_used: dict[str, int] = field(default_factory=dict)
+    seen_lead_ids: list[str] = field(default_factory=list)
+    caller_completed: bool = False
+    completion_rationale: str | None = None
+    stop_reason: str | None = None
 
     @property
     def progress(self) -> tuple[int, int]:
@@ -342,10 +360,21 @@ def _job_from_payload(payload: dict[str, Any]) -> ResearchJob:
                     state=str(attempt.get("state", "done")),
                     attempted_at=float(attempt.get("attempted_at", 0.0)),
                     engine_coverage=_coverage(attempt.get("engine_coverage")),
+                    attempt_id=str(attempt.get("attempt_id", "")),
+                    finished_at=attempt.get("finished_at"),
+                    enforcement=dict(attempt.get("enforcement") or {}),
+                    admitted_result_ids=list(attempt.get("admitted_result_ids") or []),
+                    new_lead_ids=list(attempt.get("new_lead_ids") or []),
                 )
                 for attempt in (item.get("attempts") or [])
             ],
             enforcement=dict(item.get("enforcement") or {}),
+            subquestion_id=item.get("subquestion_id"),
+            rationale=item.get("rationale"),
+            parent_attempt_id=item.get("parent_attempt_id"),
+            continuation_key=item.get("continuation_key"),
+            continuation_digest=item.get("continuation_digest"),
+            requires_intent_grant=bool(item.get("requires_intent_grant", True)),
         )
         for item in (payload.get("queries") or [])
     ]
@@ -364,6 +393,13 @@ def _job_from_payload(payload: dict[str, Any]) -> ResearchJob:
         owner_id=payload.get("owner_id"),
         lease_token=payload.get("lease_token"),
         lease_expires_at=float(payload.get("lease_expires_at", 0.0)),
+        subquestions=dict(payload.get("subquestions") or {}),
+        budget_limits=dict(payload.get("budget_limits") or {}),
+        budget_used=dict(payload.get("budget_used") or {}),
+        seen_lead_ids=list(payload.get("seen_lead_ids") or []),
+        caller_completed=bool(payload.get("caller_completed", False)),
+        completion_rationale=payload.get("completion_rationale"),
+        stop_reason=payload.get("stop_reason"),
     )
 
 
@@ -380,3 +416,20 @@ def generate_owner_id() -> str:
 def generate_lease_token() -> str:
     """Generate an opaque, unforgeable lease ownership token."""
     return f"lease-{secrets.token_hex(16)}"
+
+
+def recover_orphan_attempts(job: ResearchJob) -> None:
+    """Finalize uncertain attempts only after acquiring a replacement lease."""
+    for query in job.queries:
+        if (
+            query.state == "running"
+            and not job.budget_limits
+            and (not query.attempts or query.attempts[-1].state != "running")
+        ):
+            # Preserve conservative usage when migrating a pre-ledger job.
+            query.attempts.append(ResearchQueryAttempt(attempt_id=f"attempt-{uuid.uuid4().hex}", state="running"))
+        if query.attempts and query.attempts[-1].state == "running":
+            attempt = query.attempts[-1]
+            attempt.state = "interrupted"
+            attempt.finished_at = time.time()
+            attempt.error = "Previous dispatch outcome is unknown after worker recovery; reservation retained"

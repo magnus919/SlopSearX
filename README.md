@@ -192,7 +192,7 @@ MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.
   `slopsearx_explain_search_scope`, `slopsearx_get_service_status`,
   `slopsearx_read_results`, `slopsearx_read_result`, `slopsearx_read_entities`,
   `slopsearx_start_research`, `slopsearx_get_job`, `slopsearx_cancel_job`,
-  `slopsearx_retry_research`, `slopsearx_extend_research`
+  `slopsearx_retry_research`, `slopsearx_extend_research`, `slopsearx_update_research`
 - Resources: `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`
 - Specialist tools (jobs, security, science, research) are disabled until
