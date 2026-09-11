@@ -555,7 +555,13 @@ class MCPPolicy:
 
     # Specialist tool grants — all disabled until explicitly enabled.
     enabled_tools: dict[str, bool] = field(
-        default_factory=lambda: {"jobs": False, "security": False, "science": False, "research": False}
+        default_factory=lambda: {
+            "jobs": False,
+            "security": False,
+            "science": False,
+            "research": False,
+            "retrieval_receipts": False,
+        }
     )
     sensitive_engines: set[str] = field(default_factory=lambda: set(DEFAULT_SENSITIVE_ENGINES))
     required_key_engines: set[str] = field(default_factory=lambda: set(REQUIRED_KEY_ENGINES))
@@ -694,6 +700,7 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
         "MCP_GRANT_SECURITY": "security",
         "MCP_GRANT_SCIENCE": "science",
         "MCP_GRANT_RESEARCH": "research",
+        "MCP_GRANT_RETRIEVAL_RECEIPTS": "retrieval_receipts",
     }
     for env_var, tool in grant_map.items():
         value = os.environ.get(env_var, "").strip().lower()
