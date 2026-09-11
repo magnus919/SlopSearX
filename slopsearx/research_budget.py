@@ -67,6 +67,12 @@ def budget_summary(job: ResearchJob) -> dict[str, Any]:
 
 def reserve_attempt(job: ResearchJob, query: ResearchQuery) -> ResearchQueryAttempt | None:
     """Prepare one attempt under the caller's lease, without performing I/O."""
+
+    def reject(reason: str) -> None:
+        job.stop_reason = reason
+        query.state = "failed"
+        query.error = reason
+
     if query.attempts and query.attempts[-1].state == "running":
         interrupted = query.attempts[-1]
         interrupted.state = "interrupted"
@@ -78,10 +84,10 @@ def reserve_attempt(job: ResearchJob, query: ResearchQuery) -> ResearchQueryAtte
         ("results", 1, "result_budget_exhausted"),
     ):
         if job.budget_used[key] + amount > job.budget_limits[key]:
-            job.stop_reason = reason
+            reject(reason)
             return None
     if len(query.engines) > job.budget_limits["engines_per_query"]:
-        job.stop_reason = "engine_budget_exhausted"
+        reject("engine_budget_exhausted")
         return None
     query.query_id = query.cursor = query.error = None
     query.result_count = 0

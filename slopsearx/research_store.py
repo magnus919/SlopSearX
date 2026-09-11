@@ -201,9 +201,9 @@ class ResearchJobStore:
         lease, e.g. a direct retry/extend run) and ``False`` when the lease
         was lost and the write was skipped. On Valkey the lease check and the
         record write happen in one atomic Lua call (compare-and-set) so a
-        concurrent reclamation cannot race between them; the in-memory
-        fallback is check-then-save, which is atomic under single-threaded
-        asyncio (no await between the check and the write).
+        concurrent reclamation cannot race between them. Non-Valkey backends
+        must expose the equivalent ``save_if_lease_owner`` atomic primitive;
+        unsupported backends fail closed.
         """
         token = job.lease_token
         if not token:
@@ -216,10 +216,21 @@ class ResearchJobStore:
         eval_method = getattr(client, "eval", None) if client is not None else None
         if eval_method is not None:
             return await self._save_if_owned_valkey(eval_method, job, token)
-        if await self._lease_get(self._lease_key(job.job_id)) != token:
+        compare_and_set = getattr(store, "save_if_lease_owner", None)
+        if compare_and_set is None:
             return False
-        await self.save(job)
-        return True
+        saved = bool(
+            await compare_and_set(
+                self._lease_key(job.job_id),
+                token,
+                self._key(job.job_id),
+                _job_to_payload(job),
+                JOB_RETENTION_SECONDS,
+            )
+        )
+        if saved:
+            await self._refresh_ready(job.job_id)
+        return saved
 
     async def clear_ownership(self, job: ResearchJob) -> bool:
         """Clear record ownership while the old token still fences the write.
@@ -236,9 +247,20 @@ class ResearchJobStore:
         if evaluate is not None:
             saved = await self._save_if_owned_valkey(evaluate, cleared, token)
         else:
-            saved = await self._lease_get(self._lease_key(job.job_id)) == token
+            compare_and_set = getattr(self._store, "save_if_lease_owner", None)
+            if compare_and_set is None:
+                return False
+            saved = bool(
+                await compare_and_set(
+                    self._lease_key(job.job_id),
+                    token,
+                    self._key(job.job_id),
+                    _job_to_payload(cleared),
+                    JOB_RETENTION_SECONDS,
+                )
+            )
             if saved:
-                await self.save(cleared)
+                await self._refresh_ready(job.job_id)
         if saved:
             job.owner_id = job.lease_token = None
             job.lease_expires_at = 0.0

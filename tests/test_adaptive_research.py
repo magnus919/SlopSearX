@@ -198,6 +198,8 @@ async def test_legacy_running_attempt_is_charged_once_before_recovery(state, pri
     recovered = await state.runner.run_direct(job)
     assert recovered.budget_used["attempts"] == 1 + int(prior_history)
     assert recovered.queries[0].attempts[-1].state == "interrupted"
+    assert recovered.queries[0].state == "failed"
+    assert recovered.queries[0].error == "attempt_budget_exhausted"
     assert recovered.stop_reason == "attempt_budget_exhausted"
     assert state.ctx.active_engines["wikipedia"].calls == calls
     replay = await state.runner.run_direct(recovered)
