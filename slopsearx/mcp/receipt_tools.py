@@ -19,6 +19,7 @@ from slopsearx.artifacts import (
     manifest_artifact_id,
     parse_artifact_ref,
 )
+from slopsearx.mcp.composition import ResolvedSource, resolve_source
 from slopsearx.mcp.result_serialization import NON_VERIFICATION_NOTE, _retrieval_handoff
 from slopsearx.mcp.state import current_tenant, get_state
 from slopsearx.retrieval_receipts import RECEIPT_CONTRACT, RECEIPT_VERSION
@@ -281,11 +282,21 @@ async def slopsearx_export_research_manifest(
     artifacts: list[dict[str, Any]] | None = None,
     max_depth: StrictInt = 2,
     max_nodes: StrictInt = 100,
+    source: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Join explicit results or a bounded lineage cut to retained observations."""
+    """Join explicit results, a lineage cut, or one workflow source to observations."""
     enabled = _enabled()
     if isinstance(enabled, dict):
         return enabled
+    if source is not None and (result_ids is not None or artifacts is not None):
+        return _error("input_conflict", "source cannot be combined with result_ids or artifacts")
+    resolved_source: ResolvedSource | None = None
+    if source is not None:
+        resolved = await resolve_source(source, "research_manifest")
+        if isinstance(resolved, dict):
+            return resolved
+        resolved_source = resolved
+        result_ids = list(resolved.result_ids)
     if result_ids is None:
         result_ids = []
     else:
@@ -348,10 +359,14 @@ async def slopsearx_export_research_manifest(
         "observations_verified": False,
         "verification_note": NON_VERIFICATION_NOTE,
     }
+    if resolved_source is not None:
+        manifest["source"] = resolved_source.stored()
     manifest["artifact"] = artifact_ref("research_manifest", manifest_artifact_id(manifest))
     manifest["lineage"] = [
         lineage_edge(manifest["artifact"], "contains", artifact_ref("result", result_id)) for result_id in result_ids
     ]
+    if resolved_source is not None:
+        manifest["lineage"].append(lineage_edge(manifest["artifact"], "derived_from", resolved_source.artifact))
     if len(json.dumps(manifest, separators=(",", ":"), ensure_ascii=False).encode()) > MAX_MANIFEST_BYTES:
         return _error("resource_limit", "encoded manifest exceeds 1048576 bytes")
     return manifest

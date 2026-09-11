@@ -170,7 +170,7 @@ async def _research_job(ref: dict[str, Any]) -> tuple[dict[str, Any], list[dict[
         return _error_node(ref, "missing")
     if core._research_workflow_policy_error(state, job):
         return _policy_node(ref)
-    edges: list[dict[str, Any]] = []
+    edges = _validated_edges(job.workflow.get("lineage") or [])
     for query in job.queries:
         for attempt in query.attempts:
             attempt_ref = artifact_ref("research_attempt", composite_artifact_id(job.job_id, attempt.attempt_id))
@@ -222,7 +222,7 @@ async def _staged(ref: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, A
 
     if _policy_check(read.record):
         return _policy_node(ref)
-    edges = []
+    edges = _validated_edges(read.record.get("lineage") or [])
     for stage in read.record.get("stages", []):
         for attempt in stage.get("attempts", []):
             cursor = attempt.get("cursor")
@@ -341,7 +341,7 @@ async def _dossier(ref: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, 
         return _error_node(ref, "missing")
     if core._research_workflow_policy_error(state, job):
         return _policy_node(ref)
-    edges = []
+    edges = _validated_edges(job.workflow.get("lineage") or [])
     for query in job.queries:
         for attempt in query.attempts:
             if attempt.cursor:
