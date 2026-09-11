@@ -137,4 +137,6 @@ def test_dependency_dossier_grant_does_not_change_http_search(
     enabled_data = enabled.json()
     disabled_data["meta"].pop("query_id")
     enabled_data["meta"].pop("query_id")
+    disabled_data["meta"].pop("response_time_ms")
+    enabled_data["meta"].pop("response_time_ms")
     assert disabled_data == enabled_data
