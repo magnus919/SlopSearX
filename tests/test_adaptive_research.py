@@ -293,6 +293,88 @@ async def test_unexpected_dispatch_failure_has_fresh_durable_attempt(state):
     assert response["stop_reason"] == "execution_failed"
 
 
+class _SimulatedWorkerDeath(BaseException):
+    """Escape normal exception handling like an abruptly terminated process."""
+
+
+async def test_worker_death_after_engine_return_is_conservatively_recovered(state):
+    """A returned but uncommitted engine response remains an uncertain charge."""
+    state.ctx.active_engines["wikipedia"]._count = 1
+    started = await t.slopsearx_start_research(
+        "investigate",
+        max_queries=1,
+        max_attempts=2,
+        initial_plan=[{"query": "first", "engines": ["wikipedia"]}],
+    )
+    original = state.service.search
+
+    async def die_after_return(request):
+        await original(request)
+        raise _SimulatedWorkerDeath
+
+    state.service.search = die_after_return
+    with pytest.raises(_SimulatedWorkerDeath):
+        await state.runner.run_direct(await state.job_store.load(started["job_id"]))
+
+    interrupted = await state.job_store.load(started["job_id"])
+    assert interrupted.queries[0].state == "running"
+    assert interrupted.queries[0].attempts[0].state == "running"
+    assert interrupted.budget_used["attempts"] == 1
+    assert state.ctx.active_engines["wikipedia"].calls == 1
+
+    state.service.search = original
+    recovered = await state.runner.run_direct(interrupted)
+    attempts = recovered.queries[0].attempts
+    assert [attempt.state for attempt in attempts] == ["interrupted", "done"]
+    assert attempts[0].cursor is None
+    assert attempts[1].cursor is not None
+    assert recovered.budget_used["attempts"] == 2
+    # SearchService's durable-compatible response cache prevents a second
+    # engine dispatch even though the first worker died before job linkage.
+    assert state.ctx.active_engines["wikipedia"].calls == 1
+    assert (await state.snapshots.read(attempts[1].cursor)).snapshot is not None
+
+
+async def test_worker_death_after_snapshot_write_preserves_orphan_and_recovers(state):
+    """A snapshot written before job linkage stays immutable through recovery."""
+    state.ctx.active_engines["wikipedia"]._count = 1
+    started = await t.slopsearx_start_research(
+        "investigate",
+        max_queries=1,
+        max_attempts=2,
+        initial_plan=[{"query": "first", "engines": ["wikipedia"]}],
+    )
+    original_create = state.snapshots.create
+    written: list[str] = []
+
+    async def die_after_snapshot(*args, **kwargs):
+        cursor = await original_create(*args, **kwargs)
+        assert cursor is not None
+        written.append(cursor)
+        raise _SimulatedWorkerDeath
+
+    state.snapshots.create = die_after_snapshot
+    with pytest.raises(_SimulatedWorkerDeath):
+        await state.runner.run_direct(await state.job_store.load(started["job_id"]))
+
+    assert len(written) == 1
+    orphan = await state.snapshots.read(written[0])
+    assert orphan.snapshot is not None
+    assert orphan.snapshot.total == 1
+    interrupted = await state.job_store.load(started["job_id"])
+    assert interrupted.queries[0].cursor is None
+    assert interrupted.budget_used["attempts"] == 1
+
+    state.snapshots.create = original_create
+    recovered = await state.runner.run_direct(interrupted)
+    attempts = recovered.queries[0].attempts
+    assert [attempt.state for attempt in attempts] == ["interrupted", "done"]
+    assert attempts[1].cursor is not None and attempts[1].cursor != written[0]
+    assert recovered.budget_used["attempts"] == 2
+    assert state.ctx.active_engines["wikipedia"].calls == 1
+    assert (await state.snapshots.read(written[0])).snapshot == orphan.snapshot
+
+
 @pytest.mark.parametrize("stop", ["deadline", "cancel"])
 async def test_lifecycle_during_dispatch_retains_evidence_and_stops_next_query(state, stop):
 
