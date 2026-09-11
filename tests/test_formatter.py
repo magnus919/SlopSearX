@@ -726,6 +726,37 @@ class TestPortalHtml:
         assert "not eligible" in output
         assert "non-global literal IP address" in output
 
+    def test_result_explanation_lists_multiple_v2_identities(self) -> None:
+        output = format_html(
+            [_make_result("https://example.com/paper", "Paper")],
+            "paper",
+            portal_state={
+                "query": "paper",
+                "grouping_status": "available",
+                "result_groups": {
+                    "0": [
+                        {
+                            "entity_id": "doi-id",
+                            "namespace": "doi",
+                            "identifier": {"doi": "10.1000/example"},
+                            "result_indices": [0],
+                            "conflicting_fields": [],
+                        },
+                        {
+                            "entity_id": "pmid-id",
+                            "namespace": "pmid",
+                            "identifier": {"pmid": "123456"},
+                            "result_indices": [0],
+                            "conflicting_fields": [],
+                        },
+                    ]
+                },
+            },
+        )
+
+        assert "doi — doi: 10.1000/example" in output
+        assert "pmid — pmid: 123456" in output
+
     @pytest.mark.parametrize(
         ("status", "label"),
         [("partial", "partial; no supported identity"), ("empty", "empty; no supported identities")],

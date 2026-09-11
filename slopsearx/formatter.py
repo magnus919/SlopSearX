@@ -599,29 +599,38 @@ def _portal_result_explanation(result: SearchResult, index: int, state: dict[str
 
     grouping_status = str(_portal_state_value(state, "grouping_status", "unavailable"))
     groups = _portal_state_value(state, "result_groups", {})
-    group = groups.get(str(index)) if isinstance(groups, dict) else None
+    group_value = groups.get(str(index)) if isinstance(groups, dict) else None
+    group_items = (
+        group_value if isinstance(group_value, list) else [group_value] if isinstance(group_value, dict) else []
+    )
+    identified_groups = [group for group in group_items if isinstance(group, dict) and group.get("entity_id")]
     entity_markup: str
-    if isinstance(group, dict) and group.get("entity_id"):
-        namespace = html_lib.escape(str(group.get("namespace") or "entity"), quote=True)
-        identifier = html_lib.escape(_portal_identifier(group.get("identifier")), quote=True)
-        member_indices = [value for value in group.get("result_indices", []) if type(value) is int and value >= 0]
-        member_links = " ".join(
-            f'<a class="explanation-link" href="#result-{member + 1}">#{member + 1}</a>' for member in member_indices
-        )
-        conflicts = [str(field) for field in group.get("conflicting_fields", []) if str(field)]
-        conflict_markup = ""
-        if conflicts:
-            conflict_names = html_lib.escape(", ".join(sorted(conflicts)), quote=True)
-            conflict_markup = (
-                f"<li><strong>Source-reported conflicts:</strong> {conflict_names}. "
-                f"Inspect contributing results: {member_links}</li>"
+    if identified_groups:
+        entity_parts: list[str] = []
+        conflict_parts: list[str] = []
+        for group in identified_groups:
+            namespace = html_lib.escape(str(group.get("namespace") or "entity"), quote=True)
+            identifier = html_lib.escape(_portal_identifier(group.get("identifier")), quote=True)
+            member_indices = [value for value in group.get("result_indices", []) if type(value) is int and value >= 0]
+            member_links = " ".join(
+                f'<a class="explanation-link" href="#result-{member + 1}">#{member + 1}</a>'
+                for member in member_indices
             )
-        entity_markup = (
-            f'<li><strong>Entity:</strong> <span class="explanation-status" data-status="available">'
-            f"{namespace} — {identifier}</span> · {len(member_indices)} result"
-            f"{'s' if len(member_indices) != 1 else ''} in this canonical response</li>{conflict_markup}"
-        )
-    elif isinstance(group, dict):
+            entity_parts.append(
+                f'<li><strong>Entity:</strong> <span class="explanation-status" data-status="available">'
+                f"{namespace} — {identifier}</span> · {len(member_indices)} result"
+                f"{'s' if len(member_indices) != 1 else ''} in this canonical response</li>"
+            )
+            conflicts = [str(field) for field in group.get("conflicting_fields", []) if str(field)]
+            if conflicts:
+                conflict_names = html_lib.escape(", ".join(sorted(conflicts)), quote=True)
+                conflict_parts.append(
+                    f"<li><strong>Source-reported conflicts:</strong> {conflict_names}. "
+                    f"Inspect contributing results: {member_links}</li>"
+                )
+        entity_markup = "".join(entity_parts + conflict_parts)
+    elif group_items:
+        group = group_items[0]
         group_reason = html_lib.escape(str(group.get("reason") or "unsupported result metadata"), quote=True)
         entity_markup = f"<li><strong>Entity grouping:</strong> unsupported for this result ({group_reason.replace('_', ' ')}).</li>"
     else:

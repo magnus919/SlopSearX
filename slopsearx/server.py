@@ -545,7 +545,7 @@ def _portal_state(
     warnings = [str(warning) for warning in response.scope.warnings if str(warning).strip()]
     scope_label = ", ".join(part.strip() for part in categories.split(",") if part.strip()) or "All sources"
     grouping_status = "available"
-    result_groups: dict[str, dict[str, Any]] = {}
+    result_groups: dict[str, list[dict[str, Any]]] = {}
     try:
         # The HTTP service returns its canonical unsliced response. Project
         # identities over that full response before the formatter applies any
@@ -560,7 +560,8 @@ def _portal_state(
                 total=len(response.results),
                 tenant="public-portal",
                 ranking_explanation=response.ranking_explanation,
-            )
+            ),
+            version=2,
         )
         for group in projection:
             result_indices: list[int] = []
@@ -579,7 +580,7 @@ def _portal_state(
                     continue
                 result_indices.append(result_index)
             for result_index in result_indices:
-                result_groups[str(result_index)] = explanation
+                result_groups.setdefault(str(result_index), []).append(explanation)
     except Exception:  # noqa: BLE001 — explanation failure must not break search
         grouping_status = "unavailable"
     return {

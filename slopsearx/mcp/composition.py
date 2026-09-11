@@ -118,7 +118,10 @@ async def _entity_group(ref: dict[str, Any]) -> ResolvedSource | dict[str, Any]:
         return parent
     read = await get_state().snapshots.for_tenant(current_tenant()).read(snapshot_id)
     assert read.snapshot is not None
-    group = next((item for item in entity_groups(read.snapshot) if item.get("entity_id") == entity_id), None)
+    version = 2 if entity_id.startswith("entity-v2-") else 1
+    group = next(
+        (item for item in entity_groups(read.snapshot, version=version) if item.get("entity_id") == entity_id), None
+    )
     if group is None:
         return _error("source_not_found", "source entity group was not found")
     result_ids = [str(item) for item in group["result_ids"]]

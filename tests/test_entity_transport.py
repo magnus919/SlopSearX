@@ -54,6 +54,10 @@ async def test_entity_view_preserves_cached_flat_results(monkeypatch):
             )
             assert second["entities"][0]["identifier"]["cve_id"] == "CVE-2024-99999"
             assert not second["meta"]["has_more"]
+            v2 = _payload(await session.call_tool("slopsearx_read_entities", {"cursor": cursor, "version": 2}))
+            assert v2["version"] == 2
+            assert v2["relationships"] == []
+            assert all(entity["entity_id"].startswith("entity-v2-") for entity in v2["entities"])
             assert _payload(await session.call_tool("slopsearx_read_results", {"cursor": cursor})) == before
             repeated = _payload(await session.call_tool("slopsearx_search", query))
             assert len(calls) == 1
