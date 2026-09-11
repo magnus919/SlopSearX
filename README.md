@@ -187,7 +187,7 @@ slopsearx-mcp --remote http://<slopsearx-host>:8000/mcp --oauth
 MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.com slopsearx-mcp
 ```
 
-- 33 tools: `slopsearx_search`, `slopsearx_search_targeted`,
+- 35 tools: `slopsearx_search`, `slopsearx_search_targeted`,
   `slopsearx_search_jobs`, `slopsearx_search_security`,
   `slopsearx_search_science`, `slopsearx_list_capabilities`,
   `slopsearx_explain_search_scope`, `slopsearx_get_service_status`,
@@ -198,6 +198,7 @@ MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.
   `slopsearx_create_saved_search`, `slopsearx_get_saved_search`,
   `slopsearx_update_saved_search`, `slopsearx_pause_saved_search`,
   `slopsearx_delete_saved_search`, `slopsearx_read_saved_search_reports`,
+  `slopsearx_read_saved_search_events`, `slopsearx_ack_saved_search_events`,
   `slopsearx_submit_retrieval_receipt`,
   `slopsearx_read_retrieval_receipts`, `slopsearx_export_research_manifest`,
   `slopsearx_preview_staged_search`, `slopsearx_search_staged`,
@@ -211,11 +212,12 @@ MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.
 - Supported artifact-to-workflow transitions, source lifecycle errors, and
   conflict rules are documented in
   [`docs/WORKFLOW_COMPOSITION.md`](docs/WORKFLOW_COMPOSITION.md).
-- Specialist tools (jobs, security, science, research, saved searches, retrieval receipts,
+- Specialist tools (jobs, security, science, research, saved searches and events, retrieval receipts,
   staged search, dependency dossiers) are disabled until
   the operator grants them (`MCP_GRANT_JOBS=1`, `MCP_GRANT_SECURITY=1`,
   `MCP_GRANT_SCIENCE=1`, `MCP_GRANT_RESEARCH=1`,
   `MCP_GRANT_SAVED_SEARCHES=1`, `MCP_GRANT_RETRIEVAL_RECEIPTS=1`,
+  `MCP_GRANT_SAVED_SEARCH_EVENTS=1`,
   `MCP_GRANT_STAGED_SEARCH=1`, `MCP_GRANT_DEPENDENCY_DOSSIER=1`).
 - Sensitive engines (`hibp`, `dehashed`) are unreachable from generic
   routing, categories, and intent profiles, and are rejected by **every**

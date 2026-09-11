@@ -144,3 +144,15 @@ def test_dependency_dossier_grant_does_not_change_http_search(
     disabled_data["meta"].pop("response_time_ms")
     enabled_data["meta"].pop("response_time_ms")
     assert disabled_data == enabled_data
+
+
+def test_saved_event_grant_does_not_change_http_search(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    params = {"q": "contract", "format": "json"}
+    monkeypatch.delenv("MCP_GRANT_SAVED_SEARCH_EVENTS", raising=False)
+    disabled = client.get("/search", params=params).json()
+    monkeypatch.setenv("MCP_GRANT_SAVED_SEARCH_EVENTS", "1")
+    enabled = client.get("/search", params=params).json()
+    for data in (disabled, enabled):
+        data["meta"].pop("query_id")
+        data["meta"].pop("response_time_ms")
+    assert disabled == enabled
