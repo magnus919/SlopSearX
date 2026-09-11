@@ -90,6 +90,8 @@ header, and an unverified JWT claim are not identities.
 An operator-managed identity directory maps one external subject to one stable
 internal `principal_id` and to zero or more tenant memberships. Each membership
 contains a stable `tenant_id`, roles/grants, status, and authorization revision.
+The principal has its own authorization revision so a global principal
+revocation does not depend on updating every membership atomically.
 The directory is server-side configuration or a bounded Valkey-backed service;
 it is never supplied by a form or inferred from an object ID. If claim-based
 mapping is later supported, the issuer, claim name, accepted values, and tenant
@@ -108,11 +110,12 @@ Every request rebuilds an authorization context from the session's immutable
 principal ID and active tenant, then resolves the current membership revision
 and grants server-side. Effective grants are the intersection of current
 membership grants and current operator policy; a runtime policy denial always
-wins. A cached grant snapshot may be used only when its short operator-set
-maximum age has not elapsed and its revision still matches. Store unavailability,
-a missing membership, a disabled principal/tenant, or an unknown grant fails
-closed. This prevents a valid but stale session from retaining revoked
-privileges.
+wins. The session's principal revision and membership revision must both equal
+current server-side state before authorization. A cached grant snapshot may be
+used only when its short operator-set maximum age has not elapsed and both
+revisions still match. Store unavailability, a missing membership, a disabled
+principal/tenant, a revision mismatch, or an unknown grant fails closed. This
+prevents a valid but stale session from retaining revoked privileges.
 
 ### Session contract
 
@@ -120,9 +123,9 @@ The cookie contains a cryptographically random, opaque handle with at least 256
 bits of entropy. Valkey stores only a keyed hash of that handle under a separate
 browser-session prefix. The bounded record contains principal ID, active tenant,
 OIDC issuer, authentication time, created/last-seen/absolute expiry, membership
-revision, CSRF secret, and a session generation. It contains no raw OIDC access,
-ID, or refresh token unless a later accepted decision demonstrates a concrete
-need and specifies encryption and revocation.
+revision, principal revision, CSRF secret, and a session generation. It contains
+no raw OIDC access, ID, or refresh token unless a later accepted decision
+demonstrates a concrete need and specifies encryption and revocation.
 
 The default cookie name is `__Host-slopsearx_session` and its attributes are
 `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/`, with no `Domain`. Direct
@@ -144,8 +147,10 @@ and redirects only to a validated local target. IdP logout is optional and does
 not replace local invalidation. Operator revocation increments the principal or
 membership revision and deletes known sessions when indexed; revision checking
 provides fail-closed protection if index cleanup is incomplete. Back-channel
-logout may be added when the configured IdP supports it. Sessions expire
-naturally if it is unavailable.
+logout may be added when the configured IdP supports it. Every protected request
+rejects a session whose principal or membership revision no longer matches, so
+incomplete index cleanup cannot preserve access. Sessions expire naturally if
+the IdP logout endpoint is unavailable.
 
 ### CSRF and redirect safety
 
@@ -254,7 +259,7 @@ FastAPI application:
 - identity provider: starts login and validates callback into an external
   `(issuer, sub)` identity;
 - membership resolver: maps the external identity to current principal,
-  tenants, revisions, and grants;
+  tenants, principal/membership revisions, and grants;
 - session store: creates, rotates, reads, revokes, and expires tenant-bound
   opaque sessions using an injected clock and token source;
 - request identity resolver: converts cookie/session state into the normalized

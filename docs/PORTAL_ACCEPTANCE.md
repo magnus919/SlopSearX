@@ -83,8 +83,9 @@ Before `/workflows` can be enabled, tests must prove:
    and status with no cookie, a valid workflow cookie, and an invalid cookie;
 2. successful login and tenant/privilege changes rotate the session, invalidate
    the old handle, and preserve idle/absolute expiry ceilings;
-3. logout, operator revocation, stale membership revisions, disabled tenants,
-   and Valkey failure deny protected access without affecting public search;
+3. logout, operator revocation, stale principal or membership revisions,
+   disabled principals/tenants, and Valkey failure deny protected access
+   without affecting public search;
 4. every mutation rejects missing/replayed CSRF tokens, cross-origin requests,
    unsafe content types, stale revisions, duplicate submission, and absent
    action grants before the application transition;
