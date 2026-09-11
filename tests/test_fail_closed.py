@@ -330,7 +330,7 @@ class TestSemaphoreFailClosedInteraction:
             transport = ASGITransport(app=app, client=("10.0.0.1", 12345))
             async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
                 initial_slots = server_mod._engine_semaphore._value
-                response = await ac.get("/search", params={"q": "test"})
+                response = await ac.get("/search", params={"q": "test", "format": "json"})
                 assert response.status_code == 429, f"Expected 429, got {response.status_code}: {response.text[:200]}"
                 assert server_mod._engine_semaphore._value == initial_slots
         finally:
@@ -360,7 +360,7 @@ class TestSemaphoreFailClosedInteraction:
         try:
             transport = ASGITransport(app=app, client=("10.0.0.1", 12345))
             async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
-                r = await ac.get("/search", params={"q": "test"})
+                r = await ac.get("/search", params={"q": "test", "format": "json"})
                 assert r.status_code == 429
                 assert server_mod._engine_semaphore._value == initial_value
         finally:
@@ -379,7 +379,7 @@ class TestFullSearchFlow:
 
     def test_search_returns_results(self, client: TestClient) -> None:
         """A simple search returns valid results."""
-        response = client.get("/search", params={"q": "test"})
+        response = client.get("/search", params={"q": "test", "format": "json"})
         assert response.status_code in (200, 503)
         data = response.json()
         # Should have valid structure

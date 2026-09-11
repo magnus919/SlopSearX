@@ -633,6 +633,7 @@ class TestGitHubAdapter:
         assert result.results[0].url == "https://github.com/user/repo1"
         assert "★ 42" in result.results[0].content
         assert result.results[0].score == 42.0
+        assert result.results[0].payload["data"]["repository"] == "user/repo1"
 
     async def test_search_missing_token(self):
         instances = discover_engines({"github": {"enabled": True, "api_key": ""}})
@@ -769,11 +770,19 @@ class TestSemanticScholarAdapter:
         assert "Cited by: 250" in result.results[0].content
         assert result.results[0].published_date == "2023-06-15"
         assert result.results[0].score == 250.0
+        assert result.results[0].payload["data"]["doi"] == "10.1234/example"
 
     async def test_search_includes_arxiv_id(self, adapter, sample_response):
         async with MockHTTP(lambda r: httpx.Response(200, json=sample_response)):
             result = await adapter.search("deep learning")
         assert "arXiv: 2306.12345" in result.results[0].content
+
+    async def test_non_mapping_external_ids_are_ignored(self, adapter, sample_response):
+        sample_response["data"][0]["externalIds"] = ["10.1234/example"]
+        async with MockHTTP(lambda r: httpx.Response(200, json=sample_response)):
+            result = await adapter.search("deep learning")
+        assert result.status == EngineStatus.OK
+        assert result.results[0].payload["data"] == {}
 
     async def test_search_sends_api_key_when_configured(self):
         test_key = "***********"

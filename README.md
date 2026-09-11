@@ -9,7 +9,8 @@
 
 SlopSearX is a horizontally scalable, stateless meta search engine designed for AI agent consumption. It replaces SearXNG in the GroktoCrawl stack with:
 
-- **JSON output by default** — structured responses designed for programmatic consumption
+- **HTML output by default** — SearXNG-compatible browser responses with JSON/CSV/RSS negotiation
+- **Human search portal** — a responsive, server-rendered landing and results experience with Dark / Darker themes
 - **YAML+Markdown native output** — structured + readable for AI agent contexts via `format=yaml`
 - **SearXNG-compatible API** — drop-in replacement for existing consumers
 - **Plugin engine adapters** — one file per engine, `@register_engine`, zero orchestrator changes
@@ -24,8 +25,12 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 
 | Endpoint | Description |
 |---|---|
-| `GET /search?q=...&format=json` | SearXNG-compatible JSON (default) |
+| `GET /search?q=...` | SearXNG-compatible HTML (default; Accept-aware) |
+| `GET /search?q=...&format=json` | SearXNG-compatible JSON |
+| `GET /search?q=...&format=csv` | CSV results when enabled in `search.formats` |
+| `GET /search?q=...&format=rss` | RSS results when enabled in `search.formats` |
 | `GET /search?q=...&format=yaml` | YAML+Markdown agent-native output |
+| `GET /` | Human search portal landing page (HTML; machine formats retain the missing-query error) |
 | `GET /search?q=...&categories=science,news` | Filter by category (OR semantics) |
 | `GET /search?q=...&engines=brave,wikipedia` | Explicit engine selection |
 | `GET /health` | Per-engine health check with status |
@@ -154,7 +159,8 @@ observed health (`last_known_status`). See `docs/MCP_CONTRACT.md` §7.4.
 
 SlopSearX ships a Model Context Protocol server for AI agents. It exposes
 intent-level search (no URL strings), capability discovery, scope
-explanation, snapshot-based pagination, and asynchronous research jobs —
+explanation, snapshot-based pagination, asynchronous research jobs, scheduled
+change detection, and attributed retrieval receipts —
 built on the same pipeline as the HTTP API. Search results carry a
 machine-readable `retrieval` handoff record so a downstream reader (e.g.
 GroktoCrawl) can capture pages and link them back to the originating result
@@ -181,18 +187,38 @@ slopsearx-mcp --remote http://<slopsearx-host>:8000/mcp --oauth
 MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.com slopsearx-mcp
 ```
 
-- 15 tools: `slopsearx_search`, `slopsearx_search_targeted`,
+- 35 tools: `slopsearx_search`, `slopsearx_search_targeted`,
   `slopsearx_search_jobs`, `slopsearx_search_security`,
   `slopsearx_search_science`, `slopsearx_list_capabilities`,
   `slopsearx_explain_search_scope`, `slopsearx_get_service_status`,
-  `slopsearx_read_results`, `slopsearx_read_result`,
+  `slopsearx_read_results`, `slopsearx_read_result`, `slopsearx_read_entities`,
   `slopsearx_start_research`, `slopsearx_get_job`, `slopsearx_cancel_job`,
-  `slopsearx_retry_research`, `slopsearx_extend_research`
+  `slopsearx_retry_research`, `slopsearx_extend_research`,
+  `slopsearx_update_research`,
+  `slopsearx_create_saved_search`, `slopsearx_get_saved_search`,
+  `slopsearx_update_saved_search`, `slopsearx_pause_saved_search`,
+  `slopsearx_delete_saved_search`, `slopsearx_read_saved_search_reports`,
+  `slopsearx_read_saved_search_events`, `slopsearx_ack_saved_search_events`,
+  `slopsearx_submit_retrieval_receipt`,
+  `slopsearx_read_retrieval_receipts`, `slopsearx_export_research_manifest`,
+  `slopsearx_preview_staged_search`, `slopsearx_search_staged`,
+  `slopsearx_get_staged_search`, `slopsearx_retry_staged_search`,
+  `slopsearx_start_dependency_dossier`, `slopsearx_get_dependency_dossier`,
+  `slopsearx_get_artifact_lineage`
 - Resources: `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`
-- Specialist tools (jobs, security, science, research) are disabled until
+- Artifact references and bounded workflow lineage are documented in
+  [`docs/ARTIFACT_LINEAGE.md`](docs/ARTIFACT_LINEAGE.md).
+- Supported artifact-to-workflow transitions, source lifecycle errors, and
+  conflict rules are documented in
+  [`docs/WORKFLOW_COMPOSITION.md`](docs/WORKFLOW_COMPOSITION.md).
+- Specialist tools (jobs, security, science, research, saved searches and events, retrieval receipts,
+  staged search, dependency dossiers) are disabled until
   the operator grants them (`MCP_GRANT_JOBS=1`, `MCP_GRANT_SECURITY=1`,
-  `MCP_GRANT_SCIENCE=1`, `MCP_GRANT_RESEARCH=1`).
+  `MCP_GRANT_SCIENCE=1`, `MCP_GRANT_RESEARCH=1`,
+  `MCP_GRANT_SAVED_SEARCHES=1`, `MCP_GRANT_RETRIEVAL_RECEIPTS=1`,
+  `MCP_GRANT_SAVED_SEARCH_EVENTS=1`,
+  `MCP_GRANT_STAGED_SEARCH=1`, `MCP_GRANT_DEPENDENCY_DOSSIER=1`).
 - Sensitive engines (`hibp`, `dehashed`) are unreachable from generic
   routing, categories, and intent profiles, and are rejected by **every**
   explicit-engine search path (generic explicit engines, targeted, jobs,
@@ -253,6 +279,35 @@ docker run -d --name slopsearx -p 8080:8080 \
 # Try it
 curl 'http://localhost:8080/search?q=hello+world&format=json'
 ```
+
+Standard HTML, CSV, JSON, and RSS formats are controlled by `search.formats`
+in `config.yaml` (or `SEARCH_FORMATS=html,json`). YAML is an additive
+SlopSearX format and is always available. A requested standard format that is
+not enabled returns HTTP 403; malformed search parameters return HTTP 400.
+
+### Browser portal
+
+Open `/` for the human-facing search portal. A query submitted there uses the
+same search service, routing, cache, ranking, and engine policy as the API; use
+`/search` directly for a result page or for compatibility clients. The portal
+defaults to **Dark** mode and provides a **Darker** mode toggle. Operators can
+set `SLOPSEARX_PORTAL_DEFAULT_THEME=darker` to change the initial theme. An
+explicit user choice is retained in browser storage when available. The portal
+does not grant capabilities that the server-side policy would reject. Explicit
+selection of a sensitive engine (currently `hibp` and `dehashed` by default)
+also requires `MCP_TARGETED_SENSITIVE_ALLOWED=true`; the same operator policy
+is applied before either the browser or MCP surface dispatches a search.
+
+Public search remains account-free. Operators can separately enable the OIDC
+and Valkey-backed `/workflows` supervisor console for tenant-scoped workflow
+inspection and explicitly granted actions. The workflow routes are disabled by
+default and do not change `/`, `/search`, or MCP contracts. See
+[`docs/WORKFLOW_PORTAL.md`](docs/WORKFLOW_PORTAL.md) for its direct HTTPS
+deployment, identity, two-gate authorization, and rollback requirements.
+
+See [`docs/PORTAL_DEPLOYMENT.md`](docs/PORTAL_DEPLOYMENT.md) for the browser
+URL map, proxy/access modes, digest-pinned deployment, smoke check, rollback,
+and troubleshooting runbook.
 
 ## License
 

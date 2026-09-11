@@ -14,6 +14,7 @@ import httpx
 
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult, register_engine
 from slopsearx.filters import publication_date_bounds, publication_date_in_bounds, time_range_window
+from slopsearx.payload import DOMAIN_SCIENCE, build_payload
 
 
 @register_engine
@@ -86,6 +87,12 @@ class OpenAlexAdapter(EngineAdapter):
                         engine=self.name,
                         score=float(work.get("relevance_score") or 0),
                         published_date=work.get("publication_date"),
+                        payload=build_payload(
+                            DOMAIN_SCIENCE,
+                            "publication",
+                            {"doi": doi or None, "openalex_id": work.get("id") or None},
+                            engine=self.name,
+                        ),
                     )
                 )
             return AdapterResponse(
