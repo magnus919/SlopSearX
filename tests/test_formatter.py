@@ -592,9 +592,18 @@ class TestPortalHtml:
         assert "Research" in output
         assert "Brave" in output and "Wikipedia" in output
         assert "Open result ↗" in output
+        assert "Open JSON view ↗" in output
         assert "format=json" in output
         assert "Sources in view" in output
         assert "data-result-card" in output
+
+        disabled_output = format_html(
+            [result],
+            "climate",
+            portal_state={"query": "climate", "json_enabled": False},
+        )
+        assert "Open JSON view ↗" not in disabled_output
+        assert "format=json" not in disabled_output
 
     def test_browser_error_uses_portal_shell(self) -> None:
         output = format_error_html("invalid_filter", "The filter is invalid.", field="safesearch")

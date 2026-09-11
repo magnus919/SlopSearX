@@ -620,6 +620,7 @@ def format_html(
     """Format the human-facing, safe HTML search-results page."""
     escaped_query = html_lib.escape(query, quote=True)
     state = portal_state or {"query": query}
+    json_enabled = bool(_portal_state_value(state, "json_enabled", True))
     result_items: list[str] = []
     for index, result in enumerate(results):
         title = html_lib.escape(str(result.title or result.url or "Untitled result"), quote=True)
@@ -662,18 +663,19 @@ def format_html(
                     f'<figure class="result-media"><img src="{html_lib.escape(thumbnail, quote=True)}" '
                     f'alt="{title}" loading="lazy"><figcaption>{caption}</figcaption></figure>'
                 )
-        json_url = html_lib.escape(_portal_format_url(state, "json"), quote=True)
         path_markup = f'<span class="result-path">{result_path}</span>' if result_path else ""
         metadata = f"<span>{category}</span>" + (f"<span>{published}</span>" if published else "")
+        actions = (
+            '<div class="result-actions"><a class="result-action" href="{}" target="_blank" rel="noopener noreferrer">'
+            "Open result ↗</a></div>"
+        ).format(url)
         result_items.append(
             f'<article class="result" data-result-card style="--i:{index}">'
             f'<div class="result-kicker"><span class="result-source-line">{domain}</span>{path_markup}'
             f'<span class="result-pill type">{result_type}</span>{consensus}</div>'
             f'<h2><a class="result-link" href="{url}" target="_blank" rel="noopener noreferrer">{title}</a></h2>'
             f'<p class="result-content">{content}</p>'
-            f'{special}{media_markup}<div class="result-meta">{source_pills}{metadata}</div>'
-            f'<div class="result-actions"><a class="result-action" href="{url}" target="_blank" rel="noopener noreferrer">Open result ↗</a>'
-            f'<a class="result-action" href="{json_url}">JSON view ↗</a></div>'
+            f'{special}{media_markup}<div class="result-meta">{source_pills}{metadata}</div>{actions}'
             "</article>"
         )
 
@@ -735,6 +737,11 @@ def format_html(
     )
     if not source_rows:
         source_rows = '<li class="rail-source"><span class="rail-source-name">No responding sources</span></li>'
+    json_link = (
+        f'<a class="rail-link" href="{html_lib.escape(_portal_format_url(state, "json"), quote=True)}">Open JSON view ↗</a>'
+        if json_enabled
+        else ""
+    )
     rail = f"""
 <aside class="results-rail" aria-label="Search summary">
   <section class="rail-card">
@@ -746,7 +753,7 @@ def format_html(
   <section class="rail-card">
     <p class="rail-label">Sources in view</p>
     <ul class="rail-sources">{source_rows}</ul>
-    <a class="rail-link" href="{html_lib.escape(_portal_format_url(state, "json"), quote=True)}">Open JSON view ↗</a>
+    {json_link}
   </section>
 </aside>"""
     content = f"""

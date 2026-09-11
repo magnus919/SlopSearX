@@ -69,7 +69,7 @@ def test_results_journey_keeps_links_and_escaped_content() -> None:
         assert page.get_by_text("Matched 2 sources").is_visible()
         assert page.get_by_text("Research").is_visible()
         assert page.get_by_role("article").get_by_text("Wikipedia").is_visible()
-        assert page.get_by_role("article").get_by_role("link", name="JSON view ↗", exact=True).is_visible()
+        assert page.get_by_role("link", name="Open JSON view ↗", exact=True).is_visible()
         assert page.get_by_role("complementary", name="Search summary").is_visible()
         assert page.get_by_role("link", name="← Previous").get_attribute("href")
         assert page.get_by_role("link", name="Next →").get_attribute("href")
