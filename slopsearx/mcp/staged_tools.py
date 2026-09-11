@@ -7,6 +7,7 @@ import time
 import uuid
 from typing import Any
 
+from slopsearx import metrics as m
 from slopsearx.artifacts import artifact_ref
 from slopsearx.capabilities import INTENT_PROFILES
 from slopsearx.mcp import tools as core
@@ -431,10 +432,14 @@ async def slopsearx_search_staged(
     if status == "unavailable":
         return _error("store_unavailable", "staged search requires connected Valkey")
     if status == "quota":
+        m.record_workflow_rejection("staged_search", "capacity")
         return _error("operation_quota_exceeded", "tenant has 32 retained staged operations")
     if status == "conflict":
+        m.record_workflow_rejection("staged_search", "idempotency")
         return _error("idempotency_conflict", "idempotency key refers to a different plan")
     if status == "created":
+        m.record_workflow_accepted("staged_search", "durable_leased")
+        m.transition_workflow("staged_search", None, "queued")
         await state.staged_runner.enqueue(current_tenant(), record["operation_id"])
     return await _render(stored, include, max_results)  # type: ignore[arg-type]
 
@@ -451,6 +456,7 @@ async def slopsearx_get_staged_search(
     if read.unavailable:
         return _error("store_unavailable", "staged search store is unavailable")
     if read.expired:
+        m.record_workflow_expiry("staged_search", "operation")
         return _error("expired_handle", "staged operation expired", expires_at=read.expires_at)
     if read.record is None:
         return _error("invalid_operation_id", "unknown staged operation")
@@ -486,7 +492,13 @@ async def slopsearx_retry_staged_search(operation_id: str, retry_key: str) -> di
     }
     if status in errors:
         code, message = errors[status]
+        if status == "budget":
+            m.record_workflow_rejection("staged_search", "budget")
+        elif status == "expired":
+            m.record_workflow_expiry("staged_search", "operation")
         return _error(code, message)
     if status == "queued":
+        m.record_workflow_retry("staged_search")
+        m.transition_workflow("staged_search", read.record.get("state") if read.record else None, "queued")
         await state.staged_runner.enqueue(current_tenant(), operation_id)
     return await _render(record, None, None)  # type: ignore[arg-type]

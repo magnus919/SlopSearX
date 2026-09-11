@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from slopsearx import saved_runner as saved_runner_mod
 from slopsearx.mcp import tools as t
 from slopsearx.mcp.state import set_state, tenant_scope
 from slopsearx.saved_runner import SavedSearchRunner
@@ -151,6 +152,29 @@ async def test_scheduled_run_bypasses_canonical_cache(saved_state):
     assert report["observation"]["cached"] is False
     assert report["observation"]["discovered_count"] == 1
     assert state.ctx.active_engines["wikipedia"].calls == 2
+
+
+async def test_expired_lease_recovery_normalizes_running_gauge(saved_state, monkeypatch: pytest.MonkeyPatch):
+    state, now = saved_state
+    created = await create()
+    now[0] = 1060
+    abandoned = await state.saved_store.for_tenant("default").claim(created["search_id"], now=now[0])
+    assert abandoned is not None
+    now[0] += 61
+    transitions: list[tuple[str | None, str]] = []
+    recoveries: list[str] = []
+    monkeypatch.setattr(
+        saved_runner_mod.m,
+        "transition_workflow",
+        lambda _workflow, previous, current: transitions.append((previous, current)),
+    )
+    monkeypatch.setattr(saved_runner_mod.m, "record_workflow_recovery", recoveries.append)
+
+    report = await state.saved_runner.run_one("default", created["search_id"], now=now[0])
+
+    assert report is not None
+    assert recoveries == ["saved_search"]
+    assert transitions[:2] == [("running", "interrupted"), ("interrupted", "running")]
 
 
 async def test_midflight_policy_revocation_blocks_evidence_commit(saved_state):

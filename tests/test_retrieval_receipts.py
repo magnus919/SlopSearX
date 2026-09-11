@@ -77,6 +77,27 @@ async def test_success_replay_conflict_failure_and_manifest(state):
             assert state.ctx.cache._data[key] == value
 
 
+async def test_failed_receipt_records_failed_terminal_outcome(state, monkeypatch: pytest.MonkeyPatch):
+    identifier = await result_id()
+    outcomes: list[str] = []
+    monkeypatch.setattr(
+        receipts.m,
+        "record_workflow_terminal",
+        lambda _workflow, outcome, *_args: outcomes.append(outcome),
+    )
+
+    submitted = await receipts.slopsearx_submit_retrieval_receipt(
+        identifier,
+        "test-reader",
+        "capture-failed",
+        "failed",
+        failure_code="blocked",
+    )
+
+    assert submitted["state"] == "created"
+    assert outcomes == ["failed"]
+
+
 async def test_tenant_grant_and_unknown_handle(state):
     identifier = await result_id()
     with tenant_scope("other"):

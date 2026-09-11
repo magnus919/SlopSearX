@@ -16,6 +16,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from slopsearx import metrics as m
 from slopsearx.artifacts import artifact_ref
 from slopsearx.service import SearchRequest, SearchService
 from slopsearx.snapshot import SnapshotStore
@@ -67,24 +68,26 @@ return {'created', ARGV[5]}
 
 _CLAIM_SCRIPT = """
 local raw = redis.call('GET', KEYS[1])
-if not raw then redis.call('ZREM', KEYS[3], KEYS[1]); return '' end
+if not raw then redis.call('ZREM', KEYS[3], KEYS[1]); return {'missing',''} end
 local current = cjson.decode(raw)
-if current.state ~= 'queued' then redis.call('ZREM', KEYS[3], KEYS[1]); return '' end
+if current.state ~= 'queued' then redis.call('ZREM', KEYS[3], KEYS[1]); return {'not_queued',''} end
 if tonumber(current.execution_deadline_at) <= tonumber(ARGV[1]) or
    tonumber(current.expires_at) <= tonumber(ARGV[1]) then
   current.state='failed'; current.stop_reason='deadline_expired'
   current.objectives.unmet={{objective='deadline_ms',reason='deadline_expired'}}
-  redis.call('SETEX', KEYS[1], ARGV[3], cjson.encode(current))
-  redis.call('ZREM', KEYS[3], KEYS[1]); return ''
+  local encoded=cjson.encode(current)
+  redis.call('SETEX', KEYS[1], ARGV[3], encoded)
+  redis.call('ZREM', KEYS[3], KEYS[1]); return {'deadline',encoded}
 end
-if redis.call('SET', KEYS[2], ARGV[2], 'NX', 'EX', ARGV[4]) == false then return '' end
+if redis.call('SET', KEYS[2], ARGV[2], 'NX', 'EX', ARGV[4]) == false then return {'busy',''} end
 local stage = current.stages[tonumber(current.next_stage) + 1]
 local cost = #stage.scope.selected_engines
 if tonumber(current.budget.reserved) + cost > tonumber(current.budget.limit) then
   current.state='failed'; current.stop_reason='budget_exhausted'
   current.objectives.unmet={{objective='max_engine_calls',reason='budget_exhausted'}}
-  redis.call('SETEX', KEYS[1], ARGV[3], cjson.encode(current))
-  redis.call('DEL', KEYS[2]); redis.call('ZREM', KEYS[3], KEYS[1]); return ''
+  local encoded=cjson.encode(current)
+  redis.call('SETEX', KEYS[1], ARGV[3], encoded)
+  redis.call('DEL', KEYS[2]); redis.call('ZREM', KEYS[3], KEYS[1]); return {'budget',encoded}
 end
 current.state='running'; current.owner_token=ARGV[2]
 current.budget.reserved=tonumber(current.budget.reserved)+cost
@@ -97,7 +100,7 @@ stage.attempts[#stage.attempts+1]=attempt
 redis.call('SETEX', KEYS[1], ARGV[3], cjson.encode(current))
 redis.call('ZREM', KEYS[3], KEYS[1])
 redis.call('ZADD', KEYS[4], tonumber(ARGV[1])+tonumber(ARGV[4]), KEYS[1])
-return cjson.encode(current)
+return {'claimed',cjson.encode(current)}
 """
 
 _OWNED_SAVE_SCRIPT = """
@@ -381,8 +384,29 @@ class StagedSearchStore:
                 attempt_id,
                 str(started_at),
             )
-            decoded = self._decode(raw)
-            return (_normalize_record(json.loads(decoded)), token) if decoded else None
+            if isinstance(raw, (list, tuple)):
+                status = self._decode(raw[0])
+                decoded = self._decode(raw[1])
+                if status in {"deadline", "budget"}:
+                    if status == "deadline":
+                        m.record_workflow_expiry("staged_search", "operation")
+                    else:
+                        m.record_workflow_rejection("staged_search", "budget")
+                    m.transition_workflow("staged_search", "queued", "failed")
+                    m.record_workflow_terminal("staged_search", "failed")
+                    return None
+                if status != "claimed":
+                    return None
+            else:  # Legacy/injected clients may return the pre-status payload.
+                decoded = self._decode(raw)
+            if not decoded:
+                return None
+            claimed = _normalize_record(json.loads(decoded))
+            m.transition_workflow("staged_search", "queued", "running")
+            m.workflow_queue_wait.observe(
+                {"workflow": "staged_search"}, max(0.0, started_at - float(claimed["accepted_at"]))
+            )
+            return claimed, token
         async with self._lock:
             fresh = await self.read(tenant, operation_id)
             fresh_record = fresh.record
@@ -394,6 +418,9 @@ class StagedSearchStore:
             if record["budget"]["reserved"] + cost > record["budget"]["limit"]:
                 record.update(state="failed", stop_reason="budget_exhausted")
                 await self.save(tenant, record)
+                m.record_workflow_rejection("staged_search", "budget")
+                m.transition_workflow("staged_search", "queued", "failed")
+                m.record_workflow_terminal("staged_search", "failed")
                 return None
             record["state"] = "running"
             record["owner_token"] = token
@@ -401,6 +428,10 @@ class StagedSearchStore:
             stage["state"] = "running"
             stage["attempts"].append(attempt)
             await self.save(tenant, record)
+            m.transition_workflow("staged_search", "queued", "running")
+            m.workflow_queue_wait.observe(
+                {"workflow": "staged_search"}, max(0.0, started_at - float(record["accepted_at"]))
+            )
             return record, token
 
     async def claim_next(self) -> tuple[str, str] | None:
@@ -490,6 +521,10 @@ class StagedSearchStore:
                 str(ttl),
             )
             recovered += int(bool(result))
+        m.record_workflow_recovery("staged_search", recovered)
+        for _ in range(recovered):
+            m.transition_workflow("staged_search", "running", "interrupted")
+            m.record_workflow_terminal("staged_search", "interrupted")
         return recovered
 
     async def reconcile_indexes(self) -> None:
@@ -654,6 +689,7 @@ class StagedSearchRunner:
         if claimed is None:
             return
         record, lease_token = claimed
+        execution_started = time.monotonic()
         stage_index = int(record.get("next_stage", 0))
         stage = record["stages"][stage_index]
         attempt = stage["attempts"][-1]
@@ -668,7 +704,10 @@ class StagedSearchRunner:
             stage["state"] = "failed"
             record.update(state="failed", stop_reason="policy_rejected", error=rejection.get("error"))
             record["objectives"]["unmet"].append({"objective": "fallback", "reason": "policy_rejected"})
-            await self.store.save_owned(tenant, record, lease_token)
+            if await self.store.save_owned(tenant, record, lease_token):
+                m.record_workflow_rejection("staged_search", "policy")
+                m.transition_workflow("staged_search", "running", "failed")
+                m.record_workflow_terminal("staged_search", "failed", time.monotonic() - execution_started)
             return
         engines = list(stage["scope"]["selected_engines"])
         remaining_ms = int((record["execution_deadline_at"] - time.time()) * 1000)
@@ -683,7 +722,10 @@ class StagedSearchRunner:
             stage["state"] = "failed"
             record.update(state="failed", stop_reason="deadline_expired")
             record["objectives"]["unmet"].append({"objective": "deadline_ms", "reason": "deadline_expired"})
-            await self.store.save_owned(tenant, record, lease_token)
+            if await self.store.save_owned(tenant, record, lease_token):
+                m.record_workflow_expiry("staged_search", "operation")
+                m.transition_workflow("staged_search", "running", "failed")
+                m.record_workflow_terminal("staged_search", "failed", time.monotonic() - execution_started)
             return
         attempt_id = str(attempt["attempt_id"])
         filters = record["plan"]["filters"]
@@ -710,7 +752,9 @@ class StagedSearchRunner:
                 stage["state"] = "failed"
                 record.update(state="failed", stop_reason="deadline_expired")
                 record["objectives"]["unmet"].append({"objective": "deadline_ms", "reason": "deadline_expired"})
-                await self.store.save_owned(tenant, record, lease_token)
+                if await self.store.save_owned(tenant, record, lease_token):
+                    m.transition_workflow("staged_search", "running", "failed")
+                    m.record_workflow_terminal("staged_search", "failed", time.monotonic() - execution_started)
                 return
             response = await self.service.search(
                 SearchRequest(
@@ -735,7 +779,9 @@ class StagedSearchRunner:
             record.update(state="failed", stop_reason="execution_failed")
             if stage_index == 0 and len(record["stages"]) > 1:
                 record["objectives"]["unmet"].append({"objective": "fallback", "reason": "initial_stage_failed"})
-            await self.store.save_owned(tenant, record, lease_token)
+            if await self.store.save_owned(tenant, record, lease_token):
+                m.transition_workflow("staged_search", "running", "failed")
+                m.record_workflow_terminal("staged_search", "failed", time.monotonic() - execution_started)
             return
         finally:
             renewal.cancel()
@@ -825,4 +871,10 @@ class StagedSearchRunner:
         if not await self.store.save_owned(tenant, record, lease_token):
             return
         if record["state"] == "queued":
+            m.transition_workflow("staged_search", "running", "queued")
             await self.enqueue(tenant, operation_id)
+        else:
+            outcome = "succeeded" if record["state"] == "completed" else "failed"
+            m.transition_workflow("staged_search", "running", outcome)
+            m.record_workflow_terminal("staged_search", outcome, time.monotonic() - execution_started)
+            m.workflow_admitted_results.observe({"workflow": "staged_search"}, float(attempt["result_count"]))

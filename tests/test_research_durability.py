@@ -525,7 +525,15 @@ class TestClaim:
         assert len(winners) == 1
         assert {winners[0].owner_id} <= {"w1", "w2"}
 
-    async def test_claim_resets_running_query_on_orphan_recovery(self) -> None:
+    async def test_claim_resets_running_query_on_orphan_recovery(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        transitions: list[tuple[str | None, str]] = []
+        recoveries: list[str] = []
+        monkeypatch.setattr(
+            research_store_mod.m,
+            "transition_workflow",
+            lambda _workflow, previous, current: transitions.append((previous, current)),
+        )
+        monkeypatch.setattr(research_store_mod.m, "record_workflow_recovery", recoveries.append)
         _, store = _build_state()
         job_store = ResearchJobStore(store)
         job = _job(
@@ -543,6 +551,8 @@ class TestClaim:
         assert claimed.queries[0].state == "done"
         assert claimed.queries[0].cursor == "snap-old"
         assert claimed.queries[1].state == "pending"
+        assert recoveries == ["research"]
+        assert transitions == [("running", "interrupted"), ("interrupted", "running")]
 
     async def test_lease_expiry_makes_job_reclaimable(self) -> None:
         _, store = _build_state()
@@ -1035,7 +1045,7 @@ class TestRunnerExecution:
 
 
 class TestDirectRunsAfterDurableExecution:
-    async def test_retry_clears_stale_lease_and_reruns(self) -> None:
+    async def test_retry_clears_stale_lease_and_reruns(self, monkeypatch: pytest.MonkeyPatch) -> None:
         state, store = _build_state()
         job_store = state.job_store
         state.ctx.active_engines["wikipedia"] = _MockEngine("wikipedia", status=EngineStatus.ERROR)
@@ -1056,6 +1066,12 @@ class TestDirectRunsAfterDurableExecution:
         # A retry of a previously durable-executed job must not raise
         # LeaseLostError against the released lease and must re-run the work.
         state.ctx.active_engines["wikipedia"] = _MockEngine("wikipedia")
+        transitions: list[tuple[str | None, str]] = []
+        monkeypatch.setattr(
+            research_store_mod.m,
+            "transition_workflow",
+            lambda _workflow, previous, current: transitions.append((previous, current)),
+        )
         result = await state.runner.retry(job.job_id, tenant="default")
 
         assert result is not None
@@ -1063,6 +1079,7 @@ class TestDirectRunsAfterDurableExecution:
         assert result.queries[0].state == "done"
         assert result.owner_id is None
         assert result.lease_token is None
+        assert transitions == [("failed", "running"), ("running", "succeeded")]
 
     async def test_direct_retry_claim_excludes_durable_worker(self) -> None:
         """A direct retry of an orphaned running job must hold a lease.

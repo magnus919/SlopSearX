@@ -13,6 +13,7 @@ import time
 from dataclasses import replace
 from typing import Any, Callable
 
+from slopsearx import metrics as m
 from slopsearx.research_models import (
     LeaseLostError,
     ResearchJob,
@@ -24,6 +25,11 @@ from slopsearx.research_models import (
 from slopsearx.snapshot import KeyValueStore
 
 logger = logging.getLogger(__name__)
+
+
+def _workflow_kind(job: ResearchJob) -> m.WorkflowKind:
+    return "dependency_dossier" if job.workflow.get("kind") == "dependency_dossier" else "research"
+
 
 JOB_KEY_PREFIX = "mcp:job"
 IDEMPOTENCY_PREFIX = "mcp:idem"
@@ -447,6 +453,11 @@ class ResearchJobStore:
                 try:
                     if claimed.state == "expired":
                         expired += 1
+                        workflow = _workflow_kind(claimed)
+                        m.record_workflow_recovery(workflow)
+                        m.transition_workflow(workflow, "running", "expired")
+                        m.record_workflow_expiry(workflow, "job")
+                        m.record_workflow_terminal(workflow, "expired")
                     if not await self.clear_ownership(claimed):
                         raise LeaseLostError(job_id)
                 finally:
@@ -617,6 +628,16 @@ class ResearchJobStore:
                 await self._lease_release(self._lease_key(job_id), token)
                 return None
             recover_orphan_attempts(job)
+            workflow = _workflow_kind(job)
+            metric_previous = pre.state
+            if pre.state == "running":
+                m.record_workflow_recovery(workflow)
+                # A replacement process starts with empty gauges, while a
+                # surviving process may still hold the dead owner's running
+                # observation. Normalizing through the recovery boundary
+                # state makes both cases converge on one active lease.
+                m.transition_workflow(workflow, "running", "interrupted")
+                metric_previous = "interrupted"
             job.owner_id = owner_id
             job.lease_token = token
             job.lease_expires_at = time.time() + lease_ttl
@@ -628,6 +649,9 @@ class ResearchJobStore:
                 job.stop_reason = "deadline_expired"
                 if not await self.save_if_owned(job):
                     raise LeaseLostError(job_id)
+                m.transition_workflow(workflow, metric_previous, "expired")
+                m.record_workflow_expiry(workflow, "job")
+                m.record_workflow_terminal(workflow, "expired")
                 await self._lease_release(self._lease_key(job_id), token)
                 return None
             for query in job.queries:
@@ -636,6 +660,8 @@ class ResearchJobStore:
             job.state = "running"
             if not await self.save_if_owned(job):
                 raise LeaseLostError(job_id)
+            m.transition_workflow(workflow, metric_previous, "running")
+            m.workflow_queue_wait.observe({"workflow": workflow}, max(0.0, time.time() - job.created_at))
             return job
         except BaseException:
             await self._lease_release(self._lease_key(job_id), token)
@@ -669,6 +695,7 @@ class ResearchJobStore:
             if current is None:
                 await self._lease_release(self._lease_key(job.job_id), token)
                 return None
+            previous_state = current.state
             recover_orphan_attempts(current)
             current.owner_id = owner_id
             current.lease_token = token
@@ -698,6 +725,14 @@ class ResearchJobStore:
                     current.state = "running"
             if not await self.save_if_owned(current):
                 raise LeaseLostError(job.job_id)
+            if current.state == "running":
+                workflow = _workflow_kind(current)
+                metric_previous = previous_state
+                if previous_state == "running":
+                    m.record_workflow_recovery(workflow)
+                    m.transition_workflow(workflow, "running", "interrupted")
+                    metric_previous = "interrupted"
+                m.transition_workflow(workflow, metric_previous, "running")
             return current
         except BaseException:
             await self._lease_release(self._lease_key(job.job_id), token)

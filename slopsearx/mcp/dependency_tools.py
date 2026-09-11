@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any
 
+from slopsearx import metrics as m
 from slopsearx.artifacts import artifact_ref
 from slopsearx.dependency_dossier import (
     ADVISORY_ENGINE,
@@ -116,9 +117,11 @@ async def slopsearx_start_dependency_dossier(
         ResearchQuery(index=len(queries), query=advisory_terms, intent="security", engines=[ADVISORY_ENGINE])
     )
     if len(queries) > state.policy.job_max_queries:
+        m.record_workflow_rejection("dependency_dossier", "budget")
         return _error("budget_exceeded", "research query budget cannot fund required dossier sections")
     selected = [engine for query in queries for engine in query.engines]
     if rejection := core._enforce_policy(state, selected):
+        m.record_workflow_rejection("dependency_dossier", "policy")
         rejection["error"]["code"] = "policy_rejected"
         return rejection
     deadline_ts = core._resolve_deadline(state, deadline)
@@ -152,10 +155,13 @@ async def slopsearx_start_dependency_dossier(
         return _error("store_unavailable", "dependency dossier admission could not be persisted")
     if not created:
         if admitted.workflow.get("kind") != "dependency_dossier" or admitted.workflow.get("identity_digest") != digest:
+            m.record_workflow_rejection("dependency_dossier", "idempotency")
             return _error("idempotency_conflict", "idempotency key refers to a different workflow request")
         if rejection := _workflow_policy_error(admitted):
             return rejection
         return _start_envelope(admitted, replay=True)
+    m.record_workflow_accepted("dependency_dossier", "durable_leased")
+    m.transition_workflow("dependency_dossier", None, "queued")
     state.runner.enqueue(admitted.job_id, tenant=tenant)
     return _start_envelope(admitted, replay=False)
 
