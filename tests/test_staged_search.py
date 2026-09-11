@@ -9,6 +9,7 @@ import json
 import pytest
 
 from slopsearx import staged as staged_mod
+from slopsearx.adapter import EngineStatus
 from slopsearx.capabilities import MCPPolicy
 from slopsearx.mcp import staged_tools
 from slopsearx.mcp.state import set_state
@@ -89,6 +90,45 @@ async def test_clean_empty_runs_disjoint_fallback(staged_state) -> None:
     assert completed["budget"]["reserved"] == 2
     assert completed["stages"][0]["attempts"][0]["result_count"] == 0
     assert completed["stages"][1]["attempts"][0]["result_count"] > 0
+
+
+async def test_partial_empty_initial_stage_does_not_dispatch_fallback(staged_state) -> None:
+    staged_state.ctx.active_engines["wikipedia"] = _MockEngine(
+        "wikipedia", status=EngineStatus.TIMEOUT
+    )
+    staged_state.ctx.active_engines["brave"] = _MockEngine("brave", count=0)
+    staged_state.ctx.active_engines["duckduckgo"] = _MockEngine("duckduckgo")
+    arguments = {
+        "query": "partial initial evidence",
+        "objectives": {"deadline_ms": 5000, "max_engine_calls": 3},
+        "initial_scope": {"engines": ["wikipedia", "brave"]},
+        "fallback_scope": {"engines": ["duckduckgo"]},
+        "allow_scope_expansion": True,
+        "idempotency_key": "request-partial-empty",
+    }
+
+    accepted = await staged_tools.slopsearx_search_staged(**arguments)
+    await staged_state.staged_runner.run_one("default", accepted["operation_id"])
+    completed = await staged_tools.slopsearx_get_staged_search(accepted["operation_id"])
+
+    assert completed["state"] == "failed"
+    assert completed["stop_reason"] == "execution_failed"
+    assert completed["budget"]["unit"] == "adapter_search_invocations"
+    assert completed["budget"]["limit"] == 3
+    assert completed["budget"]["reserved"] == 2
+    assert completed["budget"]["observed"] == 2
+    assert completed["budget"]["remaining"] == 1
+    assert completed["stages"][0]["state"] == "failed"
+    statuses = {
+        outcome["engine"]: outcome["status"]
+        for outcome in completed["stages"][0]["attempts"][0]["engine_outcomes"]
+    }
+    assert statuses == {"brave": "ok", "wikipedia": "timeout"}
+    assert completed["stages"][1]["state"] == "pending"
+    assert completed["objectives"]["unmet"] == [
+        {"objective": "fallback", "reason": "initial_stage_failed"}
+    ]
+    assert staged_state.ctx.active_engines["duckduckgo"].calls == 0
 
 
 async def test_cached_empty_initial_stage_does_not_authorize_fallback(staged_state) -> None:
