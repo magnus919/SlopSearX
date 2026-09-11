@@ -250,6 +250,7 @@ def create_server(
     mcp.tool()(_instrumented(_tools.slopsearx_get_service_status))
     mcp.tool()(_instrumented(_tools.slopsearx_read_results))
     mcp.tool()(_instrumented(_tools.slopsearx_read_result))
+    mcp.tool()(_instrumented(_tools.slopsearx_read_entities))
     mcp.tool()(_instrumented(_tools.slopsearx_start_research))
     mcp.tool()(_instrumented(_tools.slopsearx_get_job))
     mcp.tool()(_instrumented(_tools.slopsearx_cancel_job))

@@ -21,6 +21,7 @@ from slopsearx.filters import (
     publication_date_bounds,
     resolve_filter_enforcement,
 )
+from slopsearx.mcp.entity_projection import ENTITY_CONTRACT, ENTITY_VERSION, entity_groups
 from slopsearx.mcp.result_serialization import (
     CONTENT_UNAVAILABLE_NOTE as CONTENT_UNAVAILABLE_NOTE,
 )
@@ -1492,6 +1493,57 @@ async def slopsearx_read_results(
             "ranking": snapshot.ranking_explanation,
             "has_more": end < snapshot.total,
             "query_id": snapshot.query_id,
+        },
+    }
+
+
+async def slopsearx_read_entities(
+    cursor: str,
+    page: int = 1,
+    max_results: int | None = None,
+) -> dict[str, Any]:
+    """Read explicit CVE and npm/PyPI release groups from a captured snapshot.
+
+    max_results counts entities, not members; groups contain original result IDs
+    for slopsearx_read_result. Unknown identities stay separate. This read-only
+    view neither searches nor establishes source independence or verification.
+    """
+    state = get_state()
+    if not cursor or not cursor.strip():
+        return _error("invalid_input", "cursor is required", field="cursor")
+    if page < 1:
+        return _error("invalid_input", "page must be >= 1", field="page")
+    page_size = _bounded_max_results(state, max_results)
+    lookup = await state.snapshots.for_tenant(current_tenant()).read(cursor)
+    if lookup.unavailable:
+        return _error("store_unavailable", "snapshot store is unavailable", field="cursor")
+    if lookup.expired:
+        return _error(
+            "expired_handle",
+            "snapshot has expired",
+            handle=cursor,
+            expires_at=_expires_iso(lookup.expires_at),
+            field="cursor",
+        )
+    if lookup.snapshot is None:
+        return _error("invalid_cursor", "unknown cursor", field="cursor")
+    snapshot = lookup.snapshot
+    groups = entity_groups(snapshot)
+    start = (page - 1) * page_size
+    return {
+        "contract": ENTITY_CONTRACT,
+        "version": ENTITY_VERSION,
+        "cursor": cursor,
+        "query": snapshot.query,
+        "page": page,
+        "entities": groups[start : start + page_size],
+        "meta": {
+            "total_entities": len(groups),
+            "total_results": len(snapshot.results),
+            "unresolved_entities": sum(group["entity_id"] is None for group in groups),
+            "has_more": start + page_size < len(groups),
+            "query_id": snapshot.query_id,
+            "note": "Entity identity is source-reported, not independent corroboration or verification.",
         },
     }
 
