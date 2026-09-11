@@ -300,7 +300,7 @@ class TestSemaphoreBounds:
                 server_mod._engine_semaphore = asyncio.Semaphore(1)
                 server_mod._active_engines = slow_engines
                 t0 = time.monotonic()
-                response = tc.get("/search", params={"q": "test"})
+                response = tc.get("/search", params={"q": "test", "format": "json"})
                 elapsed = time.monotonic() - t0
 
                 assert response.status_code == 200
@@ -337,7 +337,7 @@ class TestSemaphoreReleased:
             with TestClient(app) as tc:
                 server_mod._engine_semaphore = asyncio.Semaphore(5)
                 server_mod._active_engines = err_engines
-                response = tc.get("/search", params={"q": "test"})
+                response = tc.get("/search", params={"q": "test", "format": "json"})
                 assert response.status_code == 503  # all unresponsive
 
                 sem = server_mod._engine_semaphore
@@ -367,10 +367,10 @@ class TestSemaphoreReleased:
             with TestClient(app) as tc:
                 server_mod._engine_semaphore = asyncio.Semaphore(5)
                 server_mod._active_engines = mixed_engines
-                r1 = tc.get("/search", params={"q": "test"})
+                r1 = tc.get("/search", params={"q": "test", "format": "json"})
                 assert r1.status_code in (200, 503)
 
-                r2 = tc.get("/search", params={"q": "test"})
+                r2 = tc.get("/search", params={"q": "test", "format": "json"})
                 assert r2.status_code in (200, 503)
 
                 sem = server_mod._engine_semaphore
@@ -398,10 +398,10 @@ class TestPerClientRateLimit429:
         server_mod._client_rate_window = limiter
 
         try:
-            r1 = client.get("/search", params={"q": "test"})
+            r1 = client.get("/search", params={"q": "test", "format": "json"})
             assert r1.status_code == 200, f"Expected 200, got {r1.status_code}"
 
-            r2 = client.get("/search", params={"q": "test"})
+            r2 = client.get("/search", params={"q": "test", "format": "json"})
             assert r2.status_code == 429, f"Expected 429, got {r2.status_code}"
             data = r2.json()
             assert data["error"] == "rate_limited"
@@ -422,7 +422,7 @@ class TestPerClientRateLimit429:
         initial_value = server_mod._engine_semaphore._value
 
         try:
-            response = client.get("/search", params={"q": "test"})
+            response = client.get("/search", params={"q": "test", "format": "json"})
             assert response.status_code == 429
 
             assert server_mod._engine_semaphore is not None
@@ -464,10 +464,10 @@ class TestIndependentIPs:
                 httpx.AsyncClient(transport=transport_b, base_url="http://test") as client_b,
             ):
                 for _ in range(3):
-                    r = await client_a.get("/search", params={"q": "test"})
+                    r = await client_a.get("/search", params={"q": "test", "format": "json"})
                 assert r.status_code == 429, f"Expected 429 for IP-A, got {r.status_code}"
 
-                r_b = await client_b.get("/search", params={"q": "test"})
+                r_b = await client_b.get("/search", params={"q": "test", "format": "json"})
                 assert r_b.status_code == 200, f"Expected 200 for IP-B, got {r_b.status_code}"
         finally:
             server_mod._active_engines = original_engines
@@ -503,8 +503,8 @@ class TestConcurrentRequestsShareSemaphore:
             async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
                 t0 = time.monotonic()
                 results = await asyncio.gather(
-                    ac.get("/search", params={"q": "test"}),
-                    ac.get("/search", params={"q": "test2"}),
+                    ac.get("/search", params={"q": "test", "format": "json"}),
+                    ac.get("/search", params={"q": "test2", "format": "json"}),
                 )
                 elapsed = time.monotonic() - t0
 
@@ -543,7 +543,7 @@ class TestRateLimiterUsesClientIP:
         try:
             transport = ASGITransport(app=app, client=("10.0.0.42", 9999))
             async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
-                r = await ac.get("/search", params={"q": "test"})
+                r = await ac.get("/search", params={"q": "test", "format": "json"})
                 assert r.status_code == 200
                 assert "10.0.0.42" in tracker.keys, f"Expected '10.0.0.42' in {tracker.keys}"
         finally:
@@ -573,7 +573,7 @@ class TestNoEnginesNoSemaphore:
                 assert server_mod._engine_semaphore is not None
                 initial_value = server_mod._engine_semaphore._value
 
-                response = tc.get("/search", params={"q": "test"})
+                response = tc.get("/search", params={"q": "test", "format": "json"})
                 assert response.status_code == 503
                 data = response.json()
                 assert "no engines available" in str(data)
@@ -629,7 +629,7 @@ class TestIPv6RateLimiting:
         try:
             transport = ASGITransport(app=app, client=("::1", 54321))
             async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
-                r = await ac.get("/search", params={"q": "test"})
+                r = await ac.get("/search", params={"q": "test", "format": "json"})
                 assert r.status_code == 200, f"Expected 200 for IPv6, got {r.status_code}"
 
                 assert "::1" in tracker.keys, f"Expected '::1' in {tracker.keys}"
@@ -661,9 +661,9 @@ class TestIPv6RateLimiting:
                 httpx.AsyncClient(transport=transport_v6, base_url="http://test") as client_v6,
             ):
                 for _ in range(3):
-                    await client_v4.get("/search", params={"q": "test"})
+                    await client_v4.get("/search", params={"q": "test", "format": "json"})
 
-                r_v6 = await client_v6.get("/search", params={"q": "test"})
+                r_v6 = await client_v6.get("/search", params={"q": "test", "format": "json"})
                 assert r_v6.status_code == 200, f"Expected 200 for IPv6, got {r_v6.status_code}"
         finally:
             server_mod._active_engines = original_engines

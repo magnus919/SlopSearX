@@ -89,3 +89,77 @@ tests:
   - eval_time: 12m
     alertname: HighLatency
     exp_alerts: []
+- name: workflow stuck firing
+  interval: 1m
+  input_series:
+  - series: slopsearx_workflow_oldest_claimable_age_seconds{workflow="research"}
+    values: 301x20
+  alert_rule_test:
+  - eval_time: 12m
+    alertname: WorkflowQueueStuck
+    exp_alerts:
+    - exp_labels:
+        workflow: research
+        severity: warning
+      exp_annotations:
+        summary: research workflow queue is stuck
+        description: The oldest claimable operation has waited more than five minutes for ten minutes.
+- name: workflow stuck healthy
+  interval: 1m
+  input_series:
+  - series: slopsearx_workflow_oldest_claimable_age_seconds{workflow="research"}
+    values: 0x20
+  alert_rule_test:
+  - eval_time: 12m
+    alertname: WorkflowQueueStuck
+    exp_alerts: []
+- name: workflow recovery firing
+  interval: 1m
+  input_series:
+  - series: slopsearx_workflow_lease_recoveries_total{workflow="staged_search"}
+    values: 0+1x20
+  alert_rule_test:
+  - eval_time: 12m
+    alertname: WorkflowLeaseRecoveryBurst
+    exp_alerts:
+    - exp_labels:
+        workflow: staged_search
+        severity: warning
+      exp_annotations:
+        summary: Repeated staged_search lease recovery
+        description: More than two expired leases were recovered in five minutes; inspect worker stability.
+- name: workflow recovery healthy
+  interval: 1m
+  input_series:
+  - series: slopsearx_workflow_lease_recoveries_total{workflow="staged_search"}
+    values: 0+0x20
+  alert_rule_test:
+  - eval_time: 12m
+    alertname: WorkflowLeaseRecoveryBurst
+    exp_alerts: []
+- name: workflow failures firing
+  interval: 1m
+  input_series:
+  - series: slopsearx_workflow_terminal_total{workflow="saved_search",outcome="failed"}
+    values: 0+1x30
+  alert_rule_test:
+  - eval_time: 22m
+    alertname: WorkflowTerminalFailures
+    exp_alerts:
+    - exp_labels:
+        workflow: saved_search
+        severity: warning
+      exp_annotations:
+        summary: Sustained saved_search workflow failures
+        description: At least three workflow attempts failed in the last ten minutes for ten minutes.
+- name: workflow failures healthy
+  interval: 1m
+  input_series:
+  - series: slopsearx_workflow_terminal_total{workflow="saved_search",outcome="failed"}
+    values: 0+0x30
+  - series: slopsearx_workflow_terminal_total{workflow="saved_search",outcome="interrupted"}
+    values: 0+1x30
+  alert_rule_test:
+  - eval_time: 22m
+    alertname: WorkflowTerminalFailures
+    exp_alerts: []

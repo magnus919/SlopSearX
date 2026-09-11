@@ -113,6 +113,17 @@ class InMemoryStore:
         self._data.pop(key, None)
         return True
 
+    async def save_if_lease_owner(
+        self, lease_key: str, token: str, record_key: str, value: dict[str, Any], ttl: int
+    ) -> bool:
+        """Atomically replace a record when the in-memory lease still matches."""
+        current = self._data.get(lease_key)
+        if not isinstance(current, dict) or current.get("token") != token:
+            return False
+        self._data[record_key] = value
+        self.set_ttls.append(ttl)
+        return True
+
     async def close(self) -> None:
         # In-memory: nothing to release; kept so destroy_context works.
         return None

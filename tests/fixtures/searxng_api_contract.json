@@ -1,0 +1,141 @@
+{
+  "reference": {
+    "project": "SearXNG",
+    "version": "2026.6.29+28d388576",
+    "captured": "2026-09-07",
+    "source": "https://docs.searxng.org/dev/search_api.html"
+  },
+  "request_matrix": [
+    {
+      "name": "root_get_json",
+      "method": "GET",
+      "path": "/",
+      "params": {"q": "contract", "format": "json"},
+      "status": 200,
+      "media_type": "application/json"
+    },
+    {
+      "name": "search_get_json",
+      "method": "GET",
+      "path": "/search",
+      "params": {"q": "contract", "format": "json"},
+      "status": 200,
+      "media_type": "application/json"
+    },
+    {
+      "name": "root_post_json",
+      "method": "POST",
+      "path": "/",
+      "params": {"q": "contract", "format": "json"},
+      "status": 200,
+      "media_type": "application/json"
+    },
+    {
+      "name": "search_post_json",
+      "method": "POST",
+      "path": "/search",
+      "params": {"q": "contract", "format": "json"},
+      "status": 200,
+      "media_type": "application/json"
+    },
+    {
+      "name": "default_html",
+      "method": "GET",
+      "path": "/search",
+      "params": {"q": "contract"},
+      "status": 200,
+      "media_type": "text/html"
+    },
+    {
+      "name": "explicit_html",
+      "method": "GET",
+      "path": "/search",
+      "params": {"q": "contract", "format": "html"},
+      "status": 200,
+      "media_type": "text/html"
+    },
+    {
+      "name": "explicit_csv",
+      "method": "GET",
+      "path": "/search",
+      "params": {"q": "contract", "format": "csv"},
+      "status": 200,
+      "media_type": "text/csv"
+    },
+    {
+      "name": "explicit_rss",
+      "method": "GET",
+      "path": "/search",
+      "params": {"q": "contract", "format": "rss"},
+      "status": 200,
+      "media_type": "application/rss+xml"
+    },
+    {
+      "name": "missing_query_json",
+      "method": "GET",
+      "path": "/search",
+      "params": {"format": "json"},
+      "status": 400,
+      "media_type": "application/json",
+      "error": "query_required"
+    },
+    {
+      "name": "invalid_page_json",
+      "method": "GET",
+      "path": "/search",
+      "params": {"q": "contract", "format": "json", "pageno": 0},
+      "status": 400,
+      "media_type": "application/json",
+      "error": "invalid_filter"
+    },
+    {
+      "name": "invalid_safesearch_json",
+      "method": "GET",
+      "path": "/search",
+      "params": {"q": "contract", "format": "json", "safesearch": 3},
+      "status": 400,
+      "media_type": "application/json",
+      "error": "invalid_filter"
+    }
+  ],
+  "disabled_formats": {
+    "csv": {"status": 403, "media_type": "text/csv"},
+    "rss": {"status": 403, "media_type": "application/rss+xml"}
+  },
+  "config": {
+    "categories_type": "list",
+    "required_top_level": [
+      "autocomplete",
+      "categories",
+      "default_locale",
+      "default_theme",
+      "engines",
+      "instance_name",
+      "locales",
+      "plugins",
+      "safe_search",
+      "version"
+    ],
+    "required_engine_fields": ["categories", "enabled", "name", "shortcut", "type"],
+    "required_result_fields": [
+      "author",
+      "category",
+      "content",
+      "engine",
+      "engines",
+      "img_src",
+      "metadata",
+      "open_group",
+      "parsed_url",
+      "positions",
+      "priority",
+      "pubdate",
+      "publishedDate",
+      "score",
+      "template",
+      "title",
+      "url"
+    ],
+    "parsed_url": ["https", "example.test", "/path", "param", "q=one", "section"]
+  }
+}

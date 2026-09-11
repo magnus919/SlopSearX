@@ -63,6 +63,13 @@ class TestPyPIAdapter:
         assert result.results[0].title == "requests 2.34.2"
         assert "HTTP" in result.results[0].content
 
+    async def test_non_mapping_project_urls_are_ignored(self, adapter, pypi_json_response):
+        pypi_json_response["info"]["project_urls"] = ["https://github.com/psf/requests"]
+        async with MockHTTP(lambda r: httpx.Response(200, json=pypi_json_response)):
+            result = await adapter.search("requests")
+        assert result.status == EngineStatus.OK
+        assert "repository_url" not in result.results[0].payload["data"]
+
     async def test_search_not_found_falls_back(self, adapter):
         """When exact name not found, falls back to simple index search."""
         calls = []
@@ -140,6 +147,13 @@ class TestNpmAdapter:
             result = await adapter.search("nonexistent")
         assert result.status == EngineStatus.OK
         assert len(result.results) == 0
+
+    async def test_non_mapping_package_links_are_ignored(self, adapter, sample_response):
+        sample_response["objects"][0]["package"]["links"] = ["https://github.com/expressjs/express"]
+        async with MockHTTP(lambda r: httpx.Response(200, json=sample_response)):
+            result = await adapter.search("web framework")
+        assert result.status == EngineStatus.OK
+        assert "repository_url" not in result.results[0].payload["data"]
 
     async def test_search_rate_limited(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(429)):
@@ -494,6 +508,7 @@ class TestPubMedAdapter:
         assert result.status == EngineStatus.OK
         assert len(result.results) == 2
         assert "COVID-19" in result.results[0].title
+        assert result.results[0].payload["data"]["pmid"] == "12345"
 
     async def test_search_no_results(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(200, json={"esearchresult": {"idlist": []}})):
