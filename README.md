@@ -284,6 +284,10 @@ The portal has no analytics or third-party runtime assets by default. Search
 forms are read-only requests; there is no authenticated browser mutation that
 needs a CSRF token in this release.
 
+See [`docs/PORTAL_DEPLOYMENT.md`](docs/PORTAL_DEPLOYMENT.md) for the browser
+URL map, proxy/access modes, digest-pinned deployment, smoke check, rollback,
+and troubleshooting runbook.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

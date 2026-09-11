@@ -107,3 +107,21 @@ Security review follows the [OWASP XSS Prevention Cheat Sheet](https://cheatshee
 Each release PR links the exact test commands, browser screenshots or run
 record, measured budget output, and any environment gaps. A passing static test
 is not a substitute for the manual visual and assistive-technology review.
+
+For the first release, the local review record is:
+
+- 2026-09-11: landing and deterministic all-source-unavailable result states
+  were opened from the final image-equivalent app build in the Codex browser at
+  desktop width; the hierarchy, Dark default, Darker toggle, scope disclosure,
+  empty state, and concise copy were reviewed visually. The narrow viewport is
+  exercised by the Chromium journey in CI.
+- 2026-09-11: the browser accessibility tree exposed named search controls,
+  heading structure, the theme state, and the scope disclosure; keyboard `/`
+  focus and the scope controls are covered by the Chromium smoke journey.
+- 2026-09-11: `scripts/portal_release_smoke.py` passed against local HTTP for
+  both `SLOPSEARX_PORTAL_DEFAULT_THEME=dark` and `darker` (landing 200,
+  readiness 200, deterministic search envelope 503 with the requested query).
+
+The CI `portal-browser` job is the repeatable release gate. Production canary
+and rollback evidence is deployment-specific and belongs in the operator's
+release record described by [`docs/PORTAL_DEPLOYMENT.md`](PORTAL_DEPLOYMENT.md).
