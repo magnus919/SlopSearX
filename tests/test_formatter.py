@@ -641,8 +641,26 @@ class TestPortalHtml:
         assert "Open JSON view ↗" in output
         assert "format=json" in output
         assert "Source status" in output
-        assert "Page 1" in output
+        assert "Page 1 · more may be available" in output
+        assert 'aria-label="Try next result page"' in output
+        assert "Try next page →" in output
         assert "data-result-card" in output
+
+        last_page = format_html(
+            [result],
+            "climate",
+            portal_state={"query": "climate", "page": 1, "has_more": False},
+        )
+        assert "Try next page →" not in last_page
+        assert "Next page →" not in last_page
+
+        known_more = format_html(
+            [result],
+            "climate",
+            portal_state={"query": "climate", "page": 1, "has_more": True},
+        )
+        assert "Next page →" in known_more
+        assert 'aria-label="Next result page"' in known_more
 
         disabled_output = format_html(
             [result],
