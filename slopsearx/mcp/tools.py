@@ -18,6 +18,7 @@ from typing import Any
 from pydantic import StrictInt
 
 from slopsearx.adapter import OBSERVED_STATUS_VOCAB, SUPPORTED_MEDIA_TYPES
+from slopsearx.artifacts import artifact_ref, composite_artifact_id
 from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, engine_policy_rejection, resolve_intent
 from slopsearx.filters import (
     DateFilterError,
@@ -581,6 +582,7 @@ def _envelope(
             "deadline_exceeded": response.deadline_exceeded,
             "ranking": response.ranking_explanation,
             "cursor": cursor,
+            "artifact": artifact_ref("snapshot", cursor) if cursor else None,
             "suggestions": response.suggestions if include_suggestions else [],
             "total": total,
             "has_more": total > len(response.results),
@@ -1485,6 +1487,7 @@ async def slopsearx_read_results(
     return {
         "query": snapshot.query,
         "cursor": cursor,
+        "artifact": artifact_ref("snapshot", cursor),
         "page": page,
         "results": [
             _result_to_dict(result, result_id=state.snapshots.result_id(cursor, start + index))
@@ -1538,7 +1541,20 @@ async def slopsearx_read_entities(
         "cursor": cursor,
         "query": snapshot.query,
         "page": page,
-        "entities": groups[start : start + page_size],
+        "entities": [
+            {
+                **group,
+                "artifact": (
+                    artifact_ref(
+                        "entity_group",
+                        composite_artifact_id(cursor, str(group["entity_id"])),
+                    )
+                    if group["entity_id"]
+                    else None
+                ),
+            }
+            for group in groups[start : start + page_size]
+        ],
         "meta": {
             "total_entities": len(groups),
             "total_results": len(snapshot.results),
@@ -2306,6 +2322,10 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
     job_coverage = summarize_coverage([entry for query in job.queries for entry in query.engine_coverage])
     return {
         "job_id": job.job_id,
+        "artifact": artifact_ref(
+            "dependency_dossier" if job.workflow.get("kind") == "dependency_dossier" else "research_job",
+            job.job_id,
+        ),
         "state": job.state,
         "question": job.question,
         "strategy": job.strategy,
@@ -2322,12 +2342,23 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
                 "result_count": query.result_count,
                 "query_id": query.query_id,
                 "cursor": query.cursor,
+                "snapshot_artifact": artifact_ref("snapshot", query.cursor) if query.cursor else None,
                 "error": query.error,
                 "subquestion_id": query.subquestion_id,
                 "rationale": query.rationale,
                 "parent_attempt_id": query.parent_attempt_id,
                 "continuation_key": query.continuation_key,
-                "attempts": [dataclasses.asdict(attempt) for attempt in query.attempts],
+                "attempts": [
+                    {
+                        **dataclasses.asdict(attempt),
+                        "artifact": artifact_ref(
+                            "research_attempt",
+                            composite_artifact_id(job.job_id, attempt.attempt_id),
+                        ),
+                        "snapshot_artifact": (artifact_ref("snapshot", attempt.cursor) if attempt.cursor else None),
+                    }
+                    for attempt in query.attempts
+                ],
                 "engine_coverage": [
                     {
                         "engine": cov.engine,
@@ -2413,6 +2444,7 @@ def _saved_state(state: McpState) -> tuple[Any, Any] | dict[str, Any]:
 def _saved_summary(definition: SavedDefinition) -> dict[str, Any]:
     return {
         "search_id": definition.search_id,
+        "artifact": artifact_ref("saved_search", definition.search_id),
         "revision": definition.revision,
         "query": definition.query,
         "engines": definition.engines,
@@ -2680,8 +2712,20 @@ async def slopsearx_read_saved_search_reports(search_id: str, limit: StrictInt =
         report_policy_error = _enforce_policy(state, [str(engine) for engine in report_engines])
         if report_policy_error:
             return report_policy_error
+        report["artifact"] = artifact_ref(
+            "saved_report",
+            composite_artifact_id(search_id, str(report["run_id"])),
+        )
+        report["lineage"] = [
+            {
+                "from": report["artifact"],
+                "relation": "derived_from",
+                "to": artifact_ref("saved_search", search_id),
+            }
+        ]
     return {
         "search_id": search_id,
+        "artifact": artifact_ref("saved_search", search_id),
         "revision": definition.revision,
         "reports": reports,
         "latest_run_id": definition.latest_run_id,

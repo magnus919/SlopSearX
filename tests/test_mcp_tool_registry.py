@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from slopsearx.capabilities import MCPPolicy
-from slopsearx.mcp import dependency_tools, receipt_tools, staged_tools, tools
+from slopsearx.mcp import dependency_tools, lineage_tools, receipt_tools, staged_tools, tools
 from slopsearx.mcp.server import create_server
 from slopsearx.mcp.tool_registry import (
     TOOL_DEFINITIONS,
@@ -52,12 +52,13 @@ GOLDEN_TOOL_NAMES = (
     "slopsearx_retry_staged_search",
     "slopsearx_start_dependency_dossier",
     "slopsearx_get_dependency_dossier",
+    "slopsearx_get_artifact_lineage",
 )
 
 
 def _exported_tool_names() -> set[str]:
     exported: set[str] = set()
-    for module in (tools, receipt_tools, staged_tools, dependency_tools):
+    for module in (tools, receipt_tools, staged_tools, dependency_tools, lineage_tools):
         exported.update(
             name
             for name, value in vars(module).items()

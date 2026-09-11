@@ -289,6 +289,8 @@ class TestWorkflow:
         after = _calls(state)
 
         assert report["state"] == "succeeded"
+        assert started["artifact"]["kind"] == "dependency_dossier"
+        assert report["artifact"] == started["artifact"]
         assert report["resolved_package_identity"]["status"] == "resolved"
         assert report["resolved_package_identity"]["version_match"] == "exact"
         assert report["repository_identity"]["basis"] == "caller_supplied"

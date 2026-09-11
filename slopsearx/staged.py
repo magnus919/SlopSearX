@@ -16,6 +16,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from slopsearx.artifacts import artifact_ref
 from slopsearx.service import SearchRequest, SearchService
 from slopsearx.snapshot import SnapshotStore
 
@@ -748,6 +749,7 @@ class StagedSearchRunner:
             response.results,
             response.scope,
             ranking_explanation=response.ranking_explanation,
+            derived_from=[artifact_ref("staged_search", operation_id)],
         )
         outcomes = [
             {

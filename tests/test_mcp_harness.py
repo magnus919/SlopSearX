@@ -349,7 +349,7 @@ class TestAuthenticatedTransport:
                 res = await session.call_tool("slopsearx_search", {"query": "hello"})
                 assert "results" in _payload(res)
                 tools = await session.list_tools()
-                assert len(tools.tools) == 32
+                assert tuple(tool.name for tool in tools.tools) == tool_names()
 
     async def test_authenticated_dependency_dossier_start(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("MCP_GRANT_DEPENDENCY_DOSSIER", "1")

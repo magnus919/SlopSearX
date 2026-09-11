@@ -7,6 +7,7 @@ import time
 import uuid
 from typing import Any
 
+from slopsearx.artifacts import artifact_ref
 from slopsearx.capabilities import INTENT_PROFILES
 from slopsearx.mcp import tools as core
 from slopsearx.mcp.result_serialization import _result_to_dict
@@ -248,6 +249,7 @@ async def _render(record: dict[str, Any], include: list[str] | None, max_results
     results: list[dict[str, Any]] = []
     meta = {
         "cursor": None,
+        "artifact": None,
         "query_id": None,
         "total": 0,
         "returned": 0,
@@ -272,6 +274,7 @@ async def _render(record: dict[str, Any], include: list[str] | None, max_results
                 ]
             meta.update(
                 cursor=attempt["cursor"],
+                artifact=artifact_ref("snapshot", attempt["cursor"]),
                 query_id=attempt["query_id"],
                 total=snapshot.total,
                 returned=len(results),
@@ -288,6 +291,7 @@ async def _render(record: dict[str, Any], include: list[str] | None, max_results
         "contract": CONTRACT,
         "version": VERSION,
         "operation_id": record["operation_id"],
+        "artifact": artifact_ref("staged_search", record["operation_id"]),
         "state": record["state"],
         "stop_reason": record.get("stop_reason"),
         "accepted_at": record["accepted_at"],

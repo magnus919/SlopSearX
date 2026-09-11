@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Any
 
 from slopsearx.adapter import SearchResult, media_to_dict
+from slopsearx.artifacts import artifact_ref
 from slopsearx.mcp.retrieval_url import RETRIEVAL_URL_STATUS_OK, _retrieval_url
 from slopsearx.payload import (
     PAYLOAD_INLINE_BYTES,
@@ -186,6 +187,7 @@ def _result_to_dict(
         card["media"] = media
     if result_id is not None:
         card["result_id"] = result_id
+        card["artifact"] = artifact_ref("result", result_id)
     inline = _payload_inline(result, requested=include_payload)
     if inline is not None:
         card["payload"] = inline
@@ -220,6 +222,7 @@ def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: st
     content_available = len(content) > SNIPPET_LENGTH
     record = {
         "result_id": result_id,
+        "artifact": artifact_ref("result", result_id),
         "title": result.title,
         "url": result.url,
         "content": content,
