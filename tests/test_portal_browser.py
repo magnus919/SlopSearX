@@ -46,7 +46,8 @@ def test_results_journey_keeps_links_and_escaped_content() -> None:
         title='A <script>alert("x")</script>',
         content="A useful result",
         engine="mocktest",
-        engines={"mocktest"},
+        engines={"mocktest", "wikipedia"},
+        category="science",
     )
     state = {
         "query": "valkey",
@@ -65,7 +66,11 @@ def test_results_journey_keeps_links_and_escaped_content() -> None:
         page.set_content(format_html([result], "valkey", portal_state=state))
 
         assert page.get_by_role("heading", name='A <script>alert("x")</script>').is_visible()
-        assert page.get_by_text("Source: mocktest").is_visible()
+        assert page.get_by_text("Matched 2 sources").is_visible()
+        assert page.get_by_text("Research").is_visible()
+        assert page.get_by_text("Wikipedia").is_visible()
+        assert page.get_by_role("link", name="JSON view ↗").is_visible()
+        assert page.get_by_role("complementary", name="Search summary").is_visible()
         assert page.get_by_role("link", name="← Previous").get_attribute("href")
         assert page.get_by_role("link", name="Next →").get_attribute("href")
         page.get_by_text("Scope and filters").click()

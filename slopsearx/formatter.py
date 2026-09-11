@@ -260,18 +260,43 @@ a { color: inherit; }
 .portal-footer { display: flex; justify-content: space-between; gap: 1rem; padding: 2.5rem 0 2rem; color: var(--quiet); font: .68rem "SFMono-Regular", Consolas, monospace; }
 .results-shell { padding: 3rem 0 1rem; }
 .results-top { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 2.3rem; }
-.results-top h1 { margin: .5rem 0 0; font: 500 clamp(2rem, 4vw, 3.8rem)/.95 Georgia, serif; letter-spacing: -.05em; }
-.results-top .summary { max-width: 18rem; margin: 0; color: var(--muted); text-align: right; font-size: .85rem; }
-.results-list { max-width: 850px; }
-.result { position: relative; padding: 1.35rem 0 1.6rem; border-top: 1px solid var(--line); animation: rise .5s both; animation-delay: calc(var(--i, 0) * 55ms); }
-.result::before { content: counter(result); counter-increment: result; position: absolute; left: -2.5rem; top: 1.45rem; color: var(--quiet); font: .68rem "SFMono-Regular", Consolas, monospace; }
-.results-list { counter-reset: result; }
-.result-link { display: inline; color: var(--ink); text-decoration: none; font: 500 clamp(1.25rem, 2.5vw, 1.8rem)/1.1 Georgia, serif; letter-spacing: -.025em; }
+.results-top h1 { max-width: 18ch; margin: .5rem 0 0; font: 500 clamp(2rem, 4vw, 3.8rem)/.95 Georgia, serif; letter-spacing: -.05em; overflow-wrap: anywhere; }
+.results-top .summary { max-width: 21rem; margin: 0; color: var(--muted); text-align: right; font-size: .85rem; }
+.results-top .summary strong { color: var(--ink); font-weight: 600; }
+.results-layout { display: grid; grid-template-columns: minmax(0, 1fr) 15.5rem; gap: 2.2rem; align-items: start; }
+.results-main { min-width: 0; }
+.results-list { display: grid; gap: .85rem; counter-reset: result; }
+.result { position: relative; min-width: 0; padding: 1.25rem 1.3rem 1.1rem 4.2rem; border: 1px solid var(--line); border-radius: .18rem; background: linear-gradient(135deg, rgba(42,43,38,.72), rgba(34,35,31,.38)); box-shadow: 0 .9rem 2.2rem rgba(0,0,0,.12); animation: rise .5s both; animation-delay: calc(var(--i, 0) * 55ms); transition: border-color .2s, transform .2s, background .2s; }
+.result:hover { border-color: rgba(229,181,103,.48); background: linear-gradient(135deg, rgba(48,47,39,.82), rgba(34,35,31,.52)); transform: translateY(-2px); }
+.result.is-active { border-color: var(--signal); box-shadow: 0 0 0 2px rgba(167,215,197,.18), 0 1rem 2.6rem rgba(0,0,0,.2); }
+.result::before { content: counter(result, decimal-leading-zero); counter-increment: result; position: absolute; left: 1.25rem; top: 1.25rem; width: 2rem; height: 2rem; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: var(--accent); background: var(--paper-lift); font: .68rem "SFMono-Regular", Consolas, monospace; }
+.result-kicker { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem .65rem; margin-bottom: .55rem; color: var(--muted); font: .66rem "SFMono-Regular", Consolas, monospace; }
+.result-source-line { display: inline-flex; align-items: center; min-width: 0; max-width: 100%; color: var(--signal); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.result-source-line::before { content: ""; width: .4rem; height: .4rem; flex: 0 0 auto; margin-right: .45rem; border-radius: 50%; background: var(--signal); box-shadow: 0 0 .55rem rgba(167,215,197,.5); }
+.result-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--quiet); }
+.result-pill { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 99px; padding: .22rem .48rem; color: var(--muted); background: rgba(11,12,11,.18); font: 600 .59rem/1 "SFMono-Regular", Consolas, monospace; letter-spacing: .04em; text-transform: uppercase; }
+.result-pill.type { color: var(--accent); border-color: rgba(229,181,103,.34); }
+.result-pill.consensus { color: var(--signal); border-color: rgba(167,215,197,.35); }
+.result-link { display: inline; color: var(--ink); text-decoration: none; font: 500 clamp(1.18rem, 2.1vw, 1.58rem)/1.12 Georgia, serif; letter-spacing: -.025em; }
 .result-link:hover { color: var(--accent-strong); }
-.result-url { margin: .45rem 0 .6rem; color: var(--signal); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: .68rem "SFMono-Regular", Consolas, monospace; }
-.result-content { max-width: 70ch; margin: 0; color: var(--muted); font-size: .91rem; }
-.result-meta { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin-top: .9rem; color: var(--quiet); font: .65rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; letter-spacing: .04em; }
-.result-meta span + span::before { content: "•"; margin-right: 1rem; color: var(--accent); }
+.result-content { max-width: 72ch; margin: .65rem 0 0; color: var(--muted); font-size: .91rem; line-height: 1.62; }
+.result-meta { display: flex; flex-wrap: wrap; gap: .45rem .9rem; margin-top: .9rem; color: var(--quiet); font: .64rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; letter-spacing: .04em; }
+.result-meta span + span::before { content: "•"; margin-right: .9rem; color: var(--accent); }
+.result-actions { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1rem; padding-top: .8rem; border-top: 1px solid rgba(244,240,232,.08); }
+.result-action { color: var(--muted); text-decoration: none; font: 700 .62rem "SFMono-Regular", Consolas, monospace; letter-spacing: .06em; text-transform: uppercase; }
+.result-action:hover, .result-action:focus-visible { color: var(--accent-strong); }
+.results-rail { display: grid; gap: .8rem; position: sticky; top: 1rem; }
+.rail-card { padding: 1rem; border: 1px solid var(--line); background: rgba(34,35,31,.58); }
+.rail-label { margin: 0 0 .8rem; color: var(--accent); font: 700 .63rem "SFMono-Regular", Consolas, monospace; letter-spacing: .12em; text-transform: uppercase; }
+.rail-count { display: block; color: var(--ink); font: 500 3.4rem/.9 Georgia, serif; letter-spacing: -.07em; }
+.rail-copy { margin: .55rem 0 0; color: var(--muted); font-size: .78rem; }
+.rail-detail { display: flex; justify-content: space-between; gap: .5rem; margin-top: .9rem; padding-top: .75rem; border-top: 1px solid var(--line); color: var(--quiet); font: .61rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; }
+.rail-sources { display: grid; gap: .55rem; margin: 0; padding: 0; list-style: none; }
+.rail-source { display: flex; align-items: center; justify-content: space-between; gap: .7rem; color: var(--muted); font: .7rem "SFMono-Regular", Consolas, monospace; }
+.rail-source-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rail-source-count { color: var(--signal); }
+.rail-link { display: inline-flex; margin-top: 1rem; color: var(--accent); text-decoration: none; font: 700 .62rem "SFMono-Regular", Consolas, monospace; letter-spacing: .06em; text-transform: uppercase; }
+.rail-link:hover { color: var(--accent-strong); }
 .notice { margin: 1.5rem 0; padding: .8rem 1rem; border: 1px solid rgba(229,181,103,.45); color: var(--muted); background: rgba(229,181,103,.07); font-size: .82rem; }
 .notice[data-kind="error"] { border-color: rgba(226,126,126,.65); background: rgba(226,126,126,.08); }
 .scope-panel { margin: 1rem 0 2.2rem; padding: 1rem; border: 1px solid var(--line); background: rgba(34,35,31,.58); }
@@ -295,12 +320,13 @@ a { color: inherit; }
 .result-media figcaption { padding: .45rem .6rem; color: var(--quiet); font: .65rem "SFMono-Regular", Consolas, monospace; }
 .suggestions { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1rem; }
 .suggestions a { border-bottom: 1px solid var(--accent); color: var(--accent); text-decoration: none; font-size: .82rem; }
-.pagination { display: flex; justify-content: space-between; gap: 1rem; max-width: 850px; padding: 1.5rem 0; border-top: 1px solid var(--line); }
+.pagination { display: flex; justify-content: space-between; gap: 1rem; padding: 1.5rem 0; border-top: 1px solid var(--line); }
 .page-link { border: 1px solid var(--line); color: var(--muted); background: transparent; padding: .6rem .8rem; text-decoration: none; font: .68rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; letter-spacing: .05em; }
 .page-link:hover { color: var(--ink); border-color: var(--accent); }
 .empty { padding: 3rem 0; color: var(--muted); border-top: 1px solid var(--line); }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@media (max-width: 720px) { .portal { width: min(100% - 1.5rem, 42rem); } .hero { display: block; padding: 4.5rem 0 3.5rem; } .hero h1 { font-size: clamp(3.2rem, 16vw, 5rem); } .hero-note { margin-top: 3rem; } .results-top { display: block; } .results-top .summary { margin-top: 1rem; text-align: left; } .result::before { display: none; } .search-form { display: block; } .search-button { width: 100%; min-height: 3rem; } .search-hint { display: none; } .portal-footer { display: block; } .portal-footer span { display: block; margin-top: .5rem; } .scope-grid { grid-template-columns: 1fr; } .scope-apply { width: 100%; } .pagination { display: grid; grid-template-columns: 1fr 1fr; } .page-link { text-align: center; } }
+@media (max-width: 900px) { .results-layout { grid-template-columns: 1fr; } .results-rail { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .portal { width: min(100% - 1.5rem, 42rem); } .hero { display: block; padding: 4.5rem 0 3.5rem; } .hero h1 { font-size: clamp(3.2rem, 16vw, 5rem); } .hero-note { margin-top: 3rem; } .results-top { display: block; } .results-top .summary { margin-top: 1rem; text-align: left; } .result { padding: 1.1rem 1rem 1rem 3.7rem; } .result::before { left: .9rem; top: 1.1rem; width: 2rem; height: 2rem; } .result-kicker { display: block; } .result-kicker > * { margin: 0 .45rem .35rem 0; } .search-form { display: block; } .search-button { width: 100%; min-height: 3rem; } .search-hint { display: none; } .portal-footer { display: block; } .portal-footer span { display: block; margin-top: .5rem; } .scope-grid { grid-template-columns: 1fr; } .scope-apply { width: 100%; } .pagination { display: grid; grid-template-columns: 1fr 1fr; } .page-link { text-align: center; } .results-rail { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 """
 
@@ -326,9 +352,28 @@ _PORTAL_SCRIPT = """
     update();
   });
   const input = document.querySelector(".search-input");
+  const resultCards = Array.from(document.querySelectorAll("[data-result-card]"));
+  let activeResult = -1;
+  const setActiveResult = function (next) {
+    if (!resultCards.length) return;
+    activeResult = Math.max(0, Math.min(resultCards.length - 1, next));
+    resultCards.forEach(function (card, index) {
+      card.classList.toggle("is-active", index === activeResult);
+    });
+    resultCards[activeResult].scrollIntoView({ block: "nearest", behavior: "smooth" });
+  };
   document.addEventListener("keydown", function (event) {
+    const target = event.target;
+    const typing = target && (target.matches("input, textarea, select") || target.isContentEditable);
     if ((event.key === "/" || (event.key === "k" && (event.metaKey || event.ctrlKey))) && document.activeElement !== input) {
       event.preventDefault(); if (input) input.focus();
+    } else if (!typing && event.key === "j" && resultCards.length) {
+      event.preventDefault(); setActiveResult(activeResult + 1);
+    } else if (!typing && event.key === "k" && resultCards.length) {
+      event.preventDefault(); setActiveResult(activeResult - 1);
+    } else if (!typing && event.key === "Enter" && activeResult >= 0) {
+      const link = resultCards[activeResult].querySelector(".result-link");
+      if (link) { event.preventDefault(); window.open(link.href, "_blank", "noopener,noreferrer"); }
     }
   });
 }());
@@ -422,6 +467,59 @@ def _portal_page_url(state: dict[str, Any] | None, page: int) -> str:
         "pageno": str(page),
     }
     return "/search?" + urlencode({key: value for key, value in values.items() if value not in (None, "")})
+
+
+def _portal_format_url(state: dict[str, Any] | None, output_format: str) -> str:
+    """Build a machine-view link that preserves the visible search state."""
+    values = {
+        "q": _portal_state_value(state, "query"),
+        "categories": _portal_state_value(state, "categories"),
+        "engines": _portal_state_value(state, "engines"),
+        "language": _portal_state_value(state, "language", "en"),
+        "time_range": _portal_state_value(state, "time_range"),
+        "safesearch": str(_portal_state_value(state, "safesearch", 0)),
+        "pageno": str(_portal_state_value(state, "page", 1)),
+        "format": output_format,
+    }
+    return "/search?" + urlencode({key: value for key, value in values.items() if value not in (None, "")})
+
+
+def _portal_engine_label(engine: str) -> str:
+    """Turn an internal engine slug into a compact, human-readable label."""
+    return str(engine).replace("_", " ").replace("-", " ").title()
+
+
+def _portal_result_type(
+    result: SearchResult, category: str, media: dict[str, Any] | None, payload: dict[str, Any] | None
+) -> str:
+    """Return an honest, low-signal result label from declared source metadata."""
+    if media:
+        return str(media.get("media_type", "media")).title()
+    if payload:
+        return "Structured"
+    root = category.split(":", 1)[0].strip().lower()
+    labels = {
+        "science": "Research",
+        "github": "Developer",
+        "packages": "Package",
+        "security": "Security",
+        "jobs": "Jobs",
+        "news": "News",
+        "reference": "Reference",
+        "media": "Media",
+    }
+    return labels.get(root, "Web")
+
+
+def _portal_source_counts(results: list[SearchResult]) -> list[tuple[str, int]]:
+    """Count the source appearances represented on the current result page."""
+    counts: dict[str, int] = {}
+    for result in results:
+        engines = result.engines or {result.engine}
+        for engine in engines:
+            if engine:
+                counts[str(engine)] = counts.get(str(engine), 0) + 1
+    return sorted(counts.items(), key=lambda item: (-item[1], item[0]))
 
 
 def _portal_scope_panel(state: dict[str, Any] | None) -> str:
@@ -521,25 +619,35 @@ def format_html(
 ) -> str:
     """Format the human-facing, safe HTML search-results page."""
     escaped_query = html_lib.escape(query, quote=True)
+    state = portal_state or {"query": query}
     result_items: list[str] = []
     for index, result in enumerate(results):
         title = html_lib.escape(str(result.title or result.url or "Untitled result"), quote=True)
         raw_url = _safe_href(result.url)
         url = html_lib.escape(raw_url, quote=True)
-        domain = html_lib.escape(urlparse(raw_url).netloc if raw_url != "#" else "unknown source", quote=True)
+        parsed_result_url = urlparse(raw_url) if raw_url != "#" else None
+        domain = html_lib.escape(parsed_result_url.netloc if parsed_result_url else "unknown source", quote=True)
+        result_path = html_lib.escape((parsed_result_url.path or "/") if parsed_result_url else "", quote=True)
         content = html_lib.escape(result.content or "")
-        category = html_lib.escape(result.category or "web", quote=True)
+        category_value = str(result.category or "web")
+        category = html_lib.escape(category_value, quote=True)
         published = html_lib.escape((result.published_date or "").split("T", 1)[0], quote=True)
         engines = sorted(result.engines) if result.engines else [result.engine]
-        sources = ", ".join(html_lib.escape(str(engine), quote=True) for engine in engines if engine)
-        metadata = f"<span>{category}</span>" + (f"<span>{published}</span>" if published else "")
-        metadata += f"<span>Source{('s' if len(engines) != 1 else '')}: {sources or 'unknown'}</span>"
-        special_bits: list[str] = []
         media = media_to_dict(result.media)
+        payload = _payload_for_output(result.payload)
+        source_pills = "".join(
+            f'<span class="result-pill">{html_lib.escape(_portal_engine_label(str(engine)), quote=True)}</span>'
+            for engine in engines
+            if engine
+        )
+        consensus = (
+            f'<span class="result-pill consensus">Matched {len(engines)} sources</span>' if len(engines) > 1 else ""
+        )
+        result_type = html_lib.escape(_portal_result_type(result, category_value, media, payload), quote=True)
+        special_bits: list[str] = []
         if media:
             media_type = html_lib.escape(str(media.get("media_type", "media")), quote=True)
             special_bits.append(f"<span>{media_type} result</span>")
-        payload = _payload_for_output(result.payload)
         if payload:
             domain_name = html_lib.escape(str(payload.get("domain", "specialist")), quote=True)
             payload_type = html_lib.escape(str(payload.get("type", "result")), quote=True)
@@ -554,12 +662,18 @@ def format_html(
                     f'<figure class="result-media"><img src="{html_lib.escape(thumbnail, quote=True)}" '
                     f'alt="{title}" loading="lazy"><figcaption>{caption}</figcaption></figure>'
                 )
+        json_url = html_lib.escape(_portal_format_url(state, "json"), quote=True)
+        path_markup = f'<span class="result-path">{result_path}</span>' if result_path else ""
+        metadata = f"<span>{category}</span>" + (f"<span>{published}</span>" if published else "")
         result_items.append(
-            f'<article class="result" style="--i:{index}">'
+            f'<article class="result" data-result-card style="--i:{index}">'
+            f'<div class="result-kicker"><span class="result-source-line">{domain}</span>{path_markup}'
+            f'<span class="result-pill type">{result_type}</span>{consensus}</div>'
             f'<h2><a class="result-link" href="{url}" target="_blank" rel="noopener noreferrer">{title}</a></h2>'
-            f'<p class="result-url">{domain}</p>'
             f'<p class="result-content">{content}</p>'
-            f'{special}{media_markup}<div class="result-meta">{metadata}</div>'
+            f'{special}{media_markup}<div class="result-meta">{source_pills}{metadata}</div>'
+            f'<div class="result-actions"><a class="result-action" href="{url}" target="_blank" rel="noopener noreferrer">Open result ↗</a>'
+            f'<a class="result-action" href="{json_url}">JSON view ↗</a></div>'
             "</article>"
         )
 
@@ -590,7 +704,6 @@ def format_html(
         unavailable = '<div class="notice" role="status">Some sources could not answer this search. The results below are still usable.</div>'
     else:
         unavailable = ""
-    state = portal_state or {}
     scope_label = html_lib.escape(str(_portal_state_value(state, "scope_label", "All sources")), quote=True)
     selected_count = int(_portal_state_value(state, "selected_engine_count", 0) or 0)
     responded_count = int(_portal_state_value(state, "responsive_engine_count", 0) or 0)
@@ -614,6 +727,28 @@ def format_html(
             )
         pagination = f'<nav class="pagination" aria-label="Pagination">{"".join(pagination_links)}</nav>'
     search_hidden = _portal_hidden_inputs(state, exclude={"q", "pageno"}, page=1)
+    source_counts = _portal_source_counts(results)
+    source_rows = "".join(
+        f'<li class="rail-source"><span class="rail-source-name">{html_lib.escape(_portal_engine_label(engine), quote=True)}</span>'
+        f'<span class="rail-source-count">{count}</span></li>'
+        for engine, count in source_counts[:7]
+    )
+    if not source_rows:
+        source_rows = '<li class="rail-source"><span class="rail-source-name">No responding sources</span></li>'
+    rail = f"""
+<aside class="results-rail" aria-label="Search summary">
+  <section class="rail-card">
+    <p class="rail-label">Result signal</p>
+    <strong class="rail-count">{len(results)}</strong>
+    <p class="rail-copy">merged results on this page</p>
+    <div class="rail-detail"><span>{responded_count} sources answered</span><span>{elapsed} ms</span></div>
+  </section>
+  <section class="rail-card">
+    <p class="rail-label">Sources in view</p>
+    <ul class="rail-sources">{source_rows}</ul>
+    <a class="rail-link" href="{html_lib.escape(_portal_format_url(state, "json"), quote=True)}">Open JSON view ↗</a>
+  </section>
+</aside>"""
     content = f"""
 <main class="portal">
   <header class="masthead"><a class="brand" href="/"><span class="brand-mark"><span>⌁</span></span><span>SLOPSEARX</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Darker · off</button></header>
@@ -622,8 +757,7 @@ def format_html(
     <section class="search-panel" aria-label="Refine search"><form class="search-form" action="/search" method="get"><label class="sr-only" for="portal-query">Search SlopSearX</label><input class="search-input" id="portal-query" name="q" type="search" value="{escaped_query}" required>{search_hidden}<button class="search-button" type="submit">Search ↗</button></form></section>
     {_portal_scope_panel(state)}
     {unavailable}
-    <div class="results-list">{body}</div>
-    {pagination}
+    <div class="results-layout"><div class="results-main"><div class="results-list">{body}</div>{pagination}</div>{rail}</div>
   </section>
   <footer class="portal-footer"><span>Sources are configured by the operator.</span><span>Press / to focus search.</span></footer>
 </main>
