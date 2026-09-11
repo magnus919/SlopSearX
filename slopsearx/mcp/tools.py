@@ -8,18 +8,32 @@ envelope described in docs/MCP_SERVER_DESIGN.md §3.
 
 from __future__ import annotations
 
+import dataclasses
 import datetime as _dt
+import hashlib
+import json
 import time
 from typing import Any
 
+from pydantic import StrictInt
+
+from slopsearx import metrics as m
 from slopsearx.adapter import OBSERVED_STATUS_VOCAB, SUPPORTED_MEDIA_TYPES
-from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, resolve_intent
+from slopsearx.artifacts import artifact_ref, composite_artifact_id, lineage_edge
+from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, engine_policy_rejection, resolve_intent
 from slopsearx.filters import (
     DateFilterError,
     enforcement_entry,
     engine_filter_layer,
     publication_date_bounds,
     resolve_filter_enforcement,
+)
+from slopsearx.mcp.composition import ResolvedSource, resolve_source
+from slopsearx.mcp.entity_projection import (
+    ENTITY_CONTRACT,
+    ENTITY_VERSION,
+    ENTITY_VERSIONS,
+    entity_projection,
 )
 from slopsearx.mcp.result_serialization import (
     CONTENT_UNAVAILABLE_NOTE as CONTENT_UNAVAILABLE_NOTE,
@@ -68,48 +82,6 @@ from slopsearx.mcp.result_serialization import (
 from slopsearx.mcp.result_serialization import (
     _source_engines as _source_engines,
 )
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_DEPRECATED_SITE_LOCAL_V6 as RETRIEVAL_DEPRECATED_SITE_LOCAL_V6,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_PORT_MAX as RETRIEVAL_PORT_MAX,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_SIXTOFOUR_V6 as RETRIEVAL_SIXTOFOUR_V6,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_AMBIGUOUS as RETRIEVAL_URL_STATUS_AMBIGUOUS,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_MISSING as RETRIEVAL_URL_STATUS_MISSING,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_NON_HTTP as RETRIEVAL_URL_STATUS_NON_HTTP,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_OK as RETRIEVAL_URL_STATUS_OK,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_UNSAFE as RETRIEVAL_URL_STATUS_UNSAFE,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUSES as RETRIEVAL_URL_STATUSES,
-)
-from slopsearx.mcp.retrieval_url import (
-    UNSAFE_RETRIEVAL_SCHEMES as UNSAFE_RETRIEVAL_SCHEMES,
-)
-from slopsearx.mcp.retrieval_url import (
-    _ip_literal_candidates as _ip_literal_candidates,
-)
-from slopsearx.mcp.retrieval_url import (
-    _ipv4_component_value as _ipv4_component_value,
-)
-from slopsearx.mcp.retrieval_url import (
-    _retrieval_url as _retrieval_url,
-)
-from slopsearx.mcp.retrieval_url import (
-    _whatwg_ipv4_literal as _whatwg_ipv4_literal,
-)
 from slopsearx.mcp.state import McpState, current_tenant, get_state
 from slopsearx.ratelimit import ValkeySlidingWindow
 from slopsearx.research import (
@@ -122,6 +94,52 @@ from slopsearx.research import (
     plan_research_queries,
     summarize_coverage,
 )
+from slopsearx.research_budget import ResearchMutationError, budget_summary, initialize_budget
+from slopsearx.retrieval_url import (
+    RETRIEVAL_DEPRECATED_SITE_LOCAL_V6 as RETRIEVAL_DEPRECATED_SITE_LOCAL_V6,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_PORT_MAX as RETRIEVAL_PORT_MAX,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_SIXTOFOUR_V6 as RETRIEVAL_SIXTOFOUR_V6,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_AMBIGUOUS as RETRIEVAL_URL_STATUS_AMBIGUOUS,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_MISSING as RETRIEVAL_URL_STATUS_MISSING,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_NON_HTTP as RETRIEVAL_URL_STATUS_NON_HTTP,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_OK as RETRIEVAL_URL_STATUS_OK,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_UNSAFE as RETRIEVAL_URL_STATUS_UNSAFE,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUSES as RETRIEVAL_URL_STATUSES,
+)
+from slopsearx.retrieval_url import (
+    UNSAFE_RETRIEVAL_SCHEMES as UNSAFE_RETRIEVAL_SCHEMES,
+)
+from slopsearx.retrieval_url import (
+    _ip_literal_candidates as _ip_literal_candidates,
+)
+from slopsearx.retrieval_url import (
+    _ipv4_component_value as _ipv4_component_value,
+)
+from slopsearx.retrieval_url import (
+    _retrieval_url as _retrieval_url,
+)
+from slopsearx.retrieval_url import (
+    _whatwg_ipv4_literal as _whatwg_ipv4_literal,
+)
+from slopsearx.saved_events import definition_event, public_event
+from slopsearx.saved_models import SavedDefinition, generate_search_id
+from slopsearx.saved_store import OutboxCapacityError, RevisionConflictError
 from slopsearx.service import (
     QueryValidationError,
     RateLimitExceededError,
@@ -152,6 +170,8 @@ GRANT_ENV = {
     "jobs": "MCP_GRANT_JOBS",
     "security": "MCP_GRANT_SECURITY",
     "science": "MCP_GRANT_SCIENCE",
+    "saved_searches": "MCP_GRANT_SAVED_SEARCHES",
+    "saved_search_events": "MCP_GRANT_SAVED_SEARCH_EVENTS",
 }
 INTENT_GRANTS: dict[str, str] = {
     "jobs": "jobs",
@@ -285,19 +305,12 @@ def _enforce_policy(
     whole request is rejected, naming the sensitive engines in the
     structured ``error.engines`` field.
     """
-    error = _validate_engines(state, engines)
-    if error:
-        return error
-    sensitive = [name for name in engines if name in state.policy.sensitive_engines]
-    if sensitive and not state.policy.targeted_sensitive_allowed:
-        return _error(
-            "tool_disabled",
-            "sensitive engines are unreachable without the sensitive-engine grant "
-            f"({SENSITIVE_GRANT}=1): {', '.join(sorted(sensitive))}",
-            field=field,
-            engines=sensitive,
-            grant=SENSITIVE_GRANT,
-        )
+    rejection = engine_policy_rejection(state.catalog, state.policy, engines)
+    if rejection:
+        details = dict(rejection)
+        code = str(details.pop("code"))
+        message = str(details.pop("message"))
+        return _error(code, message, field=field, **details)
     return None
 
 
@@ -578,6 +591,7 @@ def _envelope(
             "deadline_exceeded": response.deadline_exceeded,
             "ranking": response.ranking_explanation,
             "cursor": cursor,
+            "artifact": artifact_ref("snapshot", cursor) if cursor else None,
             "suggestions": response.suggestions if include_suggestions else [],
             "total": total,
             "has_more": total > len(response.results),
@@ -1407,6 +1421,15 @@ def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str,
                 else "Valkey unavailable — research jobs are not executed (no shared job store)"
             ),
         },
+        "workflow_health": m.workflow_health_summary(
+            availability={
+                "research": state.job_store.available,
+                "dependency_dossier": state.job_store.available,
+                "staged_search": state.staged_store is not None and state.staged_store.available,
+                "saved_search": state.saved_store is not None and state.saved_store.available,
+                "retrieval_receipt": state.receipt_store is not None and state.receipt_store.available,
+            }
+        ),
         "policy_bounds": {
             "max_query_length": state.policy.max_query_length,
             "max_results": state.policy.max_results,
@@ -1482,6 +1505,7 @@ async def slopsearx_read_results(
     return {
         "query": snapshot.query,
         "cursor": cursor,
+        "artifact": artifact_ref("snapshot", cursor),
         "page": page,
         "results": [
             _result_to_dict(result, result_id=state.snapshots.result_id(cursor, start + index))
@@ -1494,6 +1518,76 @@ async def slopsearx_read_results(
             "query_id": snapshot.query_id,
         },
     }
+
+
+async def slopsearx_read_entities(
+    cursor: str,
+    page: int = 1,
+    max_results: int | None = None,
+    version: StrictInt = ENTITY_VERSION,
+) -> dict[str, Any]:
+    """Read versioned explicit-identifier groups from a captured snapshot.
+
+    max_results counts entities, not members; groups contain original result IDs
+    for slopsearx_read_result. Unknown identities stay separate. This read-only
+    view neither searches nor establishes source independence or verification.
+    """
+    state = get_state()
+    if not cursor or not cursor.strip():
+        return _error("invalid_input", "cursor is required", field="cursor")
+    if page < 1:
+        return _error("invalid_input", "page must be >= 1", field="page")
+    if type(version) is not int or version not in ENTITY_VERSIONS:
+        return _error("invalid_input", f"version must be one of {ENTITY_VERSIONS}", field="version")
+    page_size = _bounded_max_results(state, max_results)
+    lookup = await state.snapshots.for_tenant(current_tenant()).read(cursor)
+    if lookup.unavailable:
+        return _error("store_unavailable", "snapshot store is unavailable", field="cursor")
+    if lookup.expired:
+        return _error(
+            "expired_handle",
+            "snapshot has expired",
+            handle=cursor,
+            expires_at=_expires_iso(lookup.expires_at),
+            field="cursor",
+        )
+    if lookup.snapshot is None:
+        return _error("invalid_cursor", "unknown cursor", field="cursor")
+    snapshot = lookup.snapshot
+    groups, relationships = entity_projection(snapshot, version)
+    start = (page - 1) * page_size
+    response = {
+        "contract": ENTITY_CONTRACT,
+        "version": version,
+        "cursor": cursor,
+        "query": snapshot.query,
+        "page": page,
+        "entities": [
+            {
+                **group,
+                "artifact": (
+                    artifact_ref(
+                        "entity_group",
+                        composite_artifact_id(cursor, str(group["entity_id"])),
+                    )
+                    if group["entity_id"]
+                    else None
+                ),
+            }
+            for group in groups[start : start + page_size]
+        ],
+        "meta": {
+            "total_entities": len(groups),
+            "total_results": len(snapshot.results),
+            "unresolved_entities": sum(group["entity_id"] is None for group in groups),
+            "has_more": start + page_size < len(groups),
+            "query_id": snapshot.query_id,
+            "note": "Entity identity is source-reported, not independent corroboration or verification.",
+        },
+    }
+    if version > ENTITY_VERSION:
+        response["relationships"] = relationships
+    return response
 
 
 async def slopsearx_read_result(result_id: str) -> dict[str, Any]:
@@ -1540,17 +1634,143 @@ async def slopsearx_read_result(result_id: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def _research_workflow_policy_error(state: McpState, job: ResearchJob) -> dict[str, Any] | None:
+    """Recheck additive workflow grants and captured scope before disclosure."""
+    if job.workflow.get("kind") != "dependency_dossier":
+        return None
+    for grant, env_name in (
+        ("dependency_dossier", "MCP_GRANT_DEPENDENCY_DOSSIER"),
+        ("research", "MCP_GRANT_RESEARCH"),
+        ("security", "MCP_GRANT_SECURITY"),
+    ):
+        if not state.policy.tool_enabled(grant):
+            return _error("tool_disabled", f"dependency dossier requires {env_name}", grant=env_name)
+    rejection = _enforce_policy(state, [engine for query in job.queries for engine in query.engines])
+    if rejection:
+        rejection["error"]["code"] = "policy_rejected"
+    return rejection
+
+
+def _research_workflow_budget_error(job: ResearchJob) -> dict[str, Any] | None:
+    """Refuse workflow retries after their cumulative execution budget."""
+    if job.workflow.get("kind") != "dependency_dossier":
+        return None
+    budget = job.workflow.get("budget") or {}
+    if int(budget.get("used_adapter_calls", 0)) >= int(budget.get("max_adapter_calls", len(job.queries))):
+        return _error("budget_exceeded", "dependency dossier adapter call budget is exhausted")
+    if int(budget.get("captured_results", 0)) >= int(budget.get("max_results", 0)):
+        return _error("budget_exceeded", "dependency dossier result budget is exhausted")
+    return None
+
+
+def _research_dispatch_error(state: McpState, query: ResearchQuery) -> str | None:
+    if not state.policy.tool_enabled("research"):
+        return "research grant is disabled"
+    grant = INTENT_GRANTS.get(query.intent)
+    if query.requires_intent_grant and grant and not state.policy.tool_enabled(grant):
+        return f"{query.intent} requires the {grant} grant"
+    if not query.engines:
+        return "research query has no permitted engines"
+    error = _enforce_policy(state, query.engines)
+    return str(error["error"]["message"]) if error else None
+
+
+def bind_research_policy(state: McpState) -> None:
+    """Keep recovered and retried dispatches behind the shared live policy gate."""
+    state.runner.dispatch_validator = lambda query: _research_dispatch_error(state, query)
+
+
+def _research_metadata(value: Any, name: str, limit: int = 512) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value.strip() or len(value) > limit:
+        raise ResearchMutationError("invalid_input", f"{name} must be a nonempty string of at most {limit} characters")
+    return value.strip()
+
+
+def _prepare_research_query(state: McpState, entry: dict[str, Any], max_engines: int) -> ResearchQuery:
+    allowed = {"query", "intent", "engines", "subquestion_id", "rationale", "parent_attempt_id"}
+    if not isinstance(entry, dict) or set(entry) - allowed:
+        raise ResearchMutationError("invalid_input", "invalid research plan entry fields")
+    text = entry.get("query")
+    if not isinstance(text, str) or _validate_query(text, state):
+        raise ResearchMutationError("invalid_input", "query must be a nonempty bounded string")
+    intent = entry.get("intent", "web")
+    if not isinstance(intent, str) or intent not in INTENT_PROFILES:
+        raise ResearchMutationError("invalid_input", "unknown research intent")
+    if INTENT_PROFILES[intent].media_types:
+        raise ResearchMutationError("invalid_intent", "research subqueries do not support media searches")
+    grant = INTENT_GRANTS.get(intent)
+    if grant and not state.policy.tool_enabled(grant):
+        raise ResearchMutationError("tool_disabled", f"intent {intent} requires the {grant} grant")
+    engines = entry.get("engines")
+    if engines is not None:
+        if not isinstance(engines, list) or not engines or any(not isinstance(name, str) for name in engines):
+            raise ResearchMutationError("invalid_input", "engines must be a nonempty list of names")
+        error = _enforce_policy(state, engines)
+        if error:
+            raise ResearchMutationError(str(error["error"]["code"]), str(error["error"]["message"]))
+    else:
+        engines, _ = resolve_intent(intent, state.catalog)
+        engines = [
+            name
+            for name in engines
+            if name not in state.policy.sensitive_engines or state.policy.targeted_sensitive_allowed
+        ]
+    engines = list(dict.fromkeys(engines))[:max_engines]
+    query = ResearchQuery(
+        index=0,
+        query=text.strip(),
+        intent=intent,
+        engines=engines,
+        subquestion_id=_research_metadata(entry.get("subquestion_id"), "subquestion_id", 128),
+        rationale=_research_metadata(entry.get("rationale"), "rationale", state.policy.max_query_length),
+        parent_attempt_id=_research_metadata(entry.get("parent_attempt_id"), "parent_attempt_id", 128),
+        requires_intent_grant=True,
+    )
+    rejection = _research_dispatch_error(state, query)
+    if rejection:
+        raise ResearchMutationError("tool_disabled", rejection)
+    return query
+
+
+def _validate_research_associations(job: ResearchJob, query: ResearchQuery) -> None:
+    if query.subquestion_id is not None and query.subquestion_id not in job.subquestions:
+        raise ResearchMutationError("invalid_input", "unknown subquestion_id")
+    if query.parent_attempt_id is not None and not any(
+        attempt.attempt_id == query.parent_attempt_id and attempt.state != "running"
+        for existing in job.queries
+        for attempt in existing.attempts
+    ):
+        raise ResearchMutationError("invalid_input", "parent_attempt_id must identify a terminal attempt in this job")
+
+
+def _research_limit(value: int | None, ceiling: int, field: str) -> int:
+    if value is None:
+        return ceiling
+    if type(value) is not int or value <= 0:
+        raise ResearchMutationError("invalid_input", f"{field} must be a positive integer")
+    return min(value, ceiling)
+
+
 async def slopsearx_start_research(
     question: str,
     strategy: str = "triangulate",
-    max_queries: int | None = None,
-    max_engines_per_query: int | None = None,
+    max_queries: StrictInt | None = None,
+    max_engines_per_query: StrictInt | None = None,
     deadline: str | None = None,
     idempotency_key: str | None = None,
+    initial_plan: list[dict[str, Any]] | None = None,
+    subquestions: list[dict[str, str]] | None = None,
+    max_attempts: StrictInt | None = None,
+    max_engine_attempts: StrictInt | None = None,
+    max_results: StrictInt | None = None,
+    source: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Start an asynchronous multi-query research job.
 
-    Strategies: triangulate (same question across independent sources),
+    An optional artifact source contributes retained evidence and lineage but
+    never execution policy. Strategies: triangulate (same question across independent sources),
     broad (several source families), fresh (recent material),
     counterevidence (limits, criticism, counterexamples). Returns a job
     handle immediately; poll slopsearx_get_job for progress.
@@ -1578,35 +1798,118 @@ async def slopsearx_start_research(
             valid_alternatives=list(VALID_STRATEGIES),
         )
 
+    resolved_source: ResolvedSource | None = None
+    composition_digest: str | None = None
+    if source is not None:
+        resolved = await resolve_source(source, "research")
+        if isinstance(resolved, dict):
+            return resolved
+        resolved_source = resolved
+        if not store.available:
+            return _error("store_unavailable", "composed research requires connected Valkey")
+        composition_digest = hashlib.sha256(
+            json.dumps(
+                {
+                    "source": resolved.artifact,
+                    "question": question,
+                    "strategy": strategy,
+                    "max_queries": max_queries,
+                    "max_engines_per_query": max_engines_per_query,
+                    "deadline": deadline,
+                    "initial_plan": initial_plan,
+                    "subquestions": subquestions,
+                    "max_attempts": max_attempts,
+                    "max_engine_attempts": max_engine_attempts,
+                    "max_results": max_results,
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+        ).hexdigest()
+
     if idempotency_key:
         existing = await store.find_by_idempotency(idempotency_key)
         if existing is not None:
+            existing_digest = (existing.workflow.get("composition") or {}).get("request_digest")
+            if (source is not None or existing_digest is not None) and existing_digest != composition_digest:
+                return _error("idempotency_conflict", "idempotency key refers to a different composed request")
             result = _job_summary(existing)
             result["note"] = "returned existing job for idempotency_key"
             return result
 
-    max_queries = min(max_queries or state.policy.job_max_queries, state.policy.job_max_queries)
-    max_engines = min(
-        max_engines_per_query or state.policy.job_max_engines_per_query, state.policy.job_max_engines_per_query
-    )
+    bind_research_policy(state)
+    try:
+        limits = {
+            "queries": _research_limit(max_queries, state.policy.job_max_queries, "max_queries"),
+            "attempts": _research_limit(max_attempts, state.policy.job_max_queries, "max_attempts"),
+            "engines_per_query": _research_limit(
+                max_engines_per_query, state.policy.job_max_engines_per_query, "max_engines_per_query"
+            ),
+            "engine_attempts": _research_limit(
+                max_engine_attempts,
+                state.policy.job_max_queries * state.policy.job_max_engines_per_query,
+                "max_engine_attempts",
+            ),
+            "results": _research_limit(max_results, state.policy.job_max_results, "max_results"),
+        }
+        limits["engine_attempts"] = min(limits["engine_attempts"], limits["attempts"] * limits["engines_per_query"])
+        declared = {}
+        if subquestions is not None:
+            if not isinstance(subquestions, list) or len(subquestions) > limits["queries"]:
+                raise ResearchMutationError("invalid_input", "subquestions exceeds query budget")
+            for item in subquestions:
+                if not isinstance(item, dict) or set(item) != {"id", "question"}:
+                    raise ResearchMutationError("invalid_input", "subquestion requires exactly id and question")
+                identity = _research_metadata(item["id"], "subquestion id", 128)
+                question_text = _research_metadata(
+                    item["question"], "subquestion question", state.policy.max_query_length
+                )
+                if identity is None or question_text is None or identity in declared:
+                    raise ResearchMutationError("invalid_input", "duplicate or missing subquestion")
+                declared[identity] = {"question": question_text, "state": "unresolved"}
+    except ResearchMutationError as exc:
+        return _error(exc.code, str(exc))
 
     deadline_ts = _resolve_deadline(state, deadline)
     if isinstance(deadline_ts, dict):
         return deadline_ts
 
-    queries, warnings = plan_research_queries(
-        question.strip(),
-        strategy,
-        max_queries,
-        max_engines,
-        state.catalog,
-        state.policy,
-    )
+    try:
+        if initial_plan is not None:
+            if not isinstance(initial_plan, list) or not initial_plan or len(initial_plan) > limits["queries"]:
+                raise ResearchMutationError("invalid_input", "initial_plan must fit the positive query budget")
+            queries = [_prepare_research_query(state, entry, limits["engines_per_query"]) for entry in initial_plan]
+            warnings: list[str] = []
+            for index, query in enumerate(queries):
+                query.index = index
+                if query.parent_attempt_id is not None:
+                    raise ResearchMutationError("invalid_input", "initial queries cannot reference parent attempts")
+                if query.subquestion_id is not None and query.subquestion_id not in declared:
+                    raise ResearchMutationError("invalid_input", "unknown subquestion_id")
+            if len(queries) > limits["attempts"] or sum(len(q.engines) for q in queries) > limits["engine_attempts"]:
+                raise ResearchMutationError("job_budget_exceeded", "initial plan exceeds execution budget")
+        else:
+            queries, warnings = plan_research_queries(
+                question.strip(),
+                strategy,
+                limits["queries"],
+                limits["engines_per_query"],
+                state.catalog,
+                state.policy,
+            )
+            for query in queries:
+                # Empty template scopes are reported as failed queries, never dispatched unscoped.
+                error = _enforce_policy(state, query.engines)
+                if error:
+                    raise ResearchMutationError(str(error["error"]["code"]), str(error["error"]["message"]))
+    except ResearchMutationError as exc:
+        return _error(exc.code, str(exc))
     if not queries:
         return _error("invalid_input", "; ".join(warnings) or "no queries could be planned", field="strategy")
 
+    job_id = generate_job_id()
     job = ResearchJob(
-        job_id=generate_job_id(),
+        job_id=job_id,
         question=question.strip(),
         strategy=strategy,
         queries=queries,
@@ -1614,8 +1917,31 @@ async def slopsearx_start_research(
         deadline=deadline_ts,
         tenant=tenant,
         idempotency_key=idempotency_key,
+        subquestions=declared,
+        budget_limits=limits,
+        budget_used={"attempts": 0, "engine_attempts": 0, "results": 0},
+        workflow=(
+            {
+                "composition": {
+                    "source": resolved_source.stored(),
+                    "request_digest": composition_digest,
+                },
+                "lineage": [
+                    lineage_edge(
+                        artifact_ref("research_job", job_id),
+                        "derived_from",
+                        resolved_source.artifact,
+                    )
+                ],
+            }
+            if resolved_source is not None
+            else {}
+        ),
     )
     await store.save(job)
+    if store.available:
+        m.record_workflow_accepted("research", "durable_leased")
+        m.transition_workflow("research", None, "queued")
     state.runner.enqueue(job.job_id, tenant=tenant)
 
     result = _job_summary(job)
@@ -1658,6 +1984,8 @@ async def slopsearx_get_job(job_id: str) -> dict[str, Any]:
     job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
+    if rejection := _research_workflow_policy_error(state, job):
+        return rejection
     result = _job_summary(job)
     result["created_at"] = _dt.datetime.fromtimestamp(job.created_at, tz=_dt.timezone.utc).isoformat()
     result["note"] = "completed queries are immutable; their cursors remain readable"
@@ -1699,6 +2027,9 @@ async def slopsearx_cancel_job(job_id: str) -> dict[str, Any]:
             "state": result_state,
             "note": "best-effort cancellation requested; completed evidence remains readable",
         }
+    workflow: m.WorkflowKind = "dependency_dossier" if job.workflow.get("kind") == "dependency_dossier" else "research"
+    m.transition_workflow(workflow, job.state, "cancelled")
+    m.record_workflow_terminal(workflow, "cancelled")
     return {
         "job_id": job.job_id,
         "state": "cancelled",
@@ -1726,10 +2057,17 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
     job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
+    workflow: m.WorkflowKind = "dependency_dossier" if job.workflow.get("kind") == "dependency_dossier" else "research"
+    if rejection := _research_workflow_policy_error(state, job):
+        m.record_workflow_rejection(workflow, "policy")
+        return rejection
+    if exhausted := _research_workflow_budget_error(job):
+        m.record_workflow_rejection(workflow, "budget")
+        return exhausted
 
     # Terminal-state gate: a cancelled or already-expired job is never
     # resurrected by a retry (VAL-RESEARCH-010/011).
-    if job.state in ("cancelled", "expired"):
+    if job.state in ("cancelled", "expired") or job.caller_completed:
         return {
             "job_id": job.job_id,
             "state": job.state,
@@ -1746,6 +2084,9 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
             field="job_id",
         )
 
+    attempt_counts = {query.index: len(query.attempts) for query in job.queries}
+    m.record_workflow_retry(workflow)
+    bind_research_policy(state)
     try:
         job = await state.runner.retry(job_id, tenant=tenant)
     except JobStillRunningError:
@@ -1781,11 +2122,10 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
             "job deadline had already passed; retry finalized the job to expired and re-executed no subqueries"
         )
     else:
-        result["retried"] = [query.index for query in retryable]
-        result["note"] = (
-            "retried only failed/empty subqueries; each gained a new linked attempt, "
-            "and successful evidence was preserved unchanged"
-        )
+        result["retried"] = [
+            query.index for query in job.queries if len(query.attempts) > attempt_counts.get(query.index, 0)
+        ]
+        result["note"] = "retry accounting recorded; inspect retried indices and stop_reason for executed work"
     return result
 
 
@@ -1794,6 +2134,10 @@ async def slopsearx_extend_research(
     query: str,
     intent: str = "web",
     engines: list[str] | None = None,
+    subquestion_id: str | None = None,
+    rationale: str | None = None,
+    parent_attempt_id: str | None = None,
+    continuation_key: str | None = None,
 ) -> dict[str, Any]:
     """Append and execute one bounded follow-up query to a research job.
 
@@ -1811,6 +2155,10 @@ async def slopsearx_extend_research(
     job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
+    if job.workflow:
+        if rejection := _research_workflow_policy_error(state, job):
+            return rejection
+        return _error("invalid_input", "workflow research jobs cannot be extended", field="job_id")
 
     error = _validate_query(query, state)
     if error:
@@ -1841,6 +2189,9 @@ async def slopsearx_extend_research(
             field="intent",
         )
 
+    if engines is not None and not engines:
+        return _error("invalid_input", "engines must be a nonempty list when supplied", field="engines")
+
     # Resolve the follow-up engine scope through the shared policy gate.
     if engines:
         policy_error = _enforce_policy(state, list(engines), field="engines")
@@ -1860,26 +2211,47 @@ async def slopsearx_extend_research(
         if sensitive:
             resolved_engines = [name for name in resolved_engines if name not in state.policy.sensitive_engines]
 
-    # Budget + deadline guards (VAL-RESEARCH-015): reject without corrupting.
-    if len(job.queries) >= state.policy.job_max_queries:
-        return _error(
-            "job_budget_exceeded",
-            f"job is at its query budget of {state.policy.job_max_queries} subqueries",
-            field="query",
-        )
-    if time.time() >= job.deadline:
-        return _error("deadline_exceeded", "job deadline has passed; cannot extend", field="query")
-
     new_query = ResearchQuery(
         index=len(job.queries),
         query=query.strip(),
         intent=intent,
-        engines=resolved_engines,
+        engines=list(dict.fromkeys(resolved_engines)),
+        requires_intent_grant=True,
     )
+    try:
+        new_query.subquestion_id = _research_metadata(subquestion_id, "subquestion_id", 128)
+        new_query.rationale = _research_metadata(rationale, "rationale", state.policy.max_query_length)
+        new_query.parent_attempt_id = _research_metadata(parent_attempt_id, "parent_attempt_id", 128)
+        new_query.continuation_key = _research_metadata(continuation_key, "continuation_key", 128)
+    except ResearchMutationError as exc:
+        return _error(exc.code, str(exc))
+    equivalent = [
+        new_query.query,
+        new_query.intent,
+        sorted(new_query.engines),
+        new_query.subquestion_id,
+        new_query.rationale,
+        new_query.parent_attempt_id,
+    ]
+    new_query.continuation_digest = hashlib.sha256(json.dumps(equivalent).encode()).hexdigest()
+    # Read-only replay remains available after completion/deadline. Current
+    # caller and scope policy above still applies; no lease or dispatch needed.
+    if new_query.continuation_key:
+        previous = next((q for q in job.queries if q.continuation_key == new_query.continuation_key), None)
+        if previous is not None:
+            if previous.continuation_digest != new_query.continuation_digest:
+                return _error("idempotency_conflict", "continuation_key was used for another request")
+            result = _job_summary(job)
+            result["note"] = "returned the current status of the previously accepted continuation"
+            return result
+
+    if time.time() >= job.deadline:
+        return _error("deadline_exceeded", "job deadline has passed; cannot extend", field="query")
+
     # Terminal-state gate: mirror retry and refuse to append a follow-up
     # query to a job that already reached a terminal state (never resurrect
     # a cancelled/expired job).
-    if job.state in ("cancelled", "expired"):
+    if job.state in ("cancelled", "expired") or job.caller_completed:
         return _error(
             "invalid_job_state",
             f"job is in terminal state '{job.state}'; cannot extend",
@@ -1888,8 +2260,30 @@ async def slopsearx_extend_research(
             field="query",
         )
 
+    bind_research_policy(state)
+
     def _append_followup(target: ResearchJob) -> None:
-        target.queries.append(new_query)
+        initialize_budget(target, state.policy)
+        if target.caller_completed:
+            raise ResearchMutationError("invalid_job_state", "caller already completed this job")
+        _validate_research_associations(target, new_query)
+        if new_query.continuation_key:
+            previous = next((q for q in target.queries if q.continuation_key == new_query.continuation_key), None)
+            if previous is not None:
+                if previous.continuation_digest != new_query.continuation_digest:
+                    raise ResearchMutationError("idempotency_conflict", "continuation_key was used for another request")
+                raise ResearchMutationError("continuation_replayed", "continuation already accepted")
+        if len(target.queries) >= target.budget_limits["queries"]:
+            raise ResearchMutationError("job_budget_exceeded", "job query budget is exhausted")
+        for key, amount in (("attempts", 1), ("engine_attempts", len(new_query.engines)), ("results", 1)):
+            if target.budget_used[key] + amount > target.budget_limits[key]:
+                raise ResearchMutationError("job_budget_exceeded", f"job {key} budget is exhausted")
+        if len(new_query.engines) > target.budget_limits["engines_per_query"]:
+            raise ResearchMutationError("job_budget_exceeded", "follow-up exceeds per-query engine budget")
+        rejection = _research_dispatch_error(state, new_query)
+        if rejection:
+            raise ResearchMutationError("tool_disabled", rejection)
+        target.queries.append(dataclasses.replace(new_query, index=len(target.queries)))
 
     # A job previously executed by the durable worker still carries lease
     # fields whose Valkey key was already released. Run through run_direct so
@@ -1901,6 +2295,14 @@ async def slopsearx_extend_research(
     # instead of racing it.
     try:
         job = await state.runner.run_direct(job, mutate=_append_followup)
+    except ResearchMutationError as exc:
+        if exc.code == "continuation_replayed":
+            current = await store.load(job_id)
+            if current is not None:
+                result = _job_summary(current)
+                result["note"] = "returned the current status of the previously accepted continuation"
+                return result
+        return _error(exc.code, str(exc), field="query")
     except JobStillRunningError:
         return {
             "job_id": job_id,
@@ -1938,6 +2340,63 @@ async def slopsearx_extend_research(
     return result
 
 
+async def slopsearx_update_research(
+    job_id: str,
+    subquestion_states: dict[str, str],
+    complete: bool = False,
+    rationale: str | None = None,
+) -> dict[str, Any]:
+    """Record caller-declared progress or completion without judging evidence.
+
+    State values are resolved/unresolved. Completion preserves unresolved
+    questions and permanently prevents new execution for this job.
+    """
+    state = get_state()
+    if not state.policy.tool_enabled("research"):
+        return _error("tool_disabled", "research grant is required")
+    store = state.job_store.for_tenant(current_tenant())
+    if not store.available:
+        return _error("store_unavailable", "job store is unavailable")
+    job = await store.load(job_id)
+    if job is None:
+        return _error("invalid_job_id", "unknown job id", field="job_id")
+    if not isinstance(subquestion_states, dict) or any(
+        value not in ("resolved", "unresolved") for value in subquestion_states.values()
+    ):
+        return _error("invalid_input", "subquestion states must be resolved or unresolved")
+    if type(complete) is not bool:
+        return _error("invalid_input", "complete must be a boolean")
+    try:
+        rationale = _research_metadata(rationale, "rationale", state.policy.max_query_length)
+    except ResearchMutationError as exc:
+        return _error(exc.code, str(exc))
+    if job.state in ("cancelled", "expired") or job.caller_completed:
+        return _error("invalid_job_state", "job is already terminal")
+
+    def update(target: ResearchJob) -> None:
+        if set(subquestion_states) - set(target.subquestions):
+            raise ResearchMutationError("invalid_input", "unknown subquestion id")
+        initialize_budget(target, state.policy)
+        for identity, value in subquestion_states.items():
+            target.subquestions[identity]["state"] = value
+        if complete:
+            target.caller_completed = True
+            target.completion_rationale = rationale
+            target.stop_reason = "caller_completed"
+            # Operational success here means the caller closed work, not that answers are true.
+            for query in target.queries:
+                if query.state in ("pending", "running"):
+                    query.state = "cancelled"
+            target.state = "succeeded"
+
+    try:
+        return _job_summary(await state.runner.run_direct(job, mutate=update, execute=False))
+    except ResearchMutationError as exc:
+        return _error(exc.code, str(exc))
+    except (JobStillRunningError, LeaseLostError):
+        return _error("job_busy", "job is owned by a live worker; retry the progress update later")
+
+
 def _job_summary(job: ResearchJob) -> dict[str, Any]:
     """Compact job view for tool responses.
 
@@ -1947,8 +2406,12 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
     """
     completed, total = job.progress
     job_coverage = summarize_coverage([entry for query in job.queries for entry in query.engine_coverage])
-    return {
+    summary = {
         "job_id": job.job_id,
+        "artifact": artifact_ref(
+            "dependency_dossier" if job.workflow.get("kind") == "dependency_dossier" else "research_job",
+            job.job_id,
+        ),
         "state": job.state,
         "question": job.question,
         "strategy": job.strategy,
@@ -1965,14 +2428,20 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
                 "result_count": query.result_count,
                 "query_id": query.query_id,
                 "cursor": query.cursor,
+                "snapshot_artifact": artifact_ref("snapshot", query.cursor) if query.cursor else None,
                 "error": query.error,
+                "subquestion_id": query.subquestion_id,
+                "rationale": query.rationale,
+                "parent_attempt_id": query.parent_attempt_id,
+                "continuation_key": query.continuation_key,
                 "attempts": [
                     {
-                        "cursor": attempt.cursor,
-                        "query_id": attempt.query_id,
-                        "result_count": attempt.result_count,
-                        "error": attempt.error,
-                        "state": attempt.state,
+                        **dataclasses.asdict(attempt),
+                        "artifact": artifact_ref(
+                            "research_attempt",
+                            composite_artifact_id(job.job_id, attempt.attempt_id),
+                        ),
+                        "snapshot_artifact": (artifact_ref("snapshot", attempt.cursor) if attempt.cursor else None),
                     }
                     for attempt in query.attempts
                 ],
@@ -1993,4 +2462,466 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
         ],
         "coverage": job_coverage.as_dict(),
         "warnings": job.warnings,
+        "subquestions": job.subquestions,
+        "unresolved_subquestions": [
+            identity for identity, item in job.subquestions.items() if item["state"] == "unresolved"
+        ],
+        "caller_completed": job.caller_completed,
+        "completion_rationale": job.completion_rationale,
+        "stop_reason": job.stop_reason,
+        "budgets": budget_summary(job),
+    }
+    composition = job.workflow.get("composition")
+    if isinstance(composition, dict):
+        summary["source"] = composition.get("source")
+        summary["lineage"] = list(job.workflow.get("lineage") or [])
+    return summary
+
+
+# ---------------------------------------------------------------------------
+# Saved searches (explicitly granted, tenant-scoped, Valkey-backed)
+# ---------------------------------------------------------------------------
+
+
+def _saved_policy_fingerprint(state: McpState, definition: SavedDefinition) -> str:
+    """Hash stable execution policy/config while excluding observed health."""
+    capabilities = []
+    for name in sorted(definition.engines):
+        capability = state.catalog.get(name)
+        capabilities.append(
+            {
+                "name": name,
+                "active": name in state.ctx.active_engines,
+                "enabled": capability.enabled if capability else False,
+                "auth_configured": capability.auth_configured if capability else False,
+                "categories": sorted(capability.categories) if capability else [],
+            }
+        )
+    value = {
+        "saved_searches": state.policy.tool_enabled("saved_searches"),
+        "targeted_sensitive_allowed": state.policy.targeted_sensitive_allowed,
+        "sensitive_engines": sorted(state.policy.sensitive_engines),
+        "capabilities": capabilities,
+    }
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def _saved_policy_error(state: McpState, definition: SavedDefinition) -> str | None:
+    if not state.policy.tool_enabled("saved_searches"):
+        return "saved-search grant is disabled"
+    error = _enforce_policy(state, definition.engines)
+    return str(error["error"]["message"]) if error else None
+
+
+def bind_saved_search_policy(state: McpState) -> None:
+    """Keep background dispatch on the same live policy gate as MCP calls."""
+    if state.saved_runner is not None:
+        state.saved_runner._policy_check = lambda definition: _saved_policy_error(state, definition)
+        state.saved_runner._policy_fingerprint = lambda definition: _saved_policy_fingerprint(state, definition)
+
+
+def _saved_state(state: McpState) -> tuple[Any, Any] | dict[str, Any]:
+    if not state.policy.tool_enabled("saved_searches"):
+        return _error(
+            "tool_disabled",
+            "saved-search tools require the saved-search grant (MCP_GRANT_SAVED_SEARCHES=1)",
+        )
+    if state.saved_store is None or state.saved_runner is None or not state.saved_store.available:
+        return _error("store_unavailable", "saved searches require connected Valkey")
+    bind_saved_search_policy(state)
+    return state.saved_store.for_tenant(current_tenant()), state.saved_runner
+
+
+def _saved_summary(definition: SavedDefinition) -> dict[str, Any]:
+    return {
+        "search_id": definition.search_id,
+        "artifact": artifact_ref("saved_search", definition.search_id),
+        "revision": definition.revision,
+        "query": definition.query,
+        "engines": definition.engines,
+        "interval_seconds": definition.interval_seconds,
+        "retention_seconds": definition.retention_seconds,
+        "max_results": definition.max_results,
+        "max_reports": definition.max_reports,
+        "created_at": definition.created_at,
+        "expires_at": definition.expires_at,
+        "next_due": definition.next_due,
+        "paused": definition.paused,
+        "latest_run_id": definition.latest_run_id,
+        "comparison": {
+            "window": "fixed_first_page",
+            "identity_version": "url-source-window-v1",
+            "absence_event": "not_observed_in_latest_run",
+            "absence_is_deletion": False,
+        },
+    }
+
+
+def _saved_positive(value: Any, field: str, minimum: int, maximum: int) -> int:
+    if type(value) is not int or not minimum <= value <= maximum:
+        raise ValueError(f"{field} must be an integer between {minimum} and {maximum}")
+    return value
+
+
+async def slopsearx_create_saved_search(
+    query: str,
+    engines: list[str],
+    interval_seconds: StrictInt,
+    retention_seconds: StrictInt | None = None,
+    expires_in_seconds: StrictInt | None = None,
+    max_results: StrictInt | None = None,
+    max_reports: StrictInt | None = None,
+    start_immediately: bool = False,
+) -> dict[str, Any]:
+    """Create one bounded, explicitly scoped scheduled search."""
+    state = get_state()
+    resolved = _saved_state(state)
+    if isinstance(resolved, dict):
+        return resolved
+    if type(start_immediately) is not bool:
+        return _error("invalid_input", "start_immediately must be a boolean")
+    store, _runner = resolved
+    query_error = _validate_query(query, state)
+    if query_error:
+        return query_error
+    if not isinstance(engines, list) or not engines or len(engines) > state.policy.saved_max_engines:
+        return _error("invalid_input", "engines must be a nonempty list within the configured bound", field="engines")
+    selected = list(dict.fromkeys(engines))
+    policy_error = _enforce_policy(state, selected)
+    if policy_error:
+        return policy_error
+    try:
+        interval = _saved_positive(
+            interval_seconds,
+            "interval_seconds",
+            state.policy.saved_min_interval_seconds,
+            state.policy.saved_max_interval_seconds,
+        )
+        retention = _saved_positive(
+            state.policy.saved_default_retention_seconds if retention_seconds is None else retention_seconds,
+            "retention_seconds",
+            1,
+            state.policy.saved_max_retention_seconds,
+        )
+        lifetime = _saved_positive(
+            retention if expires_in_seconds is None else expires_in_seconds,
+            "expires_in_seconds",
+            1,
+            state.policy.saved_max_retention_seconds,
+        )
+        rows = _saved_positive(
+            state.policy.saved_max_results if max_results is None else max_results,
+            "max_results",
+            1,
+            state.policy.saved_max_results,
+        )
+        reports = _saved_positive(
+            state.policy.saved_default_reports if max_reports is None else max_reports,
+            "max_reports",
+            1,
+            state.policy.saved_max_reports,
+        )
+    except ValueError as exc:
+        return _error("invalid_input", str(exc))
+    now = time.time()
+    definition = SavedDefinition(
+        search_id=generate_search_id(),
+        tenant=current_tenant(),
+        query=query.strip(),
+        engines=selected,
+        interval_seconds=interval,
+        retention_seconds=min(retention, lifetime),
+        max_results=rows,
+        max_reports=reports,
+        created_at=now,
+        expires_at=now + lifetime,
+        next_due=now if start_immediately else now + interval,
+    )
+    definition.policy_fingerprint = _saved_policy_fingerprint(state, definition)
+    outcome = await store.create(definition, state.policy.saved_max_definitions, now=now)
+    if outcome == "quota_exceeded":
+        m.record_workflow_rejection("saved_search", "capacity")
+        return _error("resource_limit", "saved-search definition quota is exhausted")
+    if outcome != "created":
+        return _error("store_unavailable", "saved search could not be persisted")
+    m.record_workflow_accepted("saved_search", "durable_leased")
+    return _saved_summary(definition)
+
+
+async def slopsearx_get_saved_search(search_id: str) -> dict[str, Any]:
+    """Read one caller-owned definition."""
+    state = get_state()
+    resolved = _saved_state(state)
+    if isinstance(resolved, dict):
+        return resolved
+    store, _runner = resolved
+    definition = await store.load(search_id)
+    if definition is None:
+        return _error("invalid_search_id", "unknown saved search")
+    policy_error = _enforce_policy(state, definition.engines)
+    return policy_error or _saved_summary(definition)
+
+
+async def slopsearx_update_saved_search(
+    search_id: str,
+    expected_revision: StrictInt,
+    query: str | None = None,
+    engines: list[str] | None = None,
+    interval_seconds: StrictInt | None = None,
+    retention_seconds: StrictInt | None = None,
+    max_results: StrictInt | None = None,
+    max_reports: StrictInt | None = None,
+) -> dict[str, Any]:
+    """Update with optimistic revision checking; scope changes reset baseline."""
+    state = get_state()
+    resolved = _saved_state(state)
+    if isinstance(resolved, dict):
+        return resolved
+    store, _runner = resolved
+    if type(expected_revision) is not int or expected_revision < 1:
+        return _error("invalid_input", "expected_revision must be a positive integer")
+    definition = await store.load(search_id)
+    if definition is None:
+        return _error("invalid_search_id", "unknown saved search")
+    now = time.time()
+    old_window = definition.window()
+    if query is not None:
+        query_error = _validate_query(query, state)
+        if query_error:
+            return query_error
+        definition.query = query.strip()
+    if engines is not None:
+        if not engines or len(engines) > state.policy.saved_max_engines:
+            return _error("invalid_input", "engines must be a nonempty list within the configured bound")
+        definition.engines = list(dict.fromkeys(engines))
+    policy_error = _enforce_policy(state, definition.engines)
+    if policy_error:
+        return policy_error
+    try:
+        if interval_seconds is not None:
+            definition.interval_seconds = _saved_positive(
+                interval_seconds,
+                "interval_seconds",
+                state.policy.saved_min_interval_seconds,
+                state.policy.saved_max_interval_seconds,
+            )
+        if retention_seconds is not None:
+            definition.retention_seconds = min(
+                _saved_positive(retention_seconds, "retention_seconds", 1, state.policy.saved_max_retention_seconds),
+                max(1, int(definition.expires_at - now)),
+            )
+        if max_results is not None:
+            definition.max_results = _saved_positive(max_results, "max_results", 1, state.policy.saved_max_results)
+        if max_reports is not None:
+            definition.max_reports = _saved_positive(max_reports, "max_reports", 1, state.policy.saved_max_reports)
+    except ValueError as exc:
+        return _error("invalid_input", str(exc))
+    definition.policy_fingerprint = _saved_policy_fingerprint(state, definition)
+    if definition.window() != old_window or interval_seconds is not None:
+        definition.baseline = None
+        definition.latest_run_id = None
+        definition.last_slot = -1
+        definition.created_at = now
+        definition.next_due = now + definition.interval_seconds
+    try:
+        definition = await store.compare_and_set(definition, expected_revision, now=now)
+    except RevisionConflictError as exc:
+        return _error("revision_conflict", "saved search changed", current_revision=exc.current_revision)
+    except LookupError:
+        return _error("invalid_search_id", "unknown saved search")
+    return _saved_summary(definition)
+
+
+async def slopsearx_pause_saved_search(
+    search_id: str, expected_revision: StrictInt, paused: bool = True
+) -> dict[str, Any]:
+    """Pause or resume; both revisions fence any old in-flight commit."""
+    state = get_state()
+    resolved = _saved_state(state)
+    if isinstance(resolved, dict):
+        return resolved
+    store, _runner = resolved
+    if type(expected_revision) is not int or expected_revision < 1 or type(paused) is not bool:
+        return _error("invalid_input", "expected_revision and paused have invalid types")
+    definition = await store.load(search_id)
+    if definition is None:
+        return _error("invalid_search_id", "unknown saved search")
+    now = time.time()
+    definition.paused = paused
+    definition.baseline = None
+    definition.latest_run_id = None
+    definition.last_slot = -1
+    definition.created_at = now
+    definition.next_due = now + definition.interval_seconds
+    definition.policy_fingerprint = _saved_policy_fingerprint(state, definition)
+    try:
+        event = (
+            definition_event(definition, "definition_paused", now)
+            if paused and state.policy.tool_enabled("saved_search_events")
+            else None
+        )
+        definition = await store.compare_and_set(definition, expected_revision, now=now, event=event)
+    except OutboxCapacityError:
+        m.record_saved_event_capacity("stream")
+        return _error("resource_limit", "saved-search event outbox is at capacity")
+    except RevisionConflictError as exc:
+        return _error("revision_conflict", "saved search changed", current_revision=exc.current_revision)
+    except LookupError:
+        return _error("invalid_search_id", "unknown saved search")
+    if event is not None:
+        m.record_saved_event_publication("definition_paused")
+    return _saved_summary(definition)
+
+
+async def slopsearx_delete_saved_search(search_id: str, expected_revision: StrictInt) -> dict[str, Any]:
+    """Delete the caller-owned definition and fence late workers."""
+    state = get_state()
+    resolved = _saved_state(state)
+    if isinstance(resolved, dict):
+        return resolved
+    store, _runner = resolved
+    if type(expected_revision) is not int:
+        return _error("invalid_input", "expected_revision must be an integer")
+    try:
+        await store.delete(search_id, expected_revision, now=time.time())
+    except RevisionConflictError as exc:
+        return _error("revision_conflict", "saved search changed", current_revision=exc.current_revision)
+    except LookupError:
+        return _error("invalid_search_id", "unknown saved search")
+    return {"search_id": search_id, "state": "deleted"}
+
+
+async def slopsearx_read_saved_search_reports(search_id: str, limit: StrictInt = 20) -> dict[str, Any]:
+    """Poll retained, coverage-aware change reports."""
+    state = get_state()
+    resolved = _saved_state(state)
+    if isinstance(resolved, dict):
+        return resolved
+    store, _runner = resolved
+    if type(limit) is not int or not 1 <= limit <= state.policy.saved_max_reports:
+        return _error("invalid_input", "limit is outside the configured report bound")
+    definition = await store.load(search_id)
+    if definition is None:
+        return _error("invalid_search_id", "unknown saved search")
+    policy_error = _enforce_policy(state, definition.engines)
+    if policy_error:
+        return policy_error
+    reports = await store.reports(search_id, now=time.time(), limit=limit)
+    for report in reports:
+        window = report.get("observation", {}).get("window", {})
+        report_engines = window.get("engines", [])
+        if not isinstance(report_engines, list) or not report_engines:
+            return _error("tool_disabled", "retained report has no policy-verifiable engine scope")
+        report_policy_error = _enforce_policy(state, [str(engine) for engine in report_engines])
+        if report_policy_error:
+            return report_policy_error
+        report["artifact"] = artifact_ref(
+            "saved_report",
+            composite_artifact_id(search_id, str(report["run_id"])),
+        )
+        report["lineage"] = [
+            {
+                "from": report["artifact"],
+                "relation": "derived_from",
+                "to": artifact_ref("saved_search", search_id),
+            }
+        ]
+    return {
+        "search_id": search_id,
+        "artifact": artifact_ref("saved_search", search_id),
+        "revision": definition.revision,
+        "reports": reports,
+        "latest_run_id": definition.latest_run_id,
+        "note": "not_observed_in_latest_run is bounded observation, never a deletion or closure claim",
+    }
+
+
+def _saved_event_state(state: McpState) -> Any | dict[str, Any]:
+    if not state.policy.tool_enabled("saved_search_events"):
+        return _error(
+            "tool_disabled",
+            "saved-search events require the event grant (MCP_GRANT_SAVED_SEARCH_EVENTS=1)",
+        )
+    if state.saved_store is None or not state.saved_store.available:
+        return _error("store_unavailable", "saved-search events require connected Valkey")
+    return state.saved_store.for_tenant(current_tenant())
+
+
+async def slopsearx_read_saved_search_events(
+    consumer_id: str,
+    cursor: str | None = None,
+    limit: StrictInt = 50,
+) -> dict[str, Any]:
+    """Read one bounded, tenant-ordered at-least-once saved-search event batch."""
+    state = get_state()
+    store = _saved_event_state(state)
+    if isinstance(store, dict):
+        m.record_saved_event_read("rejected")
+        return store
+    if type(limit) is not int or not 1 <= limit <= 100:
+        m.record_saved_event_read("rejected")
+        return _error("invalid_input", "limit must be an integer between 1 and 100")
+    try:
+        batch = await store.read_events(consumer_id, cursor=cursor, limit=limit)
+    except ValueError as exc:
+        m.record_saved_event_read("rejected")
+        return _error("invalid_input", str(exc))
+    events = []
+    redacted_count = 0
+    for event_cursor, event in batch.pop("events"):
+        engines = event.get("_policy_engines")
+        redacted = (
+            not state.policy.tool_enabled("saved_searches")
+            or not isinstance(engines, list)
+            or bool(engine_policy_rejection(state.catalog, state.policy, [str(item) for item in engines]))
+        )
+        redacted_count += int(redacted)
+        events.append(public_event(event, event_cursor, redacted=redacted))
+    if batch["gap"]["detected"]:
+        outcome = "gap"
+    elif redacted_count:
+        outcome = "redacted"
+    else:
+        outcome = "delivered" if events else "empty"
+    oldest_age = max(0.0, time.time() - min(float(item["occurred_at"]) for item in events)) if events else None
+    m.record_saved_event_read(outcome, oldest_age_seconds=oldest_age)
+    return {
+        "contract": "slopsearx.saved_search_event_batch",
+        "contract_version": 1,
+        "consumer_id": consumer_id,
+        **batch,
+        "events": events,
+        "returned": len(events),
+        "redacted": redacted_count,
+        "delivery": "at_least_once",
+    }
+
+
+async def slopsearx_ack_saved_search_events(consumer_id: str, cursor: str) -> dict[str, Any]:
+    """Idempotently advance one tenant-scoped saved-search event consumer."""
+    state = get_state()
+    store = _saved_event_state(state)
+    if isinstance(store, dict):
+        m.record_saved_event_ack("rejected")
+        return store
+    try:
+        previous = await store.acknowledged_cursor(consumer_id)
+        acknowledged = await store.acknowledge_event(consumer_id, cursor, now=time.time())
+    except ValueError as exc:
+        m.record_saved_event_ack("rejected")
+        return _error("invalid_input", str(exc))
+    except LookupError:
+        m.record_saved_event_ack("rejected")
+        return _error("cursor_expired", "the tenant event stream is unavailable or expired")
+    except OutboxCapacityError:
+        m.record_saved_event_ack("rejected")
+        m.record_saved_event_capacity("consumer")
+        return _error("resource_limit", "saved-search event consumer capacity is exhausted")
+    m.record_saved_event_ack("idempotent" if acknowledged == previous else "advanced")
+    return {
+        "contract": "slopsearx.saved_search_event_ack",
+        "contract_version": 1,
+        "consumer_id": consumer_id,
+        "acknowledged_cursor": acknowledged,
+        "idempotent": True,
     }

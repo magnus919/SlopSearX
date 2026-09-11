@@ -45,6 +45,15 @@ class RoutingConfig:
 
 
 @dataclass
+class SearchConfig:
+    """HTTP search-surface settings."""
+
+    # SearXNG-compatible formats. YAML is SlopSearX's additive extension
+    # and is intentionally not gated by this list.
+    formats: list[str] = field(default_factory=lambda: ["html", "csv", "json", "rss"])
+
+
+@dataclass
 class EngineEntry:
     enabled: bool = True
     base_url: str = ""
@@ -72,6 +81,7 @@ class Config:
     cache: CacheConfig = field(default_factory=CacheConfig)
     ranking: RankingConfig = field(default_factory=RankingConfig)
     routing: RoutingConfig = field(default_factory=RoutingConfig)
+    search: SearchConfig = field(default_factory=SearchConfig)
 
     # Global settings
     default_engines: list[str] = field(default_factory=lambda: ["brave", "wikipedia"])
@@ -348,12 +358,15 @@ def _dict_to_config(data: dict[str, Any]) -> Config:
         fallback=routing_data.get("fallback"),
         budget=routing_data.get("budget"),
     )
+    search_data = data.get("search", {})
+    search = SearchConfig(formats=list(search_data.get("formats", SearchConfig().formats)))
 
     return Config(
         engines=engines or {name: EngineEntry(**cfg) for name, cfg in _DEFAULT_ENGINES.items()},
         cache=cache,
         ranking=ranking,
         routing=routing,
+        search=search,
         enable_suggestions=data.get("enable_suggestions", False),
         default_engines=data.get("default_engines", ["brave", "wikipedia"]),
         log_level=data.get("log_level", "INFO"),
@@ -386,6 +399,8 @@ def _apply_env_overrides(config: Config, overrides: dict[str, str]) -> Config:
             config.log_level = value.upper()
         elif key == "search_default_engines":
             config.default_engines = [e.strip() for e in value.split(",")]
+        elif key == "search_formats":
+            config.search.formats = [f.strip().lower() for f in value.split(",") if f.strip()]
     return config
 
 
@@ -479,6 +494,8 @@ def load_config(
                 config.routing.fallback = rd["fallback"]
             if "budget" in rd:
                 config.routing.budget = rd["budget"]
+        if "search" in file_data and "formats" in file_data["search"]:
+            config.search.formats = list(file_data["search"]["formats"])
         config.default_engines = file_data.get("default_engines", config.default_engines)
         config.log_level = file_data.get("log_level", config.log_level)
         config.enable_suggestions = file_data.get("enable_suggestions", config.enable_suggestions)

@@ -170,6 +170,7 @@ CARD_KEYS = {
     "citation",
     "retrieval",
     "result_id",
+    "artifact",
 }
 
 

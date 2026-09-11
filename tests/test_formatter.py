@@ -1,13 +1,21 @@
-"""Tests for response formatters — JSON and YAML+Markdown."""
+"""Tests for response formatters — JSON, HTML, CSV, RSS, and YAML+Markdown."""
 
 from __future__ import annotations
 
+import gzip
+
+import pytest
 import yaml
 
-from slopsearx.adapter import SearchResult
+from slopsearx.adapter import MediaInfo, SearchResult
 from slopsearx.formatter import (
+    _PORTAL_CSS,
+    _PORTAL_SCRIPT,
     _payload_for_output,
+    format_error_html,
+    format_html,
     format_json,
+    format_landing_page,
     format_yaml_markdown,
 )
 from slopsearx.payload import (
@@ -105,10 +113,33 @@ class TestFormatJson:
         assert r["author"] is None
         assert r["metadata"] is None
         assert r["template"] == "default.html"
-        assert r["parsed_url"] is None
+        assert r["parsed_url"] == ["https", "example.com", "", "", "", ""]
         assert r["open_group"] is False
         assert r["close_group"] is False
         assert r["priority"] == ""
+
+    def test_parsed_url_preserves_query_fragment_and_params(self) -> None:
+        result = _make_result("https://example.com/path;param?q=one#section", "Example")
+
+        response = format_json(results=[result], query="test")
+
+        assert response["results"][0]["parsed_url"] == [
+            "https",
+            "example.com",
+            "/path",
+            "param",
+            "q=one",
+            "section",
+        ]
+
+    def test_parsed_url_omits_absent_or_malformed_urls(self) -> None:
+        absent = _make_result("", "Absent")
+        malformed = _make_result("http://[invalid", "Malformed")
+
+        response = format_json(results=[absent, malformed], query="test")
+
+        assert response["results"][0]["parsed_url"] is None
+        assert response["results"][1]["parsed_url"] is None
 
     def test_multi_engine_result(self) -> None:
         """Multi-engine result shows all engines in 'engines' array."""
@@ -490,3 +521,290 @@ class TestFormatYamlMarkdown:
         parsed = yaml.safe_load(output.split("---\n", 1)[0])
 
         assert parsed["results"][0]["payload"] is None
+
+
+class TestPortalHtml:
+    """Human-facing portal rendering remains safe and theme-aware."""
+
+    def test_landing_page_contains_search_and_theme_controls(self) -> None:
+        output = format_landing_page(default_theme="darker")
+
+        assert 'data-default-theme="darker"' in output
+        assert 'action="/search"' in output
+        assert "data-theme-toggle" in output
+        assert "Search <em>SlopSearX.</em>" in output
+        assert "let stored = null" in output
+        assert "storage is optional" in output
+
+    def test_result_page_escapes_content_and_rejects_unsafe_links(self) -> None:
+        result = _make_result(
+            "javascript:alert(1)",
+            '<script>alert("x")</script>',
+            content="<img src=x onerror=alert(1)>",
+        )
+
+        output = format_html([result], "<query>", default_theme="dark")
+
+        assert "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;" in output
+        assert "&lt;img src=x onerror=alert(1)&gt;" in output
+        assert 'href="#"' in output
+        assert "javascript:" not in output
+
+    def test_result_page_restores_only_safe_highlight_tags(self) -> None:
+        result = _make_result(
+            "https://example.com",
+            "Highlighted result",
+            content='<strong>match</strong> <em>context</em> <strong onclick="alert(1)">unsafe</strong>',
+        )
+
+        output = format_html([result], "match")
+
+        assert "<strong>match</strong>" in output
+        assert "<em>context</em>" in output
+        assert "&lt;strong onclick=&quot;alert(1)&quot;&gt;unsafe&lt;/strong&gt;" in output
+
+    def test_result_page_names_unavailable_sources_in_notice_and_rail(self) -> None:
+        result = _make_result("https://example.com", "A result")
+
+        output = format_html(
+            [result],
+            "climate",
+            unresponsive_engines=[["google", "blocked"], ["reddit", "rate limited"]],
+            meta={"partial": True, "empty_engines": [["duckduckgo", "no results"]]},
+            portal_state={"query": "climate", "responsive_engine_count": 1},
+        )
+
+        assert "Some sources could not answer this search." in output
+        assert "Google (blocked)" in output
+        assert "Reddit (rate limited)" in output
+        assert "Duckduckgo (no results)" in output
+        assert "Source status" in output
+        assert output.count("Google") >= 2
+
+    def test_successful_empty_sources_do_not_trigger_partial_failure(self) -> None:
+        result = _make_result("https://example.com", "A result")
+
+        output = format_html(
+            [result],
+            "climate",
+            meta={"partial": False, "empty_engines": [["duckduckgo", "successful scrape returned no results"]]},
+            portal_state={"query": "climate", "responsive_engine_count": 2},
+        )
+
+        assert "No results from some sources." in output
+        assert "Some sources could not answer this search." not in output
+        assert "Duckduckgo" in output
+
+    def test_result_page_preserves_filters_and_explains_scope(self) -> None:
+        result = _make_result("https://example.com", "A result")
+        output = format_html(
+            [result],
+            "valkey",
+            portal_state={
+                "query": "valkey",
+                "categories": "packages",
+                "language": "en",
+                "time_range": "month",
+                "safesearch": 1,
+                "page": 2,
+                "category_options": ["general", "packages"],
+                "scope_label": "packages",
+                "selected_engine_count": 2,
+                "responsive_engine_count": 1,
+                "filter_enforcement": {
+                    "time_range": {"requested": "month", "status": "unsupported", "reason": "not enforced"},
+                    "safesearch": {"requested": 1, "status": "partially_enforced", "reason": "one source"},
+                },
+            },
+        )
+
+        assert 'option value="packages" selected' in output
+        assert 'name="time_range"' in output
+        assert "Past month" in output
+        assert "packages · 1 of 2 sources answered" in output
+        assert "partially enforced" in output
+        assert "pageno=1" in output
+        assert "pageno=3" in output
+
+    def test_result_page_surfaces_provenance_consensus_and_machine_view(self) -> None:
+        result = _make_result("https://docs.example.com/guide", "A useful guide")
+        result.category = "science"
+        result.engine = "brave"
+        result.engines = {"brave", "wikipedia"}
+
+        output = format_html(
+            [result],
+            "climate",
+            portal_state={"query": "climate", "page": 1, "responsive_engine_count": 2},
+        )
+
+        assert "Matched 2 sources" in output
+        assert 'title="Same URL returned by 2 configured engines"' in output
+        assert "Research" in output
+        assert "Brave" in output and "Wikipedia" in output
+        assert "Open result ↗" in output
+        assert "Open JSON view ↗" in output
+        assert "format=json" in output
+        assert "Source status" in output
+        assert "Page 1 · more may be available" in output
+        assert 'aria-label="Try next result page"' in output
+        assert "Try next page →" in output
+        assert "data-result-card" in output
+
+        last_page = format_html(
+            [result],
+            "climate",
+            portal_state={"query": "climate", "page": 1, "has_more": False},
+        )
+        assert "Try next page →" not in last_page
+        assert "Next page →" not in last_page
+
+        known_more = format_html(
+            [result],
+            "climate",
+            portal_state={"query": "climate", "page": 1, "has_more": True},
+        )
+        assert "Next page →" in known_more
+        assert 'aria-label="Next result page"' in known_more
+
+        disabled_output = format_html(
+            [result],
+            "climate",
+            portal_state={"query": "climate", "json_enabled": False},
+        )
+        assert "Open JSON view ↗" not in disabled_output
+        assert "format=json" not in disabled_output
+
+    def test_result_explanation_is_progressive_truthful_and_escaped(self) -> None:
+        result = _make_result(
+            "https://docs.example.com/guide",
+            "A useful guide",
+            engine="brave",
+            engines={"brave", "wikipedia"},
+        )
+        result.tier = 1
+        output = format_html(
+            [result],
+            "climate",
+            portal_state={
+                "query": "climate",
+                "ranking_explanation": "tier_then_reciprocal_rank_fusion_k60",
+                "grouping_status": "available",
+                "result_groups": {
+                    "0": {
+                        "entity_id": "opaque",
+                        "namespace": "repository<script>",
+                        "identifier": {"owner": "example&co", "repo": "search"},
+                        "result_indices": [0, 2],
+                        "conflicting_fields": ["description<img>"],
+                    }
+                },
+            },
+        )
+
+        assert '<details class="result-explanation">' in output
+        assert "Why this result appeared" in output
+        assert "Reciprocal rank fusion (k=60)" in output
+        assert "it is not confidence" in output
+        assert "repository&lt;script&gt;" in output
+        assert "example&amp;co" in output
+        assert "description&lt;img&gt;" in output
+        assert 'href="#result-1"' in output and 'href="#result-3"' in output
+        assert "structurally eligible" in output
+        assert "has not been fetched or verified" in output
+        assert "repository<script>" not in output
+
+    def test_result_explanation_reports_grouping_and_handoff_limitations(self) -> None:
+        result = _make_result("http://127.0.0.1/private", "Local result")
+        output = format_html(
+            [result],
+            "local",
+            portal_state={"query": "local", "grouping_status": "expired"},
+        )
+
+        assert "expired with its source snapshot" in output
+        assert "not eligible" in output
+        assert "non-global literal IP address" in output
+
+    def test_result_explanation_lists_multiple_v2_identities(self) -> None:
+        output = format_html(
+            [_make_result("https://example.com/paper", "Paper")],
+            "paper",
+            portal_state={
+                "query": "paper",
+                "grouping_status": "available",
+                "result_groups": {
+                    "0": [
+                        {
+                            "entity_id": "doi-id",
+                            "namespace": "doi",
+                            "identifier": {"doi": "10.1000/example"},
+                            "result_indices": [0],
+                            "conflicting_fields": [],
+                        },
+                        {
+                            "entity_id": "pmid-id",
+                            "namespace": "pmid",
+                            "identifier": {"pmid": "123456"},
+                            "result_indices": [0],
+                            "conflicting_fields": [],
+                        },
+                    ]
+                },
+            },
+        )
+
+        assert "doi — doi: 10.1000/example" in output
+        assert "pmid — pmid: 123456" in output
+
+    @pytest.mark.parametrize(
+        ("status", "label"),
+        [("partial", "partial; no supported identity"), ("empty", "empty; no supported identities")],
+    )
+    def test_result_explanation_names_non_available_grouping_states(self, status: str, label: str) -> None:
+        output = format_html(
+            [_make_result("https://example.com", "Result")],
+            "query",
+            portal_state={"query": "query", "grouping_status": status},
+        )
+
+        assert label in output
+
+    def test_portal_explanation_stays_within_documented_asset_and_shell_budgets(self) -> None:
+        output = format_html(
+            [_make_result("https://example.com", "A result", content="A compact explanation fixture")],
+            "query",
+            portal_state={"query": "query", "grouping_status": "empty"},
+        ).encode()
+
+        assert len(_PORTAL_CSS.encode()) + len(_PORTAL_SCRIPT.encode()) <= 30 * 1024
+        assert len(output) <= 50 * 1024
+        assert len(gzip.compress(output)) <= 15 * 1024
+
+    def test_browser_error_uses_portal_shell(self) -> None:
+        output = format_error_html("invalid_filter", "The filter is invalid.", field="safesearch")
+
+        assert 'role="alert"' in output
+        assert "Field: safesearch" in output
+        assert "Return to search" in output
+
+    def test_specialist_and_media_results_keep_safe_compact_metadata(self) -> None:
+        result = _make_result("https://example.com", "Vulnerability result")
+        result.media = MediaInfo(
+            media_type="image",
+            thumbnail="https://cdn.example.com/thumb.jpg",
+            source="https://example.com/source",
+        )
+        result.payload = build_payload(
+            "security",
+            "vulnerability",
+            {"cve_id": "CVE-2026-0001"},
+            engine="nvd",
+        )
+
+        output = format_html([result], "cve")
+
+        assert "image result" in output
+        assert "security / vulnerability" in output
+        assert 'src="https://cdn.example.com/thumb.jpg"' in output
+        assert 'alt="Vulnerability result"' in output

@@ -12,6 +12,7 @@ from typing import Any
 import pytest
 
 import engines  # noqa: F401 — triggers @register_engine to populate registry
+from slopsearx import metrics as m
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult
 from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, load_mcp_policy
 from slopsearx.config import load_config
@@ -35,6 +36,16 @@ class _FakeStore:
     async def set(self, key: str, value: dict[str, Any], ttl: int = 300) -> None:
         del ttl
         self._data[key] = value
+
+    async def save_if_lease_owner(
+        self, lease_key: str, token: str, record_key: str, value: dict[str, Any], ttl: int
+    ) -> bool:
+        del ttl
+        current = self._data.get(lease_key)
+        if not isinstance(current, dict) or current.get("token") != token:
+            return False
+        self._data[record_key] = value
+        return True
 
 
 class _MockEngine(EngineAdapter):
@@ -604,6 +615,7 @@ class TestDiscoveryTools:
             "policy_bounds",
             "degradation",
             "freshness",
+            "workflow_health",
         ):
             assert key in result, f"missing schema key {key}"
 
@@ -725,6 +737,15 @@ class TestDiscoveryTools:
         blob = str(result)
         assert "# HELP" not in blob and "# TYPE" not in blob
         assert "metrics" not in blob.lower()
+
+    async def test_status_workflow_health_is_tenant_safe(self, state: McpState) -> None:
+        result = await t.slopsearx_get_service_status()
+        assert set(result["workflow_health"]) == set(m.WORKFLOW_KINDS)
+        assert all(set(item) == {"available", "status"} for item in result["workflow_health"].values())
+        assert result["workflow_health"]["research"] == {"available": True, "status": "available"}
+        assert result["workflow_health"]["staged_search"] == {"available": False, "status": "unavailable"}
+        m.transition_workflow("research", None, "queued")
+        assert (await t.slopsearx_get_service_status())["workflow_health"] == result["workflow_health"]
 
 
 # ---------------------------------------------------------------------------
@@ -957,13 +978,19 @@ async def test_legacy_snapshot_ranking_defaults_to_presence(state):
 
 
 async def test_research_snapshot_captures_actual_ranking(state):
+    import time
+
     from slopsearx.research import ResearchJob, ResearchQuery
 
     state.ctx.ranking_strategy = "reciprocal_rank_fusion"
     state.runner._service = SearchService(state.ctx)
     query = ResearchQuery(index=0, intent="web", query_id="q1", query="evidence", engines=["wikipedia"])
-    job = ResearchJob(job_id="ranking-job", question="evidence", strategy="triangulate", queries=[query])
-    await state.runner._execute_query(job, query)
+    job = ResearchJob(
+        job_id="ranking-job", question="evidence", strategy="triangulate", queries=[query], deadline=time.time() + 60
+    )
+    await state.job_store.save(job)
+    completed = await state.runner.run_direct(job)
+    query = completed.queries[0]
     assert query.cursor
     snapshot = await state.snapshots.get(query.cursor)
     assert snapshot and snapshot.ranking_explanation == "tier_then_reciprocal_rank_fusion_k60"

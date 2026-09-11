@@ -519,7 +519,7 @@ class TestHealthEndpointObserved:
                 before = client.get("/health").json()["engines"]["wikipedia"]
                 assert before["status"] == "unknown"
 
-                client.get("/search", params={"q": "test", "engines": "wikipedia"})
+                client.get("/search", params={"q": "test", "engines": "wikipedia", "format": "json"})
 
                 after = client.get("/health").json()["engines"]["wikipedia"]
                 assert after["status"] == "ok"
@@ -549,7 +549,7 @@ class TestHealthEndpointObserved:
                 server_mod._active_engines = {"wikipedia": engine}
                 server_mod._router = None
 
-                client.get("/search", params={"q": "test", "engines": "wikipedia"})
+                client.get("/search", params={"q": "test", "engines": "wikipedia", "format": "json"})
 
                 after = client.get("/health").json()["engines"]["wikipedia"]
                 assert after["status"] == "ok"

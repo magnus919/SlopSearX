@@ -6,20 +6,30 @@ repairable discovery aid. Execution and planning live in research.py.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
+from dataclasses import replace
 from typing import Any, Callable
 
+from slopsearx import metrics as m
 from slopsearx.research_models import (
+    LeaseLostError,
     ResearchJob,
     _job_from_payload,
     _job_to_payload,
     generate_lease_token,
+    recover_orphan_attempts,
 )
 from slopsearx.snapshot import KeyValueStore
 
 logger = logging.getLogger(__name__)
+
+
+def _workflow_kind(job: ResearchJob) -> m.WorkflowKind:
+    return "dependency_dossier" if job.workflow.get("kind") == "dependency_dossier" else "research"
+
 
 JOB_KEY_PREFIX = "mcp:job"
 IDEMPOTENCY_PREFIX = "mcp:idem"
@@ -32,6 +42,17 @@ DEFAULT_JOB_POLL_INTERVAL_SECONDS = 1.0
 
 # Ready indexes are derived state; job records and lease tokens remain authority.
 READY_PREFIX = "mcp:ready:v1"
+RECENT_PREFIX = "mcp:recent:v1"
+MAX_RECENT_JOBS = 200
+_RECENT_RECORD_SCRIPT = """
+redis.call('ZADD', KEYS[1], ARGV[1], ARGV[2])
+local count = redis.call('ZCARD', KEYS[1])
+if count > tonumber(ARGV[3]) then
+  redis.call('ZREMRANGEBYRANK', KEYS[1], 0, count - tonumber(ARGV[3]) - 1)
+end
+redis.call('EXPIRE', KEYS[1], ARGV[4])
+return 1
+"""
 _RECONCILE_INTERVAL = 10
 _RECONCILE_BATCH = 128
 _READY_REFRESH_SCRIPT = """
@@ -118,6 +139,20 @@ redis.call('DEL', KEYS[1])
 return 1
 """
 
+_IDEMPOTENT_CREATE_SCRIPT = """
+local existing = redis.call('GET', KEYS[1])
+if existing then
+    local ok, record = pcall(cjson.decode, existing)
+    if ok and type(record) == 'table' and record.job_id then
+        return {0, record.job_id}
+    end
+    return {-1, ''}
+end
+redis.call('SETEX', KEYS[2], ARGV[1], ARGV[2])
+redis.call('SETEX', KEYS[1], ARGV[1], ARGV[3])
+return {1, ARGV[4]}
+"""
+
 
 # ---------------------------------------------------------------------------
 # Storage
@@ -141,9 +176,16 @@ class ResearchJobStore:
       flag and finalizes immediately when no worker holds the lease.
     """
 
-    def __init__(self, store: KeyValueStore | None, tenant: str = "default") -> None:
+    def __init__(
+        self,
+        store: KeyValueStore | None,
+        tenant: str = "default",
+        *,
+        admission_locks: dict[str, asyncio.Lock] | None = None,
+    ) -> None:
         self._store = store
         self._tenant = tenant
+        self._admission_locks = admission_locks if admission_locks is not None else {}
 
     @property
     def available(self) -> bool:
@@ -162,7 +204,7 @@ class ResearchJobStore:
         """Return a tenant-scoped view sharing the same backing store."""
         if tenant == self._tenant:
             return self
-        return ResearchJobStore(self._store, tenant=tenant)
+        return ResearchJobStore(self._store, tenant=tenant, admission_locks=self._admission_locks)
 
     def _key(self, job_id: str) -> str:
         return f"{JOB_KEY_PREFIX}:{self._tenant}:{job_id}"
@@ -176,6 +218,33 @@ class ResearchJobStore:
     def _cancel_key(self, job_id: str) -> str:
         return f"{CANCEL_KEY_PREFIX}:{self._tenant}:{job_id}"
 
+    def _recent_key(self) -> str:
+        return f"{RECENT_PREFIX}:{self._tenant}"
+
+    async def _record_recent(self, job: ResearchJob) -> None:
+        """Maintain the bounded tenant index used by workflow explorers."""
+        store = self._store
+        if store is None or not store.is_connected:
+            return
+        client = getattr(store, "_client", None)
+        if client is not None and hasattr(client, "eval"):
+            await client.eval(
+                _RECENT_RECORD_SCRIPT,
+                1,
+                self._recent_key(),
+                str(job.created_at),
+                job.job_id,
+                str(MAX_RECENT_JOBS),
+                str(JOB_RETENTION_SECONDS),
+            )
+            return
+        async with self._admission_locks.setdefault(f"recent:{self._tenant}", asyncio.Lock()):
+            current = await store.get(self._recent_key()) or {}
+            index = {str(key): float(value) for key, value in current.items()}
+            index[job.job_id] = job.created_at
+            ordered = sorted(index.items(), key=lambda item: (item[1], item[0]), reverse=True)[:MAX_RECENT_JOBS]
+            await store.set(self._recent_key(), dict(ordered), JOB_RETENTION_SECONDS)
+
     async def save(self, job: ResearchJob) -> None:
         """Persist a job. No-op when the store is unavailable."""
         store = self._store
@@ -183,6 +252,7 @@ class ResearchJobStore:
             return
         payload = _job_to_payload(job)
         await store.set(self._key(job.job_id), payload, JOB_RETENTION_SECONDS)
+        await self._record_recent(job)
         await self._refresh_ready(job.job_id)
         if job.idempotency_key:
             await store.set(
@@ -198,9 +268,9 @@ class ResearchJobStore:
         lease, e.g. a direct retry/extend run) and ``False`` when the lease
         was lost and the write was skipped. On Valkey the lease check and the
         record write happen in one atomic Lua call (compare-and-set) so a
-        concurrent reclamation cannot race between them; the in-memory
-        fallback is check-then-save, which is atomic under single-threaded
-        asyncio (no await between the check and the write).
+        concurrent reclamation cannot race between them. Non-Valkey backends
+        must expose the equivalent ``save_if_lease_owner`` atomic primitive;
+        unsupported backends fail closed.
         """
         token = job.lease_token
         if not token:
@@ -213,10 +283,55 @@ class ResearchJobStore:
         eval_method = getattr(client, "eval", None) if client is not None else None
         if eval_method is not None:
             return await self._save_if_owned_valkey(eval_method, job, token)
-        if await self._lease_get(self._lease_key(job.job_id)) != token:
+        compare_and_set = getattr(store, "save_if_lease_owner", None)
+        if compare_and_set is None:
             return False
-        await self.save(job)
-        return True
+        saved = bool(
+            await compare_and_set(
+                self._lease_key(job.job_id),
+                token,
+                self._key(job.job_id),
+                _job_to_payload(job),
+                JOB_RETENTION_SECONDS,
+            )
+        )
+        if saved:
+            await self._refresh_ready(job.job_id)
+        return saved
+
+    async def clear_ownership(self, job: ResearchJob) -> bool:
+        """Clear record ownership while the old token still fences the write.
+
+        The caller releases that token afterwards. This avoids an unguarded
+        record write after another replica can acquire the released lease.
+        """
+        token = job.lease_token
+        if not token or not self.available:
+            return False
+        cleared = replace(job, owner_id=None, lease_token=None, lease_expires_at=0.0)
+        client = getattr(self._store, "_client", None)
+        evaluate = getattr(client, "eval", None)
+        if evaluate is not None:
+            saved = await self._save_if_owned_valkey(evaluate, cleared, token)
+        else:
+            compare_and_set = getattr(self._store, "save_if_lease_owner", None)
+            if compare_and_set is None:
+                return False
+            saved = bool(
+                await compare_and_set(
+                    self._lease_key(job.job_id),
+                    token,
+                    self._key(job.job_id),
+                    _job_to_payload(cleared),
+                    JOB_RETENTION_SECONDS,
+                )
+            )
+            if saved:
+                await self._refresh_ready(job.job_id)
+        if saved:
+            job.owner_id = job.lease_token = None
+            job.lease_expires_at = 0.0
+        return saved
 
     async def _save_if_owned_valkey(self, eval_method: Any, job: ResearchJob, token: str) -> bool:
         """Atomic compare-and-set: persist ``job`` only if ``token`` still owns the lease."""
@@ -272,6 +387,93 @@ class ResearchJobStore:
             return None
         return await self.load(job_id)
 
+    async def create_idempotent(self, job: ResearchJob) -> tuple[ResearchJob | None, bool]:
+        """Atomically create ``job`` or return the record owning its key.
+
+        Real Valkey uses one Lua transaction for the job and idempotency
+        records. Lightweight in-memory stores are serialized by a shared
+        per-tenant lock so deterministic tests exercise the same admission
+        semantics.
+        """
+        if not job.idempotency_key:
+            await self.save(job)
+            return job, True
+        store = self._store
+        if store is None or not store.is_connected:
+            return None, False
+        client = getattr(store, "_client", None)
+        eval_method = getattr(client, "eval", None) if client is not None else None
+        if eval_method is not None:
+            encoded_job = json.dumps(_job_to_payload(job), default=str)
+            encoded_idem = json.dumps({"job_id": job.job_id})
+            result = await eval_method(
+                _IDEMPOTENT_CREATE_SCRIPT,
+                2,
+                self._idem_key(job.idempotency_key),
+                self._key(job.job_id),
+                str(JOB_RETENTION_SECONDS),
+                encoded_job,
+                encoded_idem,
+                job.job_id,
+            )
+            created = int(result[0]) == 1
+            if int(result[0]) < 0:
+                return None, False
+            raw_job_id = result[1]
+            resolved_id = raw_job_id.decode() if isinstance(raw_job_id, bytes) else str(raw_job_id)
+            if created:
+                await self._refresh_ready(job.job_id)
+                await self._record_recent(job)
+            return await self.load(resolved_id), created
+
+        lock = self._admission_locks.setdefault(self._tenant, asyncio.Lock())
+        async with lock:
+            existing = await self.find_by_idempotency(job.idempotency_key)
+            if existing is not None:
+                return existing, False
+            await self.save(job)
+            return job, True
+
+    async def list_recent(self, *, before: tuple[float, str] | None = None, limit: int = 20) -> list[ResearchJob]:
+        """Read one deterministic page from the maintained tenant index."""
+        if not self.available or not 1 <= limit <= MAX_RECENT_JOBS:
+            return []
+        store = self._store
+        assert store is not None
+        client = getattr(store, "_client", None)
+        pairs: list[tuple[str, float]] = []
+        if client is not None and hasattr(client, "zrevrange"):
+            raw = await client.zrevrange(self._recent_key(), 0, MAX_RECENT_JOBS - 1, withscores=True)
+            pairs = [(item.decode() if isinstance(item, bytes) else str(item), float(score)) for item, score in raw]
+        else:
+            payload = await store.get(self._recent_key()) or {}
+            pairs = sorted(
+                ((str(key), float(value)) for key, value in payload.items()),
+                key=lambda item: (item[1], item[0]),
+                reverse=True,
+            )
+        if before is not None:
+            pairs = [item for item in pairs if (item[1], item[0]) < before]
+        jobs: list[ResearchJob] = []
+        stale: list[str] = []
+        loaded = await asyncio.gather(*(self.load(job_id) for job_id, _score in pairs))
+        for (job_id, _score), job in zip(pairs, loaded, strict=True):
+            if job is None:
+                stale.append(job_id)
+                continue
+            jobs.append(job)
+            if len(jobs) == limit:
+                break
+        if stale:
+            if client is not None and hasattr(client, "zrem"):
+                await client.zrem(self._recent_key(), *stale)
+            else:
+                payload = await store.get(self._recent_key()) or {}
+                for job_id in stale:
+                    payload.pop(job_id, None)
+                await store.set(self._recent_key(), payload, JOB_RETENTION_SECONDS)
+        return jobs
+
     async def _scan_job_ids(self) -> list[str]:
         """List this tenant's persisted job IDs."""
         store = self._store
@@ -322,16 +524,26 @@ class ResearchJobStore:
                 job = await self.load(job_id)
                 if job is None or job.state != "running":
                     continue
-                if await self._lease_get(self._lease_key(job_id)) is not None:
-                    continue
                 if job.deadline > now:
                     continue
-                job.state = "expired"
-                for query in job.queries:
-                    if query.state in ("pending", "running"):
-                        query.state = "cancelled"
-                await self.save(job)
-                expired += 1
+                claimed = await self._claim_prepared(job, "expiry", DEFAULT_JOB_LEASE_TTL_SECONDS)
+                if claimed is None:
+                    continue
+                token = claimed.lease_token
+                try:
+                    if claimed.state == "expired":
+                        expired += 1
+                        workflow = _workflow_kind(claimed)
+                        m.record_workflow_recovery(workflow)
+                        m.transition_workflow(workflow, "running", "expired")
+                        m.record_workflow_expiry(workflow, "job")
+                        m.record_workflow_terminal(workflow, "expired")
+                    if not await self.clear_ownership(claimed):
+                        raise LeaseLostError(job_id)
+                finally:
+                    if token:
+                        await self._lease_release(self._lease_key(job_id), token)
+
         except Exception as exc:  # noqa: BLE001 — graceful degradation
             logger.warning("ResearchJobStore: stale-job scan failed: %s", exc)
         return expired
@@ -489,33 +701,51 @@ class ResearchJobStore:
         token = generate_lease_token()
         if not await self._lease_acquire(self._lease_key(job_id), token, lease_ttl):
             return None
-        # Re-load under the lease (authoritative; another replica may have
-        # finalized the job between the pre-filter and the lease win).
-        job = await self.load(job_id)
-        if job is None or job.state not in ("queued", "running"):
-            await self._lease_release(self._lease_key(job_id), token)
-            return None
-        elif time.time() >= job.deadline:
-            # A deadline-passed job can no longer make progress: finalize it to
-            # ``expired`` (matching ``_run_job``/``retry``/``expire_stale_running``)
-            # instead of handing it to a worker that would classify it
-            # ``partial``/``failed`` when the deadline gate fires mid-run.
+        try:
+            # Re-load under the lease; every subsequent write is token-fenced.
+            job = await self.load(job_id)
+            if job is None or job.state not in ("queued", "running"):
+                await self._lease_release(self._lease_key(job_id), token)
+                return None
+            recover_orphan_attempts(job)
+            workflow = _workflow_kind(job)
+            metric_previous = pre.state
+            if pre.state == "running":
+                m.record_workflow_recovery(workflow)
+                # A replacement process starts with empty gauges, while a
+                # surviving process may still hold the dead owner's running
+                # observation. Normalizing through the recovery boundary
+                # state makes both cases converge on one active lease.
+                m.transition_workflow(workflow, "running", "interrupted")
+                metric_previous = "interrupted"
+            job.owner_id = owner_id
+            job.lease_token = token
+            job.lease_expires_at = time.time() + lease_ttl
+            if time.time() >= job.deadline:
+                for query in job.queries:
+                    if query.state in ("pending", "running"):
+                        query.state = "cancelled"
+                job.state = "expired"
+                job.stop_reason = "deadline_expired"
+                if not await self.save_if_owned(job):
+                    raise LeaseLostError(job_id)
+                m.transition_workflow(workflow, metric_previous, "expired")
+                m.record_workflow_expiry(workflow, "job")
+                m.record_workflow_terminal(workflow, "expired")
+                await self._lease_release(self._lease_key(job_id), token)
+                return None
             for query in job.queries:
-                if query.state in ("pending", "running"):
-                    query.state = "cancelled"
-            job.state = "expired"
-            await self.save(job)
+                if query.state == "running":
+                    query.state = "pending"
+            job.state = "running"
+            if not await self.save_if_owned(job):
+                raise LeaseLostError(job_id)
+            m.transition_workflow(workflow, metric_previous, "running")
+            m.workflow_queue_wait.observe({"workflow": workflow}, max(0.0, time.time() - job.created_at))
+            return job
+        except BaseException:
             await self._lease_release(self._lease_key(job_id), token)
-            return None
-        for query in job.queries:
-            if query.state == "running":
-                query.state = "pending"
-        job.state = "running"
-        job.owner_id = owner_id
-        job.lease_token = token
-        job.lease_expires_at = time.time() + lease_ttl
-        await self.save(job)
-        return job
+            raise
 
     async def _claim_prepared(
         self,
@@ -540,41 +770,53 @@ class ResearchJobStore:
         token = generate_lease_token()
         if not await self._lease_acquire(self._lease_key(job.job_id), token, lease_ttl):
             return None
-        current = await self.load(job.job_id)
-        if current is None:
+        try:
+            current = await self.load(job.job_id)
+            if current is None:
+                await self._lease_release(self._lease_key(job.job_id), token)
+                return None
+            previous_state = current.state
+            recover_orphan_attempts(current)
+            current.owner_id = owner_id
+            current.lease_token = token
+            current.lease_expires_at = time.time() + lease_ttl
+            current.cancel_requested = current.cancel_requested or job.cancel_requested
+            if current.state in ("cancelled", "expired") or current.caller_completed:
+                pass
+            elif time.time() >= current.deadline:
+                for query in current.queries:
+                    if query.state in ("pending", "running"):
+                        query.state = "cancelled"
+                current.state = "expired"
+                current.stop_reason = "deadline_expired"
+            elif current.cancel_requested:
+                for query in current.queries:
+                    if query.state in ("pending", "running"):
+                        query.state = "cancelled"
+                current.state = "cancelled"
+                current.stop_reason = "cancelled"
+            else:
+                if mutate is not None:
+                    mutate(current)
+                for query in current.queries:
+                    if query.state == "running":
+                        query.state = "pending"
+                if any(query.state == "pending" for query in current.queries):
+                    current.state = "running"
+            if not await self.save_if_owned(current):
+                raise LeaseLostError(job.job_id)
+            if current.state == "running":
+                workflow = _workflow_kind(current)
+                metric_previous = previous_state
+                if previous_state == "running":
+                    m.record_workflow_recovery(workflow)
+                    m.transition_workflow(workflow, "running", "interrupted")
+                    metric_previous = "interrupted"
+                m.transition_workflow(workflow, metric_previous, "running")
+            return current
+        except BaseException:
             await self._lease_release(self._lease_key(job.job_id), token)
-            return None
-        # Deadline finalization runs BEFORE the caller's mutation is applied or
-        # persisted: a claimable job whose deadline lapsed between the caller's
-        # deadline gate and this point is finalized to ``expired`` here, so a
-        # follow-up that can never run is not written into the record (and is
-        # therefore never appended twice by run_direct's terminal path).
-        if time.time() >= current.deadline:
-            for query in current.queries:
-                if query.state in ("pending", "running"):
-                    query.state = "cancelled"
-            current.state = "expired"
-            await self.save(current)
-            await self._lease_release(self._lease_key(job.job_id), token)
-            return None
-        # Re-apply the caller's intended mutation to the freshly loaded record
-        # while holding the lease, so a concurrent finalizer cannot interleave.
-        if mutate is not None:
-            mutate(current)
-        if current.state not in ("queued", "running"):
-            await self._lease_release(self._lease_key(job.job_id), token)
-            return None
-        # Preserve a cancellation request that landed after ``job`` was loaded.
-        current.cancel_requested = current.cancel_requested or job.cancel_requested
-        for query in current.queries:
-            if query.state == "running":
-                query.state = "pending"
-        current.state = "running"
-        current.owner_id = owner_id
-        current.lease_token = token
-        current.lease_expires_at = time.time() + lease_ttl
-        await self.save(current)
-        return current
+            raise
 
     def _ready_client(self) -> Any:
         """Real sorted-set backend; simple injected stores keep their scan seam."""
@@ -713,17 +955,19 @@ class ResearchJobStore:
             {"cancel_requested": True, "requested_at": time.time()},
             JOB_RETENTION_SECONDS,
         )
-        # A live owner will observe the flag on its next reload; leave the
-        # job record alone so we don't fight its intermediate writes.
-        if await self._lease_get(self._lease_key(job_id)) is not None:
+        # Claim and reload before finalizing; checking absence of a lease
+        # followed by an unconditional save races a new worker's reservation.
+        claimed = await self._claim_prepared(job, "cancellation", DEFAULT_JOB_LEASE_TTL_SECONDS)
+        if claimed is None:
             return "running"
-        job.cancel_requested = True
-        job.state = "cancelled"
-        for query in job.queries:
-            if query.state in ("pending", "running"):
-                query.state = "cancelled"
-        await self.save(job)
-        return "cancelled"
+        token = claimed.lease_token
+        try:
+            if not await self.clear_ownership(claimed):
+                raise LeaseLostError(job_id)
+            return claimed.state
+        finally:
+            if token:
+                await self._lease_release(self._lease_key(job_id), token)
 
 
 async def _scan_keys(store: KeyValueStore | None, pattern: str) -> list[str]:
