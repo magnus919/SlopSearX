@@ -8,9 +8,14 @@ envelope described in docs/MCP_SERVER_DESIGN.md §3.
 
 from __future__ import annotations
 
+import dataclasses
 import datetime as _dt
+import hashlib
+import json
 import time
 from typing import Any
+
+from pydantic import StrictInt
 
 from slopsearx.adapter import OBSERVED_STATUS_VOCAB, SUPPORTED_MEDIA_TYPES
 from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, resolve_intent
@@ -122,6 +127,7 @@ from slopsearx.research import (
     plan_research_queries,
     summarize_coverage,
 )
+from slopsearx.research_budget import ResearchMutationError, budget_summary, initialize_budget
 from slopsearx.service import (
     QueryValidationError,
     RateLimitExceededError,
@@ -1540,13 +1546,108 @@ async def slopsearx_read_result(result_id: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def _research_dispatch_error(state: McpState, query: ResearchQuery) -> str | None:
+    if not state.policy.tool_enabled("research"):
+        return "research grant is disabled"
+    grant = INTENT_GRANTS.get(query.intent)
+    if query.requires_intent_grant and grant and not state.policy.tool_enabled(grant):
+        return f"{query.intent} requires the {grant} grant"
+    if not query.engines:
+        return "research query has no permitted engines"
+    error = _enforce_policy(state, query.engines)
+    return str(error["error"]["message"]) if error else None
+
+
+def bind_research_policy(state: McpState) -> None:
+    """Keep recovered and retried dispatches behind the shared live policy gate."""
+    state.runner.dispatch_validator = lambda query: _research_dispatch_error(state, query)
+
+
+def _research_metadata(value: Any, name: str, limit: int = 512) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value.strip() or len(value) > limit:
+        raise ResearchMutationError("invalid_input", f"{name} must be a nonempty string of at most {limit} characters")
+    return value.strip()
+
+
+def _prepare_research_query(state: McpState, entry: dict[str, Any], max_engines: int) -> ResearchQuery:
+    allowed = {"query", "intent", "engines", "subquestion_id", "rationale", "parent_attempt_id"}
+    if not isinstance(entry, dict) or set(entry) - allowed:
+        raise ResearchMutationError("invalid_input", "invalid research plan entry fields")
+    text = entry.get("query")
+    if not isinstance(text, str) or _validate_query(text, state):
+        raise ResearchMutationError("invalid_input", "query must be a nonempty bounded string")
+    intent = entry.get("intent", "web")
+    if not isinstance(intent, str) or intent not in INTENT_PROFILES:
+        raise ResearchMutationError("invalid_input", "unknown research intent")
+    if INTENT_PROFILES[intent].media_types:
+        raise ResearchMutationError("invalid_intent", "research subqueries do not support media searches")
+    grant = INTENT_GRANTS.get(intent)
+    if grant and not state.policy.tool_enabled(grant):
+        raise ResearchMutationError("tool_disabled", f"intent {intent} requires the {grant} grant")
+    engines = entry.get("engines")
+    if engines is not None:
+        if not isinstance(engines, list) or not engines or any(not isinstance(name, str) for name in engines):
+            raise ResearchMutationError("invalid_input", "engines must be a nonempty list of names")
+        error = _enforce_policy(state, engines)
+        if error:
+            raise ResearchMutationError(str(error["error"]["code"]), str(error["error"]["message"]))
+    else:
+        engines, _ = resolve_intent(intent, state.catalog)
+        engines = [
+            name
+            for name in engines
+            if name not in state.policy.sensitive_engines or state.policy.targeted_sensitive_allowed
+        ]
+    engines = list(dict.fromkeys(engines))[:max_engines]
+    query = ResearchQuery(
+        index=0,
+        query=text.strip(),
+        intent=intent,
+        engines=engines,
+        subquestion_id=_research_metadata(entry.get("subquestion_id"), "subquestion_id", 128),
+        rationale=_research_metadata(entry.get("rationale"), "rationale", state.policy.max_query_length),
+        parent_attempt_id=_research_metadata(entry.get("parent_attempt_id"), "parent_attempt_id", 128),
+        requires_intent_grant=True,
+    )
+    rejection = _research_dispatch_error(state, query)
+    if rejection:
+        raise ResearchMutationError("tool_disabled", rejection)
+    return query
+
+
+def _validate_research_associations(job: ResearchJob, query: ResearchQuery) -> None:
+    if query.subquestion_id is not None and query.subquestion_id not in job.subquestions:
+        raise ResearchMutationError("invalid_input", "unknown subquestion_id")
+    if query.parent_attempt_id is not None and not any(
+        attempt.attempt_id == query.parent_attempt_id and attempt.state != "running"
+        for existing in job.queries
+        for attempt in existing.attempts
+    ):
+        raise ResearchMutationError("invalid_input", "parent_attempt_id must identify a terminal attempt in this job")
+
+
+def _research_limit(value: int | None, ceiling: int, field: str) -> int:
+    if value is None:
+        return ceiling
+    if type(value) is not int or value <= 0:
+        raise ResearchMutationError("invalid_input", f"{field} must be a positive integer")
+    return min(value, ceiling)
+
+
 async def slopsearx_start_research(
     question: str,
     strategy: str = "triangulate",
-    max_queries: int | None = None,
-    max_engines_per_query: int | None = None,
+    max_queries: StrictInt | None = None,
+    max_engines_per_query: StrictInt | None = None,
     deadline: str | None = None,
     idempotency_key: str | None = None,
+    initial_plan: list[dict[str, Any]] | None = None,
+    subquestions: list[dict[str, str]] | None = None,
+    max_attempts: StrictInt | None = None,
+    max_engine_attempts: StrictInt | None = None,
+    max_results: StrictInt | None = None,
 ) -> dict[str, Any]:
     """Start an asynchronous multi-query research job.
 
@@ -1585,23 +1686,73 @@ async def slopsearx_start_research(
             result["note"] = "returned existing job for idempotency_key"
             return result
 
-    max_queries = min(max_queries or state.policy.job_max_queries, state.policy.job_max_queries)
-    max_engines = min(
-        max_engines_per_query or state.policy.job_max_engines_per_query, state.policy.job_max_engines_per_query
-    )
+    bind_research_policy(state)
+    try:
+        limits = {
+            "queries": _research_limit(max_queries, state.policy.job_max_queries, "max_queries"),
+            "attempts": _research_limit(max_attempts, state.policy.job_max_queries, "max_attempts"),
+            "engines_per_query": _research_limit(
+                max_engines_per_query, state.policy.job_max_engines_per_query, "max_engines_per_query"
+            ),
+            "engine_attempts": _research_limit(
+                max_engine_attempts,
+                state.policy.job_max_queries * state.policy.job_max_engines_per_query,
+                "max_engine_attempts",
+            ),
+            "results": _research_limit(max_results, state.policy.job_max_results, "max_results"),
+        }
+        limits["engine_attempts"] = min(limits["engine_attempts"], limits["attempts"] * limits["engines_per_query"])
+        declared = {}
+        if subquestions is not None:
+            if not isinstance(subquestions, list) or len(subquestions) > limits["queries"]:
+                raise ResearchMutationError("invalid_input", "subquestions exceeds query budget")
+            for item in subquestions:
+                if not isinstance(item, dict) or set(item) != {"id", "question"}:
+                    raise ResearchMutationError("invalid_input", "subquestion requires exactly id and question")
+                identity = _research_metadata(item["id"], "subquestion id", 128)
+                question_text = _research_metadata(
+                    item["question"], "subquestion question", state.policy.max_query_length
+                )
+                if identity is None or question_text is None or identity in declared:
+                    raise ResearchMutationError("invalid_input", "duplicate or missing subquestion")
+                declared[identity] = {"question": question_text, "state": "unresolved"}
+    except ResearchMutationError as exc:
+        return _error(exc.code, str(exc))
 
     deadline_ts = _resolve_deadline(state, deadline)
     if isinstance(deadline_ts, dict):
         return deadline_ts
 
-    queries, warnings = plan_research_queries(
-        question.strip(),
-        strategy,
-        max_queries,
-        max_engines,
-        state.catalog,
-        state.policy,
-    )
+    try:
+        if initial_plan is not None:
+            if not isinstance(initial_plan, list) or not initial_plan or len(initial_plan) > limits["queries"]:
+                raise ResearchMutationError("invalid_input", "initial_plan must fit the positive query budget")
+            queries = [_prepare_research_query(state, entry, limits["engines_per_query"]) for entry in initial_plan]
+            warnings: list[str] = []
+            for index, query in enumerate(queries):
+                query.index = index
+                if query.parent_attempt_id is not None:
+                    raise ResearchMutationError("invalid_input", "initial queries cannot reference parent attempts")
+                if query.subquestion_id is not None and query.subquestion_id not in declared:
+                    raise ResearchMutationError("invalid_input", "unknown subquestion_id")
+            if len(queries) > limits["attempts"] or sum(len(q.engines) for q in queries) > limits["engine_attempts"]:
+                raise ResearchMutationError("job_budget_exceeded", "initial plan exceeds execution budget")
+        else:
+            queries, warnings = plan_research_queries(
+                question.strip(),
+                strategy,
+                limits["queries"],
+                limits["engines_per_query"],
+                state.catalog,
+                state.policy,
+            )
+            for query in queries:
+                # Empty template scopes are reported as failed queries, never dispatched unscoped.
+                error = _enforce_policy(state, query.engines)
+                if error:
+                    raise ResearchMutationError(str(error["error"]["code"]), str(error["error"]["message"]))
+    except ResearchMutationError as exc:
+        return _error(exc.code, str(exc))
     if not queries:
         return _error("invalid_input", "; ".join(warnings) or "no queries could be planned", field="strategy")
 
@@ -1614,6 +1765,9 @@ async def slopsearx_start_research(
         deadline=deadline_ts,
         tenant=tenant,
         idempotency_key=idempotency_key,
+        subquestions=declared,
+        budget_limits=limits,
+        budget_used={"attempts": 0, "engine_attempts": 0, "results": 0},
     )
     await store.save(job)
     state.runner.enqueue(job.job_id, tenant=tenant)
@@ -1729,7 +1883,7 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
 
     # Terminal-state gate: a cancelled or already-expired job is never
     # resurrected by a retry (VAL-RESEARCH-010/011).
-    if job.state in ("cancelled", "expired"):
+    if job.state in ("cancelled", "expired") or job.caller_completed:
         return {
             "job_id": job.job_id,
             "state": job.state,
@@ -1746,6 +1900,8 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
             field="job_id",
         )
 
+    attempt_counts = {query.index: len(query.attempts) for query in job.queries}
+    bind_research_policy(state)
     try:
         job = await state.runner.retry(job_id, tenant=tenant)
     except JobStillRunningError:
@@ -1781,11 +1937,10 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
             "job deadline had already passed; retry finalized the job to expired and re-executed no subqueries"
         )
     else:
-        result["retried"] = [query.index for query in retryable]
-        result["note"] = (
-            "retried only failed/empty subqueries; each gained a new linked attempt, "
-            "and successful evidence was preserved unchanged"
-        )
+        result["retried"] = [
+            query.index for query in job.queries if len(query.attempts) > attempt_counts.get(query.index, 0)
+        ]
+        result["note"] = "retry accounting recorded; inspect retried indices and stop_reason for executed work"
     return result
 
 
@@ -1794,6 +1949,10 @@ async def slopsearx_extend_research(
     query: str,
     intent: str = "web",
     engines: list[str] | None = None,
+    subquestion_id: str | None = None,
+    rationale: str | None = None,
+    parent_attempt_id: str | None = None,
+    continuation_key: str | None = None,
 ) -> dict[str, Any]:
     """Append and execute one bounded follow-up query to a research job.
 
@@ -1841,6 +2000,9 @@ async def slopsearx_extend_research(
             field="intent",
         )
 
+    if engines is not None and not engines:
+        return _error("invalid_input", "engines must be a nonempty list when supplied", field="engines")
+
     # Resolve the follow-up engine scope through the shared policy gate.
     if engines:
         policy_error = _enforce_policy(state, list(engines), field="engines")
@@ -1860,26 +2022,47 @@ async def slopsearx_extend_research(
         if sensitive:
             resolved_engines = [name for name in resolved_engines if name not in state.policy.sensitive_engines]
 
-    # Budget + deadline guards (VAL-RESEARCH-015): reject without corrupting.
-    if len(job.queries) >= state.policy.job_max_queries:
-        return _error(
-            "job_budget_exceeded",
-            f"job is at its query budget of {state.policy.job_max_queries} subqueries",
-            field="query",
-        )
-    if time.time() >= job.deadline:
-        return _error("deadline_exceeded", "job deadline has passed; cannot extend", field="query")
-
     new_query = ResearchQuery(
         index=len(job.queries),
         query=query.strip(),
         intent=intent,
-        engines=resolved_engines,
+        engines=list(dict.fromkeys(resolved_engines)),
+        requires_intent_grant=True,
     )
+    try:
+        new_query.subquestion_id = _research_metadata(subquestion_id, "subquestion_id", 128)
+        new_query.rationale = _research_metadata(rationale, "rationale", state.policy.max_query_length)
+        new_query.parent_attempt_id = _research_metadata(parent_attempt_id, "parent_attempt_id", 128)
+        new_query.continuation_key = _research_metadata(continuation_key, "continuation_key", 128)
+    except ResearchMutationError as exc:
+        return _error(exc.code, str(exc))
+    equivalent = [
+        new_query.query,
+        new_query.intent,
+        sorted(new_query.engines),
+        new_query.subquestion_id,
+        new_query.rationale,
+        new_query.parent_attempt_id,
+    ]
+    new_query.continuation_digest = hashlib.sha256(json.dumps(equivalent).encode()).hexdigest()
+    # Read-only replay remains available after completion/deadline. Current
+    # caller and scope policy above still applies; no lease or dispatch needed.
+    if new_query.continuation_key:
+        previous = next((q for q in job.queries if q.continuation_key == new_query.continuation_key), None)
+        if previous is not None:
+            if previous.continuation_digest != new_query.continuation_digest:
+                return _error("idempotency_conflict", "continuation_key was used for another request")
+            result = _job_summary(job)
+            result["note"] = "returned the current status of the previously accepted continuation"
+            return result
+
+    if time.time() >= job.deadline:
+        return _error("deadline_exceeded", "job deadline has passed; cannot extend", field="query")
+
     # Terminal-state gate: mirror retry and refuse to append a follow-up
     # query to a job that already reached a terminal state (never resurrect
     # a cancelled/expired job).
-    if job.state in ("cancelled", "expired"):
+    if job.state in ("cancelled", "expired") or job.caller_completed:
         return _error(
             "invalid_job_state",
             f"job is in terminal state '{job.state}'; cannot extend",
@@ -1888,8 +2071,30 @@ async def slopsearx_extend_research(
             field="query",
         )
 
+    bind_research_policy(state)
+
     def _append_followup(target: ResearchJob) -> None:
-        target.queries.append(new_query)
+        initialize_budget(target, state.policy)
+        if target.caller_completed:
+            raise ResearchMutationError("invalid_job_state", "caller already completed this job")
+        _validate_research_associations(target, new_query)
+        if new_query.continuation_key:
+            previous = next((q for q in target.queries if q.continuation_key == new_query.continuation_key), None)
+            if previous is not None:
+                if previous.continuation_digest != new_query.continuation_digest:
+                    raise ResearchMutationError("idempotency_conflict", "continuation_key was used for another request")
+                raise ResearchMutationError("continuation_replayed", "continuation already accepted")
+        if len(target.queries) >= target.budget_limits["queries"]:
+            raise ResearchMutationError("job_budget_exceeded", "job query budget is exhausted")
+        for key, amount in (("attempts", 1), ("engine_attempts", len(new_query.engines)), ("results", 1)):
+            if target.budget_used[key] + amount > target.budget_limits[key]:
+                raise ResearchMutationError("job_budget_exceeded", f"job {key} budget is exhausted")
+        if len(new_query.engines) > target.budget_limits["engines_per_query"]:
+            raise ResearchMutationError("job_budget_exceeded", "follow-up exceeds per-query engine budget")
+        rejection = _research_dispatch_error(state, new_query)
+        if rejection:
+            raise ResearchMutationError("tool_disabled", rejection)
+        target.queries.append(dataclasses.replace(new_query, index=len(target.queries)))
 
     # A job previously executed by the durable worker still carries lease
     # fields whose Valkey key was already released. Run through run_direct so
@@ -1901,6 +2106,14 @@ async def slopsearx_extend_research(
     # instead of racing it.
     try:
         job = await state.runner.run_direct(job, mutate=_append_followup)
+    except ResearchMutationError as exc:
+        if exc.code == "continuation_replayed":
+            current = await store.load(job_id)
+            if current is not None:
+                result = _job_summary(current)
+                result["note"] = "returned the current status of the previously accepted continuation"
+                return result
+        return _error(exc.code, str(exc), field="query")
     except JobStillRunningError:
         return {
             "job_id": job_id,
@@ -1938,6 +2151,63 @@ async def slopsearx_extend_research(
     return result
 
 
+async def slopsearx_update_research(
+    job_id: str,
+    subquestion_states: dict[str, str],
+    complete: bool = False,
+    rationale: str | None = None,
+) -> dict[str, Any]:
+    """Record caller-declared progress or completion without judging evidence.
+
+    State values are resolved/unresolved. Completion preserves unresolved
+    questions and permanently prevents new execution for this job.
+    """
+    state = get_state()
+    if not state.policy.tool_enabled("research"):
+        return _error("tool_disabled", "research grant is required")
+    store = state.job_store.for_tenant(current_tenant())
+    if not store.available:
+        return _error("store_unavailable", "job store is unavailable")
+    job = await store.load(job_id)
+    if job is None:
+        return _error("invalid_job_id", "unknown job id", field="job_id")
+    if not isinstance(subquestion_states, dict) or any(
+        value not in ("resolved", "unresolved") for value in subquestion_states.values()
+    ):
+        return _error("invalid_input", "subquestion states must be resolved or unresolved")
+    if type(complete) is not bool:
+        return _error("invalid_input", "complete must be a boolean")
+    try:
+        rationale = _research_metadata(rationale, "rationale", state.policy.max_query_length)
+    except ResearchMutationError as exc:
+        return _error(exc.code, str(exc))
+    if job.state in ("cancelled", "expired") or job.caller_completed:
+        return _error("invalid_job_state", "job is already terminal")
+
+    def update(target: ResearchJob) -> None:
+        if set(subquestion_states) - set(target.subquestions):
+            raise ResearchMutationError("invalid_input", "unknown subquestion id")
+        initialize_budget(target, state.policy)
+        for identity, value in subquestion_states.items():
+            target.subquestions[identity]["state"] = value
+        if complete:
+            target.caller_completed = True
+            target.completion_rationale = rationale
+            target.stop_reason = "caller_completed"
+            # Operational success here means the caller closed work, not that answers are true.
+            for query in target.queries:
+                if query.state in ("pending", "running"):
+                    query.state = "cancelled"
+            target.state = "succeeded"
+
+    try:
+        return _job_summary(await state.runner.run_direct(job, mutate=update, execute=False))
+    except ResearchMutationError as exc:
+        return _error(exc.code, str(exc))
+    except (JobStillRunningError, LeaseLostError):
+        return _error("job_busy", "job is owned by a live worker; retry the progress update later")
+
+
 def _job_summary(job: ResearchJob) -> dict[str, Any]:
     """Compact job view for tool responses.
 
@@ -1966,16 +2236,11 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
                 "query_id": query.query_id,
                 "cursor": query.cursor,
                 "error": query.error,
-                "attempts": [
-                    {
-                        "cursor": attempt.cursor,
-                        "query_id": attempt.query_id,
-                        "result_count": attempt.result_count,
-                        "error": attempt.error,
-                        "state": attempt.state,
-                    }
-                    for attempt in query.attempts
-                ],
+                "subquestion_id": query.subquestion_id,
+                "rationale": query.rationale,
+                "parent_attempt_id": query.parent_attempt_id,
+                "continuation_key": query.continuation_key,
+                "attempts": [dataclasses.asdict(attempt) for attempt in query.attempts],
                 "engine_coverage": [
                     {
                         "engine": cov.engine,
@@ -1993,4 +2258,12 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
         ],
         "coverage": job_coverage.as_dict(),
         "warnings": job.warnings,
+        "subquestions": job.subquestions,
+        "unresolved_subquestions": [
+            identity for identity, item in job.subquestions.items() if item["state"] == "unresolved"
+        ],
+        "caller_completed": job.caller_completed,
+        "completion_rationale": job.completion_rationale,
+        "stop_reason": job.stop_reason,
+        "budgets": budget_summary(job),
     }

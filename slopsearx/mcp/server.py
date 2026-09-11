@@ -162,6 +162,7 @@ async def _lifespan(
         version=_package_version(),
     )
     set_state(state)
+    _tools.bind_research_policy(state)
     runner_task = asyncio.create_task(runner.run_forever())
     try:
         yield state
@@ -255,6 +256,7 @@ def create_server(
     mcp.tool()(_instrumented(_tools.slopsearx_cancel_job))
     mcp.tool()(_instrumented(_tools.slopsearx_retry_research))
     mcp.tool()(_instrumented(_tools.slopsearx_extend_research))
+    mcp.tool()(_instrumented(_tools.slopsearx_update_research))
 
     # --- resources ------------------------------------------------------
     mcp.resource(
