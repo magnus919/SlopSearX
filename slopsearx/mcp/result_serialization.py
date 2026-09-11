@@ -9,7 +9,6 @@ from typing import Any
 
 from slopsearx.adapter import SearchResult, media_to_dict
 from slopsearx.artifacts import artifact_ref
-from slopsearx.mcp.retrieval_url import RETRIEVAL_URL_STATUS_OK, _retrieval_url
 from slopsearx.payload import (
     PAYLOAD_INLINE_BYTES,
     is_valid_payload,
@@ -17,6 +16,7 @@ from slopsearx.payload import (
     payload_serialized_size,
     payload_to_dict,
 )
+from slopsearx.retrieval_url import RETRIEVAL_URL_STATUS_OK, _retrieval_url
 from slopsearx.snapshot import SearchSnapshot
 
 RANKING_EXPLANATION = "tier_then_cross_engine_presence"

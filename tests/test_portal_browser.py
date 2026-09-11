@@ -77,4 +77,10 @@ def test_results_journey_keeps_links_and_escaped_content() -> None:
         assert page.get_by_role("button", name="Apply filters").is_visible()
         assert page.locator("script").count() == 1
         assert page.locator(".result-link").get_attribute("href") == "https://example.com/result"
+        explanation = page.get_by_role("group").filter(has_text="Why this result appeared")
+        explanation.get_by_text("Why this result appeared").click()
+        assert explanation.get_by_text("Cross-source presence").is_visible()
+        assert explanation.get_by_text("structurally eligible").is_visible()
+        page.set_viewport_size({"width": 390, "height": 844})
+        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
         browser.close()

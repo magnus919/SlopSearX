@@ -50,7 +50,13 @@ return to the same query by copying the URL.
    Unsupported controls are omitted or disabled with a short reason.
 3. **Inspect provenance:** each result shows title, safe destination, source
    engine(s), category/type, and publication metadata when present. Missing
-   metadata is omitted rather than replaced with invented values.
+   metadata is omitted rather than replaced with invented values. A closed
+   **Why this result appeared** disclosure lists contributing sources, the
+   effective ranking method and tier, supported entity identity/group
+   membership, conflict field names, and structural retrieval-handoff status.
+   Ranking is described as ordering rather than confidence, and retrieval
+   eligibility never implies that a page was fetched, safe, correct, or
+   verified.
 4. **Recover from partial search:** a partial banner names the unavailable or
    empty sources and keeps successful results usable. An all-source failure
    explains that no result was available and offers a retry.

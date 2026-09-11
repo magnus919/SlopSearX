@@ -29,6 +29,7 @@ from slopsearx.payload import (
     payload_serialized_size,
     payload_to_dict,
 )
+from slopsearx.retrieval_url import RETRIEVAL_URL_STATUS_OK, classify_retrieval_url
 
 # ---------------------------------------------------------------------------
 # JSON Formatter — SearXNG-compatible
@@ -241,7 +242,7 @@ a { color: inherit; }
 .brand-mark span { transform: rotate(-45deg); }
 .theme-toggle { border: 1px solid var(--line); border-radius: 99px; color: var(--muted); background: transparent; cursor: pointer; padding: .6rem .85rem; font: 600 .7rem/1 "SFMono-Regular", Consolas, monospace; transition: border-color .2s, color .2s, background .2s; }
 .theme-toggle:hover, .theme-toggle:focus-visible { color: var(--ink); border-color: var(--accent); background: var(--paper-lift); }
-.theme-toggle:focus-visible, .search-input:focus-visible, .search-button:focus-visible, .result-link:focus-visible { outline: 3px solid var(--signal); outline-offset: 3px; }
+.theme-toggle:focus-visible, .search-input:focus-visible, .search-button:focus-visible, .result-link:focus-visible, .result-explanation summary:focus-visible, .explanation-link:focus-visible { outline: 3px solid var(--signal); outline-offset: 3px; }
 .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .16em; font: 700 .7rem/1.2 "SFMono-Regular", Consolas, monospace; }
 .hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(18rem, .8fr); gap: 5rem; align-items: end; padding: clamp(5rem, 12vw, 9rem) 0 5rem; }
 .hero h1 { max-width: 12ch; margin: .8rem 0 1.25rem; font: 500 clamp(3.3rem, 8vw, 7rem)/.9 Georgia, "Times New Roman", serif; letter-spacing: -.065em; }
@@ -287,6 +288,15 @@ a { color: inherit; }
 .result-actions { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1rem; padding-top: .8rem; border-top: 1px solid rgba(244,240,232,.08); }
 .result-action { color: var(--muted); text-decoration: none; font: 700 .62rem "SFMono-Regular", Consolas, monospace; letter-spacing: .06em; text-transform: uppercase; }
 .result-action:hover, .result-action:focus-visible { color: var(--accent-strong); }
+.result-explanation { margin-top: .9rem; border-top: 1px solid rgba(244,240,232,.08); color: var(--muted); font-size: .78rem; }
+.result-explanation summary { cursor: pointer; padding: .8rem 0 .15rem; color: var(--accent); font: 700 .64rem "SFMono-Regular", Consolas, monospace; letter-spacing: .06em; text-transform: uppercase; }
+.explanation-list { display: grid; gap: .55rem; margin: .7rem 0 .2rem; padding: 0; list-style: none; }
+.explanation-list strong { color: var(--ink); font-weight: 600; }
+.explanation-sources { display: inline-flex; flex-wrap: wrap; gap: .3rem; margin-left: .25rem; }
+.explanation-link { color: var(--signal); }
+.explanation-status { color: var(--quiet); }
+.explanation-status[data-status="available"], .explanation-status[data-status="eligible"] { color: var(--signal); }
+.explanation-status[data-status="unavailable"], .explanation-status[data-status="expired"], .explanation-status[data-status="ineligible"] { color: #e8b0a8; }
 .results-rail { display: grid; gap: .8rem; position: sticky; top: 1rem; }
 .rail-card { padding: 1rem; border: 1px solid var(--line); background: rgba(34,35,31,.58); }
 .rail-label { margin: 0 0 .8rem; color: var(--accent); font: 700 .63rem "SFMono-Regular", Consolas, monospace; letter-spacing: .12em; text-transform: uppercase; }
@@ -560,6 +570,96 @@ def _portal_source_counts(results: list[SearchResult]) -> list[tuple[str, int]]:
     return sorted(counts.items(), key=lambda item: (-item[1], item[0]))
 
 
+def _portal_ranking_explanation(strategy: str, tier: int) -> str:
+    """Describe ordering as ranking arithmetic, never confidence."""
+    if strategy == "tier_then_reciprocal_rank_fusion_k60":
+        method = "Reciprocal rank fusion (k=60) combines each source's result order"
+    else:
+        method = "Cross-source presence counts configured sources returning the same normalized URL"
+    return f"{method}, after configured tier {tier}. The score controls ordering; it is not confidence."
+
+
+def _portal_identifier(identifier: Any) -> str:
+    if not isinstance(identifier, dict):
+        return ""
+    return ", ".join(
+        f"{str(key).replace('_', ' ')}: {value}" for key, value in sorted(identifier.items()) if value is not None
+    )
+
+
+def _portal_result_explanation(result: SearchResult, index: int, state: dict[str, Any]) -> str:
+    """Render bounded provenance, identity, ranking, and handoff facts."""
+    engines = sorted(str(engine) for engine in (result.engines or {result.engine}) if engine)
+    source_labels = "".join(
+        f'<span class="result-pill">{html_lib.escape(_portal_engine_label(engine), quote=True)}</span>'
+        for engine in engines
+    )
+    strategy = str(_portal_state_value(state, "ranking_explanation", "tier_then_cross_engine_presence"))
+    ranking = html_lib.escape(_portal_ranking_explanation(strategy, int(result.tier or 2)), quote=True)
+
+    grouping_status = str(_portal_state_value(state, "grouping_status", "unavailable"))
+    groups = _portal_state_value(state, "result_groups", {})
+    group = groups.get(str(index)) if isinstance(groups, dict) else None
+    entity_markup: str
+    if isinstance(group, dict) and group.get("entity_id"):
+        namespace = html_lib.escape(str(group.get("namespace") or "entity"), quote=True)
+        identifier = html_lib.escape(_portal_identifier(group.get("identifier")), quote=True)
+        member_indices = [value for value in group.get("result_indices", []) if type(value) is int and value >= 0]
+        member_links = " ".join(
+            f'<a class="explanation-link" href="#result-{member + 1}">#{member + 1}</a>' for member in member_indices
+        )
+        conflicts = [str(field) for field in group.get("conflicting_fields", []) if str(field)]
+        conflict_markup = ""
+        if conflicts:
+            conflict_names = html_lib.escape(", ".join(sorted(conflicts)), quote=True)
+            conflict_markup = (
+                f"<li><strong>Source-reported conflicts:</strong> {conflict_names}. "
+                f"Inspect contributing results: {member_links}</li>"
+            )
+        entity_markup = (
+            f'<li><strong>Entity:</strong> <span class="explanation-status" data-status="available">'
+            f"{namespace} — {identifier}</span> · {len(member_indices)} result"
+            f"{'s' if len(member_indices) != 1 else ''} in this canonical response</li>{conflict_markup}"
+        )
+    elif isinstance(group, dict):
+        group_reason = html_lib.escape(str(group.get("reason") or "unsupported result metadata"), quote=True)
+        entity_markup = f"<li><strong>Entity grouping:</strong> unsupported for this result ({group_reason.replace('_', ' ')}).</li>"
+    else:
+        status = grouping_status if grouping_status in {"unavailable", "partial", "empty", "expired"} else "unavailable"
+        descriptions = {
+            "unavailable": "unavailable for this response",
+            "partial": "partial; no supported identity was available for this result",
+            "empty": "empty; no supported identities were found",
+            "expired": "expired with its source snapshot",
+        }
+        entity_markup = (
+            f'<li><strong>Entity grouping:</strong> <span class="explanation-status" data-status="{status}">'
+            f"{descriptions[status]}</span>.</li>"
+        )
+
+    url_status, retrieval_reason, _scheme, _url = classify_retrieval_url(result.url)
+    if url_status == RETRIEVAL_URL_STATUS_OK:
+        retrieval = (
+            '<span class="explanation-status" data-status="eligible">structurally eligible</span> for downstream '
+            "retrieval. The page has not been fetched or verified; a retriever must check the resolved destination."
+        )
+    else:
+        reason_text = html_lib.escape(str(retrieval_reason or url_status).replace("_", " "), quote=True)
+        retrieval = (
+            '<span class="explanation-status" data-status="ineligible">not eligible</span> for the technical '
+            f"handoff ({reason_text})."
+        )
+    return (
+        '<details class="result-explanation"><summary>Why this result appeared</summary>'
+        '<ul class="explanation-list">'
+        f'<li><strong>Contributors:</strong><span class="explanation-sources">{source_labels}</span> '
+        f"({len(engines)} configured source{'s' if len(engines) != 1 else ''})</li>"
+        f"<li><strong>Ranking:</strong> {ranking}</li>{entity_markup}"
+        f"<li><strong>Retrieval handoff:</strong> {retrieval}</li>"
+        "</ul></details>"
+    )
+
+
 def _portal_scope_panel(state: dict[str, Any] | None) -> str:
     """Render capability-aware scope and filter controls."""
     state = state or {}
@@ -718,13 +818,14 @@ def format_html(
             '<div class="result-actions"><a class="result-action" href="{}" target="_blank" rel="noopener noreferrer">'
             "Open result ↗</a></div>"
         ).format(url)
+        explanation = _portal_result_explanation(result, index, state)
         result_items.append(
-            f'<article class="result" data-result-card style="--i:{index}">'
+            f'<article class="result" id="result-{index + 1}" data-result-card style="--i:{index}">'
             f'<div class="result-kicker"><span class="result-source-line">{domain}</span>{path_markup}'
             f'<span class="result-pill type">{result_type}</span>{consensus}</div>'
             f'<h2><a class="result-link" href="{url}" target="_blank" rel="noopener noreferrer">{title}</a></h2>'
             f'<p class="result-content">{content}</p>'
-            f'{special}{media_markup}<div class="result-meta">{source_pills}{metadata}</div>{actions}'
+            f'{special}{media_markup}<div class="result-meta">{source_pills}{metadata}</div>{explanation}{actions}'
             "</article>"
         )
 

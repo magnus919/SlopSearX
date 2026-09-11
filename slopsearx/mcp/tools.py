@@ -76,48 +76,6 @@ from slopsearx.mcp.result_serialization import (
 from slopsearx.mcp.result_serialization import (
     _source_engines as _source_engines,
 )
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_DEPRECATED_SITE_LOCAL_V6 as RETRIEVAL_DEPRECATED_SITE_LOCAL_V6,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_PORT_MAX as RETRIEVAL_PORT_MAX,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_SIXTOFOUR_V6 as RETRIEVAL_SIXTOFOUR_V6,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_AMBIGUOUS as RETRIEVAL_URL_STATUS_AMBIGUOUS,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_MISSING as RETRIEVAL_URL_STATUS_MISSING,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_NON_HTTP as RETRIEVAL_URL_STATUS_NON_HTTP,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_OK as RETRIEVAL_URL_STATUS_OK,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_UNSAFE as RETRIEVAL_URL_STATUS_UNSAFE,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUSES as RETRIEVAL_URL_STATUSES,
-)
-from slopsearx.mcp.retrieval_url import (
-    UNSAFE_RETRIEVAL_SCHEMES as UNSAFE_RETRIEVAL_SCHEMES,
-)
-from slopsearx.mcp.retrieval_url import (
-    _ip_literal_candidates as _ip_literal_candidates,
-)
-from slopsearx.mcp.retrieval_url import (
-    _ipv4_component_value as _ipv4_component_value,
-)
-from slopsearx.mcp.retrieval_url import (
-    _retrieval_url as _retrieval_url,
-)
-from slopsearx.mcp.retrieval_url import (
-    _whatwg_ipv4_literal as _whatwg_ipv4_literal,
-)
 from slopsearx.mcp.state import McpState, current_tenant, get_state
 from slopsearx.ratelimit import ValkeySlidingWindow
 from slopsearx.research import (
@@ -131,6 +89,48 @@ from slopsearx.research import (
     summarize_coverage,
 )
 from slopsearx.research_budget import ResearchMutationError, budget_summary, initialize_budget
+from slopsearx.retrieval_url import (
+    RETRIEVAL_DEPRECATED_SITE_LOCAL_V6 as RETRIEVAL_DEPRECATED_SITE_LOCAL_V6,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_PORT_MAX as RETRIEVAL_PORT_MAX,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_SIXTOFOUR_V6 as RETRIEVAL_SIXTOFOUR_V6,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_AMBIGUOUS as RETRIEVAL_URL_STATUS_AMBIGUOUS,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_MISSING as RETRIEVAL_URL_STATUS_MISSING,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_NON_HTTP as RETRIEVAL_URL_STATUS_NON_HTTP,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_OK as RETRIEVAL_URL_STATUS_OK,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_UNSAFE as RETRIEVAL_URL_STATUS_UNSAFE,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUSES as RETRIEVAL_URL_STATUSES,
+)
+from slopsearx.retrieval_url import (
+    UNSAFE_RETRIEVAL_SCHEMES as UNSAFE_RETRIEVAL_SCHEMES,
+)
+from slopsearx.retrieval_url import (
+    _ip_literal_candidates as _ip_literal_candidates,
+)
+from slopsearx.retrieval_url import (
+    _ipv4_component_value as _ipv4_component_value,
+)
+from slopsearx.retrieval_url import (
+    _retrieval_url as _retrieval_url,
+)
+from slopsearx.retrieval_url import (
+    _whatwg_ipv4_literal as _whatwg_ipv4_literal,
+)
 from slopsearx.saved_models import SavedDefinition, generate_search_id
 from slopsearx.saved_store import RevisionConflictError
 from slopsearx.service import (
