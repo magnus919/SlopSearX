@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from slopsearx.adapter import SearchResult
+from slopsearx.artifacts import artifact_ref, lineage_edge, parse_artifact_ref
 from slopsearx.service import ScopeDecision, search_result_from_dict, search_result_to_dict
 
 SNAPSHOT_KEY_PREFIX = "mcp:snapshot"
@@ -57,6 +58,8 @@ class SearchSnapshot:
     created_at: float = field(default_factory=time.time)
     expires_at: float | None = None
     ranking_explanation: str = "tier_then_cross_engine_presence"
+    lineage: list[dict[str, Any]] = field(default_factory=list)
+    lineage_available: bool = True
 
 
 @dataclass
@@ -125,6 +128,7 @@ class SnapshotStore:
         scope: ScopeDecision,
         *,
         ranking_explanation: str = "tier_then_cross_engine_presence",
+        derived_from: list[dict[str, Any]] | None = None,
     ) -> str | None:
         """Capture a result set and return its opaque snapshot ID.
 
@@ -147,6 +151,14 @@ class SnapshotStore:
             "tenant": self._tenant,
             "created_at": created_at,
             "expires_at": created_at + self._ttl,
+            "lineage": [
+                lineage_edge(
+                    artifact_ref("snapshot", snapshot_id),
+                    "derived_from",
+                    parse_artifact_ref(parent),
+                )
+                for parent in (derived_from or [])
+            ],
         }
         # Store TTL exceeds the logical expires_at horizon (see
         # ``store_ttl_seconds``) so expired snapshots remain reachable on real
@@ -211,4 +223,6 @@ def _snapshot_from_payload(payload: dict[str, Any]) -> SearchSnapshot:
         created_at=created_at,
         expires_at=expires_at,
         ranking_explanation=str(payload.get("ranking_explanation", "tier_then_cross_engine_presence")),
+        lineage=[dict(item) for item in (payload.get("lineage") or []) if isinstance(item, dict)],
+        lineage_available="lineage" in payload,
     )

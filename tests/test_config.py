@@ -35,6 +35,7 @@ class TestConfigDataclass:
         config = Config()
         assert config.cache.ttl_seconds == 300
         assert config.ranking.strategy == "presence"
+        assert config.search.formats == ["html", "csv", "json", "rss"]
         assert config.default_engines == ["brave", "wikipedia"]
 
     def test_custom_config(self) -> None:
@@ -73,6 +74,7 @@ class TestLoadConfig:
                 "brave": {"timeout_ms": 2_000, "max_results": 5},
             },
             "cache": {"ttl_seconds": 600},
+            "search": {"formats": ["html", "json"]},
         }
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             yaml.dump(data, f)
@@ -86,6 +88,7 @@ class TestLoadConfig:
             # Should keep other defaults
             assert config.engines["brave"].base_url == "https://api.search.brave.com/res/v1/web/search"
             assert config.cache.ttl_seconds == 600
+            assert config.search.formats == ["html", "json"]
         finally:
             config_path.unlink()
 
@@ -142,15 +145,18 @@ class TestLoadConfig:
         os.environ["SEARCH_CACHE_TTL_SECONDS"] = "900"
         os.environ["SEARCH_LOG_LEVEL"] = "DEBUG"
         os.environ["SEARCH_DEFAULT_ENGINES"] = "wikipedia,brave"
+        os.environ["SEARCH_FORMATS"] = "html,json"
         try:
             config = load_config()
             assert config.cache.ttl_seconds == 900
             assert config.log_level == "DEBUG"
             assert config.default_engines == ["wikipedia", "brave"]
+            assert config.search.formats == ["html", "json"]
         finally:
             del os.environ["SEARCH_CACHE_TTL_SECONDS"]
             del os.environ["SEARCH_LOG_LEVEL"]
             del os.environ["SEARCH_DEFAULT_ENGINES"]
+            del os.environ["SEARCH_FORMATS"]
 
     def test_engine_api_key_from_env(self) -> None:
         """ENGINE_*_API_KEY env var should be picked up as api_key."""

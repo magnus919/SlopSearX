@@ -5,6 +5,14 @@ ranking:
   strategy: presence  # opt-in alternative: reciprocal_rank_fusion
 routing:
   enabled: true
+# Standard SearXNG response formats. YAML remains available as the
+# SlopSearX agent-native extension even when it is not listed here.
+search:
+  formats:
+    - html
+    - csv
+    - json
+    - rss
 
 # MCP server policy (see docs/MCP_SERVER.md for the full reference).
 # Specialist tools are disabled until granted here or via MCP_* env vars.

@@ -97,6 +97,7 @@ class TestOpenAlexAdapterSearch:
             result = await adapter.search("deep learning")
 
         assert result.results[0].url == "https://openalex.org/W456"
+        assert result.results[0].payload["data"]["openalex_id"] == "https://openalex.org/W456"
 
     async def test_search_empty_results(self, adapter):
         def _handler(r):

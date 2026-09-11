@@ -28,18 +28,15 @@ jobs:
       pull-requests: write
       issues: write
       actions: read
+      id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 1
 
-      # BYOK: install the repo's custom-model config on the runner so @droid
-      # runs use your own keys (see .github/droid-settings.json). `droid exec`
-      # reads $HOME/.factory/settings.json, and each apiKey references a
-      # secret-backed env var exported on the action step below.
-      # Secrets required: DEEPSEEK_API_KEY, NOUS_API_KEY, QWEN_API_KEY
-      # (Settings > Secrets and variables > Actions).
+      # Install the repo's LiteLLM model config. The API key is supplied by
+      # the GPUSLUT_API_KEY repository secret on the action step below.
       - name: Install Droid BYOK settings
         shell: bash
         run: |
@@ -50,13 +47,9 @@ jobs:
         uses: Factory-AI/droid-action@2041e7cc36d1390346bdaa6616e4bf7ac6b96b27
         with:
           factory_api_key: ${{ secrets.FACTORY_API_KEY }}
-          # BYOK model overrides covering every @droid flow (review, security,
-          # security-full, fill). Any provider model id from
-          # .github/droid-settings.json works here.
-          review_model: "deepseek-v4-flash"
-          security_model: "deepseek-v4-flash"
-          fill_model: "deepseek-v4-flash"
+          # Route every @droid flow through LiteLLM's general alias.
+          review_model: "general"
+          security_model: "general"
+          fill_model: "general"
         env:
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          NOUS_API_KEY: ${{ secrets.NOUS_API_KEY }}
-          QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
+          GPUSLUT_API_KEY: ${{ secrets.GPUSLUT_API_KEY }}
