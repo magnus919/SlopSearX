@@ -38,3 +38,18 @@ async def test_search_receipt_read_manifest_over_authenticated_transport(monkeyp
         assert read["total"] == 1
         manifest = _payload(await client.call_tool("slopsearx_export_research_manifest", {"result_ids": [identifier]}))
         assert manifest["items"][0]["receipts"][0]["receipt_id"] == submitted["receipt"]["receipt_id"]
+        graph = _payload(
+            await client.call_tool(
+                "slopsearx_get_artifact_lineage",
+                {"artifact": search["meta"]["artifact"], "direction": "incoming", "max_depth": 1},
+            )
+        )
+        assert graph["nodes"][0]["artifact"] == search["meta"]["artifact"]
+        selected = _payload(
+            await client.call_tool(
+                "slopsearx_export_research_manifest",
+                {"artifacts": [search["meta"]["artifact"]], "max_depth": 1, "max_nodes": 2},
+            )
+        )
+        assert selected["items"][0]["result_id"] == identifier
+        assert selected["lineage_cuts"][0]["root"] == search["meta"]["artifact"]

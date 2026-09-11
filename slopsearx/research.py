@@ -16,9 +16,12 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from time import monotonic
 from typing import Any, Callable
 
-from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, resolve_intent
+from slopsearx import metrics as m
+from slopsearx.artifacts import artifact_ref, composite_artifact_id
+from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, engine_policy_rejection, resolve_intent
 from slopsearx.filters import resolve_filter_enforcement
 from slopsearx.research_budget import finish_attempt, initialize_budget, reserve_attempt
 
@@ -342,6 +345,15 @@ class ResearchJobRunner:
                 continue
             if time.time() >= job.deadline:
                 break
+            workflow_error = self._workflow_dispatch_error(job)
+            if workflow_error:
+                query.state = "failed"
+                query.error = workflow_error
+                query.engine_coverage = [classify_coverage(engine=name, dispatched=False) for name in query.engines]
+                query.attempts.append(_attempt_from_query(query))
+                if not await store.save_if_owned(job):
+                    raise LeaseLostError(job.job_id)
+                continue
             if job.lease_token:
                 lease_token: str = job.lease_token
                 if not await store.renew(job.job_id, lease_token, self._lease_ttl):
@@ -401,6 +413,25 @@ class ResearchJobRunner:
             raise LeaseLostError(job.job_id)
         return job
 
+    def _workflow_dispatch_error(self, job: ResearchJob) -> str | None:
+        """Recheck workflow authority and cumulative budget before dispatch."""
+        if job.workflow.get("kind") != "dependency_dossier":
+            return None
+        for grant in ("dependency_dossier", "research", "security"):
+            if not self._policy.tool_enabled(grant):
+                return f"policy_rejected: {grant} grant revoked"
+        engines = [engine for query in job.queries for engine in query.engines]
+        if rejection := engine_policy_rejection(self._catalog, self._policy, engines):
+            return f"policy_rejected: {rejection['message']}"
+        budget = job.workflow.get("budget") or {}
+        used_calls = int(budget.get("used_adapter_calls", 0))
+        if used_calls >= int(budget.get("max_adapter_calls", len(job.queries))):
+            return "budget_exceeded: adapter call budget exhausted"
+        captured_results = int(budget.get("captured_results", 0))
+        if captured_results >= int(budget.get("max_results", self._policy.job_max_results)):
+            return "budget_exceeded: result budget exhausted"
+        return None
+
     async def _raise_if_live_owned(self, job: ResearchJob) -> None:
         """Raise :class:`JobStillRunningError` if ``job`` is live-lease-owned.
 
@@ -432,6 +463,8 @@ class ResearchJobRunner:
         if claimed is None:
             raise JobStillRunningError(job.job_id)
         token = claimed.lease_token
+        started_running = claimed.state == "running"
+        started = monotonic()
         try:
             if not execute or claimed.state in ("cancelled", "expired") or claimed.caller_completed:
                 result = claimed
@@ -439,6 +472,12 @@ class ResearchJobRunner:
                 result = await self.run_pending(claimed)
             if not await store.clear_ownership(result):
                 raise LeaseLostError(job.job_id)
+            workflow: m.WorkflowKind = (
+                "dependency_dossier" if result.workflow.get("kind") == "dependency_dossier" else "research"
+            )
+            if started_running and result.state in m.WORKFLOW_OUTCOMES:
+                m.transition_workflow(workflow, "running", result.state)
+                m.record_workflow_terminal(workflow, result.state, monotonic() - started)
             return result
         finally:
             await store.release(job.job_id, token)
@@ -580,8 +619,19 @@ class ResearchJobRunner:
 
     async def _execute_claimed(self, job: ResearchJob) -> None:
         """Execute a claimed job and always release its lease afterwards."""
+        started = monotonic()
         try:
-            await self.run_pending(job)
+            result = await self.run_pending(job)
+            workflow: m.WorkflowKind = (
+                "dependency_dossier" if result.workflow.get("kind") == "dependency_dossier" else "research"
+            )
+            if result.state in m.WORKFLOW_OUTCOMES:
+                m.transition_workflow(workflow, "running", result.state)
+                m.record_workflow_terminal(workflow, result.state, monotonic() - started)
+            if workflow == "dependency_dossier":
+                m.workflow_admitted_results.observe(
+                    {"workflow": workflow}, float(result.workflow.get("budget", {}).get("captured_results", 0))
+                )
         except LeaseLostError:
             logger.warning("ResearchJobRunner: lost lease for job %s; abandoning execution", job.job_id)
         finally:
@@ -627,6 +677,20 @@ class ResearchJobRunner:
             if not await store.save_if_owned(job):
                 raise LeaseLostError(job.job_id)
             return
+        if job.workflow.get("kind") == "dependency_dossier":
+            budget = job.workflow.setdefault("budget", {})
+            used_calls = int(budget.get("used_adapter_calls", 0))
+            call_cost = len(query.engines)
+            if used_calls + call_cost > int(budget.get("max_adapter_calls", len(job.queries))):
+                query.state = "failed"
+                query.error = "budget_exceeded: adapter call budget exhausted"
+                if not await store.save_if_owned(job):
+                    raise LeaseLostError(job.job_id)
+                return
+            # Persist the charge before dispatch. If the worker dies after the
+            # upstream call, recovery retains this uncertain charge instead of
+            # silently spending it again.
+            budget["used_adapter_calls"] = used_calls + call_cost
         if not await store.save_if_owned(job):
             raise LeaseLostError(job.job_id)
         request = SearchRequest(
@@ -652,6 +716,15 @@ class ResearchJobRunner:
                 raise LeaseLostError(job.job_id)
             return
 
+        if job.workflow.get("kind") == "dependency_dossier":
+            budget = job.workflow.setdefault("budget", {})
+            already_captured = int(budget.get("captured_results", 0))
+            remaining = max(0, int(budget.get("max_results", self._policy.job_max_results)) - already_captured)
+            admitted = min(len(response.results), remaining)
+            budget["captured_results"] = already_captured + admitted
+            admitted_results = budget.setdefault("admitted_results", {})
+            admitted_results[str(query.index)] = admitted
+
         query.query_id = response.query_id
         query.result_count = len(response.results)
         query.cursor = await snapshots.create(
@@ -660,6 +733,12 @@ class ResearchJobRunner:
             response.results,
             response.scope,
             ranking_explanation=response.ranking_explanation,
+            derived_from=[
+                artifact_ref(
+                    "research_attempt",
+                    composite_artifact_id(job.job_id, query.attempts[-1].attempt_id),
+                )
+            ],
         )
         # Persist per-engine coverage and the disjoint bucket summary.
         query.engine_coverage = self._build_query_coverage(query, response)

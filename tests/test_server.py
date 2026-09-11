@@ -190,15 +190,18 @@ class TestSearchEndpoint:
         assert response.json()["query"] == "route compatibility"
 
     @pytest.mark.parametrize("saved_grant", ["0", "1"])
+    @pytest.mark.parametrize("event_grant", ["0", "1"])
     @pytest.mark.parametrize("receipt_grant", ["0", "1"])
     def test_additive_mcp_grants_do_not_change_searxng_json(
         self,
         client: TestClient,
         monkeypatch,
         saved_grant: str,
+        event_grant: str,
         receipt_grant: str,
     ) -> None:
         monkeypatch.setenv("MCP_GRANT_SAVED_SEARCHES", saved_grant)
+        monkeypatch.setenv("MCP_GRANT_SAVED_SEARCH_EVENTS", event_grant)
         monkeypatch.setenv("MCP_GRANT_RETRIEVAL_RECEIPTS", receipt_grant)
         response = client.get("/search", params={"q": "compatibility", "format": "json"})
         assert response.status_code == 200
@@ -388,7 +391,12 @@ class TestSearchEndpoint:
         assert 'value="general"' in response.text
         assert "Past month" in response.text
         assert "← Previous" in response.text
-        assert "Next →" in response.text
+        assert "Try next page →" in response.text
+        assert "Why this result appeared" in response.text
+        assert "Cross-source presence" in response.text
+        assert "it is not confidence" in response.text
+        assert "unsupported for this result" in response.text
+        assert "structurally eligible" in response.text
 
     def test_strict_safesearch_is_rejected_before_dispatch(self, client: TestClient) -> None:
         response = client.get("/search", params={"q": "test", "safesearch": 2, "format": "json"})

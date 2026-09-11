@@ -187,7 +187,7 @@ slopsearx-mcp --remote http://<slopsearx-host>:8000/mcp --oauth
 MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.com slopsearx-mcp
 ```
 
-- 26 tools: `slopsearx_search`, `slopsearx_search_targeted`,
+- 35 tools: `slopsearx_search`, `slopsearx_search_targeted`,
   `slopsearx_search_jobs`, `slopsearx_search_security`,
   `slopsearx_search_science`, `slopsearx_list_capabilities`,
   `slopsearx_explain_search_scope`, `slopsearx_get_service_status`,
@@ -198,14 +198,27 @@ MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.
   `slopsearx_create_saved_search`, `slopsearx_get_saved_search`,
   `slopsearx_update_saved_search`, `slopsearx_pause_saved_search`,
   `slopsearx_delete_saved_search`, `slopsearx_read_saved_search_reports`,
+  `slopsearx_read_saved_search_events`, `slopsearx_ack_saved_search_events`,
   `slopsearx_submit_retrieval_receipt`,
-  `slopsearx_read_retrieval_receipts`, `slopsearx_export_research_manifest`
+  `slopsearx_read_retrieval_receipts`, `slopsearx_export_research_manifest`,
+  `slopsearx_preview_staged_search`, `slopsearx_search_staged`,
+  `slopsearx_get_staged_search`, `slopsearx_retry_staged_search`,
+  `slopsearx_start_dependency_dossier`, `slopsearx_get_dependency_dossier`,
+  `slopsearx_get_artifact_lineage`
 - Resources: `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`
-- Specialist tools (jobs, security, science, research, saved searches, retrieval receipts) are disabled until
+- Artifact references and bounded workflow lineage are documented in
+  [`docs/ARTIFACT_LINEAGE.md`](docs/ARTIFACT_LINEAGE.md).
+- Supported artifact-to-workflow transitions, source lifecycle errors, and
+  conflict rules are documented in
+  [`docs/WORKFLOW_COMPOSITION.md`](docs/WORKFLOW_COMPOSITION.md).
+- Specialist tools (jobs, security, science, research, saved searches and events, retrieval receipts,
+  staged search, dependency dossiers) are disabled until
   the operator grants them (`MCP_GRANT_JOBS=1`, `MCP_GRANT_SECURITY=1`,
   `MCP_GRANT_SCIENCE=1`, `MCP_GRANT_RESEARCH=1`,
-  `MCP_GRANT_SAVED_SEARCHES=1`, `MCP_GRANT_RETRIEVAL_RECEIPTS=1`).
+  `MCP_GRANT_SAVED_SEARCHES=1`, `MCP_GRANT_RETRIEVAL_RECEIPTS=1`,
+  `MCP_GRANT_SAVED_SEARCH_EVENTS=1`,
+  `MCP_GRANT_STAGED_SEARCH=1`, `MCP_GRANT_DEPENDENCY_DOSSIER=1`).
 - Sensitive engines (`hibp`, `dehashed`) are unreachable from generic
   routing, categories, and intent profiles, and are rejected by **every**
   explicit-engine search path (generic explicit engines, targeted, jobs,
@@ -285,12 +298,12 @@ selection of a sensitive engine (currently `hibp` and `dehashed` by default)
 also requires `MCP_TARGETED_SENSITIVE_ALLOWED=true`; the same operator policy
 is applied before either the browser or MCP surface dispatches a search.
 
-For a public deployment, put the service behind the operator's TLS and
-authentication reverse proxy. SlopSearX does not provide browser accounts,
-trust arbitrary forwarded headers, or send engine credentials to the browser.
-The portal has no analytics or third-party runtime assets by default. Search
-forms are read-only requests; there is no authenticated browser mutation that
-needs a CSRF token in this release.
+Public search remains account-free. Operators can separately enable the OIDC
+and Valkey-backed `/workflows` supervisor console for tenant-scoped workflow
+inspection and explicitly granted actions. The workflow routes are disabled by
+default and do not change `/`, `/search`, or MCP contracts. See
+[`docs/WORKFLOW_PORTAL.md`](docs/WORKFLOW_PORTAL.md) for its direct HTTPS
+deployment, identity, two-gate authorization, and rollback requirements.
 
 See [`docs/PORTAL_DEPLOYMENT.md`](docs/PORTAL_DEPLOYMENT.md) for the browser
 URL map, proxy/access modes, digest-pinned deployment, smoke check, rollback,

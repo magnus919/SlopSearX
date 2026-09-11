@@ -36,13 +36,14 @@ from slopsearx.capabilities import (
 )
 from slopsearx.config import Config, load_config
 from slopsearx.mcp import prompts as _prompts
-from slopsearx.mcp import receipt_tools as _receipt_tools
 from slopsearx.mcp import resources as _resources
+from slopsearx.mcp import staged_tools as _staged_tools
 from slopsearx.mcp import tools as _tools
 from slopsearx.mcp.gateway import create_gateway
 from slopsearx.mcp.oauth import oauth_settings_from_policy
 from slopsearx.mcp.security import make_http_app
 from slopsearx.mcp.state import McpState, set_state
+from slopsearx.mcp.tool_registry import TOOL_DEFINITIONS
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
 from slopsearx.retrieval_receipts import ReceiptStore
 from slopsearx.routing import load_routing_budget
@@ -50,6 +51,7 @@ from slopsearx.saved_runner import SavedSearchRunner
 from slopsearx.saved_store import SavedSearchStore
 from slopsearx.service import AppContext, SearchService, build_context, destroy_context
 from slopsearx.snapshot import SnapshotStore
+from slopsearx.staged import StagedSearchRunner, StagedSearchStore
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +73,12 @@ How to search correctly:
   of the thing you searched for.
 - Pagination: use the cursor from a search with slopsearx_read_results;
   pages come from a captured snapshot and never re-run the query.
-- Specialist tools (jobs, security, science, research, retrieval receipts) are disabled until
+- Specialist tools (jobs, security, science, research, saved searches,
+  retrieval receipts, staged search, dependency dossiers) are disabled until
   the operator grants them (MCP_GRANT_JOBS / MCP_GRANT_SECURITY /
-  MCP_GRANT_SCIENCE / MCP_GRANT_RESEARCH / MCP_GRANT_RETRIEVAL_RECEIPTS).
+  MCP_GRANT_SCIENCE / MCP_GRANT_RESEARCH / MCP_GRANT_SAVED_SEARCHES /
+  MCP_GRANT_RETRIEVAL_RECEIPTS / MCP_GRANT_STAGED_SEARCH /
+  MCP_GRANT_DEPENDENCY_DOSSIER).
 - Capabilities, routing profiles, and health are available as resources
   (slopsearx://capabilities, slopsearx://routing-profiles,
   slopsearx://health/summary) — read them instead of guessing engine names.
@@ -156,7 +161,14 @@ async def _lifespan(
         poll_interval=policy.job_poll_interval_seconds,
         max_concurrent_jobs=policy.job_max_concurrent_jobs,
     )
-    saved_store = SavedSearchStore(ctx.cache)
+    staged_store = StagedSearchStore(ctx.cache)
+    staged_runner = StagedSearchRunner(service, staged_store, snapshots, _staged_tools._policy_check)
+    saved_store = SavedSearchStore(
+        ctx.cache,
+        event_capacity=policy.saved_event_capacity,
+        event_retention_seconds=policy.saved_event_retention_seconds,
+        event_consumers=policy.saved_event_max_consumers,
+    )
     saved_runner = SavedSearchRunner(
         service,
         saved_store,
@@ -172,6 +184,8 @@ async def _lifespan(
         snapshots=snapshots,
         job_store=job_store,
         runner=runner,
+        staged_store=staged_store,
+        staged_runner=staged_runner,
         version=_package_version(),
         receipt_store=receipt_store,
         saved_store=saved_store,
@@ -181,11 +195,13 @@ async def _lifespan(
     _tools.bind_saved_search_policy(state)
     _tools.bind_research_policy(state)
     runner_task = asyncio.create_task(runner.run_forever())
+    staged_runner_task = asyncio.create_task(staged_runner.run_forever())
     saved_runner_task = asyncio.create_task(saved_runner.run_forever())
     try:
         yield state
     finally:
         runner_task.cancel()
+        staged_runner_task.cancel()
         saved_runner_task.cancel()
         try:
             await runner_task
@@ -193,6 +209,10 @@ async def _lifespan(
             pass
         try:
             await saved_runner_task
+        except asyncio.CancelledError:
+            pass
+        try:
+            await staged_runner_task
         except asyncio.CancelledError:
             pass
         set_state(None)
@@ -264,32 +284,8 @@ def create_server(
     )
 
     # --- tools ---------------------------------------------------------
-    mcp.tool()(_instrumented(_tools.slopsearx_search))
-    mcp.tool()(_instrumented(_tools.slopsearx_search_targeted))
-    mcp.tool()(_instrumented(_tools.slopsearx_search_jobs))
-    mcp.tool()(_instrumented(_tools.slopsearx_search_security))
-    mcp.tool()(_instrumented(_tools.slopsearx_search_science))
-    mcp.tool()(_instrumented(_tools.slopsearx_list_capabilities))
-    mcp.tool()(_instrumented(_tools.slopsearx_explain_search_scope))
-    mcp.tool()(_instrumented(_tools.slopsearx_get_service_status))
-    mcp.tool()(_instrumented(_tools.slopsearx_read_results))
-    mcp.tool()(_instrumented(_tools.slopsearx_read_result))
-    mcp.tool()(_instrumented(_tools.slopsearx_read_entities))
-    mcp.tool()(_instrumented(_tools.slopsearx_start_research))
-    mcp.tool()(_instrumented(_tools.slopsearx_get_job))
-    mcp.tool()(_instrumented(_tools.slopsearx_cancel_job))
-    mcp.tool()(_instrumented(_tools.slopsearx_retry_research))
-    mcp.tool()(_instrumented(_tools.slopsearx_extend_research))
-    mcp.tool()(_instrumented(_tools.slopsearx_update_research))
-    mcp.tool()(_instrumented(_tools.slopsearx_create_saved_search))
-    mcp.tool()(_instrumented(_tools.slopsearx_get_saved_search))
-    mcp.tool()(_instrumented(_tools.slopsearx_update_saved_search))
-    mcp.tool()(_instrumented(_tools.slopsearx_pause_saved_search))
-    mcp.tool()(_instrumented(_tools.slopsearx_delete_saved_search))
-    mcp.tool()(_instrumented(_tools.slopsearx_read_saved_search_reports))
-    mcp.tool()(_instrumented(_receipt_tools.slopsearx_submit_retrieval_receipt))
-    mcp.tool()(_instrumented(_receipt_tools.slopsearx_read_retrieval_receipts))
-    mcp.tool()(_instrumented(_receipt_tools.slopsearx_export_research_manifest))
+    for definition in TOOL_DEFINITIONS:
+        mcp.tool()(_instrumented(definition.callable))
 
     # --- resources ------------------------------------------------------
     mcp.resource(

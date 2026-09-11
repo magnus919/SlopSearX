@@ -117,7 +117,42 @@ def test_result_fields_are_required_but_slopsearx_extensions_are_allowed(client:
     assert result["parsed_url"] == CONTRACT["config"]["parsed_url"]
     assert "meta" in data
     assert "tier" in result
+    assert "artifact" not in data["meta"]
+    assert "artifact" not in result
+    assert "source" not in data and "lineage" not in data
+    assert "source" not in result and "lineage" not in result
 
     yaml_response = client.get("/search", params={"q": "contract", "format": "yaml"})
     assert yaml_response.status_code == 200
     assert yaml_response.headers["content-type"].startswith("text/vnd.yaml+markdown")
+
+
+def test_dependency_dossier_grant_does_not_change_http_search(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    params = {"q": "contract", "format": "json"}
+    monkeypatch.delenv("MCP_GRANT_DEPENDENCY_DOSSIER", raising=False)
+    disabled = client.get("/search", params=params)
+    monkeypatch.setenv("MCP_GRANT_DEPENDENCY_DOSSIER", "1")
+    enabled = client.get("/search", params=params)
+
+    assert disabled.status_code == enabled.status_code == 200
+    disabled_data = disabled.json()
+    enabled_data = enabled.json()
+    disabled_data["meta"].pop("query_id")
+    enabled_data["meta"].pop("query_id")
+    disabled_data["meta"].pop("response_time_ms")
+    enabled_data["meta"].pop("response_time_ms")
+    assert disabled_data == enabled_data
+
+
+def test_saved_event_grant_does_not_change_http_search(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    params = {"q": "contract", "format": "json"}
+    monkeypatch.delenv("MCP_GRANT_SAVED_SEARCH_EVENTS", raising=False)
+    disabled = client.get("/search", params=params).json()
+    monkeypatch.setenv("MCP_GRANT_SAVED_SEARCH_EVENTS", "1")
+    enabled = client.get("/search", params=params).json()
+    for data in (disabled, enabled):
+        data["meta"].pop("query_id")
+        data["meta"].pop("response_time_ms")
+    assert disabled == enabled

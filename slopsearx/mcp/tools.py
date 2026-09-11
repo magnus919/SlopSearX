@@ -17,8 +17,10 @@ from typing import Any
 
 from pydantic import StrictInt
 
+from slopsearx import metrics as m
 from slopsearx.adapter import OBSERVED_STATUS_VOCAB, SUPPORTED_MEDIA_TYPES
-from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, resolve_intent
+from slopsearx.artifacts import artifact_ref, composite_artifact_id, lineage_edge
+from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, engine_policy_rejection, resolve_intent
 from slopsearx.filters import (
     DateFilterError,
     enforcement_entry,
@@ -26,7 +28,13 @@ from slopsearx.filters import (
     publication_date_bounds,
     resolve_filter_enforcement,
 )
-from slopsearx.mcp.entity_projection import ENTITY_CONTRACT, ENTITY_VERSION, entity_groups
+from slopsearx.mcp.composition import ResolvedSource, resolve_source
+from slopsearx.mcp.entity_projection import (
+    ENTITY_CONTRACT,
+    ENTITY_VERSION,
+    ENTITY_VERSIONS,
+    entity_projection,
+)
 from slopsearx.mcp.result_serialization import (
     CONTENT_UNAVAILABLE_NOTE as CONTENT_UNAVAILABLE_NOTE,
 )
@@ -74,48 +82,6 @@ from slopsearx.mcp.result_serialization import (
 from slopsearx.mcp.result_serialization import (
     _source_engines as _source_engines,
 )
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_DEPRECATED_SITE_LOCAL_V6 as RETRIEVAL_DEPRECATED_SITE_LOCAL_V6,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_PORT_MAX as RETRIEVAL_PORT_MAX,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_SIXTOFOUR_V6 as RETRIEVAL_SIXTOFOUR_V6,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_AMBIGUOUS as RETRIEVAL_URL_STATUS_AMBIGUOUS,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_MISSING as RETRIEVAL_URL_STATUS_MISSING,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_NON_HTTP as RETRIEVAL_URL_STATUS_NON_HTTP,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_OK as RETRIEVAL_URL_STATUS_OK,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUS_UNSAFE as RETRIEVAL_URL_STATUS_UNSAFE,
-)
-from slopsearx.mcp.retrieval_url import (
-    RETRIEVAL_URL_STATUSES as RETRIEVAL_URL_STATUSES,
-)
-from slopsearx.mcp.retrieval_url import (
-    UNSAFE_RETRIEVAL_SCHEMES as UNSAFE_RETRIEVAL_SCHEMES,
-)
-from slopsearx.mcp.retrieval_url import (
-    _ip_literal_candidates as _ip_literal_candidates,
-)
-from slopsearx.mcp.retrieval_url import (
-    _ipv4_component_value as _ipv4_component_value,
-)
-from slopsearx.mcp.retrieval_url import (
-    _retrieval_url as _retrieval_url,
-)
-from slopsearx.mcp.retrieval_url import (
-    _whatwg_ipv4_literal as _whatwg_ipv4_literal,
-)
 from slopsearx.mcp.state import McpState, current_tenant, get_state
 from slopsearx.ratelimit import ValkeySlidingWindow
 from slopsearx.research import (
@@ -129,8 +95,51 @@ from slopsearx.research import (
     summarize_coverage,
 )
 from slopsearx.research_budget import ResearchMutationError, budget_summary, initialize_budget
+from slopsearx.retrieval_url import (
+    RETRIEVAL_DEPRECATED_SITE_LOCAL_V6 as RETRIEVAL_DEPRECATED_SITE_LOCAL_V6,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_PORT_MAX as RETRIEVAL_PORT_MAX,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_SIXTOFOUR_V6 as RETRIEVAL_SIXTOFOUR_V6,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_AMBIGUOUS as RETRIEVAL_URL_STATUS_AMBIGUOUS,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_MISSING as RETRIEVAL_URL_STATUS_MISSING,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_NON_HTTP as RETRIEVAL_URL_STATUS_NON_HTTP,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_OK as RETRIEVAL_URL_STATUS_OK,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUS_UNSAFE as RETRIEVAL_URL_STATUS_UNSAFE,
+)
+from slopsearx.retrieval_url import (
+    RETRIEVAL_URL_STATUSES as RETRIEVAL_URL_STATUSES,
+)
+from slopsearx.retrieval_url import (
+    UNSAFE_RETRIEVAL_SCHEMES as UNSAFE_RETRIEVAL_SCHEMES,
+)
+from slopsearx.retrieval_url import (
+    _ip_literal_candidates as _ip_literal_candidates,
+)
+from slopsearx.retrieval_url import (
+    _ipv4_component_value as _ipv4_component_value,
+)
+from slopsearx.retrieval_url import (
+    _retrieval_url as _retrieval_url,
+)
+from slopsearx.retrieval_url import (
+    _whatwg_ipv4_literal as _whatwg_ipv4_literal,
+)
+from slopsearx.saved_events import definition_event, public_event
 from slopsearx.saved_models import SavedDefinition, generate_search_id
-from slopsearx.saved_store import RevisionConflictError
+from slopsearx.saved_store import OutboxCapacityError, RevisionConflictError
 from slopsearx.service import (
     QueryValidationError,
     RateLimitExceededError,
@@ -162,6 +171,7 @@ GRANT_ENV = {
     "security": "MCP_GRANT_SECURITY",
     "science": "MCP_GRANT_SCIENCE",
     "saved_searches": "MCP_GRANT_SAVED_SEARCHES",
+    "saved_search_events": "MCP_GRANT_SAVED_SEARCH_EVENTS",
 }
 INTENT_GRANTS: dict[str, str] = {
     "jobs": "jobs",
@@ -295,19 +305,12 @@ def _enforce_policy(
     whole request is rejected, naming the sensitive engines in the
     structured ``error.engines`` field.
     """
-    error = _validate_engines(state, engines)
-    if error:
-        return error
-    sensitive = [name for name in engines if name in state.policy.sensitive_engines]
-    if sensitive and not state.policy.targeted_sensitive_allowed:
-        return _error(
-            "tool_disabled",
-            "sensitive engines are unreachable without the sensitive-engine grant "
-            f"({SENSITIVE_GRANT}=1): {', '.join(sorted(sensitive))}",
-            field=field,
-            engines=sensitive,
-            grant=SENSITIVE_GRANT,
-        )
+    rejection = engine_policy_rejection(state.catalog, state.policy, engines)
+    if rejection:
+        details = dict(rejection)
+        code = str(details.pop("code"))
+        message = str(details.pop("message"))
+        return _error(code, message, field=field, **details)
     return None
 
 
@@ -588,6 +591,7 @@ def _envelope(
             "deadline_exceeded": response.deadline_exceeded,
             "ranking": response.ranking_explanation,
             "cursor": cursor,
+            "artifact": artifact_ref("snapshot", cursor) if cursor else None,
             "suggestions": response.suggestions if include_suggestions else [],
             "total": total,
             "has_more": total > len(response.results),
@@ -1417,6 +1421,15 @@ def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str,
                 else "Valkey unavailable — research jobs are not executed (no shared job store)"
             ),
         },
+        "workflow_health": m.workflow_health_summary(
+            availability={
+                "research": state.job_store.available,
+                "dependency_dossier": state.job_store.available,
+                "staged_search": state.staged_store is not None and state.staged_store.available,
+                "saved_search": state.saved_store is not None and state.saved_store.available,
+                "retrieval_receipt": state.receipt_store is not None and state.receipt_store.available,
+            }
+        ),
         "policy_bounds": {
             "max_query_length": state.policy.max_query_length,
             "max_results": state.policy.max_results,
@@ -1492,6 +1505,7 @@ async def slopsearx_read_results(
     return {
         "query": snapshot.query,
         "cursor": cursor,
+        "artifact": artifact_ref("snapshot", cursor),
         "page": page,
         "results": [
             _result_to_dict(result, result_id=state.snapshots.result_id(cursor, start + index))
@@ -1510,8 +1524,9 @@ async def slopsearx_read_entities(
     cursor: str,
     page: int = 1,
     max_results: int | None = None,
+    version: StrictInt = ENTITY_VERSION,
 ) -> dict[str, Any]:
-    """Read explicit CVE and npm/PyPI release groups from a captured snapshot.
+    """Read versioned explicit-identifier groups from a captured snapshot.
 
     max_results counts entities, not members; groups contain original result IDs
     for slopsearx_read_result. Unknown identities stay separate. This read-only
@@ -1522,6 +1537,8 @@ async def slopsearx_read_entities(
         return _error("invalid_input", "cursor is required", field="cursor")
     if page < 1:
         return _error("invalid_input", "page must be >= 1", field="page")
+    if type(version) is not int or version not in ENTITY_VERSIONS:
+        return _error("invalid_input", f"version must be one of {ENTITY_VERSIONS}", field="version")
     page_size = _bounded_max_results(state, max_results)
     lookup = await state.snapshots.for_tenant(current_tenant()).read(cursor)
     if lookup.unavailable:
@@ -1537,15 +1554,28 @@ async def slopsearx_read_entities(
     if lookup.snapshot is None:
         return _error("invalid_cursor", "unknown cursor", field="cursor")
     snapshot = lookup.snapshot
-    groups = entity_groups(snapshot)
+    groups, relationships = entity_projection(snapshot, version)
     start = (page - 1) * page_size
-    return {
+    response = {
         "contract": ENTITY_CONTRACT,
-        "version": ENTITY_VERSION,
+        "version": version,
         "cursor": cursor,
         "query": snapshot.query,
         "page": page,
-        "entities": groups[start : start + page_size],
+        "entities": [
+            {
+                **group,
+                "artifact": (
+                    artifact_ref(
+                        "entity_group",
+                        composite_artifact_id(cursor, str(group["entity_id"])),
+                    )
+                    if group["entity_id"]
+                    else None
+                ),
+            }
+            for group in groups[start : start + page_size]
+        ],
         "meta": {
             "total_entities": len(groups),
             "total_results": len(snapshot.results),
@@ -1555,6 +1585,9 @@ async def slopsearx_read_entities(
             "note": "Entity identity is source-reported, not independent corroboration or verification.",
         },
     }
+    if version > ENTITY_VERSION:
+        response["relationships"] = relationships
+    return response
 
 
 async def slopsearx_read_result(result_id: str) -> dict[str, Any]:
@@ -1599,6 +1632,35 @@ async def slopsearx_read_result(result_id: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Research jobs
 # ---------------------------------------------------------------------------
+
+
+def _research_workflow_policy_error(state: McpState, job: ResearchJob) -> dict[str, Any] | None:
+    """Recheck additive workflow grants and captured scope before disclosure."""
+    if job.workflow.get("kind") != "dependency_dossier":
+        return None
+    for grant, env_name in (
+        ("dependency_dossier", "MCP_GRANT_DEPENDENCY_DOSSIER"),
+        ("research", "MCP_GRANT_RESEARCH"),
+        ("security", "MCP_GRANT_SECURITY"),
+    ):
+        if not state.policy.tool_enabled(grant):
+            return _error("tool_disabled", f"dependency dossier requires {env_name}", grant=env_name)
+    rejection = _enforce_policy(state, [engine for query in job.queries for engine in query.engines])
+    if rejection:
+        rejection["error"]["code"] = "policy_rejected"
+    return rejection
+
+
+def _research_workflow_budget_error(job: ResearchJob) -> dict[str, Any] | None:
+    """Refuse workflow retries after their cumulative execution budget."""
+    if job.workflow.get("kind") != "dependency_dossier":
+        return None
+    budget = job.workflow.get("budget") or {}
+    if int(budget.get("used_adapter_calls", 0)) >= int(budget.get("max_adapter_calls", len(job.queries))):
+        return _error("budget_exceeded", "dependency dossier adapter call budget is exhausted")
+    if int(budget.get("captured_results", 0)) >= int(budget.get("max_results", 0)):
+        return _error("budget_exceeded", "dependency dossier result budget is exhausted")
+    return None
 
 
 def _research_dispatch_error(state: McpState, query: ResearchQuery) -> str | None:
@@ -1703,10 +1765,12 @@ async def slopsearx_start_research(
     max_attempts: StrictInt | None = None,
     max_engine_attempts: StrictInt | None = None,
     max_results: StrictInt | None = None,
+    source: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Start an asynchronous multi-query research job.
 
-    Strategies: triangulate (same question across independent sources),
+    An optional artifact source contributes retained evidence and lineage but
+    never execution policy. Strategies: triangulate (same question across independent sources),
     broad (several source families), fresh (recent material),
     counterevidence (limits, criticism, counterexamples). Returns a job
     handle immediately; poll slopsearx_get_job for progress.
@@ -1734,9 +1798,41 @@ async def slopsearx_start_research(
             valid_alternatives=list(VALID_STRATEGIES),
         )
 
+    resolved_source: ResolvedSource | None = None
+    composition_digest: str | None = None
+    if source is not None:
+        resolved = await resolve_source(source, "research")
+        if isinstance(resolved, dict):
+            return resolved
+        resolved_source = resolved
+        if not store.available:
+            return _error("store_unavailable", "composed research requires connected Valkey")
+        composition_digest = hashlib.sha256(
+            json.dumps(
+                {
+                    "source": resolved.artifact,
+                    "question": question,
+                    "strategy": strategy,
+                    "max_queries": max_queries,
+                    "max_engines_per_query": max_engines_per_query,
+                    "deadline": deadline,
+                    "initial_plan": initial_plan,
+                    "subquestions": subquestions,
+                    "max_attempts": max_attempts,
+                    "max_engine_attempts": max_engine_attempts,
+                    "max_results": max_results,
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+        ).hexdigest()
+
     if idempotency_key:
         existing = await store.find_by_idempotency(idempotency_key)
         if existing is not None:
+            existing_digest = (existing.workflow.get("composition") or {}).get("request_digest")
+            if (source is not None or existing_digest is not None) and existing_digest != composition_digest:
+                return _error("idempotency_conflict", "idempotency key refers to a different composed request")
             result = _job_summary(existing)
             result["note"] = "returned existing job for idempotency_key"
             return result
@@ -1811,8 +1907,9 @@ async def slopsearx_start_research(
     if not queries:
         return _error("invalid_input", "; ".join(warnings) or "no queries could be planned", field="strategy")
 
+    job_id = generate_job_id()
     job = ResearchJob(
-        job_id=generate_job_id(),
+        job_id=job_id,
         question=question.strip(),
         strategy=strategy,
         queries=queries,
@@ -1823,8 +1920,28 @@ async def slopsearx_start_research(
         subquestions=declared,
         budget_limits=limits,
         budget_used={"attempts": 0, "engine_attempts": 0, "results": 0},
+        workflow=(
+            {
+                "composition": {
+                    "source": resolved_source.stored(),
+                    "request_digest": composition_digest,
+                },
+                "lineage": [
+                    lineage_edge(
+                        artifact_ref("research_job", job_id),
+                        "derived_from",
+                        resolved_source.artifact,
+                    )
+                ],
+            }
+            if resolved_source is not None
+            else {}
+        ),
     )
     await store.save(job)
+    if store.available:
+        m.record_workflow_accepted("research", "durable_leased")
+        m.transition_workflow("research", None, "queued")
     state.runner.enqueue(job.job_id, tenant=tenant)
 
     result = _job_summary(job)
@@ -1867,6 +1984,8 @@ async def slopsearx_get_job(job_id: str) -> dict[str, Any]:
     job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
+    if rejection := _research_workflow_policy_error(state, job):
+        return rejection
     result = _job_summary(job)
     result["created_at"] = _dt.datetime.fromtimestamp(job.created_at, tz=_dt.timezone.utc).isoformat()
     result["note"] = "completed queries are immutable; their cursors remain readable"
@@ -1908,6 +2027,9 @@ async def slopsearx_cancel_job(job_id: str) -> dict[str, Any]:
             "state": result_state,
             "note": "best-effort cancellation requested; completed evidence remains readable",
         }
+    workflow: m.WorkflowKind = "dependency_dossier" if job.workflow.get("kind") == "dependency_dossier" else "research"
+    m.transition_workflow(workflow, job.state, "cancelled")
+    m.record_workflow_terminal(workflow, "cancelled")
     return {
         "job_id": job.job_id,
         "state": "cancelled",
@@ -1935,6 +2057,13 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
     job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
+    workflow: m.WorkflowKind = "dependency_dossier" if job.workflow.get("kind") == "dependency_dossier" else "research"
+    if rejection := _research_workflow_policy_error(state, job):
+        m.record_workflow_rejection(workflow, "policy")
+        return rejection
+    if exhausted := _research_workflow_budget_error(job):
+        m.record_workflow_rejection(workflow, "budget")
+        return exhausted
 
     # Terminal-state gate: a cancelled or already-expired job is never
     # resurrected by a retry (VAL-RESEARCH-010/011).
@@ -1956,6 +2085,7 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
         )
 
     attempt_counts = {query.index: len(query.attempts) for query in job.queries}
+    m.record_workflow_retry(workflow)
     bind_research_policy(state)
     try:
         job = await state.runner.retry(job_id, tenant=tenant)
@@ -2025,6 +2155,10 @@ async def slopsearx_extend_research(
     job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
+    if job.workflow:
+        if rejection := _research_workflow_policy_error(state, job):
+            return rejection
+        return _error("invalid_input", "workflow research jobs cannot be extended", field="job_id")
 
     error = _validate_query(query, state)
     if error:
@@ -2272,8 +2406,12 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
     """
     completed, total = job.progress
     job_coverage = summarize_coverage([entry for query in job.queries for entry in query.engine_coverage])
-    return {
+    summary = {
         "job_id": job.job_id,
+        "artifact": artifact_ref(
+            "dependency_dossier" if job.workflow.get("kind") == "dependency_dossier" else "research_job",
+            job.job_id,
+        ),
         "state": job.state,
         "question": job.question,
         "strategy": job.strategy,
@@ -2290,12 +2428,23 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
                 "result_count": query.result_count,
                 "query_id": query.query_id,
                 "cursor": query.cursor,
+                "snapshot_artifact": artifact_ref("snapshot", query.cursor) if query.cursor else None,
                 "error": query.error,
                 "subquestion_id": query.subquestion_id,
                 "rationale": query.rationale,
                 "parent_attempt_id": query.parent_attempt_id,
                 "continuation_key": query.continuation_key,
-                "attempts": [dataclasses.asdict(attempt) for attempt in query.attempts],
+                "attempts": [
+                    {
+                        **dataclasses.asdict(attempt),
+                        "artifact": artifact_ref(
+                            "research_attempt",
+                            composite_artifact_id(job.job_id, attempt.attempt_id),
+                        ),
+                        "snapshot_artifact": (artifact_ref("snapshot", attempt.cursor) if attempt.cursor else None),
+                    }
+                    for attempt in query.attempts
+                ],
                 "engine_coverage": [
                     {
                         "engine": cov.engine,
@@ -2322,6 +2471,11 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
         "stop_reason": job.stop_reason,
         "budgets": budget_summary(job),
     }
+    composition = job.workflow.get("composition")
+    if isinstance(composition, dict):
+        summary["source"] = composition.get("source")
+        summary["lineage"] = list(job.workflow.get("lineage") or [])
+    return summary
 
 
 # ---------------------------------------------------------------------------
@@ -2381,6 +2535,7 @@ def _saved_state(state: McpState) -> tuple[Any, Any] | dict[str, Any]:
 def _saved_summary(definition: SavedDefinition) -> dict[str, Any]:
     return {
         "search_id": definition.search_id,
+        "artifact": artifact_ref("saved_search", definition.search_id),
         "revision": definition.revision,
         "query": definition.query,
         "engines": definition.engines,
@@ -2485,9 +2640,11 @@ async def slopsearx_create_saved_search(
     definition.policy_fingerprint = _saved_policy_fingerprint(state, definition)
     outcome = await store.create(definition, state.policy.saved_max_definitions, now=now)
     if outcome == "quota_exceeded":
+        m.record_workflow_rejection("saved_search", "capacity")
         return _error("resource_limit", "saved-search definition quota is exhausted")
     if outcome != "created":
         return _error("store_unavailable", "saved search could not be persisted")
+    m.record_workflow_accepted("saved_search", "durable_leased")
     return _saved_summary(definition)
 
 
@@ -2598,11 +2755,21 @@ async def slopsearx_pause_saved_search(
     definition.next_due = now + definition.interval_seconds
     definition.policy_fingerprint = _saved_policy_fingerprint(state, definition)
     try:
-        definition = await store.compare_and_set(definition, expected_revision, now=now)
+        event = (
+            definition_event(definition, "definition_paused", now)
+            if paused and state.policy.tool_enabled("saved_search_events")
+            else None
+        )
+        definition = await store.compare_and_set(definition, expected_revision, now=now, event=event)
+    except OutboxCapacityError:
+        m.record_saved_event_capacity("stream")
+        return _error("resource_limit", "saved-search event outbox is at capacity")
     except RevisionConflictError as exc:
         return _error("revision_conflict", "saved search changed", current_revision=exc.current_revision)
     except LookupError:
         return _error("invalid_search_id", "unknown saved search")
+    if event is not None:
+        m.record_saved_event_publication("definition_paused")
     return _saved_summary(definition)
 
 
@@ -2648,10 +2815,113 @@ async def slopsearx_read_saved_search_reports(search_id: str, limit: StrictInt =
         report_policy_error = _enforce_policy(state, [str(engine) for engine in report_engines])
         if report_policy_error:
             return report_policy_error
+        report["artifact"] = artifact_ref(
+            "saved_report",
+            composite_artifact_id(search_id, str(report["run_id"])),
+        )
+        report["lineage"] = [
+            {
+                "from": report["artifact"],
+                "relation": "derived_from",
+                "to": artifact_ref("saved_search", search_id),
+            }
+        ]
     return {
         "search_id": search_id,
+        "artifact": artifact_ref("saved_search", search_id),
         "revision": definition.revision,
         "reports": reports,
         "latest_run_id": definition.latest_run_id,
         "note": "not_observed_in_latest_run is bounded observation, never a deletion or closure claim",
+    }
+
+
+def _saved_event_state(state: McpState) -> Any | dict[str, Any]:
+    if not state.policy.tool_enabled("saved_search_events"):
+        return _error(
+            "tool_disabled",
+            "saved-search events require the event grant (MCP_GRANT_SAVED_SEARCH_EVENTS=1)",
+        )
+    if state.saved_store is None or not state.saved_store.available:
+        return _error("store_unavailable", "saved-search events require connected Valkey")
+    return state.saved_store.for_tenant(current_tenant())
+
+
+async def slopsearx_read_saved_search_events(
+    consumer_id: str,
+    cursor: str | None = None,
+    limit: StrictInt = 50,
+) -> dict[str, Any]:
+    """Read one bounded, tenant-ordered at-least-once saved-search event batch."""
+    state = get_state()
+    store = _saved_event_state(state)
+    if isinstance(store, dict):
+        m.record_saved_event_read("rejected")
+        return store
+    if type(limit) is not int or not 1 <= limit <= 100:
+        m.record_saved_event_read("rejected")
+        return _error("invalid_input", "limit must be an integer between 1 and 100")
+    try:
+        batch = await store.read_events(consumer_id, cursor=cursor, limit=limit)
+    except ValueError as exc:
+        m.record_saved_event_read("rejected")
+        return _error("invalid_input", str(exc))
+    events = []
+    redacted_count = 0
+    for event_cursor, event in batch.pop("events"):
+        engines = event.get("_policy_engines")
+        redacted = (
+            not state.policy.tool_enabled("saved_searches")
+            or not isinstance(engines, list)
+            or bool(engine_policy_rejection(state.catalog, state.policy, [str(item) for item in engines]))
+        )
+        redacted_count += int(redacted)
+        events.append(public_event(event, event_cursor, redacted=redacted))
+    if batch["gap"]["detected"]:
+        outcome = "gap"
+    elif redacted_count:
+        outcome = "redacted"
+    else:
+        outcome = "delivered" if events else "empty"
+    oldest_age = max(0.0, time.time() - min(float(item["occurred_at"]) for item in events)) if events else None
+    m.record_saved_event_read(outcome, oldest_age_seconds=oldest_age)
+    return {
+        "contract": "slopsearx.saved_search_event_batch",
+        "contract_version": 1,
+        "consumer_id": consumer_id,
+        **batch,
+        "events": events,
+        "returned": len(events),
+        "redacted": redacted_count,
+        "delivery": "at_least_once",
+    }
+
+
+async def slopsearx_ack_saved_search_events(consumer_id: str, cursor: str) -> dict[str, Any]:
+    """Idempotently advance one tenant-scoped saved-search event consumer."""
+    state = get_state()
+    store = _saved_event_state(state)
+    if isinstance(store, dict):
+        m.record_saved_event_ack("rejected")
+        return store
+    try:
+        previous = await store.acknowledged_cursor(consumer_id)
+        acknowledged = await store.acknowledge_event(consumer_id, cursor, now=time.time())
+    except ValueError as exc:
+        m.record_saved_event_ack("rejected")
+        return _error("invalid_input", str(exc))
+    except LookupError:
+        m.record_saved_event_ack("rejected")
+        return _error("cursor_expired", "the tenant event stream is unavailable or expired")
+    except OutboxCapacityError:
+        m.record_saved_event_ack("rejected")
+        m.record_saved_event_capacity("consumer")
+        return _error("resource_limit", "saved-search event consumer capacity is exhausted")
+    m.record_saved_event_ack("idempotent" if acknowledged == previous else "advanced")
+    return {
+        "contract": "slopsearx.saved_search_event_ack",
+        "contract_version": 1,
+        "consumer_id": consumer_id,
+        "acknowledged_cursor": acknowledged,
+        "idempotent": True,
     }

@@ -30,6 +30,52 @@ proxy. For a public deployment, require TLS and proxy authentication before
 forwarding to port 8080. The application does not trust arbitrary forwarded
 headers, and engine API keys remain server-side.
 
+The separately gated protected workflow portal follows
+[`ADR 002`](adr/002-browser-identity-and-tenant-isolation.md). Its primary
+identity mode is a dedicated OIDC client with an opaque server-side session;
+the existing MCP OAuth server is not a browser identity provider. It remains
+disabled by default and supports direct HTTPS exposure in this release. See
+[`WORKFLOW_PORTAL.md`](WORKFLOW_PORTAL.md) for configuration and release gates.
+
+### Direct-exposure topology
+
+For a direct deployment, the configured external origin is an allowlisted
+HTTPS origin and forwarding headers are ignored. The application terminates TLS
+inside its trusted boundary, validates the OIDC issuer and callback against the
+configured origin, and uses a host-only Secure cookie. Loopback HTTP is allowed
+only by an explicit development mode with a different cookie name; it is not a
+production access mode.
+
+### Planned trusted-proxy topology
+
+For proxy TLS termination, configure a narrow allowlist of proxy addresses and
+block every direct route to the application port. The proxy must remove incoming
+`Forwarded`, `X-Forwarded-*`, and identity headers before setting its own scheme,
+host, and client-address values. It must preserve the original Host, forward
+`/auth` and `/workflows` with `/` and `/search`, and avoid caching protected
+responses. SlopSearX accepts forwarding data only from the configured peers and
+still uses the configured HTTPS external origin for redirects and Origin checks.
+
+An authenticating proxy's plain identity headers are not sufficient for tenant
+identity. A future proxy-identity provider requires a signed assertion or mTLS
+hop, the normalized identity/membership boundary from ADR 002, and a separate
+explicit mode. Never enable both OIDC and proxy identity implicitly or choose a
+provider from request headers.
+
+Before enabling protected routes, the operator must provision an OIDC client
+with exact callback URLs, identity-to-tenant memberships, current/previous
+session-handle hashing keys, an audit pseudonymization key, bounded login/session/action
+rate limits, Valkey, and an external origin. Startup must fail closed for an
+incomplete identity configuration. Protected-route dependency failure returns
+an unavailable/auth failure without affecting public search.
+
+OIDC client secrets and session keys belong in the deployment secret store,
+never the ConfigMap, image, URL, or logs. Rotate keys with a bounded previous-key
+drain window and revoke browser session generations after an identity incident.
+The rollout canaries read-only `/workflows` first; mutations are enabled one at
+a time. Rollback disables the workflow-portal feature, invalidates its sessions,
+and leaves public search, MCP, and workflow workers running.
+
 The portal and MCP surface share the sensitive-engine policy. Explicit browser
 selection of the default sensitive engines (`hibp` and `dehashed`) is rejected
 unless the operator sets `MCP_TARGETED_SENSITIVE_ALLOWED=true`. This grant is

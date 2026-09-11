@@ -560,8 +560,11 @@ class MCPPolicy:
             "security": False,
             "science": False,
             "research": False,
+            "dependency_dossier": False,
+            "staged_search": False,
             "retrieval_receipts": False,
             "saved_searches": False,
+            "saved_search_events": False,
         }
     )
     sensitive_engines: set[str] = field(default_factory=lambda: set(DEFAULT_SENSITIVE_ENGINES))
@@ -578,6 +581,8 @@ class MCPPolicy:
     job_lease_ttl_seconds: int = 60
     job_poll_interval_seconds: float = 1.0
     job_max_concurrent_jobs: int = 1
+    staged_max_deadline_ms: int = 30000
+    staged_max_engine_calls: int = 64
     saved_max_definitions: int = 20
     saved_max_engines: int = 5
     saved_max_results: int = 100
@@ -589,6 +594,9 @@ class MCPPolicy:
     saved_max_interval_seconds: int = 86_400
     saved_max_concurrent_runs: int = 2
     saved_dispatch_timeout_seconds: int = 30
+    saved_event_capacity: int = 1000
+    saved_event_retention_seconds: int = 604_800
+    saved_event_max_consumers: int = 100
     # Empty token = authentication disabled (stdio transport is trusted by
     # process-launch boundary; HTTP transport requires a token).
     auth_token: str = ""
@@ -627,6 +635,35 @@ class MCPPolicy:
         if self.saved_min_interval_seconds > self.saved_max_interval_seconds:
             problems.append("mcp.saved_min_interval_seconds must not exceed mcp.saved_max_interval_seconds")
         return problems
+
+
+def engine_policy_rejection(
+    catalog: CapabilityCatalog,
+    policy: MCPPolicy,
+    engines: list[str],
+) -> dict[str, Any] | None:
+    """Evaluate the shared fail-closed engine policy without a wire format."""
+    known = catalog.known_names()
+    unknown = [name for name in engines if name not in known]
+    inactive = [name for name in engines if name in known and not bool((cap := catalog.get(name)) and cap.enabled)]
+    if unknown or inactive:
+        problems = [f"{name} (unknown)" for name in unknown] + [f"{name} (inactive)" for name in inactive]
+        valid = sorted(name for name in known if bool((cap := catalog.get(name)) and cap.enabled))
+        return {
+            "code": "invalid_scope",
+            "message": "unknown or inactive engines: " + ", ".join(problems),
+            "valid_alternatives": valid,
+        }
+    sensitive = sorted({name for name in engines if name in policy.sensitive_engines})
+    if sensitive and not policy.targeted_sensitive_allowed:
+        return {
+            "code": "tool_disabled",
+            "message": "sensitive engines are unreachable without the sensitive-engine grant "
+            f"(MCP_TARGETED_SENSITIVE_ALLOWED=1): {', '.join(sensitive)}",
+            "engines": sensitive,
+            "grant": "MCP_TARGETED_SENSITIVE_ALLOWED",
+        }
+    return None
 
 
 def load_mcp_policy(
@@ -677,6 +714,8 @@ def _apply_mcp_section(policy: MCPPolicy, section: dict[str, Any]) -> None:
         ("job_default_deadline_seconds", 600),
         ("job_lease_ttl_seconds", 60),
         ("job_max_concurrent_jobs", 1),
+        ("staged_max_deadline_ms", 30000),
+        ("staged_max_engine_calls", 64),
         ("saved_max_definitions", 20),
         ("saved_max_engines", 5),
         ("saved_max_results", 100),
@@ -688,6 +727,9 @@ def _apply_mcp_section(policy: MCPPolicy, section: dict[str, Any]) -> None:
         ("saved_max_interval_seconds", 86400),
         ("saved_max_concurrent_runs", 2),
         ("saved_dispatch_timeout_seconds", 30),
+        ("saved_event_capacity", 1000),
+        ("saved_event_retention_seconds", 604800),
+        ("saved_event_max_consumers", 100),
     ):
         value = section.get(key)
         if isinstance(value, int) and value > 0:
@@ -729,8 +771,11 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
         "MCP_GRANT_SECURITY": "security",
         "MCP_GRANT_SCIENCE": "science",
         "MCP_GRANT_RESEARCH": "research",
+        "MCP_GRANT_DEPENDENCY_DOSSIER": "dependency_dossier",
+        "MCP_GRANT_STAGED_SEARCH": "staged_search",
         "MCP_GRANT_RETRIEVAL_RECEIPTS": "retrieval_receipts",
         "MCP_GRANT_SAVED_SEARCHES": "saved_searches",
+        "MCP_GRANT_SAVED_SEARCH_EVENTS": "saved_search_events",
     }
     for env_var, tool in grant_map.items():
         value = os.environ.get(env_var, "").strip().lower()
@@ -749,6 +794,8 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
         "MCP_JOB_DEFAULT_DEADLINE_SECONDS": "job_default_deadline_seconds",
         "MCP_JOB_LEASE_TTL_SECONDS": "job_lease_ttl_seconds",
         "MCP_JOB_MAX_CONCURRENT_JOBS": "job_max_concurrent_jobs",
+        "MCP_STAGED_MAX_DEADLINE_MS": "staged_max_deadline_ms",
+        "MCP_STAGED_MAX_ENGINE_CALLS": "staged_max_engine_calls",
         "MCP_SAVED_MAX_DEFINITIONS": "saved_max_definitions",
         "MCP_SAVED_MAX_ENGINES": "saved_max_engines",
         "MCP_SAVED_MAX_RESULTS": "saved_max_results",
@@ -760,6 +807,9 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
         "MCP_SAVED_MAX_INTERVAL_SECONDS": "saved_max_interval_seconds",
         "MCP_SAVED_MAX_CONCURRENT_RUNS": "saved_max_concurrent_runs",
         "MCP_SAVED_DISPATCH_TIMEOUT_SECONDS": "saved_dispatch_timeout_seconds",
+        "MCP_SAVED_EVENT_CAPACITY": "saved_event_capacity",
+        "MCP_SAVED_EVENT_RETENTION_SECONDS": "saved_event_retention_seconds",
+        "MCP_SAVED_EVENT_MAX_CONSUMERS": "saved_event_max_consumers",
     }
     for env_var, attr in int_map.items():
         raw = os.environ.get(env_var, "").strip()

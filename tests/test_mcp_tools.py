@@ -12,6 +12,7 @@ from typing import Any
 import pytest
 
 import engines  # noqa: F401 — triggers @register_engine to populate registry
+from slopsearx import metrics as m
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult
 from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, load_mcp_policy
 from slopsearx.config import load_config
@@ -614,6 +615,7 @@ class TestDiscoveryTools:
             "policy_bounds",
             "degradation",
             "freshness",
+            "workflow_health",
         ):
             assert key in result, f"missing schema key {key}"
 
@@ -735,6 +737,15 @@ class TestDiscoveryTools:
         blob = str(result)
         assert "# HELP" not in blob and "# TYPE" not in blob
         assert "metrics" not in blob.lower()
+
+    async def test_status_workflow_health_is_tenant_safe(self, state: McpState) -> None:
+        result = await t.slopsearx_get_service_status()
+        assert set(result["workflow_health"]) == set(m.WORKFLOW_KINDS)
+        assert all(set(item) == {"available", "status"} for item in result["workflow_health"].values())
+        assert result["workflow_health"]["research"] == {"available": True, "status": "available"}
+        assert result["workflow_health"]["staged_search"] == {"available": False, "status": "unavailable"}
+        m.transition_workflow("research", None, "queued")
+        assert (await t.slopsearx_get_service_status())["workflow_health"] == result["workflow_health"]
 
 
 # ---------------------------------------------------------------------------

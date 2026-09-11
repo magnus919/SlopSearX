@@ -44,6 +44,7 @@ from slopsearx.formatter import (
     format_yaml_markdown,
 )
 from slopsearx.logging import setup_logging
+from slopsearx.mcp.entity_projection import entity_groups
 from slopsearx.middleware import RequestIDMiddleware
 from slopsearx.ratelimit import RateLimiter, RateLimitStrategy, ValkeySlidingWindow
 from slopsearx.router import QueryRouter
@@ -72,8 +73,14 @@ from slopsearx.service import (
     destroy_context,
     unresponsive_from_outcomes,
 )
+from slopsearx.snapshot import SearchSnapshot
 from slopsearx.stats import EngineStatsTracker
 from slopsearx.suggest import SuggestionService
+from slopsearx.workflow_portal import (
+    WorkflowPortalRuntime,
+    build_workflow_router,
+    build_workflow_runtime_from_env,
+)
 
 # Populated at startup
 _active_engines: dict[str, EngineAdapter] = {}
@@ -86,6 +93,7 @@ _stats_tracker: EngineStatsTracker | None = None
 _audit_logger: QueryAuditLogger | None = None
 _empty_scrape_diagnostics_enabled = False
 _portal_policy: MCPPolicy | None = None
+_workflow_portal_runtime: WorkflowPortalRuntime | None = None
 
 # Concurrency and per-client rate limiting
 _engine_semaphore: asyncio.Semaphore | None = None
@@ -104,7 +112,7 @@ async def _startup() -> None:
     global _engine_semaphore, _client_rate_window  # noqa: PLW0603
     global _empty_scrape_diagnostics_enabled  # noqa: PLW0603
     global _router, _suggestion_service, _stats_tracker, _audit_logger  # noqa: PLW0603
-    global _portal_policy  # noqa: PLW0603
+    global _portal_policy, _workflow_portal_runtime  # noqa: PLW0603
     global _routing_budget_cache  # noqa: PLW0603
 
     ctx = await build_context()
@@ -125,6 +133,8 @@ async def _startup() -> None:
     # Freeze the browser policy beside the startup capability/config snapshot
     # so an environment change cannot alter access mid-process.
     _portal_policy = load_mcp_policy()
+    if _workflow_portal_runtime is None:
+        _workflow_portal_runtime = build_workflow_runtime_from_env(ctx, _portal_policy)
     # Freeze the routing budget from the startup context (resolved once,
     # beside the config/catalog snapshot) so the HTTP routed scope/digest
     # never track a runtime ``ROUTING_*`` env change.
@@ -147,6 +157,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="SlopSearX", version="0.1.0", lifespan=lifespan)
 app.add_middleware(RequestIDMiddleware)
+
+
+def configure_workflow_portal(runtime: WorkflowPortalRuntime | None) -> None:
+    """Install the protected portal runtime at the explicit injection seam.
+
+    Production startup leaves this unset unless the operator's OIDC/session
+    composition validates. Tests inject deterministic providers and stores.
+    """
+    global _workflow_portal_runtime  # noqa: PLW0603
+    _workflow_portal_runtime = runtime
+
+
+app.include_router(build_workflow_router(lambda: _workflow_portal_runtime))
 
 
 def _service_version() -> str:
@@ -542,6 +565,45 @@ def _portal_state(
         enforcement["safesearch"] = resolve_filter_enforcement(selected, "safesearch", safesearch, _active_engines)
     warnings = [str(warning) for warning in response.scope.warnings if str(warning).strip()]
     scope_label = ", ".join(part.strip() for part in categories.split(",") if part.strip()) or "All sources"
+    grouping_status = "available"
+    result_groups: dict[str, list[dict[str, Any]]] = {}
+    try:
+        # The HTTP service returns its canonical unsliced response. Project
+        # identities over that full response before the formatter applies any
+        # presentation choices, without persisting a public-browser snapshot.
+        projection = entity_groups(
+            SearchSnapshot(
+                snapshot_id=response.query_id or "portal-response",
+                query=query,
+                query_id=response.query_id,
+                results=response.results,
+                scope=response.scope,
+                total=len(response.results),
+                tenant="public-portal",
+                ranking_explanation=response.ranking_explanation,
+            ),
+            version=2,
+        )
+        for group in projection:
+            result_indices: list[int] = []
+            explanation: dict[str, Any] = {
+                "entity_id": group.get("entity_id"),
+                "namespace": group.get("namespace"),
+                "identifier": group.get("identifier"),
+                "reason": group.get("reason"),
+                "result_indices": result_indices,
+                "conflicting_fields": list(group.get("conflicting_fields") or []),
+            }
+            for result_id in group.get("result_ids") or []:
+                try:
+                    result_index = int(str(result_id).rsplit(":", 1)[1])
+                except (ValueError, IndexError):
+                    continue
+                result_indices.append(result_index)
+            for result_index in result_indices:
+                result_groups.setdefault(str(result_index), []).append(explanation)
+    except Exception:  # noqa: BLE001 — explanation failure must not break search
+        grouping_status = "unavailable"
     return {
         "query": query,
         "categories": categories,
@@ -556,6 +618,9 @@ def _portal_state(
         "selected_engine_count": len(selected),
         "responsive_engine_count": sum(1 for outcome in response.engine_outcomes if outcome.status == "ok"),
         "filter_enforcement": enforcement,
+        "ranking_explanation": response.ranking_explanation,
+        "grouping_status": grouping_status,
+        "result_groups": result_groups,
         "suggestions": list(response.suggestions),
         "all_unresponsive": response.all_unresponsive,
         "json_enabled": "json" in _configured_search_formats(),
@@ -850,7 +915,13 @@ async def _search_endpoint(request: Request) -> Any:
         response = await service.search(search_request)
     except QueryValidationError as exc:
         if exc.field != "query":
-            return _format_error_response(output_format, 400, error="invalid_filter", field=exc.field, message=str(exc))
+            return _format_error_response(
+                output_format,
+                400,
+                error="invalid_filter",
+                field=exc.field,
+                message="Invalid search parameter.",
+            )
         return _format_error_response(
             output_format, 400, error="query_required", message="The 'q' parameter is required."
         )

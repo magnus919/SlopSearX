@@ -232,6 +232,16 @@ class _LuaEvalClient(_ValkeyLikeClient):
 
     async def eval(self, script: str, numkeys: int, *args: Any) -> int:
         del numkeys
+        if script == research_store_mod._RECENT_RECORD_SCRIPT:
+            key, score, member, maximum, ttl = args
+            current = json.loads(self._data.get(key, b"{}").decode())
+            current[str(member)] = float(score)
+            ordered = sorted(current.items(), key=lambda item: (float(item[1]), str(item[0])), reverse=True)[
+                : int(maximum)
+            ]
+            self._data[key] = json.dumps(dict(ordered)).encode()
+            self._ttl[key] = time.time() + int(ttl)
+            return 1
         if script == _LEASE_RENEW_SCRIPT:
             key, token, ttl = args
             current = self._data.get(key)
@@ -525,7 +535,15 @@ class TestClaim:
         assert len(winners) == 1
         assert {winners[0].owner_id} <= {"w1", "w2"}
 
-    async def test_claim_resets_running_query_on_orphan_recovery(self) -> None:
+    async def test_claim_resets_running_query_on_orphan_recovery(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        transitions: list[tuple[str | None, str]] = []
+        recoveries: list[str] = []
+        monkeypatch.setattr(
+            research_store_mod.m,
+            "transition_workflow",
+            lambda _workflow, previous, current: transitions.append((previous, current)),
+        )
+        monkeypatch.setattr(research_store_mod.m, "record_workflow_recovery", recoveries.append)
         _, store = _build_state()
         job_store = ResearchJobStore(store)
         job = _job(
@@ -543,6 +561,8 @@ class TestClaim:
         assert claimed.queries[0].state == "done"
         assert claimed.queries[0].cursor == "snap-old"
         assert claimed.queries[1].state == "pending"
+        assert recoveries == ["research"]
+        assert transitions == [("running", "interrupted"), ("interrupted", "running")]
 
     async def test_lease_expiry_makes_job_reclaimable(self) -> None:
         _, store = _build_state()
@@ -1035,7 +1055,7 @@ class TestRunnerExecution:
 
 
 class TestDirectRunsAfterDurableExecution:
-    async def test_retry_clears_stale_lease_and_reruns(self) -> None:
+    async def test_retry_clears_stale_lease_and_reruns(self, monkeypatch: pytest.MonkeyPatch) -> None:
         state, store = _build_state()
         job_store = state.job_store
         state.ctx.active_engines["wikipedia"] = _MockEngine("wikipedia", status=EngineStatus.ERROR)
@@ -1056,6 +1076,12 @@ class TestDirectRunsAfterDurableExecution:
         # A retry of a previously durable-executed job must not raise
         # LeaseLostError against the released lease and must re-run the work.
         state.ctx.active_engines["wikipedia"] = _MockEngine("wikipedia")
+        transitions: list[tuple[str | None, str]] = []
+        monkeypatch.setattr(
+            research_store_mod.m,
+            "transition_workflow",
+            lambda _workflow, previous, current: transitions.append((previous, current)),
+        )
         result = await state.runner.retry(job.job_id, tenant="default")
 
         assert result is not None
@@ -1063,6 +1089,7 @@ class TestDirectRunsAfterDurableExecution:
         assert result.queries[0].state == "done"
         assert result.owner_id is None
         assert result.lease_token is None
+        assert transitions == [("failed", "running"), ("running", "succeeded")]
 
     async def test_direct_retry_claim_excludes_durable_worker(self) -> None:
         """A direct retry of an orphaned running job must hold a lease.
@@ -1393,6 +1420,25 @@ class TestDirectRunReconciliation:
 
 
 class TestLeaseOwnershipGuard:
+    async def test_workflow_failure_aborts_when_lease_guarded_save_loses_ownership(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        state, _ = _build_state(owner_id="w1")
+        job_store = state.job_store
+        job = _job(queries=[ResearchQuery(index=0, query="q", intent="web", engines=["wikipedia"])])
+        job.workflow = {"kind": "dependency_dossier"}
+        await job_store.save(job)
+        claimed = await job_store.claim(job.job_id, "w1", 60)
+        assert claimed is not None
+
+        async def lose_ownership(_job: ResearchJob) -> bool:
+            return False
+
+        monkeypatch.setattr(job_store, "save_if_owned", lose_ownership)
+
+        with pytest.raises(LeaseLostError):
+            await state.runner.run_pending(claimed)
+
     async def test_stale_owner_does_not_persist_after_lease_reclaimed(self) -> None:
         state, store = _build_state(lease_ttl=1)
         job_store = state.job_store

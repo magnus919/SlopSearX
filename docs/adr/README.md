@@ -7,3 +7,4 @@ use a new record and link the successor.
 ## Index
 
 - [001 — Web portal delivery architecture](001-web-portal-architecture.md)
+- [002 — Browser identity and tenant isolation](002-browser-identity-and-tenant-isolation.md)

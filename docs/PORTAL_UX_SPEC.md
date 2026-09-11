@@ -11,8 +11,14 @@ keeps the portal useful before exposing every engine knob.
 | Researcher | Narrow a broad search without losing the query | Scope/filter changes are visible in the URL and survive reload/share |
 | Operator or engineer | Explain why coverage is partial or unavailable | Source health, unsupported filters, and degraded states are truthful and non-secret |
 
-Accounts, saved collections, autocomplete providers, research workspaces, and
-AI summaries remain later work. They are not implied by this specification.
+The public search experience remains account-free. The separately gated
+workflow supervisor console is documented in
+[`WORKFLOW_PORTAL.md`](WORKFLOW_PORTAL.md); it does not alter public search.
+
+The workflow console identity design is recorded in accepted
+[`ADR 002`](adr/002-browser-identity-and-tenant-isolation.md). It remains
+disabled by default, so the portal stays public search until an operator
+explicitly configures protected routes.
 
 ## Information architecture
 
@@ -45,7 +51,13 @@ return to the same query by copying the URL.
    Unsupported controls are omitted or disabled with a short reason.
 3. **Inspect provenance:** each result shows title, safe destination, source
    engine(s), category/type, and publication metadata when present. Missing
-   metadata is omitted rather than replaced with invented values.
+   metadata is omitted rather than replaced with invented values. A closed
+   **Why this result appeared** disclosure lists contributing sources, the
+   effective ranking method and tier, supported entity identity/group
+   membership, conflict field names, and structural retrieval-handoff status.
+   Ranking is described as ordering rather than confidence, and retrieval
+   eligibility never implies that a page was fetched, safe, correct, or
+   verified.
 4. **Recover from partial search:** a partial banner names the unavailable or
    empty sources and keeps successful results usable. An all-source failure
    explains that no result was available and offers a retry.
@@ -55,6 +67,35 @@ return to the same query by copying the URL.
 6. **Choose visual mode:** the toggle is labelled `Darker mode` when Dark is
    active and `Dark mode` when Darker is active. The setting is explicit and
    local; it is never inferred from system preference.
+
+## Protected workflow identity states
+
+These states govern the separately enabled `/workflows` namespace without
+changing public search. They are the implemented interaction contract for
+issue #358.
+
+| State | Required content and recovery |
+| --- | --- |
+| Signed out | A concise explanation that workflows require sign-in and one `Sign in` action. Preserve only a validated local `/workflows` return path. Public-search navigation stays available. |
+| Signing in/callback failure | A non-secret error, `Try again`, and `Return to search`. Never show authorization codes, issuer details, claims, or raw provider errors. |
+| Tenant choice | Show only the authenticated principal's server-derived memberships. Require an explicit choice when there is more than one; do not accept a tenant from the URL. |
+| Authenticated | Show the active tenant label and signed-in state without exposing internal principal/tenant IDs. Offer tenant switching only for multiple current memberships. |
+| Session expired | Preserve unsent form content in the current document when safe, disable submission, explain expiry, and offer sign-in. Never replay a mutation automatically after sign-in. |
+| Forbidden action | Explain that the action is unavailable under current access and return to the object's safe detail page. Do not reveal hidden grants or other tenants. |
+| Unknown/expired/revoked object | One generic `Not found or unavailable` state for all object-level denials, with a link to the bounded workflow list. |
+| Sign-out complete | Confirm local sign-out, remove protected content from history-restored views, and offer public search or sign-in. |
+
+Sign-in, sign-out, tenant selection, and mutation recovery are keyboard
+operable, have visible focus, and announce status without moving focus except
+when correction is required. A session expiry during a mutation requires the
+user to sign in, review current object state, and submit a fresh CSRF-protected
+action. The UI never claims an action succeeded from a redirect alone.
+
+Protected pages use `Cache-Control: no-store` and must not place principal,
+tenant, object, token, or workflow data in URLs beyond opaque object handles.
+Browser Back after logout or tenant switch must not reveal cached protected
+content. Public pages do not change their content or cache behavior based on a
+workflow cookie.
 
 ## Labels and truthful filter behavior
 

@@ -11,6 +11,15 @@ from typing import Any
 
 from pydantic import StrictInt
 
+from slopsearx import metrics as m
+from slopsearx.artifacts import (
+    artifact_ref,
+    composite_artifact_id,
+    lineage_edge,
+    manifest_artifact_id,
+    parse_artifact_ref,
+)
+from slopsearx.mcp.composition import ResolvedSource, resolve_source
 from slopsearx.mcp.result_serialization import NON_VERIFICATION_NOTE, _retrieval_handoff
 from slopsearx.mcp.state import current_tenant, get_state
 from slopsearx.retrieval_receipts import RECEIPT_CONTRACT, RECEIPT_VERSION
@@ -146,6 +155,17 @@ def _discovery(snapshot: Any, result: Any, result_id: str) -> dict[str, Any]:
     }
 
 
+def _decorate_receipt(result_id: str, receipt: dict[str, Any]) -> dict[str, Any]:
+    """Project additive artifact identity without changing retained v1 data."""
+    value = dict(receipt)
+    value["artifact"] = artifact_ref(
+        "retrieval_receipt",
+        composite_artifact_id(result_id, str(value["receipt_id"])),
+    )
+    value["lineage"] = [lineage_edge(value["artifact"], "retrieval_of", artifact_ref("result", result_id))]
+    return value
+
+
 async def slopsearx_submit_retrieval_receipt(
     result_id: str,
     retriever: str,
@@ -182,9 +202,10 @@ async def slopsearx_submit_retrieval_receipt(
     now = time.time()
     replay, prior = await store.replay(result_id, idempotency_key, digest, now=now)
     if replay == "conflict":
+        m.record_workflow_rejection("retrieval_receipt", "idempotency")
         return _error("idempotency_conflict", "idempotency key was already used with different content")
     if replay == "replayed" and prior:
-        return {"state": "replayed", "receipt": prior}
+        return {"state": "replayed", "receipt": _decorate_receipt(result_id, prior)}
     source = await _source(result_id)
     if isinstance(source, dict):
         return source
@@ -200,14 +221,18 @@ async def slopsearx_submit_retrieval_receipt(
     }
     outcome, stored = await store.submit(result_id, idempotency_key, digest, receipt, now=now)
     if outcome == "conflict":
+        m.record_workflow_rejection("retrieval_receipt", "idempotency")
         return _error("idempotency_conflict", "idempotency key was already used with different content")
     if outcome == "capacity":
+        m.record_workflow_rejection("retrieval_receipt", "capacity")
         return _error("resource_limit", "receipt limit reached for this result")
     if outcome == "size":
         return _error("invalid_input", "encoded receipt exceeds 32768 bytes")
     if outcome == "unavailable" or stored is None:
         return _error("store_unavailable", "receipt could not be persisted")
-    return {"state": outcome, "receipt": stored}
+    m.record_workflow_accepted("retrieval_receipt", "immediate")
+    m.record_workflow_terminal("retrieval_receipt", body["observation"]["status"])
+    return {"state": outcome, "receipt": _decorate_receipt(result_id, stored)}
 
 
 async def _read(result_id: str, limit: int) -> dict[str, Any]:
@@ -225,6 +250,8 @@ async def _read(result_id: str, limit: int) -> dict[str, Any]:
             "store_unavailable": "unavailable",
         }.get(code, "unknown")
         if not receipts:
+            if code == "expired_handle":
+                m.record_workflow_expiry("retrieval_receipt", "receipt")
             return source
         discovery = receipts[0].get("discovery") if receipts else None
     else:
@@ -235,7 +262,7 @@ async def _read(result_id: str, limit: int) -> dict[str, Any]:
         "result_id": result_id,
         "source_snapshot_status": source_state,
         "discovery": discovery,
-        "receipts": receipts,
+        "receipts": [_decorate_receipt(result_id, receipt) for receipt in receipts],
         "total": total,
         "returned": len(receipts),
         "has_more": total > len(receipts),
@@ -250,29 +277,96 @@ async def slopsearx_read_retrieval_receipts(result_id: str, limit: StrictInt = 2
     return await _read(result_id, limit)
 
 
-async def slopsearx_export_research_manifest(result_ids: list[str]) -> dict[str, Any]:
-    """Join explicit result identities to retained attributed observations."""
+async def slopsearx_export_research_manifest(
+    result_ids: list[str] | None = None,
+    artifacts: list[dict[str, Any]] | None = None,
+    max_depth: StrictInt = 2,
+    max_nodes: StrictInt = 100,
+    source: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Join explicit results, a lineage cut, or one workflow source to observations."""
     enabled = _enabled()
     if isinstance(enabled, dict):
         return enabled
-    if not isinstance(result_ids, list) or not 1 <= len(result_ids) <= MAX_MANIFEST_RESULTS:
-        return _error("invalid_input", "result_ids must contain 1-25 entries")
+    if source is not None and (result_ids is not None or artifacts is not None):
+        return _error("input_conflict", "source cannot be combined with result_ids or artifacts")
+    resolved_source: ResolvedSource | None = None
+    if source is not None:
+        resolved = await resolve_source(source, "research_manifest")
+        if isinstance(resolved, dict):
+            return resolved
+        resolved_source = resolved
+        result_ids = list(resolved.result_ids)
+    if result_ids is None:
+        result_ids = []
+    else:
+        result_ids = list(result_ids)
+    if artifacts is None:
+        artifacts = []
+    if not isinstance(result_ids, list) or len(result_ids) > MAX_MANIFEST_RESULTS:
+        return _error("invalid_input", "result_ids must contain at most 25 entries")
     if any(not isinstance(result_id, str) or not result_id for result_id in result_ids):
         return _error("invalid_input", "every result_id must be a non-empty string")
+    if not isinstance(artifacts, list) or len(artifacts) > MAX_MANIFEST_RESULTS:
+        return _error("invalid_input", "artifacts must contain at most 25 entries")
+    if not result_ids and not artifacts:
+        return _error("invalid_input", "provide at least one result_id or artifact")
+    if type(max_depth) is not int or not 0 <= max_depth <= 5:
+        return _error("invalid_input", "max_depth must be an integer from 0 to 5")
+    if type(max_nodes) is not int or not 1 <= max_nodes <= 100:
+        return _error("invalid_input", "max_nodes must be an integer from 1 to 100")
+    roots: list[dict[str, Any]] = []
+    try:
+        roots = [parse_artifact_ref(item) for item in artifacts]
+    except ValueError as exc:
+        return _error("invalid_input", str(exc))
+    if len({(item["kind"], item["id"]) for item in roots}) != len(roots):
+        return _error("invalid_input", "artifacts must not contain duplicates")
     if len(set(result_ids)) != len(result_ids):
         return _error("invalid_input", "result_ids must not contain duplicates")
+    lineage_cuts: list[dict[str, Any]] = []
+    if roots:
+        from slopsearx.mcp.lineage_tools import slopsearx_get_artifact_lineage
+
+        for root in roots:
+            cut = await slopsearx_get_artifact_lineage(
+                root,
+                direction="both",
+                max_depth=max_depth,
+                max_nodes=max_nodes,
+            )
+            if "error" in cut:
+                return cut
+            lineage_cuts.append(cut)
+            result_ids.extend(
+                node["artifact"]["id"]
+                for node in cut["nodes"]
+                if node.get("status") == "live" and node.get("artifact", {}).get("kind") == "result"
+            )
+    result_ids = list(dict.fromkeys(result_ids))
+    if len(result_ids) > MAX_MANIFEST_RESULTS:
+        return _error("resource_limit", "lineage selection exceeds 25 results")
     items = []
     for result_id in result_ids:
         item = await _read(result_id, 20)
         items.append({"result_id": result_id, **item} if "error" in item else item)
-    manifest = {
+    manifest: dict[str, Any] = {
         "contract": "slopsearx.research_manifest",
         "version": 1,
         "generated_at": time.time(),
         "items": items,
+        "lineage_cuts": lineage_cuts,
         "observations_verified": False,
         "verification_note": NON_VERIFICATION_NOTE,
     }
+    if resolved_source is not None:
+        manifest["source"] = resolved_source.stored()
+    manifest["artifact"] = artifact_ref("research_manifest", manifest_artifact_id(manifest))
+    manifest["lineage"] = [
+        lineage_edge(manifest["artifact"], "contains", artifact_ref("result", result_id)) for result_id in result_ids
+    ]
+    if resolved_source is not None:
+        manifest["lineage"].append(lineage_edge(manifest["artifact"], "derived_from", resolved_source.artifact))
     if len(json.dumps(manifest, separators=(",", ":"), ensure_ascii=False).encode()) > MAX_MANIFEST_BYTES:
         return _error("resource_limit", "encoded manifest exceeds 1048576 bytes")
     return manifest
