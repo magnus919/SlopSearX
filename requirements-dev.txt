@@ -8,16 +8,16 @@ annotated-doc==0.0.4
     # via fastapi
 annotated-types==0.8.0
     # via pydantic
-anyio==4.14.2
+anyio==4.15.0
     # via
     #   httpx
     #   starlette
     #   watchfiles
-ast-serialize==0.8.0
+ast-serialize==0.9.0
     # via mypy
 boolean-py==5.0
     # via license-expression
-build==1.5.1
+build==1.6.0
     # via pip-tools
 cachecontrol[filecache]==0.14.4
     # via
@@ -83,7 +83,7 @@ import-linter==2.13
     # via slopsearx (pyproject.toml)
 iniconfig==2.3.0
     # via pytest
-librt==0.13.0
+librt==0.15.0
     # via mypy
 license-expression==30.4.4
     # via cyclonedx-python-lib
@@ -95,7 +95,7 @@ markdown-it-py==4.2.0
     # via rich
 mdurl==0.1.2
     # via markdown-it-py
-msgpack==1.2.1
+msgpack==1.2.2
     # via cachecontrol
 mypy==2.3.1
     # via slopsearx (pyproject.toml)
@@ -133,17 +133,17 @@ pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-pre-commit==4.6.0
+pre-commit==4.6.2
     # via slopsearx (pyproject.toml)
 prometheus-client==0.26.0
     # via slopsearx (pyproject.toml)
 py-serializable==2.1.0
     # via cyclonedx-python-lib
-pydantic==2.13.4
+pydantic==2.13.5
     # via
     #   fastapi
     #   slopsearx (pyproject.toml)
-pydantic-core==2.46.4
+pydantic-core==2.46.5
     # via pydantic
 pygments==2.21.0
     # via
@@ -187,7 +187,7 @@ rich==15.0.0
     #   pip-audit
 ruff==0.16.6
     # via slopsearx (pyproject.toml)
-sentry-sdk==2.68.0
+sentry-sdk==2.68.1
     # via slopsearx (pyproject.toml)
 six==1.17.0
     # via mando
@@ -232,7 +232,7 @@ vulture==2.16
     # via slopsearx (pyproject.toml)
 watchfiles==1.2.0
     # via uvicorn
-websockets==16.0
+websockets==17.1
     # via uvicorn
 wheel==0.48.0
     # via pip-tools
