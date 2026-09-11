@@ -545,6 +545,37 @@ class TestPortalHtml:
         assert 'href="#"' in output
         assert "javascript:" not in output
 
+    def test_result_page_restores_only_safe_highlight_tags(self) -> None:
+        result = _make_result(
+            "https://example.com",
+            "Highlighted result",
+            content='<strong>match</strong> <em>context</em> <strong onclick="alert(1)">unsafe</strong>',
+        )
+
+        output = format_html([result], "match")
+
+        assert "<strong>match</strong>" in output
+        assert "<em>context</em>" in output
+        assert "&lt;strong onclick=&quot;alert(1)&quot;&gt;unsafe&lt;/strong&gt;" in output
+
+    def test_result_page_names_unavailable_sources_in_notice_and_rail(self) -> None:
+        result = _make_result("https://example.com", "A result")
+
+        output = format_html(
+            [result],
+            "climate",
+            unresponsive_engines=[["google", "blocked"], ["reddit", "rate limited"]],
+            meta={"partial": True, "empty_engines": [["duckduckgo", "no results"]]},
+            portal_state={"query": "climate", "responsive_engine_count": 1},
+        )
+
+        assert "Some sources could not answer this search." in output
+        assert "Google (blocked)" in output
+        assert "Reddit (rate limited)" in output
+        assert "Duckduckgo (no results)" in output
+        assert "Source status" in output
+        assert output.count("Google") >= 2
+
     def test_result_page_preserves_filters_and_explains_scope(self) -> None:
         result = _make_result("https://example.com", "A result")
         output = format_html(
@@ -594,7 +625,7 @@ class TestPortalHtml:
         assert "Open result ↗" in output
         assert "Open JSON view ↗" in output
         assert "format=json" in output
-        assert "Sources in view" in output
+        assert "Source status" in output
         assert "data-result-card" in output
 
         disabled_output = format_html(

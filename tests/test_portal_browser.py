@@ -29,10 +29,10 @@ def test_landing_search_and_darker_toggle() -> None:
 
         assert page.get_by_role("heading", name="Search SlopSearX.").is_visible()
         assert page.get_by_role("searchbox", name="Search SlopSearX").is_visible()
-        toggle = page.get_by_role("button", name="Darker · off")
+        toggle = page.get_by_role("button", name="Use darker mode")
         toggle.click()
         assert page.locator("html").get_attribute("data-theme") == "darker"
-        assert page.get_by_role("button", name="Darker · on").is_visible()
+        assert page.get_by_role("button", name="Use dark mode").is_visible()
         page.locator("#portal-query").blur()
         page.keyboard.press("/")
         assert page.locator("#portal-query").evaluate("element => document.activeElement === element")
@@ -73,7 +73,6 @@ def test_results_journey_keeps_links_and_escaped_content() -> None:
         assert page.get_by_role("complementary", name="Search summary").is_visible()
         assert page.get_by_role("link", name="← Previous").get_attribute("href")
         assert page.get_by_role("link", name="Next →").get_attribute("href")
-        page.get_by_text("Scope and filters").click()
         assert page.get_by_role("combobox", name="Scope").is_visible()
         assert page.get_by_role("button", name="Apply filters").is_visible()
         assert page.locator("script").count() == 1
