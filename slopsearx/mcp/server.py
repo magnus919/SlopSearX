@@ -35,6 +35,7 @@ from slopsearx.capabilities import (
     validate_intent_profiles,
 )
 from slopsearx.config import Config, load_config
+from slopsearx.mcp import dependency_tools as _dependency_tools
 from slopsearx.mcp import prompts as _prompts
 from slopsearx.mcp import resources as _resources
 from slopsearx.mcp import tools as _tools
@@ -255,6 +256,8 @@ def create_server(
     mcp.tool()(_instrumented(_tools.slopsearx_cancel_job))
     mcp.tool()(_instrumented(_tools.slopsearx_retry_research))
     mcp.tool()(_instrumented(_tools.slopsearx_extend_research))
+    mcp.tool()(_instrumented(_dependency_tools.slopsearx_start_dependency_dossier))
+    mcp.tool()(_instrumented(_dependency_tools.slopsearx_get_dependency_dossier))
 
     # --- resources ------------------------------------------------------
     mcp.resource(

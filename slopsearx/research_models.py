@@ -282,6 +282,9 @@ class ResearchJob:
     deadline: float = 0.0
     tenant: str = "default"
     idempotency_key: str | None = None
+    # Optional additive metadata for bounded workflows built on the durable
+    # research runner. Ordinary research jobs keep this empty.
+    workflow: dict[str, Any] = field(default_factory=dict)
     cancel_requested: bool = False
     # Durable-execution lease fields. ``owner_id`` identifies the replica,
     # ``lease_token`` proves ownership, and ``lease_expires_at`` is the
@@ -360,6 +363,7 @@ def _job_from_payload(payload: dict[str, Any]) -> ResearchJob:
         deadline=float(payload.get("deadline", 0.0)),
         tenant=str(payload.get("tenant", "default")),
         idempotency_key=payload.get("idempotency_key"),
+        workflow=dict(payload.get("workflow") or {}),
         cancel_requested=bool(payload.get("cancel_requested", False)),
         owner_id=payload.get("owner_id"),
         lease_token=payload.get("lease_token"),

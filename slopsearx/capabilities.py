@@ -555,7 +555,13 @@ class MCPPolicy:
 
     # Specialist tool grants — all disabled until explicitly enabled.
     enabled_tools: dict[str, bool] = field(
-        default_factory=lambda: {"jobs": False, "security": False, "science": False, "research": False}
+        default_factory=lambda: {
+            "jobs": False,
+            "security": False,
+            "science": False,
+            "research": False,
+            "dependency_dossier": False,
+        }
     )
     sensitive_engines: set[str] = field(default_factory=lambda: set(DEFAULT_SENSITIVE_ENGINES))
     required_key_engines: set[str] = field(default_factory=lambda: set(REQUIRED_KEY_ENGINES))
@@ -603,6 +609,35 @@ class MCPPolicy:
         if self.oauth_enabled and not self.oauth_issuer_url:
             problems.append("mcp.oauth.enabled requires mcp.oauth.issuer_url (or MCP_OAUTH_ISSUER_URL)")
         return problems
+
+
+def engine_policy_rejection(
+    catalog: CapabilityCatalog,
+    policy: MCPPolicy,
+    engines: list[str],
+) -> dict[str, Any] | None:
+    """Evaluate the shared fail-closed engine policy without a wire format."""
+    known = catalog.known_names()
+    unknown = [name for name in engines if name not in known]
+    inactive = [name for name in engines if name in known and not bool((cap := catalog.get(name)) and cap.enabled)]
+    if unknown or inactive:
+        problems = [f"{name} (unknown)" for name in unknown] + [f"{name} (inactive)" for name in inactive]
+        valid = sorted(name for name in known if bool((cap := catalog.get(name)) and cap.enabled))
+        return {
+            "code": "invalid_scope",
+            "message": "unknown or inactive engines: " + ", ".join(problems),
+            "valid_alternatives": valid,
+        }
+    sensitive = sorted({name for name in engines if name in policy.sensitive_engines})
+    if sensitive and not policy.targeted_sensitive_allowed:
+        return {
+            "code": "tool_disabled",
+            "message": "sensitive engines are unreachable without the sensitive-engine grant "
+            f"(MCP_TARGETED_SENSITIVE_ALLOWED=1): {', '.join(sensitive)}",
+            "engines": sensitive,
+            "grant": "MCP_TARGETED_SENSITIVE_ALLOWED",
+        }
+    return None
 
 
 def load_mcp_policy(
@@ -694,6 +729,7 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
         "MCP_GRANT_SECURITY": "security",
         "MCP_GRANT_SCIENCE": "science",
         "MCP_GRANT_RESEARCH": "research",
+        "MCP_GRANT_DEPENDENCY_DOSSIER": "dependency_dossier",
     }
     for env_var, tool in grant_map.items():
         value = os.environ.get(env_var, "").strip().lower()

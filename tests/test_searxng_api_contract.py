@@ -115,3 +115,20 @@ def test_result_fields_are_required_but_slopsearx_extensions_are_allowed(client:
     yaml_response = client.get("/search", params={"q": "contract", "format": "yaml"})
     assert yaml_response.status_code == 200
     assert yaml_response.headers["content-type"].startswith("text/vnd.yaml+markdown")
+
+
+def test_dependency_dossier_grant_does_not_change_http_search(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    params = {"q": "contract", "format": "json"}
+    monkeypatch.delenv("MCP_GRANT_DEPENDENCY_DOSSIER", raising=False)
+    disabled = client.get("/search", params=params)
+    monkeypatch.setenv("MCP_GRANT_DEPENDENCY_DOSSIER", "1")
+    enabled = client.get("/search", params=params)
+
+    assert disabled.status_code == enabled.status_code == 200
+    disabled_data = disabled.json()
+    enabled_data = enabled.json()
+    disabled_data["meta"].pop("query_id")
+    enabled_data["meta"].pop("query_id")
+    assert disabled_data == enabled_data
