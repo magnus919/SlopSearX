@@ -7,8 +7,8 @@ versioned contract, member references, and entity pagination semantics.
 The Model Context Protocol (MCP) server exposes SlopSearX to AI agents as
 intent-level tools. Agents can search across 51 engines without knowing URL
 query strings, discover what can be searched, preview routing before spending
-rate limits, page through stable result snapshots, and run bounded
-multi-query research jobs.
+rate limits, page through stable result snapshots, run bounded multi-query
+research jobs, and schedule bounded change detection.
 
 The MCP server runs the **same pipeline** as the HTTP API
 (`slopsearx.service.SearchService`): identical scope resolution, ranking,
@@ -20,9 +20,10 @@ machine-readable `retrieval` handoff record (see `docs/RETRIEVAL_HANDOFF.md`)
 so a downstream reader such as GroktoCrawl can capture pages and link them
 back to the originating result and snapshot.
 
-- **Tools (15):** intent search, targeted search, jobs, security, science,
+- **Tools (21):** intent search, targeted search, jobs, security, science,
   capability listing, scope explanation, service status, snapshot reads,
-  research jobs (start/get/cancel/retry/extend).
+  research jobs (start/get/cancel/retry/extend), and saved searches
+  (create/get/update/pause/delete/read reports).
 - **Resources:** `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`.
 - **Prompts (4):** repeatable agent workflows that compose the tools.
@@ -35,7 +36,7 @@ back to the originating result and snapshot.
 |---|---|
 | Python ≥ 3.12 | Same as the rest of SlopSearX |
 | `slopsearx` installed | MCP support ships with the package (`fastmcp` dependency) |
-| Valkey (recommended) | Caching, rate limiting, snapshots, and research jobs persist here. Without Valkey the server still runs and searches work, but pagination cursors and research jobs are unavailable |
+| Valkey (recommended) | Caching, rate limiting, snapshots, research jobs, and saved searches persist here. Without Valkey the server still runs and searches work, but durable agent workflows are unavailable |
 | Engine API keys | Same `ENGINE_*_API_KEY` environment variables the HTTP service uses (e.g. `ENGINE_BRAVE_API_KEY`) |
 
 ## 2. Installation
@@ -67,6 +68,7 @@ mcp:
     security: false
     science: false
     research: false
+    saved_searches: false
   # Engines that generic routing must never reach accidentally. Only an
   # explicit engines list (with the targeted grant) or the security tool
   # (with its grant) can query them.
@@ -86,6 +88,18 @@ mcp:
   job_lease_ttl_seconds: 60
   job_poll_interval_seconds: 1.0
   job_max_concurrent_jobs: 1
+  # Scheduled saved-search bounds.
+  saved_max_definitions: 20
+  saved_max_engines: 5
+  saved_max_results: 100
+  saved_default_reports: 20
+  saved_max_reports: 100
+  saved_default_retention_seconds: 604800
+  saved_max_retention_seconds: 2592000
+  saved_min_interval_seconds: 60
+  saved_max_interval_seconds: 86400
+  saved_max_concurrent_runs: 2
+  saved_dispatch_timeout_seconds: 30
   # Auth (HTTP transport only). Empty = authentication disabled; stdio is
   # trusted by its process-launch boundary.
   auth_token: ""
@@ -122,6 +136,7 @@ mcp:
 | `MCP_GRANT_SECURITY` | unset (false) | enables `slopsearx_search_security` and `intent=security` |
 | `MCP_GRANT_SCIENCE` | unset (false) | enables `slopsearx_search_science` |
 | `MCP_GRANT_RESEARCH` | unset (false) | enables research jobs |
+| `MCP_GRANT_SAVED_SEARCHES` | unset (false) | enables scheduled saved searches and change reports |
 | `MCP_TARGETED_SENSITIVE_ALLOWED` | unset (false) | lets `slopsearx_search_targeted` query sensitive engines (`hibp`, `dehashed`); otherwise they are rejected with `tool_disabled` |
 | `MCP_MAX_QUERY_LENGTH` | `500` | max query characters |
 | `MCP_MAX_RESULTS` | `50` | presentation bound on result pages |
@@ -133,6 +148,14 @@ mcp:
 | `MCP_JOB_LEASE_TTL_SECONDS` | `60` | research-job lease visibility timeout (how long a replica may own a running job before another replica can reclaim it) |
 | `MCP_JOB_POLL_INTERVAL_SECONDS` | `1.0` | how often an idle research worker polls Valkey for claimable jobs |
 | `MCP_JOB_MAX_CONCURRENT_JOBS` | `1` | bounded per-replica research-job concurrency |
+| `MCP_SAVED_MAX_DEFINITIONS` | `20` | maximum active definitions per tenant |
+| `MCP_SAVED_MAX_ENGINES` | `5` | maximum explicit engines per definition |
+| `MCP_SAVED_MAX_RESULTS` | `100` | maximum first-page observation size |
+| `MCP_SAVED_DEFAULT_REPORTS` / `MCP_SAVED_MAX_REPORTS` | `20` / `100` | default and hard report-count bounds |
+| `MCP_SAVED_DEFAULT_RETENTION_SECONDS` / `MCP_SAVED_MAX_RETENTION_SECONDS` | `604800` / `2592000` | default and maximum evidence retention |
+| `MCP_SAVED_MIN_INTERVAL_SECONDS` / `MCP_SAVED_MAX_INTERVAL_SECONDS` | `60` / `86400` | scheduling interval bounds |
+| `MCP_SAVED_MAX_CONCURRENT_RUNS` | `2` | bounded per-replica execution concurrency |
+| `MCP_SAVED_DISPATCH_TIMEOUT_SECONDS` | `30` | timeout for one scheduled observation |
 | `MCP_SENSITIVE_ENGINES` | `hibp,dehashed` | comma-separated override |
 | `MCP_LOG_LEVEL` | `info` | uvicorn log level for HTTP transport |
 | `MCP_REMOTE_URL` | empty | gateway mode: remote server URL (`--remote`) |
@@ -684,6 +707,36 @@ and the worker cannot claim the locally enqueued job, so it is dropped rather
 than run. `slopsearx_start_research` still returns a handle, but it is flagged
 `degraded`/`ephemeral` and the job is never persisted or executed.
 
+### 6.13.2 Saved searches (grant: `MCP_GRANT_SAVED_SEARCHES`)
+
+Saved searches repeatedly observe a fixed first-page result window and emit
+machine-readable change reports. They require an explicit engine list and use
+the same shared policy gate as interactive MCP searches.
+
+- `slopsearx_create_saved_search` creates a tenant-scoped definition with
+  bounded schedule, lifetime, result window, retention, and report count.
+- `slopsearx_get_saved_search` reads the definition and current revision.
+- `slopsearx_update_saved_search` changes scope or bounds using
+  `expected_revision`; stale writers receive a revision conflict.
+- `slopsearx_pause_saved_search` pauses or resumes scheduling with the same
+  revision fence. `slopsearx_delete_saved_search` removes the definition,
+  baseline, reports, and scheduling hints.
+- `slopsearx_read_saved_search_reports` returns newest-first reports within
+  the configured count and retention bounds.
+
+Each run bypasses reusable cache entries, records source provenance, and
+compares only equivalent observation windows. Reports distinguish additions,
+source-field changes, and results absent from the latest observation. They do
+not claim that an absent result was deleted from the source. Cache use,
+partial engine coverage, policy changes, truncation, and source-winner changes
+are reported as incomparable rather than as content changes. Valkey leases,
+revision checks, and policy fingerprints fence duplicate workers and late
+commits. Missed intervals are coalesced into one current run.
+
+Saved searches are an additive MCP surface. They do not add parameters or
+fields to `/` or `/search`, so SearXNG HTTP clients retain the existing request
+and response contract whether the grant is enabled or disabled.
+
 ### 6.14 Why there is no separate "advanced search" tool
 
 Earlier design work (the original PRD) floated a dedicated, typed
@@ -911,7 +964,7 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
 | Gateway `--oauth` never prints an authorize URL | Callback port already in use by another process — pick a free one with `--oauth-callback-port`; verify the remote is in OAuth mode and reachable |
 | Gateway `--oauth` prints the URL but authorization times out | The browser never hit the callback (loopback port blocked or URL opened on a different host); use `--oauth-no-browser` and complete the redirect on the agent host |
 | Gateway re-authorizes on every run | The token file was not persisted — pass `--oauth-token-file FILE` (or `MCP_REMOTE_TOKEN_FILE`) to a stable path |
-| Tool returns `tool_disabled` | Grant missing: set `MCP_GRANT_JOBS/SECURITY/SCIENCE/RESEARCH=1` |
+| Tool returns `tool_disabled` | Grant missing: set the matching `MCP_GRANT_JOBS/SECURITY/SCIENCE/RESEARCH/SAVED_SEARCHES=1` |
 | Any search tool returns `tool_disabled` naming `hibp`/`dehashed` | Sensitive engines need the uniform grant: `MCP_TARGETED_SENSITIVE_ALLOWED=1` (or `mcp.targeted_sensitive_allowed: true`) — deliberate policy boundary, not a bug |
 | `invalid_scope` with alternatives | Engine name typo or engine disabled in config |
 | `safesearch_unenforced` | No adapter enforces SafeSearch; use `moderate`/`off` |

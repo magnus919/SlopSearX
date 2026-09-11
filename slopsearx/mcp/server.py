@@ -44,6 +44,8 @@ from slopsearx.mcp.security import make_http_app
 from slopsearx.mcp.state import McpState, set_state
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
 from slopsearx.routing import load_routing_budget
+from slopsearx.saved_runner import SavedSearchRunner
+from slopsearx.saved_store import SavedSearchStore
 from slopsearx.service import AppContext, SearchService, build_context, destroy_context
 from slopsearx.snapshot import SnapshotStore
 
@@ -151,6 +153,14 @@ async def _lifespan(
         poll_interval=policy.job_poll_interval_seconds,
         max_concurrent_jobs=policy.job_max_concurrent_jobs,
     )
+    saved_store = SavedSearchStore(ctx.cache)
+    saved_runner = SavedSearchRunner(
+        service,
+        saved_store,
+        policy,
+        policy_check=lambda definition: "saved-search policy is not initialized",
+        policy_fingerprint=lambda definition: "",
+    )
     state = McpState(
         ctx=ctx,
         policy=policy,
@@ -160,16 +170,25 @@ async def _lifespan(
         job_store=job_store,
         runner=runner,
         version=_package_version(),
+        saved_store=saved_store,
+        saved_runner=saved_runner,
     )
     set_state(state)
+    _tools.bind_saved_search_policy(state)
     _tools.bind_research_policy(state)
     runner_task = asyncio.create_task(runner.run_forever())
+    saved_runner_task = asyncio.create_task(saved_runner.run_forever())
     try:
         yield state
     finally:
         runner_task.cancel()
+        saved_runner_task.cancel()
         try:
             await runner_task
+        except asyncio.CancelledError:
+            pass
+        try:
+            await saved_runner_task
         except asyncio.CancelledError:
             pass
         set_state(None)
@@ -258,6 +277,12 @@ def create_server(
     mcp.tool()(_instrumented(_tools.slopsearx_retry_research))
     mcp.tool()(_instrumented(_tools.slopsearx_extend_research))
     mcp.tool()(_instrumented(_tools.slopsearx_update_research))
+    mcp.tool()(_instrumented(_tools.slopsearx_create_saved_search))
+    mcp.tool()(_instrumented(_tools.slopsearx_get_saved_search))
+    mcp.tool()(_instrumented(_tools.slopsearx_update_saved_search))
+    mcp.tool()(_instrumented(_tools.slopsearx_pause_saved_search))
+    mcp.tool()(_instrumented(_tools.slopsearx_delete_saved_search))
+    mcp.tool()(_instrumented(_tools.slopsearx_read_saved_search_reports))
 
     # --- resources ------------------------------------------------------
     mcp.resource(

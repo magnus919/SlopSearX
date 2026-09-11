@@ -129,6 +129,8 @@ from slopsearx.research import (
     summarize_coverage,
 )
 from slopsearx.research_budget import ResearchMutationError, budget_summary, initialize_budget
+from slopsearx.saved_models import SavedDefinition, generate_search_id
+from slopsearx.saved_store import RevisionConflictError
 from slopsearx.service import (
     QueryValidationError,
     RateLimitExceededError,
@@ -159,6 +161,7 @@ GRANT_ENV = {
     "jobs": "MCP_GRANT_JOBS",
     "security": "MCP_GRANT_SECURITY",
     "science": "MCP_GRANT_SCIENCE",
+    "saved_searches": "MCP_GRANT_SAVED_SEARCHES",
 }
 INTENT_GRANTS: dict[str, str] = {
     "jobs": "jobs",
@@ -2318,4 +2321,337 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
         "completion_rationale": job.completion_rationale,
         "stop_reason": job.stop_reason,
         "budgets": budget_summary(job),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Saved searches (explicitly granted, tenant-scoped, Valkey-backed)
+# ---------------------------------------------------------------------------
+
+
+def _saved_policy_fingerprint(state: McpState, definition: SavedDefinition) -> str:
+    """Hash stable execution policy/config while excluding observed health."""
+    capabilities = []
+    for name in sorted(definition.engines):
+        capability = state.catalog.get(name)
+        capabilities.append(
+            {
+                "name": name,
+                "active": name in state.ctx.active_engines,
+                "enabled": capability.enabled if capability else False,
+                "auth_configured": capability.auth_configured if capability else False,
+                "categories": sorted(capability.categories) if capability else [],
+            }
+        )
+    value = {
+        "saved_searches": state.policy.tool_enabled("saved_searches"),
+        "targeted_sensitive_allowed": state.policy.targeted_sensitive_allowed,
+        "sensitive_engines": sorted(state.policy.sensitive_engines),
+        "capabilities": capabilities,
+    }
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def _saved_policy_error(state: McpState, definition: SavedDefinition) -> str | None:
+    if not state.policy.tool_enabled("saved_searches"):
+        return "saved-search grant is disabled"
+    error = _enforce_policy(state, definition.engines)
+    return str(error["error"]["message"]) if error else None
+
+
+def bind_saved_search_policy(state: McpState) -> None:
+    """Keep background dispatch on the same live policy gate as MCP calls."""
+    if state.saved_runner is not None:
+        state.saved_runner._policy_check = lambda definition: _saved_policy_error(state, definition)
+        state.saved_runner._policy_fingerprint = lambda definition: _saved_policy_fingerprint(state, definition)
+
+
+def _saved_state(state: McpState) -> tuple[Any, Any] | dict[str, Any]:
+    if not state.policy.tool_enabled("saved_searches"):
+        return _error(
+            "tool_disabled",
+            "saved-search tools require the saved-search grant (MCP_GRANT_SAVED_SEARCHES=1)",
+        )
+    if state.saved_store is None or state.saved_runner is None or not state.saved_store.available:
+        return _error("store_unavailable", "saved searches require connected Valkey")
+    bind_saved_search_policy(state)
+    return state.saved_store.for_tenant(current_tenant()), state.saved_runner
+
+
+def _saved_summary(definition: SavedDefinition) -> dict[str, Any]:
+    return {
+        "search_id": definition.search_id,
+        "revision": definition.revision,
+        "query": definition.query,
+        "engines": definition.engines,
+        "interval_seconds": definition.interval_seconds,
+        "retention_seconds": definition.retention_seconds,
+        "max_results": definition.max_results,
+        "max_reports": definition.max_reports,
+        "created_at": definition.created_at,
+        "expires_at": definition.expires_at,
+        "next_due": definition.next_due,
+        "paused": definition.paused,
+        "latest_run_id": definition.latest_run_id,
+        "comparison": {
+            "window": "fixed_first_page",
+            "identity_version": "url-source-window-v1",
+            "absence_event": "not_observed_in_latest_run",
+            "absence_is_deletion": False,
+        },
+    }
+
+
+def _saved_positive(value: Any, field: str, minimum: int, maximum: int) -> int:
+    if type(value) is not int or not minimum <= value <= maximum:
+        raise ValueError(f"{field} must be an integer between {minimum} and {maximum}")
+    return value
+
+
+async def slopsearx_create_saved_search(
+    query: str,
+    engines: list[str],
+    interval_seconds: StrictInt,
+    retention_seconds: StrictInt | None = None,
+    expires_in_seconds: StrictInt | None = None,
+    max_results: StrictInt | None = None,
+    max_reports: StrictInt | None = None,
+    start_immediately: bool = False,
+) -> dict[str, Any]:
+    """Create one bounded, explicitly scoped scheduled search."""
+    state = get_state()
+    resolved = _saved_state(state)
+    if isinstance(resolved, dict):
+        return resolved
+    if type(start_immediately) is not bool:
+        return _error("invalid_input", "start_immediately must be a boolean")
+    store, _runner = resolved
+    query_error = _validate_query(query, state)
+    if query_error:
+        return query_error
+    if not isinstance(engines, list) or not engines or len(engines) > state.policy.saved_max_engines:
+        return _error("invalid_input", "engines must be a nonempty list within the configured bound", field="engines")
+    selected = list(dict.fromkeys(engines))
+    policy_error = _enforce_policy(state, selected)
+    if policy_error:
+        return policy_error
+    try:
+        interval = _saved_positive(
+            interval_seconds,
+            "interval_seconds",
+            state.policy.saved_min_interval_seconds,
+            state.policy.saved_max_interval_seconds,
+        )
+        retention = _saved_positive(
+            state.policy.saved_default_retention_seconds if retention_seconds is None else retention_seconds,
+            "retention_seconds",
+            1,
+            state.policy.saved_max_retention_seconds,
+        )
+        lifetime = _saved_positive(
+            retention if expires_in_seconds is None else expires_in_seconds,
+            "expires_in_seconds",
+            1,
+            state.policy.saved_max_retention_seconds,
+        )
+        rows = _saved_positive(
+            state.policy.saved_max_results if max_results is None else max_results,
+            "max_results",
+            1,
+            state.policy.saved_max_results,
+        )
+        reports = _saved_positive(
+            state.policy.saved_default_reports if max_reports is None else max_reports,
+            "max_reports",
+            1,
+            state.policy.saved_max_reports,
+        )
+    except ValueError as exc:
+        return _error("invalid_input", str(exc))
+    now = time.time()
+    definition = SavedDefinition(
+        search_id=generate_search_id(),
+        tenant=current_tenant(),
+        query=query.strip(),
+        engines=selected,
+        interval_seconds=interval,
+        retention_seconds=min(retention, lifetime),
+        max_results=rows,
+        max_reports=reports,
+        created_at=now,
+        expires_at=now + lifetime,
+        next_due=now if start_immediately else now + interval,
+    )
+    definition.policy_fingerprint = _saved_policy_fingerprint(state, definition)
+    outcome = await store.create(definition, state.policy.saved_max_definitions, now=now)
+    if outcome == "quota_exceeded":
+        return _error("resource_limit", "saved-search definition quota is exhausted")
+    if outcome != "created":
+        return _error("store_unavailable", "saved search could not be persisted")
+    return _saved_summary(definition)
+
+
+async def slopsearx_get_saved_search(search_id: str) -> dict[str, Any]:
+    """Read one caller-owned definition."""
+    state = get_state()
+    resolved = _saved_state(state)
+    if isinstance(resolved, dict):
+        return resolved
+    store, _runner = resolved
+    definition = await store.load(search_id)
+    if definition is None:
+        return _error("invalid_search_id", "unknown saved search")
+    policy_error = _enforce_policy(state, definition.engines)
+    return policy_error or _saved_summary(definition)
+
+
+async def slopsearx_update_saved_search(
+    search_id: str,
+    expected_revision: StrictInt,
+    query: str | None = None,
+    engines: list[str] | None = None,
+    interval_seconds: StrictInt | None = None,
+    retention_seconds: StrictInt | None = None,
+    max_results: StrictInt | None = None,
+    max_reports: StrictInt | None = None,
+) -> dict[str, Any]:
+    """Update with optimistic revision checking; scope changes reset baseline."""
+    state = get_state()
+    resolved = _saved_state(state)
+    if isinstance(resolved, dict):
+        return resolved
+    store, _runner = resolved
+    if type(expected_revision) is not int or expected_revision < 1:
+        return _error("invalid_input", "expected_revision must be a positive integer")
+    definition = await store.load(search_id)
+    if definition is None:
+        return _error("invalid_search_id", "unknown saved search")
+    now = time.time()
+    old_window = definition.window()
+    if query is not None:
+        query_error = _validate_query(query, state)
+        if query_error:
+            return query_error
+        definition.query = query.strip()
+    if engines is not None:
+        if not engines or len(engines) > state.policy.saved_max_engines:
+            return _error("invalid_input", "engines must be a nonempty list within the configured bound")
+        definition.engines = list(dict.fromkeys(engines))
+    policy_error = _enforce_policy(state, definition.engines)
+    if policy_error:
+        return policy_error
+    try:
+        if interval_seconds is not None:
+            definition.interval_seconds = _saved_positive(
+                interval_seconds,
+                "interval_seconds",
+                state.policy.saved_min_interval_seconds,
+                state.policy.saved_max_interval_seconds,
+            )
+        if retention_seconds is not None:
+            definition.retention_seconds = min(
+                _saved_positive(retention_seconds, "retention_seconds", 1, state.policy.saved_max_retention_seconds),
+                max(1, int(definition.expires_at - now)),
+            )
+        if max_results is not None:
+            definition.max_results = _saved_positive(max_results, "max_results", 1, state.policy.saved_max_results)
+        if max_reports is not None:
+            definition.max_reports = _saved_positive(max_reports, "max_reports", 1, state.policy.saved_max_reports)
+    except ValueError as exc:
+        return _error("invalid_input", str(exc))
+    definition.policy_fingerprint = _saved_policy_fingerprint(state, definition)
+    if definition.window() != old_window or interval_seconds is not None:
+        definition.baseline = None
+        definition.latest_run_id = None
+        definition.last_slot = -1
+        definition.created_at = now
+        definition.next_due = now + definition.interval_seconds
+    try:
+        definition = await store.compare_and_set(definition, expected_revision, now=now)
+    except RevisionConflictError as exc:
+        return _error("revision_conflict", "saved search changed", current_revision=exc.current_revision)
+    except LookupError:
+        return _error("invalid_search_id", "unknown saved search")
+    return _saved_summary(definition)
+
+
+async def slopsearx_pause_saved_search(
+    search_id: str, expected_revision: StrictInt, paused: bool = True
+) -> dict[str, Any]:
+    """Pause or resume; both revisions fence any old in-flight commit."""
+    state = get_state()
+    resolved = _saved_state(state)
+    if isinstance(resolved, dict):
+        return resolved
+    store, _runner = resolved
+    if type(expected_revision) is not int or expected_revision < 1 or type(paused) is not bool:
+        return _error("invalid_input", "expected_revision and paused have invalid types")
+    definition = await store.load(search_id)
+    if definition is None:
+        return _error("invalid_search_id", "unknown saved search")
+    now = time.time()
+    definition.paused = paused
+    definition.baseline = None
+    definition.latest_run_id = None
+    definition.last_slot = -1
+    definition.created_at = now
+    definition.next_due = now + definition.interval_seconds
+    definition.policy_fingerprint = _saved_policy_fingerprint(state, definition)
+    try:
+        definition = await store.compare_and_set(definition, expected_revision, now=now)
+    except RevisionConflictError as exc:
+        return _error("revision_conflict", "saved search changed", current_revision=exc.current_revision)
+    except LookupError:
+        return _error("invalid_search_id", "unknown saved search")
+    return _saved_summary(definition)
+
+
+async def slopsearx_delete_saved_search(search_id: str, expected_revision: StrictInt) -> dict[str, Any]:
+    """Delete the caller-owned definition and fence late workers."""
+    state = get_state()
+    resolved = _saved_state(state)
+    if isinstance(resolved, dict):
+        return resolved
+    store, _runner = resolved
+    if type(expected_revision) is not int:
+        return _error("invalid_input", "expected_revision must be an integer")
+    try:
+        await store.delete(search_id, expected_revision, now=time.time())
+    except RevisionConflictError as exc:
+        return _error("revision_conflict", "saved search changed", current_revision=exc.current_revision)
+    except LookupError:
+        return _error("invalid_search_id", "unknown saved search")
+    return {"search_id": search_id, "state": "deleted"}
+
+
+async def slopsearx_read_saved_search_reports(search_id: str, limit: StrictInt = 20) -> dict[str, Any]:
+    """Poll retained, coverage-aware change reports."""
+    state = get_state()
+    resolved = _saved_state(state)
+    if isinstance(resolved, dict):
+        return resolved
+    store, _runner = resolved
+    if type(limit) is not int or not 1 <= limit <= state.policy.saved_max_reports:
+        return _error("invalid_input", "limit is outside the configured report bound")
+    definition = await store.load(search_id)
+    if definition is None:
+        return _error("invalid_search_id", "unknown saved search")
+    policy_error = _enforce_policy(state, definition.engines)
+    if policy_error:
+        return policy_error
+    reports = await store.reports(search_id, now=time.time(), limit=limit)
+    for report in reports:
+        window = report.get("observation", {}).get("window", {})
+        report_engines = window.get("engines", [])
+        if not isinstance(report_engines, list) or not report_engines:
+            return _error("tool_disabled", "retained report has no policy-verifiable engine scope")
+        report_policy_error = _enforce_policy(state, [str(engine) for engine in report_engines])
+        if report_policy_error:
+            return report_policy_error
+    return {
+        "search_id": search_id,
+        "revision": definition.revision,
+        "reports": reports,
+        "latest_run_id": definition.latest_run_id,
+        "note": "not_observed_in_latest_run is bounded observation, never a deletion or closure claim",
     }

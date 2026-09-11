@@ -159,7 +159,8 @@ observed health (`last_known_status`). See `docs/MCP_CONTRACT.md` §7.4.
 
 SlopSearX ships a Model Context Protocol server for AI agents. It exposes
 intent-level search (no URL strings), capability discovery, scope
-explanation, snapshot-based pagination, and asynchronous research jobs —
+explanation, snapshot-based pagination, asynchronous research jobs, and
+scheduled change detection —
 built on the same pipeline as the HTTP API. Search results carry a
 machine-readable `retrieval` handoff record so a downstream reader (e.g.
 GroktoCrawl) can capture pages and link them back to the originating result
@@ -186,18 +187,23 @@ slopsearx-mcp --remote http://<slopsearx-host>:8000/mcp --oauth
 MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.com slopsearx-mcp
 ```
 
-- 16 tools: `slopsearx_search`, `slopsearx_search_targeted`,
+- 23 tools: `slopsearx_search`, `slopsearx_search_targeted`,
   `slopsearx_search_jobs`, `slopsearx_search_security`,
   `slopsearx_search_science`, `slopsearx_list_capabilities`,
   `slopsearx_explain_search_scope`, `slopsearx_get_service_status`,
   `slopsearx_read_results`, `slopsearx_read_result`, `slopsearx_read_entities`,
   `slopsearx_start_research`, `slopsearx_get_job`, `slopsearx_cancel_job`,
-  `slopsearx_retry_research`, `slopsearx_extend_research`, `slopsearx_update_research`
+  `slopsearx_retry_research`, `slopsearx_extend_research`,
+  `slopsearx_update_research`,
+  `slopsearx_create_saved_search`, `slopsearx_get_saved_search`,
+  `slopsearx_update_saved_search`, `slopsearx_pause_saved_search`,
+  `slopsearx_delete_saved_search`, `slopsearx_read_saved_search_reports`
 - Resources: `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`
-- Specialist tools (jobs, security, science, research) are disabled until
+- Specialist tools (jobs, security, science, research, saved searches) are disabled until
   the operator grants them (`MCP_GRANT_JOBS=1`, `MCP_GRANT_SECURITY=1`,
-  `MCP_GRANT_SCIENCE=1`, `MCP_GRANT_RESEARCH=1`).
+  `MCP_GRANT_SCIENCE=1`, `MCP_GRANT_RESEARCH=1`,
+  `MCP_GRANT_SAVED_SEARCHES=1`).
 - Sensitive engines (`hibp`, `dehashed`) are unreachable from generic
   routing, categories, and intent profiles, and are rejected by **every**
   explicit-engine search path (generic explicit engines, targeted, jobs,
