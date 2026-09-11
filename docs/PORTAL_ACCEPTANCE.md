@@ -67,6 +67,47 @@ The existing MCP `state_factory` harness and SearXNG compatibility suite remain
 authoritative for machine behavior. Portal tests assert the HTML projection
 without changing those contracts.
 
+## Protected workflow identity gate
+
+The later workflow console must implement the injection boundary and security
+contract in [`ADR 002`](adr/002-browser-identity-and-tenant-isolation.md). Its
+deterministic route tests inject a fake identity provider and membership
+resolver, in-memory sessions, fixed clock, and deterministic token source while
+still exercising real cookies, middleware, CSRF checks, content negotiation,
+application services, and HTML. A global current-user variable or a fixture
+that skips authentication is not acceptable evidence.
+
+Before `/workflows` can be enabled, tests must prove:
+
+1. public `/` and every SearXNG `/search` method/format have equivalent output
+   and status with no cookie, a valid workflow cookie, and an invalid cookie;
+2. successful login and tenant/privilege changes rotate the session, invalidate
+   the old handle, and preserve idle/absolute expiry ceilings;
+3. logout, operator revocation, stale principal or membership revisions,
+   disabled principals/tenants, and Valkey failure deny protected access
+   without affecting public search;
+4. every mutation rejects missing/replayed CSRF tokens, cross-origin requests,
+   unsafe content types, stale revisions, duplicate submission, and absent
+   action grants before the application transition;
+5. OIDC state/nonce/PKCE replay, forged issuer/audience/signature, open-return
+   redirects, direct spoofed forwarding headers, and token/cookie leakage fail;
+6. two-tenant fixtures cannot read, time, list, mutate, or distinguish each
+   other's unknown/expired/revoked object IDs; object denial uses the same 404
+   body, headers, cache policy, and bounded timing class;
+7. explicit machine negotiation receives 401/403 problem responses rather than
+   HTML redirects, while protected browser navigation has a safe sign-in path;
+8. sign-in, tenant choice, expiry during a form, forbidden action, generic
+   unavailable object, and signed-out recovery pass keyboard, live-region,
+   narrow viewport, history/cache, and malicious-content journeys; and
+9. audit events use closed vocabularies and keyed pseudonyms and contain no raw
+   subject, email, query, workflow content, cookie, CSRF value, authorization
+   code, OIDC token, or secret.
+
+The exact release head must pass the ordinary unit/type/lint suite, portal
+contract and browser jobs, MCP transport tests, Valkey integration, security
+cases above, and the pinned SearXNG compatibility suite. Maintainer acceptance
+of ADR 002 is a prerequisite, not a substitute for this evidence.
+
 ## Portal dependency map and gate ownership
 
 The portal contract depends on the shared search request/response models and
