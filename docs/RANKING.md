@@ -51,3 +51,7 @@ explanation used to produce their results. Reading a snapshot after configuratio
 changes preserves that historical explanation; legacy snapshots lacking the new
 field retain the presence default. Direct searches and research subquery captures
 use the same provenance field (issue #254).
+
+The broader audit of retained contribution ranks, canonical-result grouping,
+freshness semantics, and the next evaluation boundary is in
+[`RETRIEVAL_QUALITY_EVALUATION.md`](RETRIEVAL_QUALITY_EVALUATION.md).
