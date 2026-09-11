@@ -9,32 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  assess-depth:
-    runs-on: ubuntu-latest
-    outputs:
-      depth: ${{ steps.check.outputs.depth }}
-      security: ${{ steps.check.outputs.security }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 2
-      - id: check
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          CHANGED=$(gh pr diff ${{ github.event.pull_request.number }} --name-only 2>/dev/null || git diff --name-only HEAD~1)
-          echo "Changed files:"
-          echo "$CHANGED"
-          if echo "$CHANGED" | grep -qiE '(auth|oauth|jwt|saml|password|api.?key|secret|token|credential|crypt|cert|ssl|tls|firewall|proxy|dockerfile|docker-compose|kubernetes|k8s|terraform|\.env|config\.|sudo|exec|eval|spawn|cve|exploit)'; then
-            echo "depth=deep" >> $GITHUB_OUTPUT
-            echo "security=true" >> $GITHUB_OUTPUT
-          else
-            echo "depth=shallow" >> $GITHUB_OUTPUT
-            echo "security=false" >> $GITHUB_OUTPUT
-          fi
-
   droid-review:
-    needs: assess-depth
     if: github.event.pull_request.draft == false && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
@@ -48,12 +23,8 @@ jobs:
         with:
           fetch-depth: 1
 
-      # BYOK: the runner has no local ~/.factory/settings.json, so install the
-      # repo's custom-model config there. `droid exec` (spawned by the action)
-      # reads $HOME/.factory/settings.json, and each apiKey references a
-      # secret-backed env var exported on the action step below.
-      # Secrets required: DEEPSEEK_API_KEY, NOUS_API_KEY, QWEN_API_KEY
-      # (Settings > Secrets and variables > Actions).
+      # Install the repo's LiteLLM model config. The API key is supplied by
+      # the GPUSLUT_API_KEY repository secret on the action step below.
       - name: Install Droid BYOK settings
         shell: bash
         run: |
@@ -65,16 +36,12 @@ jobs:
         with:
           factory_api_key: ${{ secrets.FACTORY_API_KEY }}
           automatic_review: true
-          review_depth: ${{ needs.assess-depth.outputs.depth }}
-          automatic_security_review: ${{ needs.assess-depth.outputs.security }}
+          review_depth: deep
+          automatic_security_review: true
           allowed_bots: "dependabot"
-          # BYOK model overrides: both review passes and the security pass run on
-          # a custom model. Reference it by the provider model id from
-          # .github/droid-settings.json (e.g. deepseek-v4-pro,
-          # deepseek/deepseek-v4-flash-latest) or by its custom: id.
-          review_model: "deepseek-v4-flash"
-          security_model: "deepseek-v4-flash"
+          # Both review passes and the security pass use LiteLLM's general
+          # routing alias from .github/droid-settings.json.
+          review_model: "general"
+          security_model: "general"
         env:
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          NOUS_API_KEY: ${{ secrets.NOUS_API_KEY }}
-          QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
+          GPUSLUT_API_KEY: ${{ secrets.GPUSLUT_API_KEY }}
