@@ -16,6 +16,7 @@ from slopsearx.adapter import (
     SearchResult,
     register_engine,
 )
+from slopsearx.capabilities import MCPPolicy
 from slopsearx.config import load_config
 from slopsearx.server import app
 
@@ -133,6 +134,7 @@ def client() -> TestClient:
     # Save original state
     original_engines = dict(server_mod._active_engines)
     original_empty_scrape_diagnostics = server_mod._empty_scrape_diagnostics_enabled
+    original_portal_policy = server_mod._portal_policy
 
     with TestClient(app) as tc:
         # Set mock engine AFTER startup runs (which calls discover_engines)
@@ -146,6 +148,7 @@ def client() -> TestClient:
     # Restore original state
     server_mod._active_engines = original_engines
     server_mod._empty_scrape_diagnostics_enabled = original_empty_scrape_diagnostics
+    server_mod._portal_policy = original_portal_policy
 
 
 # ---------------------------------------------------------------------------
@@ -294,6 +297,53 @@ class TestSearchEndpoint:
         assert "Search <em>SlopSearX.</em>" in response.text
         assert 'action="/search"' in response.text
         assert "data-theme-toggle" in response.text
+
+    def test_portal_html_responses_include_security_headers(self, client: TestClient) -> None:
+        landing = client.get("/")
+        assert landing.status_code == 200
+        assert "default-src 'self'" in landing.headers["content-security-policy"]
+        assert landing.headers["referrer-policy"] == "no-referrer"
+        assert landing.headers["x-content-type-options"] == "nosniff"
+        assert "camera=()" in landing.headers["permissions-policy"]
+
+        results = client.get("/search", params={"q": "headers"})
+        assert results.status_code == 200
+        assert "default-src 'self'" in results.headers["content-security-policy"]
+
+    def test_sensitive_engine_selection_is_rejected_before_dispatch(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import slopsearx.server as server_mod
+
+        monkeypatch.setattr(
+            server_mod,
+            "_portal_policy",
+            MCPPolicy(sensitive_engines={"mocktest"}, targeted_sensitive_allowed=False),
+        )
+        response = client.get("/search", params={"q": "private", "engines": "mocktest", "format": "json"})
+
+        assert response.status_code == 403
+        assert response.json() == {
+            "error": "engine_restricted",
+            "message": "Explicit selection of one or more sensitive sources requires operator authorization.",
+            "field": "engines",
+            "engines": ["mocktest"],
+        }
+
+    def test_sensitive_engine_selection_is_allowed_with_operator_grant(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import slopsearx.server as server_mod
+
+        monkeypatch.setattr(
+            server_mod,
+            "_portal_policy",
+            MCPPolicy(sensitive_engines={"mocktest"}, targeted_sensitive_allowed=True),
+        )
+        response = client.get("/search", params={"q": "private", "engines": "mocktest", "format": "json"})
+
+        assert response.status_code == 200
+        assert response.json()["number_of_results"] == 3
 
     def test_root_machine_format_without_query_keeps_error_contract(self, client: TestClient) -> None:
         response = client.get("/", params={"format": "json"})

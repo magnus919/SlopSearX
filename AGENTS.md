@@ -61,6 +61,7 @@ slopsearx/
 9. **Canonical cache + view derivation.** The cache stores the canonical full `SearchResponse` (all include-able fields, unsliced results), keyed by query, language, safesearch, categories, engines, page, time range, and explicit publication-date bounds — not by `include`/`max_results`/`freshness`. The MCP read boundary derives the requested view (include-filtered fields and the `max_results` slice) from the current request, so a cached response never depends on the request that populated it. `max_results` is a presentation bound that slices the presented page; it never truncates the captured snapshot.
 10. **JSON-safe serialization.** `SearchResult.engines` is a `set[str]`; it is canonicalized to a sorted list at the serialization boundary and rehydrated robustly (accepting a list or a legacy stringified set). Never rely on `json.dumps(default=str)` for any typed field that must round-trip through the cache or snapshots.
 11. **MCP `state_factory` test-injection hook.** `slopsearx/mcp/server.py` accepts a `state_factory` callable that overrides the runtime wiring (engines + shared store) while keeping the transport, tool surface, and auth identical. It is used by `slopsearx/mcp/harness.py` to drive deterministic MCP client tests against fake engines and an in-memory store. Do not remove it; it is the user-testing validation seam.
+12. **The web portal is a first-class service.** Changes to search requests/responses, result serialization, engine capabilities, filter enforcement, access policy, cache/snapshots, HTTP routes, configuration, packaging, or engine behavior require a portal impact review. Reuse the shared `SearchService`, capability catalog, policy inputs, and HTML formatter; add or update deterministic portal contract/browser coverage and the portal docs when the browser-visible contract changes. The CI portal gate is required evidence for these changes.
 
 ## API Contract
 
@@ -124,6 +125,7 @@ class MyEngine(EngineAdapter):
 
 - `spec.md` — full architecture spec, API contract, deployment topology, caching strategy
 - `CONTRIBUTING.md` — contribution workflow
+- `docs/PORTAL_UX_SPEC.md`, `docs/PORTAL_VISUAL_SYSTEM.md`, and `docs/PORTAL_ACCEPTANCE.md` — portal behavior, visual, and release contracts
 
 ## graphify
 
