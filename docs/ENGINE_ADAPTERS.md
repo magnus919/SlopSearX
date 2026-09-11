@@ -171,7 +171,7 @@ Engines can declare namespace-prefixed sub-categories for fine-grained routing:
 
 Sub-categories appear in `/config` output alongside base categories and are selected with `?categories=github:code`.
 
-## Built-In Adapters (51)
+## Built-In Adapters (52)
 
 ### General / Web
 
@@ -179,6 +179,7 @@ Sub-categories appear in `/config` output alongside base categories and are sele
 |---|---|---|---|---|
 | Brave Search | `engines/brave.py` | api | general, news, science, images | `ENGINE_BRAVE_API_KEY` |
 | DuckDuckGo | `engines/duckduckgo.py` | scrape | general, news | None |
+| Exa | `engines/exa.py` | api | general, news | `ENGINE_EXA_API_KEY` |
 | Google | `engines/google.py` | scrape | general, news | None |
 | Hacker News | `engines/hackernews.py` | api | general, news | None |
 | Reddit | `engines/reddit.py` | api | general, social, reddit:subreddit | None |
@@ -276,7 +277,7 @@ Sub-categories appear in `/config` output alongside base categories and are sele
 
 See `slopsearx/adapter.py` for the base classes (`EngineAdapter`, `ScrapeAdapter`) and the registry functions (`register_engine`, `discover_engines`).
 
-> **Engine count (51).** This table is maintained to match the live adapter
+> **Engine count (52).** This table is maintained to match the live adapter
 > registry. Adding or removing an engine file requires updating this table and
 > the `Engines` table in `README.md`. The MCP capability catalog
 > (`slopsearx_list_capabilities`, `slopsearx://capabilities`) is generated from

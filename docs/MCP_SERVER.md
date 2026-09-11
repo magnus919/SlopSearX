@@ -1,7 +1,7 @@
 # SlopSearX MCP Server
 
 The Model Context Protocol (MCP) server exposes SlopSearX to AI agents as
-intent-level tools. Agents can search across 51 engines without knowing URL
+intent-level tools. Agents can search across 52 engines without knowing URL
 query strings, discover what can be searched, preview routing before spending
 rate limits, page through stable result snapshots, and run bounded
 multi-query research jobs.
