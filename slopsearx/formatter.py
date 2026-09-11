@@ -786,7 +786,16 @@ def format_html(
     )
     current_page = max(1, int(_portal_state_value(state, "page", 1) or 1))
     previous = current_page > 1
-    next_page = bool(results)
+    # Most upstream engines do not expose an authoritative total.  Callers
+    # may provide ``has_more`` when they know it; otherwise label the action
+    # as an attempt instead of presenting availability as a fact.
+    has_more = _portal_state_value(state, "has_more", None)
+    next_page = bool(results) if has_more is None else bool(has_more)
+    next_label = "Try next page →" if has_more is None else "Next page →"
+    next_aria_label = "Try next result page" if has_more is None else "Next result page"
+    page_context = f"Page {current_page}"
+    if has_more is None and next_page:
+        page_context += " · more may be available"
     pagination = ""
     if previous or next_page:
         pagination_links: list[str] = []
@@ -796,10 +805,10 @@ def format_html(
             )
         else:
             pagination_links.append('<span class="page-spacer" aria-hidden="true"></span>')
-        pagination_links.append(f'<span class="page-current" aria-current="page">Page {current_page}</span>')
+        pagination_links.append(f'<span class="page-current" aria-current="page">{page_context}</span>')
         if next_page:
             pagination_links.append(
-                f'<a class="page-link" aria-label="Next result page" href="{html_lib.escape(_portal_page_url(state, current_page + 1), quote=True)}">Next page →</a>'
+                f'<a class="page-link" aria-label="{next_aria_label}" href="{html_lib.escape(_portal_page_url(state, current_page + 1), quote=True)}">{next_label}</a>'
             )
         pagination = f'<nav class="pagination" aria-label="Pagination">{"".join(pagination_links)}</nav>'
     search_hidden = _portal_hidden_inputs(state, exclude={"q", "pageno"}, page=1)
