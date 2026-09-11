@@ -17,6 +17,7 @@ from typing import Any
 
 from pydantic import StrictInt
 
+from slopsearx import metrics as m
 from slopsearx.adapter import OBSERVED_STATUS_VOCAB, SUPPORTED_MEDIA_TYPES
 from slopsearx.artifacts import artifact_ref, composite_artifact_id
 from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, engine_policy_rejection, resolve_intent
@@ -1412,6 +1413,15 @@ def service_diagnostics(state: McpState, *, now: str | None = None) -> dict[str,
                 else "Valkey unavailable — research jobs are not executed (no shared job store)"
             ),
         },
+        "workflow_health": m.workflow_health_summary(
+            availability={
+                "research": state.job_store.available,
+                "dependency_dossier": state.job_store.available,
+                "staged_search": state.staged_store is not None and state.staged_store.available,
+                "saved_search": state.saved_store is not None and state.saved_store.available,
+                "retrieval_receipt": state.receipt_store is not None and state.receipt_store.available,
+            }
+        ),
         "policy_bounds": {
             "max_query_length": state.policy.max_query_length,
             "max_results": state.policy.max_results,
@@ -1863,6 +1873,9 @@ async def slopsearx_start_research(
         budget_used={"attempts": 0, "engine_attempts": 0, "results": 0},
     )
     await store.save(job)
+    if store.available:
+        m.record_workflow_accepted("research", "durable_leased")
+        m.transition_workflow("research", None, "queued")
     state.runner.enqueue(job.job_id, tenant=tenant)
 
     result = _job_summary(job)
@@ -1948,6 +1961,9 @@ async def slopsearx_cancel_job(job_id: str) -> dict[str, Any]:
             "state": result_state,
             "note": "best-effort cancellation requested; completed evidence remains readable",
         }
+    workflow: m.WorkflowKind = "dependency_dossier" if job.workflow.get("kind") == "dependency_dossier" else "research"
+    m.transition_workflow(workflow, job.state, "cancelled")
+    m.record_workflow_terminal(workflow, "cancelled")
     return {
         "job_id": job.job_id,
         "state": "cancelled",
@@ -1975,9 +1991,12 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
     job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
+    workflow: m.WorkflowKind = "dependency_dossier" if job.workflow.get("kind") == "dependency_dossier" else "research"
     if rejection := _research_workflow_policy_error(state, job):
+        m.record_workflow_rejection(workflow, "policy")
         return rejection
     if exhausted := _research_workflow_budget_error(job):
+        m.record_workflow_rejection(workflow, "budget")
         return exhausted
 
     # Terminal-state gate: a cancelled or already-expired job is never
@@ -2000,6 +2019,7 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
         )
 
     attempt_counts = {query.index: len(query.attempts) for query in job.queries}
+    m.record_workflow_retry(workflow)
     bind_research_policy(state)
     try:
         job = await state.runner.retry(job_id, tenant=tenant)
@@ -2549,9 +2569,11 @@ async def slopsearx_create_saved_search(
     definition.policy_fingerprint = _saved_policy_fingerprint(state, definition)
     outcome = await store.create(definition, state.policy.saved_max_definitions, now=now)
     if outcome == "quota_exceeded":
+        m.record_workflow_rejection("saved_search", "capacity")
         return _error("resource_limit", "saved-search definition quota is exhausted")
     if outcome != "created":
         return _error("store_unavailable", "saved search could not be persisted")
+    m.record_workflow_accepted("saved_search", "durable_leased")
     return _saved_summary(definition)
 
 

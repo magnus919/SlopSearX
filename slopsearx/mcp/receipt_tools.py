@@ -11,6 +11,7 @@ from typing import Any
 
 from pydantic import StrictInt
 
+from slopsearx import metrics as m
 from slopsearx.artifacts import (
     artifact_ref,
     composite_artifact_id,
@@ -200,6 +201,7 @@ async def slopsearx_submit_retrieval_receipt(
     now = time.time()
     replay, prior = await store.replay(result_id, idempotency_key, digest, now=now)
     if replay == "conflict":
+        m.record_workflow_rejection("retrieval_receipt", "idempotency")
         return _error("idempotency_conflict", "idempotency key was already used with different content")
     if replay == "replayed" and prior:
         return {"state": "replayed", "receipt": _decorate_receipt(result_id, prior)}
@@ -218,13 +220,17 @@ async def slopsearx_submit_retrieval_receipt(
     }
     outcome, stored = await store.submit(result_id, idempotency_key, digest, receipt, now=now)
     if outcome == "conflict":
+        m.record_workflow_rejection("retrieval_receipt", "idempotency")
         return _error("idempotency_conflict", "idempotency key was already used with different content")
     if outcome == "capacity":
+        m.record_workflow_rejection("retrieval_receipt", "capacity")
         return _error("resource_limit", "receipt limit reached for this result")
     if outcome == "size":
         return _error("invalid_input", "encoded receipt exceeds 32768 bytes")
     if outcome == "unavailable" or stored is None:
         return _error("store_unavailable", "receipt could not be persisted")
+    m.record_workflow_accepted("retrieval_receipt", "immediate")
+    m.record_workflow_terminal("retrieval_receipt", body["observation"]["status"])
     return {"state": outcome, "receipt": _decorate_receipt(result_id, stored)}
 
 
@@ -243,6 +249,8 @@ async def _read(result_id: str, limit: int) -> dict[str, Any]:
             "store_unavailable": "unavailable",
         }.get(code, "unknown")
         if not receipts:
+            if code == "expired_handle":
+                m.record_workflow_expiry("retrieval_receipt", "receipt")
             return source
         discovery = receipts[0].get("discovery") if receipts else None
     else:

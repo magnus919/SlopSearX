@@ -76,3 +76,32 @@ groups:
         annotations:
           summary: "Server error rate > 0.1/s"
           description: "Overall error rate across all engines is elevated. Check /health."
+
+      # --- Durable workflows ---
+
+      - alert: WorkflowQueueStuck
+        expr: max by (workflow) (slopsearx_workflow_oldest_claimable_age_seconds) > 300
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.workflow }} workflow queue is stuck"
+          description: "The oldest claimable operation has waited more than five minutes for ten minutes."
+
+      - alert: WorkflowLeaseRecoveryBurst
+        expr: sum by (workflow) (increase(slopsearx_workflow_lease_recoveries_total[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Repeated {{ $labels.workflow }} lease recovery"
+          description: "More than two expired leases were recovered in five minutes; inspect worker stability."
+
+      - alert: WorkflowTerminalFailures
+        expr: sum by (workflow) (increase(slopsearx_workflow_terminal_total{outcome="failed"}[10m])) >= 3
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Sustained {{ $labels.workflow }} workflow failures"
+          description: "At least three workflow attempts failed in the last ten minutes for ten minutes."

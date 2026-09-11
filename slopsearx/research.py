@@ -16,8 +16,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from time import monotonic
 from typing import Any, Callable
 
+from slopsearx import metrics as m
 from slopsearx.artifacts import artifact_ref, composite_artifact_id
 from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, engine_policy_rejection, resolve_intent
 from slopsearx.filters import resolve_filter_enforcement
@@ -461,6 +463,8 @@ class ResearchJobRunner:
         if claimed is None:
             raise JobStillRunningError(job.job_id)
         token = claimed.lease_token
+        started_running = claimed.state == "running"
+        started = monotonic()
         try:
             if not execute or claimed.state in ("cancelled", "expired") or claimed.caller_completed:
                 result = claimed
@@ -468,6 +472,12 @@ class ResearchJobRunner:
                 result = await self.run_pending(claimed)
             if not await store.clear_ownership(result):
                 raise LeaseLostError(job.job_id)
+            workflow: m.WorkflowKind = (
+                "dependency_dossier" if result.workflow.get("kind") == "dependency_dossier" else "research"
+            )
+            if started_running and result.state in m.WORKFLOW_OUTCOMES:
+                m.transition_workflow(workflow, "running", result.state)
+                m.record_workflow_terminal(workflow, result.state, monotonic() - started)
             return result
         finally:
             await store.release(job.job_id, token)
@@ -609,8 +619,19 @@ class ResearchJobRunner:
 
     async def _execute_claimed(self, job: ResearchJob) -> None:
         """Execute a claimed job and always release its lease afterwards."""
+        started = monotonic()
         try:
-            await self.run_pending(job)
+            result = await self.run_pending(job)
+            workflow: m.WorkflowKind = (
+                "dependency_dossier" if result.workflow.get("kind") == "dependency_dossier" else "research"
+            )
+            if result.state in m.WORKFLOW_OUTCOMES:
+                m.transition_workflow(workflow, "running", result.state)
+                m.record_workflow_terminal(workflow, result.state, monotonic() - started)
+            if workflow == "dependency_dossier":
+                m.workflow_admitted_results.observe(
+                    {"workflow": workflow}, float(result.workflow.get("budget", {}).get("captured_results", 0))
+                )
         except LeaseLostError:
             logger.warning("ResearchJobRunner: lost lease for job %s; abandoning execution", job.job_id)
         finally:

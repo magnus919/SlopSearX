@@ -644,6 +644,14 @@ Liveness, Valkey connectivity (and fail-closed state), engine inventory,
 snapshot/job store availability. `/health` does **not** probe external
 APIs — engine health is observed passively through search outcomes.
 
+The response includes `workflow_health`, a compact tenant-safe map for durable
+workflow availability. Each workflow reports only `available` and a closed
+status (`available` or `unavailable`) derived from that workflow's durable
+store; it never reveals global
+tenant, queue, job, result, or query counts. Full workflow counters, gauges, and
+histograms remain operator-only at `/metrics` and are documented in
+[`docs/alerting/README.md`](alerting/README.md).
+
 ### 6.9 `slopsearx_read_results` / 6.10 `slopsearx_read_result`
 
 Stable pagination over a captured snapshot. `cursor` comes from a previous

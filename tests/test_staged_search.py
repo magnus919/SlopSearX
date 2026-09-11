@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import copy
+import json
 
 import pytest
 
+from slopsearx import staged as staged_mod
 from slopsearx.capabilities import MCPPolicy
 from slopsearx.mcp import staged_tools
 from slopsearx.mcp.state import set_state
@@ -180,6 +183,101 @@ async def test_retry_preserves_unknown_aggregate_accounting(staged_state) -> Non
     assert completed["budget"]["observed"] is None
 
 
+async def test_orphan_recovery_records_interrupted_outcome(staged_state, monkeypatch: pytest.MonkeyPatch) -> None:
+    transitions: list[tuple[str | None, str]] = []
+    terminal: list[str] = []
+
+    class ExpiredLeaseClient:
+        def __init__(self, record_key: str) -> None:
+            self.record_key = record_key
+
+        async def zrangebyscore(self, *_args, **_kwargs):
+            return [self.record_key]
+
+        async def eval(self, *_args):
+            return 1
+
+        async def zrem(self, *_args):
+            return 1
+
+    record_key = staged_state.staged_store._key("default", "op-recovered")
+    staged_state.ctx.cache._data[record_key] = {
+        "tenant": "default",
+        "operation_id": "op-recovered",
+        "expires_at": 9999999999.0,
+    }
+    client = ExpiredLeaseClient(record_key)
+    monkeypatch.setattr(staged_state.staged_store, "_client", lambda: client)
+    monkeypatch.setattr(
+        staged_mod.m,
+        "transition_workflow",
+        lambda _workflow, previous, current: transitions.append((previous, current)),
+    )
+    monkeypatch.setattr(
+        staged_mod.m,
+        "record_workflow_terminal",
+        lambda _workflow, outcome, *_args: terminal.append(outcome),
+    )
+
+    assert await staged_state.staged_store.recover_orphans() == 1
+    assert transitions == [("running", "interrupted")]
+    assert terminal == ["interrupted"]
+
+
+@pytest.mark.parametrize("status", ["deadline", "budget"])
+async def test_valkey_claim_terminal_status_balances_queued_metrics(
+    staged_state, monkeypatch: pytest.MonkeyPatch, status: str
+) -> None:
+    accepted = await staged_tools.slopsearx_search_staged(
+        "terminal claim",
+        {"deadline_ms": 5000, "max_engine_calls": 1},
+        {"engines": ["wikipedia"]},
+        f"terminal-claim-{status}",
+    )
+    read = await staged_state.staged_store.read("default", accepted["operation_id"])
+    assert read.record is not None
+    terminal_record = copy.deepcopy(read.record)
+    terminal_record.update(
+        state="failed", stop_reason="deadline_expired" if status == "deadline" else "budget_exhausted"
+    )
+
+    class TerminalClaimClient:
+        async def eval(self, *_args):
+            return [status, json.dumps(terminal_record)]
+
+    transitions: list[tuple[str | None, str]] = []
+    terminal: list[str] = []
+    expiries: list[str] = []
+    rejections: list[str] = []
+    monkeypatch.setattr(staged_state.staged_store, "_client", lambda: TerminalClaimClient())
+    monkeypatch.setattr(
+        staged_mod.m,
+        "transition_workflow",
+        lambda _workflow, previous, current: transitions.append((previous, current)),
+    )
+    monkeypatch.setattr(
+        staged_mod.m,
+        "record_workflow_terminal",
+        lambda _workflow, outcome, *_args: terminal.append(outcome),
+    )
+    monkeypatch.setattr(
+        staged_mod.m,
+        "record_workflow_expiry",
+        lambda _workflow, artifact, *_args: expiries.append(artifact),
+    )
+    monkeypatch.setattr(
+        staged_mod.m,
+        "record_workflow_rejection",
+        lambda _workflow, reason, *_args: rejections.append(reason),
+    )
+
+    assert await staged_state.staged_store.claim("default", accepted["operation_id"]) is None
+    assert transitions == [("queued", "failed")]
+    assert terminal == ["failed"]
+    assert expiries == (["operation"] if status == "deadline" else [])
+    assert rejections == (["budget"] if status == "budget" else [])
+
+
 async def test_absolute_deadline_terminalizes_claimed_attempt(staged_state) -> None:
     accepted = await staged_tools.slopsearx_search_staged(
         "deadline",
@@ -195,6 +293,37 @@ async def test_absolute_deadline_terminalizes_claimed_attempt(staged_state) -> N
     assert failed["stages"][0]["attempts"][0]["state"] == "failed"
     assert failed["stages"][0]["attempts"][0]["observed_engine_calls"] == 0
     assert {item["objective"] for item in failed["objectives"]["unmet"]} == {"deadline_ms"}
+
+
+async def test_deadline_after_renewal_records_terminal_metrics(staged_state, monkeypatch: pytest.MonkeyPatch) -> None:
+    accepted = await staged_tools.slopsearx_search_staged(
+        "deadline after renewal",
+        {"deadline_ms": 5000, "max_engine_calls": 1},
+        {"engines": ["wikipedia"]},
+        "request-deadline-renewal",
+    )
+    read = await staged_state.staged_store.read("default", accepted["operation_id"])
+    assert read.record is not None
+    clock = [float(read.record["execution_deadline_at"]) - 1]
+    monkeypatch.setattr(staged_mod.time, "time", lambda: clock[0])
+    original_renew = staged_state.staged_store.renew
+
+    async def renew_then_expire(*args):
+        renewed = await original_renew(*args)
+        clock[0] += 2
+        return renewed
+
+    terminal: list[str] = []
+    monkeypatch.setattr(staged_state.staged_store, "renew", renew_then_expire)
+    monkeypatch.setattr(
+        staged_mod.m,
+        "record_workflow_terminal",
+        lambda _workflow, outcome, *_args: terminal.append(outcome),
+    )
+
+    await staged_state.staged_runner.run_one("default", accepted["operation_id"])
+
+    assert terminal == ["failed"]
 
 
 async def test_policy_revocation_hides_retained_results_and_replay(staged_state) -> None:
