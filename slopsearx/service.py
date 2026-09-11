@@ -123,6 +123,11 @@ class SearchRequest:
     # limiting and the audit trail.
     client_identifier: str | None = None
     interactive_timeout_ms: int | None = None
+    # Workflow-only execution controls. Defaults preserve ordinary HTTP/MCP
+    # search semantics. Suggestion generation affects canonical cache content;
+    # isolation affects only active singleflight ownership.
+    generate_suggestions: bool = True
+    execution_isolation_key: str | None = None
     date_from: str | None = None
     date_to: str | None = None
     # Freeze the relative calendar window for cache identity and post-filtering.
@@ -193,6 +198,7 @@ class SearchResponse:
     empty_engines: list[list[str]] = field(default_factory=list)
     cached_error: bool = False
     ranking_explanation: str = "tier_then_cross_engine_presence"
+    dispatched_engine_count: int = 0
 
 
 # ---------------------------------------------------------------------------
@@ -735,6 +741,8 @@ class SearchService:
         key += repr([(name, id(self._ctx.active_engines[name])) for name in scope.selected_engines])
         if request.freshness == "prefer_fresh":
             key += ":" + query_id
+        if request.execution_isolation_key is not None:
+            key += ":isolated:" + request.execution_isolation_key
         task = self._inflight.get(key)
         if task is None:
             task = asyncio.create_task(self._execute_search(request, scope, routing_digest, query_id, t_start))
@@ -827,7 +835,7 @@ class SearchService:
         # requested include view is derived at read time (the cache key omits
         # include/max_results/freshness, so the cache must hold the full form).
         suggestions_task: asyncio.Task[list[str]] | None = None
-        if self._ctx.suggestion_service is not None:
+        if request.generate_suggestions and self._ctx.suggestion_service is not None:
             suggestions_task = asyncio.create_task(self._generate_suggestions(request.query))
 
         engine_timeouts = [
@@ -1006,6 +1014,7 @@ class SearchService:
             all_unresponsive=all_unresponsive,
             empty_engines=empty_engines,
             ranking_explanation=self._ranking_explanation,
+            dispatched_engine_count=len(started_engines),
         )
 
         if not deadline_exceeded:
@@ -1361,7 +1370,8 @@ def _scope_cache_key(request: SearchRequest, routing_digest: str) -> str:
         time_range_anchor=request._time_range_anchor,
     )
     budget = f":interactive:{request.interactive_timeout_ms}" if request.interactive_timeout_ms is not None else ""
-    return f"{base}:{routing_digest}{budget}"
+    suggestions = f":suggestions:{int(request.generate_suggestions)}"
+    return f"{base}:{routing_digest}{budget}{suggestions}"
 
 
 def build_response_meta(response: SearchResponse) -> dict[str, Any]:
@@ -1476,6 +1486,7 @@ def search_response_to_payload(response: SearchResponse) -> dict[str, Any]:
         "all_unresponsive": response.all_unresponsive,
         "empty_engines": [list(entry) for entry in response.empty_engines],
         "cached_error": response.cached_error,
+        "dispatched_engine_count": response.dispatched_engine_count,
     }
 
 
@@ -1521,6 +1532,7 @@ def search_response_from_payload(payload: dict[str, Any]) -> SearchResponse:
         empty_engines=[[str(item) for item in entry] for entry in (payload.get("empty_engines") or [])],
         cached_error=bool(payload.get("cached_error", False)),
         ranking_explanation=str(payload.get("ranking_explanation", "tier_then_cross_engine_presence")),
+        dispatched_engine_count=int(payload.get("dispatched_engine_count", 0)),
     )
 
 

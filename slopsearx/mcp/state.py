@@ -19,6 +19,7 @@ from slopsearx.capabilities import CapabilityCatalog, MCPPolicy
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
 from slopsearx.service import AppContext, SearchService
 from slopsearx.snapshot import SnapshotStore
+from slopsearx.staged import StagedSearchRunner, StagedSearchStore
 
 # Request-scoped tenant override. Used by tests and by transports that set
 # an explicit tenant per request; production HTTP/OAuth derives the tenant
@@ -38,6 +39,8 @@ class McpState:
     job_store: ResearchJobStore
     runner: ResearchJobRunner
     version: str
+    staged_store: StagedSearchStore | None = None
+    staged_runner: StagedSearchRunner | None = None
 
 
 _state: McpState | None = None

@@ -37,6 +37,7 @@ from slopsearx.capabilities import (
 from slopsearx.config import Config, load_config
 from slopsearx.mcp import prompts as _prompts
 from slopsearx.mcp import resources as _resources
+from slopsearx.mcp import staged_tools as _staged_tools
 from slopsearx.mcp import tools as _tools
 from slopsearx.mcp.gateway import create_gateway
 from slopsearx.mcp.oauth import oauth_settings_from_policy
@@ -46,6 +47,7 @@ from slopsearx.research import ResearchJobRunner, ResearchJobStore
 from slopsearx.routing import load_routing_budget
 from slopsearx.service import AppContext, SearchService, build_context, destroy_context
 from slopsearx.snapshot import SnapshotStore
+from slopsearx.staged import StagedSearchRunner, StagedSearchStore
 
 logger = logging.getLogger(__name__)
 
@@ -151,6 +153,8 @@ async def _lifespan(
         poll_interval=policy.job_poll_interval_seconds,
         max_concurrent_jobs=policy.job_max_concurrent_jobs,
     )
+    staged_store = StagedSearchStore(ctx.cache)
+    staged_runner = StagedSearchRunner(service, staged_store, snapshots, _staged_tools._policy_check)
     state = McpState(
         ctx=ctx,
         policy=policy,
@@ -159,16 +163,24 @@ async def _lifespan(
         snapshots=snapshots,
         job_store=job_store,
         runner=runner,
+        staged_store=staged_store,
+        staged_runner=staged_runner,
         version=_package_version(),
     )
     set_state(state)
     runner_task = asyncio.create_task(runner.run_forever())
+    staged_runner_task = asyncio.create_task(staged_runner.run_forever())
     try:
         yield state
     finally:
         runner_task.cancel()
+        staged_runner_task.cancel()
         try:
             await runner_task
+        except asyncio.CancelledError:
+            pass
+        try:
+            await staged_runner_task
         except asyncio.CancelledError:
             pass
         set_state(None)
@@ -255,6 +267,10 @@ def create_server(
     mcp.tool()(_instrumented(_tools.slopsearx_cancel_job))
     mcp.tool()(_instrumented(_tools.slopsearx_retry_research))
     mcp.tool()(_instrumented(_tools.slopsearx_extend_research))
+    mcp.tool()(_instrumented(_staged_tools.slopsearx_preview_staged_search))
+    mcp.tool()(_instrumented(_staged_tools.slopsearx_search_staged))
+    mcp.tool()(_instrumented(_staged_tools.slopsearx_get_staged_search))
+    mcp.tool()(_instrumented(_staged_tools.slopsearx_retry_staged_search))
 
     # --- resources ------------------------------------------------------
     mcp.resource(

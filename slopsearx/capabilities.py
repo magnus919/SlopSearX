@@ -555,7 +555,13 @@ class MCPPolicy:
 
     # Specialist tool grants — all disabled until explicitly enabled.
     enabled_tools: dict[str, bool] = field(
-        default_factory=lambda: {"jobs": False, "security": False, "science": False, "research": False}
+        default_factory=lambda: {
+            "jobs": False,
+            "security": False,
+            "science": False,
+            "research": False,
+            "staged_search": False,
+        }
     )
     sensitive_engines: set[str] = field(default_factory=lambda: set(DEFAULT_SENSITIVE_ENGINES))
     required_key_engines: set[str] = field(default_factory=lambda: set(REQUIRED_KEY_ENGINES))
@@ -571,6 +577,8 @@ class MCPPolicy:
     job_lease_ttl_seconds: int = 60
     job_poll_interval_seconds: float = 1.0
     job_max_concurrent_jobs: int = 1
+    staged_max_deadline_ms: int = 30000
+    staged_max_engine_calls: int = 64
     # Empty token = authentication disabled (stdio transport is trusted by
     # process-launch boundary; HTTP transport requires a token).
     auth_token: str = ""
@@ -653,6 +661,8 @@ def _apply_mcp_section(policy: MCPPolicy, section: dict[str, Any]) -> None:
         ("job_default_deadline_seconds", 600),
         ("job_lease_ttl_seconds", 60),
         ("job_max_concurrent_jobs", 1),
+        ("staged_max_deadline_ms", 30000),
+        ("staged_max_engine_calls", 64),
     ):
         value = section.get(key)
         if isinstance(value, int) and value > 0:
@@ -694,6 +704,7 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
         "MCP_GRANT_SECURITY": "security",
         "MCP_GRANT_SCIENCE": "science",
         "MCP_GRANT_RESEARCH": "research",
+        "MCP_GRANT_STAGED_SEARCH": "staged_search",
     }
     for env_var, tool in grant_map.items():
         value = os.environ.get(env_var, "").strip().lower()
@@ -712,6 +723,8 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
         "MCP_JOB_DEFAULT_DEADLINE_SECONDS": "job_default_deadline_seconds",
         "MCP_JOB_LEASE_TTL_SECONDS": "job_lease_ttl_seconds",
         "MCP_JOB_MAX_CONCURRENT_JOBS": "job_max_concurrent_jobs",
+        "MCP_STAGED_MAX_DEADLINE_MS": "staged_max_deadline_ms",
+        "MCP_STAGED_MAX_ENGINE_CALLS": "staged_max_engine_calls",
     }
     for env_var, attr in int_map.items():
         raw = os.environ.get(env_var, "").strip()

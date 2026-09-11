@@ -577,10 +577,12 @@ def _format_error_response(
     if extra:
         payload.update(extra)
     if output_format == "html":
-        return _portal_security_headers(HTMLResponse(
-            content=format_error_html(error, message, field=field, default_theme=_portal_default_theme()),
-            status_code=status_code,
-        ))
+        return _portal_security_headers(
+            HTMLResponse(
+                content=format_error_html(error, message, field=field, default_theme=_portal_default_theme()),
+                status_code=status_code,
+            )
+        )
     if output_format == "csv":
         return PlainTextResponse(
             content=format_csv([]) + f"{error},{message}\n",
@@ -643,17 +645,19 @@ def _render_search_response(
 ) -> Response:
     """Render one normalized search response in the requested format."""
     if output_format == "html":
-        return _portal_security_headers(HTMLResponse(
-            content=format_html(
-                results,
-                query,
-                meta=meta,
-                unresponsive_engines=unresponsive_engines,
-                portal_state=portal_state,
-                default_theme=_portal_default_theme(),
-            ),
-            status_code=status_code,
-        ))
+        return _portal_security_headers(
+            HTMLResponse(
+                content=format_html(
+                    results,
+                    query,
+                    meta=meta,
+                    unresponsive_engines=unresponsive_engines,
+                    portal_state=portal_state,
+                    default_theme=_portal_default_theme(),
+                ),
+                status_code=status_code,
+            )
+        )
     if output_format == "yaml":
         yaml_output = format_yaml_markdown(
             results,
