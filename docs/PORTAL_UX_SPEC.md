@@ -14,6 +14,11 @@ keeps the portal useful before exposing every engine knob.
 Accounts, saved collections, autocomplete providers, research workspaces, and
 AI summaries remain later work. They are not implied by this specification.
 
+The proposed identity design for a later workflow console is recorded in
+[`ADR 002`](adr/002-browser-identity-and-tenant-isolation.md). Until its
+implementation is separately delivered and enabled, the portal remains the
+public search experience described here.
+
 ## Information architecture
 
 ```text
@@ -55,6 +60,34 @@ return to the same query by copying the URL.
 6. **Choose visual mode:** the toggle is labelled `Darker mode` when Dark is
    active and `Dark mode` when Darker is active. The setting is explicit and
    local; it is never inferred from system preference.
+
+## Protected workflow identity states
+
+These states govern the later `/workflows` namespace without changing public
+search. They are a design contract for issue #358, not an implemented feature.
+
+| State | Required content and recovery |
+| --- | --- |
+| Signed out | A concise explanation that workflows require sign-in and one `Sign in` action. Preserve only a validated local `/workflows` return path. Public-search navigation stays available. |
+| Signing in/callback failure | A non-secret error, `Try again`, and `Return to search`. Never show authorization codes, issuer details, claims, or raw provider errors. |
+| Tenant choice | Show only the authenticated principal's server-derived memberships. Require an explicit choice when there is more than one; do not accept a tenant from the URL. |
+| Authenticated | Show the active tenant label and signed-in state without exposing internal principal/tenant IDs. Offer tenant switching only for multiple current memberships. |
+| Session expired | Preserve unsent form content in the current document when safe, disable submission, explain expiry, and offer sign-in. Never replay a mutation automatically after sign-in. |
+| Forbidden action | Explain that the action is unavailable under current access and return to the object's safe detail page. Do not reveal hidden grants or other tenants. |
+| Unknown/expired/revoked object | One generic `Not found or unavailable` state for all object-level denials, with a link to the bounded workflow list. |
+| Sign-out complete | Confirm local sign-out, remove protected content from history-restored views, and offer public search or sign-in. |
+
+Sign-in, sign-out, tenant selection, and mutation recovery are keyboard
+operable, have visible focus, and announce status without moving focus except
+when correction is required. A session expiry during a mutation requires the
+user to sign in, review current object state, and submit a fresh CSRF-protected
+action. The UI never claims an action succeeded from a redirect alone.
+
+Protected pages use `Cache-Control: no-store` and must not place principal,
+tenant, object, token, or workflow data in URLs beyond opaque object handles.
+Browser Back after logout or tenant switch must not reveal cached protected
+content. Public pages do not change their content or cache behavior based on a
+workflow cookie.
 
 ## Labels and truthful filter behavior
 
