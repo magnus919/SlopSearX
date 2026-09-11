@@ -148,6 +148,9 @@ from slopsearx.service import (
     SearchRequest,
     SearchService,
 )
+from slopsearx.service import (
+    RateLimitExceededError as RateLimitExceededError,
+)
 from slopsearx.snapshot import SnapshotStore
 
 logger = logging.getLogger(__name__)

@@ -7,9 +7,14 @@ import pytest
 
 from slopsearx.mcp import tools as t
 from slopsearx.mcp.state import set_state, tenant_scope
-from slopsearx.research import ResearchJobRunner
+from slopsearx.research import RateLimitExceededError, ResearchJobRunner
 from slopsearx.research_models import _job_from_payload, _job_to_payload
+from slopsearx.service import RateLimitExceededError as ServiceRateLimitExceededError
 from tests.test_research_retry_followup import _build_state
+
+
+def test_rate_limit_error_remains_a_compatibility_export() -> None:
+    assert RateLimitExceededError is ServiceRateLimitExceededError
 
 
 @pytest.fixture
