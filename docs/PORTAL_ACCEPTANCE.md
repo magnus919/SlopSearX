@@ -62,6 +62,9 @@ The browser suite must cover:
 8. malicious title, content, URL, and engine name strings;
 9. page two and back/forward URL restoration;
 10. Dark/Darker persistence with storage enabled and storage blocked.
+11. progressive result explanations, including entity grouping lifecycle
+    states, escaped contributor/conflict metadata, truthful ranking labels,
+    and retrieval eligibility without verification language.
 
 The existing MCP `state_factory` harness and SearXNG compatibility suite remain
 authoritative for machine behavior. Portal tests assert the HTML projection

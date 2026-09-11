@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import gzip
+
+import pytest
 import yaml
 
 from slopsearx.adapter import MediaInfo, SearchResult
 from slopsearx.formatter import (
+    _PORTAL_CSS,
+    _PORTAL_SCRIPT,
     _payload_for_output,
     format_error_html,
     format_html,
@@ -669,6 +674,81 @@ class TestPortalHtml:
         )
         assert "Open JSON view ↗" not in disabled_output
         assert "format=json" not in disabled_output
+
+    def test_result_explanation_is_progressive_truthful_and_escaped(self) -> None:
+        result = _make_result(
+            "https://docs.example.com/guide",
+            "A useful guide",
+            engine="brave",
+            engines={"brave", "wikipedia"},
+        )
+        result.tier = 1
+        output = format_html(
+            [result],
+            "climate",
+            portal_state={
+                "query": "climate",
+                "ranking_explanation": "tier_then_reciprocal_rank_fusion_k60",
+                "grouping_status": "available",
+                "result_groups": {
+                    "0": {
+                        "entity_id": "opaque",
+                        "namespace": "repository<script>",
+                        "identifier": {"owner": "example&co", "repo": "search"},
+                        "result_indices": [0, 2],
+                        "conflicting_fields": ["description<img>"],
+                    }
+                },
+            },
+        )
+
+        assert '<details class="result-explanation">' in output
+        assert "Why this result appeared" in output
+        assert "Reciprocal rank fusion (k=60)" in output
+        assert "it is not confidence" in output
+        assert "repository&lt;script&gt;" in output
+        assert "example&amp;co" in output
+        assert "description&lt;img&gt;" in output
+        assert 'href="#result-1"' in output and 'href="#result-3"' in output
+        assert "structurally eligible" in output
+        assert "has not been fetched or verified" in output
+        assert "repository<script>" not in output
+
+    def test_result_explanation_reports_grouping_and_handoff_limitations(self) -> None:
+        result = _make_result("http://127.0.0.1/private", "Local result")
+        output = format_html(
+            [result],
+            "local",
+            portal_state={"query": "local", "grouping_status": "expired"},
+        )
+
+        assert "expired with its source snapshot" in output
+        assert "not eligible" in output
+        assert "non-global literal IP address" in output
+
+    @pytest.mark.parametrize(
+        ("status", "label"),
+        [("partial", "partial; no supported identity"), ("empty", "empty; no supported identities")],
+    )
+    def test_result_explanation_names_non_available_grouping_states(self, status: str, label: str) -> None:
+        output = format_html(
+            [_make_result("https://example.com", "Result")],
+            "query",
+            portal_state={"query": "query", "grouping_status": status},
+        )
+
+        assert label in output
+
+    def test_portal_explanation_stays_within_documented_asset_and_shell_budgets(self) -> None:
+        output = format_html(
+            [_make_result("https://example.com", "A result", content="A compact explanation fixture")],
+            "query",
+            portal_state={"query": "query", "grouping_status": "empty"},
+        ).encode()
+
+        assert len(_PORTAL_CSS.encode()) + len(_PORTAL_SCRIPT.encode()) <= 30 * 1024
+        assert len(output) <= 50 * 1024
+        assert len(gzip.compress(output)) <= 15 * 1024
 
     def test_browser_error_uses_portal_shell(self) -> None:
         output = format_error_html("invalid_filter", "The filter is invalid.", field="safesearch")

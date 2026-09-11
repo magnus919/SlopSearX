@@ -44,6 +44,7 @@ from slopsearx.formatter import (
     format_yaml_markdown,
 )
 from slopsearx.logging import setup_logging
+from slopsearx.mcp.entity_projection import entity_groups
 from slopsearx.middleware import RequestIDMiddleware
 from slopsearx.ratelimit import RateLimiter, RateLimitStrategy, ValkeySlidingWindow
 from slopsearx.router import QueryRouter
@@ -72,6 +73,7 @@ from slopsearx.service import (
     destroy_context,
     unresponsive_from_outcomes,
 )
+from slopsearx.snapshot import SearchSnapshot
 from slopsearx.stats import EngineStatsTracker
 from slopsearx.suggest import SuggestionService
 
@@ -542,6 +544,44 @@ def _portal_state(
         enforcement["safesearch"] = resolve_filter_enforcement(selected, "safesearch", safesearch, _active_engines)
     warnings = [str(warning) for warning in response.scope.warnings if str(warning).strip()]
     scope_label = ", ".join(part.strip() for part in categories.split(",") if part.strip()) or "All sources"
+    grouping_status = "available"
+    result_groups: dict[str, dict[str, Any]] = {}
+    try:
+        # The HTTP service returns its canonical unsliced response. Project
+        # identities over that full response before the formatter applies any
+        # presentation choices, without persisting a public-browser snapshot.
+        projection = entity_groups(
+            SearchSnapshot(
+                snapshot_id=response.query_id or "portal-response",
+                query=query,
+                query_id=response.query_id,
+                results=response.results,
+                scope=response.scope,
+                total=len(response.results),
+                tenant="public-portal",
+                ranking_explanation=response.ranking_explanation,
+            )
+        )
+        for group in projection:
+            result_indices: list[int] = []
+            explanation: dict[str, Any] = {
+                "entity_id": group.get("entity_id"),
+                "namespace": group.get("namespace"),
+                "identifier": group.get("identifier"),
+                "reason": group.get("reason"),
+                "result_indices": result_indices,
+                "conflicting_fields": list(group.get("conflicting_fields") or []),
+            }
+            for result_id in group.get("result_ids") or []:
+                try:
+                    result_index = int(str(result_id).rsplit(":", 1)[1])
+                except (ValueError, IndexError):
+                    continue
+                result_indices.append(result_index)
+            for result_index in result_indices:
+                result_groups[str(result_index)] = explanation
+    except Exception:  # noqa: BLE001 — explanation failure must not break search
+        grouping_status = "unavailable"
     return {
         "query": query,
         "categories": categories,
@@ -556,6 +596,9 @@ def _portal_state(
         "selected_engine_count": len(selected),
         "responsive_engine_count": sum(1 for outcome in response.engine_outcomes if outcome.status == "ok"),
         "filter_enforcement": enforcement,
+        "ranking_explanation": response.ranking_explanation,
+        "grouping_status": grouping_status,
+        "result_groups": result_groups,
         "suggestions": list(response.suggestions),
         "all_unresponsive": response.all_unresponsive,
         "json_enabled": "json" in _configured_search_formats(),

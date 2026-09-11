@@ -389,6 +389,11 @@ class TestSearchEndpoint:
         assert "Past month" in response.text
         assert "← Previous" in response.text
         assert "Try next page →" in response.text
+        assert "Why this result appeared" in response.text
+        assert "Cross-source presence" in response.text
+        assert "it is not confidence" in response.text
+        assert "unsupported for this result" in response.text
+        assert "structurally eligible" in response.text
 
     def test_strict_safesearch_is_rejected_before_dispatch(self, client: TestClient) -> None:
         response = client.get("/search", params={"q": "test", "safesearch": 2, "format": "json"})
