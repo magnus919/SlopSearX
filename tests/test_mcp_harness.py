@@ -188,8 +188,9 @@ class TestFirstVisitReachability:
             async with _session(url) as (session, _client):
                 await session.initialize()
                 tools = await session.list_tools()
-                # The harness serves the same 13-tool surface as production.
-                assert len(tools.tools) == 19
+                # The harness exposes the combined entity-projection,
+                # adaptive-research, saved-search, receipt, and staged-search surface.
+                assert len(tools.tools) == 30
 
 
 class TestDeterministicSearchEnvelope:
@@ -347,7 +348,7 @@ class TestAuthenticatedTransport:
                 res = await session.call_tool("slopsearx_search", {"query": "hello"})
                 assert "results" in _payload(res)
                 tools = await session.list_tools()
-                assert len(tools.tools) == 19
+                assert len(tools.tools) == 30
 
     async def test_authenticated_staged_workflow(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("MCP_GRANT_STAGED_SEARCH", "1")

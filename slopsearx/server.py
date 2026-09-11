@@ -558,6 +558,7 @@ def _portal_state(
         "filter_enforcement": enforcement,
         "suggestions": list(response.suggestions),
         "all_unresponsive": response.all_unresponsive,
+        "json_enabled": "json" in _configured_search_formats(),
     }
 
 
