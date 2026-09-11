@@ -24,6 +24,9 @@ Closes #N
 - [ ] Commits use Conventional Commits (`feat:`, `fix:`, etc.)
 - [ ] Documentation updated (README, spec, or AGENTS.md)
 - [ ] If adding an engine: one file, zero orchestrator changes
+- [ ] I reviewed portal impact for shared/backend changes (or this change is unrelated)
+- [ ] If the portal contract changed, I updated its tests and documentation
+- [ ] Portal contract/browser validation is included or explained below
 
 ## Test Results
 

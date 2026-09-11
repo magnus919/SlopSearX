@@ -67,6 +67,28 @@ The existing MCP `state_factory` harness and SearXNG compatibility suite remain
 authoritative for machine behavior. Portal tests assert the HTML projection
 without changing those contracts.
 
+## Portal dependency map and gate ownership
+
+The portal contract depends on the shared search request/response models and
+`SearchService`/`ScopeResolver`; the live capability catalog and filter
+enforcement resolver; MCP policy inputs for sensitive access; cache and
+snapshot view derivation; HTTP route and format negotiation; engine result
+schemas; layered configuration; and the Python package/container that serves
+the formatter. These are shared backend dependencies, so the portal contract
+job runs on every pull request instead of relying on frontend-only path
+filters.
+
+`tests/test_server.py` exercises the real FastAPI boundary with deterministic
+fake engines and isolated test state. `tests/test_formatter.py` exercises the
+HTML projection and escaping rules. The dedicated browser job loads those
+same formatter outputs in Chromium and covers landing/search, theme toggle,
+source attribution, safe result links, and pagination. A change that removes a
+required result or scope field makes the contract assertions fail; a compatible
+backend change continues through the same required checks. The normal test
+matrix remains authoritative for the API/MCP suites, while these portal jobs
+own browser-visible regressions and should be updated alongside any baseline
+change.
+
 ## Privacy and operations
 
 - No query analytics, third-party tracking, or remote assets by default.
@@ -85,3 +107,21 @@ Security review follows the [OWASP XSS Prevention Cheat Sheet](https://cheatshee
 Each release PR links the exact test commands, browser screenshots or run
 record, measured budget output, and any environment gaps. A passing static test
 is not a substitute for the manual visual and assistive-technology review.
+
+For the first release, the local review record is:
+
+- 2026-09-11: landing and deterministic all-source-unavailable result states
+  were opened from the final image-equivalent app build in the Codex browser at
+  desktop width; the hierarchy, Dark default, Darker toggle, scope disclosure,
+  empty state, and concise copy were reviewed visually. The narrow viewport is
+  exercised by the Chromium journey in CI.
+- 2026-09-11: the browser accessibility tree exposed named search controls,
+  heading structure, the theme state, and the scope disclosure; keyboard `/`
+  focus and the scope controls are covered by the Chromium smoke journey.
+- 2026-09-11: `scripts/portal_release_smoke.py` passed against local HTTP for
+  both `SLOPSEARX_PORTAL_DEFAULT_THEME=dark` and `darker` (landing 200,
+  readiness 200, deterministic search envelope 503 with the requested query).
+
+The CI `portal-browser` job is the repeatable release gate. Production canary
+and rollback evidence is deployment-specific and belongs in the operator's
+release record described by [`docs/PORTAL_DEPLOYMENT.md`](PORTAL_DEPLOYMENT.md).

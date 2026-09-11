@@ -159,8 +159,8 @@ observed health (`last_known_status`). See `docs/MCP_CONTRACT.md` §7.4.
 
 SlopSearX ships a Model Context Protocol server for AI agents. It exposes
 intent-level search (no URL strings), capability discovery, scope
-explanation, snapshot-based pagination, asynchronous research jobs, and
-attributed retrieval receipts —
+explanation, snapshot-based pagination, asynchronous research jobs, scheduled
+change detection, and attributed retrieval receipts —
 built on the same pipeline as the HTTP API. Search results carry a
 machine-readable `retrieval` handoff record so a downstream reader (e.g.
 GroktoCrawl) can capture pages and link them back to the originating result
@@ -187,21 +187,25 @@ slopsearx-mcp --remote http://<slopsearx-host>:8000/mcp --oauth
 MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.com slopsearx-mcp
 ```
 
-- 18 tools: `slopsearx_search`, `slopsearx_search_targeted`,
+- 26 tools: `slopsearx_search`, `slopsearx_search_targeted`,
   `slopsearx_search_jobs`, `slopsearx_search_security`,
   `slopsearx_search_science`, `slopsearx_list_capabilities`,
   `slopsearx_explain_search_scope`, `slopsearx_get_service_status`,
-  `slopsearx_read_results`, `slopsearx_read_result`,
+  `slopsearx_read_results`, `slopsearx_read_result`, `slopsearx_read_entities`,
   `slopsearx_start_research`, `slopsearx_get_job`, `slopsearx_cancel_job`,
   `slopsearx_retry_research`, `slopsearx_extend_research`,
+  `slopsearx_update_research`,
+  `slopsearx_create_saved_search`, `slopsearx_get_saved_search`,
+  `slopsearx_update_saved_search`, `slopsearx_pause_saved_search`,
+  `slopsearx_delete_saved_search`, `slopsearx_read_saved_search_reports`,
   `slopsearx_submit_retrieval_receipt`,
   `slopsearx_read_retrieval_receipts`, `slopsearx_export_research_manifest`
 - Resources: `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`
-- Specialist tools (jobs, security, science, research, retrieval receipts) are disabled until
+- Specialist tools (jobs, security, science, research, saved searches, retrieval receipts) are disabled until
   the operator grants them (`MCP_GRANT_JOBS=1`, `MCP_GRANT_SECURITY=1`,
   `MCP_GRANT_SCIENCE=1`, `MCP_GRANT_RESEARCH=1`,
-  `MCP_GRANT_RETRIEVAL_RECEIPTS=1`).
+  `MCP_GRANT_SAVED_SEARCHES=1`, `MCP_GRANT_RETRIEVAL_RECEIPTS=1`).
 - Sensitive engines (`hibp`, `dehashed`) are unreachable from generic
   routing, categories, and intent profiles, and are rejected by **every**
   explicit-engine search path (generic explicit engines, targeted, jobs,
@@ -276,7 +280,21 @@ same search service, routing, cache, ranking, and engine policy as the API; use
 defaults to **Dark** mode and provides a **Darker** mode toggle. Operators can
 set `SLOPSEARX_PORTAL_DEFAULT_THEME=darker` to change the initial theme. An
 explicit user choice is retained in browser storage when available. The portal
-does not grant capabilities that the server-side policy would reject.
+does not grant capabilities that the server-side policy would reject. Explicit
+selection of a sensitive engine (currently `hibp` and `dehashed` by default)
+also requires `MCP_TARGETED_SENSITIVE_ALLOWED=true`; the same operator policy
+is applied before either the browser or MCP surface dispatches a search.
+
+For a public deployment, put the service behind the operator's TLS and
+authentication reverse proxy. SlopSearX does not provide browser accounts,
+trust arbitrary forwarded headers, or send engine credentials to the browser.
+The portal has no analytics or third-party runtime assets by default. Search
+forms are read-only requests; there is no authenticated browser mutation that
+needs a CSRF token in this release.
+
+See [`docs/PORTAL_DEPLOYMENT.md`](docs/PORTAL_DEPLOYMENT.md) for the browser
+URL map, proxy/access modes, digest-pinned deployment, smoke check, rollback,
+and troubleshooting runbook.
 
 ## License
 

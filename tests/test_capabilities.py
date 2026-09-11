@@ -321,13 +321,15 @@ class TestIntentProfiles:
 
 
 class TestMCPPolicy:
-    def test_defaults_are_secure(self) -> None:
+    def test_defaults_are_secure(self, monkeypatch) -> None:
+        monkeypatch.delenv("MCP_GRANT_SAVED_SEARCHES", raising=False)
         policy = load_mcp_policy(config_path=None)
         assert policy.tool_enabled("jobs") is False
         assert policy.tool_enabled("security") is False
         assert policy.tool_enabled("science") is False
         assert policy.tool_enabled("research") is False
         assert policy.tool_enabled("retrieval_receipts") is False
+        assert policy.tool_enabled("saved_searches") is False
         assert policy.sensitive_engines == set(DEFAULT_SENSITIVE_ENGINES)
         assert policy.max_results == 50
         assert policy.auth_token == ""
@@ -340,9 +342,12 @@ mcp:
   enabled_tools:
     jobs: true
     security: true
+    saved_searches: true
   sensitive_engines: [hibp]
   max_results: 25
   job_max_queries: 5
+  saved_max_definitions: 9
+  saved_min_interval_seconds: 120
   auth_token: "s3cret"
 """
         )
@@ -350,9 +355,12 @@ mcp:
         assert policy.tool_enabled("jobs") is True
         assert policy.tool_enabled("security") is True
         assert policy.tool_enabled("science") is False
+        assert policy.tool_enabled("saved_searches") is True
         assert policy.sensitive_engines == {"hibp"}
         assert policy.max_results == 25
         assert policy.job_max_queries == 5
+        assert policy.saved_max_definitions == 9
+        assert policy.saved_min_interval_seconds == 120
         assert policy.auth_token == "s3cret"
 
     def test_env_overrides_beat_yaml(self, tmp_path, monkeypatch) -> None:
@@ -361,10 +369,14 @@ mcp:
         monkeypatch.setenv("MCP_GRANT_JOBS", "0")
         monkeypatch.setenv("MCP_MAX_RESULTS", "100")
         monkeypatch.setenv("MCP_GRANT_RETRIEVAL_RECEIPTS", "1")
+        monkeypatch.setenv("MCP_GRANT_SAVED_SEARCHES", "1")
+        monkeypatch.setenv("MCP_SAVED_MAX_RESULTS", "75")
         policy = load_mcp_policy(config_path=config_file)
         assert policy.tool_enabled("jobs") is False  # env wins
         assert policy.max_results == 100
+        assert policy.tool_enabled("saved_searches") is True
         assert policy.tool_enabled("retrieval_receipts") is True
+        assert policy.saved_max_results == 75
 
     def test_invalid_env_values_ignored(self, monkeypatch) -> None:
         monkeypatch.setenv("MCP_MAX_RESULTS", "not-a-number")
@@ -382,3 +394,17 @@ mcp:
         policy = load_mcp_policy(config_path=None)
         catalog = _catalog()
         assert policy.validate(catalog) == []
+
+    def test_validate_saved_search_bound_relationships(self) -> None:
+        policy = MCPPolicy(
+            saved_default_reports=11,
+            saved_max_reports=10,
+            saved_default_retention_seconds=101,
+            saved_max_retention_seconds=100,
+            saved_min_interval_seconds=61,
+            saved_max_interval_seconds=60,
+        )
+        problems = policy.validate(_catalog())
+        assert any("saved_default_reports" in problem for problem in problems)
+        assert any("saved_default_retention_seconds" in problem for problem in problems)
+        assert any("saved_min_interval_seconds" in problem for problem in problems)
