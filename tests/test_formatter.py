@@ -7,7 +7,9 @@ import yaml
 from slopsearx.adapter import SearchResult
 from slopsearx.formatter import (
     _payload_for_output,
+    format_html,
     format_json,
+    format_landing_page,
     format_yaml_markdown,
 )
 from slopsearx.payload import (
@@ -513,3 +515,31 @@ class TestFormatYamlMarkdown:
         parsed = yaml.safe_load(output.split("---\n", 1)[0])
 
         assert parsed["results"][0]["payload"] is None
+
+
+class TestPortalHtml:
+    """Human-facing portal rendering remains safe and theme-aware."""
+
+    def test_landing_page_contains_search_and_theme_controls(self) -> None:
+        output = format_landing_page(default_theme="darker")
+
+        assert 'data-default-theme="darker"' in output
+        assert 'action="/search"' in output
+        assert "data-theme-toggle" in output
+        assert "Search <em>SlopSearX.</em>" in output
+        assert "let stored = null" in output
+        assert "storage is optional" in output
+
+    def test_result_page_escapes_content_and_rejects_unsafe_links(self) -> None:
+        result = _make_result(
+            "javascript:alert(1)",
+            '<script>alert("x")</script>',
+            content="<img src=x onerror=alert(1)>",
+        )
+
+        output = format_html([result], "<query>", default_theme="dark")
+
+        assert "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;" in output
+        assert "&lt;img src=x onerror=alert(1)&gt;" in output
+        assert 'href="#"' in output
+        assert "javascript:" not in output

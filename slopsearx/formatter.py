@@ -4,6 +4,11 @@ The internal SearchResult dataclass is decoupled from the wire format.
 Formatters map between the internal model and output serialization.
 """
 
+# The self-contained portal stylesheet is intentionally readable as CSS. Its
+# long lines are not Python formatting problems and are covered by browser
+# rendering tests instead.
+# ruff: noqa: E501
+
 from __future__ import annotations
 
 import csv
@@ -186,31 +191,196 @@ def format_json(
     return response
 
 
+_PORTAL_CSS = """
+:root {
+  color-scheme: dark;
+  --ink: #f4f0e8;
+  --muted: #a49e91;
+  --quiet: #6e6a61;
+  --paper: #191a18;
+  --paper-raised: #22231f;
+  --paper-lift: #2a2b26;
+  --line: rgba(244, 240, 232, .13);
+  --accent: #e5b567;
+  --accent-strong: #f1c979;
+  --signal: #a7d7c5;
+  --shadow: rgba(0, 0, 0, .32);
+}
+:root[data-theme="darker"] {
+  --ink: #f8f3e9;
+  --muted: #a9a398;
+  --quiet: #716c62;
+  --paper: #0b0c0b;
+  --paper-raised: #121311;
+  --paper-lift: #1a1b18;
+  --line: rgba(248, 243, 233, .15);
+  --accent: #f0bd65;
+  --accent-strong: #ffd88b;
+  --signal: #b8e4d2;
+  --shadow: rgba(0, 0, 0, .5);
+}
+* { box-sizing: border-box; }
+html { min-width: 320px; background: var(--paper); }
+body {
+  margin: 0; min-height: 100vh; color: var(--ink); background:
+    radial-gradient(circle at 8% -10%, rgba(229,181,103,.14), transparent 32rem),
+    radial-gradient(circle at 92% 20%, rgba(167,215,197,.07), transparent 28rem),
+    var(--paper);
+  font-family: "Avenir Next", "Segoe UI", sans-serif; line-height: 1.5;
+}
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .22;
+  background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 5rem 5rem; mask-image: linear-gradient(to bottom, black, transparent 70%);
+}
+a { color: inherit; }
+.portal { position: relative; width: min(1180px, calc(100% - 2.5rem)); margin: 0 auto; }
+.masthead { display: flex; justify-content: space-between; align-items: center; padding: 1.6rem 0; border-bottom: 1px solid var(--line); }
+.brand { display: inline-flex; align-items: center; gap: .7rem; text-decoration: none; letter-spacing: .09em; font: 700 .78rem/1 "SFMono-Regular", Consolas, monospace; }
+.brand-mark { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--accent); color: var(--accent); transform: rotate(45deg); }
+.brand-mark span { transform: rotate(-45deg); }
+.theme-toggle { border: 1px solid var(--line); border-radius: 99px; color: var(--muted); background: transparent; cursor: pointer; padding: .6rem .85rem; font: 600 .7rem/1 "SFMono-Regular", Consolas, monospace; transition: border-color .2s, color .2s, background .2s; }
+.theme-toggle:hover, .theme-toggle:focus-visible { color: var(--ink); border-color: var(--accent); background: var(--paper-lift); }
+.theme-toggle:focus-visible, .search-input:focus-visible, .search-button:focus-visible, .result-link:focus-visible { outline: 3px solid var(--signal); outline-offset: 3px; }
+.eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .16em; font: 700 .7rem/1.2 "SFMono-Regular", Consolas, monospace; }
+.hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(18rem, .8fr); gap: 5rem; align-items: end; padding: clamp(5rem, 12vw, 9rem) 0 5rem; }
+.hero h1 { max-width: 12ch; margin: .8rem 0 1.25rem; font: 500 clamp(3.3rem, 8vw, 7rem)/.9 Georgia, "Times New Roman", serif; letter-spacing: -.065em; }
+.hero h1 em { color: var(--accent); font-style: normal; }
+.hero-copy { max-width: 31rem; margin: 0; color: var(--muted); font-size: 1.05rem; }
+.hero-note { border-left: 1px solid var(--accent); padding: 0 0 0 1.35rem; color: var(--muted); font-size: .92rem; }
+.hero-note strong { display: block; margin-bottom: .45rem; color: var(--ink); font: 600 1rem Georgia, serif; }
+.search-panel { padding: .45rem; background: var(--paper-raised); border: 1px solid var(--line); box-shadow: 0 1.2rem 3rem var(--shadow); }
+.search-form { display: flex; gap: .45rem; }
+.search-input { min-width: 0; flex: 1; border: 0; color: var(--ink); background: transparent; padding: 1rem 1.1rem; font: 1rem "Avenir Next", "Segoe UI", sans-serif; }
+.search-input::placeholder { color: var(--quiet); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.search-button { border: 0; color: #171710; background: var(--accent); cursor: pointer; padding: 0 1.35rem; font: 700 .75rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; letter-spacing: .08em; transition: background .2s, transform .2s; }
+.search-button:hover { background: var(--accent-strong); transform: translateY(-1px); }
+.search-hint { display: flex; justify-content: space-between; gap: 1rem; padding: .65rem 1rem .35rem; color: var(--quiet); font: .66rem "SFMono-Regular", Consolas, monospace; }
+.search-hint kbd { border: 1px solid var(--line); border-radius: .2rem; padding: .12rem .3rem; color: var(--muted); }
+.portal-footer { display: flex; justify-content: space-between; gap: 1rem; padding: 2.5rem 0 2rem; color: var(--quiet); font: .68rem "SFMono-Regular", Consolas, monospace; }
+.results-shell { padding: 3rem 0 1rem; }
+.results-top { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 2.3rem; }
+.results-top h1 { margin: .5rem 0 0; font: 500 clamp(2rem, 4vw, 3.8rem)/.95 Georgia, serif; letter-spacing: -.05em; }
+.results-top .summary { max-width: 18rem; margin: 0; color: var(--muted); text-align: right; font-size: .85rem; }
+.results-list { max-width: 850px; }
+.result { position: relative; padding: 1.35rem 0 1.6rem; border-top: 1px solid var(--line); animation: rise .5s both; animation-delay: calc(var(--i, 0) * 55ms); }
+.result::before { content: counter(result); counter-increment: result; position: absolute; left: -2.5rem; top: 1.45rem; color: var(--quiet); font: .68rem "SFMono-Regular", Consolas, monospace; }
+.results-list { counter-reset: result; }
+.result-link { display: inline; color: var(--ink); text-decoration: none; font: 500 clamp(1.25rem, 2.5vw, 1.8rem)/1.1 Georgia, serif; letter-spacing: -.025em; }
+.result-link:hover { color: var(--accent-strong); }
+.result-url { margin: .45rem 0 .6rem; color: var(--signal); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: .68rem "SFMono-Regular", Consolas, monospace; }
+.result-content { max-width: 70ch; margin: 0; color: var(--muted); font-size: .91rem; }
+.result-meta { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin-top: .9rem; color: var(--quiet); font: .65rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; letter-spacing: .04em; }
+.result-meta span + span::before { content: "•"; margin-right: 1rem; color: var(--accent); }
+.notice { margin: 1.5rem 0; padding: .8rem 1rem; border: 1px solid rgba(229,181,103,.45); color: var(--muted); background: rgba(229,181,103,.07); font-size: .82rem; }
+.empty { padding: 3rem 0; color: var(--muted); border-top: 1px solid var(--line); }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (max-width: 720px) { .portal { width: min(100% - 1.5rem, 42rem); } .hero { display: block; padding: 4.5rem 0 3.5rem; } .hero h1 { font-size: clamp(3.2rem, 16vw, 5rem); } .hero-note { margin-top: 3rem; } .results-top { display: block; } .results-top .summary { margin-top: 1rem; text-align: left; } .result::before { display: none; } .search-form { display: block; } .search-button { width: 100%; min-height: 3rem; } .search-hint { display: none; } .portal-footer { display: block; } .portal-footer span { display: block; margin-top: .5rem; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+"""
+
+
+_PORTAL_SCRIPT = """
+(function () {
+  const root = document.documentElement;
+  let stored = null;
+  try { stored = window.localStorage.getItem("slopsearx-theme"); } catch (_) { /* storage is optional */ }
+  const configured = root.dataset.defaultTheme || "dark";
+  const allowed = ["dark", "darker"];
+  const theme = allowed.includes(stored) ? stored : (allowed.includes(configured) ? configured : "dark");
+  root.dataset.theme = theme;
+  const button = document.querySelector("[data-theme-toggle]");
+  const update = function () {
+    const darker = root.dataset.theme === "darker";
+    if (button) { button.textContent = darker ? "Darker · on" : "Darker · off"; button.setAttribute("aria-pressed", String(darker)); }
+  };
+  update();
+  if (button) button.addEventListener("click", function () {
+    root.dataset.theme = root.dataset.theme === "darker" ? "dark" : "darker";
+    try { window.localStorage.setItem("slopsearx-theme", root.dataset.theme); } catch (_) { /* storage is optional */ }
+    update();
+  });
+  const input = document.querySelector(".search-input");
+  document.addEventListener("keydown", function (event) {
+    if ((event.key === "/" || (event.key === "k" && (event.metaKey || event.ctrlKey))) && document.activeElement !== input) {
+      event.preventDefault(); if (input) input.focus();
+    }
+  });
+}());
+"""
+
+
+def _safe_href(url: str | None) -> str:
+    """Return only browser-safe absolute HTTP(S) URLs for result links."""
+    if not url:
+        return "#"
+    try:
+        parsed = urlparse(url)
+    except (TypeError, ValueError):
+        return "#"
+    return url if parsed.scheme in {"http", "https"} and parsed.netloc else "#"
+
+
+def _portal_document(*, body: str, title: str, default_theme: str = "dark") -> str:
+    """Build the browser document with the portal's self-contained shell."""
+    safe_theme = default_theme if default_theme in {"dark", "darker"} else "dark"
+    return (
+        '<!doctype html>\n<html lang="en" data-default-theme="'
+        + safe_theme
+        + '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+        + f'<meta name="description" content="SlopSearX — search across the open web and specialist sources."><title>{html_lib.escape(title)}</title>'
+        + "<style>"
+        + _PORTAL_CSS
+        + "</style></head><body>"
+        + body
+        + "<script>"
+        + _PORTAL_SCRIPT
+        + "</script></body></html>"
+    )
+
+
+def format_landing_page(*, default_theme: str = "dark") -> str:
+    """Render the human-facing portal landing page for a bare root visit."""
+    body = """
+<main class="portal">
+  <header class="masthead"><a class="brand" href="/"><span class="brand-mark"><span>⌁</span></span><span>SLOPSEARX</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Darker · off</button></header>
+  <section class="hero" aria-labelledby="hero-title">
+    <div><div class="eyebrow">Search</div><h1 id="hero-title">Search <em>SlopSearX.</em></h1><p class="hero-copy">Search across the web and specialist sources configured for this instance.</p></div>
+    <aside class="hero-note"><strong>Configured sources</strong>Results identify their source. If an engine cannot answer, the page says so.</aside>
+  </section>
+  <section class="search-panel" aria-label="Search"><form class="search-form" action="/search" method="get"><label class="sr-only" for="portal-query">Search SlopSearX</label><input class="search-input" id="portal-query" name="q" type="search" placeholder="Search" autocomplete="off" autofocus required><button class="search-button" type="submit">Search ↗</button></form><div class="search-hint"><span>Enter a query</span><span><kbd>/</kbd> focus search</span></div></section>
+  <footer class="portal-footer"><span>Sources are configured by the operator.</span><span>Press / to focus search.</span></footer>
+</main>
+"""
+    return _portal_document(body=body, title="SlopSearX — search", default_theme=default_theme)
+
+
 def format_html(
     results: list[SearchResult],
     query: str,
     *,
     meta: dict[str, Any] | None = None,
     unresponsive_engines: list[list[str]] | None = None,
+    default_theme: str = "dark",
 ) -> str:
-    """Format a small, safe HTML search-results page.
-
-    This is intentionally theme-neutral: the compatibility contract requires
-    HTML output, while the JSON and YAML formatters remain the richer machine
-    interfaces for clients that do not need a browser page.
-    """
+    """Format the human-facing, safe HTML search-results page."""
     escaped_query = html_lib.escape(query, quote=True)
     result_items: list[str] = []
-    for result in results:
+    for index, result in enumerate(results):
         title = html_lib.escape(result.title or result.url, quote=True)
-        url = html_lib.escape(result.url, quote=True)
+        raw_url = _safe_href(result.url)
+        url = html_lib.escape(raw_url, quote=True)
+        domain = html_lib.escape(urlparse(raw_url).netloc if raw_url != "#" else "unknown source", quote=True)
         content = html_lib.escape(result.content or "")
+        category = html_lib.escape(result.category or "web", quote=True)
+        published = html_lib.escape((result.published_date or "").split("T", 1)[0], quote=True)
+        metadata = f"<span>{category}</span>" + (f"<span>{published}</span>" if published else "")
         result_items.append(
-            '<article class="result">'
-            f'<h2><a href="{url}">{title}</a></h2>'
-            f'<p class="url">{url}</p>'
-            f"<p>{content}</p>"
-            f'<p class="engine">{html_lib.escape(result.engine, quote=True)}</p>'
+            f'<article class="result" style="--i:{index}">'
+            f'<h2><a class="result-link" href="{url}" target="_blank" rel="noopener noreferrer">{title}</a></h2>'
+            f'<p class="result-url">{domain}</p>'
+            f'<p class="result-content">{content}</p>'
+            f'<div class="result-meta"><span>{html_lib.escape(result.engine, quote=True)}</span>{metadata}</div>'
             "</article>"
         )
 
@@ -219,19 +389,22 @@ def format_html(
         failures = ", ".join(html_lib.escape(str(engine), quote=True) for engine, _ in unresponsive_engines)
         body += f'<p class="unresponsive">Unavailable engines: {failures}</p>'
     elapsed = int((meta or {}).get("response_time_ms", 0))
-    return (
-        "<!doctype html>\n"
-        '<html lang="en"><head><meta charset="utf-8">'
-        f"<title>Search results for {escaped_query}</title></head>\n"
-        "<body>\n"
-        '<form action="/search" method="get">'
-        f'<input name="q" value="{escaped_query}">'
-        '<button type="submit">Search</button></form>\n'
-        f"<h1>Search results for {escaped_query}</h1>\n"
-        f'<p class="summary">{len(results)} results in {elapsed} ms.</p>\n'
-        f"{body}\n"
-        "</body></html>"
-    )
+    unavailable = ""
+    if unresponsive_engines:
+        unavailable = '<div class="notice" role="status">Some sources could not answer this search. The results below are still usable.</div>'
+    content = f"""
+<main class="portal">
+  <header class="masthead"><a class="brand" href="/"><span class="brand-mark"><span>⌁</span></span><span>SLOPSEARX</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Darker · off</button></header>
+  <section class="results-shell" aria-labelledby="results-title">
+    <div class="results-top"><div><div class="eyebrow">Search results</div><h1 id="results-title">{escaped_query}</h1></div><p class="summary">{len(results)} results · {elapsed} ms</p></div>
+    <section class="search-panel" aria-label="Refine search"><form class="search-form" action="/search" method="get"><label class="sr-only" for="portal-query">Search SlopSearX</label><input class="search-input" id="portal-query" name="q" type="search" value="{escaped_query}" required><button class="search-button" type="submit">Search ↗</button></form></section>
+    {unavailable}
+    <div class="results-list">{body}</div>
+  </section>
+  <footer class="portal-footer"><span>Sources are configured by the operator.</span><span>Press / to focus search.</span></footer>
+</main>
+"""
+    return _portal_document(body=content, title=f"Search results for {query}", default_theme=default_theme)
 
 
 def format_csv(results: list[SearchResult]) -> str:
