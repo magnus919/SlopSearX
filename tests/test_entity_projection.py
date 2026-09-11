@@ -118,6 +118,18 @@ def test_equal_and_one_sided_facts_do_not_conflict():
     assert groups[0]["conflicting_fields"] == []
 
 
+def test_conflict_fields_are_specific_to_identity_namespace():
+    first, second = result(), result()
+    first.payload["data"]["name"] = "first"
+    second.payload["data"]["name"] = "second"
+    assert entity_groups(snapshot([first, second]))[0]["conflicting_fields"] == ["name"]
+    packages = [
+        result("pkg", engine="npm", cve_id="CVE-2024-12345"),
+        result("pkg", engine="npm", cve_id="CVE-2024-99999"),
+    ]
+    assert entity_groups(snapshot(packages))[0]["conflicting_fields"] == ["cve_id"]
+
+
 def test_large_snapshot_linear_conservation():
     rows = [result() for _ in range(500)] + [result(None) for _ in range(500)]
     groups = entity_groups(snapshot(rows))

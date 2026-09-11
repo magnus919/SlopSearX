@@ -13,7 +13,6 @@ from slopsearx.snapshot import SearchSnapshot
 
 ENTITY_CONTRACT = "slopsearx.entity_groups"
 ENTITY_VERSION = 1
-_IDENTIFIER_FIELDS = frozenset({"cve_id", "name", "version", "ecosystem"})
 
 
 def _text(value: Any) -> str | None:
@@ -103,8 +102,9 @@ def entity_groups(snapshot: SearchSnapshot) -> list[dict[str, Any]]:
                 conflicts[entity_id] = set()
         group["result_ids"].append(f"{snapshot.snapshot_id}:{index}")
         if entity_id is not None:
+            identity_fields = {"cve_id"} if namespace == "cve" else {"name", "version", "ecosystem"}
             for field, value in data.items():
-                if field in _IDENTIFIER_FIELDS:
+                if field in identity_fields:
                     continue
                 encoded_value = json.dumps(value, sort_keys=True, separators=(",", ":"))
                 previous = facts[entity_id].setdefault(field, encoded_value)
