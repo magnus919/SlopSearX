@@ -157,8 +157,10 @@ async def test_snapshot_result_and_entity_group_seed_dossiers_without_dispatch(s
     read = await state.snapshots.read(entity_snapshot_id)
     group = entity_groups(read.snapshot)[0]
     entity = artifact_ref("entity_group", composite_artifact_id(entity_snapshot_id, group["entity_id"]))
+    group_v2 = entity_groups(read.snapshot, version=2)[0]
+    entity_v2 = artifact_ref("entity_group", composite_artifact_id(entity_snapshot_id, group_v2["entity_id"]))
     calls = {name: engine.calls for name, engine in state.ctx.active_engines.items()}
-    for index, source in enumerate((snapshot, result, entity)):
+    for index, source in enumerate((snapshot, result, entity, entity_v2)):
         dossier = await dependency_tools.slopsearx_start_dependency_dossier(
             "pypi", "requests", idempotency_key=f"seed-{index}", source=source
         )

@@ -9,8 +9,9 @@ import httpx
 import pytest
 
 from slopsearx.adapter import SearchResult, discover_engines
+from slopsearx.mcp import lineage_tools
 from slopsearx.mcp import tools as t
-from slopsearx.mcp.entity_projection import entity_groups
+from slopsearx.mcp.entity_projection import entity_groups, entity_projection
 from slopsearx.mcp.state import set_state, tenant_scope
 from slopsearx.payload import build_payload
 from slopsearx.service import ScopeDecision
@@ -136,6 +137,142 @@ def test_large_snapshot_linear_conservation():
     assert len(groups) == 501
     ids = [i for g in groups for i in g["result_ids"]]
     assert len(ids) == len(set(ids)) == 1000
+
+
+def v2_result(domain, kind, data, *, engine="source"):
+    return SearchResult(
+        url="https://example.com/lead",
+        title="lead",
+        content="lead",
+        engine=engine,
+        engines={engine},
+        payload=build_payload(domain, kind, data, engine=engine),
+    )
+
+
+def test_v2_scholarly_identifiers_normalize_without_merging_namespaces():
+    row = v2_result(
+        "science",
+        "publication",
+        {
+            "doi": "https://doi.org/10.1000/CAFÉ",
+            "pmid": "12345678",
+            "pmcid": "pmc87654321",
+            "openalex_id": "https://openalex.org/w2626778328",
+        },
+    )
+    groups, relationships = entity_projection(snapshot([row]), version=2)
+
+    assert [(group["namespace"], group["identifier"]) for group in groups] == [
+        ("doi", {"doi": "10.1000/café"}),
+        ("pmid", {"pmid": "12345678"}),
+        ("pmcid", {"pmcid": "PMC87654321"}),
+        ("openalex", {"openalex_id": "W2626778328"}),
+    ]
+    assert len({group["entity_id"] for group in groups}) == 4
+    assert {edge["relation"] for edge in relationships} == {"source_reported_alias"}
+    assert all(edge["result_ids"] == ["snap-test:0"] for edge in relationships)
+
+
+def test_v2_repository_case_and_git_url_are_canonical_but_redirect_paths_are_not_followed():
+    equivalent = [
+        v2_result("code", "repository", {"repository": "Owner/Repo"}, engine="github"),
+        v2_result("code", "repository", {"repository": "https://github.com/owner/repo.git"}, engine="github"),
+    ]
+    groups, _ = entity_projection(snapshot(equivalent), version=2)
+    assert len(groups) == 1
+    assert groups[0]["identifier"] == {"repository": "owner/repo"}
+    assert groups[0]["result_ids"] == ["snap-test:0", "snap-test:1"]
+
+    redirected = v2_result(
+        "code", "repository", {"repository": "https://github.com/old/repo/redirect"}, engine="github"
+    )
+    assert entity_projection(snapshot([redirected]), version=2)[0][0]["entity_id"] is None
+
+    conflicting = v2_result(
+        "code",
+        "repository",
+        {"repository": "owner/one", "repository_url": "https://github.com/owner/two"},
+        engine="github",
+    )
+    unresolved = entity_projection(snapshot([conflicting]), version=2)[0][0]
+    assert unresolved["entity_id"] is None
+    assert unresolved["reason"] == "conflicting_source_identifiers"
+
+
+def test_v2_candidate_repository_and_advisory_edges_do_not_merge_entities():
+    package = v2_result(
+        "packages",
+        "package",
+        {"name": "pkg", "version": "1", "repository_url": "https://github.com/Org/Repo"},
+        engine="pypi",
+    )
+    advisory = v2_result(
+        "security",
+        "vulnerability",
+        {"cve_id": "CVE-2026-12345", "ghsa_id": "GHSA-2345-cfgh-jmpq"},
+        engine="nvd",
+    )
+    groups, relationships = entity_projection(snapshot([package, advisory]), version=2)
+
+    assert {group["namespace"] for group in groups} == {"pypi", "github_repository", "cve", "ghsa"}
+    assert {edge["relation"] for edge in relationships} == {"candidate_repository", "source_reported_advisory"}
+    assert all(edge["from_entity_id"] != edge["to_entity_id"] for edge in relationships)
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {"doi": "same title"},
+        {"pmid": "0"},
+        {"pmcid": "PMC12 extra"},
+        {"openalex_id": "https://evil.example/W2626778328"},
+        {"repository": "https://github.com/owner/repo/issues"},
+        {"ghsa_id": "GHSA-aaaa-bbbb-cccc"},
+        {"doi": "10.1000/" + "x" * 513},
+    ],
+)
+def test_v2_malformed_or_oversized_identifiers_stay_unresolved(data):
+    domain, kind = ("science", "publication")
+    if "repository" in data:
+        domain, kind = "code", "repository"
+    if "ghsa_id" in data:
+        domain, kind = "security", "advisory"
+    group = entity_projection(snapshot([v2_result(domain, kind, data)]), version=2)[0][0]
+    assert group["entity_id"] is None
+    assert group["reason"] == "invalid_inferred_or_conflicting_identifier"
+
+
+def test_v2_inferred_identifier_is_unresolved_and_ids_ignore_cursor_rank_and_order():
+    inferred = v2_result("science", "publication", {"doi": "10.1000/example"})
+    inferred.payload["provenance"]["inferred_fields"] = ["doi"]
+    assert entity_projection(snapshot([inferred]), version=2)[0][0]["entity_id"] is None
+
+    first = v2_result("science", "publication", {"doi": "doi:10.1000/Example"})
+    second = copy.deepcopy(first)
+    second.position, second.score = 99, 0.01
+    left = snapshot([first])
+    right = SearchSnapshot("another", "q", "other", [second], ScopeDecision(), 1, "default")
+    assert (
+        entity_projection(left, version=2)[0][0]["entity_id"] == entity_projection(right, version=2)[0][0]["entity_id"]
+    )
+
+
+async def test_entity_tool_negotiates_v2_and_rejects_unknown_version(state):
+    cursor = await state.snapshots.create(
+        "q",
+        "q1",
+        [v2_result("science", "publication", {"doi": "10.1000/example", "pmid": "123"})],
+        ScopeDecision(),
+    )
+    v1 = await t.slopsearx_read_entities(cursor)
+    v2 = await t.slopsearx_read_entities(cursor, version=2)
+    assert v1["version"] == 1 and "relationships" not in v1
+    assert v2["version"] == 2 and v2["relationships"][0]["relation"] == "source_reported_alias"
+    graph = await lineage_tools.slopsearx_get_artifact_lineage(v2["entities"][0]["artifact"], max_depth=0)
+    assert graph["nodes"][0]["status"] == "live"
+    assert (await t.slopsearx_read_entities(cursor, version=3))["error"]["field"] == "version"
+    assert (await t.slopsearx_read_entities(cursor, version=True))["error"]["field"] == "version"
 
 
 @pytest.fixture

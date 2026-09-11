@@ -80,3 +80,44 @@ migration; unsupported payloads remain singleton records.
 DOI, job identity, semantic matching, and page-content comparisons are outside
 version 1. No URL canonicalization is added: the view reuses original result
 IDs, leaving canonical URL identity work in [#307](https://github.com/magnus919/SlopSearX/issues/307).
+
+## Version 2 contract
+
+Pass `version=2` to opt into scholarly, repository, and advisory identities.
+Version 1 remains the default and retains its original fields, IDs, grouping,
+and one-result-to-one-group conservation rule. Version 2 uses `entity-v2-`
+IDs and adds a top-level `relationships` list. One result can contribute to
+more than one v2 entity when its source explicitly reports aliases.
+
+Version 2 retains CVE, npm, and PyPI rules and adds these authorities:
+
+| Namespace | Accepted explicit value | Normalization |
+| --- | --- | --- |
+| `doi` | `doi`, `doi:` value, or direct `https://doi.org/` URL | Percent-decode the resolver path, normalize Unicode to NFC, case-fold, and require a `10.` registrant prefix plus suffix. |
+| `pmid` | `pmid`, or PubMed's explicit `publication_id` | Preserve one to nine non-zero decimal digits. |
+| `pmcid` | `pmcid` | Uppercase `PMC` plus one to nine non-zero decimal digits. |
+| `openalex` | `openalex_id` or direct HTTPS OpenAlex work URL | Uppercase `W` plus 4–15 digits; queries and fragments are rejected. |
+| `github_repository` | `repository` or `repository_url` | Accept `owner/repository` or a direct HTTPS GitHub repository URL, remove `.git`, and case-fold. Extra paths, redirects, queries, and fragments are not followed or inferred. |
+| `ghsa` | `ghsa_id` or `advisory_id` | Uppercase the canonical `GHSA-xxxx-xxxx-xxxx` alphabet. |
+| `osv_advisory` | `advisory_id` | Uppercase supported `PYSEC`, `RUSTSEC`, and `GO` identifiers. |
+
+Every field must appear in `adapter_fields`, must be absent from
+`inferred_fields`, and must be attributed to a contributing engine. Titles,
+authors, hostnames, result URLs, and similar text never establish identity.
+Malformed, oversized, inferred, or conflicting same-namespace values remain
+unresolved with a stable reason. Equivalent spelling produces the same ID
+regardless of cursor, result order, rank, or score.
+
+Relationships never merge namespaces. Each record contains
+`from_entity_id`, `relation`, `to_entity_id`, and the source `result_ids` that
+reported the relationship:
+
+- `source_reported_alias` connects distinct scholarly identifier namespaces;
+- `candidate_repository` connects a package release to an explicitly reported
+  GitHub repository candidate without asserting ownership;
+- `source_reported_advisory` connects a CVE to an explicitly reported GHSA or
+  supported OSV advisory without asserting affected-version applicability.
+
+The projector performs no search, page fetch, redirect resolution, DNS lookup,
+or semantic matching. Flat snapshot results and every SearXNG HTTP response
+remain unchanged.

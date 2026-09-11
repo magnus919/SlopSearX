@@ -366,7 +366,8 @@ async def _entity_group(ref: dict[str, Any]) -> tuple[dict[str, Any], list[dict[
         return _error_node(ref, parent["status"], parent.get("expires_at"))
     read = await get_state().snapshots.for_tenant(current_tenant()).read(snapshot_id)
     assert read.snapshot is not None
-    group = next((item for item in entity_groups(read.snapshot) if item.get("entity_id") == entity_id), None)
+    version = 2 if entity_id.startswith("entity-v2-") else 1
+    group = next((item for item in entity_groups(read.snapshot, version) if item.get("entity_id") == entity_id), None)
     if group is None:
         return _error_node(ref, "missing")
     edges = [lineage_edge(ref, "derived_from", snapshot_ref)]

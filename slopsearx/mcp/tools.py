@@ -29,7 +29,12 @@ from slopsearx.filters import (
     resolve_filter_enforcement,
 )
 from slopsearx.mcp.composition import ResolvedSource, resolve_source
-from slopsearx.mcp.entity_projection import ENTITY_CONTRACT, ENTITY_VERSION, entity_groups
+from slopsearx.mcp.entity_projection import (
+    ENTITY_CONTRACT,
+    ENTITY_VERSION,
+    ENTITY_VERSIONS,
+    entity_projection,
+)
 from slopsearx.mcp.result_serialization import (
     CONTENT_UNAVAILABLE_NOTE as CONTENT_UNAVAILABLE_NOTE,
 )
@@ -1517,8 +1522,9 @@ async def slopsearx_read_entities(
     cursor: str,
     page: int = 1,
     max_results: int | None = None,
+    version: StrictInt = ENTITY_VERSION,
 ) -> dict[str, Any]:
-    """Read explicit CVE and npm/PyPI release groups from a captured snapshot.
+    """Read versioned explicit-identifier groups from a captured snapshot.
 
     max_results counts entities, not members; groups contain original result IDs
     for slopsearx_read_result. Unknown identities stay separate. This read-only
@@ -1529,6 +1535,8 @@ async def slopsearx_read_entities(
         return _error("invalid_input", "cursor is required", field="cursor")
     if page < 1:
         return _error("invalid_input", "page must be >= 1", field="page")
+    if type(version) is not int or version not in ENTITY_VERSIONS:
+        return _error("invalid_input", f"version must be one of {ENTITY_VERSIONS}", field="version")
     page_size = _bounded_max_results(state, max_results)
     lookup = await state.snapshots.for_tenant(current_tenant()).read(cursor)
     if lookup.unavailable:
@@ -1544,11 +1552,11 @@ async def slopsearx_read_entities(
     if lookup.snapshot is None:
         return _error("invalid_cursor", "unknown cursor", field="cursor")
     snapshot = lookup.snapshot
-    groups = entity_groups(snapshot)
+    groups, relationships = entity_projection(snapshot, version)
     start = (page - 1) * page_size
-    return {
+    response = {
         "contract": ENTITY_CONTRACT,
-        "version": ENTITY_VERSION,
+        "version": version,
         "cursor": cursor,
         "query": snapshot.query,
         "page": page,
@@ -1575,6 +1583,9 @@ async def slopsearx_read_entities(
             "note": "Entity identity is source-reported, not independent corroboration or verification.",
         },
     }
+    if version > ENTITY_VERSION:
+        response["relationships"] = relationships
+    return response
 
 
 async def slopsearx_read_result(result_id: str) -> dict[str, Any]:
