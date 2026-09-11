@@ -50,7 +50,7 @@ if redis.call('ZCARD', KEYS[3]) == 0 and redis.call('EXISTS', KEYS[5]) == 1 then
       local ok,item=pcall(cjson.decode,candidate)
       if not ok then return {'unavailable',''} end
       if tonumber(item.expires_at) > tonumber(ARGV[2]) then
-        redis.call('ZADD',KEYS[3],item.expires_at,key)
+        redis.call('ZADD',KEYS[3],item.expires_at,item.operation_id)
       end
     end
   end
@@ -59,7 +59,7 @@ if redis.call('ZCARD', KEYS[3]) >= tonumber(ARGV[3]) then return {'quota', ''} e
 if redis.call('EXISTS', KEYS[1]) == 1 then return {'conflict', ''} end
 redis.call('SETEX', KEYS[1], ARGV[4], ARGV[5])
 redis.call('SETEX', KEYS[2], ARGV[4], cjson.encode({record_key=KEYS[1]}))
-redis.call('ZADD', KEYS[3], ARGV[6], KEYS[1])
+redis.call('ZADD', KEYS[3], ARGV[6], ARGV[8])
 redis.call('EXPIRE', KEYS[3], ARGV[4])
 redis.call('SETEX', KEYS[5], ARGV[4], '1')
 redis.call('ZADD', KEYS[4], ARGV[2], KEYS[1])
@@ -306,6 +306,7 @@ class StagedSearchStore:
                     raw,
                     str(record["expires_at"]),
                     self._record_pattern(tenant),
+                    str(record["operation_id"]),
                 )
             except Exception:  # noqa: BLE001 - fail closed on authority error
                 return "unavailable", None
@@ -572,6 +573,38 @@ class StagedSearchStore:
         if time.time() > expires_at:
             return StoreRead(expired=True, expires_at=expires_at)
         return StoreRead(record=payload)
+
+    async def list_recent(
+        self, tenant: str, *, before: tuple[float, str] | None = None, limit: int = 20
+    ) -> list[dict[str, Any]]:
+        """Read a bounded deterministic page from the maintained tenant index."""
+        if not self.available or not 1 <= limit <= 50:
+            return []
+        now = time.time()
+        client = self._client()
+        if client is not None and hasattr(client, "zrevrange"):
+            raw = await client.zrevrange(self._index_key(tenant), 0, MAX_OPERATIONS_PER_TENANT - 1, withscores=True)
+            index = {self._decode(key): float(expiry) for key, expiry in raw if float(expiry) > now}
+        else:
+            index = {key: expiry for key, expiry in (await self._read_index(tenant)).items() if expiry > now}
+        record_prefix = f"{PREFIX}:record:{self._tenant_hash(tenant)}:"
+        index = {
+            (key[len(record_prefix) :] if key.startswith(record_prefix) else key): expiry
+            for key, expiry in index.items()
+        }
+        operation_ids = [key for key in index if not key.startswith("idem:")]
+        reads = await asyncio.gather(*(self.read(tenant, operation_id) for operation_id in operation_ids))
+        records = [item.record for item in reads if item.record is not None]
+        records.sort(
+            key=lambda item: (float(item.get("accepted_at", 0)), str(item.get("operation_id", ""))), reverse=True
+        )
+        if before is not None:
+            records = [
+                item
+                for item in records
+                if (float(item.get("accepted_at", 0)), str(item.get("operation_id", ""))) < before
+            ]
+        return records[:limit]
 
     async def save(self, tenant: str, record: dict[str, Any]) -> bool:
         """Save without extending the accepted retention horizon."""

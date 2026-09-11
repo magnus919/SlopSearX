@@ -50,13 +50,27 @@ class McpState:
 
 
 _state: McpState | None = None
+_state_override: ContextVar[McpState | None] = ContextVar("slopsearx_state_override", default=None)
 
 
 def get_state() -> McpState:
     """Return the live MCP state, or raise if not initialized."""
+    override = _state_override.get()
+    if override is not None:
+        return override
     if _state is None:
         raise RuntimeError("MCP server state is not initialized")
     return _state
+
+
+@contextmanager
+def state_scope(state: McpState) -> Iterator[None]:
+    """Install request-local shared state without changing the MCP process state."""
+    token = _state_override.set(state)
+    try:
+        yield
+    finally:
+        _state_override.reset(token)
 
 
 def set_state(state: McpState | None) -> None:

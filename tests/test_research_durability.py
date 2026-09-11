@@ -232,6 +232,16 @@ class _LuaEvalClient(_ValkeyLikeClient):
 
     async def eval(self, script: str, numkeys: int, *args: Any) -> int:
         del numkeys
+        if script == research_store_mod._RECENT_RECORD_SCRIPT:
+            key, score, member, maximum, ttl = args
+            current = json.loads(self._data.get(key, b"{}").decode())
+            current[str(member)] = float(score)
+            ordered = sorted(current.items(), key=lambda item: (float(item[1]), str(item[0])), reverse=True)[
+                : int(maximum)
+            ]
+            self._data[key] = json.dumps(dict(ordered)).encode()
+            self._ttl[key] = time.time() + int(ttl)
+            return 1
         if script == _LEASE_RENEW_SCRIPT:
             key, token, ttl = args
             current = self._data.get(key)

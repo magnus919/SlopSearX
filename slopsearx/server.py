@@ -76,6 +76,11 @@ from slopsearx.service import (
 from slopsearx.snapshot import SearchSnapshot
 from slopsearx.stats import EngineStatsTracker
 from slopsearx.suggest import SuggestionService
+from slopsearx.workflow_portal import (
+    WorkflowPortalRuntime,
+    build_workflow_router,
+    build_workflow_runtime_from_env,
+)
 
 # Populated at startup
 _active_engines: dict[str, EngineAdapter] = {}
@@ -88,6 +93,7 @@ _stats_tracker: EngineStatsTracker | None = None
 _audit_logger: QueryAuditLogger | None = None
 _empty_scrape_diagnostics_enabled = False
 _portal_policy: MCPPolicy | None = None
+_workflow_portal_runtime: WorkflowPortalRuntime | None = None
 
 # Concurrency and per-client rate limiting
 _engine_semaphore: asyncio.Semaphore | None = None
@@ -106,7 +112,7 @@ async def _startup() -> None:
     global _engine_semaphore, _client_rate_window  # noqa: PLW0603
     global _empty_scrape_diagnostics_enabled  # noqa: PLW0603
     global _router, _suggestion_service, _stats_tracker, _audit_logger  # noqa: PLW0603
-    global _portal_policy  # noqa: PLW0603
+    global _portal_policy, _workflow_portal_runtime  # noqa: PLW0603
     global _routing_budget_cache  # noqa: PLW0603
 
     ctx = await build_context()
@@ -127,6 +133,8 @@ async def _startup() -> None:
     # Freeze the browser policy beside the startup capability/config snapshot
     # so an environment change cannot alter access mid-process.
     _portal_policy = load_mcp_policy()
+    if _workflow_portal_runtime is None:
+        _workflow_portal_runtime = build_workflow_runtime_from_env(ctx, _portal_policy)
     # Freeze the routing budget from the startup context (resolved once,
     # beside the config/catalog snapshot) so the HTTP routed scope/digest
     # never track a runtime ``ROUTING_*`` env change.
@@ -149,6 +157,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="SlopSearX", version="0.1.0", lifespan=lifespan)
 app.add_middleware(RequestIDMiddleware)
+
+
+def configure_workflow_portal(runtime: WorkflowPortalRuntime | None) -> None:
+    """Install the protected portal runtime at the explicit injection seam.
+
+    Production startup leaves this unset unless the operator's OIDC/session
+    composition validates. Tests inject deterministic providers and stores.
+    """
+    global _workflow_portal_runtime  # noqa: PLW0603
+    _workflow_portal_runtime = runtime
+
+
+app.include_router(build_workflow_router(lambda: _workflow_portal_runtime))
 
 
 def _service_version() -> str:

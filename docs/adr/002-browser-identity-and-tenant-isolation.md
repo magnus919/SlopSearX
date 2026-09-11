@@ -1,10 +1,8 @@
 # ADR 002: Browser identity and tenant isolation
 
-- **Status:** Proposed for maintainer acceptance
+- **Status:** Accepted
 - **Scope:** Protected browser workflow routes tracked by issues #357 and #358
-- **Decision authority:** This record becomes Accepted only when the maintainer
-  merges the pull request that introduces it. Implementation must not begin
-  while the record remains Proposed.
+- **Decision authority:** Accepted by maintainer merge in PR #361.
 - **Date:** 2026-09-11
 
 ## Context
@@ -211,20 +209,13 @@ button is never authorization.
 
 ### Network and deployment boundary
 
-OIDC is enabled only with a configured external origin using HTTPS, except the
-explicit loopback development mode. TLS terminates either in SlopSearX's trusted
-server boundary or at a declared reverse proxy. SlopSearX trusts forwarded
-scheme, host, and client address only from an operator-configured narrow list of
-proxy addresses. The edge must remove incoming forwarding and identity headers,
-set fresh forwarding headers, preserve the original Host, and block alternate
-direct paths to the application. The application must not infer trust merely
-because a request came from a private address.
-
-In direct exposure, forwarding headers are ignored and callback/origin checks
-use the configured external origin. In proxy exposure, startup fails when OIDC
-is enabled with an invalid external origin, an empty/broad trust configuration,
-or an external scheme inconsistent with the TLS topology. Host is allowlisted
-before it participates in a redirect or origin calculation.
+OIDC is enabled only with a configured HTTPS external origin. This release uses
+direct TLS exposure: forwarding headers are ignored, callback/origin checks use
+the configured external origin, and Host is allowlisted before it participates
+in a redirect or origin calculation. Startup rejects proxy-trust configuration
+because proxy mode is not implemented. A later proxy mode must require an
+operator-configured narrow address allowlist, edge header stripping, fresh
+forwarding headers, and blocked direct paths before forwarded values are used.
 
 Separate bounded rate limits apply to unauthenticated login starts by client
 network key, callbacks by transaction key and network key, authenticated reads
