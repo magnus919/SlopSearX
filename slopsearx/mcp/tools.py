@@ -18,7 +18,7 @@ from typing import Any
 from pydantic import StrictInt
 
 from slopsearx.adapter import OBSERVED_STATUS_VOCAB, SUPPORTED_MEDIA_TYPES
-from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, resolve_intent
+from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, engine_policy_rejection, resolve_intent
 from slopsearx.filters import (
     DateFilterError,
     enforcement_entry,
@@ -295,19 +295,12 @@ def _enforce_policy(
     whole request is rejected, naming the sensitive engines in the
     structured ``error.engines`` field.
     """
-    error = _validate_engines(state, engines)
-    if error:
-        return error
-    sensitive = [name for name in engines if name in state.policy.sensitive_engines]
-    if sensitive and not state.policy.targeted_sensitive_allowed:
-        return _error(
-            "tool_disabled",
-            "sensitive engines are unreachable without the sensitive-engine grant "
-            f"({SENSITIVE_GRANT}=1): {', '.join(sorted(sensitive))}",
-            field=field,
-            engines=sensitive,
-            grant=SENSITIVE_GRANT,
-        )
+    rejection = engine_policy_rejection(state.catalog, state.policy, engines)
+    if rejection:
+        details = dict(rejection)
+        code = str(details.pop("code"))
+        message = str(details.pop("message"))
+        return _error(code, message, field=field, **details)
     return None
 
 
@@ -1601,6 +1594,35 @@ async def slopsearx_read_result(result_id: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def _research_workflow_policy_error(state: McpState, job: ResearchJob) -> dict[str, Any] | None:
+    """Recheck additive workflow grants and captured scope before disclosure."""
+    if job.workflow.get("kind") != "dependency_dossier":
+        return None
+    for grant, env_name in (
+        ("dependency_dossier", "MCP_GRANT_DEPENDENCY_DOSSIER"),
+        ("research", "MCP_GRANT_RESEARCH"),
+        ("security", "MCP_GRANT_SECURITY"),
+    ):
+        if not state.policy.tool_enabled(grant):
+            return _error("tool_disabled", f"dependency dossier requires {env_name}", grant=env_name)
+    rejection = _enforce_policy(state, [engine for query in job.queries for engine in query.engines])
+    if rejection:
+        rejection["error"]["code"] = "policy_rejected"
+    return rejection
+
+
+def _research_workflow_budget_error(job: ResearchJob) -> dict[str, Any] | None:
+    """Refuse workflow retries after their cumulative execution budget."""
+    if job.workflow.get("kind") != "dependency_dossier":
+        return None
+    budget = job.workflow.get("budget") or {}
+    if int(budget.get("used_adapter_calls", 0)) >= int(budget.get("max_adapter_calls", len(job.queries))):
+        return _error("budget_exceeded", "dependency dossier adapter call budget is exhausted")
+    if int(budget.get("captured_results", 0)) >= int(budget.get("max_results", 0)):
+        return _error("budget_exceeded", "dependency dossier result budget is exhausted")
+    return None
+
+
 def _research_dispatch_error(state: McpState, query: ResearchQuery) -> str | None:
     if not state.policy.tool_enabled("research"):
         return "research grant is disabled"
@@ -1867,6 +1889,8 @@ async def slopsearx_get_job(job_id: str) -> dict[str, Any]:
     job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
+    if rejection := _research_workflow_policy_error(state, job):
+        return rejection
     result = _job_summary(job)
     result["created_at"] = _dt.datetime.fromtimestamp(job.created_at, tz=_dt.timezone.utc).isoformat()
     result["note"] = "completed queries are immutable; their cursors remain readable"
@@ -1935,6 +1959,10 @@ async def slopsearx_retry_research(job_id: str) -> dict[str, Any]:
     job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
+    if rejection := _research_workflow_policy_error(state, job):
+        return rejection
+    if exhausted := _research_workflow_budget_error(job):
+        return exhausted
 
     # Terminal-state gate: a cancelled or already-expired job is never
     # resurrected by a retry (VAL-RESEARCH-010/011).
@@ -2025,6 +2053,10 @@ async def slopsearx_extend_research(
     job = await store.load(job_id)
     if job is None:
         return _error("invalid_job_id", "unknown job id", field="job_id")
+    if job.workflow:
+        if rejection := _research_workflow_policy_error(state, job):
+            return rejection
+        return _error("invalid_input", "workflow research jobs cannot be extended", field="job_id")
 
     error = _validate_query(query, state)
     if error:

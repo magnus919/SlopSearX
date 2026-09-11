@@ -21,12 +21,12 @@ machine-readable `retrieval` handoff record (see `docs/RETRIEVAL_HANDOFF.md`)
 so a downstream reader such as GroktoCrawl can capture pages and link them
 back to the originating result and snapshot.
 
-- **Tools (30):** intent search, targeted search, jobs, security, science,
+- **Tools (32):** intent search, targeted search, jobs, security, science,
   capability listing, scope explanation, service status, snapshot reads,
   research jobs (start/get/cancel/retry/extend/update), saved searches
   (create/get/update/pause/delete/read reports), and retrieval receipts
   (submit/read/export manifest), and staged search
-  (preview/start/get/retry).
+  (preview/start/get/retry), and dependency dossiers (start/get).
 - **Resources:** `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`.
 - **Prompts (4):** repeatable agent workflows that compose the tools.
@@ -71,8 +71,10 @@ mcp:
     security: false
     science: false
     research: false
+    staged_search: false
     retrieval_receipts: false
     saved_searches: false
+    dependency_dossier: false
   # Engines that generic routing must never reach accidentally. Only an
   # explicit engines list (with the targeted grant) or the security tool
   # (with its grant) can query them.
@@ -140,6 +142,7 @@ mcp:
 | `MCP_GRANT_SECURITY` | unset (false) | enables `slopsearx_search_security` and `intent=security` |
 | `MCP_GRANT_SCIENCE` | unset (false) | enables `slopsearx_search_science` |
 | `MCP_GRANT_RESEARCH` | unset (false) | enables research jobs |
+| `MCP_GRANT_DEPENDENCY_DOSSIER` | unset (false) | enables package/repository/advisory dossiers |
 | `MCP_GRANT_STAGED_SEARCH` | unset (false) | enables bounded staged search operations |
 | `MCP_STAGED_MAX_DEADLINE_MS` | `30000` | maximum staged operation deadline |
 | `MCP_STAGED_MAX_ENGINE_CALLS` | `64` | maximum reserved adapter calls per operation |

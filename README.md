@@ -187,7 +187,7 @@ slopsearx-mcp --remote http://<slopsearx-host>:8000/mcp --oauth
 MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.com slopsearx-mcp
 ```
 
-- 30 tools: `slopsearx_search`, `slopsearx_search_targeted`,
+- 32 tools: `slopsearx_search`, `slopsearx_search_targeted`,
   `slopsearx_search_jobs`, `slopsearx_search_security`,
   `slopsearx_search_science`, `slopsearx_list_capabilities`,
   `slopsearx_explain_search_scope`, `slopsearx_get_service_status`,
@@ -201,15 +201,16 @@ MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.
   `slopsearx_submit_retrieval_receipt`,
   `slopsearx_read_retrieval_receipts`, `slopsearx_export_research_manifest`,
   `slopsearx_preview_staged_search`, `slopsearx_search_staged`,
-  `slopsearx_get_staged_search`, `slopsearx_retry_staged_search`
+  `slopsearx_get_staged_search`, `slopsearx_retry_staged_search`,
+  `slopsearx_start_dependency_dossier`, `slopsearx_get_dependency_dossier`
 - Resources: `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`
 - Specialist tools (jobs, security, science, research, saved searches, retrieval receipts,
-  staged search) are disabled until
+  staged search, dependency dossiers) are disabled until
   the operator grants them (`MCP_GRANT_JOBS=1`, `MCP_GRANT_SECURITY=1`,
   `MCP_GRANT_SCIENCE=1`, `MCP_GRANT_RESEARCH=1`,
   `MCP_GRANT_SAVED_SEARCHES=1`, `MCP_GRANT_RETRIEVAL_RECEIPTS=1`,
-  `MCP_GRANT_STAGED_SEARCH=1`).
+  `MCP_GRANT_STAGED_SEARCH=1`, `MCP_GRANT_DEPENDENCY_DOSSIER=1`).
 - Sensitive engines (`hibp`, `dehashed`) are unreachable from generic
   routing, categories, and intent profiles, and are rejected by **every**
   explicit-engine search path (generic explicit engines, targeted, jobs,

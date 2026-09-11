@@ -1393,6 +1393,25 @@ class TestDirectRunReconciliation:
 
 
 class TestLeaseOwnershipGuard:
+    async def test_workflow_failure_aborts_when_lease_guarded_save_loses_ownership(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        state, _ = _build_state(owner_id="w1")
+        job_store = state.job_store
+        job = _job(queries=[ResearchQuery(index=0, query="q", intent="web", engines=["wikipedia"])])
+        job.workflow = {"kind": "dependency_dossier"}
+        await job_store.save(job)
+        claimed = await job_store.claim(job.job_id, "w1", 60)
+        assert claimed is not None
+
+        async def lose_ownership(_job: ResearchJob) -> bool:
+            return False
+
+        monkeypatch.setattr(job_store, "save_if_owned", lose_ownership)
+
+        with pytest.raises(LeaseLostError):
+            await state.runner.run_pending(claimed)
+
     async def test_stale_owner_does_not_persist_after_lease_reclaimed(self) -> None:
         state, store = _build_state(lease_ttl=1)
         job_store = state.job_store

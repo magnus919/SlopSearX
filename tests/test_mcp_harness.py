@@ -189,8 +189,9 @@ class TestFirstVisitReachability:
                 await session.initialize()
                 tools = await session.list_tools()
                 # The harness exposes the combined entity-projection,
-                # adaptive-research, saved-search, receipt, and staged-search surface.
-                assert len(tools.tools) == 30
+                # adaptive-research, saved-search, receipt, staged-search,
+                # and dependency-dossier surface.
+                assert len(tools.tools) == 32
 
 
 class TestDeterministicSearchEnvelope:
@@ -348,7 +349,38 @@ class TestAuthenticatedTransport:
                 res = await session.call_tool("slopsearx_search", {"query": "hello"})
                 assert "results" in _payload(res)
                 tools = await session.list_tools()
-                assert len(tools.tools) == 30
+                assert len(tools.tools) == 32
+
+    async def test_authenticated_dependency_dossier_start(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("MCP_GRANT_DEPENDENCY_DOSSIER", "1")
+        monkeypatch.setenv("MCP_GRANT_RESEARCH", "1")
+        monkeypatch.setenv("MCP_GRANT_SECURITY", "1")
+        specs = [
+            FakeEngineSpec(name="pypi", categories=["packages"]),
+            FakeEngineSpec(name="github", categories=["it"]),
+            FakeEngineSpec(name="nvd", categories=["security"]),
+        ]
+        cfg = h.fixture_config()
+        cfg.engines.update(
+            {
+                "pypi": EngineEntry(api_key=""),
+                "github": EngineEntry(api_key="fixture-key"),
+                "nvd": EngineEntry(api_key=""),
+            }
+        )
+        app = make_fixture_http_app(specs, token="s3cret", config=cfg)
+        async with _serve(app) as url:
+            async with _session(url, token="s3cret") as (session, _client):
+                await session.initialize()
+                result = _payload(
+                    await session.call_tool(
+                        "slopsearx_start_dependency_dossier",
+                        {"ecosystem": "pypi", "package": "requests"},
+                    )
+                )
+                assert result["contract"] == "slopsearx.dependency_dossier"
+                assert result["job_id"].startswith("job-")
+                assert result["requested_identity"]["package"] == "requests"
 
     async def test_authenticated_staged_workflow(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("MCP_GRANT_STAGED_SEARCH", "1")

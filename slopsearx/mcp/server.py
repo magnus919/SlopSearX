@@ -35,6 +35,7 @@ from slopsearx.capabilities import (
     validate_intent_profiles,
 )
 from slopsearx.config import Config, load_config
+from slopsearx.mcp import dependency_tools as _dependency_tools
 from slopsearx.mcp import prompts as _prompts
 from slopsearx.mcp import receipt_tools as _receipt_tools
 from slopsearx.mcp import resources as _resources
@@ -74,10 +75,11 @@ How to search correctly:
 - Pagination: use the cursor from a search with slopsearx_read_results;
   pages come from a captured snapshot and never re-run the query.
 - Specialist tools (jobs, security, science, research, saved searches,
-  retrieval receipts, staged search) are disabled until
+  retrieval receipts, staged search, dependency dossiers) are disabled until
   the operator grants them (MCP_GRANT_JOBS / MCP_GRANT_SECURITY /
   MCP_GRANT_SCIENCE / MCP_GRANT_RESEARCH / MCP_GRANT_SAVED_SEARCHES /
-  MCP_GRANT_RETRIEVAL_RECEIPTS / MCP_GRANT_STAGED_SEARCH).
+  MCP_GRANT_RETRIEVAL_RECEIPTS / MCP_GRANT_STAGED_SEARCH /
+  MCP_GRANT_DEPENDENCY_DOSSIER).
 - Capabilities, routing profiles, and health are available as resources
   (slopsearx://capabilities, slopsearx://routing-profiles,
   slopsearx://health/summary) — read them instead of guessing engine names.
@@ -308,6 +310,8 @@ def create_server(
     mcp.tool()(_instrumented(_staged_tools.slopsearx_search_staged))
     mcp.tool()(_instrumented(_staged_tools.slopsearx_get_staged_search))
     mcp.tool()(_instrumented(_staged_tools.slopsearx_retry_staged_search))
+    mcp.tool()(_instrumented(_dependency_tools.slopsearx_start_dependency_dossier))
+    mcp.tool()(_instrumented(_dependency_tools.slopsearx_get_dependency_dossier))
 
     # --- resources ------------------------------------------------------
     mcp.resource(

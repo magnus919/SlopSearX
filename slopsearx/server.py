@@ -850,7 +850,13 @@ async def _search_endpoint(request: Request) -> Any:
         response = await service.search(search_request)
     except QueryValidationError as exc:
         if exc.field != "query":
-            return _format_error_response(output_format, 400, error="invalid_filter", field=exc.field, message=str(exc))
+            return _format_error_response(
+                output_format,
+                400,
+                error="invalid_filter",
+                field=exc.field,
+                message="Invalid search parameter.",
+            )
         return _format_error_response(
             output_format, 400, error="query_required", message="The 'q' parameter is required."
         )

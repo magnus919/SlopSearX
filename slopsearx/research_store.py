@@ -6,6 +6,7 @@ repairable discovery aid. Execution and planning live in research.py.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
@@ -121,6 +122,20 @@ redis.call('DEL', KEYS[1])
 return 1
 """
 
+_IDEMPOTENT_CREATE_SCRIPT = """
+local existing = redis.call('GET', KEYS[1])
+if existing then
+    local ok, record = pcall(cjson.decode, existing)
+    if ok and type(record) == 'table' and record.job_id then
+        return {0, record.job_id}
+    end
+    return {-1, ''}
+end
+redis.call('SETEX', KEYS[2], ARGV[1], ARGV[2])
+redis.call('SETEX', KEYS[1], ARGV[1], ARGV[3])
+return {1, ARGV[4]}
+"""
+
 
 # ---------------------------------------------------------------------------
 # Storage
@@ -144,9 +159,16 @@ class ResearchJobStore:
       flag and finalizes immediately when no worker holds the lease.
     """
 
-    def __init__(self, store: KeyValueStore | None, tenant: str = "default") -> None:
+    def __init__(
+        self,
+        store: KeyValueStore | None,
+        tenant: str = "default",
+        *,
+        admission_locks: dict[str, asyncio.Lock] | None = None,
+    ) -> None:
         self._store = store
         self._tenant = tenant
+        self._admission_locks = admission_locks if admission_locks is not None else {}
 
     @property
     def available(self) -> bool:
@@ -165,7 +187,7 @@ class ResearchJobStore:
         """Return a tenant-scoped view sharing the same backing store."""
         if tenant == self._tenant:
             return self
-        return ResearchJobStore(self._store, tenant=tenant)
+        return ResearchJobStore(self._store, tenant=tenant, admission_locks=self._admission_locks)
 
     def _key(self, job_id: str) -> str:
         return f"{JOB_KEY_PREFIX}:{self._tenant}:{job_id}"
@@ -319,6 +341,52 @@ class ResearchJobStore:
         if not job_id:
             return None
         return await self.load(job_id)
+
+    async def create_idempotent(self, job: ResearchJob) -> tuple[ResearchJob | None, bool]:
+        """Atomically create ``job`` or return the record owning its key.
+
+        Real Valkey uses one Lua transaction for the job and idempotency
+        records. Lightweight in-memory stores are serialized by a shared
+        per-tenant lock so deterministic tests exercise the same admission
+        semantics.
+        """
+        if not job.idempotency_key:
+            await self.save(job)
+            return job, True
+        store = self._store
+        if store is None or not store.is_connected:
+            return None, False
+        client = getattr(store, "_client", None)
+        eval_method = getattr(client, "eval", None) if client is not None else None
+        if eval_method is not None:
+            encoded_job = json.dumps(_job_to_payload(job), default=str)
+            encoded_idem = json.dumps({"job_id": job.job_id})
+            result = await eval_method(
+                _IDEMPOTENT_CREATE_SCRIPT,
+                2,
+                self._idem_key(job.idempotency_key),
+                self._key(job.job_id),
+                str(JOB_RETENTION_SECONDS),
+                encoded_job,
+                encoded_idem,
+                job.job_id,
+            )
+            created = int(result[0]) == 1
+            if int(result[0]) < 0:
+                return None, False
+            raw_job_id = result[1]
+            resolved_id = raw_job_id.decode() if isinstance(raw_job_id, bytes) else str(raw_job_id)
+            if created:
+                await self._refresh_ready(job.job_id)
+            return await self.load(resolved_id), created
+
+        lock = self._admission_locks.setdefault(self._tenant, asyncio.Lock())
+        async with lock:
+            existing = await self.find_by_idempotency(job.idempotency_key)
+            if existing is not None:
+                return existing, False
+            await self.save(job)
+            return job, True
 
     async def _scan_job_ids(self) -> list[str]:
         """List this tenant's persisted job IDs."""
