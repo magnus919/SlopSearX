@@ -67,6 +67,28 @@ The existing MCP `state_factory` harness and SearXNG compatibility suite remain
 authoritative for machine behavior. Portal tests assert the HTML projection
 without changing those contracts.
 
+## Portal dependency map and gate ownership
+
+The portal contract depends on the shared search request/response models and
+`SearchService`/`ScopeResolver`; the live capability catalog and filter
+enforcement resolver; MCP policy inputs for sensitive access; cache and
+snapshot view derivation; HTTP route and format negotiation; engine result
+schemas; layered configuration; and the Python package/container that serves
+the formatter. These are shared backend dependencies, so the portal contract
+job runs on every pull request instead of relying on frontend-only path
+filters.
+
+`tests/test_server.py` exercises the real FastAPI boundary with deterministic
+fake engines and isolated test state. `tests/test_formatter.py` exercises the
+HTML projection and escaping rules. The dedicated browser job loads those
+same formatter outputs in Chromium and covers landing/search, theme toggle,
+source attribution, safe result links, and pagination. A change that removes a
+required result or scope field makes the contract assertions fail; a compatible
+backend change continues through the same required checks. The normal test
+matrix remains authoritative for the API/MCP suites, while these portal jobs
+own browser-visible regressions and should be updated alongside any baseline
+change.
+
 ## Privacy and operations
 
 - No query analytics, third-party tracking, or remote assets by default.

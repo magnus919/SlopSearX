@@ -272,7 +272,17 @@ same search service, routing, cache, ranking, and engine policy as the API; use
 defaults to **Dark** mode and provides a **Darker** mode toggle. Operators can
 set `SLOPSEARX_PORTAL_DEFAULT_THEME=darker` to change the initial theme. An
 explicit user choice is retained in browser storage when available. The portal
-does not grant capabilities that the server-side policy would reject.
+does not grant capabilities that the server-side policy would reject. Explicit
+selection of a sensitive engine (currently `hibp` and `dehashed` by default)
+also requires `MCP_TARGETED_SENSITIVE_ALLOWED=true`; the same operator policy
+is applied before either the browser or MCP surface dispatches a search.
+
+For a public deployment, put the service behind the operator's TLS and
+authentication reverse proxy. SlopSearX does not provide browser accounts,
+trust arbitrary forwarded headers, or send engine credentials to the browser.
+The portal has no analytics or third-party runtime assets by default. Search
+forms are read-only requests; there is no authenticated browser mutation that
+needs a CSRF token in this release.
 
 ## License
 
