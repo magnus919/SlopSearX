@@ -6,7 +6,7 @@ import dataclasses
 from typing import Any
 
 from slopsearx import metrics as m
-from slopsearx.artifacts import artifact_ref
+from slopsearx.artifacts import artifact_ref, lineage_edge
 from slopsearx.dependency_dossier import (
     ADVISORY_ENGINE,
     ECOSYSTEM_ENGINES,
@@ -16,6 +16,7 @@ from slopsearx.dependency_dossier import (
     workflow_identity,
 )
 from slopsearx.mcp import tools as core
+from slopsearx.mcp.composition import ResolvedSource, resolve_source
 from slopsearx.mcp.result_serialization import _result_to_dict
 from slopsearx.mcp.state import current_tenant, get_state
 from slopsearx.research import ResearchJob, ResearchQuery, generate_job_id
@@ -82,8 +83,9 @@ async def slopsearx_start_dependency_dossier(
     repository: str | None = None,
     deadline: str | None = None,
     idempotency_key: str | None = None,
+    source: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Start an attributed package/repository/advisory investigation."""
+    """Start an attributed investigation with optional retained seed evidence."""
     state = get_state()
     if denied := _grant_error():
         return denied
@@ -99,6 +101,12 @@ async def slopsearx_start_dependency_dossier(
     store = state.job_store.for_tenant(tenant)
     if not store.available:
         return _error("store_unavailable", "dependency dossiers require connected Valkey")
+    resolved_source: ResolvedSource | None = None
+    if source is not None:
+        resolved = await resolve_source(source, "dependency_dossier")
+        if isinstance(resolved, dict):
+            return resolved
+        resolved_source = resolved
     normalized = identity["package"]
     queries = [ResearchQuery(index=0, query=normalized, intent="packages", engines=[ECOSYSTEM_ENGINES[ecosystem]])]
     section_queries: dict[str, int | None] = {"package_information": 0, "repository_records": None}
@@ -127,8 +135,9 @@ async def slopsearx_start_dependency_dossier(
     deadline_ts = core._resolve_deadline(state, deadline)
     if isinstance(deadline_ts, dict):
         return deadline_ts
+    job_id = generate_job_id()
     job = ResearchJob(
-        job_id=generate_job_id(),
+        job_id=job_id,
         question=f"Dependency dossier for {ecosystem}:{normalized}",
         strategy="dependency_dossier",
         queries=queries,
@@ -148,6 +157,20 @@ async def slopsearx_start_dependency_dossier(
                 "captured_results": 0,
                 "admitted_results": {},
             },
+            **(
+                {
+                    "composition": {"source": resolved_source.stored()},
+                    "lineage": [
+                        lineage_edge(
+                            artifact_ref("dependency_dossier", job_id),
+                            "derived_from",
+                            resolved_source.artifact,
+                        )
+                    ],
+                }
+                if resolved_source is not None
+                else {}
+            ),
         },
     )
     admitted, created = await store.create_idempotent(job)
@@ -157,6 +180,10 @@ async def slopsearx_start_dependency_dossier(
         if admitted.workflow.get("kind") != "dependency_dossier" or admitted.workflow.get("identity_digest") != digest:
             m.record_workflow_rejection("dependency_dossier", "idempotency")
             return _error("idempotency_conflict", "idempotency key refers to a different workflow request")
+        existing_source = (admitted.workflow.get("composition") or {}).get("source", {}).get("artifact")
+        requested_source = resolved_source.artifact if resolved_source is not None else None
+        if existing_source != requested_source:
+            return _error("idempotency_conflict", "idempotency key refers to a different composition source")
         if rejection := _workflow_policy_error(admitted):
             return rejection
         return _start_envelope(admitted, replay=True)
@@ -167,7 +194,7 @@ async def slopsearx_start_dependency_dossier(
 
 
 def _start_envelope(job: ResearchJob, *, replay: bool) -> dict[str, Any]:
-    return {
+    envelope = {
         "contract": CONTRACT,
         "version": VERSION,
         "job_id": job.job_id,
@@ -178,6 +205,11 @@ def _start_envelope(job: ResearchJob, *, replay: bool) -> dict[str, Any]:
         "deadline": job.deadline,
         "replay": replay,
     }
+    composition = job.workflow.get("composition")
+    if isinstance(composition, dict):
+        envelope["source"] = composition.get("source")
+        envelope["lineage"] = list(job.workflow.get("lineage") or [])
+    return envelope
 
 
 def _coverage(query: ResearchQuery) -> list[dict[str, Any]]:
@@ -328,7 +360,7 @@ async def slopsearx_get_dependency_dossier(job_id: str, max_results: int | None 
             f"Find the canonical repository published by {identity['ecosystem']} for {identity['package']}"
         )
     followups.append(f"Verify affected-version ranges for advisory leads concerning {identity['package']}")
-    return {
+    report = {
         "contract": CONTRACT,
         "version": VERSION,
         "job_id": job.job_id,
@@ -365,3 +397,8 @@ async def slopsearx_get_dependency_dossier(job_id: str, max_results: int | None 
             "zero advisory leads does not establish absence of vulnerabilities",
         ],
     }
+    composition = job.workflow.get("composition")
+    if isinstance(composition, dict):
+        report["source"] = composition.get("source")
+        report["lineage"] = list(job.workflow.get("lineage") or [])
+    return report

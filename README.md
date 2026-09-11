@@ -208,6 +208,9 @@ MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.
   `slopsearx://routing-profiles`, `slopsearx://health/summary`
 - Artifact references and bounded workflow lineage are documented in
   [`docs/ARTIFACT_LINEAGE.md`](docs/ARTIFACT_LINEAGE.md).
+- Supported artifact-to-workflow transitions, source lifecycle errors, and
+  conflict rules are documented in
+  [`docs/WORKFLOW_COMPOSITION.md`](docs/WORKFLOW_COMPOSITION.md).
 - Specialist tools (jobs, security, science, research, saved searches, retrieval receipts,
   staged search, dependency dossiers) are disabled until
   the operator grants them (`MCP_GRANT_JOBS=1`, `MCP_GRANT_SECURITY=1`,

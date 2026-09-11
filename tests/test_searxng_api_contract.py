@@ -119,6 +119,8 @@ def test_result_fields_are_required_but_slopsearx_extensions_are_allowed(client:
     assert "tier" in result
     assert "artifact" not in data["meta"]
     assert "artifact" not in result
+    assert "source" not in data and "lineage" not in data
+    assert "source" not in result and "lineage" not in result
 
     yaml_response = client.get("/search", params={"q": "contract", "format": "yaml"})
     assert yaml_response.status_code == 200

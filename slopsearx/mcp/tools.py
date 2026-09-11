@@ -19,7 +19,7 @@ from pydantic import StrictInt
 
 from slopsearx import metrics as m
 from slopsearx.adapter import OBSERVED_STATUS_VOCAB, SUPPORTED_MEDIA_TYPES
-from slopsearx.artifacts import artifact_ref, composite_artifact_id
+from slopsearx.artifacts import artifact_ref, composite_artifact_id, lineage_edge
 from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, engine_policy_rejection, resolve_intent
 from slopsearx.filters import (
     DateFilterError,
@@ -28,6 +28,7 @@ from slopsearx.filters import (
     publication_date_bounds,
     resolve_filter_enforcement,
 )
+from slopsearx.mcp.composition import ResolvedSource, resolve_source
 from slopsearx.mcp.entity_projection import ENTITY_CONTRACT, ENTITY_VERSION, entity_groups
 from slopsearx.mcp.result_serialization import (
     CONTENT_UNAVAILABLE_NOTE as CONTENT_UNAVAILABLE_NOTE,
@@ -1751,10 +1752,12 @@ async def slopsearx_start_research(
     max_attempts: StrictInt | None = None,
     max_engine_attempts: StrictInt | None = None,
     max_results: StrictInt | None = None,
+    source: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Start an asynchronous multi-query research job.
 
-    Strategies: triangulate (same question across independent sources),
+    An optional artifact source contributes retained evidence and lineage but
+    never execution policy. Strategies: triangulate (same question across independent sources),
     broad (several source families), fresh (recent material),
     counterevidence (limits, criticism, counterexamples). Returns a job
     handle immediately; poll slopsearx_get_job for progress.
@@ -1782,9 +1785,41 @@ async def slopsearx_start_research(
             valid_alternatives=list(VALID_STRATEGIES),
         )
 
+    resolved_source: ResolvedSource | None = None
+    composition_digest: str | None = None
+    if source is not None:
+        resolved = await resolve_source(source, "research")
+        if isinstance(resolved, dict):
+            return resolved
+        resolved_source = resolved
+        if not store.available:
+            return _error("store_unavailable", "composed research requires connected Valkey")
+        composition_digest = hashlib.sha256(
+            json.dumps(
+                {
+                    "source": resolved.artifact,
+                    "question": question,
+                    "strategy": strategy,
+                    "max_queries": max_queries,
+                    "max_engines_per_query": max_engines_per_query,
+                    "deadline": deadline,
+                    "initial_plan": initial_plan,
+                    "subquestions": subquestions,
+                    "max_attempts": max_attempts,
+                    "max_engine_attempts": max_engine_attempts,
+                    "max_results": max_results,
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+        ).hexdigest()
+
     if idempotency_key:
         existing = await store.find_by_idempotency(idempotency_key)
         if existing is not None:
+            existing_digest = (existing.workflow.get("composition") or {}).get("request_digest")
+            if (source is not None or existing_digest is not None) and existing_digest != composition_digest:
+                return _error("idempotency_conflict", "idempotency key refers to a different composed request")
             result = _job_summary(existing)
             result["note"] = "returned existing job for idempotency_key"
             return result
@@ -1859,8 +1894,9 @@ async def slopsearx_start_research(
     if not queries:
         return _error("invalid_input", "; ".join(warnings) or "no queries could be planned", field="strategy")
 
+    job_id = generate_job_id()
     job = ResearchJob(
-        job_id=generate_job_id(),
+        job_id=job_id,
         question=question.strip(),
         strategy=strategy,
         queries=queries,
@@ -1871,6 +1907,23 @@ async def slopsearx_start_research(
         subquestions=declared,
         budget_limits=limits,
         budget_used={"attempts": 0, "engine_attempts": 0, "results": 0},
+        workflow=(
+            {
+                "composition": {
+                    "source": resolved_source.stored(),
+                    "request_digest": composition_digest,
+                },
+                "lineage": [
+                    lineage_edge(
+                        artifact_ref("research_job", job_id),
+                        "derived_from",
+                        resolved_source.artifact,
+                    )
+                ],
+            }
+            if resolved_source is not None
+            else {}
+        ),
     )
     await store.save(job)
     if store.available:
@@ -2340,7 +2393,7 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
     """
     completed, total = job.progress
     job_coverage = summarize_coverage([entry for query in job.queries for entry in query.engine_coverage])
-    return {
+    summary = {
         "job_id": job.job_id,
         "artifact": artifact_ref(
             "dependency_dossier" if job.workflow.get("kind") == "dependency_dossier" else "research_job",
@@ -2405,6 +2458,11 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
         "stop_reason": job.stop_reason,
         "budgets": budget_summary(job),
     }
+    composition = job.workflow.get("composition")
+    if isinstance(composition, dict):
+        summary["source"] = composition.get("source")
+        summary["lineage"] = list(job.workflow.get("lineage") or [])
+    return summary
 
 
 # ---------------------------------------------------------------------------

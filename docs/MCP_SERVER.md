@@ -677,7 +677,7 @@ so a card-only consumer can decide whether to fetch without expanding.
 
 ### 6.11–6.16 Research jobs (grant: `MCP_GRANT_RESEARCH`)
 
-- `slopsearx_start_research(question, strategy, max_queries, max_engines_per_query, deadline, idempotency_key)` — strategies:
+- `slopsearx_start_research(question, strategy, max_queries, max_engines_per_query, deadline, idempotency_key, source)` — strategies:
   - `triangulate` — same question across independent source families
   - `broad` — several source families
   - `fresh` — recent material (`time_range` day/month)
@@ -751,7 +751,9 @@ than run. `slopsearx_start_research` still returns a handle, but it is flagged
 - `slopsearx_export_research_manifest` joins receipts for up to 25 explicit
   result IDs or live result nodes selected from bounded artifact lineage into
   a versioned manifest capped at 1 MiB. Artifact selections record the exact
-  graph under `lineage_cuts`.
+  graph under `lineage_cuts`. A single `source` can instead select a staged
+  search, research attempt, or research job under the workflow-composition
+  matrix.
 
 Receipts use a fixed 24-hour Valkey horizon, a maximum of 20 observations per
 result, and result-scoped idempotency. Identical retries return the original
@@ -801,6 +803,22 @@ retrieve a result URL, mutate a record, or extend retention. Missing, expired,
 unavailable, policy-denied, and legacy lineage gaps are explicit node states.
 See [`ARTIFACT_LINEAGE.md`](ARTIFACT_LINEAGE.md) for the schemas, relation
 semantics, bounds, compatibility, and rollback behavior.
+
+### 6.13.5 Workflow composition
+
+Compatible workflow entry points accept an optional version-one artifact
+`source`. The source contributes retained evidence and immutable lineage;
+callers still provide the destination objective, scope, budget, deadline, and
+idempotency key where that destination requires them. The destination's live
+grants and sensitive-engine policy are applied atomically before persistence
+or dispatch. Invalid, expired, denied, partial, incomparable, truncated, and
+conflicting sources have stable machine-readable outcomes and never trigger a
+fresh unlinked search.
+
+The complete source-input schema and transition matrix are in
+[`WORKFLOW_COMPOSITION.md`](WORKFLOW_COMPOSITION.md). This is an additive MCP
+contract. It adds no HTTP parameters or response fields to the SearXNG surface,
+and it adds no public portal action.
 
 ### 6.14 Why there is no separate "advanced search" tool
 

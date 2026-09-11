@@ -8,9 +8,10 @@ import uuid
 from typing import Any
 
 from slopsearx import metrics as m
-from slopsearx.artifacts import artifact_ref
+from slopsearx.artifacts import artifact_ref, lineage_edge
 from slopsearx.capabilities import INTENT_PROFILES
 from slopsearx.mcp import tools as core
+from slopsearx.mcp.composition import ResolvedSource, resolve_source
 from slopsearx.mcp.result_serialization import _result_to_dict
 from slopsearx.mcp.state import current_tenant, get_state
 from slopsearx.service import ScopeResolver, SearchRequest
@@ -305,6 +306,11 @@ async def _render(record: dict[str, Any], include: list[str] | None, max_results
         "stages": record["stages"],
         "results": results,
         "meta": meta,
+        **(
+            {"source": record["composition"]["source"], "lineage": record.get("lineage", [])}
+            if record.get("composition")
+            else {}
+        ),
     }
 
 
@@ -335,22 +341,38 @@ async def slopsearx_preview_staged_search(
 
 
 async def slopsearx_search_staged(
-    query: str,
-    objectives: dict[str, Any],
-    initial_scope: dict[str, Any],
-    idempotency_key: str,
+    query: str | None = None,
+    objectives: dict[str, Any] | None = None,
+    initial_scope: dict[str, Any] | None = None,
+    idempotency_key: str | None = None,
     fallback_scope: dict[str, Any] | None = None,
     allow_scope_expansion: bool = False,
     filters: dict[str, Any] | None = None,
     include: list[str] | None = None,
     max_results: int | None = None,
+    source: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Accept a durable staged search and return immediately."""
+    """Accept a durable staged search, optionally deriving its query from a saved report."""
     state = get_state()
     if not state.policy.tool_enabled("staged_search"):
         return _error("tool_disabled", "staged search is disabled", grant="MCP_GRANT_STAGED_SEARCH")
     if not isinstance(idempotency_key, str) or not idempotency_key.strip() or len(idempotency_key.strip()) > 128:
         return _error("invalid_input", "idempotency_key must contain 1 to 128 characters", field="idempotency_key")
+    resolved_source: ResolvedSource | None = None
+    if source is not None:
+        if query is not None:
+            return _error("input_conflict", "query is derived from source and must be omitted", field="query")
+        resolved = await resolve_source(source, "staged_search")
+        if isinstance(resolved, dict):
+            return resolved
+        resolved_source = resolved
+        query = resolved.query
+    if not isinstance(query, str):
+        return _error("invalid_input", "query is required when source is omitted", field="query")
+    if not isinstance(objectives, dict):
+        return _error("invalid_input", "objectives is required", field="objectives")
+    if not isinstance(initial_scope, dict):
+        return _error("invalid_input", "initial_scope is required", field="initial_scope")
     if isinstance(_validate_view(include, max_results), dict):
         return _validate_view(include, max_results)  # type: ignore[return-value]
     assert state.staged_store is not None
@@ -361,6 +383,10 @@ async def slopsearx_search_staged(
     if existing.expired:
         return _error("expired_handle", "staged operation expired", expires_at=existing.expires_at)
     if existing.record is not None:
+        existing_source = (existing.record.get("composition") or {}).get("source", {}).get("artifact")
+        requested_source = resolved_source.artifact if resolved_source is not None else None
+        if existing_source != requested_source:
+            return _error("idempotency_conflict", "idempotency key refers to a different composition source")
         if not _replay_equivalent(
             existing.record,
             query,
@@ -428,6 +454,15 @@ async def slopsearx_search_staged(
         "selected_result_attempt_id": None,
         "next_stage": 0,
     }
+    if resolved_source is not None:
+        record["composition"] = {"source": resolved_source.stored()}
+        record["lineage"] = [
+            lineage_edge(
+                artifact_ref("staged_search", record["operation_id"]),
+                "derived_from",
+                resolved_source.artifact,
+            )
+        ]
     status, stored = await state.staged_store.admit(current_tenant(), idempotency_key.strip(), plan["digest"], record)
     if status == "unavailable":
         return _error("store_unavailable", "staged search requires connected Valkey")
