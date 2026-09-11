@@ -19,7 +19,9 @@ from __future__ import annotations
 
 import asyncio
 import json
-from contextlib import asynccontextmanager
+import sys
+from contextlib import asynccontextmanager, suppress
+from types import SimpleNamespace
 from typing import Any, AsyncIterator
 
 import httpx
@@ -41,9 +43,11 @@ from slopsearx.mcp.harness import (
     make_fixture_http_app,
 )
 from slopsearx.mcp.security import make_http_app
+from slopsearx.mcp.tool_registry import tool_names
 from slopsearx.service import AppContext
 
 _FIXTURE_SPECS = [FakeEngineSpec(name="wikipedia", count=3), FakeEngineSpec(name="brave", count=2)]
+_SERVER_TIMEOUT_SECONDS = 10.0
 
 
 @asynccontextmanager
@@ -53,14 +57,32 @@ async def _serve(app: Any, token: str = "") -> AsyncIterator[str]:
     config = uvicorn.Config(app, host="127.0.0.1", port=0, log_level="error")
     server = uvicorn.Server(config)
     task = asyncio.create_task(server.serve())
-    try:
+
+    async def wait_until_started() -> None:
         while not server.started:
+            if task.done():
+                await task
+                raise RuntimeError("fixture HTTP server exited before startup")
             await asyncio.sleep(0.02)
+
+    try:
+        await asyncio.wait_for(wait_until_started(), timeout=_SERVER_TIMEOUT_SECONDS)
         port = server.servers[0].sockets[0].getsockname()[1]
         yield f"http://127.0.0.1:{port}/mcp"
     finally:
         server.should_exit = True
-        await task
+        primary_error = sys.exc_info()[0] is not None
+        try:
+            await asyncio.wait_for(asyncio.shield(task), timeout=_SERVER_TIMEOUT_SECONDS)
+        except TimeoutError as exc:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
+            if not primary_error:
+                raise RuntimeError("fixture HTTP server did not stop") from exc
+        except BaseException:
+            if not primary_error:
+                raise
 
 
 @asynccontextmanager
@@ -151,6 +173,37 @@ class TestBuildFixtureContext:
 # ---------------------------------------------------------------------------
 
 
+async def test_fixture_server_propagates_startup_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FailingServer:
+        started = False
+        should_exit = False
+
+        async def serve(self) -> None:
+            raise RuntimeError("fixture startup failed")
+
+    monkeypatch.setattr(uvicorn, "Server", lambda _config: FailingServer())
+    with pytest.raises(RuntimeError, match="fixture startup failed"):
+        async with _serve(object()):
+            pytest.fail("a failed fixture server must never yield")
+
+
+async def test_fixture_server_bounds_stalled_shutdown(monkeypatch: pytest.MonkeyPatch) -> None:
+    class StalledServer:
+        started = False
+        should_exit = False
+        servers = [SimpleNamespace(sockets=[SimpleNamespace(getsockname=lambda: ("127.0.0.1", 1))])]
+
+        async def serve(self) -> None:
+            self.started = True
+            await asyncio.Event().wait()
+
+    monkeypatch.setattr(uvicorn, "Server", lambda _config: StalledServer())
+    monkeypatch.setattr("tests.test_mcp_harness._SERVER_TIMEOUT_SECONDS", 0.05)
+    with pytest.raises(RuntimeError, match="did not stop"):
+        async with _serve(object()):
+            pass
+
+
 class TestFirstVisitReachability:
     async def test_discovery_to_search_chain(self) -> None:
         app = make_fixture_http_app(_FIXTURE_SPECS)
@@ -188,8 +241,9 @@ class TestFirstVisitReachability:
             async with _session(url) as (session, _client):
                 await session.initialize()
                 tools = await session.list_tools()
-                # The harness serves the same 13-tool surface as production.
-                assert len(tools.tools) == 15
+                # The production server and its deterministic harness expose
+                # the exact declarative inventory in stable order.
+                assert tuple(tool.name for tool in tools.tools) == tool_names()
 
 
 class TestDeterministicSearchEnvelope:
@@ -347,7 +401,68 @@ class TestAuthenticatedTransport:
                 res = await session.call_tool("slopsearx_search", {"query": "hello"})
                 assert "results" in _payload(res)
                 tools = await session.list_tools()
-                assert len(tools.tools) == 15
+                assert tuple(tool.name for tool in tools.tools) == tool_names()
+
+    async def test_authenticated_dependency_dossier_start(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("MCP_GRANT_DEPENDENCY_DOSSIER", "1")
+        monkeypatch.setenv("MCP_GRANT_RESEARCH", "1")
+        monkeypatch.setenv("MCP_GRANT_SECURITY", "1")
+        specs = [
+            FakeEngineSpec(name="pypi", categories=["packages"]),
+            FakeEngineSpec(name="github", categories=["it"]),
+            FakeEngineSpec(name="nvd", categories=["security"]),
+        ]
+        cfg = h.fixture_config()
+        cfg.engines.update(
+            {
+                "pypi": EngineEntry(api_key=""),
+                "github": EngineEntry(api_key="fixture-key"),
+                "nvd": EngineEntry(api_key=""),
+            }
+        )
+        app = make_fixture_http_app(specs, token="s3cret", config=cfg)
+        async with _serve(app) as url:
+            async with _session(url, token="s3cret") as (session, _client):
+                await session.initialize()
+                result = _payload(
+                    await session.call_tool(
+                        "slopsearx_start_dependency_dossier",
+                        {"ecosystem": "pypi", "package": "requests"},
+                    )
+                )
+                assert result["contract"] == "slopsearx.dependency_dossier"
+                assert result["job_id"].startswith("job-")
+                assert result["requested_identity"]["package"] == "requests"
+
+    async def test_authenticated_staged_workflow(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("MCP_GRANT_STAGED_SEARCH", "1")
+        app = make_fixture_http_app(_FIXTURE_SPECS, token="s3cret")
+        async with _serve(app) as url:
+            async with _session(url, token="s3cret") as (session, _client):
+                await session.initialize()
+                arguments = {
+                    "query": "durable evidence",
+                    "objectives": {"deadline_ms": 5000, "max_engine_calls": 1},
+                    "initial_scope": {"engines": ["wikipedia"]},
+                }
+                preview = _payload(await session.call_tool("slopsearx_preview_staged_search", arguments))
+                assert preview["dispatch"] is False
+                accepted = _payload(
+                    await session.call_tool(
+                        "slopsearx_search_staged", {**arguments, "idempotency_key": "transport-staged-1"}
+                    )
+                )
+                for _ in range(50):
+                    current = _payload(
+                        await session.call_tool(
+                            "slopsearx_get_staged_search", {"operation_id": accepted["operation_id"]}
+                        )
+                    )
+                    if current["state"] in {"completed", "failed", "interrupted"}:
+                        break
+                    await asyncio.sleep(0.02)
+                assert current["state"] == "completed"
+                assert current["results"]
 
     async def test_wrong_token_is_rejected(self) -> None:
         app = make_fixture_http_app(_FIXTURE_SPECS, token="s3cret")
