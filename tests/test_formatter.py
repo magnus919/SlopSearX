@@ -634,12 +634,14 @@ class TestPortalHtml:
         )
 
         assert "Matched 2 sources" in output
+        assert 'title="Same URL returned by 2 configured engines"' in output
         assert "Research" in output
         assert "Brave" in output and "Wikipedia" in output
         assert "Open result ↗" in output
         assert "Open JSON view ↗" in output
         assert "format=json" in output
         assert "Source status" in output
+        assert "Page 1" in output
         assert "data-result-card" in output
 
         disabled_output = format_html(

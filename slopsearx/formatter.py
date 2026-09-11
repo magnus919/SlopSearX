@@ -260,6 +260,7 @@ a { color: inherit; }
 .search-hint kbd { border: 1px solid var(--line); border-radius: .2rem; padding: .12rem .3rem; color: var(--muted); }
 .portal-footer { display: flex; justify-content: space-between; gap: 1rem; padding: 2.5rem 0 2rem; color: var(--quiet); font: .68rem "SFMono-Regular", Consolas, monospace; }
 .results-shell { padding: 3rem 0 1rem; }
+.results-shell > .search-panel { position: sticky; top: .5rem; z-index: 3; }
 .results-top { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 2.3rem; }
 .results-top h1 { max-width: 18ch; margin: .5rem 0 0; font: 500 clamp(2rem, 4vw, 3.8rem)/.95 Georgia, serif; letter-spacing: -.05em; overflow-wrap: anywhere; }
 .results-top .summary { max-width: 21rem; margin: 0; color: var(--muted); text-align: right; font-size: .85rem; }
@@ -327,13 +328,15 @@ a { color: inherit; }
 .result-media figcaption { padding: .45rem .6rem; color: var(--quiet); font: .65rem "SFMono-Regular", Consolas, monospace; }
 .suggestions { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1rem; }
 .suggestions a { border-bottom: 1px solid var(--accent); color: var(--accent); text-decoration: none; font-size: .82rem; }
-.pagination { display: flex; justify-content: space-between; gap: 1rem; padding: 1.5rem 0; border-top: 1px solid var(--line); }
+.pagination { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.5rem 0; border-top: 1px solid var(--line); }
+.page-current { color: var(--muted); font: .68rem "SFMono-Regular", Consolas, monospace; letter-spacing: .05em; text-transform: uppercase; }
+.page-spacer { min-width: 5rem; }
 .page-link { border: 1px solid var(--line); color: var(--muted); background: transparent; padding: .6rem .8rem; text-decoration: none; font: .68rem "SFMono-Regular", Consolas, monospace; text-transform: uppercase; letter-spacing: .05em; }
 .page-link:hover { color: var(--ink); border-color: var(--accent); }
 .empty { padding: 3rem 0; color: var(--muted); border-top: 1px solid var(--line); }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (max-width: 900px) { .results-layout { grid-template-columns: 1fr; } .results-rail { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 720px) { .portal { width: min(100% - 1.5rem, 42rem); } .hero { display: block; padding: 4.5rem 0 3.5rem; } .hero h1 { font-size: clamp(3.2rem, 16vw, 5rem); } .hero-note { margin-top: 3rem; } .results-top { display: block; } .results-top .summary { margin-top: 1rem; text-align: left; } .result { padding: 1.1rem 1rem 1rem 3.7rem; } .result::before { left: .9rem; top: 1.1rem; width: 2rem; height: 2rem; } .result-kicker { display: block; } .result-kicker > * { margin: 0 .45rem .35rem 0; } .search-form { display: block; } .search-button { width: 100%; min-height: 3rem; } .search-hint { display: none; } .portal-footer { display: block; } .portal-footer span { display: block; margin-top: .5rem; } .scope-grid { grid-template-columns: 1fr; } .scope-apply { width: 100%; } .pagination { display: grid; grid-template-columns: 1fr 1fr; } .page-link { text-align: center; } .results-rail { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .portal { width: min(100% - 1.5rem, 42rem); } .hero { display: block; padding: 4.5rem 0 3.5rem; } .hero h1 { font-size: clamp(3.2rem, 16vw, 5rem); } .hero-note { margin-top: 3rem; } .results-top { display: block; } .results-top .summary { margin-top: 1rem; text-align: left; } .result { padding: 1.1rem 1rem 1rem 3.7rem; } .result::before { left: .9rem; top: 1.1rem; width: 2rem; height: 2rem; } .result-kicker { display: block; } .result-kicker > * { margin: 0 .45rem .35rem 0; } .search-form { display: block; } .search-button { width: 100%; min-height: 3rem; } .search-hint { display: none; } .portal-footer { display: block; } .portal-footer span { display: block; margin-top: .5rem; } .scope-grid { grid-template-columns: 1fr; } .scope-apply { width: 100%; } .pagination { display: grid; grid-template-columns: 1fr 1fr 1fr; } .page-link { text-align: center; } .page-current { text-align: center; } .page-spacer { min-width: 0; } .results-rail { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 """
 
@@ -543,7 +546,7 @@ def _portal_result_type(
         "reference": "Reference",
         "media": "Media",
     }
-    return labels.get(root, "Web")
+    return labels.get(root, "General")
 
 
 def _portal_source_counts(results: list[SearchResult]) -> list[tuple[str, int]]:
@@ -683,8 +686,12 @@ def format_html(
             for engine in engines
             if engine
         )
+        consensus_count = len(engines)
         consensus = (
-            f'<span class="result-pill consensus">Matched {len(engines)} sources</span>' if len(engines) > 1 else ""
+            f'<span class="result-pill consensus" title="Same URL returned by {consensus_count} configured engines" '
+            f'aria-label="Same URL returned by {consensus_count} configured engines">Matched {consensus_count} sources</span>'
+            if consensus_count > 1
+            else ""
         )
         result_type = html_lib.escape(_portal_result_type(result, category_value, media, payload), quote=True)
         special_bits: list[str] = []
@@ -777,20 +784,22 @@ def format_html(
     scope_note = (
         f"{scope_label} · {responded_count} of {selected_count} sources answered" if selected_count else scope_label
     )
-    previous = int(_portal_state_value(state, "page", 1) or 1) > 1
+    current_page = max(1, int(_portal_state_value(state, "page", 1) or 1))
+    previous = current_page > 1
     next_page = bool(results)
     pagination = ""
     if previous or next_page:
         pagination_links: list[str] = []
         if previous:
             pagination_links.append(
-                f'<a class="page-link" href="{html_lib.escape(_portal_page_url(state, max(1, int(_portal_state_value(state, "page", 1)) - 1)), quote=True)}">← Previous</a>'
+                f'<a class="page-link" aria-label="Previous result page" href="{html_lib.escape(_portal_page_url(state, current_page - 1), quote=True)}">← Previous</a>'
             )
         else:
-            pagination_links.append("<span></span>")
+            pagination_links.append('<span class="page-spacer" aria-hidden="true"></span>')
+        pagination_links.append(f'<span class="page-current" aria-current="page">Page {current_page}</span>')
         if next_page:
             pagination_links.append(
-                f'<a class="page-link" href="{html_lib.escape(_portal_page_url(state, int(_portal_state_value(state, "page", 1)) + 1), quote=True)}">Next →</a>'
+                f'<a class="page-link" aria-label="Next result page" href="{html_lib.escape(_portal_page_url(state, current_page + 1), quote=True)}">Next page →</a>'
             )
         pagination = f'<nav class="pagination" aria-label="Pagination">{"".join(pagination_links)}</nav>'
     search_hidden = _portal_hidden_inputs(state, exclude={"q", "pageno"}, page=1)

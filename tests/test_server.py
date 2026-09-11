@@ -388,7 +388,7 @@ class TestSearchEndpoint:
         assert 'value="general"' in response.text
         assert "Past month" in response.text
         assert "← Previous" in response.text
-        assert "Next →" in response.text
+        assert "Next page →" in response.text
 
     def test_strict_safesearch_is_rejected_before_dispatch(self, client: TestClient) -> None:
         response = client.get("/search", params={"q": "test", "safesearch": 2, "format": "json"})
