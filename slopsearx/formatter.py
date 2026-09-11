@@ -298,6 +298,8 @@ a { color: inherit; }
 .rail-source-count { color: var(--signal); }
 .rail-source-unavailable { color: #e8b0a8; }
 .rail-source-unavailable .rail-source-count { color: #e8b0a8; font-size: .62rem; text-align: right; }
+.rail-source-empty { color: var(--muted); }
+.rail-source-empty .rail-source-count { color: var(--muted); font-size: .62rem; text-align: right; }
 .rail-link { display: inline-flex; margin-top: 1rem; color: var(--accent); text-decoration: none; font: 700 .62rem "SFMono-Regular", Consolas, monospace; letter-spacing: .06em; text-transform: uppercase; }
 .rail-link:hover { color: var(--accent-strong); }
 .notice { margin: 1.5rem 0; padding: .8rem 1rem; border: 1px solid rgba(229,181,103,.45); color: var(--muted); background: rgba(229,181,103,.07); font-size: .82rem; }
@@ -743,20 +745,30 @@ def format_html(
         if len(entry) >= 2
         for engine, reason in [entry[:2]]
     ]
-    unavailable_sources = source_failures + [entry for entry in empty_sources if entry[0] not in {name for name, _ in source_failures}]
     unavailable_labels = ", ".join(
         f"{html_lib.escape(_portal_engine_label(engine), quote=True)} ({html_lib.escape(reason, quote=True)})"
-        for engine, reason in unavailable_sources
+        for engine, reason in source_failures
+    )
+    empty_labels = ", ".join(
+        f"{html_lib.escape(_portal_engine_label(engine), quote=True)} ({html_lib.escape(reason, quote=True)})"
+        for engine, reason in empty_sources
     )
     elapsed = int((meta or {}).get("response_time_ms", 0))
     all_unresponsive = bool(_portal_state_value(portal_state, "all_unresponsive", False))
-    partial = bool((meta or {}).get("partial", False)) or bool(unavailable_sources)
-    if all_unresponsive or (unresponsive_engines and not results):
+    partial = bool((meta or {}).get("partial", False)) or bool(source_failures)
+    if all_unresponsive or (source_failures and not results):
         detail = f" Unavailable: {unavailable_labels}." if unavailable_labels else ""
         unavailable = f'<div class="notice" data-kind="error" role="alert"><strong>No configured source returned a result.</strong> You can retry this search.{detail}</div>'
     elif partial:
-        detail = f" Unavailable: {unavailable_labels}." if unavailable_labels else ""
+        details = []
+        if unavailable_labels:
+            details.append(f"Unavailable: {unavailable_labels}.")
+        if empty_labels:
+            details.append(f"No results: {empty_labels}.")
+        detail = f" {' '.join(details)}" if details else ""
         unavailable = f'<div class="notice" role="status"><strong>Some sources could not answer this search.</strong>{detail} The results below are still usable.</div>'
+    elif empty_labels:
+        unavailable = f'<div class="notice" role="status"><strong>No results from some sources.</strong> No results: {empty_labels}. Other results remain usable.</div>'
     else:
         unavailable = ""
     scope_label = html_lib.escape(str(_portal_state_value(state, "scope_label", "All sources")), quote=True)
@@ -791,12 +803,16 @@ def format_html(
     unavailable_rows = "".join(
         f'<li class="rail-source rail-source-unavailable"><span class="rail-source-name">{html_lib.escape(_portal_engine_label(engine), quote=True)}</span>'
         f'<span class="rail-source-count">{html_lib.escape(reason, quote=True)}</span></li>'
-        for engine, reason in unavailable_sources
+        for engine, reason in source_failures
+    )
+    empty_rows = "".join(
+        f'<li class="rail-source rail-source-empty"><span class="rail-source-name">{html_lib.escape(_portal_engine_label(engine), quote=True)}</span>'
+        f'<span class="rail-source-count">no results</span></li>'
+        for engine, _reason in empty_sources
     )
     if not source_rows:
         source_rows = '<li class="rail-source"><span class="rail-source-name">No responding sources</span></li>'
-    if unavailable_rows:
-        source_rows += unavailable_rows
+    source_rows += unavailable_rows + empty_rows
     json_link = (
         f'<a class="rail-link" href="{html_lib.escape(_portal_format_url(state, "json"), quote=True)}">Open JSON view ↗</a>'
         if json_enabled

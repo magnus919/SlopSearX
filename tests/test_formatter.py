@@ -576,6 +576,20 @@ class TestPortalHtml:
         assert "Source status" in output
         assert output.count("Google") >= 2
 
+    def test_successful_empty_sources_do_not_trigger_partial_failure(self) -> None:
+        result = _make_result("https://example.com", "A result")
+
+        output = format_html(
+            [result],
+            "climate",
+            meta={"partial": False, "empty_engines": [["duckduckgo", "successful scrape returned no results"]]},
+            portal_state={"query": "climate", "responsive_engine_count": 2},
+        )
+
+        assert "No results from some sources." in output
+        assert "Some sources could not answer this search." not in output
+        assert "Duckduckgo" in output
+
     def test_result_page_preserves_filters_and_explains_scope(self) -> None:
         result = _make_result("https://example.com", "A result")
         output = format_html(
