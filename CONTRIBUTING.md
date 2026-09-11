@@ -30,6 +30,31 @@ pip install -e ".[dev]"
 - Verify conventional commit format on all commits
 - If this is an agent-authored PR, mention `@droid` in a PR comment to request automated review
 
+## Portal impact review
+
+The browser portal is a first-class service. Before changing a backend or
+shared module, review whether the change affects the portal's request state,
+result fields, source capabilities, filter enforcement, policy boundary,
+cache/snapshot behavior, or HTTP errors. Use the accepted contracts in
+[`docs/PORTAL_UX_SPEC.md`](docs/PORTAL_UX_SPEC.md),
+[`docs/PORTAL_VISUAL_SYSTEM.md`](docs/PORTAL_VISUAL_SYSTEM.md), and
+[`docs/PORTAL_ACCEPTANCE.md`](docs/PORTAL_ACCEPTANCE.md) as the review
+baseline.
+
+At minimum, run the deterministic portal contract slice when those boundaries
+change:
+
+```bash
+pytest --no-cov -q tests/test_formatter.py tests/test_server.py
+ruff check slopsearx/formatter.py slopsearx/server.py tests/test_formatter.py tests/test_server.py
+mypy slopsearx/formatter.py slopsearx/server.py
+```
+
+A behavior change that is visible in HTML needs an HTML or browser regression
+test and an update to the portal documentation. A backend change cannot be
+considered isolated solely because it does not edit a frontend file; CI runs
+the portal contract gate for shared backend changes.
+
 ## Real Valkey integration tests
 
 CI runs cache and research ownership contracts against a disposable Valkey service.

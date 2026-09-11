@@ -10,6 +10,7 @@
 SlopSearX is a horizontally scalable, stateless meta search engine designed for AI agent consumption. It replaces SearXNG in the GroktoCrawl stack with:
 
 - **HTML output by default** — SearXNG-compatible browser responses with JSON/CSV/RSS negotiation
+- **Human search portal** — a responsive, server-rendered landing and results experience with Dark / Darker themes
 - **YAML+Markdown native output** — structured + readable for AI agent contexts via `format=yaml`
 - **SearXNG-compatible API** — drop-in replacement for existing consumers
 - **Plugin engine adapters** — one file per engine, `@register_engine`, zero orchestrator changes
@@ -29,6 +30,7 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 | `GET /search?q=...&format=csv` | CSV results when enabled in `search.formats` |
 | `GET /search?q=...&format=rss` | RSS results when enabled in `search.formats` |
 | `GET /search?q=...&format=yaml` | YAML+Markdown agent-native output |
+| `GET /` | Human search portal landing page (HTML; machine formats retain the missing-query error) |
 | `GET /search?q=...&categories=science,news` | Filter by category (OR semantics) |
 | `GET /search?q=...&engines=brave,wikipedia` | Explicit engine selection |
 | `GET /health` | Per-engine health check with status |
@@ -261,6 +263,30 @@ Standard HTML, CSV, JSON, and RSS formats are controlled by `search.formats`
 in `config.yaml` (or `SEARCH_FORMATS=html,json`). YAML is an additive
 SlopSearX format and is always available. A requested standard format that is
 not enabled returns HTTP 403; malformed search parameters return HTTP 400.
+
+### Browser portal
+
+Open `/` for the human-facing search portal. A query submitted there uses the
+same search service, routing, cache, ranking, and engine policy as the API; use
+`/search` directly for a result page or for compatibility clients. The portal
+defaults to **Dark** mode and provides a **Darker** mode toggle. Operators can
+set `SLOPSEARX_PORTAL_DEFAULT_THEME=darker` to change the initial theme. An
+explicit user choice is retained in browser storage when available. The portal
+does not grant capabilities that the server-side policy would reject. Explicit
+selection of a sensitive engine (currently `hibp` and `dehashed` by default)
+also requires `MCP_TARGETED_SENSITIVE_ALLOWED=true`; the same operator policy
+is applied before either the browser or MCP surface dispatches a search.
+
+For a public deployment, put the service behind the operator's TLS and
+authentication reverse proxy. SlopSearX does not provide browser accounts,
+trust arbitrary forwarded headers, or send engine credentials to the browser.
+The portal has no analytics or third-party runtime assets by default. Search
+forms are read-only requests; there is no authenticated browser mutation that
+needs a CSRF token in this release.
+
+See [`docs/PORTAL_DEPLOYMENT.md`](docs/PORTAL_DEPLOYMENT.md) for the browser
+URL map, proxy/access modes, digest-pinned deployment, smoke check, rollback,
+and troubleshooting runbook.
 
 ## License
 
