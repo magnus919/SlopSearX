@@ -14,6 +14,7 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.0",
+    "pydantic>=2.0,<3",
     "httpx>=0.28.0",
     "lxml>=5.3.0",
     "cssselect>=1.2",
@@ -110,8 +111,11 @@ layers = [
     "slopsearx.server",
     "slopsearx.mcp",
     "slopsearx.research",
+    "slopsearx.saved_runner",
     "slopsearx.research_store",
+    "slopsearx.saved_store",
     "slopsearx.research_models",
+    "slopsearx.saved_models",
     "slopsearx.snapshot",
     "slopsearx.service",
     "slopsearx.routing",
