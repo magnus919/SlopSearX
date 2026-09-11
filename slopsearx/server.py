@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import html as html_lib
+import os
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from importlib.metadata import PackageNotFoundError
@@ -33,7 +34,14 @@ from slopsearx.audit import QueryAuditLogger
 from slopsearx.cache import SearchCache
 from slopsearx.capabilities import CapabilityCatalog, build_engine_health
 from slopsearx.config import Config, load_config
-from slopsearx.formatter import format_csv, format_html, format_json, format_rss, format_yaml_markdown
+from slopsearx.formatter import (
+    format_csv,
+    format_html,
+    format_json,
+    format_landing_page,
+    format_rss,
+    format_yaml_markdown,
+)
 from slopsearx.logging import setup_logging
 from slopsearx.middleware import RequestIDMiddleware
 from slopsearx.ratelimit import RateLimiter, RateLimitStrategy, ValkeySlidingWindow
@@ -140,6 +148,12 @@ def _service_version() -> str:
         return package_version("slopsearx")
     except PackageNotFoundError:
         return "0.0.0"
+
+
+def _portal_default_theme() -> str:
+    """Return the configured human-portal theme, defaulting to dark."""
+    configured = os.getenv("SLOPSEARX_PORTAL_DEFAULT_THEME", "dark").strip().lower()
+    return configured if configured in {"dark", "darker"} else "dark"
 
 
 def _routing_catalog() -> CapabilityCatalog | None:
@@ -538,7 +552,13 @@ def _render_search_response(
     """Render one normalized search response in the requested format."""
     if output_format == "html":
         return HTMLResponse(
-            content=format_html(results, query, meta=meta, unresponsive_engines=unresponsive_engines),
+            content=format_html(
+                results,
+                query,
+                meta=meta,
+                unresponsive_engines=unresponsive_engines,
+                default_theme=_portal_default_theme(),
+            ),
             status_code=status_code,
         )
     if output_format == "yaml":
@@ -642,6 +662,16 @@ async def _search_endpoint(request: Request) -> Any:
         return _format_error_response(
             output_format, 400, error="invalid_filter", field=field, message=f"Invalid value for '{field}'."
         )
+
+    # A human visiting the bare root gets the portal landing page. Keep the
+    # SearXNG-compatible missing-query error on /search and for machine
+    # formats, so API clients retain their existing contract.
+    if request.url.path == "/" and request.method == "GET" and not q.strip():
+        output_format, format_error = _select_format(request, requested_format)
+        if format_error is not None:
+            return format_error
+        if output_format == "html":
+            return HTMLResponse(content=format_landing_page(default_theme=_portal_default_theme()))
 
     # Increment request counters
     # Count every compatibility request, including malformed and unsupported

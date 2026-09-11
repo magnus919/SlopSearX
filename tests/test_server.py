@@ -286,6 +286,28 @@ class TestSearchEndpoint:
         assert "text/html" in response.headers["content-type"]
         assert "query_required" in response.text
 
+    def test_root_without_query_opens_portal_landing_page(self, client: TestClient) -> None:
+        response = client.get("/")
+
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+        assert "Search <em>SlopSearX.</em>" in response.text
+        assert 'action="/search"' in response.text
+        assert "data-theme-toggle" in response.text
+
+    def test_root_machine_format_without_query_keeps_error_contract(self, client: TestClient) -> None:
+        response = client.get("/", params={"format": "json"})
+
+        assert response.status_code == 400
+        assert response.json()["error"] == "query_required"
+
+    def test_portal_default_theme_can_be_configured(self, client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("SLOPSEARX_PORTAL_DEFAULT_THEME", "darker")
+        response = client.get("/")
+
+        assert response.status_code == 200
+        assert 'data-default-theme="darker"' in response.text
+
     def test_yaml_format(self, client: TestClient) -> None:
         """format=yaml returns YAML+Markdown response."""
         response = client.get("/search", params={"q": "test", "format": "yaml"})
