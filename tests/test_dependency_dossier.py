@@ -35,6 +35,40 @@ class _MemoryStore:
         del ttl
         self._data[key] = value
 
+    async def set_nx(self, key: str, value: dict[str, Any], ttl: int = 300) -> bool:
+        del ttl
+        if key in self._data:
+            return False
+        self._data[key] = value
+        return True
+
+    async def acquire_lease(self, key: str, token: str, ttl: int) -> bool:
+        return await self.set_nx(key, {"token": token}, ttl)
+
+    async def renew_lease(self, key: str, token: str, ttl: int) -> bool:
+        del ttl
+        current = self._data.get(key)
+        if not isinstance(current, dict) or current.get("token") != token:
+            return False
+        return True
+
+    async def release_lease(self, key: str, token: str) -> bool:
+        current = self._data.get(key)
+        if not isinstance(current, dict) or current.get("token") != token:
+            return False
+        self._data.pop(key, None)
+        return True
+
+    async def save_if_lease_owner(
+        self, lease_key: str, token: str, record_key: str, value: dict[str, Any], ttl: int
+    ) -> bool:
+        del ttl
+        current = self._data.get(lease_key)
+        if not isinstance(current, dict) or current.get("token") != token:
+            return False
+        self._data[record_key] = value
+        return True
+
 
 class _MemoryClient:
     def __init__(self, store: _MemoryStore) -> None:
@@ -374,4 +408,5 @@ class TestWorkflow:
         charged = await state.job_store.load(started["job_id"])
         assert charged is not None
         assert charged.workflow["budget"]["used_adapter_calls"] == 1
-        assert charged.queries[0].attempts == []
+        assert len(charged.queries[0].attempts) == 1
+        assert charged.queries[0].attempts[0].state == "running"

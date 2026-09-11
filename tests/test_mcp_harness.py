@@ -188,8 +188,10 @@ class TestFirstVisitReachability:
             async with _session(url) as (session, _client):
                 await session.initialize()
                 tools = await session.list_tools()
-                # The harness serves the same 13-tool surface as production.
-                assert len(tools.tools) == 17
+                # The harness exposes the combined entity-projection,
+                # adaptive-research, saved-search, receipt, staged-search,
+                # and dependency-dossier surface.
+                assert len(tools.tools) == 32
 
 
 class TestDeterministicSearchEnvelope:
@@ -347,7 +349,7 @@ class TestAuthenticatedTransport:
                 res = await session.call_tool("slopsearx_search", {"query": "hello"})
                 assert "results" in _payload(res)
                 tools = await session.list_tools()
-                assert len(tools.tools) == 17
+                assert len(tools.tools) == 32
 
     async def test_authenticated_dependency_dossier_start(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("MCP_GRANT_DEPENDENCY_DOSSIER", "1")
@@ -379,6 +381,36 @@ class TestAuthenticatedTransport:
                 assert result["contract"] == "slopsearx.dependency_dossier"
                 assert result["job_id"].startswith("job-")
                 assert result["requested_identity"]["package"] == "requests"
+
+    async def test_authenticated_staged_workflow(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("MCP_GRANT_STAGED_SEARCH", "1")
+        app = make_fixture_http_app(_FIXTURE_SPECS, token="s3cret")
+        async with _serve(app) as url:
+            async with _session(url, token="s3cret") as (session, _client):
+                await session.initialize()
+                arguments = {
+                    "query": "durable evidence",
+                    "objectives": {"deadline_ms": 5000, "max_engine_calls": 1},
+                    "initial_scope": {"engines": ["wikipedia"]},
+                }
+                preview = _payload(await session.call_tool("slopsearx_preview_staged_search", arguments))
+                assert preview["dispatch"] is False
+                accepted = _payload(
+                    await session.call_tool(
+                        "slopsearx_search_staged", {**arguments, "idempotency_key": "transport-staged-1"}
+                    )
+                )
+                for _ in range(50):
+                    current = _payload(
+                        await session.call_tool(
+                            "slopsearx_get_staged_search", {"operation_id": accepted["operation_id"]}
+                        )
+                    )
+                    if current["state"] in {"completed", "failed", "interrupted"}:
+                        break
+                    await asyncio.sleep(0.02)
+                assert current["state"] == "completed"
+                assert current["results"]
 
     async def test_wrong_token_is_rejected(self) -> None:
         app = make_fixture_http_app(_FIXTURE_SPECS, token="s3cret")
