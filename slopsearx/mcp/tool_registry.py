@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from slopsearx.mcp import dependency_tools, receipt_tools, staged_tools, tools
+from slopsearx.mcp import dependency_tools, lineage_tools, receipt_tools, staged_tools, tools
 
 
 class StateRequirement(StrEnum):
@@ -380,6 +380,15 @@ TOOL_DEFINITIONS: tuple[ToolDefinition, ...] = (
         policy_gate=True,
         docs="docs/DEPENDENCY_DOSSIER.md",
         transport_test="tests/test_dependency_dossier.py",
+    ),
+    _definition(
+        lineage_tools.slopsearx_get_artifact_lineage,
+        contract="slopsearx.artifact_lineage",
+        state=StateRequirement.DURABLE,
+        sensitive=_REVALIDATED_SCOPE,
+        policy_gate=True,
+        docs="docs/ARTIFACT_LINEAGE.md",
+        transport_test="tests/test_retrieval_receipts_transport.py",
     ),
 )
 

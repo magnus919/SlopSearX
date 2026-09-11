@@ -57,6 +57,8 @@ async def test_nonempty_initial_stage_skips_fallback_and_replays(staged_state) -
     completed = await staged_tools.slopsearx_get_staged_search(accepted["operation_id"])
     replayed = await staged_tools.slopsearx_search_staged(**arguments)
     assert completed["state"] == "completed"
+    assert completed["artifact"]["kind"] == "staged_search"
+    assert completed["meta"]["artifact"]["kind"] == "snapshot"
     assert completed["stop_reason"] == "initial_nonempty"
     assert completed["budget"]["reserved"] == 1
     assert completed["stages"][1]["state"] == "skipped"

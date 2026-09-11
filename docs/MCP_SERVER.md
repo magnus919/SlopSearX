@@ -740,8 +740,10 @@ than run. `slopsearx_start_research` still returns a handle, but it is flagged
   messages remain attributed, unverified data and trigger no network access.
 - `slopsearx_read_retrieval_receipts` returns at most 20 newest-first records
   plus `total`, `returned`, and `has_more`.
-- `slopsearx_export_research_manifest` joins receipts for 1–25 explicit result
-  IDs into a versioned manifest capped at 1 MiB.
+- `slopsearx_export_research_manifest` joins receipts for up to 25 explicit
+  result IDs or live result nodes selected from bounded artifact lineage into
+  a versioned manifest capped at 1 MiB. Artifact selections record the exact
+  graph under `lineage_cuts`.
 
 Receipts use a fixed 24-hour Valkey horizon, a maximum of 20 observations per
 result, and result-scoped idempotency. Identical retries return the original
@@ -780,6 +782,17 @@ commits. Missed intervals are coalesced into one current run.
 Saved searches are an additive MCP surface. They do not add parameters or
 fields to `/` or `/search`, so SearXNG HTTP clients retain the existing request
 and response contract whether the grant is enabled or disabled.
+
+### 6.13.4 Artifact lineage
+
+Workflow responses carry `slopsearx.artifact_ref` version 1 identities.
+`slopsearx_get_artifact_lineage` resolves their existing relationships into a
+bounded, deterministic graph. Reads use the current tenant, grant, and
+sensitive-engine policy on every expansion. They never dispatch an engine,
+retrieve a result URL, mutate a record, or extend retention. Missing, expired,
+unavailable, policy-denied, and legacy lineage gaps are explicit node states.
+See [`ARTIFACT_LINEAGE.md`](ARTIFACT_LINEAGE.md) for the schemas, relation
+semantics, bounds, compatibility, and rollback behavior.
 
 ### 6.14 Why there is no separate "advanced search" tool
 

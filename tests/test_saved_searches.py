@@ -44,6 +44,7 @@ async def test_crud_schedule_and_coverage_aware_events(saved_state):
     state, now = saved_state
     created = await create()
     assert created["revision"] == 1
+    assert created["artifact"]["kind"] == "saved_search"
     assert created["comparison"]["absence_is_deletion"] is False
     assert await state.saved_runner.run_due("default", now=1059) == []
     now[0] = 1060
@@ -60,6 +61,7 @@ async def test_crud_schedule_and_coverage_aware_events(saved_state):
     assert {event["kind"] for event in absent[0]["events"]} == {"not_observed_in_latest_run"}
     reports = await t.slopsearx_read_saved_search_reports(created["search_id"])
     assert len(reports["reports"]) == 3
+    assert reports["reports"][0]["artifact"]["kind"] == "saved_report"
     assert "never a deletion" in reports["note"]
 
     paused = await t.slopsearx_pause_saved_search(created["search_id"], 1)

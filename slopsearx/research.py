@@ -18,6 +18,7 @@ import logging
 import time
 from typing import Any, Callable
 
+from slopsearx.artifacts import artifact_ref, composite_artifact_id
 from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, engine_policy_rejection, resolve_intent
 from slopsearx.filters import resolve_filter_enforcement
 from slopsearx.research_budget import finish_attempt, initialize_budget, reserve_attempt
@@ -711,6 +712,12 @@ class ResearchJobRunner:
             response.results,
             response.scope,
             ranking_explanation=response.ranking_explanation,
+            derived_from=[
+                artifact_ref(
+                    "research_attempt",
+                    composite_artifact_id(job.job_id, query.attempts[-1].attempt_id),
+                )
+            ],
         )
         # Persist per-engine coverage and the disjoint bucket summary.
         query.engine_coverage = self._build_query_coverage(query, response)

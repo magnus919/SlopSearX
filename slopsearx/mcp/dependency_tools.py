@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any
 
+from slopsearx.artifacts import artifact_ref
 from slopsearx.dependency_dossier import (
     ADVISORY_ENGINE,
     ECOSYSTEM_ENGINES,
@@ -164,6 +165,7 @@ def _start_envelope(job: ResearchJob, *, replay: bool) -> dict[str, Any]:
         "contract": CONTRACT,
         "version": VERSION,
         "job_id": job.job_id,
+        "artifact": artifact_ref("dependency_dossier", job.job_id),
         "state": job.state,
         "requested_identity": job.workflow["identity"],
         "created_at": job.created_at,
@@ -324,6 +326,7 @@ async def slopsearx_get_dependency_dossier(job_id: str, max_results: int | None 
         "contract": CONTRACT,
         "version": VERSION,
         "job_id": job.job_id,
+        "artifact": artifact_ref("dependency_dossier", job.job_id),
         "state": job.state,
         "partial": partial,
         "budget": job.workflow.get("budget", {}),
