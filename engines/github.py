@@ -14,6 +14,7 @@ from slopsearx.adapter import (
     SearchResult,
     register_engine,
 )
+from slopsearx.payload import build_payload
 
 
 @register_engine
@@ -126,6 +127,12 @@ class GitHubAdapter(EngineAdapter):
                         engine=self.name,
                         position=idx + 1,
                         category="code",
+                        payload=build_payload(
+                            "code",
+                            "repository",
+                            {"repository": repo_name or None, "path": path or None},
+                            engine=self.name,
+                        ),
                     ),
                 )
             elif is_issues:
@@ -175,6 +182,12 @@ class GitHubAdapter(EngineAdapter):
                         position=idx + 1,
                         score=float(stars),
                         category="repositories",
+                        payload=build_payload(
+                            "code",
+                            "repository",
+                            {"repository": item.get("full_name") or None},
+                            engine=self.name,
+                        ),
                     ),
                 )
 

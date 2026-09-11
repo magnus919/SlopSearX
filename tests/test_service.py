@@ -769,6 +769,28 @@ class TestRateLimit:
 
 
 class TestCache:
+    async def test_suggestion_suppression_has_distinct_cache_identity(self) -> None:
+        class Suggestions:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            async def fetch(self, query: str) -> list[str]:
+                self.calls += 1
+                return [query + " suggestion"]
+
+        engine = _OkEngine(count=1)
+        cache = _FakeCache()
+        ctx = _context(engines={"okeng": engine}, cache=cache)
+        suggestions = Suggestions()
+        ctx.suggestion_service = suggestions  # type: ignore[assignment]
+        service = SearchService(ctx)
+        ordinary = await service.search(_req())
+        staged = await service.search(_req(generate_suggestions=False))
+        assert ordinary.suggestions
+        assert staged.suggestions == []
+        assert engine.calls == 2
+        assert suggestions.calls == 1
+
     async def test_cache_hit_skips_dispatch(self) -> None:
         ok = _OkEngine(count=1)
         cache = _FakeCache()
@@ -1268,6 +1290,21 @@ async def test_identical_misses_share_dispatch_but_not_views() -> None:
     responses[1].results[0].title = "mutated"
     assert responses[2].results[0].title != "mutated"
     assert not service._inflight
+
+
+async def test_execution_isolation_prevents_active_task_sharing_but_not_cache_reuse() -> None:
+    engine = _OkEngine(count=1, delay=0.03)
+    cache = _FakeCache()
+    service = _service(engines={"okeng": engine}, cache=cache)
+    first, second = await asyncio.gather(
+        service.search(_req(execution_isolation_key="operation:a")),
+        service.search(_req(execution_isolation_key="operation:b")),
+    )
+    assert not first.cached and not second.cached
+    assert engine.calls == 2
+    cached = await service.search(_req(execution_isolation_key="operation:c"))
+    assert cached.cached
+    assert engine.calls == 2
 
 
 async def test_cancel_one_waiter_preserves_other_search() -> None:

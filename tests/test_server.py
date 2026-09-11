@@ -16,6 +16,7 @@ from slopsearx.adapter import (
     SearchResult,
     register_engine,
 )
+from slopsearx.capabilities import MCPPolicy
 from slopsearx.config import load_config
 from slopsearx.server import app
 
@@ -133,6 +134,7 @@ def client() -> TestClient:
     # Save original state
     original_engines = dict(server_mod._active_engines)
     original_empty_scrape_diagnostics = server_mod._empty_scrape_diagnostics_enabled
+    original_portal_policy = server_mod._portal_policy
 
     with TestClient(app) as tc:
         # Set mock engine AFTER startup runs (which calls discover_engines)
@@ -146,6 +148,7 @@ def client() -> TestClient:
     # Restore original state
     server_mod._active_engines = original_engines
     server_mod._empty_scrape_diagnostics_enabled = original_empty_scrape_diagnostics
+    server_mod._portal_policy = original_portal_policy
 
 
 # ---------------------------------------------------------------------------
@@ -163,7 +166,7 @@ class TestSearchEndpoint:
 
     def test_basic_search(self, client: TestClient) -> None:
         """Basic search returns JSON with results."""
-        response = client.get("/search", params={"q": "test query"})
+        response = client.get("/search", params={"q": "test query", "format": "json"})
 
         assert response.status_code == 200
         data = response.json()
@@ -172,9 +175,44 @@ class TestSearchEndpoint:
         assert len(data["results"]) == 3
         assert "meta" in data
 
+    @pytest.mark.parametrize("path", ["/", "/search"])
+    @pytest.mark.parametrize("method", ["get", "post"])
+    def test_searxng_routes_and_methods(self, client: TestClient, path: str, method: str) -> None:
+        """SearXNG clients can use either search route and GET or form POST."""
+        request = getattr(client, method)
+        kwargs = {"params": {"q": "route compatibility", "format": "json"}}
+        if method == "post":
+            kwargs = {"data": {"q": "route compatibility", "format": "json"}}
+
+        response = request(path, **kwargs)
+
+        assert response.status_code == 200
+        assert response.json()["query"] == "route compatibility"
+
+    @pytest.mark.parametrize("saved_grant", ["0", "1"])
+    @pytest.mark.parametrize("event_grant", ["0", "1"])
+    @pytest.mark.parametrize("receipt_grant", ["0", "1"])
+    def test_additive_mcp_grants_do_not_change_searxng_json(
+        self,
+        client: TestClient,
+        monkeypatch,
+        saved_grant: str,
+        event_grant: str,
+        receipt_grant: str,
+    ) -> None:
+        monkeypatch.setenv("MCP_GRANT_SAVED_SEARCHES", saved_grant)
+        monkeypatch.setenv("MCP_GRANT_SAVED_SEARCH_EVENTS", event_grant)
+        monkeypatch.setenv("MCP_GRANT_RETRIEVAL_RECEIPTS", receipt_grant)
+        response = client.get("/search", params={"q": "compatibility", "format": "json"})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["query"] == "compatibility"
+        assert data["number_of_results"] == 3
+        assert all("url" in result and "title" in result for result in data["results"])
+
     def test_missing_query(self, client: TestClient) -> None:
         """Missing q parameter returns 400."""
-        response = client.get("/search")
+        response = client.get("/search", params={"format": "json"})
 
         assert response.status_code == 400
         data = response.json()
@@ -182,7 +220,7 @@ class TestSearchEndpoint:
 
     def test_empty_query(self, client: TestClient) -> None:
         """Empty q parameter returns 400."""
-        response = client.get("/search", params={"q": ""})
+        response = client.get("/search", params={"q": "", "format": "json"})
 
         assert response.status_code == 400
         data = response.json()
@@ -190,7 +228,7 @@ class TestSearchEndpoint:
 
     def test_whitespace_only_query(self, client: TestClient) -> None:
         """Whitespace-only query returns 400."""
-        response = client.get("/search", params={"q": "   "})
+        response = client.get("/search", params={"q": "   ", "format": "json"})
 
         assert response.status_code == 400
 
@@ -215,7 +253,157 @@ class TestSearchEndpoint:
         assert response.status_code == 503
         data = response.json() if output_format == "json" else yaml.safe_load(response.text.split("\n---\n", 1)[0])
         assert data["meta"]["deadline_exceeded"]
-        assert client.get("/search", params={"q": "deadline", "interactive_timeout_ms": 0}).status_code == 422
+        assert client.get("/search", params={"q": "deadline", "interactive_timeout_ms": 0}).status_code == 400
+
+    def test_default_format_is_html(self, client: TestClient) -> None:
+        response = client.get("/search", params={"q": "test"})
+
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+        assert "Search results for test" in response.text
+
+    @pytest.mark.parametrize(
+        ("output_format", "media_type", "marker"),
+        [
+            ("html", "text/html", "Search results for test"),
+            ("json", "application/json", '"results"'),
+            ("csv", "text/csv", "title,url,content,engine,publishedDate"),
+            ("rss", "application/rss+xml", "<rss"),
+            ("yaml", "text/vnd.yaml+markdown", "## Results Summary"),
+        ],
+    )
+    def test_supported_formats(self, client: TestClient, output_format: str, media_type: str, marker: str) -> None:
+        response = client.get("/search", params={"q": "test", "format": output_format})
+
+        assert response.status_code == 200
+        assert media_type in response.headers["content-type"]
+        assert marker in response.text
+
+    def test_accept_header_negotiates_json(self, client: TestClient) -> None:
+        response = client.get("/search", params={"q": "test"}, headers={"Accept": "application/json"})
+
+        assert response.status_code == 200
+        assert "application/json" in response.headers["content-type"]
+
+    def test_disabled_format_returns_403(self, client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+        import slopsearx.server as server_mod
+
+        config = server_mod._health_config()
+        monkeypatch.setattr(config.search, "formats", ["html", "json"])
+
+        response = client.get("/search", params={"q": "test", "format": "csv"})
+
+        assert response.status_code == 403
+        assert "text/csv" in response.headers["content-type"]
+
+    @pytest.mark.parametrize("params", [{"pageno": 0}, {"safesearch": 3}, {"pageno": "not-an-int"}])
+    def test_invalid_search_parameters_return_400(self, client: TestClient, params: dict[str, object]) -> None:
+        response = client.get("/search", params={"q": "test", "format": "json", **params})
+
+        assert response.status_code == 400
+        assert response.json()["error"] == "invalid_filter"
+
+    def test_missing_query_default_html_error(self, client: TestClient) -> None:
+        response = client.get("/search")
+
+        assert response.status_code == 400
+        assert "text/html" in response.headers["content-type"]
+        assert "query_required" in response.text
+
+    def test_root_without_query_opens_portal_landing_page(self, client: TestClient) -> None:
+        response = client.get("/")
+
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+        assert "Search <em>SlopSearX.</em>" in response.text
+        assert 'action="/search"' in response.text
+        assert "data-theme-toggle" in response.text
+
+    def test_portal_html_responses_include_security_headers(self, client: TestClient) -> None:
+        landing = client.get("/")
+        assert landing.status_code == 200
+        assert "default-src 'self'" in landing.headers["content-security-policy"]
+        assert landing.headers["referrer-policy"] == "no-referrer"
+        assert landing.headers["x-content-type-options"] == "nosniff"
+        assert "camera=()" in landing.headers["permissions-policy"]
+
+        results = client.get("/search", params={"q": "headers"})
+        assert results.status_code == 200
+        assert "default-src 'self'" in results.headers["content-security-policy"]
+
+    def test_sensitive_engine_selection_is_rejected_before_dispatch(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import slopsearx.server as server_mod
+
+        monkeypatch.setattr(
+            server_mod,
+            "_portal_policy",
+            MCPPolicy(sensitive_engines={"mocktest"}, targeted_sensitive_allowed=False),
+        )
+        response = client.get("/search", params={"q": "private", "engines": "mocktest", "format": "json"})
+
+        assert response.status_code == 403
+        assert response.json() == {
+            "error": "engine_restricted",
+            "message": "Explicit selection of one or more sensitive sources requires operator authorization.",
+            "field": "engines",
+            "engines": ["mocktest"],
+        }
+
+    def test_sensitive_engine_selection_is_allowed_with_operator_grant(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import slopsearx.server as server_mod
+
+        monkeypatch.setattr(
+            server_mod,
+            "_portal_policy",
+            MCPPolicy(sensitive_engines={"mocktest"}, targeted_sensitive_allowed=True),
+        )
+        response = client.get("/search", params={"q": "private", "engines": "mocktest", "format": "json"})
+
+        assert response.status_code == 200
+        assert response.json()["number_of_results"] == 3
+
+    def test_root_machine_format_without_query_keeps_error_contract(self, client: TestClient) -> None:
+        response = client.get("/", params={"format": "json"})
+
+        assert response.status_code == 400
+        assert response.json()["error"] == "query_required"
+
+    def test_portal_default_theme_can_be_configured(self, client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("SLOPSEARX_PORTAL_DEFAULT_THEME", "darker")
+        response = client.get("/")
+
+        assert response.status_code == 200
+        assert 'data-default-theme="darker"' in response.text
+
+    def test_html_results_expose_capability_aware_scope_and_pagination(self, client: TestClient) -> None:
+        response = client.get(
+            "/search",
+            params={"q": "test", "categories": "general", "pageno": 2, "time_range": "month"},
+        )
+
+        assert response.status_code == 200
+        assert "Scope and filters" in response.text
+        assert 'name="categories"' in response.text
+        assert 'value="general"' in response.text
+        assert "Past month" in response.text
+        assert "← Previous" in response.text
+        assert "Try next page →" in response.text
+        assert "Why this result appeared" in response.text
+        assert "Cross-source presence" in response.text
+        assert "it is not confidence" in response.text
+        assert "unsupported for this result" in response.text
+        assert "structurally eligible" in response.text
+
+    def test_strict_safesearch_is_rejected_before_dispatch(self, client: TestClient) -> None:
+        response = client.get("/search", params={"q": "test", "safesearch": 2, "format": "json"})
+
+        assert response.status_code == 400
+        assert response.json()["error"] == "invalid_filter"
+        assert response.json()["field"] == "safesearch"
 
     def test_yaml_format(self, client: TestClient) -> None:
         """format=yaml returns YAML+Markdown response."""
@@ -264,15 +452,15 @@ class TestSearchEndpoint:
         assert "text/vnd.yaml+markdown" in response.headers["content-type"]
 
     def test_json_format_default(self, client: TestClient) -> None:
-        """format=json is the default."""
-        response = client.get("/search", params={"q": "test"})
+        """format=json remains available explicitly."""
+        response = client.get("/search", params={"q": "test", "format": "json"})
 
         assert response.status_code == 200
         assert "application/json" in response.headers["content-type"]
 
     def test_unresponsive_engine(self, client: TestClient) -> None:
         """Error from engine is reported in unresponsive_engines."""
-        response = client.get("/search", params={"q": "error"})
+        response = client.get("/search", params={"q": "error", "format": "json"})
 
         assert response.status_code == 503  # all engines unresponsive
         data = response.json()
@@ -281,7 +469,7 @@ class TestSearchEndpoint:
 
     def test_suggestions_always_present(self, client: TestClient) -> None:
         """suggestions field is always present (may be empty)."""
-        response = client.get("/search", params={"q": "test"})
+        response = client.get("/search", params={"q": "test", "format": "json"})
 
         data = response.json()
         assert "suggestions" in data
@@ -289,7 +477,7 @@ class TestSearchEndpoint:
 
     def test_meta_fields(self, client: TestClient) -> None:
         """meta.* extension fields are present."""
-        response = client.get("/search", params={"q": "test"})
+        response = client.get("/search", params={"q": "test", "format": "json"})
 
         data = response.json()
         meta = data["meta"]
@@ -307,13 +495,13 @@ class TestSearchEndpoint:
         server_mod._active_engines = {"emptyscrape": _EmptyScrapeEngine()}
         server_mod._empty_scrape_diagnostics_enabled = False
 
-        disabled_response = client.get("/search", params={"q": "diagnostic-disabled"})
+        disabled_response = client.get("/search", params={"q": "diagnostic-disabled", "format": "json"})
 
         assert "empty_engines" not in disabled_response.json()["meta"]
 
         server_mod._empty_scrape_diagnostics_enabled = True
 
-        response = client.get("/search", params={"q": "diagnostic-enabled"})
+        response = client.get("/search", params={"q": "diagnostic-enabled", "format": "json"})
 
         assert response.status_code == 200
         data = response.json()
@@ -322,7 +510,7 @@ class TestSearchEndpoint:
 
     def test_engines_filter(self, client: TestClient) -> None:
         """engines parameter filters which engines to use."""
-        response = client.get("/search", params={"q": "test", "engines": "mocktest"})
+        response = client.get("/search", params={"q": "test", "engines": "mocktest", "format": "json"})
 
         assert response.status_code == 200
         data = response.json()
@@ -340,7 +528,7 @@ class TestSearchEndpoint:
         When an adapter raises an exception with a URL containing an API key,
         the server-level handler must sanitize it before returning to the client.
         """
-        response = client.get("/search", params={"q": "leak_exception"})
+        response = client.get("/search", params={"q": "leak_exception", "format": "json"})
 
         assert response.status_code == 503  # all engines unresponsive
         data = response.json()
@@ -372,7 +560,7 @@ class TestSearchEndpoint:
         from slopsearx.payload import payload_to_dict
 
         server_mod._active_engines = {"surrogatepayload": _SurrogatePayloadEngine()}
-        response = client.get("/search", params={"q": "surrogate", "engines": "surrogatepayload"})
+        response = client.get("/search", params={"q": "surrogate", "engines": "surrogatepayload", "format": "json"})
         assert response.status_code == 200
         data = response.json()
         raw = {"domain": "security", "type": "vulnerability", "data": {"note": "\ud800"}}
@@ -407,6 +595,13 @@ class TestHealthEndpoint:
         assert "auth_configured" in record
         assert record["circuit_open"] is False
         assert record["circuit_consecutive_errors"] == 0
+
+    def test_healthz_is_searxng_compatible(self, client: TestClient) -> None:
+        response = client.get("/healthz")
+
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/plain")
+        assert response.text == "OK"
 
     def test_health_no_engines(self) -> None:
         """Health works even with no engines registered."""
@@ -493,7 +688,10 @@ def test_invalid_date_window_reports_filter_error(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr(server_module, "_active_engines", {engine.name: engine})
     with TestClient(app, raise_server_exceptions=True) as client:
         monkeypatch.setattr(server_module, "_active_engines", {engine.name: engine})
-        response = client.get("/search", params={"q": "climate", "engines": engine.name, "time_range": "all"})
+        response = client.get(
+            "/search",
+            params={"q": "climate", "engines": engine.name, "time_range": "all", "format": "json"},
+        )
     assert response.status_code == 400
     assert response.json()["error"] == "invalid_filter"
     assert response.json()["field"] == "time_range"
