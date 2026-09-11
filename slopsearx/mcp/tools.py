@@ -137,8 +137,9 @@ from slopsearx.retrieval_url import (
 from slopsearx.retrieval_url import (
     _whatwg_ipv4_literal as _whatwg_ipv4_literal,
 )
+from slopsearx.saved_events import definition_event, public_event
 from slopsearx.saved_models import SavedDefinition, generate_search_id
-from slopsearx.saved_store import RevisionConflictError
+from slopsearx.saved_store import OutboxCapacityError, RevisionConflictError
 from slopsearx.service import (
     QueryValidationError,
     RateLimitExceededError,
@@ -170,6 +171,7 @@ GRANT_ENV = {
     "security": "MCP_GRANT_SECURITY",
     "science": "MCP_GRANT_SCIENCE",
     "saved_searches": "MCP_GRANT_SAVED_SEARCHES",
+    "saved_search_events": "MCP_GRANT_SAVED_SEARCH_EVENTS",
 }
 INTENT_GRANTS: dict[str, str] = {
     "jobs": "jobs",
@@ -2753,11 +2755,21 @@ async def slopsearx_pause_saved_search(
     definition.next_due = now + definition.interval_seconds
     definition.policy_fingerprint = _saved_policy_fingerprint(state, definition)
     try:
-        definition = await store.compare_and_set(definition, expected_revision, now=now)
+        event = (
+            definition_event(definition, "definition_paused", now)
+            if paused and state.policy.tool_enabled("saved_search_events")
+            else None
+        )
+        definition = await store.compare_and_set(definition, expected_revision, now=now, event=event)
+    except OutboxCapacityError:
+        m.record_saved_event_capacity("stream")
+        return _error("resource_limit", "saved-search event outbox is at capacity")
     except RevisionConflictError as exc:
         return _error("revision_conflict", "saved search changed", current_revision=exc.current_revision)
     except LookupError:
         return _error("invalid_search_id", "unknown saved search")
+    if event is not None:
+        m.record_saved_event_publication("definition_paused")
     return _saved_summary(definition)
 
 
@@ -2821,4 +2833,95 @@ async def slopsearx_read_saved_search_reports(search_id: str, limit: StrictInt =
         "reports": reports,
         "latest_run_id": definition.latest_run_id,
         "note": "not_observed_in_latest_run is bounded observation, never a deletion or closure claim",
+    }
+
+
+def _saved_event_state(state: McpState) -> Any | dict[str, Any]:
+    if not state.policy.tool_enabled("saved_search_events"):
+        return _error(
+            "tool_disabled",
+            "saved-search events require the event grant (MCP_GRANT_SAVED_SEARCH_EVENTS=1)",
+        )
+    if state.saved_store is None or not state.saved_store.available:
+        return _error("store_unavailable", "saved-search events require connected Valkey")
+    return state.saved_store.for_tenant(current_tenant())
+
+
+async def slopsearx_read_saved_search_events(
+    consumer_id: str,
+    cursor: str | None = None,
+    limit: StrictInt = 50,
+) -> dict[str, Any]:
+    """Read one bounded, tenant-ordered at-least-once saved-search event batch."""
+    state = get_state()
+    store = _saved_event_state(state)
+    if isinstance(store, dict):
+        m.record_saved_event_read("rejected")
+        return store
+    if type(limit) is not int or not 1 <= limit <= 100:
+        m.record_saved_event_read("rejected")
+        return _error("invalid_input", "limit must be an integer between 1 and 100")
+    try:
+        batch = await store.read_events(consumer_id, cursor=cursor, limit=limit)
+    except ValueError as exc:
+        m.record_saved_event_read("rejected")
+        return _error("invalid_input", str(exc))
+    events = []
+    redacted_count = 0
+    for event_cursor, event in batch.pop("events"):
+        engines = event.get("_policy_engines")
+        redacted = (
+            not state.policy.tool_enabled("saved_searches")
+            or not isinstance(engines, list)
+            or bool(engine_policy_rejection(state.catalog, state.policy, [str(item) for item in engines]))
+        )
+        redacted_count += int(redacted)
+        events.append(public_event(event, event_cursor, redacted=redacted))
+    if batch["gap"]["detected"]:
+        outcome = "gap"
+    elif redacted_count:
+        outcome = "redacted"
+    else:
+        outcome = "delivered" if events else "empty"
+    oldest_age = max(0.0, time.time() - min(float(item["occurred_at"]) for item in events)) if events else None
+    m.record_saved_event_read(outcome, oldest_age_seconds=oldest_age)
+    return {
+        "contract": "slopsearx.saved_search_event_batch",
+        "contract_version": 1,
+        "consumer_id": consumer_id,
+        **batch,
+        "events": events,
+        "returned": len(events),
+        "redacted": redacted_count,
+        "delivery": "at_least_once",
+    }
+
+
+async def slopsearx_ack_saved_search_events(consumer_id: str, cursor: str) -> dict[str, Any]:
+    """Idempotently advance one tenant-scoped saved-search event consumer."""
+    state = get_state()
+    store = _saved_event_state(state)
+    if isinstance(store, dict):
+        m.record_saved_event_ack("rejected")
+        return store
+    try:
+        previous = await store.acknowledged_cursor(consumer_id)
+        acknowledged = await store.acknowledge_event(consumer_id, cursor, now=time.time())
+    except ValueError as exc:
+        m.record_saved_event_ack("rejected")
+        return _error("invalid_input", str(exc))
+    except LookupError:
+        m.record_saved_event_ack("rejected")
+        return _error("cursor_expired", "the tenant event stream is unavailable or expired")
+    except OutboxCapacityError:
+        m.record_saved_event_ack("rejected")
+        m.record_saved_event_capacity("consumer")
+        return _error("resource_limit", "saved-search event consumer capacity is exhausted")
+    m.record_saved_event_ack("idempotent" if acknowledged == previous else "advanced")
+    return {
+        "contract": "slopsearx.saved_search_event_ack",
+        "contract_version": 1,
+        "consumer_id": consumer_id,
+        "acknowledged_cursor": acknowledged,
+        "idempotent": True,
     }

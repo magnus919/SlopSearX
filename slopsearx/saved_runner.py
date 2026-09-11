@@ -10,8 +10,9 @@ from typing import Any
 
 from slopsearx import metrics as m
 from slopsearx.capabilities import MCPPolicy
+from slopsearx.saved_events import event_for_report
 from slopsearx.saved_models import SavedDefinition, compare_observations, observe, stable_id
-from slopsearx.saved_store import SavedSearchStore
+from slopsearx.saved_store import OutboxCapacityError, SavedSearchStore
 from slopsearx.service import SearchRequest, SearchService
 
 
@@ -136,14 +137,27 @@ class SavedSearchRunner:
             m.record_workflow_terminal("saved_search", "failed", max(0.0, self._clock() - started_at))
             return None
         next_due = definition.created_at + (slot + 1) * definition.interval_seconds
-        if await store.commit(
-            definition,
-            report,
-            baseline,
-            now=finished_at,
-            next_due=next_due,
-            policy_fingerprint=current_fingerprint,
-        ):
+        outbox_event = (
+            event_for_report(definition, report) if self._policy.tool_enabled("saved_search_events") else None
+        )
+        try:
+            committed = await store.commit(
+                definition,
+                report,
+                baseline,
+                now=finished_at,
+                next_due=next_due,
+                policy_fingerprint=current_fingerprint,
+                event=outbox_event,
+            )
+        except OutboxCapacityError:
+            await store.release(definition)
+            m.record_workflow_rejection("saved_search", "capacity")
+            m.record_saved_event_capacity("stream")
+            m.transition_workflow("saved_search", "running", "failed")
+            m.record_workflow_terminal("saved_search", "failed", max(0.0, self._clock() - started_at))
+            return None
+        if committed:
             outcome = "failed" if report["status"] == "incomparable" else "succeeded"
             duration = max(0.0, finished_at - started_at)
             m.transition_workflow("saved_search", "running", outcome)
@@ -152,6 +166,8 @@ class SavedSearchRunner:
             m.workflow_admitted_results.observe(
                 {"workflow": "saved_search"}, float(report.get("observation", {}).get("discovered_count", 0))
             )
+            if outbox_event is not None:
+                m.record_saved_event_publication(str(outbox_event["event_type"]))
             return report
         m.record_workflow_rejection("saved_search", "lease_lost")
         m.transition_workflow("saved_search", "running", "failed")
@@ -176,6 +192,13 @@ class SavedSearchRunner:
         """Poll bounded tenant/due batches; errors never terminate the worker."""
         while True:
             try:
+                if self._policy.tool_enabled("saved_search_events"):
+                    try:
+                        expired = await self._store.publish_expired_events(now=self._clock(), limit=128)
+                    except OutboxCapacityError:
+                        m.record_saved_event_capacity("stream")
+                        raise
+                    m.record_saved_event_publication("definition_expired", expired)
                 for tenant in await self._store.scan_tenants(limit=128):
                     await self.run_due(tenant)
             except asyncio.CancelledError:

@@ -76,3 +76,13 @@ The workflow rules are actionable as follows:
 Deploy the metrics before enabling these rules. Verify scrape size and series
 cardinality under expected load. Rollback consists of removing the collectors
 and rules; no workflow records or Valkey keys need migration.
+
+### Saved-search event outbox
+
+The `slopsearx_saved_search_event_*` series cover publications by closed event
+type, reads and acknowledgements by closed outcome, retention gaps, capacity
+rejections by `stream` or `consumer`, and the age of the oldest event returned
+by the most recent local consumer read. They never label a tenant, consumer,
+query, search, run, or event. A capacity increase requires sustained event-rate
+evidence; acknowledgement cannot extend retention, so a retention-gap increase
+usually means the consumer must reconcile and resume from current state.

@@ -163,7 +163,12 @@ async def _lifespan(
     )
     staged_store = StagedSearchStore(ctx.cache)
     staged_runner = StagedSearchRunner(service, staged_store, snapshots, _staged_tools._policy_check)
-    saved_store = SavedSearchStore(ctx.cache)
+    saved_store = SavedSearchStore(
+        ctx.cache,
+        event_capacity=policy.saved_event_capacity,
+        event_retention_seconds=policy.saved_event_retention_seconds,
+        event_consumers=policy.saved_event_max_consumers,
+    )
     saved_runner = SavedSearchRunner(
         service,
         saved_store,

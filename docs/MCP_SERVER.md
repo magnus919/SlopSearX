@@ -21,12 +21,12 @@ machine-readable `retrieval` handoff record (see `docs/RETRIEVAL_HANDOFF.md`)
 so a downstream reader such as GroktoCrawl can capture pages and link them
 back to the originating result and snapshot.
 
-- **Tools (32):** intent search, targeted search, jobs, security, science,
+- **Tools (35):** intent search, targeted search, jobs, security, science,
   capability listing, scope explanation, service status, snapshot reads,
   research jobs (start/get/cancel/retry/extend/update), saved searches
-  (create/get/update/pause/delete/read reports), and retrieval receipts
+  (create/get/update/pause/delete/read reports), their event outbox (read/ack), and retrieval receipts
   (submit/read/export manifest), and staged search
-  (preview/start/get/retry), and dependency dossiers (start/get).
+  (preview/start/get/retry), dependency dossiers (start/get), and artifact lineage.
 - **Resources:** `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`.
 - **Prompts (4):** repeatable agent workflows that compose the tools.
@@ -74,6 +74,7 @@ mcp:
     staged_search: false
     retrieval_receipts: false
     saved_searches: false
+    saved_search_events: false
     dependency_dossier: false
   # Engines that generic routing must never reach accidentally. Only an
   # explicit engines list (with the targeted grant) or the security tool
@@ -106,6 +107,9 @@ mcp:
   saved_max_interval_seconds: 86400
   saved_max_concurrent_runs: 2
   saved_dispatch_timeout_seconds: 30
+  saved_event_capacity: 1000
+  saved_event_retention_seconds: 604800
+  saved_event_max_consumers: 100
   # Auth (HTTP transport only). Empty = authentication disabled; stdio is
   # trusted by its process-launch boundary.
   auth_token: ""
@@ -147,6 +151,10 @@ mcp:
 | `MCP_STAGED_MAX_DEADLINE_MS` | `30000` | maximum staged operation deadline |
 | `MCP_STAGED_MAX_ENGINE_CALLS` | `64` | maximum reserved adapter calls per operation |
 | `MCP_GRANT_SAVED_SEARCHES` | unset (false) | enables scheduled saved searches and change reports |
+| `MCP_GRANT_SAVED_SEARCH_EVENTS` | unset (false) | publishes and reads the tenant saved-search event outbox |
+| `MCP_SAVED_EVENT_CAPACITY` | `1000` | maximum retained events per tenant stream |
+| `MCP_SAVED_EVENT_RETENTION_SECONDS` | `604800` | event and consumer-fence retention horizon |
+| `MCP_SAVED_EVENT_MAX_CONSUMERS` | `100` | maximum retained consumer fences per tenant |
 | `MCP_GRANT_RETRIEVAL_RECEIPTS` | unset (false) | enables receipt ingestion, reads, and research-manifest export |
 | `MCP_TARGETED_SENSITIVE_ALLOWED` | unset (false) | lets `slopsearx_search_targeted` query sensitive engines (`hibp`, `dehashed`); otherwise they are rejected with `tool_disabled` |
 | `MCP_MAX_QUERY_LENGTH` | `500` | max query characters |
@@ -819,6 +827,17 @@ The complete source-input schema and transition matrix are in
 [`WORKFLOW_COMPOSITION.md`](WORKFLOW_COMPOSITION.md). This is an additive MCP
 contract. It adds no HTTP parameters or response fields to the SearXNG surface,
 and it adds no public portal action.
+
+### 6.13.6 Saved-search events (grant: `MCP_GRANT_SAVED_SEARCH_EVENTS`)
+
+`slopsearx_read_saved_search_events` reads an ordered batch after an explicit
+cursor or the consumer's durable acknowledgement. The read does not mutate the
+acknowledgement. `slopsearx_ack_saved_search_events` advances that tenant and
+consumer fence monotonically and idempotently. Report/event publication is one
+atomic Valkey commit, stream capacity fails closed, retention gaps are
+explicit, and current policy can redact protected summary detail. See
+[`SAVED_SEARCH_EVENTS.md`](SAVED_SEARCH_EVENTS.md) for the versioned contract,
+restart procedure, bounds, metrics, and rollback behavior.
 
 ### 6.14 Why there is no separate "advanced search" tool
 

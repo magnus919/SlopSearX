@@ -152,7 +152,7 @@ class TestGatewayOAuthFlow:
         )
         async with create_connected_server_and_client_session(gateway) as client:
             tools = await client.list_tools()
-            assert len(tools.tools) == 33
+            assert len(tools.tools) == 35
             status = await client.call_tool("slopsearx_get_service_status", {})
             assert status.isError is False
 
@@ -172,7 +172,7 @@ class TestGatewayOAuthFlow:
         )
         async with create_connected_server_and_client_session(gateway2) as client:
             tools = await client.list_tools()
-            assert len(tools.tools) == 33
+            assert len(tools.tools) == 35
 
     async def test_oauth_and_token_are_mutually_exclusive(self) -> None:
         with pytest.raises(ValueError):

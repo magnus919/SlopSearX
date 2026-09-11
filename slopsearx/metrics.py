@@ -249,6 +249,33 @@ workflow_admitted_results = Histogram(
     "Results admitted to one durable workflow artifact",
     buckets=(0, 1, 5, 10, 25, 50, 100, 250, 500),
 )
+SAVED_EVENT_TYPES = frozenset(
+    {"report_created", "run_incomparable", "run_failed", "definition_paused", "definition_expired"}
+)
+SAVED_EVENT_READ_OUTCOMES = frozenset({"delivered", "empty", "gap", "redacted", "rejected"})
+SAVED_EVENT_ACK_OUTCOMES = frozenset({"advanced", "idempotent", "rejected"})
+SAVED_EVENT_CAPACITY_RESOURCES = frozenset({"stream", "consumer"})
+saved_event_publications = Counter(
+    "slopsearx_saved_search_event_publications_total", "Saved-search outbox events published by event type"
+)
+saved_event_reads = Counter(
+    "slopsearx_saved_search_event_reads_total", "Saved-search outbox read operations by closed outcome"
+)
+saved_event_acknowledgements = Counter(
+    "slopsearx_saved_search_event_acknowledgements_total",
+    "Saved-search outbox acknowledgement operations by closed outcome",
+)
+saved_event_retention_gaps = Counter(
+    "slopsearx_saved_search_event_retention_gaps_total", "Saved-search outbox reads that observed a retention gap"
+)
+saved_event_capacity_rejections = Counter(
+    "slopsearx_saved_search_event_capacity_rejections_total",
+    "Saved-search outbox operations rejected by bounded resource",
+)
+saved_event_backlog_age = Gauge(
+    "slopsearx_saved_search_event_backlog_age_seconds",
+    "Age of the oldest event returned by the most recent local consumer read",
+)
 _workflow_oldest_started: dict[str, float] = {}
 
 
@@ -357,6 +384,31 @@ def workflow_health_summary(*, availability: Mapping[WorkflowKind, bool]) -> dic
     return summary
 
 
+def record_saved_event_publication(event_type: str, amount: int = 1) -> None:
+    if amount > 0:
+        saved_event_publications.inc({"event_type": _closed(event_type, SAVED_EVENT_TYPES, "event type")}, amount)
+
+
+def record_saved_event_read(outcome: str, *, oldest_age_seconds: float | None = None) -> None:
+    saved_event_reads.inc({"outcome": _closed(outcome, SAVED_EVENT_READ_OUTCOMES, "event read outcome")})
+    if outcome == "gap":
+        saved_event_retention_gaps.inc({})
+    if oldest_age_seconds is not None:
+        saved_event_backlog_age.set({}, max(0.0, oldest_age_seconds))
+    elif outcome in {"empty", "gap"}:
+        saved_event_backlog_age.set({}, 0.0)
+
+
+def record_saved_event_ack(outcome: str) -> None:
+    saved_event_acknowledgements.inc({"outcome": _closed(outcome, SAVED_EVENT_ACK_OUTCOMES, "event ack outcome")})
+
+
+def record_saved_event_capacity(resource: str) -> None:
+    saved_event_capacity_rejections.inc(
+        {"resource": _closed(resource, SAVED_EVENT_CAPACITY_RESOURCES, "event capacity resource")}
+    )
+
+
 # --- Render all metrics ---
 
 
@@ -391,5 +443,11 @@ def render_metrics() -> str:
         workflow_execution.render(),
         workflow_report_generation.render(),
         workflow_admitted_results.render(),
+        saved_event_publications.render(),
+        saved_event_reads.render(),
+        saved_event_acknowledgements.render(),
+        saved_event_retention_gaps.render(),
+        saved_event_capacity_rejections.render(),
+        saved_event_backlog_age.render(),
     ]
     return "".join(parts)

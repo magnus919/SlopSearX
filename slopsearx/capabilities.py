@@ -564,6 +564,7 @@ class MCPPolicy:
             "staged_search": False,
             "retrieval_receipts": False,
             "saved_searches": False,
+            "saved_search_events": False,
         }
     )
     sensitive_engines: set[str] = field(default_factory=lambda: set(DEFAULT_SENSITIVE_ENGINES))
@@ -593,6 +594,9 @@ class MCPPolicy:
     saved_max_interval_seconds: int = 86_400
     saved_max_concurrent_runs: int = 2
     saved_dispatch_timeout_seconds: int = 30
+    saved_event_capacity: int = 1000
+    saved_event_retention_seconds: int = 604_800
+    saved_event_max_consumers: int = 100
     # Empty token = authentication disabled (stdio transport is trusted by
     # process-launch boundary; HTTP transport requires a token).
     auth_token: str = ""
@@ -723,6 +727,9 @@ def _apply_mcp_section(policy: MCPPolicy, section: dict[str, Any]) -> None:
         ("saved_max_interval_seconds", 86400),
         ("saved_max_concurrent_runs", 2),
         ("saved_dispatch_timeout_seconds", 30),
+        ("saved_event_capacity", 1000),
+        ("saved_event_retention_seconds", 604800),
+        ("saved_event_max_consumers", 100),
     ):
         value = section.get(key)
         if isinstance(value, int) and value > 0:
@@ -768,6 +775,7 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
         "MCP_GRANT_STAGED_SEARCH": "staged_search",
         "MCP_GRANT_RETRIEVAL_RECEIPTS": "retrieval_receipts",
         "MCP_GRANT_SAVED_SEARCHES": "saved_searches",
+        "MCP_GRANT_SAVED_SEARCH_EVENTS": "saved_search_events",
     }
     for env_var, tool in grant_map.items():
         value = os.environ.get(env_var, "").strip().lower()
@@ -799,6 +807,9 @@ def _apply_mcp_env(policy: MCPPolicy) -> None:
         "MCP_SAVED_MAX_INTERVAL_SECONDS": "saved_max_interval_seconds",
         "MCP_SAVED_MAX_CONCURRENT_RUNS": "saved_max_concurrent_runs",
         "MCP_SAVED_DISPATCH_TIMEOUT_SECONDS": "saved_dispatch_timeout_seconds",
+        "MCP_SAVED_EVENT_CAPACITY": "saved_event_capacity",
+        "MCP_SAVED_EVENT_RETENTION_SECONDS": "saved_event_retention_seconds",
+        "MCP_SAVED_EVENT_MAX_CONSUMERS": "saved_event_max_consumers",
     }
     for env_var, attr in int_map.items():
         raw = os.environ.get(env_var, "").strip()

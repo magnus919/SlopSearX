@@ -43,6 +43,8 @@ GOLDEN_TOOL_NAMES = (
     "slopsearx_pause_saved_search",
     "slopsearx_delete_saved_search",
     "slopsearx_read_saved_search_reports",
+    "slopsearx_read_saved_search_events",
+    "slopsearx_ack_saved_search_events",
     "slopsearx_submit_retrieval_receipt",
     "slopsearx_read_retrieval_receipts",
     "slopsearx_export_research_manifest",
