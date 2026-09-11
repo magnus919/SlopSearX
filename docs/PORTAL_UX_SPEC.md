@@ -11,13 +11,14 @@ keeps the portal useful before exposing every engine knob.
 | Researcher | Narrow a broad search without losing the query | Scope/filter changes are visible in the URL and survive reload/share |
 | Operator or engineer | Explain why coverage is partial or unavailable | Source health, unsupported filters, and degraded states are truthful and non-secret |
 
-Accounts, saved collections, autocomplete providers, research workspaces, and
-AI summaries remain later work. They are not implied by this specification.
+The public search experience remains account-free. The separately gated
+workflow supervisor console is documented in
+[`WORKFLOW_PORTAL.md`](WORKFLOW_PORTAL.md); it does not alter public search.
 
-The proposed identity design for a later workflow console is recorded in
-[`ADR 002`](adr/002-browser-identity-and-tenant-isolation.md). Until its
-implementation is separately delivered and enabled, the portal remains the
-public search experience described here.
+The workflow console identity design is recorded in accepted
+[`ADR 002`](adr/002-browser-identity-and-tenant-isolation.md). It remains
+disabled by default, so the portal stays public search until an operator
+explicitly configures protected routes.
 
 ## Information architecture
 
@@ -69,8 +70,9 @@ return to the same query by copying the URL.
 
 ## Protected workflow identity states
 
-These states govern the later `/workflows` namespace without changing public
-search. They are a design contract for issue #358, not an implemented feature.
+These states govern the separately enabled `/workflows` namespace without
+changing public search. They are the implemented interaction contract for
+issue #358.
 
 | State | Required content and recovery |
 | --- | --- |

@@ -89,6 +89,8 @@ async def test_atomic_admission_claim_fencing_and_retry(stores) -> None:
     operation_ids = {record["operation_id"] for _, record in admissions if record}
     assert len(operation_ids) == 1
     operation_id = operation_ids.pop()
+    recent = await first.list_recent("tenant-a")
+    assert [item["operation_id"] for item in recent] == [operation_id]
     record_key = first._key("tenant-a", operation_id)
     admitted_ttl = await first._client().ttl(record_key)
 

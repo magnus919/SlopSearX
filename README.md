@@ -298,12 +298,12 @@ selection of a sensitive engine (currently `hibp` and `dehashed` by default)
 also requires `MCP_TARGETED_SENSITIVE_ALLOWED=true`; the same operator policy
 is applied before either the browser or MCP surface dispatches a search.
 
-For a public deployment, put the service behind the operator's TLS and
-authentication reverse proxy. SlopSearX does not provide browser accounts,
-trust arbitrary forwarded headers, or send engine credentials to the browser.
-The portal has no analytics or third-party runtime assets by default. Search
-forms are read-only requests; there is no authenticated browser mutation that
-needs a CSRF token in this release.
+Public search remains account-free. Operators can separately enable the OIDC
+and Valkey-backed `/workflows` supervisor console for tenant-scoped workflow
+inspection and explicitly granted actions. The workflow routes are disabled by
+default and do not change `/`, `/search`, or MCP contracts. See
+[`docs/WORKFLOW_PORTAL.md`](docs/WORKFLOW_PORTAL.md) for its direct HTTPS
+deployment, identity, two-gate authorization, and rollback requirements.
 
 See [`docs/PORTAL_DEPLOYMENT.md`](docs/PORTAL_DEPLOYMENT.md) for the browser
 URL map, proxy/access modes, digest-pinned deployment, smoke check, rollback,

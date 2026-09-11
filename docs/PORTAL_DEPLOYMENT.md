@@ -30,13 +30,14 @@ proxy. For a public deployment, require TLS and proxy authentication before
 forwarding to port 8080. The application does not trust arbitrary forwarded
 headers, and engine API keys remain server-side.
 
-The future protected workflow portal follows
+The separately gated protected workflow portal follows
 [`ADR 002`](adr/002-browser-identity-and-tenant-isolation.md). Its primary
 identity mode is a dedicated OIDC client with an opaque server-side session;
-the existing MCP OAuth server is not a browser identity provider. The feature
-remains disabled until that implementation and its release gates are delivered.
+the existing MCP OAuth server is not a browser identity provider. It remains
+disabled by default and supports direct HTTPS exposure in this release. See
+[`WORKFLOW_PORTAL.md`](WORKFLOW_PORTAL.md) for configuration and release gates.
 
-### Planned direct-exposure topology
+### Direct-exposure topology
 
 For a direct deployment, the configured external origin is an allowlisted
 HTTPS origin and forwarding headers are ignored. The application terminates TLS

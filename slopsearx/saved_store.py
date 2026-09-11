@@ -23,6 +23,16 @@ LEASE_SECONDS = 60
 DEFAULT_EVENT_CAPACITY = 1000
 DEFAULT_EVENT_RETENTION_SECONDS = 604_800
 DEFAULT_EVENT_CONSUMERS = 100
+MAX_RECENT_DEFINITIONS = 200
+_RECENT_RECORD = """
+redis.call('ZADD', KEYS[1], ARGV[1], ARGV[2])
+local count = redis.call('ZCARD', KEYS[1])
+if count > tonumber(ARGV[3]) then
+  redis.call('ZREMRANGEBYRANK', KEYS[1], 0, count - tonumber(ARGV[3]) - 1)
+end
+if redis.call('TTL', KEYS[1]) < tonumber(ARGV[4]) then redis.call('EXPIRE', KEYS[1], ARGV[4]) end
+return 1
+"""
 
 _CREATE = """
 redis.call('ZREMRANGEBYSCORE', KEYS[2], '-inf', ARGV[1])
@@ -232,6 +242,8 @@ class OutboxCapacityError(RuntimeError):
 class SavedSearchStore:
     """Durable authority; indexes are bounded, repairable scheduling hints."""
 
+    _recent_locks: dict[tuple[int, str], asyncio.Lock] = {}
+
     def __init__(
         self,
         store: KeyValueStore | None,
@@ -283,6 +295,35 @@ class SavedSearchStore:
 
     def _definition_index(self) -> str:
         return f"{PREFIX}:definitions:{self._tenant}"
+
+    def _recent_index(self) -> str:
+        return f"{PREFIX}:recent:{self._tenant}"
+
+    async def _record_recent(self, definition: SavedDefinition) -> None:
+        """Maintain the bounded derived index used by human workflow lists."""
+        client = self._client()
+        ttl = max(1, int(definition.expires_at - time.time()) + STORE_TTL_MARGIN)
+        if client is not None and hasattr(client, "eval"):
+            await client.eval(
+                _RECENT_RECORD,
+                1,
+                self._recent_index(),
+                str(definition.created_at),
+                definition.search_id,
+                str(MAX_RECENT_DEFINITIONS),
+                str(ttl),
+            )
+            return
+        lock = self._recent_locks.setdefault((id(self._store), self._tenant), asyncio.Lock())
+        async with lock:
+            payload = await self._store.get(self._recent_index()) if self._store is not None else None
+            index = {str(key): float(value) for key, value in (payload or {}).items()}
+            index[definition.search_id] = definition.created_at
+            ordered = sorted(index.items(), key=lambda item: (item[1], item[0]), reverse=True)[:MAX_RECENT_DEFINITIONS]
+            definitions = await asyncio.gather(*(self.load(search_id) for search_id, _score in ordered))
+            horizon = max([definition.expires_at, *(item.expires_at for item in definitions if item is not None)])
+            retained_ttl = max(ttl, max(1, int(horizon - time.time()) + STORE_TTL_MARGIN))
+            await self._store.set(self._recent_index(), dict(ordered), retained_ttl)  # type: ignore[union-attr]
 
     def _due_index(self) -> str:
         return f"{PREFIX}:due:{self._tenant}"
@@ -373,9 +414,12 @@ class SavedSearchStore:
                 self._definition_scan_pattern(),
                 self._tenant,
             )
-            return {1: "created", 0: "duplicate", -1: "quota_exceeded", -2: "unavailable"}.get(
+            status = {1: "created", 0: "duplicate", -1: "quota_exceeded", -2: "unavailable"}.get(
                 int(result), "unavailable"
             )
+            if status == "created":
+                await self._record_recent(definition)
+            return status
         async with self._lock:
             current = await self.list_definitions(now=now)
             if len(current) >= quota:
@@ -387,7 +431,56 @@ class SavedSearchStore:
                 self._stored_payload(definition),
                 self._ttl(definition, now),
             )
+            await self._record_recent(definition)
             return "created"
+
+    async def list_recent(
+        self, *, before: tuple[float, str] | None = None, limit: int = 20, now: float | None = None
+    ) -> list[SavedDefinition]:
+        """Read one stable page from the bounded maintained recent index."""
+        if not self.available or not 1 <= limit <= MAX_RECENT_DEFINITIONS:
+            return []
+        client = self._client()
+        pairs: list[tuple[str, float]]
+        if client is not None and hasattr(client, "zrevrange"):
+            raw = await client.zrevrange(self._recent_index(), 0, MAX_RECENT_DEFINITIONS - 1, withscores=True)
+            pairs = [(item.decode() if isinstance(item, bytes) else str(item), float(score)) for item, score in raw]
+        else:
+            payload = await self._store.get(self._recent_index())  # type: ignore[union-attr]
+            pairs = sorted(
+                ((str(key), float(value)) for key, value in (payload or {}).items()),
+                key=lambda item: (item[1], item[0]),
+                reverse=True,
+            )
+        if before is not None:
+            pairs = [item for item in pairs if (item[1], item[0]) < before]
+        values: list[SavedDefinition] = []
+        live_expiries: list[float] = []
+        stale: list[str] = []
+        loaded = await asyncio.gather(*(self.load(search_id, now=now) for search_id, _score in pairs))
+        for (search_id, _score), value in zip(pairs, loaded, strict=True):
+            if value is None:
+                stale.append(search_id)
+                continue
+            live_expiries.append(value.expires_at)
+            if len(values) < limit:
+                values.append(value)
+        if stale:
+            if client is not None and hasattr(client, "zrem"):
+                await client.zrem(self._recent_index(), *stale)
+            else:
+                payload = await self._store.get(self._recent_index())  # type: ignore[union-attr]
+                if isinstance(payload, dict):
+                    for search_id in stale:
+                        payload.pop(search_id, None)
+                    instant = time.time() if now is None else now
+                    live_horizon = max((int(expiry - instant) for expiry in live_expiries), default=0)
+                    await self._store.set(  # type: ignore[union-attr]
+                        self._recent_index(),
+                        payload,
+                        max(1, live_horizon + STORE_TTL_MARGIN),
+                    )
+        return values
 
     async def list_definitions(self, *, now: float | None = None, limit: int = 128) -> list[SavedDefinition]:
         if not self.available:
@@ -536,6 +629,7 @@ class SavedSearchStore:
                         {"entries": entries},
                         self._event_retention_seconds + STORE_TTL_MARGIN,
                     )
+        await self._record_recent(definition)
         return definition
 
     async def delete(self, search_id: str, expected_revision: int, *, now: float) -> None:
@@ -568,6 +662,7 @@ class SavedSearchStore:
                 raise LookupError(search_id)
             if result != 0:
                 raise RevisionConflictError(result)
+            await client.zrem(self._recent_index(), search_id)
             return
         async with self._lock:
             latest = await self.load(search_id, now=now)
@@ -582,6 +677,14 @@ class SavedSearchStore:
                 for key in [key for key in data if key.startswith(self._report_prefix(search_id))]:
                     data.pop(key, None)
                 data[self._tombstone_key(search_id)] = {"revision": expected_revision}
+                recent = await self._store.get(self._recent_index())  # type: ignore[union-attr]
+                if isinstance(recent, dict):
+                    recent.pop(search_id, None)
+                    await self._store.set(  # type: ignore[union-attr]
+                        self._recent_index(),
+                        recent,
+                        max(1, int(current.expires_at - now) + STORE_TTL_MARGIN),
+                    )
             else:
                 raise LookupError("delete unsupported")
 

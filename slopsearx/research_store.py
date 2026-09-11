@@ -42,6 +42,17 @@ DEFAULT_JOB_POLL_INTERVAL_SECONDS = 1.0
 
 # Ready indexes are derived state; job records and lease tokens remain authority.
 READY_PREFIX = "mcp:ready:v1"
+RECENT_PREFIX = "mcp:recent:v1"
+MAX_RECENT_JOBS = 200
+_RECENT_RECORD_SCRIPT = """
+redis.call('ZADD', KEYS[1], ARGV[1], ARGV[2])
+local count = redis.call('ZCARD', KEYS[1])
+if count > tonumber(ARGV[3]) then
+  redis.call('ZREMRANGEBYRANK', KEYS[1], 0, count - tonumber(ARGV[3]) - 1)
+end
+redis.call('EXPIRE', KEYS[1], ARGV[4])
+return 1
+"""
 _RECONCILE_INTERVAL = 10
 _RECONCILE_BATCH = 128
 _READY_REFRESH_SCRIPT = """
@@ -207,6 +218,33 @@ class ResearchJobStore:
     def _cancel_key(self, job_id: str) -> str:
         return f"{CANCEL_KEY_PREFIX}:{self._tenant}:{job_id}"
 
+    def _recent_key(self) -> str:
+        return f"{RECENT_PREFIX}:{self._tenant}"
+
+    async def _record_recent(self, job: ResearchJob) -> None:
+        """Maintain the bounded tenant index used by workflow explorers."""
+        store = self._store
+        if store is None or not store.is_connected:
+            return
+        client = getattr(store, "_client", None)
+        if client is not None and hasattr(client, "eval"):
+            await client.eval(
+                _RECENT_RECORD_SCRIPT,
+                1,
+                self._recent_key(),
+                str(job.created_at),
+                job.job_id,
+                str(MAX_RECENT_JOBS),
+                str(JOB_RETENTION_SECONDS),
+            )
+            return
+        async with self._admission_locks.setdefault(f"recent:{self._tenant}", asyncio.Lock()):
+            current = await store.get(self._recent_key()) or {}
+            index = {str(key): float(value) for key, value in current.items()}
+            index[job.job_id] = job.created_at
+            ordered = sorted(index.items(), key=lambda item: (item[1], item[0]), reverse=True)[:MAX_RECENT_JOBS]
+            await store.set(self._recent_key(), dict(ordered), JOB_RETENTION_SECONDS)
+
     async def save(self, job: ResearchJob) -> None:
         """Persist a job. No-op when the store is unavailable."""
         store = self._store
@@ -214,6 +252,7 @@ class ResearchJobStore:
             return
         payload = _job_to_payload(job)
         await store.set(self._key(job.job_id), payload, JOB_RETENTION_SECONDS)
+        await self._record_recent(job)
         await self._refresh_ready(job.job_id)
         if job.idempotency_key:
             await store.set(
@@ -384,6 +423,7 @@ class ResearchJobStore:
             resolved_id = raw_job_id.decode() if isinstance(raw_job_id, bytes) else str(raw_job_id)
             if created:
                 await self._refresh_ready(job.job_id)
+                await self._record_recent(job)
             return await self.load(resolved_id), created
 
         lock = self._admission_locks.setdefault(self._tenant, asyncio.Lock())
@@ -393,6 +433,46 @@ class ResearchJobStore:
                 return existing, False
             await self.save(job)
             return job, True
+
+    async def list_recent(self, *, before: tuple[float, str] | None = None, limit: int = 20) -> list[ResearchJob]:
+        """Read one deterministic page from the maintained tenant index."""
+        if not self.available or not 1 <= limit <= MAX_RECENT_JOBS:
+            return []
+        store = self._store
+        assert store is not None
+        client = getattr(store, "_client", None)
+        pairs: list[tuple[str, float]] = []
+        if client is not None and hasattr(client, "zrevrange"):
+            raw = await client.zrevrange(self._recent_key(), 0, MAX_RECENT_JOBS - 1, withscores=True)
+            pairs = [(item.decode() if isinstance(item, bytes) else str(item), float(score)) for item, score in raw]
+        else:
+            payload = await store.get(self._recent_key()) or {}
+            pairs = sorted(
+                ((str(key), float(value)) for key, value in payload.items()),
+                key=lambda item: (item[1], item[0]),
+                reverse=True,
+            )
+        if before is not None:
+            pairs = [item for item in pairs if (item[1], item[0]) < before]
+        jobs: list[ResearchJob] = []
+        stale: list[str] = []
+        loaded = await asyncio.gather(*(self.load(job_id) for job_id, _score in pairs))
+        for (job_id, _score), job in zip(pairs, loaded, strict=True):
+            if job is None:
+                stale.append(job_id)
+                continue
+            jobs.append(job)
+            if len(jobs) == limit:
+                break
+        if stale:
+            if client is not None and hasattr(client, "zrem"):
+                await client.zrem(self._recent_key(), *stale)
+            else:
+                payload = await store.get(self._recent_key()) or {}
+                for job_id in stale:
+                    payload.pop(job_id, None)
+                await store.set(self._recent_key(), payload, JOB_RETENTION_SECONDS)
+        return jobs
 
     async def _scan_job_ids(self) -> list[str]:
         """List this tenant's persisted job IDs."""

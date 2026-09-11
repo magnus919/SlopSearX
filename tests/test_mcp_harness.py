@@ -19,7 +19,9 @@ from __future__ import annotations
 
 import asyncio
 import json
-from contextlib import asynccontextmanager
+import sys
+from contextlib import asynccontextmanager, suppress
+from types import SimpleNamespace
 from typing import Any, AsyncIterator
 
 import httpx
@@ -45,6 +47,7 @@ from slopsearx.mcp.tool_registry import tool_names
 from slopsearx.service import AppContext
 
 _FIXTURE_SPECS = [FakeEngineSpec(name="wikipedia", count=3), FakeEngineSpec(name="brave", count=2)]
+_SERVER_TIMEOUT_SECONDS = 10.0
 
 
 @asynccontextmanager
@@ -54,14 +57,32 @@ async def _serve(app: Any, token: str = "") -> AsyncIterator[str]:
     config = uvicorn.Config(app, host="127.0.0.1", port=0, log_level="error")
     server = uvicorn.Server(config)
     task = asyncio.create_task(server.serve())
-    try:
+
+    async def wait_until_started() -> None:
         while not server.started:
+            if task.done():
+                await task
+                raise RuntimeError("fixture HTTP server exited before startup")
             await asyncio.sleep(0.02)
+
+    try:
+        await asyncio.wait_for(wait_until_started(), timeout=_SERVER_TIMEOUT_SECONDS)
         port = server.servers[0].sockets[0].getsockname()[1]
         yield f"http://127.0.0.1:{port}/mcp"
     finally:
         server.should_exit = True
-        await task
+        primary_error = sys.exc_info()[0] is not None
+        try:
+            await asyncio.wait_for(asyncio.shield(task), timeout=_SERVER_TIMEOUT_SECONDS)
+        except TimeoutError as exc:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
+            if not primary_error:
+                raise RuntimeError("fixture HTTP server did not stop") from exc
+        except BaseException:
+            if not primary_error:
+                raise
 
 
 @asynccontextmanager
@@ -150,6 +171,37 @@ class TestBuildFixtureContext:
 # ---------------------------------------------------------------------------
 # Transport-level: real MCP server over streamable HTTP
 # ---------------------------------------------------------------------------
+
+
+async def test_fixture_server_propagates_startup_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FailingServer:
+        started = False
+        should_exit = False
+
+        async def serve(self) -> None:
+            raise RuntimeError("fixture startup failed")
+
+    monkeypatch.setattr(uvicorn, "Server", lambda _config: FailingServer())
+    with pytest.raises(RuntimeError, match="fixture startup failed"):
+        async with _serve(object()):
+            pytest.fail("a failed fixture server must never yield")
+
+
+async def test_fixture_server_bounds_stalled_shutdown(monkeypatch: pytest.MonkeyPatch) -> None:
+    class StalledServer:
+        started = False
+        should_exit = False
+        servers = [SimpleNamespace(sockets=[SimpleNamespace(getsockname=lambda: ("127.0.0.1", 1))])]
+
+        async def serve(self) -> None:
+            self.started = True
+            await asyncio.Event().wait()
+
+    monkeypatch.setattr(uvicorn, "Server", lambda _config: StalledServer())
+    monkeypatch.setattr("tests.test_mcp_harness._SERVER_TIMEOUT_SECONDS", 0.05)
+    with pytest.raises(RuntimeError, match="did not stop"):
+        async with _serve(object()):
+            pass
 
 
 class TestFirstVisitReachability:
