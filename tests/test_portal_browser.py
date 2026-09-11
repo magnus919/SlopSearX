@@ -71,7 +71,7 @@ def test_results_journey_keeps_links_and_escaped_content() -> None:
         assert page.get_by_role("article").get_by_text("Wikipedia").is_visible()
         assert page.get_by_role("link", name="Open JSON view ↗", exact=True).is_visible()
         assert page.get_by_role("complementary", name="Search summary").is_visible()
-        assert page.get_by_role("link", name="← Previous").get_attribute("href")
+        assert page.get_by_role("link", name="Previous result page").get_attribute("href")
         assert page.get_by_role("link", name="Next result page").get_attribute("href")
         assert page.get_by_role("combobox", name="Scope").is_visible()
         assert page.get_by_role("button", name="Apply filters").is_visible()
