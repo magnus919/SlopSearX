@@ -1,0 +1,44 @@
+{
+  "scenario": "healthy",
+  "repetition": 2,
+  "baseline_bytes": 2665,
+  "candidate_bytes": 2493,
+  "baseline_raw_bytes": 2715,
+  "candidate_raw_bytes": 2543,
+  "baseline_facts": {
+    "url": "https://wikipedia0.example",
+    "sources": [
+      "wikipedia"
+    ],
+    "language": null,
+    "duckduckgo": [
+      {
+        "status": "ok",
+        "result_count": 3
+      }
+    ]
+  },
+  "candidate_facts": {
+    "url": "https://wikipedia0.example",
+    "sources": [
+      "wikipedia"
+    ],
+    "language": null,
+    "duckduckgo": []
+  },
+  "results_equal": true,
+  "scope_equal": true,
+  "enforcement_equal": true,
+  "tasks_equal": {
+    "url": true,
+    "sources": true,
+    "language": true,
+    "duckduckgo": false
+  },
+  "tasks_available": {
+    "url": true,
+    "sources": true,
+    "language": false,
+    "duckduckgo": false
+  }
+}

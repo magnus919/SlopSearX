@@ -124,3 +124,36 @@ succeeds. Exclude that diagnostic from the registered aggregate. Store outputs,
 exit codes and the exact retry runner as inert Markdown in `retry-4/`.
 Process isolation is a workaround under investigation, not a proven root-cause
 fix. No production edits are proposed. Commit this plan before executing it.
+
+## Completed retry readout (2026-09-12): not-supported
+
+Retry plan commit: `5f17a55`. All eight registered pairs completed with exit 0,
+as did the separately retained rate-limited diagnostic (excluded from scoring).
+Each pair ran in a new Python process with a 30-second timeout. This avoided the
+previous repeated-server initialization stall; the precise cause remains unknown.
+Requests, fixtures, candidate, ordering and decision thresholds were unchanged.
+The prior blocked readout and failed attempts remain intact above.
+
+Normalized aggregate response size fell from **21,440 to 19,946 bytes**, a saving
+of **1,494 bytes (6.9683%)**, below the registered 10% minimum. Both repetitions
+matched on normalized sizes and extracted facts across all four scenarios.
+Exact fixed-corpus arithmetic is reported; no population confidence interval,
+token savings, real-agent task success or production relevance is inferred.
+
+Result cards, scope and enforcement objects remained equal in every pair.
+However, results-only output omitted the explicit DuckDuckGo status/count in
+every scenario, failing the information-preservation guardrail. Language
+information was absent in both arms, an existing baseline limitation rather
+than evidence of successful task completion. No tool errors occurred.
+
+Decision: **not-supported**. Do not recommend results-only universally or change
+defaults. No implementation PR or production change. No candidate code needs
+removal: only existing request options were compared. A new proposal must address
+the lost diagnostic information and register its own criteria before measurement.
+
+Evidence: [complete summary](evidence/EXP-001/retry-4/summary.json),
+[process exit codes](evidence/EXP-001/retry-4/runs.json), and
+[exact retry reproduction](evidence/EXP-001/retry-4/reproduce.md). Raw payloads,
+stdout/stderr and per-pair metrics are retained in each retry subdirectory.
+The original environment versions remain applicable: the retry used the same
+Python environment and unchanged runtime checkout. This update belongs to PR #376.
