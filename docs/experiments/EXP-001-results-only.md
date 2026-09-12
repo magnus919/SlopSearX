@@ -56,6 +56,57 @@
 - Persistence: documentation-only PR for every outcome; no implementation PR
   unless evidence supports an actual follow-on change and its required checks.
 
-## Readout
+## Readout: blocked (2026-09-12)
 
-Pending. Registration commit is recorded by the following readout commit.
+Registration was committed as `fdbb8d1` before candidate execution. The candidate
+was solely an existing request option; no production code was modified.
+
+The fixed comparison could not complete: two of eight planned pairs completed.
+Attempt 1 exited 1 because sandbox policy prevented a loopback listener. Attempt
+2 exited 1 when the analyzer assumed `enforcement.language` existed; the actual
+explicit-engine baseline returned an empty enforcement object. We preserved the
+responses and corrected the analyzer to record missing information, with no
+change to the decision rule. Attempt 3 completed both healthy-scenario pairs,
+then the third server emitted `ASGI callable returned without completing response`
+during session initialization and stalled. It was interrupted (exit 130), per
+the infrastructure-failure stopping rule. Root cause is not established.
+
+| Healthy fixture only | Default | Results only | Difference |
+| --- | ---: | ---: | ---: |
+| Normalized JSON bytes per response, both repetitions | 2,665 | 2,493 | -172 bytes (-6.45%) |
+| Explicit DuckDuckGo status/count available | yes | no | guardrail fails |
+| Result cards, scope, enforcement equal | yes | yes | no difference |
+| Explicit language enforcement available | no | no | baseline limitation |
+
+The healthy-case size reduction is below the registered 10% threshold; the
+aggregate metric over all four scenarios was not measured. Exact arithmetic
+repeated in both orders; no population confidence interval or real-agent benefit
+is claimed. Retaining identical empty enforcement objects is not evidence that
+the language-information task can be completed. The baseline omission deserves
+a separate targeted investigation; it is not caused by the candidate.
+
+Decision: **blocked**, with adverse partial evidence; do not promote a universal
+results-only recommendation or change defaults. No implementation PR. Full
+comparison and uncertainty across the planned scenarios remain unavailable.
+The existing opt-in remains untouched. Candidate cleanup requires no runtime
+revert because this experiment changed only request arguments.
+
+Evidence: [partial summary](evidence/EXP-001/partial-summary.json),
+[reproduction code and analyzer correction](evidence/EXP-001/reproduce.md),
+[final attempt stderr](evidence/EXP-001/run-3.stderr.txt), and
+[SHA256 manifest](evidence/EXP-001/SHA256SUMS.txt). The evidence directory retains
+all four completed response payloads, the two responses from the failed analyzer
+attempt, and stdout/stderr for all attempts. Paths in stderr identify only the
+local development environment; fixture identifiers are ephemeral and unauthenticated.
+
+Persistence: this readout and ledger are submitted on `codex/exp-001-results-only`
+stacked on process PR #375. No CI or review was requested. GitHub main requires
+one approving review, so automatic documentation merging is blocked by repository
+policy; no protection was disabled or bypassed. Local main remains unchanged
+until documentation can merge safely.
+
+Follow-up: reproduce the multi-server transport failure in isolation before
+resuming the registered comparison. Independently investigate why explicit-engine
+search has an empty enforcement object. Any change to the candidate or success
+criteria requires a new experiment; missing scenarios must not be inferred.
+

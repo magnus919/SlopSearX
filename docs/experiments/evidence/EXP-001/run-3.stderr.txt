@@ -1,0 +1,159 @@
+/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+  warnings.warn(
+[09/12/26 03:55:02] INFO     StreamableHTTP       streamable_http_manager.py:143
+                             session manager                                    
+                             started                                            
+                    INFO     Created new          streamable_http_manager.py:301
+                             transport with                                     
+                             session ID:                                        
+                             a0bfc2b09bf24f7a9f23                               
+                             1a0c7a684b87                                       
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:62166/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Received session ID:         streamable_http.py:181
+                             a0bfc2b09bf24f7a9f231a0c7a68                       
+                             4b87                                               
+                    INFO     Negotiated protocol version: streamable_http.py:193
+                             2025-11-25                                         
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:62166/mcp                         
+                             "HTTP/1.1 202 Accepted"                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:62166/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:62166/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:62166/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:62166/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session:         streamable_http.py:788
+                             a0bfc2b09bf24f7a9f231a0c7a68                       
+                             4b87                                               
+                    INFO     HTTP Request: DELETE                _client.py:1740
+                             http://127.0.0.1:62166/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     StreamableHTTP       streamable_http_manager.py:147
+                             session manager                                    
+                             shutting down                                      
+                    INFO     StreamableHTTP       streamable_http_manager.py:143
+                             session manager                                    
+                             started                                            
+                    INFO     Created new          streamable_http_manager.py:301
+                             transport with                                     
+                             session ID:                                        
+                             833da71fd3014f6b8a4d                               
+                             9c4539506f1a                                       
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:62175/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Received session ID:         streamable_http.py:181
+                             833da71fd3014f6b8a4d9c453950                       
+                             6f1a                                               
+                    INFO     Negotiated protocol version: streamable_http.py:193
+                             2025-11-25                                         
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:62175/mcp                         
+                             "HTTP/1.1 202 Accepted"                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:62175/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:62175/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:62175/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:62175/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session:         streamable_http.py:788
+                             833da71fd3014f6b8a4d9c453950                       
+                             6f1a                                               
+                    INFO     HTTP Request: DELETE                _client.py:1740
+                             http://127.0.0.1:62175/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     StreamableHTTP       streamable_http_manager.py:147
+                             session manager                                    
+                             shutting down                                      
+                    INFO     StreamableHTTP       streamable_http_manager.py:143
+                             session manager                                    
+                             started                                            
+                    INFO     Created new          streamable_http_manager.py:301
+                             transport with                                     
+                             session ID:                                        
+                             65df6013344d4bab9832                               
+                             d66b659a6b86                                       
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:62185/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Received session ID:         streamable_http.py:181
+                             65df6013344d4bab9832d66b659a                       
+                             6b86                                               
+ERROR:    ASGI callable returned without completing response.
+[09/12/26 03:56:02] INFO     StreamableHTTP       streamable_http_manager.py:147
+                             session manager                                    
+                             shutting down                                      
+                    WARNING  Session termination failed:  streamable_http.py:593
+                             All connection attempts                            
+                             failed                                             
+Traceback (most recent call last):
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/streams/memory.py", line 117, in receive
+    return self.receive_nowait()
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/streams/memory.py", line 112, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/private/tmp/exp001.py", line 53, in main
+    await session.initialize()
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/client/session.py", line 183, in initialize
+    result = await self.send_request(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/shared/session.py", line 292, in send_request
+    response_or_error = await response_stream_reader.receive()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/streams/memory.py", line 125, in receive
+    await receive_event.wait()
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1804, in wait
+    await self._event.wait()
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/locks.py", line 212, in wait
+    await fut
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/private/tmp/exp001.py", line 72, in <module>
+    asyncio.run(main())
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 123, in run
+    raise KeyboardInterrupt()
+KeyboardInterrupt
