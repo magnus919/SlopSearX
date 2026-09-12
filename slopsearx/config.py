@@ -197,6 +197,27 @@ _DEFAULT_ENGINES: dict[str, dict[str, Any]] = {
         "rate_limit": 200,
         "weight": 0.9,
     },
+    # Commercial web-search APIs. Both are inert without a configured key:
+    # they are listed here so ENGINE_EXA_* / ENGINE_TAVILY_* env overrides
+    # resolve onto a config entry, which is what lets the capability catalog
+    # report auth_configured and the cost/coverage router admit them once an
+    # operator supplies a credential.
+    "exa": {
+        "base_url": "https://api.exa.ai",
+        "type": "api",
+        "timeout_ms": 8_000,
+        "max_results": 10,
+        "rate_limit": 5.0,
+        "weight": 0.8,
+    },
+    "tavily": {
+        "base_url": "https://api.tavily.com",
+        "type": "api",
+        "timeout_ms": 8_000,
+        "max_results": 10,
+        "rate_limit": 5.0,
+        "weight": 0.8,
+    },
     "nvd": {
         "base_url": "https://services.nvd.nist.gov/rest/json/cves/2.0",
         "type": "api",
