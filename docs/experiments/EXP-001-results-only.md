@@ -110,3 +110,17 @@ Follow-up: reproduce the multi-server transport failure in isolation before
 resuming the registered comparison. Independently investigate why explicit-engine
 search has an empty enforcement object. Any change to the candidate or success
 criteria requires a new experiment; missing scenarios must not be inferred.
+
+## Authorized retry plan (2026-09-12)
+
+The maintainer explicitly requested a retry. Preserve all previous attempts.
+Retry all eight registered pairs, using a fresh Python process per pair to
+isolate repeated server lifecycle state. This strengthens the original fresh
+server/store requirement without changing requests, scenarios, measurement,
+ordering, or success criteria. Bound each process to 30 seconds; stop on its
+first infrastructure failure. First run the formerly failing rate-limited pair
+as a diagnostic in its own directory, then execute the complete corpus if it
+succeeds. Exclude that diagnostic from the registered aggregate. Store outputs,
+exit codes and the exact retry runner as inert Markdown in `retry-4/`.
+Process isolation is a workaround under investigation, not a proven root-cause
+fix. No production edits are proposed. Commit this plan before executing it.
