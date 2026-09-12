@@ -1,0 +1,84 @@
+{
+  "completed_pairs": 2,
+  "environment": {
+    "machine": "arm64",
+    "packages": {
+      "fastapi": "0.136.3",
+      "httpx": "0.28.1",
+      "mcp": "1.29.0",
+      "pydantic": "2.13.4",
+      "uvicorn": "0.49.0"
+    },
+    "python": "3.12.11",
+    "system": "Darwin"
+  },
+  "outcome": "blocked",
+  "planned_pairs": 8,
+  "rows": [
+    {
+      "baseline_bytes": 2665,
+      "baseline_facts": {
+        "duckduckgo": [
+          {
+            "result_count": 3,
+            "status": "ok"
+          }
+        ],
+        "language": null,
+        "sources": [
+          "wikipedia"
+        ],
+        "url": "https://wikipedia0.example"
+      },
+      "baseline_raw_bytes": 2715,
+      "candidate_bytes": 2493,
+      "candidate_facts": {
+        "duckduckgo": [],
+        "language": null,
+        "sources": [
+          "wikipedia"
+        ],
+        "url": "https://wikipedia0.example"
+      },
+      "candidate_raw_bytes": 2543,
+      "enforcement_equal": true,
+      "reduction_fraction": 0.06454033771106937,
+      "repetition": 1,
+      "results_equal": true,
+      "scope_equal": true
+    },
+    {
+      "baseline_bytes": 2665,
+      "baseline_facts": {
+        "duckduckgo": [
+          {
+            "result_count": 3,
+            "status": "ok"
+          }
+        ],
+        "language": null,
+        "sources": [
+          "wikipedia"
+        ],
+        "url": "https://wikipedia0.example"
+      },
+      "baseline_raw_bytes": 2715,
+      "candidate_bytes": 2493,
+      "candidate_facts": {
+        "duckduckgo": [],
+        "language": null,
+        "sources": [
+          "wikipedia"
+        ],
+        "url": "https://wikipedia0.example"
+      },
+      "candidate_raw_bytes": 2543,
+      "enforcement_equal": true,
+      "reduction_fraction": 0.06454033771106937,
+      "repetition": 2,
+      "results_equal": true,
+      "scope_equal": true
+    }
+  ],
+  "scope": "healthy fixture only; not full registered comparison"
+}
