@@ -12,6 +12,18 @@ Thanks for your interest. This project is in early development — the spec is s
 6. **Conventional Commits** — `feat:`, `fix:`, `docs:`, `chore:`, `ci:`, `refactor:`
 7. **DCO sign-off** — every commit must be signed (`git commit -s`). By signing you certify that the contribution is your own work or you have the right to submit it under the MIT license
 
+## Measured improvement experiments
+
+For hypothesis-driven improvements, follow the [experiment loop](docs/experiments/README.md).
+Register the metric and decision rule before testing, retain every outcome, and
+submit implementation PRs only when the evidence supports a useful improvement
+and all compatibility guardrails pass. Negative and inconclusive experiments
+remain in the documentation ledger even when their candidate code is discarded.
+Documentation-only experiment PRs are automatically merged without code review,
+CI, or pre-commit; follow the scope verification and signed `[skip ci]` commit
+procedure in the experiment guide. Implementation or mixed PRs retain the normal
+checks and review requirements.
+
 ## Development Setup
 
 ```bash
