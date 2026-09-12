@@ -99,7 +99,8 @@ all four completed response payloads, the two responses from the failed analyzer
 attempt, and stdout/stderr for all attempts. Paths in stderr identify only the
 local development environment; fixture identifiers are ephemeral and unauthenticated.
 
-Persistence: this readout and ledger are submitted on `codex/exp-001-results-only`
+Persistence: [PR #376](https://github.com/magnus919/SlopSearX/pull/376) submits
+this readout and ledger on `codex/exp-001-results-only`
 stacked on process PR #375. No CI or review was requested. GitHub main requires
 one approving review, so automatic documentation merging is blocked by repository
 policy; no protection was disabled or bypassed. Local main remains unchanged
@@ -109,4 +110,3 @@ Follow-up: reproduce the multi-server transport failure in isolation before
 resuming the registered comparison. Independently investigate why explicit-engine
 search has an empty enforcement object. Any change to the candidate or success
 criteria requires a new experiment; missing scenarios must not be inferred.
-
