@@ -1,0 +1,56 @@
+[
+  {
+    "scenario": "rate_limited",
+    "rep": 1,
+    "diagnostic": true,
+    "exit_code": 0
+  },
+  {
+    "scenario": "healthy",
+    "rep": 1,
+    "diagnostic": false,
+    "exit_code": 0
+  },
+  {
+    "scenario": "healthy",
+    "rep": 2,
+    "diagnostic": false,
+    "exit_code": 0
+  },
+  {
+    "scenario": "rate_limited",
+    "rep": 1,
+    "diagnostic": false,
+    "exit_code": 0
+  },
+  {
+    "scenario": "rate_limited",
+    "rep": 2,
+    "diagnostic": false,
+    "exit_code": 0
+  },
+  {
+    "scenario": "timeout",
+    "rep": 1,
+    "diagnostic": false,
+    "exit_code": 0
+  },
+  {
+    "scenario": "timeout",
+    "rep": 2,
+    "diagnostic": false,
+    "exit_code": 0
+  },
+  {
+    "scenario": "empty",
+    "rep": 1,
+    "diagnostic": false,
+    "exit_code": 0
+  },
+  {
+    "scenario": "empty",
+    "rep": 2,
+    "diagnostic": false,
+    "exit_code": 0
+  }
+]
