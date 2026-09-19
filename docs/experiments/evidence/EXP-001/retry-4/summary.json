@@ -1,0 +1,361 @@
+{
+  "rows": [
+    {
+      "scenario": "healthy",
+      "repetition": 1,
+      "baseline_bytes": 2665,
+      "candidate_bytes": 2493,
+      "baseline_raw_bytes": 2715,
+      "candidate_raw_bytes": 2543,
+      "baseline_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": [
+          {
+            "status": "ok",
+            "result_count": 3
+          }
+        ]
+      },
+      "candidate_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": []
+      },
+      "results_equal": true,
+      "scope_equal": true,
+      "enforcement_equal": true,
+      "tasks_equal": {
+        "url": true,
+        "sources": true,
+        "language": true,
+        "duckduckgo": false
+      },
+      "tasks_available": {
+        "url": true,
+        "sources": true,
+        "language": false,
+        "duckduckgo": false
+      }
+    },
+    {
+      "scenario": "healthy",
+      "repetition": 2,
+      "baseline_bytes": 2665,
+      "candidate_bytes": 2493,
+      "baseline_raw_bytes": 2715,
+      "candidate_raw_bytes": 2543,
+      "baseline_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": [
+          {
+            "status": "ok",
+            "result_count": 3
+          }
+        ]
+      },
+      "candidate_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": []
+      },
+      "results_equal": true,
+      "scope_equal": true,
+      "enforcement_equal": true,
+      "tasks_equal": {
+        "url": true,
+        "sources": true,
+        "language": true,
+        "duckduckgo": false
+      },
+      "tasks_available": {
+        "url": true,
+        "sources": true,
+        "language": false,
+        "duckduckgo": false
+      }
+    },
+    {
+      "scenario": "rate_limited",
+      "repetition": 1,
+      "baseline_bytes": 2697,
+      "candidate_bytes": 2493,
+      "baseline_raw_bytes": 2747,
+      "candidate_raw_bytes": 2543,
+      "baseline_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": [
+          {
+            "status": "rate_limited",
+            "result_count": 0
+          }
+        ]
+      },
+      "candidate_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": []
+      },
+      "results_equal": true,
+      "scope_equal": true,
+      "enforcement_equal": true,
+      "tasks_equal": {
+        "url": true,
+        "sources": true,
+        "language": true,
+        "duckduckgo": false
+      },
+      "tasks_available": {
+        "url": true,
+        "sources": true,
+        "language": false,
+        "duckduckgo": false
+      }
+    },
+    {
+      "scenario": "rate_limited",
+      "repetition": 2,
+      "baseline_bytes": 2697,
+      "candidate_bytes": 2493,
+      "baseline_raw_bytes": 2747,
+      "candidate_raw_bytes": 2543,
+      "baseline_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": [
+          {
+            "status": "rate_limited",
+            "result_count": 0
+          }
+        ]
+      },
+      "candidate_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": []
+      },
+      "results_equal": true,
+      "scope_equal": true,
+      "enforcement_equal": true,
+      "tasks_equal": {
+        "url": true,
+        "sources": true,
+        "language": true,
+        "duckduckgo": false
+      },
+      "tasks_available": {
+        "url": true,
+        "sources": true,
+        "language": false,
+        "duckduckgo": false
+      }
+    },
+    {
+      "scenario": "timeout",
+      "repetition": 1,
+      "baseline_bytes": 2692,
+      "candidate_bytes": 2493,
+      "baseline_raw_bytes": 2742,
+      "candidate_raw_bytes": 2543,
+      "baseline_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": [
+          {
+            "status": "timeout",
+            "result_count": 0
+          }
+        ]
+      },
+      "candidate_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": []
+      },
+      "results_equal": true,
+      "scope_equal": true,
+      "enforcement_equal": true,
+      "tasks_equal": {
+        "url": true,
+        "sources": true,
+        "language": true,
+        "duckduckgo": false
+      },
+      "tasks_available": {
+        "url": true,
+        "sources": true,
+        "language": false,
+        "duckduckgo": false
+      }
+    },
+    {
+      "scenario": "timeout",
+      "repetition": 2,
+      "baseline_bytes": 2692,
+      "candidate_bytes": 2493,
+      "baseline_raw_bytes": 2742,
+      "candidate_raw_bytes": 2543,
+      "baseline_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": [
+          {
+            "status": "timeout",
+            "result_count": 0
+          }
+        ]
+      },
+      "candidate_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": []
+      },
+      "results_equal": true,
+      "scope_equal": true,
+      "enforcement_equal": true,
+      "tasks_equal": {
+        "url": true,
+        "sources": true,
+        "language": true,
+        "duckduckgo": false
+      },
+      "tasks_available": {
+        "url": true,
+        "sources": true,
+        "language": false,
+        "duckduckgo": false
+      }
+    },
+    {
+      "scenario": "empty",
+      "repetition": 1,
+      "baseline_bytes": 2666,
+      "candidate_bytes": 2494,
+      "baseline_raw_bytes": 2716,
+      "candidate_raw_bytes": 2544,
+      "baseline_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": [
+          {
+            "status": "ok",
+            "result_count": 0
+          }
+        ]
+      },
+      "candidate_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": []
+      },
+      "results_equal": true,
+      "scope_equal": true,
+      "enforcement_equal": true,
+      "tasks_equal": {
+        "url": true,
+        "sources": true,
+        "language": true,
+        "duckduckgo": false
+      },
+      "tasks_available": {
+        "url": true,
+        "sources": true,
+        "language": false,
+        "duckduckgo": false
+      }
+    },
+    {
+      "scenario": "empty",
+      "repetition": 2,
+      "baseline_bytes": 2666,
+      "candidate_bytes": 2494,
+      "baseline_raw_bytes": 2716,
+      "candidate_raw_bytes": 2544,
+      "baseline_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": [
+          {
+            "status": "ok",
+            "result_count": 0
+          }
+        ]
+      },
+      "candidate_facts": {
+        "url": "https://wikipedia0.example",
+        "sources": [
+          "wikipedia"
+        ],
+        "language": null,
+        "duckduckgo": []
+      },
+      "results_equal": true,
+      "scope_equal": true,
+      "enforcement_equal": true,
+      "tasks_equal": {
+        "url": true,
+        "sources": true,
+        "language": true,
+        "duckduckgo": false
+      },
+      "tasks_available": {
+        "url": true,
+        "sources": true,
+        "language": false,
+        "duckduckgo": false
+      }
+    }
+  ],
+  "baseline_total_bytes": 21440,
+  "candidate_total_bytes": 19946,
+  "reduction_fraction": 0.06968283582089552,
+  "repeat_stable": true,
+  "all_guardrails_pass": false
+}
