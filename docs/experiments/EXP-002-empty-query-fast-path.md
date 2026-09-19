@@ -46,3 +46,51 @@
   existing merger, service, HTTP/MCP and portal contract tests plus required CI.
 - No implementation PR without supported evidence and normal implementation
   validation. Persist every outcome through a documentation PR.
+
+## Readout — not-supported (2026-09-19)
+
+Registration commit: `645a3c2`. The registered command exited 0. All 120 paired
+blocks completed (4,800 measured service calls), plus 60 warmup calls. Candidate
+injection was confined to the benchmark process and restored in `finally`;
+no production source file changed. The original baseline remained `d0aed40`.
+
+| Family | Baseline mean ms | Candidate mean ms |
+| --- | ---: | ---: |
+| No query | 0.311821 | 0.258233 |
+| Mixed | 0.392430 | 0.366780 |
+| Tracking query | 0.455052 | 0.454763 |
+| Equally weighted aggregate | 0.386434 | 0.359926 |
+
+The aggregate saving was **0.026509 ms (6.8598%)**. The registered paired-block
+bootstrap estimated a 95% interval of **0.025193–0.027879 ms**, or
+**6.5335–7.1951%**. Both the point estimate and interval fall below the 10% and
+0.2 ms practical thresholds. The no-query family improved more, but secondary
+subgroup performance cannot replace the registered aggregate criterion.
+
+All measured serialized responses matched after removing only query_id and
+response_time_ms. All nine edge-case normalization comparisons matched, and
+all family means passed the <=5% latency-regression guardrail. No errors or
+measurement-plan deviations occurred. No HTTP/MCP/portal regression suite or CI
+was run because there is no implementation proposed; these fixture equalities
+are not a substitute for those gates if the change is reconsidered.
+
+Decision: **not-supported** for production promotion under this workload and
+predeclared useful-effect rule. A small local speedup was observed, but it is
+not large enough to justify this optimization in the current experiment. No
+implementation PR, default change, or deployment. There is no candidate source
+change to revert; retain its inert reproduction code with the evidence.
+
+Limits: one local machine and a fixed synthetic workload, no upstream latency,
+no shared-store cache, no transport serialization, and no production traffic.
+Bootstrap intervals characterize variation among these timing blocks, not a
+population of users or independent machines. Observed speedup must not be
+marketed as a user-visible latency gain. A retry would require evidence of a
+materially different workload (for example much larger result sets) and a new
+registration; do not lower the useful-effect threshold after seeing this result.
+
+Evidence: [summary and environment](evidence/EXP-002/summary.json),
+[all block timings](evidence/EXP-002/blocks.json),
+[edge cases](evidence/EXP-002/edge-cases.json),
+[exact reproduction](evidence/EXP-002/reproduce.md), and
+[SHA256 manifest](evidence/EXP-002/SHA256SUMS.txt). Documentation-only persistence
+is on branch `codex/exp-002-url-normalization`.

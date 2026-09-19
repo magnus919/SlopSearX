@@ -1,0 +1,46 @@
+{
+  "measured_calls": 4800,
+  "blocks": 120,
+  "means": [
+    {
+      "family": "plain",
+      "baseline_ms": 0.3118209775,
+      "candidate_ms": 0.2582328175
+    },
+    {
+      "family": "mixed",
+      "baseline_ms": 0.39242979875,
+      "candidate_ms": 0.36678042625
+    },
+    {
+      "family": "tracking",
+      "baseline_ms": 0.45505155625,
+      "candidate_ms": 0.45476348
+    }
+  ],
+  "baseline_ms": 0.38643411083333334,
+  "candidate_ms": 0.35992557458333335,
+  "absolute_saving_ms": 0.026508536249999992,
+  "relative_saving": 0.06859781656654262,
+  "absolute_95_interval_ms": [
+    0.02519273624999996,
+    0.027879499166666655
+  ],
+  "relative_95_interval": [
+    0.06533538963176133,
+    0.07195120756337803
+  ],
+  "responses_equal": true,
+  "family_latency_guardrail": true,
+  "environment": {
+    "python": "3.12.11",
+    "system": "Darwin",
+    "machine": "arm64",
+    "registration_commit": "645a3c218d8083965fce80dd4acdd9678b7dd294",
+    "packages": {
+      "httpx": "0.28.1",
+      "pydantic": "2.13.4",
+      "fastapi": "0.136.3"
+    }
+  }
+}

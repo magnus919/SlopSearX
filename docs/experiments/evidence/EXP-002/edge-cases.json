@@ -1,0 +1,47 @@
+[
+  {
+    "input": "https://example.org",
+    "baseline": "https://example.org",
+    "candidate": "https://example.org"
+  },
+  {
+    "input": "HTTPS://EXAMPLE.ORG/a",
+    "baseline": "https://EXAMPLE.ORG/a",
+    "candidate": "https://EXAMPLE.ORG/a"
+  },
+  {
+    "input": "https://example.org/a#part",
+    "baseline": "https://example.org/a#part",
+    "candidate": "https://example.org/a#part"
+  },
+  {
+    "input": "https://example.org/a?",
+    "baseline": "https://example.org/a",
+    "candidate": "https://example.org/a"
+  },
+  {
+    "input": "https://example.org/a?utm_source=x&v=1",
+    "baseline": "https://example.org/a?v=1",
+    "candidate": "https://example.org/a?v=1"
+  },
+  {
+    "input": "https://example.org/?a=1&a=2&b=",
+    "baseline": "https://example.org/?a=1&a=2&b=",
+    "candidate": "https://example.org/?a=1&a=2&b="
+  },
+  {
+    "input": "relative/path",
+    "baseline": "relative/path",
+    "candidate": "relative/path"
+  },
+  {
+    "input": "http://[broken",
+    "baseline": "http://[broken",
+    "candidate": "http://[broken"
+  },
+  {
+    "input": "https://example.org/?q=\ud800",
+    "baseline": "https://example.org/?q=\ud800",
+    "candidate": "https://example.org/?q=\ud800"
+  }
+]
