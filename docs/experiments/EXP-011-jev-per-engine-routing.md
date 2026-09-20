@@ -1,6 +1,6 @@
 # EXP-011: Jev per-engine routing
 
-**Status:** preregistered; no measurements collected
+**Status:** inconclusive; stopped after development
 
 ## Decision
 
@@ -132,3 +132,33 @@ contribution, aggregate metrics, request/response schema versions, SHA-256
 checksums of frozen inputs, budget counters, and a final yes/no/inconclusive
 recommendation. Raw credentials, headers, and full third-party response bodies
 must never be committed.
+
+## Outcome
+
+The frozen development pass completed 36/36 valid Jev requests but consumed
+135,999 input tokens. Continuing with the registered held-out design would
+exceed the 200,000-token ceiling, so the stop rule prevented evaluation and
+search acquisition. Brave calls: 0. Other search-engine calls: 0.
+
+Development also exposed two harness defects that make the scores unsuitable
+for a product decision:
+
+1. Each engine Noul used identical instructions referring to “this engine.”
+   The question key and state-map key did not reliably bind the decision to the
+   intended engine. Outputs were nearly flat and frequently ranked unrelated
+   engines above exact domain matches.
+2. The harness represented `QueryRouter.route()` returning `None` as an empty
+   baseline selection instead of applying the service's normal fallback. That
+   is not the production baseline.
+
+The mechanically selected development candidate was `noul-card@0.65`, but its
+F1 was 0.0339 versus 0.1818 for the defective baseline. It is recorded only to
+make the preregistered selection rule auditable; it is not advanced. The result
+is **inconclusive**, not “no”: the run found an invalid measurement design and
+hit its budget stop before held-out evidence existed. A corrected experiment
+must be separately preregistered as EXP-012 with explicit engine identity in
+each question, the real `ScopeResolver` fallback, and a substantially smaller
+request representation.
+
+See `evidence/EXP-011/development-summary.json` and
+`evidence/EXP-011/development-rows.md`.

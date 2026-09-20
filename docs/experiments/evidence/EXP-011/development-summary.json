@@ -1,0 +1,33 @@
+{
+  "checksums": {
+    "development-v1.json": "d17f3ad009b3d442eef262a253129cbb9817c3287876dd421c0816926ef30b36",
+    "engine-routing-cards-v1.yaml": "80083136bd5e07df4fc8dcd6f4daa200527536d8634eaa288eb1c9e81f53981d"
+  },
+  "decision": "inconclusive",
+  "input_tokens": 135999,
+  "latency_ms": {"mean": 210.8375601156796, "p95": 271.85558300698176},
+  "model": "jev-1.13.0",
+  "search_engine_calls": {"brave": 0, "other": 0},
+  "selected_candidate": "noul-card@0.65",
+  "selected_candidate_metrics": {
+    "f1": 0.03389830508474576,
+    "macro_family_recall": 0.08333333333333333,
+    "mean_selected": 2.6666666666666665,
+    "precision": 0.03125,
+    "recall": 0.037037037037037035
+  },
+  "baseline_metrics": {
+    "f1": 0.1818181818181818,
+    "macro_family_recall": 0.13888888888888887,
+    "mean_selected": 0.5,
+    "precision": 0.5,
+    "recall": 0.1111111111111111
+  },
+  "stop_reasons": [
+    "A held-out run using the registered request design would exceed the 200000 input-token ceiling.",
+    "Engine identity was not explicit in each Noul instruction, making the measurement ambiguous.",
+    "The deterministic baseline did not reproduce the production fallback when QueryRouter returned null."
+  ],
+  "total_calls": 36,
+  "valid_calls": 36
+}
