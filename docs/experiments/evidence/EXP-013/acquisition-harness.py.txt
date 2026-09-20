@@ -1,0 +1,68 @@
+from __future__ import annotations
+import argparse, asyncio, dataclasses, json, os, statistics, sys, time
+from collections import Counter
+from pathlib import Path
+from typing import Any
+
+GENERAL = ("brave", "google", "duckduckgo")
+SAMPLE = {f"e{i:02d}" for start in (1, 7, 13, 19, 25, 31) for i in range(start, start + 5)}
+
+def runtime(repo: Path):
+    sys.path.insert(0, str(repo)); import engines  # noqa: F401
+    from slopsearx.adapter import discover_engines
+    from slopsearx.capabilities import CapabilityCatalog
+    from slopsearx.config import load_config
+    from slopsearx.router import QueryRouter
+    from slopsearx.service import ScopeResolver
+    cfg=load_config(); active=discover_engines({n:dataclasses.asdict(e) for n,e in cfg.engines.items()}); catalog=CapabilityCatalog(cfg,active)
+    eligible={c.name for c in catalog.enabled() if not c.sensitive and not c.circuit_open and (c.auth_class!="required" or c.auth_configured) and c.name in active}
+    resolver=ScopeResolver(active,QueryRouter(dataclasses.asdict(cfg.routing)),catalog=catalog)
+    return active,[n for n in GENERAL if n in eligible],resolver
+
+def useful_rank(results: list[Any], targets: set[str]) -> tuple[bool,float]:
+    for rank,result in enumerate(results[:10],1):
+        if set(result.engines)&targets: return True,1/rank
+    return False,0.0
+
+async def run(args):
+    repo=Path(args.repo).resolve(); out=Path(args.output).resolve(); summary=json.loads(Path(args.evaluation).read_text())
+    if not summary.get("advance_to_acquisition") or not all(summary["gates"].values()): raise SystemExit("offline gate did not authorize acquisition")
+    source=json.loads(Path(args.rows).read_text()); rows=[r for r in source if r["id"] in SAMPLE]
+    if len(rows)!=30: raise SystemExit("frozen acquisition sample must contain 30 rows")
+    active,general,resolver=runtime(repo); from slopsearx.merger import merge_results
+    from slopsearx.service import SearchRequest
+    counts=Counter(); evidence=[]
+    for row in rows:
+        baseline=resolver.resolve(SearchRequest(query=row["query"])).selected_engines
+        specialists=row["specialists@0.45"]; candidate=general+specialists; union=list(dict.fromkeys(baseline+candidate))
+        projected_non_brave=sum(v for k,v in counts.items() if k!="brave")+sum(n!="brave" for n in union)
+        if projected_non_brave>600 or counts["brave"]+("brave" in union)>36: raise SystemExit("call budget would be exceeded")
+        if any(counts[n]>=30 for n in union if n!="brave"): raise SystemExit(f"per-engine ceiling would be exceeded: {union}")
+        started=time.monotonic(); responses=await asyncio.gather(*(active[n].search(row["query"],{}) for n in union))
+        feeds={}; outcomes=[]
+        for name,response in zip(union,responses):
+            counts[name]+=1; feeds[name]=response.results
+            outcomes.append({"engine":name,"status":response.status.value,"result_count":len(response.results),"latency_ms":response.latency_ms})
+        b_results=merge_results({n:feeds[n] for n in baseline},strategy="presence")[:10]
+        c_results=merge_results({n:feeds[n] for n in candidate},strategy="presence")[:10]
+        targets=set(row["specialists"]); b_ok,b_rr=useful_rank(b_results,targets); c_ok,c_rr=useful_rank(c_results,targets)
+        contributing={n for result in c_results for n in result.engines}&set(specialists)
+        evidence.append({"id":row["id"],"family":row["family"],"query":row["query"],"labeled_specialists":row["specialists"],
+            "baseline_engines":baseline,"candidate_engines":candidate,"selected_specialists":specialists,"contributing_specialists":sorted(contributing),
+            "baseline_success":b_ok,"candidate_success":c_ok,"baseline_rr":b_rr,"candidate_rr":c_rr,"outcomes":outcomes,"elapsed_ms":(time.monotonic()-started)*1000})
+    positive=[r for r in evidence if r["labeled_specialists"]]; broad=[r for r in evidence if not r["labeled_specialists"]]
+    b=sum(r["baseline_success"] for r in positive); c=sum(r["candidate_success"] for r in positive); wins=[r for r in positive if r["candidate_success"] and not r["baseline_success"]]; losses=[r for r in positive if r["baseline_success"] and not r["candidate_success"]]
+    family_losses=Counter(r["family"] for r in losses); selected=sum(len(r["selected_specialists"]) for r in evidence); contributing=sum(len(r["contributing_specialists"]) for r in evidence)
+    usable=sum(any(o["status"]=="ok" for o in r["outcomes"]) for r in evidence); broad_available=sum(any(o["status"]=="ok" and o["result_count"] for o in r["outcomes"] if o["engine"] in GENERAL) for r in broad)
+    gates={"coverage_gain":c-b>=3,"unique_wins":len(wins)>=5 and len({r["family"] for r in wins})>=3,"family_losses":max(family_losses.values(),default=0)<=1,
+           "incremental_yield":contributing/selected>=.30 if selected else False,"usable_rows":usable>=29,"broad_availability":broad_available>=4,"budgets":counts["brave"]<=36 and sum(v for k,v in counts.items() if k!="brave")<=600}
+    result={"schema_version":1,"positive_rows":len(positive),"baseline_coverage":b/len(positive),"candidate_coverage":c/len(positive),"absolute_coverage_gain":(c-b)/len(positive),
+            "baseline_mean_rr":statistics.fmean(r["baseline_rr"] for r in positive),"candidate_mean_rr":statistics.fmean(r["candidate_rr"] for r in positive),
+            "unique_wins":len(wins),"unique_win_families":sorted({r["family"] for r in wins}),"selected_specialist_dispatches":selected,"contributing_specialist_dispatches":contributing,
+            "incremental_yield":contributing/selected if selected else 0,"usable_rows":usable,"broad_available_rows":broad_available,"engine_call_counts":dict(sorted(counts.items())),"gates":gates,
+            "recommendation":"supported-for-product-experiment" if all(gates.values()) else ("not-supported" if usable>=29 else "inconclusive")}
+    out.mkdir(parents=True,exist_ok=True); (out/"acquisition-rows.json").write_text(json.dumps(evidence,indent=2,sort_keys=True)+"\n"); (out/"acquisition-summary.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n"); print(json.dumps(result,indent=2,sort_keys=True))
+
+def main():
+    p=argparse.ArgumentParser(); p.add_argument("--repo",default="."); p.add_argument("--evaluation",required=True); p.add_argument("--rows",required=True); p.add_argument("--output",default="/tmp/exp013-acquisition"); a=p.parse_args(); asyncio.run(run(a))
+if __name__=="__main__": main()

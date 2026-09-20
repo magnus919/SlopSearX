@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "model": "jev-1.13.0",
+  "input_tokens": 204411,
+  "cumulative_input_tokens": 238491,
+  "valid_calls": 72,
+  "total_calls": 72,
+  "latency_ms": {"mean": 201.24599711157822, "p95": 255.6947089615278},
+  "paraphrase_agreement_mean_jaccard": 0.8958333333333334,
+  "baseline_specialists": {"f1": 0.13043478260869565, "precision": 0.42857142857142855, "recall": 0.07692307692307693, "macro_family_recall": 0.05, "abstention_accuracy": 1.0, "mean_specialists": 0.19444444444444445},
+  "candidate": {"field": "specialists@0.45", "f1": 0.8735632183908045, "precision": 0.7916666666666666, "recall": 0.9743589743589743, "macro_family_recall": 0.9833333333333334, "abstention_accuracy": 1.0, "mean_specialists": 1.3333333333333333},
+  "gates": {"abstention": true, "f1_gain": true, "macro_family_recall": true, "paraphrase_agreement": true, "policy": true, "precision": true, "recall": true, "valid_pairs": true},
+  "advance_to_acquisition": true
+}
