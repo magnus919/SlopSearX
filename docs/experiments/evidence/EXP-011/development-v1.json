@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "split": "development",
+  "queries": [
+    {"id":"d01","family":"packages_code","query":"Python library for validating JSON Schema draft 2020-12","paraphrase":"Find a Python package that validates JSON Schema 2020-12","useful_engines":["pypi","github","stackexchange"]},
+    {"id":"d02","family":"packages_code","query":"compare current lodash versions across Linux distributions","paraphrase":"Which distro repositories carry which lodash release?","useful_engines":["repology","npm"]},
+    {"id":"d03","family":"science","query":"preprints on retrieval augmented generation evaluation","paraphrase":"Find research papers evaluating RAG systems","useful_engines":["arxiv","openalex","semanticscholar"]},
+    {"id":"d04","family":"science","query":"datasets for protein language model research","paraphrase":"Find ML datasets used to train protein language models","useful_engines":["huggingface","openalex","uniprot"]},
+    {"id":"d05","family":"medical","query":"registered trials of psilocybin for treatment resistant depression","paraphrase":"Find clinical studies testing psilocybin in resistant depression","useful_engines":["clinicaltrials","pubmed"]},
+    {"id":"d06","family":"medical","query":"FDA adverse event reports for semaglutide","paraphrase":"Look up reported semaglutide adverse events in FDA data","useful_engines":["openfda","pubmed"]},
+    {"id":"d07","family":"security","query":"CVE-2024-3094 severity and exploitation probability","paraphrase":"Give NVD details and EPSS risk for CVE-2024-3094","useful_engines":["cve","nvd","epss"]},
+    {"id":"d08","family":"security","query":"MITRE ATT&CK technique for malicious PowerShell execution","paraphrase":"Which ATT&CK technique covers adversary PowerShell use?","useful_engines":["mitreattack"]},
+    {"id":"d09","family":"reference_archive","query":"archived versions of the GeoCities home page","paraphrase":"Find historical captures of GeoCities' homepage","useful_engines":["internetarchive"]},
+    {"id":"d10","family":"reference_archive","query":"Supreme Court oral argument for Gideon v Wainwright","paraphrase":"Find the Gideon v. Wainwright case and argument audio","useful_engines":["oyez"]},
+    {"id":"d11","family":"general_news_social","query":"why developers are moving from Redis to Valkey","paraphrase":"What are developers saying about switching from Redis to Valkey?","useful_engines":["hackernews","reddit","brave"]},
+    {"id":"d12","family":"general_news_social","query":"background and recent reporting on fusion power milestones","paraphrase":"Explain fusion-energy progress and find recent coverage","useful_engines":["brave","wikipedia","hackernews"]}
+  ]
+}
