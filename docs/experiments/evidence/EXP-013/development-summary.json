@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "model": "jev-1.13.0",
+  "input_tokens": 34080,
+  "valid_calls": 12,
+  "total_calls": 12,
+  "latency_ms": {"mean": 196.7442846604778, "p95": 440.4583330033347},
+  "baseline_specialists": {"f1": 0.13333333333333333, "precision": 1.0, "recall": 0.07142857142857142, "macro_family_recall": 0.05, "abstention_accuracy": 1.0, "mean_specialists": 0.08333333333333333},
+  "specialists@0.45": {"f1": 0.7647058823529412, "precision": 0.65, "recall": 0.9285714285714286, "macro_family_recall": 0.95, "abstention_accuracy": 1.0, "mean_specialists": 1.6666666666666667},
+  "specialists@0.55": {"f1": 0.75, "precision": 0.6666666666666666, "recall": 0.8571428571428571, "macro_family_recall": 0.85, "abstention_accuracy": 1.0, "mean_specialists": 1.5},
+  "specialists@0.65": {"f1": 0.75, "precision": 0.6666666666666666, "recall": 0.8571428571428571, "macro_family_recall": 0.85, "abstention_accuracy": 1.0, "mean_specialists": 1.5},
+  "specialists@0.75": {"f1": 0.8, "precision": 0.75, "recall": 0.8571428571428571, "macro_family_recall": 0.85, "abstention_accuracy": 1.0, "mean_specialists": 1.3333333333333333},
+  "selected": "specialists@0.45"
+}
