@@ -1,6 +1,6 @@
 # EXP-012: Jev routing with explicit engine-bound questions
 
-**Status:** not supported; stopped before acquisition
+**Status:** advancement gate failed; further research supported
 
 ## Decision
 
@@ -117,10 +117,11 @@ regression, valid pairs, and policy eligibility. Total Jev input was 300,427
 tokens across development and evaluation, well below the 5,000,000 ceiling.
 
 Because the offline gate failed, the harness did not run acquisition. Brave
-calls: 0. Other search-engine calls: 0. The registered recommendation is
-**no for this exact routing design**. The result does not show that Jev lacks
-routing value: it shows a large accuracy gain with insufficient precision,
-recall, and paraphrase stability for autonomous three-engine dispatch.
+calls: 0. Other search-engine calls: 0. The registered production-advancement
+decision is **no for this exact routing design**. The research conclusion is
+**supported for further research**: Jev produced a large accuracy gain, but the
+all-engine, three-slot design had insufficient precision, recall, and
+paraphrase stability for autonomous dispatch.
 
 See `evidence/EXP-012/development-summary.json`,
 `evidence/EXP-012/evaluation-summary.json`, and

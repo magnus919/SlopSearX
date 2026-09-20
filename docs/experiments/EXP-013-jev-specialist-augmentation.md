@@ -1,6 +1,6 @@
 # EXP-013: Jev specialist augmentation
 
-**Status:** preregistered; no measurements collected
+**Status:** routing supported; end-to-end effect not supported
 
 ## Decision
 
@@ -89,3 +89,45 @@ ms, and all budgets pass.
 Passing supports further product work, not immediate delivery. A failed
 offline gate prevents all search acquisition. Results must distinguish the
 registered advancement verdict from broader research value.
+
+## Outcome
+
+The specialist-only framing passed every offline gate on fresh held-out data:
+
+- specialist F1: 0.8736 versus 0.1304 for the current production scope;
+- recall: 0.9744; precision: 0.7917;
+- macro-family recall: 0.9833;
+- broad-query abstention: 6/6;
+- paraphrase agreement: 0.8958;
+- 72/72 valid held-out calls; Jev p95 latency 256 ms;
+- 238,491 cumulative Jev input tokens.
+
+The candidate selected 1.33 specialists per held-out query on average, with no
+count cap. This supports the routing hypothesis and validates excluding general
+engines from Jev's decision surface.
+
+The frozen 30-query acquisition did not meet the end-to-end product gates.
+Target coverage among 25 specialist-positive queries improved from 2/25 to
+3/25, only one query was a unique candidate win, and only 4 of 41 selected
+specialist dispatches contributed a result to the final top ten. All 30 rows
+were usable and the broad-query availability guardrail passed. Calls stayed
+within budget: 30 Brave calls and 208 non-Brave calls.
+
+The evidence isolates the next bottleneck: many correctly selected specialists
+returned results, but the production tier-first merger kept them outside the
+top ten. For example Docker Hub, RubyGems, arXiv, OpenAlex, PubMed, openFDA,
+MusicBrainz, Oyez, and EDGAR returned results that did not contribute to the
+candidate top ten. Some other specialists returned empty, rate-limited, error,
+or timeout responses.
+
+Therefore:
+
+- **Routing conclusion:** supported for product-oriented follow-up research.
+- **Shipping additive routing alone:** not supported.
+- **Next experiment:** replay specialist-aware result presentation or ranking
+  while preserving general results and the successful specialist-selection
+  policy. This run does not authorize such an implementation.
+
+See `evidence/EXP-013/evaluation-summary.json`,
+`evidence/EXP-013/acquisition-summary.json`, and
+`evidence/EXP-013/acquisition-rows.md`.

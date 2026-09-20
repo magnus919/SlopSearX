@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "recommendation": "not-supported",
+  "positive_rows": 25,
+  "baseline_coverage": 0.08,
+  "candidate_coverage": 0.12,
+  "absolute_coverage_gain": 0.04,
+  "baseline_mean_rr": 0.048,
+  "candidate_mean_rr": 0.09333333333333334,
+  "unique_wins": 1,
+  "unique_win_families": ["security"],
+  "selected_specialist_dispatches": 41,
+  "contributing_specialist_dispatches": 4,
+  "incremental_yield": 0.0975609756097561,
+  "usable_rows": 30,
+  "broad_available_rows": 5,
+  "search_calls": {"brave": 30, "non_brave": 208},
+  "gates": {"broad_availability": true, "budgets": true, "coverage_gain": false, "family_losses": true, "incremental_yield": false, "unique_wins": false, "usable_rows": true}
+}
