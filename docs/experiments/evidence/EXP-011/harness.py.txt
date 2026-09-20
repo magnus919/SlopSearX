@@ -1,0 +1,282 @@
+from __future__ import annotations
+
+import argparse
+import asyncio
+import hashlib
+import json
+import math
+import os
+import statistics
+import sys
+import time
+from collections import defaultdict
+from pathlib import Path
+from typing import Any
+
+import httpx
+import yaml
+
+MODEL = "jev-1.13.0"
+THRESHOLDS = (0.45, 0.55, 0.65)
+MAX_ENGINES = 3
+PLANS = {
+    "broad": ["brave", "duckduckgo", "wikipedia"],
+    "specialist": ["openalex", "github", "pubmed"],
+    "blended": ["brave", "wikipedia", "stackexchange"],
+}
+SENSITIVE = {"hibp", "dehashed"}
+FAMILIES = {
+    "packages_code", "science", "medical", "security",
+    "reference_archive", "general_news_social",
+}
+
+
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def load_inputs(base: Path, split: str) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, str]]:
+    cards_path = base / "engine-routing-cards-v1.yaml"
+    manifest_path = base / ("development-v1.json" if split == "development" else "evaluation-v1.json")
+    cards_doc = yaml.safe_load(cards_path.read_text())
+    manifest = json.loads(manifest_path.read_text())
+    return cards_doc, manifest["queries"], {
+        cards_path.name: sha256(cards_path), manifest_path.name: sha256(manifest_path)
+    }
+
+
+def validate(repo: Path, base: Path) -> dict[str, Any]:
+    sys.path.insert(0, str(repo))
+    import engines  # noqa: F401
+    from slopsearx.adapter import list_engines
+
+    registry = set(list_engines())
+    cards_doc = yaml.safe_load((base / "engine-routing-cards-v1.yaml").read_text())
+    cards = cards_doc.get("engines", {})
+    if set(cards) != registry:
+        raise SystemExit(f"card/registry mismatch missing={sorted(registry-set(cards))} extra={sorted(set(cards)-registry)}")
+    for name, card in cards.items():
+        if set(card) != {"purpose", "use_when"} or not all(isinstance(v, str) and v.strip() for v in card.values()):
+            raise SystemExit(f"invalid card: {name}")
+    seen: set[str] = set()
+    sizes = {"development": 12, "evaluation": 30}
+    for split, expected in sizes.items():
+        _, rows, _ = load_inputs(base, split)
+        if len(rows) != expected:
+            raise SystemExit(f"{split} must contain {expected} rows")
+        if split == "evaluation" and {r["family"] for r in rows} != FAMILIES:
+            raise SystemExit("evaluation family mismatch")
+        counts: dict[str, int] = defaultdict(int)
+        for row in rows:
+            if row["id"] in seen:
+                raise SystemExit(f"duplicate id: {row['id']}")
+            seen.add(row["id"])
+            counts[row["family"]] += 1
+            if not set(row["useful_engines"]) <= registry:
+                raise SystemExit(f"unknown target in {row['id']}")
+            if not row.get("query") or not row.get("paraphrase"):
+                raise SystemExit(f"missing text in {row['id']}")
+        if split == "evaluation" and set(counts.values()) != {5}:
+            raise SystemExit(f"evaluation must have five rows per family: {dict(counts)}")
+    return {"registered_engines": len(registry), "cards": len(cards), "queries": len(seen)}
+
+
+async def jev(client: httpx.AsyncClient, key: str, state: Any, questions: dict[str, Any]) -> dict[str, Any]:
+    started = time.monotonic()
+    status = None
+    body: dict[str, Any] = {}
+    error = None
+    try:
+        response = await client.post(
+            "https://api.typesafe.ai/v1/systemone",
+            headers={"Authorization": f"Bearer {key}"},
+            json={"model": MODEL, "state": state, "questions": questions},
+        )
+        status = response.status_code
+        body = response.json()
+    except Exception as exc:  # network evidence, not control flow
+        error = f"{type(exc).__name__}: {exc}"
+    answers = body.get("answers", {}) if isinstance(body, dict) else {}
+    probabilities = {}
+    for name in questions:
+        answer = answers.get(name, {}) if isinstance(answers, dict) else {}
+        value = answer.get("noul") if isinstance(answer, dict) else None
+        if isinstance(value, (int, float)) and math.isfinite(value) and 0 <= value <= 1:
+            probabilities[name] = float(value)
+    usage = body.get("usage", {}) if isinstance(body, dict) else {}
+    return {
+        "valid": status == 200 and body.get("model") == MODEL and len(probabilities) == len(questions),
+        "status": status,
+        "model": body.get("model"),
+        "probabilities": probabilities,
+        "usage": usage if isinstance(usage, dict) else {},
+        "latency_ms": (time.monotonic() - started) * 1000,
+        "error": error,
+    }
+
+
+def choose(probabilities: dict[str, float], threshold: float) -> list[str]:
+    ranked = sorted(probabilities, key=lambda name: (-probabilities[name], name))
+    selected = [name for name in ranked if probabilities[name] >= threshold][:MAX_ENGINES]
+    return selected or ranked[:1]
+
+
+def scores(rows: list[dict[str, Any]], field: str) -> dict[str, Any]:
+    tp = fp = fn = 0
+    recalls: dict[str, list[float]] = defaultdict(list)
+    for row in rows:
+        selected, target = set(row[field]), set(row["useful_engines"])
+        tp += len(selected & target)
+        fp += len(selected - target)
+        fn += len(target - selected)
+        recalls[row["family"]].append(len(selected & target) / len(target))
+    precision = tp / (tp + fp) if tp + fp else 0.0
+    recall = tp / (tp + fn) if tp + fn else 0.0
+    return {
+        "precision": precision,
+        "recall": recall,
+        "f1": 2 * precision * recall / (precision + recall) if precision + recall else 0.0,
+        "macro_family_recall": statistics.fmean(statistics.fmean(v) for v in recalls.values()),
+        "family_recall": {k: statistics.fmean(v) for k, v in sorted(recalls.items())},
+        "mean_selected": statistics.fmean(len(r[field]) for r in rows),
+    }
+
+
+def minimal_state(query: str, metadata: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    return {"query": query, "engines": metadata}
+
+
+def card_state(query: str, cards: dict[str, Any], metadata: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    return {"query": query, "engines": {n: {**metadata[n], **cards[n]} for n in metadata}}
+
+
+def questions(names: list[str]) -> dict[str, Any]:
+    return {name: {"type": "noul", "instructions": (
+        "Would this engine likely contribute direct, useful evidence for the query? "
+        "Judge independently. Answer no for merely possible, redundant, or off-domain coverage."
+    )} for name in names}
+
+
+async def measure(args: argparse.Namespace) -> None:
+    repo, base = Path(args.repo).resolve(), Path(args.base).resolve()
+    validation = validate(repo, base)
+    cards_doc, cases, checksums = load_inputs(base, args.split)
+    cards = cards_doc["engines"]
+    sys.path.insert(0, str(repo))
+    import engines  # noqa: F401
+    from slopsearx.adapter import list_engines
+    from slopsearx.router import QueryRouter
+
+    registry = list_engines()
+    eligible = sorted(set(registry) - SENSITIVE)
+    metadata = {name: {
+        "display_name": registry[name].display_name,
+        "categories": list(registry[name].categories),
+        "engine_type": registry[name].engine_type,
+        "cost_class": registry[name].cost_class,
+    } for name in eligible}
+    key = os.environ.get("TYPESAFE_API_KEY", "")
+    if not key:
+        raise SystemExit("TYPESAFE_API_KEY is required")
+    router = QueryRouter()
+    out = Path(args.output).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    calls: list[dict[str, Any]] = []
+    rows = []
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        for case in cases:
+            query = case["query"]
+            plan_q = {name: {"type": "noul", "instructions": "Is this the best overall search plan for the query?"} for name in PLANS}
+            plan_call = await jev(client, key, {"query": query, "plans": PLANS}, plan_q)
+            min_call = await jev(client, key, minimal_state(query, metadata), questions(eligible))
+            card_call = await jev(client, key, card_state(query, cards, metadata), questions(eligible))
+            calls.extend([plan_call, min_call, card_call])
+            best_plan = max(PLANS, key=lambda n: (plan_call["probabilities"].get(n, -1), n)) if plan_call["valid"] else "broad"
+            row = {
+                **case,
+                "deterministic": (router.route(query) or [])[:MAX_ENGINES],
+                "choice": [n for n in PLANS[best_plan] if n in eligible][:MAX_ENGINES],
+                "calls_valid": {"choice": plan_call["valid"], "noul-minimal": min_call["valid"], "noul-card": card_call["valid"]},
+                "probabilities": {"choice": plan_call["probabilities"], "noul-minimal": min_call["probabilities"], "noul-card": card_call["probabilities"]},
+                "latency_ms": {"choice": plan_call["latency_ms"], "noul-minimal": min_call["latency_ms"], "noul-card": card_call["latency_ms"]},
+            }
+            for strategy, call in (("noul-minimal", min_call), ("noul-card", card_call)):
+                for threshold in THRESHOLDS:
+                    row[f"{strategy}@{threshold}"] = choose(call["probabilities"], threshold) if call["valid"] else []
+            rows.append(row)
+
+        if args.split == "evaluation":
+            selection = json.loads(Path(args.selection).read_text())
+            field = selection["field"]
+            strategy, threshold_text = field.split("@")
+            threshold = float(threshold_text)
+            for row in rows:
+                query = row["paraphrase"]
+                state = minimal_state(query, metadata) if strategy == "noul-minimal" else card_state(query, cards, metadata)
+                call = await jev(client, key, state, questions(eligible))
+                calls.append(call)
+                row["paraphrase_selected"] = choose(call["probabilities"], threshold) if call["valid"] else []
+                row["paraphrase_valid"] = call["valid"]
+
+    candidate_fields = ["deterministic", "choice"] + [f"{s}@{t}" for s in ("noul-minimal", "noul-card") for t in THRESHOLDS]
+    metrics = {field: scores(rows, field) for field in candidate_fields}
+    input_tokens = sum(int(c["usage"].get("input_tokens", 0) or 0) for c in calls)
+    summary: dict[str, Any] = {
+        "schema_version": 1, "model": MODEL, "split": args.split,
+        "validation": validation, "checksums": checksums, "metrics": metrics,
+        "valid_calls": sum(c["valid"] for c in calls), "total_calls": len(calls),
+        "input_tokens": input_tokens,
+        "latency_ms": {"mean": statistics.fmean(c["latency_ms"] for c in calls), "p95": sorted(c["latency_ms"] for c in calls)[math.ceil(.95*len(calls))-1]},
+    }
+    if args.split == "development":
+        candidates = [f for f in candidate_fields if f.startswith("noul-")]
+        selected = sorted(candidates, key=lambda f: (-metrics[f]["macro_family_recall"], -metrics[f]["f1"], metrics[f]["mean_selected"], f.split("@")[0], -float(f.split("@")[1])))[0]
+        selection = {"schema_version": 1, "field": selected, "development_metrics": metrics[selected], "input_checksums": checksums}
+        (out / "selection-candidate.json").write_text(json.dumps(selection, indent=2, sort_keys=True) + "\n")
+        summary["selected_candidate"] = selected
+    else:
+        field = json.loads(Path(args.selection).read_text())["field"]
+        agreements = []
+        for row in rows:
+            a, b = set(row[field]), set(row["paraphrase_selected"])
+            agreements.append(len(a & b) / len(a | b) if a | b else 1.0)
+        summary["selected_field"] = field
+        summary["paraphrase_agreement_mean_jaccard"] = statistics.fmean(agreements)
+        baseline = metrics["deterministic"]
+        chosen = metrics[field]
+        family_regression = max((baseline["family_recall"][f] - chosen["family_recall"][f] for f in FAMILIES), default=0)
+        summary["routing_gate"] = {
+            "recall": chosen["recall"] >= .85,
+            "precision": chosen["precision"] >= .65,
+            "macro_family_recall": chosen["macro_family_recall"] >= .80,
+            "f1_gain": chosen["f1"] - baseline["f1"] >= .10,
+            "paraphrase_agreement": summary["paraphrase_agreement_mean_jaccard"] >= .90,
+            "family_regression": family_regression <= .10,
+            "valid_rows": sum(all(r["calls_valid"].values()) and r.get("paraphrase_valid", False) for r in rows) >= 29,
+            "policy_violations": all(not (set(r[field]) & SENSITIVE) for r in rows),
+        }
+        summary["advance_to_acquisition"] = all(summary["routing_gate"].values()) and input_tokens <= 200_000
+    (out / "rows.json").write_text(json.dumps(rows, indent=2, sort_keys=True) + "\n")
+    (out / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+    print(json.dumps(summary, indent=2, sort_keys=True))
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command", choices=["validate", "development", "evaluation"])
+    parser.add_argument("--repo", default=".")
+    parser.add_argument("--base", default="docs/experiments/evidence/EXP-011")
+    parser.add_argument("--output", default="/tmp/exp011")
+    parser.add_argument("--selection")
+    args = parser.parse_args()
+    if args.command == "validate":
+        print(json.dumps(validate(Path(args.repo).resolve(), Path(args.base).resolve()), indent=2, sort_keys=True))
+        return
+    args.split = "development" if args.command == "development" else "evaluation"
+    if args.split == "evaluation" and not args.selection:
+        raise SystemExit("--selection is required for evaluation")
+    asyncio.run(measure(args))
+
+
+if __name__ == "__main__":
+    main()

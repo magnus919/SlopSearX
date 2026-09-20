@@ -16,6 +16,9 @@ retrieves results. The current evidence does not justify adding it to SlopSearX:
   second signal than as a standalone replacement ranker;
 - SlopSearX EXP-004 was inconclusive because the execution environment returned
   no usable candidate corpus, so no SlopSearX relevance effect was measured;
+- SlopSearX EXP-005 proved authenticated Brave acquisition and valid Jev calls,
+  but its 12 official-documentation targets were already first in Brave, leaving
+  no headroom for fusion and producing a preregistered `not-supported` outcome;
 - ordinary accounts do not have documented zero-data retention, and sending
   queries, URLs, titles, and snippets would be a material external-processing
   boundary;
@@ -164,6 +167,63 @@ captured candidate corpus with established rights, labels, and adequate target
 coverage; live acquisition reliability must not be allowed to erase the
 reranking question again.
 
+## EXP-005 result
+
+EXP-005 followed up with authenticated Brave acquisition while preserving the
+same 12 queries and canonical official-documentation URL labels. It compared
+untouched Brave order with a preregistered fixed fusion of 70% reciprocal Brave
+rank and 30% Jev relevance probability. The harness and decision rule were
+committed at `962ecf4` before the measured run.
+
+The run was operationally successful but uninformative about incremental
+ranking value:
+
+- Brave returned 13-20 candidates for every query and found all 12 targets;
+- every target was already at Brave rank 1, giving baseline MRR@20 `1.0`;
+- all 12 Jev requests returned valid answers from pinned `jev-1.13.0`;
+- Jev standalone and fusion also achieved MRR@20 `1.0`, with no regressions;
+- Jev request latency was 235.3 ms mean and 451.2 ms p95/max;
+- 40,789 input tokens cost an estimated `$0.001713138` at the registered price.
+
+Under the frozen decision rule, the outcome is **not supported** because fusion
+gain was `0.0`, below the required `+0.05`. The correct interpretation is a
+ceiling effect, not evidence that Jev cannot improve harder queries. EXP-005
+establishes that the Brave-backed path can supply candidates and Jev can judge
+them cheaply and without disturbing already-correct first results; it does not
+establish incremental relevance value.
+
+Evidence: [experiment record](experiments/EXP-005-jev-brave-fusion.md),
+[summary](experiments/evidence/EXP-005/summary.json), and
+[sanitized rows](experiments/evidence/EXP-005/rows.json).
+
+## EXP-006 through EXP-010 function suite
+
+Five additional bounded experiments were preregistered together at `b7b4ce3`
+and then run once in order. All 77 Jev calls returned valid typed responses from
+`jev-1.13.0`; combined estimated input cost was `$0.003215352`.
+
+- **Hard-query fusion was not supported.** MRR@20 improved only from `0.6845`
+  to `0.6952` (`+0.0107`), below the frozen `+0.05` gate, despite zero
+  regressions.
+- **Robustness was supported for further research.** Balanced accuracy was
+  `0.9375`, with zero false positives on prompt-like adversarial negatives. The
+  only miss was a relevant result with no snippet.
+- **Research stopping was not supported.** It produced zero unsafe false stops
+  but only `0.50` recall on sufficient evidence, rejecting four complete sets.
+- **Engine-plan selection was supported for further research.** Accuracy was
+  `0.80` versus `0.4667` for the deterministic keyword router on the frozen
+  ambiguous-query set, with no output outside the offered policy-safe plans.
+- **Additive annotations were supported for further research.** Coverage,
+  accuracy, and macro F1 were each `0.8333`; all abstentions exposed overlap
+  between standards/regulatory material and primary documentation.
+
+These results narrow the credible hypotheses. They do not justify reranking or
+research-control integration. The strongest follow-up is a larger offline,
+multi-label engine-plan study over real query traces; additive multi-label
+source annotations are second. Robustness should become an evaluation gate for
+either. The full interpretation and error audit are in the
+[suite results](experiments/JEV-FUNCTION-SUITE-RESULTS.md).
+
 ## Gap register
 
 | Gap | Why it matters | What would resolve it | Status |
@@ -197,11 +257,14 @@ reranking question again.
 Outcome for issue #389: **learn more, without implementation**.
 
 Jev has a credible technical shape and exceptionally low nominal token cost for
-bounded judgments, but SlopSearX has not measured a relevance benefit, user
-demand, acceptable privacy boundary, or production latency/reliability envelope.
-Do not create a Jev client or feature issue yet.
+bounded judgments. The function suite found promising evidence for selecting
+among pre-authorized engine plans, additive source annotations, and adversarial
+robustness, but not for reranking or research stopping. SlopSearX still lacks
+affected-user demand, acceptable privacy boundaries, real-trace validation,
+and a production latency/reliability envelope. Do not create a Jev client or
+feature issue yet.
 
-A future `EXP-005` would be justified only when it can preregister:
+A future follow-up experiment would be justified only when it can preregister:
 
 1. a frozen, redistributable SlopSearX-shaped candidate corpus with adequate
    recall and independently produced labels;

@@ -1,0 +1,55 @@
+schema_version: 1
+defaults:
+  avoid_when: "The query does not seek this engine's evidence type."
+engines:
+  abuseipdb: {purpose: "IP reputation and abuse reports", use_when: "an IP address or abuse reputation is central"}
+  arxiv: {purpose: "research preprints", use_when: "the query seeks scientific papers or preprints"}
+  ashby: {purpose: "jobs hosted by Ashby", use_when: "the query seeks current job openings"}
+  brave: {purpose: "broad web and news discovery", use_when: "open-web coverage or a broad control is useful"}
+  censys: {purpose: "internet hosts and certificates", use_when: "the query targets exposed infrastructure or certificates"}
+  clinicaltrials: {purpose: "registered clinical trials", use_when: "the query seeks trials, interventions, or enrollment"}
+  crates: {purpose: "Rust packages", use_when: "the query names a Rust crate or package need"}
+  crtsh: {purpose: "certificate transparency records", use_when: "the query concerns domains, subdomains, or certificates"}
+  cve: {purpose: "canonical CVE records", use_when: "the query names a CVE or vulnerability identifier"}
+  dehashed: {purpose: "paid breach-data lookup", use_when: "authorized breach exposure lookup is explicitly requested"}
+  dockerhub: {purpose: "container images", use_when: "the query seeks a Docker image or tag"}
+  duckduckgo: {purpose: "broad web and image discovery", use_when: "general open-web coverage is useful"}
+  edgar: {purpose: "US public-company filings", use_when: "the query seeks SEC filings or company disclosures"}
+  epss: {purpose: "vulnerability exploitation probability", use_when: "the query seeks EPSS likelihood for a CVE"}
+  exploitdb: {purpose: "public exploit records", use_when: "the query seeks a known exploit or proof of concept"}
+  fred: {purpose: "US economic time series", use_when: "the query seeks macroeconomic data or indicators"}
+  github: {purpose: "source repositories, issues, and pull requests", use_when: "the query seeks code or repository artifacts"}
+  google: {purpose: "broad web and news discovery", use_when: "general open-web coverage is useful"}
+  greenhouse: {purpose: "jobs hosted by Greenhouse", use_when: "the query seeks current job openings"}
+  greynoise: {purpose: "internet scanner and IP intelligence", use_when: "the query seeks context about an observed IP"}
+  hackernews: {purpose: "technology news and discussion", use_when: "the query seeks current technical discussion"}
+  hibp: {purpose: "breach exposure status", use_when: "authorized account or domain breach lookup is explicit"}
+  huggingface: {purpose: "machine-learning datasets, models, and papers", use_when: "the query seeks ML artifacts"}
+  intelx: {purpose: "paid threat-intelligence search", use_when: "authorized threat-intelligence lookup is explicit"}
+  internetarchive: {purpose: "archived web pages and historical media", use_when: "the query seeks an older or removed version"}
+  lever: {purpose: "jobs hosted by Lever", use_when: "the query seeks current job openings"}
+  mitreattack: {purpose: "adversary tactics and techniques", use_when: "the query seeks ATT&CK techniques, groups, or mitigations"}
+  musicbrainz: {purpose: "music release and artist metadata", use_when: "the query seeks structured music credits or releases"}
+  nominatim: {purpose: "OpenStreetMap place geocoding", use_when: "the query seeks a place, address, or coordinates"}
+  npm: {purpose: "JavaScript packages", use_when: "the query names a Node or JavaScript package need"}
+  nvd: {purpose: "NIST vulnerability records", use_when: "the query seeks CVE severity, affected products, or references"}
+  openalex: {purpose: "scholarly works and authors", use_when: "the query seeks research literature or citation metadata"}
+  openfda: {purpose: "FDA drugs, devices, labels, and adverse events", use_when: "the query seeks regulated medical-product data"}
+  openlibrary: {purpose: "books and editions", use_when: "the query seeks a book, author, ISBN, or edition"}
+  otx: {purpose: "community threat indicators", use_when: "the query seeks indicators, pulses, or threat context"}
+  oyez: {purpose: "US Supreme Court cases and audio", use_when: "the query seeks a Supreme Court case or argument"}
+  pubchem: {purpose: "chemical compounds and bioassays", use_when: "the query seeks a compound, structure, or chemical identifier"}
+  pubmed: {purpose: "biomedical literature", use_when: "the query seeks medical or life-science publications"}
+  pypi: {purpose: "Python packages", use_when: "the query names a Python package need"}
+  reddit: {purpose: "community discussions", use_when: "the query seeks lived experience, opinions, or subreddit discussion"}
+  repology: {purpose: "package versions across repositories", use_when: "the query compares package versions or distributions"}
+  rubygems: {purpose: "Ruby packages", use_when: "the query names a Ruby gem or package need"}
+  semanticscholar: {purpose: "scholarly papers and citations", use_when: "the query seeks papers or citation relationships"}
+  shodan: {purpose: "internet-connected device search", use_when: "the query targets exposed services or devices"}
+  stackexchange: {purpose: "technical and expert Q&A", use_when: "the query is a concrete technical or expert question"}
+  tmdb: {purpose: "movie and television metadata", use_when: "the query seeks film, series, cast, or release information"}
+  uniprot: {purpose: "protein sequences and annotations", use_when: "the query seeks a protein, gene product, or accession"}
+  urlhaus: {purpose: "malware URL intelligence", use_when: "the query concerns a suspicious URL or malware distribution"}
+  virustotal: {purpose: "file, URL, domain, and IP reputation", use_when: "the query seeks multi-scanner malware reputation"}
+  vulncheck: {purpose: "vulnerability and exploitation intelligence", use_when: "the query seeks exploitability or vulnerability enrichment"}
+  wikipedia: {purpose: "general encyclopedic reference", use_when: "the query seeks stable background or entity context"}

@@ -1,0 +1,542 @@
+[
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 422.75841697119176,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 603,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a01",
+    "label": "primary_docs",
+    "margin": 0.7999999999999999,
+    "prediction": "primary_docs",
+    "probabilities": {
+      "discussion": 0.02,
+      "primary_docs": 0.97,
+      "source_repository": 0.05,
+      "standard_regulatory": 0.17,
+      "tutorial": 0.06,
+      "vendor_marketing": 0.02
+    },
+    "query": "Python pathlib docs",
+    "snippet": "Official Python library reference.",
+    "title": "pathlib \u2014 Object-oriented filesystem paths",
+    "top_probability": 0.97,
+    "url": "https://docs.python.org/3/library/pathlib.html"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 172.68216697266325,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 607,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a02",
+    "label": "primary_docs",
+    "margin": 0.84,
+    "prediction": "primary_docs",
+    "probabilities": {
+      "discussion": 0.03,
+      "primary_docs": 0.96,
+      "source_repository": 0.11,
+      "standard_regulatory": 0.05,
+      "tutorial": 0.12,
+      "vendor_marketing": 0.04
+    },
+    "query": "Kubernetes deployment docs",
+    "snippet": "Official Kubernetes concepts documentation.",
+    "title": "Deployments",
+    "top_probability": 0.96,
+    "url": "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 149.94895801646635,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 601,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a03",
+    "label": "primary_docs",
+    "margin": 0.10999999999999999,
+    "prediction": "primary_docs",
+    "probabilities": {
+      "discussion": 0.03,
+      "primary_docs": 0.87,
+      "source_repository": 0.08,
+      "standard_regulatory": 0.02,
+      "tutorial": 0.76,
+      "vendor_marketing": 0.06
+    },
+    "query": "FastAPI response model",
+    "snippet": "Framework documentation and examples.",
+    "title": "Response Model",
+    "top_probability": 0.87,
+    "url": "https://fastapi.tiangolo.com/tutorial/response-model/"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 179.26183296367526,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 604,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a04",
+    "label": "source_repository",
+    "margin": 0.8099999999999999,
+    "prediction": "source_repository",
+    "probabilities": {
+      "discussion": 0.03,
+      "primary_docs": 0.16,
+      "source_repository": 0.97,
+      "standard_regulatory": 0.02,
+      "tutorial": 0.03,
+      "vendor_marketing": 0.04
+    },
+    "query": "httpx source",
+    "snippet": "Source code, issues, releases, and contributing guide.",
+    "title": "encode/httpx",
+    "top_probability": 0.97,
+    "url": "https://github.com/encode/httpx"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 191.95495900930837,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 607,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a05",
+    "label": "source_repository",
+    "margin": 0.7899999999999999,
+    "prediction": "source_repository",
+    "probabilities": {
+      "discussion": 0.03,
+      "primary_docs": 0.17,
+      "source_repository": 0.96,
+      "standard_regulatory": 0.02,
+      "tutorial": 0.03,
+      "vendor_marketing": 0.02
+    },
+    "query": "prometheus source",
+    "snippet": "The Prometheus monitoring system and time series database.",
+    "title": "prometheus/prometheus",
+    "top_probability": 0.96,
+    "url": "https://github.com/prometheus/prometheus"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 256.8536659819074,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 608,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a06",
+    "label": "source_repository",
+    "margin": 0.83,
+    "prediction": "source_repository",
+    "probabilities": {
+      "discussion": 0.03,
+      "primary_docs": 0.14,
+      "source_repository": 0.97,
+      "standard_regulatory": 0.02,
+      "tutorial": 0.02,
+      "vendor_marketing": 0.04
+    },
+    "query": "rust tokio source",
+    "snippet": "Runtime source repository with code and issue tracker.",
+    "title": "tokio-rs/tokio",
+    "top_probability": 0.97,
+    "url": "https://github.com/tokio-rs/tokio"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 193.8783330260776,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 611,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a07",
+    "label": "standard_regulatory",
+    "margin": 0.06000000000000005,
+    "prediction": null,
+    "probabilities": {
+      "discussion": 0.02,
+      "primary_docs": 0.93,
+      "source_repository": 0.21,
+      "standard_regulatory": 0.87,
+      "tutorial": 0.04,
+      "vendor_marketing": 0.01
+    },
+    "query": "HTTP semantics standard",
+    "snippet": "Internet Standard defining HTTP semantics.",
+    "title": "RFC 9110: HTTP Semantics",
+    "top_probability": 0.93,
+    "url": "https://www.rfc-editor.org/rfc/rfc9110"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 290.7930830260739,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 603,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a08",
+    "label": "standard_regulatory",
+    "margin": 0.08999999999999997,
+    "prediction": null,
+    "probabilities": {
+      "discussion": 0.05,
+      "primary_docs": 0.79,
+      "source_repository": 0.51,
+      "standard_regulatory": 0.88,
+      "tutorial": 0.19,
+      "vendor_marketing": 0.02
+    },
+    "query": "SEC filing rules",
+    "snippet": "Official US regulator filing requirements.",
+    "title": "Electronic Filing and the EDGAR System",
+    "top_probability": 0.88,
+    "url": "https://www.sec.gov/submit-filings"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 205.93070797622204,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 605,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a09",
+    "label": "standard_regulatory",
+    "margin": 0.0,
+    "prediction": null,
+    "probabilities": {
+      "discussion": 0.03,
+      "primary_docs": 0.86,
+      "source_repository": 0.14,
+      "standard_regulatory": 0.86,
+      "tutorial": 0.05,
+      "vendor_marketing": 0.02
+    },
+    "query": "Python packaging standard",
+    "snippet": "Accepted Python packaging metadata standard.",
+    "title": "PEP 621",
+    "top_probability": 0.86,
+    "url": "https://peps.python.org/pep-0621/"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 197.29658297728747,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 601,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a10",
+    "label": "tutorial",
+    "margin": 0.53,
+    "prediction": "tutorial",
+    "probabilities": {
+      "discussion": 0.06,
+      "primary_docs": 0.33,
+      "source_repository": 0.1,
+      "standard_regulatory": 0.03,
+      "tutorial": 0.86,
+      "vendor_marketing": 0.1
+    },
+    "query": "learn Docker Compose",
+    "snippet": "Step-by-step walkthrough for beginners.",
+    "title": "Docker Compose Tutorial",
+    "top_probability": 0.86,
+    "url": "https://example.dev/docker-compose-tutorial"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 184.67241601319984,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 597,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a11",
+    "label": "tutorial",
+    "margin": 0.52,
+    "prediction": "tutorial",
+    "probabilities": {
+      "discussion": 0.08,
+      "primary_docs": 0.3,
+      "source_repository": 0.12,
+      "standard_regulatory": 0.03,
+      "tutorial": 0.82,
+      "vendor_marketing": 0.09
+    },
+    "query": "learn PromQL",
+    "snippet": "Hands-on tutorial with worked queries.",
+    "title": "PromQL by Example",
+    "top_probability": 0.82,
+    "url": "https://example.dev/promql-guide"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 182.49154096702114,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 597,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a12",
+    "label": "tutorial",
+    "margin": 0.74,
+    "prediction": "tutorial",
+    "probabilities": {
+      "discussion": 0.06,
+      "primary_docs": 0.11,
+      "source_repository": 0.06,
+      "standard_regulatory": 0.02,
+      "tutorial": 0.85,
+      "vendor_marketing": 0.05
+    },
+    "query": "learn pathlib",
+    "snippet": "Unofficial explanatory tutorial.",
+    "title": "A Practical Guide to pathlib",
+    "top_probability": 0.85,
+    "url": "https://example.dev/pathlib-guide"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 211.84466703562066,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 606,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a13",
+    "label": "discussion",
+    "margin": 0.81,
+    "prediction": "discussion",
+    "probabilities": {
+      "discussion": 0.91,
+      "primary_docs": 0.08,
+      "source_repository": 0.1,
+      "standard_regulatory": 0.02,
+      "tutorial": 0.07,
+      "vendor_marketing": 0.03
+    },
+    "query": "TaskGroup cancellation discussion",
+    "snippet": "Question and community answers discussing behavior.",
+    "title": "Unexpected TaskGroup cancellation behavior",
+    "top_probability": 0.91,
+    "url": "https://stackoverflow.com/questions/123/example"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 182.95104202115908,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 606,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a14",
+    "label": "discussion",
+    "margin": 0.9099999999999999,
+    "prediction": "discussion",
+    "probabilities": {
+      "discussion": 0.95,
+      "primary_docs": 0.04,
+      "source_repository": 0.04,
+      "standard_regulatory": 0.02,
+      "tutorial": 0.04,
+      "vendor_marketing": 0.02
+    },
+    "query": "Kubernetes rollout opinions",
+    "snippet": "Community discussion and opinions.",
+    "title": "Ask HN: deployment strategies",
+    "top_probability": 0.95,
+    "url": "https://news.ycombinator.com/item?id=123"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 187.20916600432247,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 603,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a15",
+    "label": "discussion",
+    "margin": 0.8999999999999999,
+    "prediction": "discussion",
+    "probabilities": {
+      "discussion": 0.95,
+      "primary_docs": 0.03,
+      "source_repository": 0.03,
+      "standard_regulatory": 0.01,
+      "tutorial": 0.05,
+      "vendor_marketing": 0.02
+    },
+    "query": "Rust Option debate",
+    "snippet": "Forum conversation among users.",
+    "title": "Why do people like Option?",
+    "top_probability": 0.95,
+    "url": "https://www.reddit.com/r/rust/comments/example"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 188.88958398019895,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 598,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a16",
+    "label": "vendor_marketing",
+    "margin": 0.8699999999999999,
+    "prediction": "vendor_marketing",
+    "probabilities": {
+      "discussion": 0.03,
+      "primary_docs": 0.07,
+      "source_repository": 0.05,
+      "standard_regulatory": 0.02,
+      "tutorial": 0.04,
+      "vendor_marketing": 0.94
+    },
+    "query": "managed Kubernetes",
+    "snippet": "Buy our managed platform. Start a free trial.",
+    "title": "Enterprise Kubernetes Platform",
+    "top_probability": 0.94,
+    "url": "https://vendor.invalid/kubernetes"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 185.54445903282613,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 604,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a17",
+    "label": "vendor_marketing",
+    "margin": 0.8600000000000001,
+    "prediction": "vendor_marketing",
+    "probabilities": {
+      "discussion": 0.03,
+      "primary_docs": 0.07,
+      "source_repository": 0.04,
+      "standard_regulatory": 0.02,
+      "tutorial": 0.04,
+      "vendor_marketing": 0.93
+    },
+    "query": "observability product",
+    "snippet": "Request a demo and compare plans.",
+    "title": "The fastest observability cloud",
+    "top_probability": 0.93,
+    "url": "https://vendor.invalid/observability"
+  },
+  {
+    "call": {
+      "error": null,
+      "latency_ms": 152.453874994535,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 597,
+        "output_tokens": 107
+      },
+      "valid": true
+    },
+    "id": "a18",
+    "label": "vendor_marketing",
+    "margin": 0.8,
+    "prediction": "vendor_marketing",
+    "probabilities": {
+      "discussion": 0.04,
+      "primary_docs": 0.09,
+      "source_repository": 0.06,
+      "standard_regulatory": 0.03,
+      "tutorial": 0.08,
+      "vendor_marketing": 0.89
+    },
+    "query": "database hosting",
+    "snippet": "Commercial hosted database with pricing CTA.",
+    "title": "PostgreSQL without operations",
+    "top_probability": 0.89,
+    "url": "https://vendor.invalid/postgres"
+  }
+]
