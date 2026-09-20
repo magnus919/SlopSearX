@@ -1,0 +1,131 @@
+from __future__ import annotations
+import argparse, asyncio, dataclasses, hashlib, json, math, os, statistics, sys, time
+from collections import Counter
+from pathlib import Path
+from typing import Any
+import httpx, yaml
+
+MODEL="jev-1.13.0"
+THRESHOLDS=(.45,.475,.50,.525,.55,.575,.60,.625,.65)
+GENERAL=("brave","google","duckduckgo")
+BROAD={"wikipedia","stackexchange","reddit","hackernews"}
+TEMPLATE=("Specialist engine id: {name}. Display name: {display}. Purpose: {purpose}. Use when: {use_when}. "
+          "Categories: {categories}. Would this named specialist provide distinctive, directly useful evidence beyond "
+          "ordinary general web search for the user query? Answer no when general search is sufficient.")
+SCHEMA_HASH=hashlib.sha256(TEMPLATE.encode()).hexdigest()
+
+def digest(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def p95(v): s=sorted(v); return s[max(0,math.ceil(.95*len(s))-1)]
+def key(t): return f"{t:.3f}"
+
+def runtime(repo):
+    sys.path.insert(0,str(repo)); import engines  # noqa: F401
+    from slopsearx.adapter import discover_engines
+    from slopsearx.capabilities import CapabilityCatalog
+    from slopsearx.config import load_config
+    cfg=load_config(); active=discover_engines({n:dataclasses.asdict(e) for n,e in cfg.engines.items()}); catalog=CapabilityCatalog(cfg,active)
+    eligible={c.name for c in catalog.enabled() if not c.sensitive and not c.circuit_open and (c.auth_class!="required" or c.auth_configured) and c.name in active}
+    return active,[n for n in GENERAL if n in eligible],sorted(eligible-set(GENERAL)-BROAD)
+
+def validate(repo):
+    manifest=repo/"docs/experiments/evidence/EXP-014/queries-v1.json"; cards_path=repo/"docs/experiments/evidence/EXP-011/engine-routing-cards-v1.yaml"
+    rows=json.loads(manifest.read_text())["queries"]; cards=yaml.safe_load(cards_path.read_text())["engines"]; active,general,specialists=runtime(repo)
+    if len(rows)!=30 or len({r['id'] for r in rows})!=30: raise SystemExit("expected 30 unique queries")
+    if Counter(r['family'] for r in rows)!={"packages":5,"science_medical":5,"security":5,"structured":5,"jobs_ml":5,"general":5}: raise SystemExit("family balance mismatch")
+    labels={e for r in rows for e in r["essential"]+r["useful"]}
+    if labels-set(specialists): raise SystemExit(f"ineligible labels: {sorted(labels-set(specialists))}")
+    if len(general)!=3: raise SystemExit(f"general base incomplete: {general}")
+    return {"queries":30,"general":general,"specialists":specialists,"specialist_count":len(specialists),"manifest_sha256":digest(manifest),"cards_sha256":digest(cards_path),"question_schema_sha256":SCHEMA_HASH}
+
+def questions(active,specialists,cards):
+    return {n:{"type":"noul","instructions":TEMPLATE.format(name=n,display=active[n].display_name,purpose=cards[n]["purpose"],use_when=cards[n]["use_when"],categories=", ".join(active[n].categories))} for n in specialists}
+
+async def jev(client,key_value,query,qs):
+    started=time.monotonic(); status=None; body={}; error=None
+    try:
+        response=await client.post("https://api.typesafe.ai/v1/systemone",headers={"Authorization":f"Bearer {key_value}"},json={"model":MODEL,"state":{"user_query":query},"questions":qs}); status=response.status_code; body=response.json()
+    except Exception as exc: error=f"{type(exc).__name__}: {exc}"
+    answers=body.get("answers",{}) if isinstance(body,dict) else {}; probs={}
+    for n in qs:
+        value=answers.get(n,{}).get("noul") if isinstance(answers.get(n,{}),dict) else None
+        if isinstance(value,(int,float)) and math.isfinite(value) and 0<=value<=1: probs[n]=float(value)
+    usage=body.get("usage",{}) if isinstance(body,dict) else {}
+    return {"valid":status==200 and body.get("model")==MODEL and len(probs)==len(qs),"probabilities":probs,"usage":usage,"latency_ms":(time.monotonic()-started)*1000,"status":status,"error":error}
+
+def offline(rows,t):
+    tp=fp=essential_total=essential_hit=useful_total=useful_hit=utility=selected=0; broad_total=broad_abstain=0
+    for r in rows:
+        got={e for e,p in r["probabilities"].items() if p>=t}; essential=set(r["essential"]); useful=set(r["useful"]); relevant=essential|useful
+        tp+=len(got&relevant); fp+=len(got-relevant); essential_total+=len(essential); essential_hit+=len(got&essential); useful_total+=len(useful); useful_hit+=len(got&useful); selected+=len(got)
+        utility+=2*len(got&essential)+len(got&useful)-len(got-relevant)
+        if not relevant: broad_total+=1; broad_abstain+=not got
+    return {"precision":tp/(tp+fp) if tp+fp else 1.0,"essential_recall":essential_hit/essential_total,"useful_recall":useful_hit/useful_total if useful_total else 1.0,
+            "mean_specialist_requests":selected/len(rows),"specialist_requests":selected,"broad_abstention":broad_abstain/broad_total,"weighted_utility":utility,"utility_per_request":utility/selected if selected else 0.0}
+
+def specialist_view(feeds,general,selected,probs):
+    from slopsearx.merger import merge_results
+    ordered=sorted(selected,key=lambda n:(-probs[n],n)); chosen=[]; seen=set()
+    for name in ordered:
+        for result in feeds[name]:
+            marker=result.url or f"{name}:{result.title}"
+            if marker not in seen: chosen.append(result); seen.add(marker); break
+    merged=merge_results({n:feeds[n] for n in general+ordered},strategy="presence")
+    for result in merged:
+        marker=result.url or f"merged:{result.title}"
+        if marker not in seen: chosen.append(result); seen.add(marker)
+        if len(chosen)>=10: break
+    return chosen[:10]
+
+def current_view(feeds,general,selected):
+    from slopsearx.merger import merge_results
+    return merge_results({n:feeds[n] for n in general+selected},strategy="presence")[:10]
+
+async def run(args):
+    repo=Path(args.repo).resolve(); out=Path(args.output).resolve(); reg=validate(repo); active,general,specialists=runtime(repo)
+    cards=yaml.safe_load((repo/"docs/experiments/evidence/EXP-011/engine-routing-cards-v1.yaml").read_text())["engines"]
+    cases=json.loads((repo/"docs/experiments/evidence/EXP-014/queries-v1.json").read_text())["queries"]; qs=questions(active,specialists,cards); api_key=os.environ.get("TYPESAFE_API_KEY","")
+    if not api_key: raise SystemExit("TYPESAFE_API_KEY required")
+    rows=[]; calls=[]
+    async with httpx.AsyncClient(timeout=30) as client:
+        for case in cases:
+            call=await jev(client,api_key,case["query"],qs); calls.append(call); rows.append({**case,"valid":call["valid"],"probabilities":call["probabilities"],"jev_latency_ms":call["latency_ms"]})
+    offline_curve={key(t):offline(rows,t) for t in THRESHOLDS}; jev_tokens=sum(int(c["usage"].get("input_tokens",0) or 0) for c in calls)
+    if jev_tokens>5_000_000 or sum(c["valid"] for c in calls)<29: raise SystemExit("Jev validity/budget gate failed")
+    counts=Counter(); acquisition=[]
+    for row in rows:
+        selected45=[n for n,p in row["probabilities"].items() if p>=.45]; union=list(dict.fromkeys(general+selected45))
+        if counts["brave"]+("brave" in union)>36 or sum(v for n,v in counts.items() if n!="brave")+sum(n!="brave" for n in union)>600: raise SystemExit("search budget would be exceeded")
+        if any(counts[n]>=30 for n in union if n!="brave"): raise SystemExit("per-engine budget would be exceeded")
+        responses=await asyncio.gather(*(active[n].search(row["query"],{}) for n in union)); feeds={}; outcomes=[]
+        for name,response in zip(union,responses): counts[name]+=1; feeds[name]=response.results; outcomes.append({"engine":name,"status":response.status.value,"result_count":len(response.results),"latency_ms":response.latency_ms})
+        curve={}
+        for t in THRESHOLDS:
+            selected=[n for n,p in row["probabilities"].items() if p>=t]; aware=specialist_view(feeds,general,selected,row["probabilities"]); current=current_view(feeds,general,selected)
+            essential=set(row["essential"]); useful=set(row["useful"]); relevant=essential|useful
+            visible={n for result in aware for n in result.engines}&set(selected); current_visible={n for result in current for n in result.engines}&set(selected)
+            def first_rank(results,targets):
+                for rank,result in enumerate(results,1):
+                    if set(result.engines)&targets:return rank
+                return None
+            curve[key(t)]={"selected":selected,"response_engines":[n for n in selected if feeds[n]],"visible_engines":sorted(visible),"labeled_visible_engines":sorted(visible&relevant),
+                           "essential_rank_aware":first_rank(aware,essential),"essential_rank_current":first_rank(current,essential),"current_visible_engines":sorted(current_visible)}
+        acquisition.append({"id":row["id"],"family":row["family"],"essential":row["essential"],"useful":row["useful"],"curve":curve,"outcomes":outcomes})
+    live_curve={}
+    usable=sum(any(o["status"]=="ok" for o in r["outcomes"]) for r in acquisition)
+    for t in THRESHOLDS:
+        k=key(t); selected=sum(len(r["curve"][k]["selected"]) for r in acquisition); responses=sum(len(r["curve"][k]["response_engines"]) for r in acquisition); visible=sum(len(r["curve"][k]["visible_engines"]) for r in acquisition); labeled=sum(len(r["curve"][k]["labeled_visible_engines"]) for r in acquisition)
+        positive=[r for r in acquisition if r["essential"]]; aware_hits=sum(r["curve"][k]["essential_rank_aware"] is not None for r in positive); current_hits=sum(r["curve"][k]["essential_rank_current"] is not None for r in positive)
+        live_curve[k]={**offline_curve[k],"response_yield":responses/selected if selected else 0,"visible_yield":visible/selected if selected else 0,"labeled_visible_yield":labeled/selected if selected else 0,
+                       "essential_coverage_aware":aware_hits/len(positive),"essential_coverage_current":current_hits/len(positive),"mean_rr_aware":statistics.fmean((1/r["curve"][k]["essential_rank_aware"] if r["curve"][k]["essential_rank_aware"] else 0) for r in positive)}
+        live_curve[k]["viable"]=live_curve[k]["essential_recall"]>=.90 and live_curve[k]["precision"]>=.75 and live_curve[k]["broad_abstention"]>=.8 and live_curve[k]["labeled_visible_yield"]>=.4 and usable>=29 and p95([c["latency_ms"] for c in calls])<=600
+    viable=[k for k,v in live_curve.items() if v["viable"]]
+    recommended=sorted(viable,key=lambda k:(-live_curve[k]["essential_coverage_aware"],-live_curve[k]["labeled_visible_yield"],-live_curve[k]["utility_per_request"],live_curve[k]["specialist_requests"],-float(k)))[0] if viable else None
+    summary={"schema_version":1,"model":MODEL,"registration":reg,"jev":{"input_tokens":jev_tokens,"valid_calls":sum(c["valid"] for c in calls),"total_calls":len(calls),"latency_ms":{"mean":statistics.fmean(c["latency_ms"] for c in calls),"p95":p95([c["latency_ms"] for c in calls])}},
+             "search_calls":{"brave":counts["brave"],"non_brave":sum(v for n,v in counts.items() if n!="brave"),"by_engine":dict(sorted(counts.items()))},"usable_rows":usable,"curve":live_curve,"recommended_threshold":recommended,"recommendation":"supported" if recommended else "not-supported"}
+    out.mkdir(parents=True,exist_ok=True); (out/"rows.json").write_text(json.dumps(acquisition,indent=2,sort_keys=True)+"\n"); (out/"summary.json").write_text(json.dumps(summary,indent=2,sort_keys=True)+"\n"); print(json.dumps(summary,indent=2,sort_keys=True))
+
+def main():
+    p=argparse.ArgumentParser(); p.add_argument("command",choices=["validate","run"]); p.add_argument("--repo",default="."); p.add_argument("--output",default="/tmp/exp014"); a=p.parse_args()
+    if a.command=="validate": print(json.dumps(validate(Path(a.repo).resolve()),indent=2,sort_keys=True)); return
+    asyncio.run(run(a))
+if __name__=="__main__": main()
