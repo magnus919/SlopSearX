@@ -369,7 +369,7 @@ only from the audited `enforced_filters` adapter declaration; `supported_filters
 
 | Filter | Reported status today | Rationale |
 |---|---|---|
-| `language` | `unsupported` | No adapter enforces it. |
+| `language` | `unsupported` | No adapter enforces it. Reported for effective default `en` as well as explicit language values. |
 | `time_range` | scope-dependent | OpenAlex enforces locally using `published_date`; mixed scopes are partial. Unknown values reject when the scope advertises enforcement. |
 | `safesearch` (moderate) | `unsupported` | No adapter enforces it. |
 | `safesearch` (strict) | `rejected` | Fail-closed before dispatch: no engine can guarantee strict filtering. |

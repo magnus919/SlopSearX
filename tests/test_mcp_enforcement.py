@@ -242,6 +242,12 @@ class TestCoreFilters:
         result = await t.slopsearx_search("hello")
         assert "enforcement" in result
         _assert_report(result["enforcement"])
+        assert result["enforcement"]["language"] == {
+            "requested": "en",
+            "status": "unsupported",
+            "reason": "no selected adapter enforces the language filter",
+            "enforced_by": [],
+        }
 
 
 # ---------------------------------------------------------------------------
