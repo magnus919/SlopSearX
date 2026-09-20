@@ -1,0 +1,139 @@
+from __future__ import annotations
+
+import argparse, asyncio, dataclasses, hashlib, json, math, os, statistics, sys, time
+from collections import Counter, defaultdict
+from pathlib import Path
+from typing import Any
+import httpx, yaml
+
+MODEL = "jev-1.13.0"
+THRESHOLDS = (0.45, 0.55, 0.65, 0.75)
+MAX_JEV_TOKENS = 5_000_000
+GENERAL = ("brave", "google", "duckduckgo")
+BROAD_SUPPORT = {"wikipedia", "stackexchange", "reddit", "hackernews"}
+QUESTION_TEMPLATE = (
+    "Specialist engine id: {name}. Display name: {display}. Purpose: {purpose}. "
+    "Use when: {use_when}. Categories: {categories}. Would this named specialist "
+    "engine provide distinctive, directly useful evidence for the user query beyond "
+    "ordinary general web search? Answer no when general search is sufficient."
+)
+SCHEMA_HASH = hashlib.sha256(QUESTION_TEMPLATE.encode()).hexdigest()
+POSITIVE_FAMILIES = {"packages_code", "science_medical", "security", "structured_reference", "economy_jobs_media"}
+
+def digest(p: Path) -> str: return hashlib.sha256(p.read_bytes()).hexdigest()
+def load(p: Path) -> list[dict[str, Any]]: return json.loads(p.read_text())["queries"]
+
+def runtime(repo: Path):
+    sys.path.insert(0, str(repo)); import engines  # noqa: F401
+    from slopsearx.adapter import discover_engines
+    from slopsearx.capabilities import CapabilityCatalog
+    from slopsearx.config import load_config
+    from slopsearx.router import QueryRouter
+    from slopsearx.service import ScopeResolver
+    cfg = load_config()
+    active = discover_engines({n: dataclasses.asdict(e) for n, e in cfg.engines.items()})
+    catalog = CapabilityCatalog(cfg, active)
+    eligible = {c.name for c in catalog.enabled() if not c.sensitive and not c.circuit_open and (c.auth_class != "required" or c.auth_configured) and c.name in active}
+    general = [n for n in GENERAL if n in eligible]
+    specialists = sorted(eligible - set(GENERAL) - BROAD_SUPPORT)
+    resolver = ScopeResolver(active, QueryRouter(dataclasses.asdict(cfg.routing)), catalog=catalog)
+    return active, general, specialists, resolver
+
+def validate(repo: Path) -> dict[str, Any]:
+    base = repo / "docs/experiments/evidence/EXP-013"
+    cards_path = repo / "docs/experiments/evidence/EXP-011/engine-routing-cards-v1.yaml"
+    dev_path, eval_path = base / "development-v1.json", base / "evaluation-v1.json"
+    cards = yaml.safe_load(cards_path.read_text())["engines"]
+    dev, ev = load(dev_path), load(eval_path)
+    active, general, specialists, _ = runtime(repo)
+    if len(dev) != 12 or len(ev) != 36 or len({r['id'] for r in dev + ev}) != 48: raise SystemExit("manifest size/id failure")
+    if set(Counter(r["family"] for r in ev).values()) != {6}: raise SystemExit("need six held-out rows per family")
+    unknown = {s for r in dev + ev for s in r["specialists"]} - set(cards)
+    if unknown: raise SystemExit(f"unknown specialist labels: {sorted(unknown)}")
+    unavailable = {s for r in dev + ev for s in r["specialists"]} - set(specialists)
+    if unavailable: raise SystemExit(f"labeled specialists not eligible: {sorted(unavailable)}")
+    if len(general) != 3: raise SystemExit(f"general base incomplete: {general}")
+    return {"active": len(active), "general": general, "specialists": specialists, "specialist_count": len(specialists),
+            "checksums": {p.name: digest(p) for p in (cards_path, dev_path, eval_path)}, "question_schema_sha256": SCHEMA_HASH}
+
+def questions(active, specialists, cards):
+    return {n: {"type": "noul", "instructions": QUESTION_TEMPLATE.format(name=n, display=active[n].display_name,
+            purpose=cards[n]["purpose"], use_when=cards[n]["use_when"], categories=", ".join(active[n].categories))} for n in specialists}
+
+async def jev(client, key, query, qs):
+    started=time.monotonic(); status=None; body={}; error=None
+    try:
+        response=await client.post("https://api.typesafe.ai/v1/systemone",headers={"Authorization":f"Bearer {key}"},json={"model":MODEL,"state":{"user_query":query},"questions":qs})
+        status=response.status_code; body=response.json()
+    except Exception as exc: error=f"{type(exc).__name__}: {exc}"
+    answers=body.get("answers",{}) if isinstance(body,dict) else {}; probs={}
+    for n in qs:
+        v=answers.get(n,{}).get("noul") if isinstance(answers.get(n,{}),dict) else None
+        if isinstance(v,(int,float)) and math.isfinite(v) and 0<=v<=1: probs[n]=float(v)
+    usage=body.get("usage",{}) if isinstance(body,dict) else {}
+    return {"valid":status==200 and body.get("model")==MODEL and len(probs)==len(qs),"probabilities":probs,"usage":usage,"latency_ms":(time.monotonic()-started)*1000,"status":status,"error":error}
+
+def select(probs, threshold):
+    ranked=sorted(probs,key=lambda n:(-probs[n],n)); return [n for n in ranked if probs[n]>=threshold]
+
+def metric(rows, field):
+    tp=fp=fn=0; fam=defaultdict(list)
+    for r in rows:
+        got,want=set(r[field]),set(r["specialists"]); tp+=len(got&want); fp+=len(got-want); fn+=len(want-got)
+        if r["family"] in POSITIVE_FAMILIES: fam[r["family"]].append(len(got&want)/len(want))
+    p=tp/(tp+fp) if tp+fp else 1.0; rec=tp/(tp+fn) if tp+fn else 1.0
+    broad=[r for r in rows if r["family"]=="general_no_specialist"]
+    return {"precision":p,"recall":rec,"f1":2*p*rec/(p+rec) if p+rec else 0.0,
+            "macro_family_recall":statistics.fmean(statistics.fmean(v) for v in fam.values()),
+            "family_recall":{k:statistics.fmean(v) for k,v in sorted(fam.items())},
+            "abstention_accuracy":sum(not r[field] for r in broad)/len(broad),"mean_specialists":statistics.fmean(len(r[field]) for r in rows)}
+
+def p95(v): s=sorted(v); return s[max(0,math.ceil(.95*len(s))-1)]
+
+async def route(args):
+    repo=Path(args.repo).resolve(); out=Path(args.output).resolve(); reg=validate(repo)
+    base=repo/"docs/experiments/evidence/EXP-013"; cases=load(base/("development-v1.json" if args.command=="development" else "evaluation-v1.json"))
+    cards=yaml.safe_load((repo/"docs/experiments/evidence/EXP-011/engine-routing-cards-v1.yaml").read_text())["engines"]
+    active,general,specialists,resolver=runtime(repo); qs=questions(active,specialists,cards); key=os.environ.get("TYPESAFE_API_KEY","")
+    if not key: raise SystemExit("TYPESAFE_API_KEY required")
+    selection_doc=json.loads(Path(args.selection).read_text()) if args.selection else None; rows=[]; calls=[]
+    from slopsearx.service import SearchRequest
+    async with httpx.AsyncClient(timeout=30) as client:
+        for case in cases:
+            call=await jev(client,key,case["query"],qs); calls.append(call); decision=resolver.resolve(SearchRequest(query=case["query"]))
+            baseline_scope=decision.selected_engines; baseline_specialists=[n for n in baseline_scope if n in specialists]
+            r={**case,"baseline_scope":baseline_scope,"baseline_specialists":baseline_specialists,"general_base":general,"valid":call["valid"],"latency_ms":call["latency_ms"],"probabilities":call["probabilities"]}
+            for t in THRESHOLDS:
+                chosen=select(call["probabilities"],t) if call["valid"] else []
+                r[f"specialists@{t}"]=chosen; r[f"scope@{t}"]=general+chosen
+            if selection_doc:
+                para=await jev(client,key,case["paraphrase"],qs); calls.append(para); t=float(selection_doc["threshold"])
+                r["paraphrase_valid"]=para["valid"]; r["paraphrase_specialists"]=select(para["probabilities"],t) if para["valid"] else []
+            rows.append(r)
+    tokens=sum(int(c["usage"].get("input_tokens",0) or 0) for c in calls)
+    if tokens>MAX_JEV_TOKENS: raise SystemExit("Jev token budget exceeded")
+    fields=["baseline_specialists"]+[f"specialists@{t}" for t in THRESHOLDS]; mets={f:metric(rows,f) for f in fields}
+    summary={"schema_version":1,"model":MODEL,"split":args.command,"registration":reg,"metrics":mets,"input_tokens":tokens,
+             "valid_calls":sum(c["valid"] for c in calls),"total_calls":len(calls),"latency_ms":{"mean":statistics.fmean(c["latency_ms"] for c in calls),"p95":p95([c["latency_ms"] for c in calls])}}
+    out.mkdir(parents=True,exist_ok=True)
+    if args.command=="development":
+        candidates=[f"specialists@{t}" for t in THRESHOLDS]
+        chosen=sorted(candidates,key=lambda f:(-mets[f]["macro_family_recall"],-mets[f]["f1"],-mets[f]["abstention_accuracy"],mets[f]["mean_specialists"],-float(f.split('@')[1])))[0]
+        selection={"schema_version":1,"field":chosen,"scope_field":chosen.replace("specialists","scope"),"threshold":float(chosen.split('@')[1]),"metrics":mets[chosen],"specialists":specialists,"general_base":general,"question_schema_sha256":SCHEMA_HASH,"input_checksums":reg["checksums"]}
+        (out/"selection.json").write_text(json.dumps(selection,indent=2,sort_keys=True)+"\n"); summary["selection"]=selection
+    else:
+        field=selection_doc["field"]; chosen=mets[field]; baseline=mets["baseline_specialists"]; agreements=[]
+        for r in rows:
+            a,b=set(r[field]),set(r["paraphrase_specialists"]); agreements.append(len(a&b)/len(a|b) if a|b else 1.0)
+        gates={"recall":chosen["recall"]>=.85,"precision":chosen["precision"]>=.75,"macro_family_recall":chosen["macro_family_recall"]>=.80,
+               "f1_gain":chosen["f1"]-baseline["f1"]>=.20,"abstention":chosen["abstention_accuracy"]>=5/6,"paraphrase_agreement":statistics.fmean(agreements)>=.85,
+               "policy":all(set(r[field])<=set(specialists) for r in rows),"valid_pairs":sum(r["valid"] and r["paraphrase_valid"] for r in rows)>=35}
+        summary.update({"selected_field":field,"paraphrase_agreement_mean_jaccard":statistics.fmean(agreements),"gates":gates,"advance_to_acquisition":all(gates.values())})
+    (out/"rows.json").write_text(json.dumps(rows,indent=2,sort_keys=True)+"\n"); (out/"summary.json").write_text(json.dumps(summary,indent=2,sort_keys=True)+"\n"); print(json.dumps(summary,indent=2,sort_keys=True))
+
+def main():
+    p=argparse.ArgumentParser(); p.add_argument("command",choices=["validate","development","evaluation"]); p.add_argument("--repo",default="."); p.add_argument("--output",default="/tmp/exp013"); p.add_argument("--selection"); a=p.parse_args()
+    if a.command=="validate": print(json.dumps(validate(Path(a.repo).resolve()),indent=2,sort_keys=True)); return
+    if a.command=="evaluation" and not a.selection: raise SystemExit("evaluation requires --selection")
+    asyncio.run(route(a))
+if __name__=="__main__": main()
