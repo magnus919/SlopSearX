@@ -49,3 +49,30 @@ PYTHONPATH pointed at this isolated checkout. Candidate may be injected into
 its module only inside the experiment process; no source edit before measurement.
 Retain all payloads, exit codes, environment and SHA256 manifest in
 `docs/experiments/evidence/EXP-003/`. Commit this registration first.
+
+## Readout — supported for contract completeness (2026-09-20)
+
+Registration: `283916f`; baseline runtime `ee2d663`. All 12 pairs (24 real MCP
+tool calls) completed with exit 0 using fresh fixture-server processes. The
+baseline reported truthful language metadata in 4/12 responses (33.33%); the
+candidate did so in 12/12 (100%), a 66.67 percentage-point gain. Both repetitions
+agreed. Aggregate normalized response bytes increased 4.2691%, below 15%.
+All other fields matched after the registered exclusions; no tool errors.
+
+Decision: **supported** on this exhaustive fixed contract corpus. This proves
+that machine-readable language facts become available for default and explicit
+English requests while preserving the measured response contract. It does not
+prove improved agent task success, relevance, actual language filtering, user
+satisfaction or production latency. No population confidence interval applies.
+English remains unsupported by these adapters; the change reports that truth.
+The prior EXP-001 observation was a default-value omission, not a consequence
+of selecting explicit engines.
+
+No implementation has shipped. A separate implementation PR must pass normal
+regression and CI gates and remain unmerged for maintainer review. HTTP/HTML
+code is unchanged; portal contract validation is still required evidence.
+
+Evidence: [summary](evidence/EXP-003/summary.json), [all pairs](evidence/EXP-003/rows.json),
+[reproduction](evidence/EXP-003/reproduce.md), and
+[checksums](evidence/EXP-003/SHA256SUMS.txt). Each case directory contains both
+raw responses, server logs and exit code. No deviations from the plan occurred.
