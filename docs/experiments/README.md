@@ -126,6 +126,7 @@ PRs or deploy changes.
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
+| [EXP-003](EXP-003-default-language-report.md) | Does reporting default English restore truthful language-filter metadata? | registered | Pending fixed transport comparison | None |
 | [EXP-002](EXP-002-empty-query-fast-path.md) | Does skipping empty query processing reduce shared-service latency meaningfully? | not-supported | 6.86% / 0.0265 ms saving; below 10% and 0.2 ms targets. Response equality passed. | None |
 | [EXP-001](EXP-001-results-only.md) | Can results-only MCP output save >=10% bytes without losing interpretation facts? | not-supported | Completed isolated retry: 6.97% smaller (target 10%); explicit engine outcome facts lost. All eight pairs completed. | None |
 | Historical reference | Would RRF improve all three synthetic query families? | not-supported | [Existing evaluation](../RETRIEVAL_QUALITY_EVALUATION.md): two improve, science regresses. Retrospective reference, not a preregistered experiment or a new run. | None from this loop |
