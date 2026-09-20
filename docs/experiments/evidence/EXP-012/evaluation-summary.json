@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "model": "jev-1.13.0",
+  "split": "evaluation",
+  "selected_field": "jev@0.65",
+  "input_tokens": 250358,
+  "cumulative_input_tokens": 300427,
+  "valid_calls": 60,
+  "total_calls": 60,
+  "latency_ms": {"mean": 219.0737986015544, "p95": 299.0740410168655},
+  "paraphrase_agreement_mean_jaccard": 0.6777777777777777,
+  "baseline": {
+    "f1": 0.19047619047619047,
+    "precision": 0.15555555555555556,
+    "recall": 0.24561403508771928,
+    "macro_family_recall": 0.18888888888888888,
+    "mean_selected": 3.0
+  },
+  "candidate": {
+    "f1": 0.6285714285714286,
+    "precision": 0.5301204819277109,
+    "recall": 0.7719298245614035,
+    "macro_family_recall": 0.8055555555555555,
+    "mean_selected": 2.7666666666666666,
+    "family_recall": {
+      "general_news_social": 0.6333333333333333,
+      "medical": 0.8,
+      "packages_code": 0.8333333333333334,
+      "reference_archive": 0.8,
+      "science": 0.9,
+      "security": 0.8666666666666666
+    }
+  },
+  "candidate_thresholds": {
+    "0.45": {"f1": 0.6068965517241379, "precision": 0.5, "recall": 0.7719298245614035, "macro_family_recall": 0.8055555555555555, "mean_selected": 2.933333333333333},
+    "0.55": {"f1": 0.6153846153846154, "precision": 0.5116279069767442, "recall": 0.7719298245614035, "macro_family_recall": 0.8055555555555555, "mean_selected": 2.8666666666666667},
+    "0.65": {"f1": 0.6285714285714286, "precision": 0.5301204819277109, "recall": 0.7719298245614035, "macro_family_recall": 0.8055555555555555, "mean_selected": 2.7666666666666666}
+  },
+  "routing_gates": {
+    "f1_gain": true,
+    "family_regression": true,
+    "macro_family_recall": true,
+    "paraphrase_agreement": false,
+    "policy": true,
+    "precision": false,
+    "recall": false,
+    "valid_pairs": true
+  },
+  "advance_to_acquisition": false,
+  "search_engine_calls": {"brave": 0, "other": 0},
+  "recommendation": "no"
+}

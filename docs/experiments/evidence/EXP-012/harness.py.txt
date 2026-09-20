@@ -1,0 +1,358 @@
+from __future__ import annotations
+
+import argparse
+import asyncio
+import dataclasses
+import hashlib
+import json
+import math
+import os
+import statistics
+import sys
+import time
+from collections import Counter, defaultdict
+from pathlib import Path
+from typing import Any
+
+import httpx
+import yaml
+
+MODEL = "jev-1.13.0"
+MAX_JEV_INPUT_TOKENS = 5_000_000
+MAX_ENGINES = 3
+THRESHOLDS = (0.45, 0.55, 0.65)
+QUESTION_TEMPLATE = (
+    "Engine id: {name}. Display name: {display_name}. Purpose: {purpose}. "
+    "Use when: {use_when}. Categories: {categories}. Engine type: {engine_type}. "
+    "Cost class: {cost_class}. Would engine '{name}' likely contribute direct, "
+    "useful evidence for the user's query? Judge this named engine independently. "
+    "Answer no when it is merely possible, redundant, or outside its described domain."
+)
+QUESTION_SCHEMA_SHA256 = hashlib.sha256(QUESTION_TEMPLATE.encode()).hexdigest()
+FAMILIES = {
+    "packages_code", "science", "medical", "security",
+    "reference_archive", "general_news_social",
+}
+
+
+def digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def paths(repo: Path) -> tuple[Path, Path, Path]:
+    base = repo / "docs/experiments/evidence/EXP-011"
+    return base / "engine-routing-cards-v1.yaml", base / "development-v1.json", base / "evaluation-v1.json"
+
+
+def load_json(path: Path) -> list[dict[str, Any]]:
+    return json.loads(path.read_text())["queries"]
+
+
+def runtime(repo: Path) -> tuple[dict[str, Any], list[str], Any]:
+    sys.path.insert(0, str(repo))
+    import engines  # noqa: F401
+    from slopsearx.adapter import discover_engines
+    from slopsearx.capabilities import CapabilityCatalog
+    from slopsearx.config import load_config
+    from slopsearx.router import QueryRouter
+    from slopsearx.service import ScopeResolver
+
+    cfg = load_config()
+    active = discover_engines({name: dataclasses.asdict(entry) for name, entry in cfg.engines.items()})
+    catalog = CapabilityCatalog(cfg, active)
+    eligible = sorted(
+        cap.name for cap in catalog.enabled()
+        if not cap.sensitive and not cap.circuit_open
+        and (cap.auth_class != "required" or cap.auth_configured)
+        and cap.name in active
+    )
+    resolver = ScopeResolver(
+        active, QueryRouter(dataclasses.asdict(cfg.routing)), catalog=catalog
+    )
+    return active, eligible, resolver
+
+
+def validate(repo: Path) -> dict[str, Any]:
+    cards_path, dev_path, eval_path = paths(repo)
+    cards = yaml.safe_load(cards_path.read_text())["engines"]
+    active, eligible, _ = runtime(repo)
+    dev, evaluation = load_json(dev_path), load_json(eval_path)
+    if len(dev) != 12 or len(evaluation) != 30:
+        raise SystemExit("expected 12 development and 30 evaluation rows")
+    if len({r["id"] for r in dev + evaluation}) != 42:
+        raise SystemExit("query IDs must be unique")
+    if set(cards) != set(__import__("slopsearx.adapter", fromlist=["list_engines"]).list_engines()):
+        raise SystemExit("routing cards do not match registry")
+    if {r["family"] for r in evaluation} != FAMILIES:
+        raise SystemExit("evaluation families differ from registration")
+    counts = Counter(r["family"] for r in evaluation)
+    if set(counts.values()) != {5}:
+        raise SystemExit("evaluation requires five queries per family")
+    unknown_targets = sorted({e for r in dev + evaluation for e in r["useful_engines"]} - set(cards))
+    if unknown_targets:
+        raise SystemExit(f"unknown targets: {unknown_targets}")
+    if not eligible:
+        raise SystemExit("no policy-eligible engines")
+    return {
+        "active_engine_count": len(active), "eligible_engine_count": len(eligible),
+        "eligible_engines": eligible, "card_count": len(cards), "query_count": 42,
+        "checksums": {p.name: digest(p) for p in (cards_path, dev_path, eval_path)},
+        "question_schema_sha256": QUESTION_SCHEMA_SHA256,
+    }
+
+
+def engine_questions(active: dict[str, Any], eligible: list[str], cards: dict[str, Any]) -> dict[str, Any]:
+    questions = {}
+    for name in eligible:
+        engine, card = active[name], cards[name]
+        instruction = QUESTION_TEMPLATE.format(
+            name=name, display_name=engine.display_name, purpose=card["purpose"],
+            use_when=card["use_when"], categories=", ".join(engine.categories),
+            engine_type=engine.engine_type, cost_class=engine.cost_class,
+        )
+        questions[name] = {"type": "noul", "instructions": instruction}
+    return questions
+
+
+async def call_jev(client: httpx.AsyncClient, key: str, query: str, questions: dict[str, Any]) -> dict[str, Any]:
+    started = time.monotonic()
+    status = None
+    body: dict[str, Any] = {}
+    error = None
+    try:
+        response = await client.post(
+            "https://api.typesafe.ai/v1/systemone",
+            headers={"Authorization": f"Bearer {key}"},
+            json={"model": MODEL, "state": {"user_query": query}, "questions": questions},
+        )
+        status = response.status_code
+        body = response.json()
+    except Exception as exc:
+        error = f"{type(exc).__name__}: {exc}"
+    answers = body.get("answers", {}) if isinstance(body, dict) else {}
+    probs = {}
+    for name in questions:
+        answer = answers.get(name, {}) if isinstance(answers, dict) else {}
+        value = answer.get("noul") if isinstance(answer, dict) else None
+        if isinstance(value, (int, float)) and math.isfinite(value) and 0 <= value <= 1:
+            probs[name] = float(value)
+    usage = body.get("usage", {}) if isinstance(body, dict) else {}
+    return {
+        "valid": status == 200 and body.get("model") == MODEL and len(probs) == len(questions),
+        "status": status, "model": body.get("model"), "probabilities": probs,
+        "usage": usage if isinstance(usage, dict) else {},
+        "latency_ms": (time.monotonic() - started) * 1000, "error": error,
+    }
+
+
+def select(probabilities: dict[str, float], threshold: float) -> list[str]:
+    ranked = sorted(probabilities, key=lambda name: (-probabilities[name], name))
+    selected = [name for name in ranked if probabilities[name] >= threshold][:MAX_ENGINES]
+    return selected or ranked[:1]
+
+
+def baseline(resolver: Any, query: str) -> tuple[list[str], str]:
+    from slopsearx.service import SearchRequest
+    decision = resolver.resolve(SearchRequest(query=query))
+    return decision.selected_engines[:MAX_ENGINES], decision.routing_rule
+
+
+def metrics(rows: list[dict[str, Any]], field: str) -> dict[str, Any]:
+    tp = fp = fn = 0
+    families: dict[str, list[float]] = defaultdict(list)
+    for row in rows:
+        selected, target = set(row[field]), set(row["useful_engines"])
+        tp += len(selected & target); fp += len(selected - target); fn += len(target - selected)
+        families[row["family"]].append(len(selected & target) / len(target))
+    precision = tp / (tp + fp) if tp + fp else 0.0
+    recall = tp / (tp + fn) if tp + fn else 0.0
+    return {
+        "precision": precision, "recall": recall,
+        "f1": 2 * precision * recall / (precision + recall) if precision + recall else 0.0,
+        "macro_family_recall": statistics.fmean(statistics.fmean(v) for v in families.values()),
+        "family_recall": {k: statistics.fmean(v) for k, v in sorted(families.items())},
+        "mean_selected": statistics.fmean(len(r[field]) for r in rows),
+    }
+
+
+def p95(values: list[float]) -> float:
+    ordered = sorted(values)
+    return ordered[max(0, math.ceil(.95 * len(ordered)) - 1)]
+
+
+async def routing(args: argparse.Namespace) -> None:
+    repo, out = Path(args.repo).resolve(), Path(args.output).resolve()
+    registration = validate(repo)
+    cards_path, dev_path, eval_path = paths(repo)
+    cards = yaml.safe_load(cards_path.read_text())["engines"]
+    cases = load_json(dev_path if args.command == "development" else eval_path)
+    active, eligible, resolver = runtime(repo)
+    qs = engine_questions(active, eligible, cards)
+    key = os.environ.get("TYPESAFE_API_KEY", "")
+    if not key:
+        raise SystemExit("TYPESAFE_API_KEY is required")
+    selection_doc = json.loads(Path(args.selection).read_text()) if args.selection else None
+    rows, calls = [], []
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        for case in cases:
+            call = await call_jev(client, key, case["query"], qs)
+            calls.append(call)
+            base, rule = baseline(resolver, case["query"])
+            row = {**case, "baseline": base, "baseline_rule": rule, "valid": call["valid"],
+                   "probabilities": call["probabilities"], "latency_ms": call["latency_ms"]}
+            for threshold in THRESHOLDS:
+                row[f"jev@{threshold}"] = select(call["probabilities"], threshold) if call["valid"] else base
+            if selection_doc:
+                para = await call_jev(client, key, case["paraphrase"], qs)
+                calls.append(para)
+                threshold = float(selection_doc["threshold"])
+                row["paraphrase_valid"] = para["valid"]
+                row["paraphrase_selected"] = select(para["probabilities"], threshold) if para["valid"] else base
+            rows.append(row)
+    input_tokens = sum(int(c["usage"].get("input_tokens", 0) or 0) for c in calls)
+    if input_tokens > MAX_JEV_INPUT_TOKENS:
+        raise SystemExit("Jev token ceiling exceeded")
+    fields = ["baseline"] + [f"jev@{t}" for t in THRESHOLDS]
+    all_metrics = {field: metrics(rows, field) for field in fields}
+    summary: dict[str, Any] = {
+        "schema_version": 1, "model": MODEL, "registration": registration,
+        "split": "development" if args.command == "development" else "evaluation",
+        "metrics": all_metrics, "valid_calls": sum(c["valid"] for c in calls),
+        "total_calls": len(calls), "input_tokens": input_tokens,
+        "latency_ms": {"mean": statistics.fmean(c["latency_ms"] for c in calls),
+                       "p95": p95([c["latency_ms"] for c in calls])},
+    }
+    out.mkdir(parents=True, exist_ok=True)
+    if args.command == "development":
+        candidates = [f"jev@{t}" for t in THRESHOLDS]
+        chosen = sorted(candidates, key=lambda f: (
+            -all_metrics[f]["macro_family_recall"], -all_metrics[f]["f1"],
+            all_metrics[f]["mean_selected"], -float(f.split("@")[1])
+        ))[0]
+        selection = {
+            "schema_version": 1, "threshold": float(chosen.split("@")[1]),
+            "field": chosen, "development_metrics": all_metrics[chosen],
+            "eligible_engines": eligible, "question_schema_sha256": QUESTION_SCHEMA_SHA256,
+            "input_checksums": registration["checksums"],
+        }
+        (out / "selection.json").write_text(json.dumps(selection, indent=2, sort_keys=True) + "\n")
+        summary["selection"] = selection
+    else:
+        field = selection_doc["field"]
+        agreement = []
+        for row in rows:
+            a, b = set(row[field]), set(row["paraphrase_selected"])
+            agreement.append(len(a & b) / len(a | b) if a | b else 1.0)
+        chosen, base = all_metrics[field], all_metrics["baseline"]
+        worst_regression = max(base["family_recall"][f] - chosen["family_recall"][f] for f in FAMILIES)
+        gates = {
+            "recall": chosen["recall"] >= .85, "precision": chosen["precision"] >= .65,
+            "macro_family_recall": chosen["macro_family_recall"] >= .80,
+            "f1_gain": chosen["f1"] - base["f1"] >= .10,
+            "paraphrase_agreement": statistics.fmean(agreement) >= .90,
+            "family_regression": worst_regression <= .10,
+            "valid_pairs": sum(r["valid"] and r["paraphrase_valid"] for r in rows) >= 29,
+            "policy": all(set(r[field]) <= set(eligible) for r in rows),
+        }
+        summary.update({"selected_field": field, "paraphrase_agreement_mean_jaccard": statistics.fmean(agreement),
+                        "routing_gates": gates, "advance_to_acquisition": all(gates.values())})
+    (out / "rows.json").write_text(json.dumps(rows, indent=2, sort_keys=True) + "\n")
+    (out / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+    print(json.dumps(summary, indent=2, sort_keys=True))
+
+
+async def acquisition(args: argparse.Namespace) -> None:
+    repo, out = Path(args.repo).resolve(), Path(args.output).resolve()
+    evaluation = json.loads(Path(args.evaluation).read_text())
+    if not evaluation.get("advance_to_acquisition"):
+        raise SystemExit("held-out routing gates did not authorize acquisition")
+    rows = json.loads(Path(args.rows).read_text())
+    selection = json.loads(Path(args.selection).read_text())
+    field = selection["field"]
+    active, eligible, _ = runtime(repo)
+    from slopsearx.merger import merge_results
+
+    counts: Counter[str] = Counter()
+    evidence = []
+    for row in rows:
+        baseline_names, candidate_names = row["baseline"], row[field]
+        union = list(dict.fromkeys(baseline_names + candidate_names))
+        projected_non_brave = sum(v for k, v in counts.items() if k != "brave") + sum(n != "brave" for n in union)
+        if len(union) > 6 or projected_non_brave > 180:
+            raise SystemExit("non-Brave total dispatch ceiling would be exceeded")
+        if any(counts[n] >= (36 if n == "brave" else 30) for n in union):
+            raise SystemExit("per-engine dispatch ceiling would be exceeded")
+        started = time.monotonic()
+        responses = await asyncio.gather(*(active[n].search(row["query"], {}) for n in union))
+        feeds = {}
+        outcomes = []
+        for name, response in zip(union, responses):
+            counts[name] += 1
+            feeds[name] = response.results
+            outcomes.append({"engine": name, "status": response.status.value, "result_count": len(response.results),
+                             "latency_ms": response.latency_ms})
+        def view(names: list[str]) -> tuple[bool, float, int]:
+            merged = merge_results({n: feeds[n] for n in names}, strategy="presence")[:10]
+            targets = set(row["useful_engines"])
+            for rank, result in enumerate(merged, 1):
+                if set(result.engines) & targets:
+                    return True, 1 / rank, len(merged)
+            return False, 0.0, len(merged)
+        b_ok, b_rr, b_count = view(baseline_names)
+        c_ok, c_rr, c_count = view(candidate_names)
+        evidence.append({"id": row["id"], "family": row["family"], "query": row["query"],
+                         "useful_engines": row["useful_engines"], "baseline_engines": baseline_names,
+                         "candidate_engines": candidate_names, "baseline_success": b_ok,
+                         "candidate_success": c_ok, "baseline_rr": b_rr, "candidate_rr": c_rr,
+                         "baseline_top10_count": b_count, "candidate_top10_count": c_count,
+                         "outcomes": outcomes, "elapsed_ms": (time.monotonic() - started) * 1000})
+    baseline_success = sum(r["baseline_success"] for r in evidence)
+    candidate_success = sum(r["candidate_success"] for r in evidence)
+    wins = [r for r in evidence if r["candidate_success"] and not r["baseline_success"]]
+    losses = [r for r in evidence if r["baseline_success"] and not r["candidate_success"]]
+    family_losses = Counter(r["family"] for r in losses)
+    valid = sum(any(o["status"] == "ok" for o in r["outcomes"]) for r in evidence)
+    gates = {
+        "coverage_gain": candidate_success - baseline_success >= 3,
+        "specialist_wins": len(wins) >= 5 and len({r["family"] for r in wins}) >= 3,
+        "family_losses": max(family_losses.values(), default=0) <= 1,
+        "dispatch_budget": statistics.fmean(len(r["candidate_engines"]) for r in evidence) <= statistics.fmean(len(r["baseline_engines"]) for r in evidence),
+        "valid_rows": valid >= 29,
+        "call_budgets": counts["brave"] <= 36 and sum(v for k, v in counts.items() if k != "brave") <= 180,
+    }
+    summary = {"schema_version": 1, "baseline_coverage": baseline_success / 30,
+               "candidate_coverage": candidate_success / 30,
+               "absolute_coverage_gain": (candidate_success - baseline_success) / 30,
+               "baseline_mean_rr": statistics.fmean(r["baseline_rr"] for r in evidence),
+               "candidate_mean_rr": statistics.fmean(r["candidate_rr"] for r in evidence),
+               "unique_candidate_wins": len(wins), "unique_win_families": sorted({r["family"] for r in wins}),
+               "valid_rows": valid, "engine_call_counts": dict(sorted(counts.items())), "gates": gates,
+               "recommendation": "yes" if all(gates.values()) else ("no" if valid >= 29 else "inconclusive")}
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "acquisition-rows.json").write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n")
+    (out / "acquisition-summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+    print(json.dumps(summary, indent=2, sort_keys=True))
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command", choices=["validate", "development", "evaluation", "acquisition"])
+    parser.add_argument("--repo", default=".")
+    parser.add_argument("--output", default="/tmp/exp012")
+    parser.add_argument("--selection")
+    parser.add_argument("--evaluation")
+    parser.add_argument("--rows")
+    args = parser.parse_args()
+    if args.command == "validate":
+        print(json.dumps(validate(Path(args.repo).resolve()), indent=2, sort_keys=True)); return
+    if args.command == "evaluation" and not args.selection:
+        raise SystemExit("evaluation requires --selection")
+    if args.command == "acquisition":
+        if not all((args.selection, args.evaluation, args.rows)):
+            raise SystemExit("acquisition requires --selection, --evaluation, and --rows")
+        asyncio.run(acquisition(args)); return
+    asyncio.run(routing(args))
+
+
+if __name__ == "__main__":
+    main()

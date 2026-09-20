@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "threshold": 0.65,
+  "field": "jev@0.65",
+  "development_metrics": {
+    "f1": 0.6206896551724138,
+    "macro_family_recall": 0.6666666666666666,
+    "mean_selected": 2.5833333333333335,
+    "precision": 0.5806451612903226,
+    "recall": 0.6666666666666666
+  },
+  "eligible_engines": [
+    "arxiv", "ashby", "brave", "clinicaltrials", "crates", "crtsh", "cve",
+    "dockerhub", "duckduckgo", "edgar", "epss", "exploitdb", "github",
+    "google", "greenhouse", "greynoise", "hackernews", "huggingface", "lever",
+    "mitreattack", "musicbrainz", "nominatim", "npm", "nvd", "openalex",
+    "openfda", "openlibrary", "oyez", "pubchem", "pubmed", "pypi", "reddit",
+    "repology", "rubygems", "semanticscholar", "stackexchange", "uniprot",
+    "urlhaus", "wikipedia"
+  ],
+  "input_checksums": {
+    "development-v1.json": "d17f3ad009b3d442eef262a253129cbb9817c3287876dd421c0816926ef30b36",
+    "engine-routing-cards-v1.yaml": "80083136bd5e07df4fc8dcd6f4daa200527536d8634eaa288eb1c9e81f53981d",
+    "evaluation-v1.json": "1af498a2fcfa396103edc3cd743fa3ceb762efd13133ba584c5f8ec0a52a3409"
+  },
+  "question_schema_sha256": "d8fc3934d6c2108ae42d90a3ab4f26ceacffbfb14c5758805a3f1457757c565c"
+}
