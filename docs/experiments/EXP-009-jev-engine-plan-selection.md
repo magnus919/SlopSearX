@@ -1,6 +1,6 @@
 # EXP-009: Jev engine-plan selection
 
-Status: **registered; not yet executed**
+Status: **completed; supported for further research**
 
 ## Hypothesis
 
@@ -24,3 +24,12 @@ outside the offered non-sensitive plans; p95 at most 1,500 ms; and cost below
 Jev never receives or chooses sensitive plans, and could never bypass the
 shared policy gate or explicit engine/category selections.
 
+## Result
+
+All 15 calls were valid. Jev selected the labeled plan for 12/15 queries
+(`0.80`) versus 7/15 (`0.4667`) for the keyword router, an absolute gain of
+`+0.3333`, with no output outside the offered plans. The run is **supported for
+further research**.
+
+See the [suite results](JEV-FUNCTION-SUITE-RESULTS.md) and
+[evidence](evidence/EXP-009/summary.json).

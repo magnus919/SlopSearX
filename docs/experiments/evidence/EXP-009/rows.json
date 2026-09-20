@@ -1,0 +1,422 @@
+[
+  {
+    "baseline": "web",
+    "call": {
+      "error": null,
+      "latency_ms": 396.28945803269744,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 695,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p01",
+    "label": "code",
+    "probabilities": {
+      "code": 0.76,
+      "historical": 0.05,
+      "jobs": 0.02,
+      "news": 0.07,
+      "reference": 0.45,
+      "science": 0.07,
+      "social": 0.22,
+      "web": 0.39
+    },
+    "query": "why does pandas merge duplicate my rows",
+    "selected": "code"
+  },
+  {
+    "baseline": "web",
+    "call": {
+      "error": null,
+      "latency_ms": 211.1931670224294,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 700,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p02",
+    "label": "science",
+    "probabilities": {
+      "code": 0.05,
+      "historical": 0.03,
+      "jobs": 0.01,
+      "news": 0.05,
+      "reference": 0.08,
+      "science": 0.93,
+      "social": 0.03,
+      "web": 0.11
+    },
+    "query": "peer reviewed evidence for microplastic bioaccumulation",
+    "selected": "science"
+  },
+  {
+    "baseline": "news",
+    "call": {
+      "error": null,
+      "latency_ms": 170.21583300083876,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 695,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p03",
+    "label": "news",
+    "probabilities": {
+      "code": 0.04,
+      "historical": 0.07,
+      "jobs": 0.02,
+      "news": 0.86,
+      "reference": 0.14,
+      "science": 0.05,
+      "social": 0.2,
+      "web": 0.31
+    },
+    "query": "what changed in the election results today",
+    "selected": "news"
+  },
+  {
+    "baseline": "web",
+    "call": {
+      "error": null,
+      "latency_ms": 167.9421670269221,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 695,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p04",
+    "label": "social",
+    "probabilities": {
+      "code": 0.58,
+      "historical": 0.06,
+      "jobs": 0.06,
+      "news": 0.17,
+      "reference": 0.17,
+      "science": 0.11,
+      "social": 0.49,
+      "web": 0.15
+    },
+    "query": "what are developers saying about this library",
+    "selected": "code"
+  },
+  {
+    "baseline": "reference",
+    "call": {
+      "error": null,
+      "latency_ms": 193.6074160039425,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 696,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p05",
+    "label": "reference",
+    "probabilities": {
+      "code": 0.03,
+      "historical": 0.75,
+      "jobs": 0.01,
+      "news": 0.06,
+      "reference": 0.26,
+      "science": 0.08,
+      "social": 0.05,
+      "web": 0.56
+    },
+    "query": "definition and background of the Treaty of Utrecht",
+    "selected": "historical"
+  },
+  {
+    "baseline": "web",
+    "call": {
+      "error": null,
+      "latency_ms": 253.18699999479577,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 700,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p06",
+    "label": "historical",
+    "probabilities": {
+      "code": 0.12,
+      "historical": 0.88,
+      "jobs": 0.04,
+      "news": 0.08,
+      "reference": 0.14,
+      "science": 0.06,
+      "social": 0.1,
+      "web": 0.29
+    },
+    "query": "find the 2008 version of this deleted homepage",
+    "selected": "historical"
+  },
+  {
+    "baseline": "code",
+    "call": {
+      "error": null,
+      "latency_ms": 216.56125003937632,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 694,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p07",
+    "label": "jobs",
+    "probabilities": {
+      "code": 0.12,
+      "historical": 0.04,
+      "jobs": 0.9,
+      "news": 0.09,
+      "reference": 0.07,
+      "science": 0.04,
+      "social": 0.13,
+      "web": 0.17
+    },
+    "query": "staff platform engineer openings using Kubernetes",
+    "selected": "jobs"
+  },
+  {
+    "baseline": "web",
+    "call": {
+      "error": null,
+      "latency_ms": 147.55283296108246,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 696,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p08",
+    "label": "web",
+    "probabilities": {
+      "code": 0.07,
+      "historical": 0.03,
+      "jobs": 0.02,
+      "news": 0.05,
+      "reference": 0.32,
+      "science": 0.04,
+      "social": 0.19,
+      "web": 0.8
+    },
+    "query": "best way to repair a dripping kitchen faucet",
+    "selected": "web"
+  },
+  {
+    "baseline": "science",
+    "call": {
+      "error": null,
+      "latency_ms": 173.23579196818173,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 694,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p09",
+    "label": "science",
+    "probabilities": {
+      "code": 0.09,
+      "historical": 0.04,
+      "jobs": 0.02,
+      "news": 0.05,
+      "reference": 0.09,
+      "science": 0.89,
+      "social": 0.06,
+      "web": 0.11
+    },
+    "query": "papers measuring retrieval augmented generation accuracy",
+    "selected": "science"
+  },
+  {
+    "baseline": "web",
+    "call": {
+      "error": null,
+      "latency_ms": 191.82958302553743,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 698,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p10",
+    "label": "code",
+    "probabilities": {
+      "code": 0.82,
+      "historical": 0.06,
+      "jobs": 0.02,
+      "news": 0.11,
+      "reference": 0.2,
+      "science": 0.07,
+      "social": 0.17,
+      "web": 0.18
+    },
+    "query": "package release broke type checking, find issue and fix",
+    "selected": "code"
+  },
+  {
+    "baseline": "code",
+    "call": {
+      "error": null,
+      "latency_ms": 242.18433297937736,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 694,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p11",
+    "label": "social",
+    "probabilities": {
+      "code": 0.18,
+      "historical": 0.06,
+      "jobs": 0.04,
+      "news": 0.3,
+      "reference": 0.12,
+      "science": 0.07,
+      "social": 0.78,
+      "web": 0.17
+    },
+    "query": "community reactions to the product announcement",
+    "selected": "social"
+  },
+  {
+    "baseline": "reference",
+    "call": {
+      "error": null,
+      "latency_ms": 197.00883299810812,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 695,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p12",
+    "label": "historical",
+    "probabilities": {
+      "code": 0.22,
+      "historical": 0.82,
+      "jobs": 0.02,
+      "news": 0.06,
+      "reference": 0.2,
+      "science": 0.1,
+      "social": 0.09,
+      "web": 0.25
+    },
+    "query": "original archived documentation for an obsolete protocol",
+    "selected": "historical"
+  },
+  {
+    "baseline": "news",
+    "call": {
+      "error": null,
+      "latency_ms": 252.83145799767226,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 693,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p13",
+    "label": "news",
+    "probabilities": {
+      "code": 0.06,
+      "historical": 0.09,
+      "jobs": 0.17,
+      "news": 0.85,
+      "reference": 0.13,
+      "science": 0.04,
+      "social": 0.29,
+      "web": 0.2
+    },
+    "query": "company announced layoffs this morning",
+    "selected": "news"
+  },
+  {
+    "baseline": "reference",
+    "call": {
+      "error": null,
+      "latency_ms": 154.14445899659768,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 695,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p14",
+    "label": "reference",
+    "probabilities": {
+      "code": 0.17,
+      "historical": 0.11,
+      "jobs": 0.02,
+      "news": 0.05,
+      "reference": 0.52,
+      "science": 0.07,
+      "social": 0.07,
+      "web": 0.65
+    },
+    "query": "official manual explaining POSIX signal semantics",
+    "selected": "web"
+  },
+  {
+    "baseline": "jobs",
+    "call": {
+      "error": null,
+      "latency_ms": 204.5054589980282,
+      "model": "jev-1.13.0",
+      "status": 200,
+      "usage": {
+        "input_tokens": 694,
+        "output_tokens": 134
+      },
+      "valid": true
+    },
+    "id": "p15",
+    "label": "jobs",
+    "probabilities": {
+      "code": 0.07,
+      "historical": 0.04,
+      "jobs": 0.89,
+      "news": 0.09,
+      "reference": 0.06,
+      "science": 0.04,
+      "social": 0.17,
+      "web": 0.19
+    },
+    "query": "principal data engineer vacancies at startups",
+    "selected": "jobs"
+  }
+]

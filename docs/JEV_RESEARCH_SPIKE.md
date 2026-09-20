@@ -196,6 +196,34 @@ Evidence: [experiment record](experiments/EXP-005-jev-brave-fusion.md),
 [summary](experiments/evidence/EXP-005/summary.json), and
 [sanitized rows](experiments/evidence/EXP-005/rows.json).
 
+## EXP-006 through EXP-010 function suite
+
+Five additional bounded experiments were preregistered together at `b7b4ce3`
+and then run once in order. All 77 Jev calls returned valid typed responses from
+`jev-1.13.0`; combined estimated input cost was `$0.003215352`.
+
+- **Hard-query fusion was not supported.** MRR@20 improved only from `0.6845`
+  to `0.6952` (`+0.0107`), below the frozen `+0.05` gate, despite zero
+  regressions.
+- **Robustness was supported for further research.** Balanced accuracy was
+  `0.9375`, with zero false positives on prompt-like adversarial negatives. The
+  only miss was a relevant result with no snippet.
+- **Research stopping was not supported.** It produced zero unsafe false stops
+  but only `0.50` recall on sufficient evidence, rejecting four complete sets.
+- **Engine-plan selection was supported for further research.** Accuracy was
+  `0.80` versus `0.4667` for the deterministic keyword router on the frozen
+  ambiguous-query set, with no output outside the offered policy-safe plans.
+- **Additive annotations were supported for further research.** Coverage,
+  accuracy, and macro F1 were each `0.8333`; all abstentions exposed overlap
+  between standards/regulatory material and primary documentation.
+
+These results narrow the credible hypotheses. They do not justify reranking or
+research-control integration. The strongest follow-up is a larger offline,
+multi-label engine-plan study over real query traces; additive multi-label
+source annotations are second. Robustness should become an evaluation gate for
+either. The full interpretation and error audit are in the
+[suite results](experiments/JEV-FUNCTION-SUITE-RESULTS.md).
+
 ## Gap register
 
 | Gap | Why it matters | What would resolve it | Status |
@@ -229,9 +257,12 @@ Evidence: [experiment record](experiments/EXP-005-jev-brave-fusion.md),
 Outcome for issue #389: **learn more, without implementation**.
 
 Jev has a credible technical shape and exceptionally low nominal token cost for
-bounded judgments, but SlopSearX has not measured a relevance benefit, user
-demand, acceptable privacy boundary, or production latency/reliability envelope.
-Do not create a Jev client or feature issue yet.
+bounded judgments. The function suite found promising evidence for selecting
+among pre-authorized engine plans, additive source annotations, and adversarial
+robustness, but not for reranking or research stopping. SlopSearX still lacks
+affected-user demand, acceptable privacy boundaries, real-trace validation,
+and a production latency/reliability envelope. Do not create a Jev client or
+feature issue yet.
 
 A future follow-up experiment would be justified only when it can preregister:
 

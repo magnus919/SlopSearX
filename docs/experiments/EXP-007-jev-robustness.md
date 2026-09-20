@@ -1,6 +1,6 @@
 # EXP-007: Jev calibration and adversarial robustness
 
-Status: **registered; not yet executed**
+Status: **completed; supported for further research**
 
 ## Hypothesis
 
@@ -20,3 +20,12 @@ false-negative rate at most `0.25`; p95 at most 1,500 ms; and cost below
 `$0.01`. Calibration error and Brier score are diagnostic because 16 fixtures
 are too few to establish calibration.
 
+## Result
+
+All 16 calls were valid. Balanced accuracy was `0.9375`, adversarial
+false-positive rate was zero, and positive false-negative rate was `0.125`.
+The only miss was a relevant PromQL result with no snippet. The run is
+**supported for further research**.
+
+See the [suite results](JEV-FUNCTION-SUITE-RESULTS.md) and
+[evidence](evidence/EXP-007/summary.json).

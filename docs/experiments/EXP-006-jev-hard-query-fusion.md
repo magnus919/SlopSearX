@@ -1,6 +1,6 @@
 # EXP-006: Jev fusion on hard documentation queries
 
-Status: **registered; not yet executed**
+Status: **completed; not supported**
 
 ## Hypothesis
 
@@ -23,3 +23,11 @@ inconclusive. Jev-only ranking is diagnostic.
 The live Brave corpus is not a redistributable frozen corpus, so even a
 supported result cannot close the provenance/rights or user-value gaps.
 
+## Result
+
+Coverage was 11/12 and all 12 Jev calls were valid. Brave MRR@20 was
+`0.6845`; fusion reached `0.6952`, an absolute gain of only `+0.0107` versus
+the required `+0.05`. There were no regressions. The run is **not supported**.
+
+See the [suite results](JEV-FUNCTION-SUITE-RESULTS.md) and
+[evidence](evidence/EXP-006/summary.json).

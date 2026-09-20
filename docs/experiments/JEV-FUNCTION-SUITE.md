@@ -1,6 +1,6 @@
 # Jev bounded function experiments (EXP-006 through EXP-010)
 
-Status: **registered; not yet executed**
+Status: **completed**
 
 Registered: 2026-09-20
 
@@ -30,3 +30,5 @@ traffic, policy changes, or external transmission of user data. API keys,
 authorization headers, raw responses, and live Brave snippets are never
 retained. Costs use the registered `$0.042 / 1M input tokens` rate.
 
+Results and cross-experiment interpretation are in
+[JEV-FUNCTION-SUITE-RESULTS.md](JEV-FUNCTION-SUITE-RESULTS.md).
