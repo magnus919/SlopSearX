@@ -1,0 +1,296 @@
+from __future__ import annotations
+
+import argparse
+import asyncio
+import hashlib
+import json
+import math
+import os
+import platform
+import statistics
+import sys
+import time
+from pathlib import Path
+from typing import Any
+from urllib.parse import urlparse
+
+import httpx
+
+
+CASES = [
+    ("q01", "Python asyncio TaskGroup documentation", "docs.python.org", "exact", "/3/library/asyncio-task.html"),
+    ("q02", "Python pathlib documentation", "docs.python.org", "exact", "/3/library/pathlib.html"),
+    ("q03", "FastAPI response model documentation", "fastapi.tiangolo.com", "prefix", "/tutorial/response-model"),
+    ("q04", "PostgreSQL SELECT command documentation", "postgresql.org", "exact", "/docs/current/sql-select.html"),
+    ("q05", "Rust std Option enum documentation", "doc.rust-lang.org", "exact", "/std/option/enum.Option.html"),
+    ("q06", "npm package.json documentation", "docs.npmjs.com", "suffix", "/configuring-npm/package-json"),
+    ("q07", "GitHub Actions workflow syntax documentation", "docs.github.com", "suffix", "/workflow-syntax-for-github-actions"),
+    ("q08", "Docker Compose file reference", "docs.docker.com", "prefix", "/reference/compose-file"),
+    ("q09", "Kubernetes Deployment documentation", "kubernetes.io", "prefix", "/docs/concepts/workloads/controllers/deployment"),
+    ("q10", "Prometheus querying basics documentation", "prometheus.io", "prefix", "/docs/prometheus/latest/querying/basics"),
+    ("q11", "MDN Fetch API documentation", "developer.mozilla.org", "suffix", "/Web/API/Fetch_API"),
+    ("q12", "Terraform lifecycle meta-argument documentation", "developer.hashicorp.com", "prefix", "/terraform/language/meta-arguments/lifecycle"),
+]
+
+
+def norm_url(url: str) -> tuple[str, str]:
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower()
+    if host.startswith("www."):
+        host = host[4:]
+    return host, parsed.path.rstrip("/") or "/"
+
+
+def is_target(url: str, host: str, mode: str, expected_path: str) -> bool:
+    actual_host, actual_path = norm_url(url)
+    expected_path = expected_path.rstrip("/") or "/"
+    if actual_host != host:
+        return False
+    if mode == "exact":
+        return actual_path == expected_path
+    if mode == "prefix":
+        return actual_path == expected_path or actual_path.startswith(expected_path + "/")
+    if mode == "suffix":
+        return actual_path == expected_path or actual_path.endswith(expected_path)
+    raise ValueError(mode)
+
+
+def reciprocal_rank(results: list[Any], host: str, mode: str, path: str) -> tuple[float, int | None]:
+    for index, result in enumerate(results[:20], start=1):
+        if is_target(result.url, host, mode, path):
+            return 1.0 / index, index
+    return 0.0, None
+
+
+def percentile(values: list[float], p: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    return ordered[max(0, math.ceil(p * len(ordered)) - 1)]
+
+
+async def run(args: argparse.Namespace) -> int:
+    sys.path.insert(0, str(Path(args.repo).resolve()))
+    from engines.brave import BraveAdapter
+
+    typesafe_key = os.environ.get("TYPESAFE_API_KEY", "")
+    brave_key = os.environ.get("ENGINE_BRAVE_API_KEY", "")
+    if not typesafe_key or not brave_key:
+        raise SystemExit("TYPESAFE_API_KEY and ENGINE_BRAVE_API_KEY are required")
+
+    out = Path(args.output)
+    out.mkdir(parents=True, exist_ok=True)
+    engine = BraveAdapter({"timeout_ms": 8_000, "max_results": 20})
+    rows: list[dict[str, Any]] = []
+    jev_latencies: list[float] = []
+    total_input_tokens = 0
+    total_output_tokens = 0
+    started = time.time()
+
+    async with httpx.AsyncClient(timeout=args.request_timeout) as client:
+        for case_id, query, target_host, target_mode, target_path in CASES:
+            acquired = await engine.search(query, {"categories": ["general"]})
+            candidates = acquired.results[:20]
+            state_candidates = []
+            for index, result in enumerate(candidates):
+                host, path = norm_url(result.url)
+                state_candidates.append(
+                    {
+                        "index": index,
+                        "title": result.title,
+                        "url": f"{host}{path}",
+                        "snippet": (result.content or "")[:500],
+                    }
+                )
+            questions = {
+                f"r{index:03d}": {
+                    "type": "noul",
+                    "instructions": (
+                        f"Is candidate {index} a direct, useful result for the query, with strong preference "
+                        "for the official primary documentation page rather than a related discussion, mirror, "
+                        "tutorial, index page, or unrelated result?"
+                    ),
+                }
+                for index in range(len(candidates))
+            }
+
+            status_code: int | None = None
+            response_json: dict[str, Any] = {}
+            jev_error: str | None = None
+            call_started = time.monotonic()
+            try:
+                response = await client.post(
+                    "https://api.typesafe.ai/v1/systemone",
+                    headers={"Authorization": f"Bearer {typesafe_key}"},
+                    json={
+                        "model": args.model,
+                        "state": {"query": query, "candidates": state_candidates},
+                        "questions": questions,
+                    },
+                )
+                status_code = response.status_code
+                response_json = response.json()
+            except Exception as exc:  # no retry by registration
+                jev_error = f"{type(exc).__name__}: {exc}"
+            jev_latency_ms = (time.monotonic() - call_started) * 1000
+            jev_latencies.append(jev_latency_ms)
+
+            answers = response_json.get("answers", {}) if isinstance(response_json, dict) else {}
+            valid_answers = True
+            probabilities: list[float] = []
+            for index in range(len(candidates)):
+                answer = answers.get(f"r{index:03d}", {})
+                value = answer.get("noul") if isinstance(answer, dict) else None
+                if not isinstance(value, (int, float)) or not math.isfinite(value) or not 0 <= value <= 1:
+                    valid_answers = False
+                    probabilities.append(float("-inf"))
+                else:
+                    probabilities.append(float(value))
+            resolved_model = response_json.get("model") if isinstance(response_json, dict) else None
+            usage = response_json.get("usage", {}) if isinstance(response_json, dict) else {}
+            if isinstance(usage, dict):
+                total_input_tokens += int(usage.get("input_tokens", 0) or 0)
+                total_output_tokens += int(usage.get("output_tokens", 0) or 0)
+            valid_call = (
+                bool(candidates)
+                and status_code == 200
+                and resolved_model == args.model
+                and len(answers) == len(candidates)
+                and valid_answers
+                and isinstance(usage, dict)
+                and "input_tokens" in usage
+            )
+
+            jev_ranked: list[Any] = []
+            fused_ranked: list[Any] = []
+            fused_scores: list[float | None] = [None] * len(candidates)
+            if valid_call:
+                indexed = list(enumerate(candidates))
+                jev_indexed = sorted(
+                    indexed,
+                    key=lambda item: (-probabilities[item[0]], item[0], norm_url(item[1].url)),
+                )
+                jev_ranked = [item[1] for item in jev_indexed]
+                fused_scores = [
+                    0.70 * (1.0 / (index + 1)) + 0.30 * probabilities[index]
+                    for index in range(len(candidates))
+                ]
+                fused_indexed = sorted(
+                    indexed,
+                    key=lambda item: (-float(fused_scores[item[0]]), item[0], norm_url(item[1].url)),
+                )
+                fused_ranked = [item[1] for item in fused_indexed]
+
+            brave_rr, brave_rank = reciprocal_rank(candidates, target_host, target_mode, target_path)
+            jev_rr, jev_rank = reciprocal_rank(jev_ranked, target_host, target_mode, target_path) if valid_call else (0.0, None)
+            fusion_rr, fusion_rank = reciprocal_rank(fused_ranked, target_host, target_mode, target_path) if valid_call else (0.0, None)
+            target_present = brave_rank is not None
+            sanitized_candidates = [
+                {
+                    "brave_rank": index + 1,
+                    "url": result.url,
+                    "title": result.title,
+                    "snippet_chars": len(result.content or ""),
+                    "snippet_sha256": hashlib.sha256((result.content or "").encode()).hexdigest(),
+                    "jev_probability": probabilities[index] if valid_call else None,
+                    "fusion_score": fused_scores[index],
+                }
+                for index, result in enumerate(candidates)
+            ]
+            rows.append(
+                {
+                    "id": case_id,
+                    "query": query,
+                    "target": {"host": target_host, "mode": target_mode, "path": target_path},
+                    "target_present": target_present,
+                    "brave": {
+                        "status": acquired.status.value,
+                        "result_count": len(acquired.results),
+                        "latency_ms": acquired.latency_ms,
+                        "error": acquired.error_message,
+                        "rr": brave_rr,
+                        "rank": brave_rank,
+                    },
+                    "candidates": sanitized_candidates,
+                    "jev": {
+                        "http_status": status_code,
+                        "resolved_model": resolved_model,
+                        "valid": valid_call,
+                        "latency_ms": jev_latency_ms,
+                        "usage": usage if isinstance(usage, dict) else {},
+                        "error": jev_error,
+                        "rr": jev_rr,
+                        "rank": jev_rank,
+                    },
+                    "fusion": {"rr": fusion_rr, "rank": fusion_rank},
+                }
+            )
+            print(json.dumps({"id": case_id, "target_present": target_present, "valid": valid_call, "ranks": [brave_rank, jev_rank, fusion_rank]}), flush=True)
+
+    await engine.shutdown()
+    coverage = sum(row["target_present"] for row in rows)
+    valid_calls = sum(row["jev"]["valid"] for row in rows)
+    brave_mrr = statistics.fmean(row["brave"]["rr"] for row in rows)
+    jev_mrr = statistics.fmean(row["jev"]["rr"] for row in rows)
+    fusion_mrr = statistics.fmean(row["fusion"]["rr"] for row in rows)
+    regressions = 0
+    max_drop = 0
+    for row in rows:
+        if not row["target_present"] or not row["jev"]["valid"]:
+            continue
+        baseline_rank = row["brave"]["rank"]
+        fusion_rank = row["fusion"]["rank"]
+        if baseline_rank is not None and fusion_rank is not None and fusion_rank > baseline_rank:
+            regressions += 1
+            max_drop = max(max_drop, fusion_rank - baseline_rank)
+    cost = total_input_tokens / 1_000_000 * 0.042
+    p95 = percentile(jev_latencies, 0.95)
+    prerequisites = coverage >= 10 and valid_calls >= 11
+    supported = (
+        prerequisites
+        and fusion_mrr - brave_mrr >= 0.05
+        and regressions <= 2
+        and max_drop <= 3
+        and p95 is not None
+        and p95 <= 1_500
+        and cost < 0.01
+    )
+    outcome = "supported-for-further-research" if supported else ("not-supported" if prerequisites else "inconclusive")
+    summary = {
+        "experiment": "EXP-005",
+        "registration_commit": args.registration_commit,
+        "model": args.model,
+        "query_count": len(rows),
+        "target_present_count": coverage,
+        "valid_jev_calls": valid_calls,
+        "brave_mrr_at_20": brave_mrr,
+        "jev_standalone_mrr_at_20_diagnostic": jev_mrr,
+        "fusion_mrr_at_20": fusion_mrr,
+        "absolute_fusion_gain": fusion_mrr - brave_mrr,
+        "fusion_target_regressions": regressions,
+        "max_target_rank_drop": max_drop,
+        "jev_latency_ms": {"mean": statistics.fmean(jev_latencies), "p95_nearest_rank": p95, "max": max(jev_latencies)},
+        "usage": {"input_tokens": total_input_tokens, "output_tokens": total_output_tokens, "estimated_usd": cost},
+        "decision": outcome,
+        "started_unix": started,
+        "finished_unix": time.time(),
+        "runtime": {"python": sys.version, "platform": platform.platform()},
+    }
+    (out / "rows.json").write_text(json.dumps(rows, indent=2, sort_keys=True) + "\n")
+    (out / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+    print(json.dumps(summary, indent=2, sort_keys=True))
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--repo", default=".")
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--model", default="jev-1.13.0")
+    parser.add_argument("--registration-commit", required=True)
+    parser.add_argument("--request-timeout", type=float, default=30.0)
+    return asyncio.run(run(parser.parse_args()))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
