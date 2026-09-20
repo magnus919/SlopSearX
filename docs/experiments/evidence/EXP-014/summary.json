@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "model": "jev-1.13.0",
+  "recommendation": "supported",
+  "recommended_threshold": 0.65,
+  "jev": {"input_tokens": 84209, "valid_calls": 30, "total_calls": 30, "latency_ms": {"mean": 215.56108189785542, "p95": 296.7496250057593}},
+  "search_calls": {"brave": 30, "non_brave": 99},
+  "usable_rows": 30,
+  "curve": {
+    "0.450": {"essential_recall": 0.9615384615384616, "useful_recall": 0.75, "precision": 0.8717948717948718, "specialist_requests": 39, "weighted_utility": 54, "utility_per_request": 1.3846153846153846, "response_yield": 0.41025641025641024, "labeled_visible_yield": 0.358974358974359, "essential_coverage_current": 0.08, "essential_coverage_aware": 0.36, "viable": false},
+    "0.475": {"essential_recall": 0.9615384615384616, "useful_recall": 0.75, "precision": 0.8947368421052632, "specialist_requests": 38, "weighted_utility": 55, "utility_per_request": 1.4473684210526316, "response_yield": 0.39473684210526316, "labeled_visible_yield": 0.3684210526315789, "essential_coverage_current": 0.08, "essential_coverage_aware": 0.36, "viable": false},
+    "0.500": {"essential_recall": 0.9615384615384616, "useful_recall": 0.6666666666666666, "precision": 0.9166666666666666, "specialist_requests": 36, "weighted_utility": 55, "utility_per_request": 1.5277777777777777, "response_yield": 0.4166666666666667, "labeled_visible_yield": 0.3888888888888889, "essential_coverage_current": 0.08, "essential_coverage_aware": 0.36, "viable": false},
+    "0.525": {"essential_recall": 0.9615384615384616, "useful_recall": 0.6666666666666666, "precision": 0.9166666666666666, "specialist_requests": 36, "weighted_utility": 55, "utility_per_request": 1.5277777777777777, "response_yield": 0.4166666666666667, "labeled_visible_yield": 0.3888888888888889, "essential_coverage_current": 0.08, "essential_coverage_aware": 0.36, "viable": false},
+    "0.550": {"essential_recall": 0.9615384615384616, "useful_recall": 0.6666666666666666, "precision": 0.9428571428571428, "specialist_requests": 35, "weighted_utility": 56, "utility_per_request": 1.6, "response_yield": 0.4, "labeled_visible_yield": 0.4, "essential_coverage_current": 0.08, "essential_coverage_aware": 0.36, "viable": true},
+    "0.575": {"essential_recall": 0.9615384615384616, "useful_recall": 0.5833333333333334, "precision": 0.9411764705882353, "specialist_requests": 34, "weighted_utility": 55, "utility_per_request": 1.6176470588235294, "response_yield": 0.4117647058823529, "labeled_visible_yield": 0.4117647058823529, "essential_coverage_current": 0.08, "essential_coverage_aware": 0.36, "viable": true},
+    "0.600": {"essential_recall": 0.9615384615384616, "useful_recall": 0.5833333333333334, "precision": 0.9411764705882353, "specialist_requests": 34, "weighted_utility": 55, "utility_per_request": 1.6176470588235294, "response_yield": 0.4117647058823529, "labeled_visible_yield": 0.4117647058823529, "essential_coverage_current": 0.08, "essential_coverage_aware": 0.36, "viable": true},
+    "0.625": {"essential_recall": 0.9230769230769231, "useful_recall": 0.5833333333333334, "precision": 0.96875, "specialist_requests": 32, "weighted_utility": 54, "utility_per_request": 1.6875, "response_yield": 0.4375, "labeled_visible_yield": 0.4375, "essential_coverage_current": 0.08, "essential_coverage_aware": 0.36, "viable": true},
+    "0.650": {"essential_recall": 0.9230769230769231, "useful_recall": 0.5833333333333334, "precision": 0.96875, "specialist_requests": 32, "weighted_utility": 54, "utility_per_request": 1.6875, "response_yield": 0.4375, "labeled_visible_yield": 0.4375, "essential_coverage_current": 0.08, "essential_coverage_aware": 0.36, "viable": true}
+  }
+}
