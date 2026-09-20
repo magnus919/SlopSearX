@@ -1,0 +1,325 @@
+from __future__ import annotations
+
+import argparse
+import asyncio
+import copy
+import hashlib
+import json
+import math
+import os
+import platform
+import statistics
+import sys
+import time
+from dataclasses import asdict
+from pathlib import Path
+from typing import Any
+from urllib.parse import urlparse
+
+import httpx
+
+
+CASES = [
+    ("q01", "Python asyncio TaskGroup documentation", "docs.python.org", "exact", "/3/library/asyncio-task.html"),
+    ("q02", "Python pathlib documentation", "docs.python.org", "exact", "/3/library/pathlib.html"),
+    ("q03", "FastAPI response model documentation", "fastapi.tiangolo.com", "prefix", "/tutorial/response-model"),
+    ("q04", "PostgreSQL SELECT command documentation", "postgresql.org", "exact", "/docs/current/sql-select.html"),
+    ("q05", "Rust std Option enum documentation", "doc.rust-lang.org", "exact", "/std/option/enum.Option.html"),
+    ("q06", "npm package.json documentation", "docs.npmjs.com", "suffix", "/configuring-npm/package-json"),
+    ("q07", "GitHub Actions workflow syntax documentation", "docs.github.com", "suffix", "/workflow-syntax-for-github-actions"),
+    ("q08", "Docker Compose file reference", "docs.docker.com", "prefix", "/reference/compose-file"),
+    ("q09", "Kubernetes Deployment documentation", "kubernetes.io", "prefix", "/docs/concepts/workloads/controllers/deployment"),
+    ("q10", "Prometheus querying basics documentation", "prometheus.io", "prefix", "/docs/prometheus/latest/querying/basics"),
+    ("q11", "MDN Fetch API documentation", "developer.mozilla.org", "suffix", "/Web/API/Fetch_API"),
+    ("q12", "Terraform lifecycle meta-argument documentation", "developer.hashicorp.com", "prefix", "/terraform/language/meta-arguments/lifecycle"),
+]
+
+
+def norm_url(url: str) -> tuple[str, str]:
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower()
+    if host.startswith("www."):
+        host = host[4:]
+    path = parsed.path.rstrip("/") or "/"
+    return host, path
+
+
+def is_target(url: str, host: str, mode: str, expected_path: str) -> bool:
+    actual_host, actual_path = norm_url(url)
+    expected_path = expected_path.rstrip("/") or "/"
+    if actual_host != host:
+        return False
+    if mode == "exact":
+        return actual_path == expected_path
+    if mode == "prefix":
+        return actual_path == expected_path or actual_path.startswith(expected_path + "/")
+    if mode == "suffix":
+        return actual_path == expected_path or actual_path.endswith(expected_path)
+    raise ValueError(mode)
+
+
+def reciprocal_rank(results: list[Any], host: str, mode: str, path: str, k: int = 20) -> tuple[float, int | None]:
+    for index, result in enumerate(results[:k], start=1):
+        if is_target(result.url, host, mode, path):
+            return 1.0 / index, index
+    return 0.0, None
+
+
+def percentile(values: list[float], p: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    index = max(0, math.ceil(p * len(ordered)) - 1)
+    return ordered[index]
+
+
+async def run(args: argparse.Namespace) -> int:
+    sys.path.insert(0, str(Path(args.repo).resolve()))
+    from engines.duckduckgo import DuckDuckGoAdapter
+    from engines.google import GoogleAdapter
+    from engines.stackexchange import StackExchangeAdapter
+    from engines.wikipedia import WikipediaAdapter
+    from slopsearx.merger import PresenceRanker, ReciprocalRankFusionRanker
+
+    key = os.environ.get("TYPESAFE_API_KEY", "")
+    if not key:
+        raise SystemExit("TYPESAFE_API_KEY is required")
+
+    out = Path(args.output)
+    out.mkdir(parents=True, exist_ok=True)
+    engine_classes = [DuckDuckGoAdapter, GoogleAdapter, WikipediaAdapter, StackExchangeAdapter]
+    engines = {
+        cls.name: cls({"timeout_ms": 8_000, "max_results": 10})
+        for cls in engine_classes
+    }
+    rows: list[dict[str, Any]] = []
+    jev_latencies: list[float] = []
+    total_input_tokens = 0
+    total_output_tokens = 0
+    started = time.time()
+
+    async with httpx.AsyncClient(timeout=args.request_timeout) as client:
+        for case_id, query, target_host, target_mode, target_path in CASES:
+            acquired = await asyncio.gather(
+                *(engine.search(query, {"categories": ["general"]}) for engine in engines.values())
+            )
+            feeds = {name: response.results for name, response in zip(engines, acquired)}
+            engine_outcomes = {
+                name: {
+                    "status": response.status.value,
+                    "result_count": len(response.results),
+                    "latency_ms": response.latency_ms,
+                    "error": response.error_message,
+                }
+                for name, response in zip(engines, acquired)
+            }
+            presence = PresenceRanker().rank(copy.deepcopy(feeds), query)
+            rrf = ReciprocalRankFusionRanker().rank(copy.deepcopy(feeds), query)
+            candidates = rrf[: args.max_candidates]
+            state_candidates = []
+            for index, result in enumerate(candidates):
+                host, path = norm_url(result.url)
+                state_candidates.append(
+                    {
+                        "index": index,
+                        "title": result.title,
+                        "url": f"{host}{path}",
+                        "snippet": (result.content or "")[: args.max_snippet_chars],
+                    }
+                )
+            state = {"query": query, "candidates": state_candidates}
+            questions = {
+                f"r{index:03d}": {
+                    "type": "noul",
+                    "instructions": (
+                        f"Is candidate {index} a direct, useful result for the query, with strong preference "
+                        "for the official primary documentation page rather than a related discussion, mirror, "
+                        "tutorial, index page, or unrelated result?"
+                    ),
+                }
+                for index in range(len(candidates))
+            }
+
+            status_code: int | None = None
+            response_json: dict[str, Any] = {}
+            jev_error: str | None = None
+            call_started = time.monotonic()
+            try:
+                response = await client.post(
+                    "https://api.typesafe.ai/v1/systemone",
+                    headers={"Authorization": f"Bearer {key}"},
+                    json={"model": args.model, "state": state, "questions": questions},
+                )
+                status_code = response.status_code
+                response_json = response.json()
+            except Exception as exc:  # preserve failure; do not retry
+                jev_error = f"{type(exc).__name__}: {exc}"
+            jev_latency_ms = (time.monotonic() - call_started) * 1000
+            jev_latencies.append(jev_latency_ms)
+
+            answers = response_json.get("answers", {}) if isinstance(response_json, dict) else {}
+            valid_answers = True
+            probabilities: list[float] = []
+            for index in range(len(candidates)):
+                answer = answers.get(f"r{index:03d}", {})
+                value = answer.get("noul") if isinstance(answer, dict) else None
+                if not isinstance(value, (int, float)) or not math.isfinite(value) or not 0 <= value <= 1:
+                    valid_answers = False
+                    probabilities.append(float("-inf"))
+                else:
+                    probabilities.append(float(value))
+            resolved_model = response_json.get("model") if isinstance(response_json, dict) else None
+            usage = response_json.get("usage", {}) if isinstance(response_json, dict) else {}
+            if isinstance(usage, dict):
+                total_input_tokens += int(usage.get("input_tokens", 0) or 0)
+                total_output_tokens += int(usage.get("output_tokens", 0) or 0)
+            valid_call = (
+                status_code == 200
+                and resolved_model == args.model
+                and len(answers) == len(candidates)
+                and valid_answers
+                and isinstance(usage, dict)
+                and "input_tokens" in usage
+            )
+            jev_ranked = []
+            if valid_call:
+                indexed = list(enumerate(candidates))
+                indexed.sort(key=lambda item: (-probabilities[item[0]], item[0], norm_url(item[1].url)))
+                jev_ranked = [item[1] for item in indexed]
+
+            presence_rr, presence_rank = reciprocal_rank(presence, target_host, target_mode, target_path)
+            rrf_rr, rrf_rank = reciprocal_rank(rrf, target_host, target_mode, target_path)
+            jev_rr, jev_rank = (
+                reciprocal_rank(jev_ranked, target_host, target_mode, target_path)
+                if valid_call
+                else (0.0, None)
+            )
+            target_present = any(is_target(r.url, target_host, target_mode, target_path) for r in rrf)
+            sanitized_candidates = []
+            for index, result in enumerate(candidates):
+                sanitized_candidates.append(
+                    {
+                        "index": index,
+                        "url": result.url,
+                        "title": result.title,
+                        "engines": sorted(result.engines),
+                        "tier": result.tier,
+                        "rrf_score": result.score,
+                        "snippet_chars": len(result.content or ""),
+                        "snippet_sha256": hashlib.sha256((result.content or "").encode()).hexdigest(),
+                        "jev_probability": probabilities[index] if valid_call else None,
+                    }
+                )
+            rows.append(
+                {
+                    "id": case_id,
+                    "query": query,
+                    "target": {"host": target_host, "mode": target_mode, "path": target_path},
+                    "target_present": target_present,
+                    "engine_outcomes": engine_outcomes,
+                    "candidate_count": len(candidates),
+                    "candidates": sanitized_candidates,
+                    "presence": {"rr": presence_rr, "rank": presence_rank},
+                    "rrf": {"rr": rrf_rr, "rank": rrf_rank},
+                    "jev": {
+                        "http_status": status_code,
+                        "resolved_model": resolved_model,
+                        "valid": valid_call,
+                        "latency_ms": jev_latency_ms,
+                        "usage": usage if isinstance(usage, dict) else {},
+                        "error": jev_error,
+                        "rr": jev_rr,
+                        "rank": jev_rank,
+                    },
+                }
+            )
+            print(json.dumps({"id": case_id, "target_present": target_present, "valid": valid_call, "ranks": [presence_rank, rrf_rank, jev_rank]}), flush=True)
+
+    for engine in engines.values():
+        await engine.shutdown()
+
+    presence_mrr = statistics.fmean(row["presence"]["rr"] for row in rows)
+    rrf_mrr = statistics.fmean(row["rrf"]["rr"] for row in rows)
+    jev_mrr = statistics.fmean(row["jev"]["rr"] for row in rows)
+    stronger_name = "rrf" if rrf_mrr >= presence_mrr else "presence"
+    stronger_mrr = max(presence_mrr, rrf_mrr)
+    present_count = sum(row["target_present"] for row in rows)
+    valid_count = sum(row["jev"]["valid"] for row in rows)
+    regressions = 0
+    max_drop = 0
+    for row in rows:
+        if not row["target_present"] or not row["jev"]["valid"]:
+            continue
+        baseline_rank = row[stronger_name]["rank"]
+        candidate_rank = row["jev"]["rank"]
+        if baseline_rank is not None and candidate_rank is not None and candidate_rank > baseline_rank:
+            regressions += 1
+            max_drop = max(max_drop, candidate_rank - baseline_rank)
+    estimated_cost = total_input_tokens / 1_000_000 * 0.042
+    summary = {
+        "baseline_sha": "d4fc9b741795de55216ad49b1ac9d7c8a39d11e0",
+        "registration_commit": "3fe19931505fb274546e6686711b3765a92d96b8",
+        "model": args.model,
+        "query_count": len(rows),
+        "target_present_count": present_count,
+        "valid_jev_calls": valid_count,
+        "presence_mrr_at_20": presence_mrr,
+        "rrf_mrr_at_20": rrf_mrr,
+        "stronger_baseline": stronger_name,
+        "stronger_baseline_mrr_at_20": stronger_mrr,
+        "jev_mrr_at_20": jev_mrr,
+        "absolute_gain": jev_mrr - stronger_mrr,
+        "target_regressions": regressions,
+        "max_target_rank_drop": max_drop,
+        "jev_latency_ms": {
+            "mean": statistics.fmean(jev_latencies),
+            "p95_nearest_rank": percentile(jev_latencies, 0.95),
+            "max": max(jev_latencies),
+        },
+        "usage": {
+            "input_tokens": total_input_tokens,
+            "output_tokens": total_output_tokens,
+            "estimated_usd_at_0_042_per_million_input": estimated_cost,
+        },
+        "elapsed_seconds": time.time() - started,
+        "environment": {
+            "python": sys.version,
+            "platform": platform.platform(),
+            "httpx": httpx.__version__,
+        },
+    }
+    primary_pass = summary["absolute_gain"] >= 0.10
+    guardrails = {
+        "coverage": present_count >= 8,
+        "valid_calls": valid_count >= 10,
+        "regressions": regressions <= 2 and max_drop <= 5,
+        "latency": (summary["jev_latency_ms"]["p95_nearest_rank"] or float("inf")) <= 1500 and max(jev_latencies) <= 3000,
+        "cost": estimated_cost <= 0.02 and total_input_tokens <= 500_000,
+    }
+    summary["primary_pass"] = primary_pass
+    summary["guardrails"] = guardrails
+    if present_count < 8 or valid_count < 10:
+        summary["outcome"] = "inconclusive"
+    elif primary_pass and all(guardrails.values()):
+        summary["outcome"] = "supported"
+    else:
+        summary["outcome"] = "not-supported"
+    (out / "rows.json").write_text(json.dumps(rows, indent=2, sort_keys=True) + "\n")
+    (out / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+    print(json.dumps(summary, indent=2, sort_keys=True))
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--repo", required=True)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--model", required=True)
+    parser.add_argument("--max-candidates", type=int, required=True)
+    parser.add_argument("--max-snippet-chars", type=int, required=True)
+    parser.add_argument("--request-timeout", type=float, required=True)
+    return asyncio.run(run(parser.parse_args()))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

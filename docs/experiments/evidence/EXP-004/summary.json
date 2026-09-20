@@ -1,0 +1,41 @@
+{
+  "absolute_gain": 0.0,
+  "baseline_sha": "d4fc9b741795de55216ad49b1ac9d7c8a39d11e0",
+  "elapsed_seconds": 2.8611316680908203,
+  "environment": {
+    "httpx": "0.28.1",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "python": "3.12.11 (main, Jun 12 2025, 12:22:42) [Clang 20.1.4 ]"
+  },
+  "guardrails": {
+    "cost": true,
+    "coverage": false,
+    "latency": true,
+    "regressions": true,
+    "valid_calls": false
+  },
+  "jev_latency_ms": {
+    "max": 318.36887501413,
+    "mean": 129.98839932940123,
+    "p95_nearest_rank": 318.36887501413
+  },
+  "jev_mrr_at_20": 0.0,
+  "max_target_rank_drop": 0,
+  "model": "jev-1.13.0",
+  "outcome": "inconclusive",
+  "presence_mrr_at_20": 0.0,
+  "primary_pass": false,
+  "query_count": 12,
+  "registration_commit": "3fe19931505fb274546e6686711b3765a92d96b8",
+  "rrf_mrr_at_20": 0.0,
+  "stronger_baseline": "rrf",
+  "stronger_baseline_mrr_at_20": 0.0,
+  "target_present_count": 0,
+  "target_regressions": 0,
+  "usage": {
+    "estimated_usd_at_0_042_per_million_input": 1.6506e-05,
+    "input_tokens": 393,
+    "output_tokens": 23
+  },
+  "valid_jev_calls": 1
+}
