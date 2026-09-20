@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "model": "jev-1.13.0",
+  "split": "development",
+  "input_tokens": 50069,
+  "valid_calls": 12,
+  "total_calls": 12,
+  "latency_ms": {"mean": 236.5547845935604, "p95": 509.7302910289727},
+  "baseline": {"f1": 0.09523809523809525, "precision": 0.08333333333333333, "recall": 0.1111111111111111, "macro_family_recall": 0.08333333333333333, "mean_selected": 3.0},
+  "jev@0.45": {"f1": 0.5901639344262295, "precision": 0.5294117647058824, "recall": 0.6666666666666666, "macro_family_recall": 0.6666666666666666, "mean_selected": 2.8333333333333335},
+  "jev@0.55": {"f1": 0.6, "precision": 0.5454545454545454, "recall": 0.6666666666666666, "macro_family_recall": 0.6666666666666666, "mean_selected": 2.75},
+  "jev@0.65": {"f1": 0.6206896551724138, "precision": 0.5806451612903226, "recall": 0.6666666666666666, "macro_family_recall": 0.6666666666666666, "mean_selected": 2.5833333333333335},
+  "selected": "jev@0.65"
+}
