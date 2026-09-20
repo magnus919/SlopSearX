@@ -42,6 +42,24 @@ class MyEngine(EngineAdapter):
 | `engine_type` | No | `"api"` | `"api"` (structured JSON API), `"scrape"` (HTML parsing), `"structured"` (e.g. Wikipedia). |
 | `categories` | No | `["general"]` | SearXNG-compatible category tags. Determines which `?categories=` queries include this engine. Can use namespace prefixes: `github:code`, `huggingface:datasets`. |
 
+### Jev routing metadata
+
+Every built-in engine must also be classified in the production routing
+catalog in `slopsearx/jev.py`. General and broad-support engines receive a role
+only and are never sent to Jev. A specialist receives a routing card with:
+
+| Field | Meaning |
+|---|---|
+| `purpose` | Short factual description of the specialist corpus or capability. |
+| `use_when` | A discriminating condition for when it adds evidence beyond ordinary web search. |
+
+This metadata is separate from policy and runtime eligibility. Credentials,
+sensitive-engine grants, enabled state, and circuit health are checked by
+SlopSearX before Jev receives the candidate list. Run
+`pytest --no-cov -q tests/test_jev.py`; its completeness contract fails when a
+built-in engine and the routing catalog diverge. Full behavior is documented
+in [TypeSafe Jev specialist routing](JEV_ROUTING.md).
+
 ### Declarative capability metadata (audited, issue 185)
 
 Every registered adapter additionally declares the capability surface it
