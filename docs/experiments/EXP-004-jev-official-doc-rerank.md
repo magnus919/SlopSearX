@@ -144,4 +144,48 @@
 
 ## Readout
 
-Pending. Append results without rewriting the registration.
+### Inconclusive (2026-09-20)
+
+The frozen run completed with exit zero, but the acquisition layer supplied no
+usable evaluation corpus. None of the 12 canonical targets appeared and only
+one query produced any candidate at all. DuckDuckGo reported challenge walls on
+both HTML frontends for every query, Google reported blocked for every query,
+Wikipedia returned HTTP 403 for every query, and Stack Exchange produced one
+result across the corpus. This failed the preregistered minimum of eight
+retrieved targets before Jev ranking quality could be measured.
+
+The harness made the registered one request per query without retries. Eleven
+empty-candidate requests returned HTTP 422 because their question maps were
+empty. The one non-empty request returned HTTP 200 from the pinned
+`jev-1.13.0`, with a complete typed answer. These 422 responses are a downstream
+effect of empty acquisition, not evidence of Jev unreliability. There were only
+393 billed input tokens and 23 output tokens, for an estimated Jev cost of
+`$0.000016506` at the registered price. Observed request latency was 130.0 ms
+mean and 318.4 ms maximum/p95 by nearest rank, but only one request exercised a
+real candidate, so this is not a representative latency estimate.
+
+Presence, RRF, and Jev MRR@20 were all zero because target coverage was zero.
+The primary `+0.10` effect therefore cannot be evaluated. The exact registered
+outcome is **inconclusive**, not `not-supported`: the failed coverage and valid-
+call guardrails prevent interpreting the zero metric as evidence for or against
+Jev reranking.
+
+No prompt, corpus, engine set, timeout, query, target, or decision rule was
+changed after registration, and no measured request was retried. No source,
+configuration, dependency, API, MCP, portal, cache, snapshot, policy, or filter
+behavior changed. A future attempt is justified only with a frozen,
+redistributable captured candidate corpus or an environment already proven to
+return adequate candidates; it must be a new linked experiment with a new
+registration rather than a rerun of EXP-004.
+
+Evidence: [summary](evidence/EXP-004/summary.json),
+[per-query sanitized rows](evidence/EXP-004/rows.json),
+[exact harness](evidence/EXP-004/harness.py.txt), and
+[checksums](evidence/EXP-004/SHA256SUMS.txt). Snippet bodies were not retained;
+the rows contain their lengths and SHA256 hashes. The rotated API key and
+authorization headers were never written to evidence.
+
+Decision: do not open an implementation issue from EXP-004. Preserve the
+provider/architecture discovery separately and consider a captured-corpus
+confirmation experiment only after its provenance, rights, labels, and
+candidate coverage are established.
