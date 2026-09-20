@@ -1,6 +1,6 @@
 # EXP-005: Jev fusion over Brave candidates
 
-Status: **registered; not yet executed**
+Status: **completed; not supported on this corpus because the baseline was saturated**
 
 Registered: 2026-09-20
 
@@ -104,3 +104,36 @@ English official-documentation task. It would not establish user demand,
 privacy acceptance, multilingual quality, production reliability, cache and
 snapshot semantics, portal disclosure, or permission to ship. Those open gaps
 remain in the #389 research report.
+
+## Result (2026-09-20)
+
+The registered harness ran once from registration commit `962ecf4`, without
+retries or changes. Brave returned status `ok` for all 12 queries and supplied
+13-20 candidates per query. Every canonical official-documentation target was
+already Brave's first result, so the baseline MRR@20 was the maximum possible
+`1.0`.
+
+All 12 Jev requests returned HTTP 200 with a complete typed answer from the
+pinned `jev-1.13.0` model. Jev standalone and the fixed fusion also placed every
+target first: MRR@20 `1.0`, zero regressions, and maximum rank drop zero. Jev
+request latency was 235.3 ms mean and 451.2 ms p95/max by nearest rank. The run
+used 40,789 input tokens and 4,190 output tokens, for an estimated input cost of
+`$0.001713138` at the registered price.
+
+The exact registered outcome is **not supported** because the required absolute
+fusion gain was `+0.05` and observed gain was `0.0`. This is a ceiling effect:
+fusion could not improve targets that Brave had already ranked first. The run
+therefore establishes reliable acquisition, valid low-cost Jev judgments, and
+no regression on these easy navigational queries, but it does not measure
+incremental relevance value on ambiguous or difficult searches.
+
+Do not tune this experiment after the result. A further experiment would need
+independently labeled queries where the baseline has genuine ranking headroom,
+preferably in a frozen redistributable corpus. That is new research, not a
+reinterpretation or rerun of EXP-005.
+
+Evidence: [summary](evidence/EXP-005/summary.json),
+[sanitized per-query rows](evidence/EXP-005/rows.json),
+[exact harness](evidence/EXP-005/harness.py.txt), and
+[checksums](evidence/EXP-005/SHA256SUMS.txt). Snippet bodies and credentials
+were not retained.
