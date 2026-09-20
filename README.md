@@ -252,6 +252,18 @@ Brave API key (`ENGINE_BRAVE_API_KEY`) for a reliable API-backed web-search
 source. A Brave key supplements the other active Tier-1 engines; it does not
 disable them.
 
+### Optional Jev specialist routing
+
+Set `TYPESAFE_API_KEY` to enable TypeSafe Jev routing automatically. SlopSearX
+keeps its ordinary general-engine base and asks Jev which eligible specialist
+engines can add distinctive evidence for the query. Every specialist meeting
+the `0.65` threshold is added; there is no arbitrary engine-count cap. Without
+the key, or if Jev is unavailable, the existing deterministic routing path is
+used unchanged. Explicit engine, category, and media scopes never invoke Jev.
+
+See [TypeSafe Jev specialist routing](docs/JEV_ROUTING.md) for configuration,
+failure behavior, policy boundaries, and routing-card maintenance.
+
 To surface successful scrape responses that parse to zero results, enable the
 opt-in diagnostic flag. These entries appear in `meta.empty_engines`; they are
 warnings rather than failures because a search can legitimately have no matches.

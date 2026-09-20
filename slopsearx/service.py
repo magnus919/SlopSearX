@@ -54,6 +54,7 @@ from slopsearx.filters import (
     resolve_filter_enforcement,
     time_range_window,
 )
+from slopsearx.jev import JevSpecialistRouter
 from slopsearx.logging import capture_exception
 from slopsearx.merger import create_ranker, extract_empty_scrape_engines, ranking_explanation
 from slopsearx.payload import _json_safe, payload_for_persistence, payload_from_dict
@@ -164,6 +165,8 @@ class ScopeDecision:
     routing_fallback: bool = False
     routing_budget_applied: bool = False
     routing_tradeoffs: list[RoutingTradeoff] = field(default_factory=list)
+    jev_added_engines: list[str] = field(default_factory=list)
+    jev_scores: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -264,6 +267,7 @@ class AppContext:
     catalog: CapabilityCatalog | None = None
     routing_budget: RoutingBudget | None = None
     ranking_strategy: str = "presence"
+    jev_router: JevSpecialistRouter | None = None
 
 
 async def build_context() -> AppContext:
@@ -365,6 +369,7 @@ async def build_context() -> AppContext:
         catalog=catalog,
         routing_budget=routing_budget,
         ranking_strategy=cfg.ranking.strategy,
+        jev_router=JevSpecialistRouter.from_environment(),
     )
 
 
@@ -683,6 +688,31 @@ class SearchService:
             raise QueryValidationError(str(exc), exc.field) from exc
 
         scope = self._resolver_for().resolve(request)
+        # A configured TypeSafe key enables additive specialist routing for
+        # otherwise-unscoped searches. Explicit engines/categories/media stay
+        # fully caller-controlled. Policy/auth/health eligibility is applied
+        # before Jev sees the candidate list, and any Jev failure preserves the
+        # deterministic scope unchanged.
+        if (
+            self._ctx.jev_router is not None
+            and not request.engines
+            and not request.categories
+            and request.media_type is None
+        ):
+            decision = await self._ctx.jev_router.route(
+                request.query,
+                self._ctx.active_engines,
+                self._ctx.catalog,
+                set(self._ctx.sensitive_engines),
+                cache=self._ctx.cache,
+            )
+            if decision is not None:
+                additions = [name for name in decision.engines if name not in scope.selected_engines]
+                scope.selected_engines.extend(additions)
+                scope.jev_added_engines = additions
+                scope.jev_scores = {name: decision.scores[name] for name in additions}
+                if additions:
+                    scope.routing_rule += "+jev specialists"
         if request.safesearch == 2:
             safe_report = resolve_filter_enforcement(
                 scope.selected_engines,
@@ -710,6 +740,14 @@ class SearchService:
         # circuit state, catalog availability, or the routing budget
         # invalidates the cache entry for this query.
         routing_digest = _routing_cache_digest(self._ctx)
+        if self._ctx.jev_router is not None:
+            routing_digest += ":jev=" + self._ctx.jev_router.cache_identity()
+            routing_digest += (
+                ":scope="
+                + hashlib.sha256(repr((scope.selected_engines, sorted(scope.jev_scores.items()))).encode()).hexdigest()[
+                    :16
+                ]
+            )
 
         if not scope.selected_engines:
             # No engines available at all — 503 with no dispatch.
@@ -944,6 +982,8 @@ class SearchService:
             request.query,
             search_params,
         )
+        if scope.jev_added_engines:
+            ranked = _promote_jev_specialists(ranked, responses, scope)
 
         elapsed_ms = (time.monotonic() - t_start) * 1000
 
@@ -1279,6 +1319,28 @@ def generate_query_id() -> str:
     return f"ssx-{uuid.uuid4().hex[:8]}"
 
 
+def _promote_jev_specialists(
+    ranked: list[SearchResult], responses: dict[str, AdapterResponse], scope: ScopeDecision
+) -> list[SearchResult]:
+    """Make one result per responding Jev-selected specialist visible first."""
+    promoted: list[SearchResult] = []
+    seen: set[str] = set()
+    ordered = sorted(scope.jev_added_engines, key=lambda name: (-scope.jev_scores.get(name, 0.0), name))
+    for name in ordered:
+        for result in responses.get(name, AdapterResponse([], EngineStatus.UNAVAILABLE)).results:
+            marker = result.url or f"{name}:{result.title}"
+            if marker not in seen:
+                promoted.append(result)
+                seen.add(marker)
+                break
+    for result in ranked:
+        marker = result.url or f"merged:{result.title}"
+        if marker not in seen:
+            promoted.append(result)
+            seen.add(marker)
+    return promoted
+
+
 def _routing_cache_digest(ctx: AppContext) -> str:
     """Deterministic digest of the live routing inputs that shape a scope.
 
@@ -1391,6 +1453,11 @@ def build_response_meta(response: SearchResponse) -> dict[str, Any]:
     }
     meta["partial"] = response.partial
     meta["deadline_exceeded"] = response.deadline_exceeded
+    if response.scope.jev_added_engines:
+        meta["jev_routing"] = {
+            "added_engines": list(response.scope.jev_added_engines),
+            "scores": dict(response.scope.jev_scores),
+        }
     if response.empty_engines:
         meta["empty_engines"] = response.empty_engines
     return meta
@@ -1462,6 +1529,8 @@ def search_response_to_payload(response: SearchResponse) -> dict[str, Any]:
             "routing_tradeoffs": [
                 {"kind": tradeoff.kind, "detail": tradeoff.detail} for tradeoff in response.scope.routing_tradeoffs
             ],
+            "jev_added_engines": list(response.scope.jev_added_engines),
+            "jev_scores": dict(response.scope.jev_scores),
         },
         "engine_outcomes": [
             {
@@ -1513,6 +1582,8 @@ def search_response_from_payload(payload: dict[str, Any]) -> SearchResponse:
             RoutingTradeoff(kind=str(item.get("kind", "")), detail=str(item.get("detail", "")))
             for item in (scope.get("routing_tradeoffs") or [])
         ],
+        jev_added_engines=[str(item) for item in (scope.get("jev_added_engines") or [])],
+        jev_scores={str(name): float(score) for name, score in (scope.get("jev_scores") or {}).items()},
     )
     return SearchResponse(
         query=str(payload.get("query", "")),

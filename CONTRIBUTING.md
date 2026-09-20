@@ -96,6 +96,7 @@ See `docs/ENGINE_ADAPTERS.md` for the full reference — contract rules, data ty
 
 - [ ] One Python file in `engines/` with a `@register_engine` class
 - [ ] `name`, `display_name`, `engine_type`, `categories` set
+- [ ] Routing role added in `slopsearx/jev.py`; specialists also include a factual `purpose` and discriminating `use_when` card
 - [ ] `async def search()` returns `AdapterResponse` — never raises
 - [ ] Import added to `engines/__init__.py`
 - [ ] Tests added in `tests/test_adapters.py`
