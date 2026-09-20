@@ -76,3 +76,17 @@ Evidence: [summary](evidence/EXP-003/summary.json), [all pairs](evidence/EXP-003
 [reproduction](evidence/EXP-003/reproduce.md), and
 [checksums](evidence/EXP-003/SHA256SUMS.txt). Each case directory contains both
 raw responses, server logs and exit code. No deviations from the plan occurred.
+
+## Implementation delivery
+
+Evidence was merged in [PR #390](https://github.com/magnus919/SlopSearX/pull/390).
+Implementation is [PR #392](https://github.com/magnus919/SlopSearX/pull/392),
+addressing [issue #391](https://github.com/magnus919/SlopSearX/issues/391).
+It is deliberately **unmerged**; supported evidence is not a deployment claim.
+Local full-suite validation passed: 1,957 passed, 54 skipped, four warnings.
+Focused pre-commit (lint, types, imports, dead code) passed. All-files hooks
+reported pre-existing formatting in historical evidence and an unrelated test;
+those automatic edits were restored to preserve evidence hashes and scope.
+Graphify AST update completed. CI and automated review were requested on the
+implementation PR; use that PR for their current status. No CI/review was
+requested for documentation-only publication.
