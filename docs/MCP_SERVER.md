@@ -576,7 +576,7 @@ Intent-based search — the primary entry point.
 | `categories` | string[] | OR filter; overridden by `engines` |
 | `engines` | string[] | explicit override; must be known engines |
 | `media_type` | string | `image` \| `video`. Constrains the dispatched scope to engines that advertise the media type; a scope with no coverage returns `media_coverage_gap`. |
-| `language` | string | `en` default — **not enforced by adapters** (warning returned) |
+| `language` | string | `en` default — **not enforced by adapters** (`enforcement.language` and warning returned, including when omitted) |
 | `time_range` | string | `day`/`month`/`year` — **not enforced by adapters** (warning returned) |
 | `safesearch` | string | `off` (default), `moderate`, `strict`. **Strict fails closed**: no adapter enforces it |
 | `max_results` | int | presentation bound, capped at `MCP_MAX_RESULTS` |

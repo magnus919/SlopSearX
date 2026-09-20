@@ -463,7 +463,7 @@ def _core_filter_enforcement(
     resolved like any other best-effort filter.
     """
     report: dict[str, Any] = {}
-    if language and language != "en":
+    if language:
         report["language"] = resolve_filter_enforcement(
             selected_engines, "language", language, state.ctx.active_engines
         )

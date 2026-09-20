@@ -327,14 +327,26 @@ class TestDeterministicSearchEnvelope:
                 assert enforcement["time_range"]["status"] == "unsupported"
                 assert enforcement["safesearch"]["status"] == "unsupported"
 
-    async def test_default_enforcement_shape(self) -> None:
+    @pytest.mark.parametrize("language", [None, "en", "de"])
+    @pytest.mark.parametrize("engines", [None, ["wikipedia"]])
+    async def test_default_enforcement_shape(self, language: str | None, engines: list[str] | None) -> None:
         app = make_fixture_http_app(_FIXTURE_SPECS)
         async with _serve(app) as url:
             async with _session(url) as (session, _client):
                 await session.initialize()
-                res = await session.call_tool("slopsearx_search", {"query": "q"})
+                arguments: dict[str, Any] = {"query": "q"}
+                if language is not None:
+                    arguments["language"] = language
+                if engines is not None:
+                    arguments["engines"] = engines
+                res = await session.call_tool("slopsearx_search", arguments)
                 data = _payload(res)
-                assert "enforcement" in data
+                entry = data["enforcement"]["language"]
+                assert entry["requested"] == (language or "en")
+                assert entry["status"] == "unsupported"
+                assert entry["reason"]
+                assert entry["enforced_by"] == []
+                assert f"language '{language or 'en'}' is not consumed by any adapter" in data["warnings"]
 
 
 class TestLifespanSensitiveSync:
