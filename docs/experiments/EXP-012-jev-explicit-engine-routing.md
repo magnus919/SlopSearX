@@ -1,6 +1,6 @@
 # EXP-012: Jev routing with explicit engine-bound questions
 
-**Status:** preregistered; no measurements collected
+**Status:** not supported; stopped before acquisition
 
 ## Decision
 
@@ -97,3 +97,31 @@ Commit sanitized per-query routing and acquisition rows, all aggregate metrics,
 effective eligible engines, input and schema checksums, usage and call counters,
 and the final recommendation. Never commit keys, authorization headers, or raw
 third-party response bodies.
+
+## Outcome
+
+All 12 development calls and all 60 held-out query/paraphrase calls returned
+valid typed responses. Development selected threshold 0.65. Held-out routing
+improved F1 from 0.1905 for the production resolver baseline to 0.6286 and
+macro family recall from 0.1889 to 0.8056. It also stayed within the policy
+boundary and achieved 219 ms mean / 299 ms p95 Jev latency.
+
+The candidate nevertheless failed three registered routing gates:
+
+- recall was 0.7719 (required 0.85);
+- precision was 0.5301 (required 0.65);
+- query/paraphrase selection agreement was 0.6778 (required 0.90).
+
+The remaining gates passed: macro family recall, F1 improvement, family
+regression, valid pairs, and policy eligibility. Total Jev input was 300,427
+tokens across development and evaluation, well below the 5,000,000 ceiling.
+
+Because the offline gate failed, the harness did not run acquisition. Brave
+calls: 0. Other search-engine calls: 0. The registered recommendation is
+**no for this exact routing design**. The result does not show that Jev lacks
+routing value: it shows a large accuracy gain with insufficient precision,
+recall, and paraphrase stability for autonomous three-engine dispatch.
+
+See `evidence/EXP-012/development-summary.json`,
+`evidence/EXP-012/evaluation-summary.json`, and
+`evidence/EXP-012/evaluation-rows.md`.

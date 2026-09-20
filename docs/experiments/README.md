@@ -126,7 +126,7 @@ PRs or deploy changes.
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
-| [EXP-012](EXP-012-jev-explicit-engine-routing.md) | Do explicitly engine-bound Jev Nouls improve bounded routing over the production scope resolver? | preregistered | Corrected successor to EXP-011; 5M-token Jev ceiling, held-out gate before any search acquisition. | None |
+| [EXP-012](EXP-012-jev-explicit-engine-routing.md) | Do explicitly engine-bound Jev Nouls improve bounded routing over the production scope resolver? | not-supported | Held-out F1 improved 0.1905 to 0.6286, but recall 0.7719, precision 0.5301, and paraphrase agreement 0.6778 missed their gates. Stopped before acquisition; 0 Brave calls. | None |
 | [EXP-011](EXP-011-jev-per-engine-routing.md) | Can batched Jev per-engine decisions improve bounded engine routing over the deterministic router? | inconclusive | Development used 135,999/200,000 Jev input tokens and exposed ambiguous engine binding plus a non-production fallback baseline. Stopped before held-out or search acquisition; 0 Brave calls. | None |
 | [EXP-004](EXP-004-jev-official-doc-rerank.md) | Can a bounded Jev rerank materially improve official-documentation navigation over presence/RRF? | inconclusive | Live acquisition returned zero canonical targets; the registered relevance effect could not be measured. | None |
 | [EXP-003](EXP-003-default-language-report.md) | Does reporting default English restore truthful language-filter metadata? | supported | Language metadata coverage 33.33% to 100%; +4.27% bytes; other fields identical. | [PR #392](https://github.com/magnus919/SlopSearX/pull/392), unmerged |
