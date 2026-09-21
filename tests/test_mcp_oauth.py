@@ -14,11 +14,11 @@ import hashlib
 import secrets
 import socket
 import time
+from importlib import import_module
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 import httpx
-import httpx2
 import pytest
 import uvicorn
 from fastmcp import Client
@@ -35,6 +35,11 @@ from slopsearx.mcp.oauth import (
 )
 from slopsearx.mcp.security import make_http_app
 from slopsearx.mcp.server import create_server
+
+try:
+    mcp_httpx = import_module("httpx2")
+except ModuleNotFoundError:
+    mcp_httpx = httpx
 
 
 def _free_port() -> int:
@@ -315,7 +320,7 @@ class TestOAuthOverHTTP:
             assert "refresh_token" in tokens
 
             # Access token works against /mcp
-            async with httpx2.AsyncClient(
+            async with mcp_httpx.AsyncClient(
                 headers={"Authorization": f"Bearer {tokens['access_token']}"}, timeout=15
             ) as authed:
                 async with streamable_http_client(f"{base}/mcp", http_client=authed) as (read, write, _):
