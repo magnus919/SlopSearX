@@ -1,11 +1,11 @@
 ---
 name: slopsearx
-description: Cloud-native, stateless, AI-agent-first meta search engine with 48 plugin engines. SearXNG-compatible API, category routing, distributed rate limiting, and agent-native YAML+Markdown output.
+description: Cloud-native, stateless meta search with 51 plugin engines, optional Jev specialist routing, SearXNG-compatible API, and agent-native YAML+Markdown output.
 ---
 
 # SlopSearX
 
-SlopSearX is a horizontally scalable meta search engine designed for AI agent consumption. It fans out queries to 48 engines in parallel, deduplicates and ranks results, and returns structured output in SearXNG-compatible JSON or agent-native YAML+Markdown.
+SlopSearX is a horizontally scalable meta search engine designed for AI agent consumption. It routes queries across eligible engines, deduplicates and ranks results, and returns structured output in SearXNG-compatible JSON or agent-native YAML+Markdown.
 
 ## How to Use
 
@@ -21,7 +21,7 @@ uvicorn slopsearx.server:app --host 0.0.0.0 --port 8080
 The `ssx` CLI wraps all API endpoints in an agent-friendly way:
 
 ```bash
-# Search across all engines (YAML output by default)
+# Search with automatic routing (YAML output by default)
 python ssx search "your query"
 
 # Search with category filter
@@ -65,6 +65,23 @@ curl 'http://localhost:8080/search?q=quantum+computing+breakthroughs+2025&format
 ```
 
 Returns YAML-frontmatter with structured results followed by a Markdown summary - ideal for AI agent processing.
+
+### Automatic and Jev-assisted routing
+
+An unscoped search keeps SlopSearX's normal general-source base. When the
+operator supplies `TYPESAFE_API_KEY` to the server process, TypeSafe Jev can
+add eligible specialist engines whose routing scores meet the configured
+threshold. The key is optional: searches still work through deterministic
+routing when it is absent or Jev fails. Explicit `--engines`, `--categories`,
+API engine/category scopes, and media searches do not invoke Jev.
+
+The JSON and YAML `meta.jev_routing` field names specialists actually added
+and their routing scores when there are additions. These scores indicate
+retrieval fit, not factual confidence in the results. `ssx` calls the HTTP API;
+set the key in the API service's environment, not merely in the CLI shell.
+For MCP, the key must reach the MCP service too. A scope preview makes no
+engine search calls, but an unscoped preview can make a billable Jev request
+on a cache miss. See [Jev routing](docs/JEV_ROUTING.md) for operator details.
 
 ### Engine Categories
 

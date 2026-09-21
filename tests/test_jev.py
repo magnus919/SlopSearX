@@ -13,6 +13,7 @@ from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, Sear
 from slopsearx.jev import ROUTING_CARDS, JevRoutingDecision, JevSpecialistRouter, validate_routing_cards
 from slopsearx.router import QueryRouter
 from slopsearx.service import AppContext, SearchRequest, SearchService
+from slopsearx.snapshot import _snapshot_from_payload
 
 
 class _Engine(EngineAdapter):
@@ -113,7 +114,9 @@ async def test_router_scores_specialists_in_one_request_and_applies_threshold(
     assert requests[0].headers["Authorization"] == "Bearer secret"
 
 
-async def test_jev_adds_every_selected_specialist_without_replacing_general_engines() -> None:
+async def test_jev_adds_every_selected_specialist_without_replacing_general_engines(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     active: dict[str, EngineAdapter] = {name: _Engine(name) for name in ("brave", "duckduckgo", "pubmed", "arxiv")}
     context = AppContext(
         active_engines=active,
@@ -129,6 +132,21 @@ async def test_jev_adds_every_selected_specialist_without_replacing_general_engi
     assert {"pubmed", "arxiv"}.issubset(response.scope.selected_engines)
     assert all(getattr(active[name], "calls") == 1 for name in response.scope.selected_engines)
     assert [result.engine for result in response.results[:2]] == ["pubmed", "arxiv"]
+
+    from slopsearx import server
+
+    monkeypatch.setattr(server, "_active_engines", active)
+    portal_state = server._portal_state(  # noqa: SLF001 - assert HTTP-to-portal contract
+        query="medical evidence",
+        categories="",
+        engine_selection="",
+        language="",
+        time_range="",
+        safesearch=0,
+        page=1,
+        response=response,
+    )
+    assert portal_state["jev_added_engines"] == ["pubmed", "arxiv"]
 
 
 async def test_explicit_scope_never_calls_jev() -> None:
@@ -158,3 +176,23 @@ async def test_jev_failure_preserves_deterministic_scope(monkeypatch: pytest.Mon
     active: dict[str, EngineAdapter] = {name: _Engine(name) for name in ("brave", "pubmed")}
     decision = await JevSpecialistRouter("secret").route("q", active, None, set())
     assert decision is None
+
+
+def test_snapshot_rehydrates_jev_scope_provenance() -> None:
+    snapshot = _snapshot_from_payload(
+        {
+            "snapshot_id": "snap-test",
+            "query": "medical evidence",
+            "query_id": "q-test",
+            "results": [],
+            "scope": {
+                "selected_engines": ["wikipedia", "pubmed"],
+                "jev_added_engines": ["pubmed"],
+                "jev_scores": {"pubmed": 0.91},
+            },
+            "total": 0,
+            "tenant": "test",
+        }
+    )
+    assert snapshot.scope.jev_added_engines == ["pubmed"]
+    assert snapshot.scope.jev_scores == {"pubmed": 0.91}

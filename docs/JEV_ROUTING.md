@@ -25,6 +25,13 @@ The response records successful additions under `meta.jev_routing`, including
 the selected engine names and their scores. The API key is never included in
 logs, cache keys, responses, or routing metadata.
 
+JSON and YAML HTTP output, including `ssx` output, carry this metadata. MCP
+search and scope-preview output carry the same additions under `jev_routing`.
+The web portal names added specialists beside the result count. Routing scores
+describe estimated retrieval fit; they are not confidence that a result is true.
+MCP scope preview does not dispatch search engines, but may incur one billable
+Jev request on a cache miss. A later search can reroute if eligibility changes.
+
 ## Configuration
 
 ```bash
@@ -35,6 +42,10 @@ No separate enablement flag is required. Docker/Compose deployments may pass
 the variable through their environment or configured env file. A project-root
 `.env` file is ignored by Git, but the application process must actually load
 or receive that file; a bare Python process does not automatically read it.
+The HTTP API/portal and MCP run as separate services in the production Compose
+stack: pass the key to each container that should use Jev. Compose's own
+interpolation `.env` is not, by itself, a container environment declaration;
+verify the resolved service configuration without printing the key.
 
 Optional tuning variables are available for operators who need them:
 

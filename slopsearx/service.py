@@ -662,7 +662,36 @@ class SearchService:
             self._resolver = resolver
         return resolver
 
-    async def search(self, request: SearchRequest) -> SearchResponse:
+    async def resolve_scope(self, request: SearchRequest) -> ScopeDecision:
+        """Resolve the exact pre-dispatch scope, including optional Jev advice.
+
+        This shared path serves execution and MCP previews. A preview does not
+        search engines, but may spend a Jev request on a cache miss.
+        """
+        scope = self._resolver_for().resolve(request)
+        if (
+            self._ctx.jev_router is not None
+            and not request.engines
+            and not request.categories
+            and request.media_type is None
+        ):
+            decision = await self._ctx.jev_router.route(
+                request.query,
+                self._ctx.active_engines,
+                self._ctx.catalog,
+                set(self._ctx.sensitive_engines),
+                cache=self._ctx.cache,
+            )
+            if decision is not None:
+                additions = [name for name in decision.engines if name not in scope.selected_engines]
+                scope.selected_engines.extend(additions)
+                scope.jev_added_engines = additions
+                scope.jev_scores = {name: decision.scores[name] for name in additions}
+                if additions:
+                    scope.routing_rule += "+jev specialists"
+        return scope
+
+    async def search(self, request: SearchRequest, *, resolved_scope: ScopeDecision | None = None) -> SearchResponse:
         """Execute a search and return a normalized response.
 
         Raises:
@@ -687,32 +716,10 @@ class SearchService:
         except DateFilterError as exc:
             raise QueryValidationError(str(exc), exc.field) from exc
 
-        scope = self._resolver_for().resolve(request)
-        # A configured TypeSafe key enables additive specialist routing for
-        # otherwise-unscoped searches. Explicit engines/categories/media stay
-        # fully caller-controlled. Policy/auth/health eligibility is applied
-        # before Jev sees the candidate list, and any Jev failure preserves the
-        # deterministic scope unchanged.
-        if (
-            self._ctx.jev_router is not None
-            and not request.engines
-            and not request.categories
-            and request.media_type is None
-        ):
-            decision = await self._ctx.jev_router.route(
-                request.query,
-                self._ctx.active_engines,
-                self._ctx.catalog,
-                set(self._ctx.sensitive_engines),
-                cache=self._ctx.cache,
-            )
-            if decision is not None:
-                additions = [name for name in decision.engines if name not in scope.selected_engines]
-                scope.selected_engines.extend(additions)
-                scope.jev_added_engines = additions
-                scope.jev_scores = {name: decision.scores[name] for name in additions}
-                if additions:
-                    scope.routing_rule += "+jev specialists"
+        # MCP may have resolved this exact request already for fail-closed
+        # filter checks. Reuse its decision so one search cannot make two
+        # billable Jev calls or dispatch a scope different from its gate.
+        scope = resolved_scope if resolved_scope is not None else await self.resolve_scope(request)
         if request.safesearch == 2:
             safe_report = resolve_filter_enforcement(
                 scope.selected_engines,

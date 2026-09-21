@@ -23,9 +23,11 @@ import engines  # noqa: F401 — triggers @register_engine to populate the regis
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult
 from slopsearx.capabilities import CapabilityCatalog, EngineCapability, load_mcp_policy, observed_health_stale_seconds
 from slopsearx.config import Config, EngineEntry
+from slopsearx.jev import JevRoutingDecision
 from slopsearx.mcp import tools as t
 from slopsearx.mcp.state import McpState, set_state
 from slopsearx.research import ResearchJobRunner, ResearchJobStore
+from slopsearx.router import QueryRouter
 from slopsearx.routing import EXCLUSION_STAGE_AUTH, EXCLUSION_STAGE_BUDGET, EXCLUSION_STAGE_HEALTH, RoutingBudget
 from slopsearx.service import (
     AppContext,
@@ -802,6 +804,41 @@ class TestMcpRoutingSurface:
         assert preview["routing_reason"] == search["scope"]["routing_reason"]
         assert preview["routing"] == search["scope"]["routing"]
         assert preview["excluded_engines"] == search["scope"]["excluded_engines"]
+
+    async def test_jev_preview_matches_execution_and_exposes_additions(self) -> None:
+        class StubJev:
+            calls = 0
+
+            async def route(self, *_args: Any, **_kwargs: Any) -> JevRoutingDecision:
+                self.calls += 1
+                return JevRoutingDecision(["pubmed"], {"pubmed": 0.91}, 1.0)
+
+            def cache_identity(self) -> str:
+                return "test"
+
+        state_obj = _build_mcp_state(["wikipedia", "pubmed"])
+        state_obj.ctx.router = QueryRouter()
+        state_obj.ctx.tier1_engines = {"wikipedia"}
+        jev = StubJev()
+        state_obj.ctx.jev_router = jev  # type: ignore[assignment]
+        set_state(state_obj)
+
+        preview = await t.slopsearx_explain_search_scope("hello", intent="auto")
+        assert jev.calls == 1
+        assert state_obj.ctx.active_engines["pubmed"].calls == 0
+        assert preview["jev_routing"] == {"added_engines": ["pubmed"], "scores": {"pubmed": 0.91}}
+        search = await t.slopsearx_search("hello", intent="auto")
+        assert jev.calls == 2  # one decision for this search, reused at dispatch
+        assert "error" not in search
+        assert preview["selected_engines"] == search["scope"]["selected_engines"]
+        assert preview["routing_reason"] == search["scope"]["routing_reason"]
+        assert preview["jev_routing"] == search["scope"]["jev_routing"]
+        assert state_obj.ctx.active_engines["pubmed"].calls == 1
+
+        explicit = await t.slopsearx_explain_search_scope("hello", engines=["wikipedia"])
+        assert explicit["selected_engines"] == ["wikipedia"]
+        assert "jev_routing" not in explicit
+        assert jev.calls == 2
 
     async def test_search_envelope_surfaces_routing_block(self) -> None:
         state_obj = _build_mcp_state(budget=RoutingBudget(max_engines=2))
