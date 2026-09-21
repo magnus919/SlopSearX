@@ -195,7 +195,7 @@ for requests from hosted-service IP ranges. Set `ENGINE_REDDIT_API_KEY` to an
 approved OAuth bearer token to use the documented `oauth.reddit.com` API path;
 the adapter does not fall back to browser automation or scraping.
 
-## Built-In Adapters (51)
+## Built-In Adapters (50)
 
 ### General / Web
 
@@ -217,7 +217,6 @@ the adapter does not fall back to browser automation or scraping.
 | GitHub | `engines/github.py` | api | general, reference, github:code, github:issues, github:prs | `GITHUB_TOKEN` |
 | npm | `engines/npm.py` | api | general, it, reference, packages | None |
 | PyPI | `engines/pypi.py` | api | general, it, reference, packages | None |
-| Repology | `engines/repology.py` | api | general, it, reference, packages | None |
 | RubyGems | `engines/rubygems.py` | api | general, it, reference, packages | None |
 | Stack Exchange | `engines/stackexchange.py` | api | general, reference, science, stackexchange:code, stackexchange:serverfault | Optional app key |
 
@@ -300,7 +299,7 @@ the adapter does not fall back to browser automation or scraping.
 
 See `slopsearx/adapter.py` for the base classes (`EngineAdapter`, `ScrapeAdapter`) and the registry functions (`register_engine`, `discover_engines`).
 
-> **Engine count (51).** This table is maintained to match the live adapter
+> **Engine count (50).** This table is maintained to match the live adapter
 > registry. Adding or removing an engine file requires updating this table and
 > the `Engines` table in `README.md`. The MCP capability catalog
 > (`slopsearx_list_capabilities`, `slopsearx://capabilities`) is generated from

@@ -396,7 +396,7 @@ INTENT_PROFILES: dict[str, IntentProfile] = {
     "code": IntentProfile(
         intent="code",
         description="Source code, issues, and package registries.",
-        engines=["github", "stackexchange", "pypi", "npm", "crates", "rubygems", "dockerhub", "repology"],
+        engines=["github", "stackexchange", "pypi", "npm", "crates", "rubygems", "dockerhub"],
     ),
     "social": IntentProfile(
         intent="social",

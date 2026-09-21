@@ -23,7 +23,7 @@ The result is an uneven product. MCP is strong enough for a guided search assist
 
 This PRD is grounded in the current repository and the deployed MCP behavior observed during verification. The following are confirmed repository facts unless explicitly marked as proposed:
 
-- The runtime adapter registry contains 51 engines, including Ashby, Greenhouse, and Lever. `docs/MCP_SERVER_DESIGN.md` notes that some prose documentation still says 48.
+- The runtime adapter registry contains 50 engines, including Ashby, Greenhouse, and Lever. `docs/MCP_SERVER_DESIGN.md` notes that some prose documentation still says 48.
 - The HTTP product surface includes `/search`, `/health`, `/config`, and `/metrics`, in addition to framework documentation routes.
 - `/search` supports query, format, categories, explicit engines, language, page, time range, and SafeSearch inputs.
 - The current MCP surface advertises 13 tools, 3 resource families, and 4 workflow prompts.

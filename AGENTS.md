@@ -6,7 +6,7 @@ This document helps AI coding agents understand the project structure, architect
 
 ```
 slopsearx/
-├── engines/            # Engine adapter plugins (one file per engine, 51 total)
+├── engines/            # Engine adapter plugins (one file per engine, 50 total)
 │   ├── arxiv.py           brave.py           crates.py
 │   ├── censys.py          clinicaltrials.py  courtlistener.py (removed)
 │   ├── crtsh.py           cve.py             dehashed.py
@@ -19,7 +19,7 @@ slopsearx/
 │   ├── nvd.py             openalex.py        openfda.py
 │   ├── openlibrary.py     otx.py             oyez.py
 │   ├── pubchem.py         pubmed.py          pypi.py
-│   ├── reddit.py          repology.py        rubygems.py
+│   ├── reddit.py          rubygems.py
 │   ├── semanticscholar.py shodan.py          stackexchange.py
 │   ├── tmdb.py            uniprot.py         urlhaus.py
 │   ├── virustotal.py      vulncheck.py       wikipedia.py

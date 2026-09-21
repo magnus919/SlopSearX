@@ -4,7 +4,7 @@ SlopSearX is a cloud-native, stateless, AI-agent-first meta search engine. It re
 
 **Key capabilities:**
 
-- **48 engine adapters** — Brave, Wikipedia, DuckDuckGo, Google, GitHub, arXiv, Hacker News, HuggingFace, Semantic Scholar, Stack Exchange, OpenAlex, Internet Archive, Reddit, PyPI, npm, crates.io, RubyGems, Repology, Docker Hub, MusicBrainz, Open Library, TMDB, PubMed, PubChem, ClinicalTrials.gov, Oyez, SEC EDGAR, FRED, Nominatim, openFDA, UniProt, and 17 security/threat-intel engines (Shodan, Censys, VirusTotal, HIBP, AlienVault OTX, AbuseIPDB, VulnCheck, IntelX, DeHashed, CRT.sh, URLhaus, FIRST EPSS, GreyNoise, Exploit-DB, MITRE ATT&CK, CVE Program, NVD)
+- **50 engine adapters** — Brave, Wikipedia, DuckDuckGo, Google, GitHub, arXiv, Hacker News, HuggingFace, Semantic Scholar, Stack Exchange, OpenAlex, Internet Archive, Reddit, PyPI, npm, crates.io, RubyGems, Docker Hub, MusicBrainz, Open Library, TMDB, PubMed, PubChem, ClinicalTrials.gov, Oyez, SEC EDGAR, FRED, Nominatim, openFDA, UniProt, and 17 security/threat-intel engines (Shodan, Censys, VirusTotal, HIBP, AlienVault OTX, AbuseIPDB, VulnCheck, IntelX, DeHashed, CRT.sh, URLhaus, FIRST EPSS, GreyNoise, Exploit-DB, MITRE ATT&CK, CVE Program, NVD), plus Ashby, Greenhouse, and Lever
 - **SearXNG-compatible API** — drop-in replacement for existing SearXNG consumers with all 23 response fields preserved
 - **Agent-native output** — JSON by default, YAML+Markdown for AI agent contexts
 - **Plugin architecture** — one file per engine, `@register_engine` decorator, zero orchestrator changes

@@ -127,10 +127,6 @@ ROUTING_CARDS: dict[str, dict[str, str]] = {
     },
     "pubmed": {"purpose": "biomedical literature", "use_when": "the query seeks medical or life-science publications"},
     "pypi": {"purpose": "Python packages", "use_when": "the query names a Python package need"},
-    "repology": {
-        "purpose": "package versions across repositories",
-        "use_when": "the query compares package versions or distributions",
-    },
     "rubygems": {"purpose": "Ruby packages", "use_when": "the query names a Ruby gem or package need"},
     "semanticscholar": {
         "purpose": "scholarly papers and citations",

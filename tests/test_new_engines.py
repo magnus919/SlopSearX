@@ -8,7 +8,7 @@ import httpx
 import pytest
 
 import engines  # noqa: F401 — trigger @register_engine
-from slopsearx.adapter import EngineStatus, discover_engines
+from slopsearx.adapter import EngineStatus, discover_engines, list_engines
 
 # ---------------------------------------------------------------------------
 # Helper
@@ -31,6 +31,11 @@ class MockHTTP:
     async def __aexit__(self, *args):
         self.patcher.stop()
         await self.mock_client.aclose()
+
+
+def test_retired_repology_is_not_registered() -> None:
+    """Retired upstreams must not reappear through the adapter registry."""
+    assert "repology" not in list_engines()
 
 
 # ---------------------------------------------------------------------------
@@ -215,55 +220,6 @@ class TestCratesAdapter:
         from slopsearx.adapter import list_engines
 
         assert "crates" in list_engines()
-
-
-# ---------------------------------------------------------------------------
-# Repology
-# ---------------------------------------------------------------------------
-
-
-class TestRepologyAdapter:
-    @pytest.fixture
-    def adapter(self):
-        instances = discover_engines({"repology": {"enabled": True}})
-        return instances["repology"]
-
-    @pytest.fixture
-    def sample_response(self) -> dict:
-        return {
-            "curl": [
-                {
-                    "repo": "homebrew",
-                    "version": "8.10.0",
-                    "summary": "Command line tool for transferring data with URL syntax",
-                    "status": "newest",
-                },
-                {
-                    "repo": "debian",
-                    "version": "7.88.1",
-                    "summary": "Command line tool for transferring data with URL syntax",
-                    "status": "outdated",
-                },
-            ],
-        }
-
-    async def test_search_returns_results(self, adapter, sample_response):
-        async with MockHTTP(lambda r: httpx.Response(200, json=sample_response)):
-            result = await adapter.search("curl")
-        assert result.status == EngineStatus.OK
-        assert len(result.results) >= 1
-        assert "curl" in result.results[0].title
-
-    async def test_search_404(self, adapter):
-        async with MockHTTP(lambda r: httpx.Response(404)):
-            result = await adapter.search("nonexistent")
-        assert result.status == EngineStatus.OK
-        assert len(result.results) == 0
-
-    def test_adapter_registered(self):
-        from slopsearx.adapter import list_engines
-
-        assert "repology" in list_engines()
 
 
 # ---------------------------------------------------------------------------

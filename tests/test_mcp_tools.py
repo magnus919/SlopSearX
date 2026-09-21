@@ -221,7 +221,7 @@ class TestSearchTool:
 
     async def test_intent_profile_resolution(self, state: McpState) -> None:
         state.ctx.active_engines = _make_engines(
-            ["github", "pypi", "npm", "crates", "rubygems", "dockerhub", "repology", "stackexchange"]
+            ["github", "pypi", "npm", "crates", "rubygems", "dockerhub", "stackexchange"]
         )
         result = await t.slopsearx_search("python package", intent="code")
 

@@ -22,7 +22,7 @@ Three-layer configuration model: built-in defaults → optional YAML file → en
 
 ### Layer 1: Built-in defaults
 
-Hardcoded in `_DEFAULT_ENGINES` dict in `config.py`. Contains production-ready defaults for all 48 engines: base URLs, rate limits, timeouts, weights. Also defaults for cache and ranking.
+Hardcoded in `_DEFAULT_ENGINES` dict in `config.py`. Contains production-ready defaults for all 50 engines: base URLs, rate limits, timeouts, weights. Also defaults for cache and ranking.
 
 ### Layer 2: YAML config file
 
