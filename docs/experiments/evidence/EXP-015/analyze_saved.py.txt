@@ -1,0 +1,37 @@
+"""Supplementary, non-primary global-threshold analysis of saved EXP-015 scores."""
+import json
+from pathlib import Path
+
+root = Path(__file__).parent
+rows = json.loads((root / "rows.json").read_text())
+result = {}
+for task in ("annotations", "next_source", "quality"):
+    cal = [r for r in rows if r["task"] == task and r["split"] == "cal"]
+    holdout = [r for r in rows if r["task"] == task and r["split"] == "holdout"]
+    observed = sorted({v for r in cal for v in r["scores"].values()})
+    thresholds = sorted({0.0, 1.0, 1.000001, *observed,
+                         *((a + b) / 2 for a, b in zip(observed, observed[1:]))})
+
+    def metrics(group, threshold):
+        tp = fp = fn = 0
+        for row in group:
+            for label, value in row["scores"].items():
+                truth = label in row["gold"]
+                positive = value >= threshold
+                tp += truth and positive
+                fp += not truth and positive
+                fn += truth and not positive
+        p = tp / (tp + fp) if tp + fp else 0
+        r = tp / (tp + fn) if tp + fn else 0
+        return {"tp": tp, "fp": fp, "fn": fn, "precision": p,
+                "recall": r, "f1": 2 * p * r / (p + r) if p + r else 0}
+
+    curve = [{"threshold": t, **metrics(cal, t)} for t in thresholds]
+    chosen = max(curve, key=lambda x: (x["f1"], x["precision"], x["threshold"]))
+    result[task] = {"chosen_on_calibration": chosen,
+                    "heldout_at_chosen": metrics(holdout, chosen["threshold"]),
+                    "heldout_at_0_5_diagnostic": metrics(holdout, 0.5),
+                    "curve": curve}
+(root / "supplementary_global_threshold.json").write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+print(json.dumps({task: {key: val for key, val in outcome.items() if key != "curve"}
+                  for task, outcome in result.items()}, indent=2, sort_keys=True))

@@ -1,0 +1,638 @@
+{
+  "calls": 60,
+  "estimated_usd": 0.0011377800000000001,
+  "fixture_sha256": "13084f267386def8cc2c13823abda745d808073fb3a3fd7d5c661f43cd358fcb",
+  "input_tokens": 27090,
+  "latency_ms": {
+    "median": 176.20608350262046,
+    "p95_nearest_rank": 269.482791016344
+  },
+  "model": "jev-1.13.0",
+  "tasks": {
+    "annotations": {
+      "baseline_holdout": {
+        "micro": {
+          "f1": 0.625,
+          "fn": 6,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.45454545454545453,
+          "tn": 37,
+          "tp": 5
+        },
+        "per_label": {
+          "discussion": {
+            "f1": 0.6666666666666666,
+            "fn": 1,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 0.5,
+            "tn": 6,
+            "tp": 1
+          },
+          "primary_docs": {
+            "f1": 0.5,
+            "fn": 2,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 0.3333333333333333,
+            "tn": 5,
+            "tp": 1
+          },
+          "source_repository": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "tn": 7,
+            "tp": 0
+          },
+          "standard_regulatory": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "tn": 7,
+            "tp": 0
+          },
+          "tutorial": {
+            "f1": 0.6666666666666666,
+            "fn": 1,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 0.5,
+            "tn": 6,
+            "tp": 1
+          },
+          "vendor_marketing": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 6,
+            "tp": 2
+          }
+        }
+      },
+      "calibration": {
+        "micro": {
+          "f1": 0.9714285714285714,
+          "fn": 0,
+          "fp": 1,
+          "precision": 0.9444444444444444,
+          "recall": 1.0,
+          "tn": 54,
+          "tp": 17
+        },
+        "per_label": {
+          "discussion": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 10,
+            "tp": 2
+          },
+          "primary_docs": {
+            "f1": 0.9090909090909091,
+            "fn": 0,
+            "fp": 1,
+            "precision": 0.8333333333333334,
+            "recall": 1.0,
+            "tn": 6,
+            "tp": 5
+          },
+          "source_repository": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 10,
+            "tp": 2
+          },
+          "standard_regulatory": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 9,
+            "tp": 3
+          },
+          "tutorial": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 9,
+            "tp": 3
+          },
+          "vendor_marketing": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 10,
+            "tp": 2
+          }
+        }
+      },
+      "delta_micro_f1": 0.32738095238095233,
+      "holdout": {
+        "micro": {
+          "f1": 0.9523809523809523,
+          "fn": 1,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.9090909090909091,
+          "tn": 37,
+          "tp": 10
+        },
+        "per_label": {
+          "discussion": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 6,
+            "tp": 2
+          },
+          "primary_docs": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 5,
+            "tp": 3
+          },
+          "source_repository": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "tn": 7,
+            "tp": 0
+          },
+          "standard_regulatory": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 7,
+            "tp": 1
+          },
+          "tutorial": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 6,
+            "tp": 2
+          },
+          "vendor_marketing": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 6,
+            "tp": 2
+          }
+        }
+      },
+      "paired_bootstrap_95pct_delta_micro_f1": [
+        0.0,
+        0.63
+      ],
+      "thresholds": {
+        "discussion": {
+          "f1": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "threshold": 0.81,
+          "tn": 10,
+          "tp": 2
+        },
+        "primary_docs": {
+          "f1": 0.9090909090909091,
+          "fn": 0,
+          "fp": 1,
+          "precision": 0.8333333333333334,
+          "recall": 1.0,
+          "threshold": 0.86,
+          "tn": 6,
+          "tp": 5
+        },
+        "source_repository": {
+          "f1": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "threshold": 0.97,
+          "tn": 10,
+          "tp": 2
+        },
+        "standard_regulatory": {
+          "f1": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "threshold": 0.86,
+          "tn": 9,
+          "tp": 3
+        },
+        "tutorial": {
+          "f1": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "threshold": 0.69,
+          "tn": 9,
+          "tp": 3
+        },
+        "vendor_marketing": {
+          "f1": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "threshold": 0.96,
+          "tn": 10,
+          "tp": 2
+        }
+      }
+    },
+    "next_source": {
+      "baseline_holdout": {
+        "micro": {
+          "f1": 0.8571428571428571,
+          "fn": 0,
+          "fp": 3,
+          "precision": 0.75,
+          "recall": 1.0,
+          "tn": 28,
+          "tp": 9
+        },
+        "per_label": {
+          "employer_jobs": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 6,
+            "tp": 2
+          },
+          "package_registry": {
+            "f1": 0.8,
+            "fn": 0,
+            "fp": 1,
+            "precision": 0.6666666666666666,
+            "recall": 1.0,
+            "tn": 5,
+            "tp": 2
+          },
+          "scholarly_literature": {
+            "f1": 0.6666666666666666,
+            "fn": 0,
+            "fp": 1,
+            "precision": 0.5,
+            "recall": 1.0,
+            "tn": 6,
+            "tp": 1
+          },
+          "source_repository": {
+            "f1": 0.8,
+            "fn": 0,
+            "fp": 1,
+            "precision": 0.6666666666666666,
+            "recall": 1.0,
+            "tn": 5,
+            "tp": 2
+          },
+          "web_archive": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 6,
+            "tp": 2
+          }
+        }
+      },
+      "calibration": {
+        "micro": {
+          "f1": 0.9333333333333333,
+          "fn": 0,
+          "fp": 2,
+          "precision": 0.875,
+          "recall": 1.0,
+          "tn": 44,
+          "tp": 14
+        },
+        "per_label": {
+          "employer_jobs": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 10,
+            "tp": 2
+          },
+          "package_registry": {
+            "f1": 0.8571428571428571,
+            "fn": 0,
+            "fp": 1,
+            "precision": 0.75,
+            "recall": 1.0,
+            "tn": 8,
+            "tp": 3
+          },
+          "scholarly_literature": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 9,
+            "tp": 3
+          },
+          "source_repository": {
+            "f1": 0.8571428571428571,
+            "fn": 0,
+            "fp": 1,
+            "precision": 0.75,
+            "recall": 1.0,
+            "tn": 8,
+            "tp": 3
+          },
+          "web_archive": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 9,
+            "tp": 3
+          }
+        }
+      },
+      "delta_micro_f1": 0.017857142857143016,
+      "holdout": {
+        "micro": {
+          "f1": 0.8750000000000001,
+          "fn": 2,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.7777777777777778,
+          "tn": 31,
+          "tp": 7
+        },
+        "per_label": {
+          "employer_jobs": {
+            "f1": 0.6666666666666666,
+            "fn": 1,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 0.5,
+            "tn": 6,
+            "tp": 1
+          },
+          "package_registry": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 6,
+            "tp": 2
+          },
+          "scholarly_literature": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 7,
+            "tp": 1
+          },
+          "source_repository": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 6,
+            "tp": 2
+          },
+          "web_archive": {
+            "f1": 0.6666666666666666,
+            "fn": 1,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 0.5,
+            "tn": 6,
+            "tp": 1
+          }
+        }
+      },
+      "paired_bootstrap_95pct_delta_micro_f1": [
+        -0.23308270676691734,
+        0.17142857142857137
+      ],
+      "thresholds": {
+        "employer_jobs": {
+          "f1": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "threshold": 0.85,
+          "tn": 10,
+          "tp": 2
+        },
+        "package_registry": {
+          "f1": 0.8571428571428571,
+          "fn": 0,
+          "fp": 1,
+          "precision": 0.75,
+          "recall": 1.0,
+          "threshold": 0.69,
+          "tn": 8,
+          "tp": 3
+        },
+        "scholarly_literature": {
+          "f1": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "threshold": 0.9,
+          "tn": 9,
+          "tp": 3
+        },
+        "source_repository": {
+          "f1": 0.8571428571428571,
+          "fn": 0,
+          "fp": 1,
+          "precision": 0.75,
+          "recall": 1.0,
+          "threshold": 0.86,
+          "tn": 8,
+          "tp": 3
+        },
+        "web_archive": {
+          "f1": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "threshold": 0.85,
+          "tn": 9,
+          "tp": 3
+        }
+      }
+    },
+    "quality": {
+      "baseline_holdout": {
+        "micro": {
+          "f1": 0.7692307692307692,
+          "fn": 1,
+          "fp": 2,
+          "precision": 0.7142857142857143,
+          "recall": 0.8333333333333334,
+          "tn": 8,
+          "tp": 5
+        },
+        "per_label": {
+          "instruction_attack": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 6,
+            "tp": 2
+          },
+          "likely_answer": {
+            "f1": 0.6666666666666665,
+            "fn": 1,
+            "fp": 2,
+            "precision": 0.6,
+            "recall": 0.75,
+            "tn": 2,
+            "tp": 3
+          }
+        }
+      },
+      "calibration": {
+        "micro": {
+          "f1": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tn": 15,
+          "tp": 9
+        },
+        "per_label": {
+          "instruction_attack": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 9,
+            "tp": 3
+          },
+          "likely_answer": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 6,
+            "tp": 6
+          }
+        }
+      },
+      "delta_micro_f1": 0.1398601398601399,
+      "holdout": {
+        "micro": {
+          "f1": 0.9090909090909091,
+          "fn": 1,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.8333333333333334,
+          "tn": 10,
+          "tp": 5
+        },
+        "per_label": {
+          "instruction_attack": {
+            "f1": 0.6666666666666666,
+            "fn": 1,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 0.5,
+            "tn": 6,
+            "tp": 1
+          },
+          "likely_answer": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "tn": 4,
+            "tp": 4
+          }
+        }
+      },
+      "paired_bootstrap_95pct_delta_micro_f1": [
+        -0.08333333333333326,
+        0.4545454545454546
+      ],
+      "thresholds": {
+        "instruction_attack": {
+          "f1": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "threshold": 0.91,
+          "tn": 9,
+          "tp": 3
+        },
+        "likely_answer": {
+          "f1": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "threshold": 0.65,
+          "tn": 6,
+          "tp": 6
+        }
+      }
+    }
+  }
+}
