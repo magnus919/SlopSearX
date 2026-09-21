@@ -1,0 +1,275 @@
+"""EXP-023 frozen full-catalog Jev comparison; inert research evidence."""
+from __future__ import annotations
+
+import argparse
+import asyncio
+import dataclasses
+import hashlib
+import json
+import math
+import random
+import statistics
+import sys
+import time
+from collections import defaultdict
+from pathlib import Path
+
+import httpx
+
+MODEL = "jev-1.13.0"
+ENDPOINT = "https://api.typesafe.ai/v1/systemone"
+GENERAL = {"brave", "google", "duckduckgo"}
+BROAD = {"wikipedia", "stackexchange", "reddit", "hackernews"}
+ARMS = ("production", "composed")
+
+
+def save(path: Path, data: object) -> None:
+    path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+
+
+def digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def load_key(path: Path) -> str:
+    for line in path.read_text().splitlines():
+        if line.startswith("TYPESAFE_API_KEY="):
+            value = line.split("=", 1)[1].strip().strip("\"'")
+            if value:
+                return value
+    raise RuntimeError("TypeSafe key missing; no provider call made")
+
+
+def runtime(repo: Path):
+    sys.path.insert(0, str(repo))
+    import engines  # noqa: F401
+    from slopsearx.adapter import discover_engines
+    from slopsearx.capabilities import CapabilityCatalog
+    from slopsearx.config import load_config
+    from slopsearx.jev import ROUTING_CARDS
+    from slopsearx.router import QueryRouter
+    from slopsearx.service import ScopeResolver
+
+    cfg = load_config()
+    active = discover_engines({name: dataclasses.asdict(entry) for name, entry in cfg.engines.items()})
+    catalog = CapabilityCatalog(cfg, active)
+    eligible = {entry.name for entry in catalog.enabled()
+                if not entry.sensitive and not entry.circuit_open
+                and (entry.auth_class != "required" or entry.auth_configured)
+                and entry.name in active}
+    specialists = sorted(eligible - GENERAL - BROAD)
+    if set(specialists) - set(ROUTING_CARDS):
+        raise RuntimeError("eligible specialist missing production routing card")
+    resolver = ScopeResolver(active, QueryRouter(dataclasses.asdict(cfg.routing)), catalog=catalog)
+    return active, specialists, resolver, ROUTING_CARDS
+
+
+def questions(arm: str, active: dict, specialists: list[str], cards: dict) -> dict:
+    result = {}
+    for name in specialists:
+        engine, card = active[name], cards[name]
+        prefix = (f"Specialist engine id: {name}. Display name: {engine.display_name}. "
+                  f"Purpose: {card['purpose']}. Use when: {card['use_when']}. "
+                  f"Categories: {', '.join(engine.categories)}. ")
+        if arm == "production":
+            result[name] = {"type": "noul", "instructions": prefix +
+                "Would this named specialist provide distinctive, directly useful evidence beyond ordinary "
+                "general web search for the user query? Answer no when general search is sufficient."}
+        else:
+            result[f"{name}_primary"] = {"type": "noul", "instructions": prefix +
+                "Would this specialist's original records be essential primary evidence for answering the "
+                "user query? Answer no if it only offers useful secondary context."}
+            result[f"{name}_secondary"] = {"type": "noul", "instructions": prefix +
+                "If this specialist is not essential primary evidence, could it still provide distinctive, "
+                "directly useful secondary evidence beyond ordinary general web search for the user query? "
+                "Answer no when general search is sufficient."}
+    return result
+
+
+def choose(arm: str, answers: dict, specialists: list[str]) -> tuple[list[str], dict]:
+    scores = {}
+    for name in specialists:
+        if arm == "production":
+            scores[name] = answers[name]
+        else:
+            p, s = answers[f"{name}_primary"], answers[f"{name}_secondary"]
+            scores[name] = 2*p + (1-p)*s - (1-p)*(1-s)
+    chosen = [name for name in specialists if scores[name] >= 0.65] if arm == "production" else [
+        name for name in specialists if scores[name] > 0]
+    return chosen, scores
+
+
+def metrics(rows: list[dict], field: str) -> dict:
+    essential_hit = useful_hit = irrelevant_selected = essential_miss = useful_miss = 0
+    broad_abstain = broad_total = 0
+    family_utility = defaultdict(list)
+    for row in rows:
+        selected = set(row[field])
+        essential, useful = set(row["essential"]), set(row["useful"])
+        essential_hit += len(selected & essential)
+        useful_hit += len(selected & useful)
+        irrelevant_selected += len(selected - essential - useful)
+        essential_miss += len(essential - selected)
+        useful_miss += len(useful - selected)
+        family_utility[row["family"]].append(
+            2*len(selected & essential) + len(selected & useful) - len(selected-essential-useful))
+        if row["family"] == "general":
+            broad_total += 1
+            broad_abstain += not selected
+    utility = 2*essential_hit + useful_hit - irrelevant_selected
+    return {"weighted_utility": utility, "utility_per_query": utility/len(rows),
+            "essential_hit": essential_hit, "essential_miss": essential_miss,
+            "useful_hit": useful_hit, "useful_miss": useful_miss,
+            "irrelevant_selected": irrelevant_selected,
+            "selected_requests": essential_hit + useful_hit + irrelevant_selected,
+            "precision": (essential_hit + useful_hit)/(essential_hit + useful_hit + irrelevant_selected)
+                         if essential_hit + useful_hit + irrelevant_selected else 1.0,
+            "broad_abstention": f"{broad_abstain}/{broad_total}",
+            "family_utility_per_query": {name: statistics.fmean(values)
+                                         for name, values in sorted(family_utility.items())}}
+
+
+def bootstrap(rows: list[dict]) -> list[float]:
+    rng = random.Random(42)
+    values = []
+    for _ in range(5000):
+        sample = [rows[rng.randrange(len(rows))] for _ in rows]
+        values.append(metrics(sample, "composed")["utility_per_query"] -
+                      metrics(sample, "production")["utility_per_query"])
+    values.sort()
+    return [values[int(.025*len(values))], values[int(.975*len(values))-1]]
+
+
+async def run(args: argparse.Namespace) -> None:
+    repo, output = Path(args.repo).resolve(), Path(args.output).resolve()
+    if output.exists() and any(output.iterdir()):
+        raise RuntimeError("output directory is nonempty; do not overwrite a trial")
+    output.mkdir(parents=True, exist_ok=True)
+    manifest = repo / "docs/experiments/evidence/EXP-014/queries-v1.json"
+    cases = json.loads(manifest.read_text())["queries"]
+    if len(cases) != 30 or len({case["id"] for case in cases}) != 30:
+        raise RuntimeError("frozen corpus size/id mismatch")
+    families = defaultdict(list)
+    for case in cases:
+        families[case["family"]].append(case)
+    if len(families) != 6 or any(len(group) != 5 for group in families.values()):
+        raise RuntimeError("expected six five-case families")
+    dev = [case for group in families.values() for case in group[:2]]
+    evaluation = [case for group in families.values() for case in group[2:]]
+    active, specialists, resolver, cards = runtime(repo)
+    if len(specialists) != 32:
+        raise RuntimeError(f"eligibility changed from preflight: {len(specialists)}")
+    gold = {name for case in cases for name in case["essential"] + case["useful"]}
+    if gold - set(specialists):
+        raise RuntimeError("gold engine is no longer eligible")
+    save(output / "preflight.json", {"model": MODEL, "specialists": specialists,
+         "source_sha256": digest(manifest), "cards_version": "production ROUTING_CARDS at baseline b227a64",
+         "development_ids": [case["id"] for case in dev],
+         "evaluation_ids": [case["id"] for case in evaluation]})
+    key = load_key(Path(args.key_file))
+    from slopsearx.service import SearchRequest
+    attempts, arm_rows, tokens = [], [], 0
+    retries = 0
+    started = time.monotonic()
+    async with httpx.AsyncClient(timeout=15) as client:
+        for split, group in (("development", dev), ("evaluation", evaluation)):
+            for index, case in enumerate(group):
+                order = ARMS if index % 2 == 0 else tuple(reversed(ARMS))
+                no_key = resolver.resolve(SearchRequest(query=case["query"]))
+                no_key_specialists = sorted(set(no_key.selected_engines) & set(specialists))
+                for arm in order:
+                    if len(arm_rows) >= 60 or tokens >= 500_000 or time.monotonic()-started > 1200:
+                        raise RuntimeError("registered calls/tokens/time limit reached")
+                    qs = questions(arm, active, specialists, cards)
+                    while True:
+                        tick = time.monotonic()
+                        try:
+                            response = await client.post(ENDPOINT,
+                                headers={"Authorization": f"Bearer {key}"},
+                                json={"model": MODEL, "state": {"user_query": case["query"]},
+                                      "questions": qs})
+                            status = response.status_code
+                        except Exception as exc:
+                            attempts.append({"id": case["id"], "arm": arm,
+                                             "status": type(exc).__name__})
+                            save(output / "attempts.json", attempts)
+                            raise RuntimeError("transport failure; stopped") from None
+                        elapsed = (time.monotonic()-tick)*1000
+                        attempts.append({"id": case["id"], "arm": arm,
+                                         "status": status, "latency_ms": elapsed})
+                        save(output / "attempts.json", attempts)
+                        if status == 529 and retries < 3:
+                            retries += 1
+                            await asyncio.sleep(0.3*2**retries)
+                            continue
+                        if status != 200:
+                            raise RuntimeError(f"provider status {status}; stopped")
+                        body = response.json()
+                        answer_rows = body.get("answers", {})
+                        answers = {name: answer_rows.get(name, {}).get("noul") for name in qs}
+                        if body.get("model") != MODEL or any(
+                            not isinstance(value, (float, int)) or not math.isfinite(value)
+                            or not 0 <= value <= 1 for value in answers.values()):
+                            raise RuntimeError("invalid model/answer; stopped")
+                        selected, scores = choose(arm, answers, specialists)
+                        usage = body.get("usage", {})
+                        tokens += int(usage.get("input_tokens", 0))
+                        arm_rows.append({"id": case["id"], "split": split, "arm": arm,
+                                         "family": case["family"], "query": case["query"],
+                                         "essential": case["essential"], "useful": case["useful"],
+                                         "selected": selected, "scores": scores,
+                                         "answers": answers, "no_key_specialists": no_key_specialists,
+                                         "latency_ms": elapsed,
+                                         "input_tokens": int(usage.get("input_tokens", 0)),
+                                         "output_tokens": int(usage.get("output_tokens", 0))})
+                        save(output / "arm-rows-partial.json", arm_rows)
+                        print(f"{split} {case['id']} {arm} valid", flush=True)
+                        break
+            if split == "development":
+                save(output / "development.json", {"rows": len(arm_rows),
+                     "production": metrics([row for row in arm_rows if row["arm"] == "production"], "selected"),
+                     "composed": metrics([row for row in arm_rows if row["arm"] == "composed"], "selected")})
+                print("development recorded before evaluation", flush=True)
+    by_id = defaultdict(dict)
+    for row in arm_rows:
+        by_id[row["id"]][row["arm"]] = row
+    joined = []
+    for case in cases:
+        pair = by_id[case["id"]]
+        if set(pair) != set(ARMS):
+            raise RuntimeError("incomplete arm pair")
+        joined.append({**case, "split": pair["production"]["split"],
+                       "production": pair["production"]["selected"],
+                       "composed": pair["composed"]["selected"],
+                       "no_key": pair["production"]["no_key_specialists"]})
+    held = [row for row in joined if row["split"] == "evaluation"]
+    prod, composed = metrics(held, "production"), metrics(held, "composed")
+    delta = composed["utility_per_query"] - prod["utility_per_query"]
+    broad = [row for row in held if row["family"] == "general"]
+    summary = {"model": MODEL, "registration_commit": args.registration_commit,
+               "source_sha256": digest(manifest), "specialists": specialists,
+               "valid_calls": len(arm_rows), "provider_attempts": len(attempts),
+               "input_tokens": tokens,
+               "latency_ms": {arm: {"median": statistics.median(row["latency_ms"] for row in arm_rows if row["arm"] == arm),
+                                    "p95_nearest_rank": sorted(row["latency_ms"] for row in arm_rows if row["arm"] == arm)[28]}
+                              for arm in ARMS},
+               "evaluation": {"production": prod, "composed": composed,
+                              "no_key": metrics(held, "no_key"),
+                              "delta_utility_per_query": delta,
+                              "paired_query_bootstrap_95pct": bootstrap(held)},
+               "exploratory_advance_gate": delta >= .25
+                 and composed["essential_miss"] <= prod["essential_miss"]+1
+                 and all(not row["composed"] for row in broad)}
+    save(output / "arm-rows.json", arm_rows)
+    save(output / "joined-rows.json", joined)
+    save(output / "summary.json", summary)
+    print(json.dumps(summary, indent=2, sort_keys=True))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--repo", required=True)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--key-file", required=True)
+    parser.add_argument("--registration-commit", required=True)
+    asyncio.run(run(parser.parse_args()))

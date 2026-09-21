@@ -1,0 +1,119 @@
+# EXP-023: Utility composition for pre-search specialist routing
+
+## Registration (before measurement)
+
+- State: registered 2026-09-21. Baseline: `b227a64` on `main`.
+- Question: on the complete currently eligible specialist catalog, can Jev
+  make *separate primary-evidence and secondary-evidence judgments* that code
+  combines into a better dispatch decision than the shipped single-Noul,
+  `0.65` router? This is distinct from EXP-022's failed post-search
+  `min(domain, incremental)` composition. General engines remain the unchanged
+  base; sensitive and ineligible specialists are excluded by code first.
+- Data: the 30 previously labeled synthetic queries in EXP-014, with five
+  each in packages, science/medical, security, structured references, jobs/ML,
+  and broad/no-specialist. Freeze first two IDs in each family as 12
+  development cases and the other three as 18 evaluation cases. These labels
+  and queries are **publicly exposed prior research data**, so the evaluation
+  split is diagnostic, not a genuinely blind confirmation.
+- Eligibility: use the current built-in adapter registry and capability
+  catalog as production does, with the current process environment; exclude
+  broad/general, sensitive, disabled, unauthenticated-required, and circuit-
+  open engines before asking Jev. A preflight found 32 eligible specialists
+  and no missing gold-label engine. Save the exact list. The separate local
+  TypeSafe key is used only for experiment calls; it is never supplied as an
+  engine credential. No engine or Brave search call is allowed.
+- Comparator A: reproduce the *exact production Noul instructions* in
+  `slopsearx/jev.py` for each eligible specialist, select every score >=0.65.
+  Compare to the ordinary keyless `ScopeResolver` specialist set as a secondary
+  deterministic baseline. The primary comparison is A versus B on the same
+  cases and catalog.
+- Candidate B: two independently evaluated Nouls per specialist. Primary:
+  would its original records be essential primary evidence for the query?
+  Secondary: if not primary, could it still offer distinct useful secondary
+  evidence beyond general web search? State is only the query, exactly as A.
+  Let `p` and `s` be these Noul yes-values. Code computes the frozen utility
+  proxy `U = 2p + (1-p)s - (1-p)(1-s)` and selects every eligible specialist
+  with `U > 0`, with no count cap. This weights essential=+2, useful=+1,
+  irrelevant=-1 in the same units as EXP-014's gold utility. It is a heuristic
+  unless these conditional model values are empirically calibrated; it is not
+  a probability that a search will succeed. No threshold or weight tuning is
+  permitted after reading outputs.
+- Primary metric: weighted gold utility per evaluation query, using
+  `2 * selected essential + selected useful - selected irrelevant`, candidate
+  minus shipped-rule comparator. Report 5,000 paired query-bootstrap 95%
+  percentiles (seed 42), essential/useful recall, precision, wasted specialist
+  requests, three broad-query abstentions, per-family effects, provider
+  latency and tokens. The ordinary keyless router is a secondary comparison.
+- Exploratory advancement gate: at least +0.25 weighted utility/query over A,
+  no more than one extra missed essential engine, all three broad controls
+  abstain, and no policy violation. Passing would only register a fresh
+  confirmation experiment; this exposed corpus cannot support product change.
+  If the gate fails, stop without tuning prompts or thresholds on evaluation
+  data. Outcome is `inconclusive` for product adoption regardless of this
+  exposed-corpus point estimate; record the narrower tested-candidate verdict.
+- Bounds: 60 valid Jev requests (30 per arm), at most three HTTP 529 retries,
+  500,000 input tokens, 20 minutes; alternate arm order by query parity.
+  Persist all attempts and scores incrementally. Stop on unexpected cost,
+  invalid response, or fourth overload. Pin `jev-1.13.0`; zero search calls,
+  no personal queries, and no production code or configuration changes.
+- Run from the isolated worktree using
+  `/Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python docs/experiments/evidence/EXP-023/replay.py.txt --repo . --output docs/experiments/evidence/EXP-023/trial1 --registration-commit dd350c3 --key-file /Volumes/tank01/magnus/git/SlopSearX/.env`.
+  The key must be read from the ignored project `.env` without printing or
+  copying its value to experiment evidence. Freeze this inert `.py.txt`
+  harness in a signed commit before measurement.
+
+## Readout
+
+Outcome: **inconclusive for product adoption; this frozen composition failed
+its exploratory advancement gate**. All 60 calls returned valid responses in
+60 attempts. The run used 251,098 Jev input tokens, no search-engine calls,
+no retries, and no production changes. The preflight recorded 32 eligible
+specialists, the exact 12/18 split, and the query-corpus checksum. Development
+metrics were saved before evaluation; no threshold or weight was tuned.
+
+| 18 exposed evaluation queries | Shipped single-Noul rule | Composed primary/secondary rule | Keyless resolver, diagnostic |
+| --- | ---: | ---: | ---: |
+| Essential engines selected / missed | 14 / 1 | 15 / 0 | 1 / 14 |
+| Useful secondary engines selected / missed | 3 / 4 | 7 / 0 | 1 / 6 |
+| Irrelevant specialist requests | 0 | 8 | 2 |
+| Selection precision | 1.000 | 0.733 | 0.500 |
+| Broad-query abstention | 3/3 | 3/3 | 3/3 |
+| Weighted utility/query | 1.722 | 1.611 | 0.056 |
+
+The composed-minus-shipped difference was **-0.111 utility/query**; a paired
+query-bootstrap 95% interval was **[-0.667, +0.500]**. The interval is wide,
+and these were already-exposed synthetic labels—not population evidence. The
+candidate gained the missed `github` primary source on `q25` and four useful
+secondary sources, but eight irrelevant requests outweighed those gains under
+the preregistered costs. Three irrelevant science sources on `q10` and two
+irrelevant security sources on `q14` were notable clusters. Both arms abstained
+on all three broad/no-specialist controls.
+
+The candidate's Noul values are not empirically calibrated probabilities of
+the gold labels. Consequently, the code's utility expression is a useful
+*decision heuristic*, not a guaranteed expectation. The strong shipped-rule
+precision on this corpus also reflects that EXP-014 was used to select its
+0.65 threshold; this is not an independent product comparison. Median Jev
+latency was 185 ms for the shipped question and 186 ms for the composed one;
+nearest-rank p95 was 265 and 255 ms. Across 30 calls per arm, the composed
+questions used 166,889 input tokens versus 84,209 for the shipped question:
+roughly twice the Jev input cost with no measured utility gain. This excludes
+network and search-engine costs; the per-call usage is preserved.
+
+The registered +0.25/query advance gate failed. We therefore did not author
+a fresh corpus, retune the formula, acquire any search results, or change
+SlopSearX. This finding does not rule out other TypeSafe workflow structures;
+it rules out advancing this exact one on the present evidence. A new design
+would need its own registration and fresh evidence, especially if it adds a
+calibrated abstention or source-specific cost rule.
+
+Evidence: [frozen harness](evidence/EXP-023/replay.py.txt),
+[preflight](evidence/EXP-023/trial1/preflight.json),
+[provider attempts](evidence/EXP-023/trial1/attempts.json),
+[development readout](evidence/EXP-023/trial1/development.json),
+[per-arm raw scores](evidence/EXP-023/trial1/arm-rows.json),
+[paired rows](evidence/EXP-023/trial1/joined-rows.json), and
+[summary](evidence/EXP-023/trial1/summary.json). The incremental
+[`arm-rows-partial.json`](evidence/EXP-023/trial1/arm-rows-partial.json) records
+write-as-you-go evidence. Registration commit `dd350c3`, frozen harness
+commit `0c84e1e`.

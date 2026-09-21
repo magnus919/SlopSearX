@@ -1,0 +1,120 @@
+{
+  "evaluation": {
+    "composed": {
+      "broad_abstention": "3/3",
+      "essential_hit": 15,
+      "essential_miss": 0,
+      "family_utility_per_query": {
+        "general": 0.0,
+        "jobs_ml": 2.0,
+        "packages": 2.6666666666666665,
+        "science_medical": 1.3333333333333333,
+        "security": 1.6666666666666667,
+        "structured": 2.0
+      },
+      "irrelevant_selected": 8,
+      "precision": 0.7333333333333333,
+      "selected_requests": 30,
+      "useful_hit": 7,
+      "useful_miss": 0,
+      "utility_per_query": 1.6111111111111112,
+      "weighted_utility": 29
+    },
+    "delta_utility_per_query": -0.11111111111111116,
+    "no_key": {
+      "broad_abstention": "3/3",
+      "essential_hit": 1,
+      "essential_miss": 14,
+      "family_utility_per_query": {
+        "general": 0.0,
+        "jobs_ml": 0.6666666666666666,
+        "packages": 0.0,
+        "science_medical": -0.3333333333333333,
+        "security": 0.0,
+        "structured": 0.0
+      },
+      "irrelevant_selected": 2,
+      "precision": 0.5,
+      "selected_requests": 4,
+      "useful_hit": 1,
+      "useful_miss": 6,
+      "utility_per_query": 0.05555555555555555,
+      "weighted_utility": 1
+    },
+    "paired_query_bootstrap_95pct": [
+      -0.6666666666666667,
+      0.4999999999999998
+    ],
+    "production": {
+      "broad_abstention": "3/3",
+      "essential_hit": 14,
+      "essential_miss": 1,
+      "family_utility_per_query": {
+        "general": 0.0,
+        "jobs_ml": 1.3333333333333333,
+        "packages": 2.0,
+        "science_medical": 2.3333333333333335,
+        "security": 2.6666666666666665,
+        "structured": 2.0
+      },
+      "irrelevant_selected": 0,
+      "precision": 1.0,
+      "selected_requests": 17,
+      "useful_hit": 3,
+      "useful_miss": 4,
+      "utility_per_query": 1.7222222222222223,
+      "weighted_utility": 31
+    }
+  },
+  "exploratory_advance_gate": false,
+  "input_tokens": 251098,
+  "latency_ms": {
+    "composed": {
+      "median": 185.8039790240582,
+      "p95_nearest_rank": 254.52524999855086
+    },
+    "production": {
+      "median": 185.01220902544446,
+      "p95_nearest_rank": 265.28362499084324
+    }
+  },
+  "model": "jev-1.13.0",
+  "provider_attempts": 60,
+  "registration_commit": "dd350c3",
+  "source_sha256": "d86deaf35fc326e24ee1113d1cafb1bd39389ce3abb30b32e423350a494bbd54",
+  "specialists": [
+    "arxiv",
+    "ashby",
+    "clinicaltrials",
+    "crates",
+    "crtsh",
+    "cve",
+    "dockerhub",
+    "edgar",
+    "epss",
+    "exploitdb",
+    "github",
+    "greenhouse",
+    "greynoise",
+    "huggingface",
+    "lever",
+    "mitreattack",
+    "musicbrainz",
+    "nominatim",
+    "npm",
+    "nvd",
+    "openalex",
+    "openfda",
+    "openlibrary",
+    "oyez",
+    "pubchem",
+    "pubmed",
+    "pypi",
+    "repology",
+    "rubygems",
+    "semanticscholar",
+    "uniprot",
+    "urlhaus"
+  ],
+  "valid_calls": 60
+}
