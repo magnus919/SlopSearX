@@ -408,7 +408,14 @@ class ResearchJobRunner:
         else:
             job.state = "failed"
         if job.stop_reason is None:
-            job.stop_reason = "plan_executed" if job.state == "succeeded" else "execution_failed"
+            if (
+                job.state == "succeeded"
+                and job.workflow.get("kind") != "dependency_dossier"
+                and len(job.queries) >= job.budget_limits["queries"]
+            ):
+                job.stop_reason = "query_budget_exhausted"
+            else:
+                job.stop_reason = "plan_executed" if job.state == "succeeded" else "execution_failed"
         if not await store.save_if_owned(job):
             raise LeaseLostError(job.job_id)
         return job
@@ -452,6 +459,7 @@ class ResearchJobRunner:
         *,
         mutate: Callable[[ResearchJob], None] | None = None,
         execute: bool = True,
+        metadata_only: bool = False,
     ) -> ResearchJob:
         """Apply a mutation and optionally execute while holding a fenced lease.
 
@@ -459,7 +467,9 @@ class ResearchJobRunner:
         apply a stale caller copy or write after releasing lease ownership.
         """
         store = self._jobs_for(job.tenant)
-        claimed = await store._claim_prepared(job, self._owner_id, self._lease_ttl, mutate=mutate)
+        claimed = await store._claim_prepared(
+            job, self._owner_id, self._lease_ttl, mutate=mutate, metadata_only=metadata_only
+        )
         if claimed is None:
             raise JobStillRunningError(job.job_id)
         token = claimed.lease_token

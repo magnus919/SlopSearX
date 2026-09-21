@@ -97,7 +97,9 @@ jobs:
           cache: pip
       - run: pip install -e ".[dev]"
       - name: Real Valkey cache and durable ownership contracts
-        run: pytest --no-cov -q tests/test_cache_integration.py tests/test_research_queue_integration.py
+        env:
+          SLOPSEARX_TEST_VALKEY_URL: redis://127.0.0.1:6379/0
+        run: pytest --no-cov -q tests/test_cache_integration.py tests/test_research_queue_integration.py tests/test_adaptive_valkey.py
 
   searxng-api-contract:
     runs-on: ubuntu-latest

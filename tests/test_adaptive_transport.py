@@ -83,3 +83,109 @@ async def test_adaptive_research_journey(monkeypatch):
             await client.call_tool("slopsearx_extend_research", {**followup, "continuation_key": "step-3"})
         )
         assert rejected["error"]["code"] == "invalid_job_state"
+
+
+async def test_budget_exhaustion_completion_replays_over_mcp_transport(monkeypatch):
+    monkeypatch.setenv("MCP_GRANT_RESEARCH", "1")
+    app = make_fixture_http_app([FakeEngineSpec(name="wikipedia", count=3)], token="research-test")
+    async with _serve(app) as url, _session(url, "research-test") as (client, _):
+        await client.initialize()
+
+        async def call(name, **arguments):
+            result = await client.call_tool(name, arguments)
+            assert not result.isError, result
+            value = _payload(result)
+            assert "error" not in value, value
+            return value
+
+        job = await call(
+            "slopsearx_start_research",
+            question="bounded retrieval",
+            max_results=1,
+            initial_plan=[{"query": "bounded", "engines": ["wikipedia"]}],
+        )
+        async with asyncio.timeout(10):
+            while job["state"] in {"queued", "running"}:
+                await asyncio.sleep(0.02)
+                job = await call("slopsearx_get_job", job_id=job["job_id"])
+        assert job["stop_reason"] == "result_budget_exhausted"
+        completed = await call(
+            "slopsearx_update_research",
+            job_id=job["job_id"],
+            subquestion_states={},
+            complete=True,
+            rationale="bounded evidence is sufficient",
+        )
+        assert completed["stop_reason"] == "result_budget_exhausted"
+        assert completed["caller_completed"] is True
+        replay = await call(
+            "slopsearx_update_research",
+            job_id=job["job_id"],
+            subquestion_states={},
+            complete=True,
+            rationale="bounded evidence is sufficient",
+        )
+        assert replay == completed
+        conflict = _payload(
+            await client.call_tool(
+                "slopsearx_update_research",
+                {
+                    "job_id": job["job_id"],
+                    "subquestion_states": {},
+                    "complete": True,
+                    "rationale": "a different decision",
+                },
+            )
+        )
+        assert conflict["error"]["code"] == "idempotency_conflict"
+
+
+async def test_exact_query_cap_completion_over_mcp_transport(monkeypatch):
+    monkeypatch.setenv("MCP_GRANT_RESEARCH", "1")
+    app = make_fixture_http_app([FakeEngineSpec(name="wikipedia", count=1)], token="research-test")
+    async with _serve(app) as url, _session(url, "research-test") as (client, _):
+        await client.initialize()
+
+        async def call(name, **arguments):
+            result = await client.call_tool(name, arguments)
+            assert not result.isError, result
+            value = _payload(result)
+            assert "error" not in value, value
+            return value
+
+        job = await call(
+            "slopsearx_start_research",
+            question="one query",
+            max_queries=1,
+            initial_plan=[{"query": "one", "engines": ["wikipedia"]}],
+        )
+        async with asyncio.timeout(10):
+            while job["state"] in {"queued", "running"}:
+                await asyncio.sleep(0.02)
+                job = await call("slopsearx_get_job", job_id=job["job_id"])
+        assert job["stop_reason"] == "query_budget_exhausted"
+        assert job["caller_completed"] is False
+        blocked = _payload(
+            await client.call_tool(
+                "slopsearx_extend_research",
+                {"job_id": job["job_id"], "query": "second", "engines": ["wikipedia"]},
+            )
+        )
+        assert blocked["error"]["code"] == "job_budget_exceeded"
+        completed = await call(
+            "slopsearx_update_research",
+            job_id=job["job_id"],
+            subquestion_states={},
+            complete=True,
+            rationale="one query was enough",
+        )
+        assert completed["caller_completed"] is True
+        assert completed["stop_reason"] == "query_budget_exhausted"
+        replay = await call(
+            "slopsearx_update_research",
+            job_id=job["job_id"],
+            subquestion_states={},
+            complete=True,
+            rationale="one query was enough",
+        )
+        assert replay == completed

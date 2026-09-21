@@ -2332,6 +2332,16 @@ async def slopsearx_extend_research(
     return result
 
 
+def _completion_replay_matches(job: ResearchJob, states: dict[str, str], rationale: str | None) -> bool:
+    if job.completion_rationale != rationale:
+        return False
+    if job.completion_subquestion_states is not None:
+        return job.completion_subquestion_states == states
+    # Legacy completed records did not retain the request map. A nonempty
+    # matching assertion is compatible; an empty map proves no equivalence.
+    return bool(states) and all(job.subquestions[identity]["state"] == value for identity, value in states.items())
+
+
 async def slopsearx_update_research(
     job_id: str,
     subquestion_states: dict[str, str],
@@ -2362,27 +2372,46 @@ async def slopsearx_update_research(
         rationale = _research_metadata(rationale, "rationale", state.policy.max_query_length)
     except ResearchMutationError as exc:
         return _error(exc.code, str(exc))
+    if job.caller_completed and complete:
+        if set(subquestion_states) - set(job.subquestions):
+            return _error("invalid_input", "unknown subquestion id")
+        if _completion_replay_matches(job, subquestion_states, rationale):
+            return _job_summary(job)
+        return _error("idempotency_conflict", "completion request conflicts with the persisted completion")
     if job.state in ("cancelled", "expired") or job.caller_completed:
         return _error("invalid_job_state", "job is already terminal")
 
     def update(target: ResearchJob) -> None:
         if set(subquestion_states) - set(target.subquestions):
             raise ResearchMutationError("invalid_input", "unknown subquestion id")
+        if target.caller_completed:
+            if complete and _completion_replay_matches(target, subquestion_states, rationale):
+                return
+            raise ResearchMutationError(
+                "idempotency_conflict", "completion request conflicts with the persisted completion"
+            )
         initialize_budget(target, state.policy)
         for identity, value in subquestion_states.items():
             target.subquestions[identity]["state"] = value
         if complete:
             target.caller_completed = True
             target.completion_rationale = rationale
-            target.stop_reason = "caller_completed"
-            # Operational success here means the caller closed work, not that answers are true.
-            for query in target.queries:
-                if query.state in ("pending", "running"):
-                    query.state = "cancelled"
-            target.state = "succeeded"
+            target.completion_subquestion_states = dict(subquestion_states)
+            if target.stop_reason not in {
+                "result_budget_exhausted",
+                "query_budget_exhausted",
+                "attempt_budget_exhausted",
+                "engine_budget_exhausted",
+            }:
+                target.stop_reason = "caller_completed"
+                # Operational success here means the caller closed work, not that answers are true.
+                for query in target.queries:
+                    if query.state in ("pending", "running"):
+                        query.state = "cancelled"
+                target.state = "succeeded"
 
     try:
-        return _job_summary(await state.runner.run_direct(job, mutate=update, execute=False))
+        return _job_summary(await state.runner.run_direct(job, mutate=update, execute=False, metadata_only=complete))
     except ResearchMutationError as exc:
         return _error(exc.code, str(exc))
     except (JobStillRunningError, LeaseLostError):

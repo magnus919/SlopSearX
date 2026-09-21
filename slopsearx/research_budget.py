@@ -10,15 +10,8 @@ from typing import Any
 from slopsearx.capabilities import MCPPolicy
 from slopsearx.merger import _normalise_url
 from slopsearx.research_models import ResearchJob, ResearchQuery, ResearchQueryAttempt
+from slopsearx.research_models import ResearchMutationError as ResearchMutationError
 from slopsearx.service import SearchResponse
-
-
-class ResearchMutationError(ValueError):
-    """An authoritative leased mutation failed without changing the record."""
-
-    def __init__(self, code: str, message: str) -> None:
-        super().__init__(message)
-        self.code = code
 
 
 def initialize_budget(job: ResearchJob, policy: MCPPolicy) -> None:

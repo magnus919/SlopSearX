@@ -33,6 +33,14 @@ class JobStillRunningError(Exception):
     """
 
 
+class ResearchMutationError(ValueError):
+    """An authoritative leased mutation failed without changing the record."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+
+
 JOB_STATES = frozenset({"queued", "running", "partial", "succeeded", "failed", "cancelled", "expired"})
 QUERY_STATES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 STRATEGIES = ("triangulate", "broad", "fresh", "counterevidence")
@@ -309,6 +317,7 @@ class ResearchJob:
     seen_lead_ids: list[str] = field(default_factory=list)
     caller_completed: bool = False
     completion_rationale: str | None = None
+    completion_subquestion_states: dict[str, str] | None = None
     stop_reason: str | None = None
 
     @property
@@ -403,6 +412,11 @@ def _job_from_payload(payload: dict[str, Any]) -> ResearchJob:
         seen_lead_ids=list(payload.get("seen_lead_ids") or []),
         caller_completed=bool(payload.get("caller_completed", False)),
         completion_rationale=payload.get("completion_rationale"),
+        completion_subquestion_states=(
+            dict(payload["completion_subquestion_states"])
+            if payload.get("completion_subquestion_states") is not None
+            else None
+        ),
         stop_reason=payload.get("stop_reason"),
     )
 
