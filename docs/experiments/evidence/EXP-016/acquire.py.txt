@@ -1,0 +1,118 @@
+"""EXP-016–018 bounded live acquisition through the production SearchService.
+
+Archived as inert .txt evidence. No Jev, Brave, private query, or credential is
+used here. Every completed service call is persisted before the next request.
+"""
+from __future__ import annotations
+
+import argparse
+import asyncio
+import hashlib
+import json
+from pathlib import Path
+
+from engines.duckduckgo import DuckDuckGoAdapter
+from engines.google import GoogleAdapter
+from engines.internetarchive import InternetArchiveAdapter
+from engines.npm import NpmAdapter
+from engines.openalex import OpenAlexAdapter
+from slopsearx.formatter import format_json
+from slopsearx.service import AppContext, SearchRequest, SearchService
+
+ENGINES = ("duckduckgo", "google", "npm", "openalex", "internetarchive")
+SPECIALISTS = ("npm", "openalex", "internetarchive")
+
+
+def card(result) -> dict:
+    return {
+        "url": result.url,
+        "title": result.title[:200],
+        "snippet": result.content[:160],
+        "engine": result.engine,
+        "engines": sorted(result.engines),
+        "position": result.position,
+        "tier": result.tier,
+    }
+
+
+def capture(response) -> dict:
+    wire = format_json(response.results, response.query)
+    canonical = json.dumps(wire, sort_keys=True, separators=(",", ":"))
+    return {
+        "query": response.query,
+        "selected_engines": response.scope.selected_engines,
+        "outcomes": [
+            {"engine": x.engine, "status": x.status, "result_count": x.result_count,
+             "latency_ms": x.latency_ms} for x in response.engine_outcomes
+        ],
+        "response_time_ms": response.response_time_ms,
+        "result_count": len(response.results),
+        "partial": response.partial,
+        "all_unresponsive": response.all_unresponsive,
+        "wire_sha256": hashlib.sha256(canonical.encode()).hexdigest(),
+        "cards": [card(r) for r in response.results[:5]],
+    }
+
+
+async def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    corpus_path = Path(__file__).with_name("query-set.json")
+    corpus_bytes = corpus_path.read_bytes()
+    corpus = json.loads(corpus_bytes)
+    assert len(corpus) == 20 and sum(x["split"] == "cal" for x in corpus) == 12
+    assert all(set(x["specialist_queries"]) == set(SPECIALISTS) for x in corpus)
+    active = {
+        "duckduckgo": DuckDuckGoAdapter({"max_results": 5, "timeout_ms": 8000}),
+        "google": GoogleAdapter({"max_results": 5, "timeout_ms": 8000}),
+        "npm": NpmAdapter({"max_results": 5, "timeout_ms": 8000}),
+        "openalex": OpenAlexAdapter({"max_results": 5, "timeout_ms": 8000}),
+        "internetarchive": InternetArchiveAdapter({"max_results": 5, "timeout_ms": 8000}),
+    }
+    ctx = AppContext(active_engines=active, cache=None, rate_limiter=None, router=None,
+                     engine_semaphore=asyncio.Semaphore(5), tier1_engines={"duckduckgo", "google"},
+                     sensitive_engines=set(), jev_router=None)
+    service = SearchService(ctx)
+    evidence = {"registration_commit": "b624f6b", "baseline_sha": "ae5cd4c",
+                "query_set_sha256": hashlib.sha256(corpus_bytes).hexdigest(),
+                "engines": list(ENGINES), "rows": [], "adapter_attempts": 0}
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        for task in corpus:
+            row = {"id": task["id"], "split": task["split"], "family": task["family"],
+                   "query": task["query"], "task": task["task"],
+                   "missing_evidence": task["missing_evidence"], "specialist_focus": task["specialist_focus"],
+                   "general": None, "specialists": {}}
+            evidence["rows"].append(row)
+            scopes = [("general", task["query"], ["duckduckgo", "google"])] + [
+                (name, task["specialist_queries"][name], [name]) for name in SPECIALISTS
+            ]
+            for name, query, engines in scopes:
+                assert evidence["adapter_attempts"] + len(engines) <= 100
+                evidence["adapter_attempts"] += len(engines)
+                try:
+                    response = await service.search(SearchRequest(
+                        query=query, engines=engines, max_results=5,
+                        freshness="prefer_fresh", generate_suggestions=False,
+                    ))
+                    result = capture(response)
+                except Exception as exc:
+                    result = {"query": query, "selected_engines": engines,
+                              "error_type": type(exc).__name__, "error": str(exc)[:160],
+                              "outcomes": [], "result_count": 0, "cards": []}
+                if name == "general":
+                    row["general"] = result
+                else:
+                    row["specialists"][name] = result
+                args.output.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n")
+                print(f"{task['id']} {name} status={','.join(x['status'] for x in result['outcomes']) or 'exception'} results={result['result_count']}", flush=True)
+                await asyncio.sleep(0.2)
+    finally:
+        for engine in active.values():
+            await engine.shutdown()
+    print(json.dumps({"rows": len(evidence["rows"]), "adapter_attempts": evidence["adapter_attempts"]}))
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
