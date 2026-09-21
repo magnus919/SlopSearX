@@ -90,3 +90,27 @@ those automatic edits were restored to preserve evidence hashes and scope.
 Graphify AST update completed. CI and automated review were requested on the
 implementation PR; use that PR for their current status. No CI/review was
 requested for documentation-only publication.
+
+## Review follow-up and merge confirmation — 2026-09-21
+
+PR #392 was merged on 2026-09-20 at 15:43:26 UTC as `55887e6`.
+This supersedes the earlier unmerged delivery status; it confirms repository
+integration, not production deployment. The former Docker-pin blocker was
+addressed separately by merged PR #400; no new build result is inferred here.
+
+Today's scheduled cycle resumed the outstanding review follow-up rather than
+starting another hypothesis. The review correctly identified that the contract
+language row could be read as promising default-language metadata on every
+search path. Inspection of current `tools.py` and
+`ResearchJobRunner._build_query_enforcement` confirms jobs/security/science and
+research subqueries do not emit this default-language entry. The contract now
+names generic and targeted searches explicitly and describes specialist and
+research key coverage. No runtime change or new measurement was made.
+
+The original supported result remains bounded to its registered generic-search
+fixture corpus (automatic and explicit engine scopes): 33.33% to 100% truthful
+language reporting, +4.27% response bytes, and other fields unchanged. It does
+not establish specialist/research completeness or agent task-success gains.
+Evidence and its checksums are unchanged. Validation for this follow-up was
+source-to-document comparison, documentation diff inspection and whitespace
+checking; no tests, CI or code review were requested for documentation-only work.
