@@ -301,7 +301,9 @@ class TestOAuthOverHTTP:
                     "client_id": client_id,
                 },
             )
-            assert bad.status_code == 400, bad.text
+            # FastMCP's OAuth handler follows MCP's invalid-grant challenge
+            # semantics: a rejected authorization code receives HTTP 401.
+            assert bad.status_code == 401, bad.text
 
             # Correct verifier succeeds
             token = await client.post(
@@ -371,4 +373,4 @@ class TestOAuthOverHTTP:
         server = create_server(host="127.0.0.1", port=port, oauth=settings, oauth_provider=provider)
         async with Client(server) as client:
             tools = await client.list_tools()
-            assert len(tools.tools) == 35
+            assert len(tools) == 35
