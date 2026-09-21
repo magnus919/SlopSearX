@@ -883,7 +883,13 @@ class SearchService:
         engine_names: list[str] = []
         started_engines: set[str] = set()
         circuit_open: list[str] = []
+        upstream_cooldown: list[tuple[str, float]] = []
         for name, engine in target.items():
+            if self._ctx.rate_limiter is not None:
+                remaining = await self._ctx.rate_limiter.upstream_cooldown_remaining(name)
+                if remaining > 0:
+                    upstream_cooldown.append((name, remaining))
+                    continue
             if not engine.circuit_allowed():
                 circuit_open.append(name)
                 continue
@@ -904,9 +910,7 @@ class SearchService:
         if request.generate_suggestions and self._ctx.suggestion_service is not None:
             suggestions_task = asyncio.create_task(self._generate_suggestions(request.query))
 
-        engine_timeouts = [
-            self._resolve_engine_timeout_s(engine) for engine in target.values() if engine.circuit_allowed()
-        ]
+        engine_timeouts = [self._resolve_engine_timeout_s(target[name]) for name in engine_names]
         # The deadline covers semaphore acquisition as well as engine work.
         # Cap the sum so the overall guard remains reachable while serialized
         # dispatch still receives a bounded budget for its selected engines.
@@ -961,7 +965,7 @@ class SearchService:
                 )
                 if result.status in (EngineStatus.ERROR, EngineStatus.TIMEOUT):
                     engine.record_failure()
-                elif result.status != EngineStatus.UNAVAILABLE:
+                elif result.status not in (EngineStatus.UNAVAILABLE, EngineStatus.RATE_LIMITED):
                     engine.record_success()
 
             responses[name] = result
@@ -995,6 +999,14 @@ class SearchService:
                         avg_score=avg_score,
                     )
                 )
+
+        # Add upstream-cooldown engines as rate-limited outcomes (no dispatch)
+        for name, remaining in upstream_cooldown:
+            responses[name] = AdapterResponse(
+                results=[],
+                status=EngineStatus.RATE_LIMITED,
+                error_message=f"upstream cooldown active; retry in {max(1, round(remaining))}s",
+            )
 
         # Add circuit-open engines as failures (no metrics — never dispatched)
         for name in circuit_open:

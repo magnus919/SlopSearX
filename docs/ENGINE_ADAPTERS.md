@@ -32,6 +32,28 @@ class MyEngine(EngineAdapter):
 4. **Adapters own their error classification.** HTTP 429, CAPTCHA, DOM change — each is classified as transient or permanent.
 5. **The internal schema is decoupled from wire format.** `SearchResult` is the internal dataclass. SearXNG JSON/YAML are output formatters — not the data model.
 
+### Semantic Scholar access and rate limits
+
+The Semantic Scholar paper-search adapter can run without credentials. Set
+`ENGINE_SEMANTICSCHOLAR_API_KEY` when an API key is available; Semantic
+Scholar says that most endpoints are public, while some endpoints require a
+key, and recommends including a key with every request. Its current API
+guidance says unauthenticated traffic is limited to 1,000 requests per second
+shared among all unauthenticated users and may be throttled further during
+heavy use; authenticated users receive higher limits (the introductory key
+limit is documented as 1 request per second across endpoints). These are
+provider expectations, not a success guarantee.
+
+When Semantic Scholar returns HTTP 429, the adapter honors the provider's
+`Retry-After` value when usable, bounds it to the service's configured safety
+range, and publishes one shared Semantic Scholar cooldown so other replicas
+do not immediately retry the provider. A later request can still be rate
+limited or fail for another provider-side reason.
+
+See Semantic Scholar's [API overview](https://www.semanticscholar.org/product/api)
+and [API tutorial](https://www.semanticscholar.org/product/api/tutorial) for
+the current authentication and rate-limit guidance.
+
 ## Class Attributes
 
 | Attribute | Required | Default | Description |
