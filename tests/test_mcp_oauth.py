@@ -325,7 +325,8 @@ class TestOAuthOverHTTP:
             async with mcp_httpx.AsyncClient(
                 headers={"Authorization": f"Bearer {tokens['access_token']}"}, timeout=15
             ) as authed:
-                async with streamable_http_client(f"{base}/mcp", http_client=authed) as (read, write, _):
+                async with streamable_http_client(f"{base}/mcp", http_client=authed) as streams:
+                    read, write = streams[0], streams[1]
                     async with ClientSession(read, write) as session:
                         await session.initialize()
                         tools = await session.list_tools()

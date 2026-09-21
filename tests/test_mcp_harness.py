@@ -24,7 +24,10 @@ from contextlib import asynccontextmanager, suppress
 from types import SimpleNamespace
 from typing import Any, AsyncIterator
 
-import httpx
+try:
+    import httpx2 as httpx  # type: ignore[import-not-found]
+except ImportError:  # MCP SDK v1 uses httpx rather than httpx2.
+    import httpx
 import pytest
 import uvicorn
 from mcp import ClientSession
@@ -91,7 +94,8 @@ async def _session(url: str, token: str = "") -> AsyncIterator[tuple[ClientSessi
     """Open a streamable-HTTP MCP client session against ``url``."""
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     async with httpx.AsyncClient(headers=headers) as client:
-        async with streamable_http_client(url, http_client=client) as (read, write, _get_session_id):
+        async with streamable_http_client(url, http_client=client) as streams:
+            read, write = streams[0], streams[1]
             async with ClientSession(read, write) as session:
                 yield session, client
 

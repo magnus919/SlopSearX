@@ -27,18 +27,20 @@ import logging
 import os
 import sys
 import time
+from importlib import import_module
 from pathlib import Path
 from typing import Any, Awaitable, Callable, cast
 
-try:
-    import httpx2 as httpx  # type: ignore[import-not-found]
-except ImportError:  # MCP SDK < 2 uses the standard httpx package.
-    import httpx
 import uvicorn
 from mcp.client.auth.exceptions import OAuthFlowError
 from mcp.client.auth.oauth2 import OAuthClientProvider
 from mcp.shared import auth as _mcp_auth
 from mcp.shared.auth import OAuthClientInformationFull, OAuthClientMetadata, OAuthToken
+
+try:
+    httpx: Any = import_module("httpx2")
+except ModuleNotFoundError:  # MCP SDK v1 uses the standard httpx package.
+    httpx = import_module("httpx")
 
 AuthorizationCodeResult: Any = getattr(_mcp_auth, "AuthorizationCodeResult", None)
 
@@ -205,7 +207,7 @@ def build_oauth_http_client(
     no_browser: bool = False,
     redirect_handler: Callable[[str], Awaitable[None]] | None = None,
     callback_handler: Callable[[], Awaitable[tuple[str, str | None]]] | None = None,
-) -> httpx.AsyncClient:
+) -> Any:
     """Build an httpx client that authenticates to the remote via OAuth.
 
     ``redirect_handler``/``callback_handler`` default to the loopback flow

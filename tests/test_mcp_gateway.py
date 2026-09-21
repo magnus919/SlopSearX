@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import socket
 import time
+from contextlib import asynccontextmanager, suppress
 from typing import Any
 
 try:
@@ -18,8 +19,7 @@ except ImportError:
     import httpx
 import pytest
 import uvicorn
-from fastmcp import FastMCP
-from mcp.shared.memory import create_connected_server_and_client_session
+from fastmcp import Client, FastMCP
 
 from slopsearx.mcp.gateway import _make_proxy, _register_proxy, create_gateway
 from slopsearx.mcp.security import make_http_app
@@ -46,6 +46,37 @@ async def _wait_for_port(port: int, timeout: float = 20.0) -> bool:
             pass
         await asyncio.sleep(0.2)
     return False
+
+
+@asynccontextmanager
+async def _gateway_client(gateway: FastMCP):
+    """Exercise the gateway across its HTTP boundary, with its real lifespan."""
+    port = _free_port()
+    server = uvicorn.Server(
+        uvicorn.Config(make_http_app(gateway, ""), host="127.0.0.1", port=port, log_level="warning")
+    )
+    task = asyncio.create_task(server.serve())
+    try:
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            if task.done():
+                raise RuntimeError("gateway startup failed")
+            try:
+                async with httpx.AsyncClient(timeout=1) as probe:
+                    await probe.get(f"http://127.0.0.1:{port}/mcp")
+                break
+            except httpx.ConnectError:
+                await asyncio.sleep(0.1)
+        else:
+            raise RuntimeError("gateway did not start")
+        async with Client(f"http://127.0.0.1:{port}/mcp") as client:
+            yield client
+    finally:
+        server.should_exit = True
+        # Uvicorn exits with SystemExit when the gateway's startup lifespan
+        # rejects bad credentials; the test asserts that startup failure.
+        with suppress(SystemExit):
+            await asyncio.wait_for(task, timeout=10)
 
 
 @pytest.fixture
@@ -89,16 +120,22 @@ class TestGateway:
         url = f"http://127.0.0.1:{remote_server}/mcp"
         gateway = create_gateway(url, token=TOKEN)
 
-        async with create_connected_server_and_client_session(gateway) as client:
+        async with _gateway_client(gateway) as client:
             tools = await client.list_tools()
-            names = [tool.name for tool in tools.tools]
+            names = [tool.name for tool in tools]
             assert "slopsearx_search" in names
             assert "slopsearx_get_service_status" in names
-            assert len(tools.tools) == 35
+            assert len(tools) == 35
+            search = next(tool for tool in tools if tool.name == "slopsearx_search")
+            schema = getattr(search, "input_schema", None) or getattr(search, "inputSchema")
+            props = schema.get("properties", {})
+            assert props["query"]["type"] == "string"
+            assert "intent" in props
+            assert "max_results" in props
 
             # Tool call is proxied to the remote server
-            result = await client.call_tool("slopsearx_get_service_status", {})
-            assert result.isError is False
+            result = await client.call_tool_mcp("slopsearx_get_service_status", {})
+            assert result.model_dump(by_alias=True)["isError"] is False
             import json
 
             payload = json.loads(result.content[0].text)
@@ -106,56 +143,38 @@ class TestGateway:
             assert payload["active_engines"] > 0
 
             # Capability listing is proxied
-            caps = await client.call_tool("slopsearx_list_capabilities", {"include_auth_requirements": False})
+            caps = await client.call_tool_mcp("slopsearx_list_capabilities", {"include_auth_requirements": False})
             caps_payload = json.loads(caps.content[0].text)
             assert caps_payload["count"] > 0
             assert "auth" not in caps_payload["engines"][0]
 
             # Resources are proxied
             resource = await client.read_resource("slopsearx://capabilities")
-            assert "SlopSearX engine catalog" in resource.contents[0].text
+            assert "SlopSearX engine catalog" in resource[0].text
 
             engine_resource = await client.read_resource("slopsearx://capabilities/wikipedia")
-            assert "wikipedia" in engine_resource.contents[0].text
+            assert "wikipedia" in engine_resource[0].text
 
             # Prompts are proxied
             prompts = await client.list_prompts()
-            assert len(prompts.prompts) == 4
+            assert len(prompts) == 4
             prompt = await client.get_prompt("research_with_source_coverage", {"question": "test"})
             assert prompt.messages
-
-    async def test_gateway_tool_schema_matches_remote(self, remote_server: Any) -> None:
-        url = f"http://127.0.0.1:{remote_server}/mcp"
-        gateway = create_gateway(url, token=TOKEN)
-
-        async with create_connected_server_and_client_session(gateway) as client:
-            tools = await client.list_tools()
-            search = next(tool for tool in tools.tools if tool.name == "slopsearx_search")
-            props = search.inputSchema.get("properties", {})
-            assert "query" in props
-            assert props["query"]["type"] == "string"
-            assert "intent" in props
-            assert "max_results" in props
+            # Unknown intent returns a structured error envelope unchanged.
+            error_result = await client.call_tool_mcp("slopsearx_search", {"query": "x", "intent": "bogus"})
+            error_payload = json.loads(error_result.content[0].text)
+            assert error_payload["error"]["code"] == "invalid_input"
+            assert "valid_alternatives" in error_payload["error"]
 
     async def test_gateway_rejects_wrong_token(self, remote_server: Any) -> None:
         url = f"http://127.0.0.1:{remote_server}/mcp"
         gateway = create_gateway(url, token="wrong-token")
 
-        # A wrong token must fail the connection (the remote returns 401)
+        async with httpx.AsyncClient() as probe:
+            rejected = await probe.get(url, headers={"Authorization": "Bearer wrong-token"})
+        assert rejected.status_code == 401
+        # A wrong token must also fail gateway startup. Exercise the in-process
+        # lifespan so expected startup rejection cannot kill a Uvicorn task.
         with pytest.raises(Exception):
-            async with create_connected_server_and_client_session(gateway) as client:
+            async with Client(gateway) as client:
                 await client.list_tools()
-
-    async def test_gateway_error_envelope_proxied(self, remote_server: Any) -> None:
-        """Remote tool error envelopes arrive intact through the gateway."""
-        url = f"http://127.0.0.1:{remote_server}/mcp"
-        gateway = create_gateway(url, token=TOKEN)
-
-        async with create_connected_server_and_client_session(gateway) as client:
-            # Unknown intent returns a structured error envelope from the remote
-            result = await client.call_tool("slopsearx_search", {"query": "x", "intent": "bogus"})
-            import json
-
-            payload = json.loads(result.content[0].text)
-            assert payload["error"]["code"] == "invalid_input"
-            assert "valid_alternatives" in payload["error"]

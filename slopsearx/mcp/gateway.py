@@ -21,21 +21,18 @@ import json
 import logging
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from importlib import import_module
 from typing import Any, AsyncIterator, Awaitable, Callable, cast
 
-try:
-    import httpx2 as httpx  # type: ignore[import-not-found]
-except ImportError:  # MCP SDK < 2 uses the standard httpx package.
-    import httpx
-
+from fastmcp import FastMCP
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
+from mcp.types import CallToolResult
 
 try:
-    from fastmcp import FastMCP
-except ImportError:  # FastMCP < 4 was bundled in the MCP SDK.
-    from mcp.server.fastmcp import FastMCP  # type: ignore[assignment]
-from mcp.types import CallToolResult
+    httpx: Any = import_module("httpx2")
+except ModuleNotFoundError:  # MCP SDK v1 uses the standard httpx package.
+    httpx = import_module("httpx")
 
 logger = logging.getLogger(__name__)
 
@@ -384,7 +381,10 @@ async def _gateway_lifespan(
         http_client = httpx.AsyncClient(headers=headers, timeout=httpx.Timeout(connect_timeout, read=300))
 
     async with http_client:
-        async with streamable_http_client(remote_url, http_client=http_client) as (read, write, _):
+        async with streamable_http_client(remote_url, http_client=http_client) as streams:
+            # MCP SDK v1 yields (read, write, session_id); v2 yields only
+            # (read, write). The gateway does not use the session id.
+            read, write = streams[0], streams[1]
             async with ClientSession(read, write) as session:
                 try:
                     await session.initialize()

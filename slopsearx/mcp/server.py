@@ -27,10 +27,6 @@ from typing import Any, AsyncIterator, Awaitable, Callable
 import uvicorn
 from fastmcp import FastMCP
 
-# FastMCP is a direct project dependency. Its HTTP application method is
-# available in v3/v4; older supported releases used the bundled SDK shape.
-_MODERN_FASTMCP = hasattr(FastMCP, "http_app")
-
 import engines  # noqa: F401 — triggers @register_engine to populate the registry
 from slopsearx import metrics as m
 from slopsearx.capabilities import (
@@ -56,6 +52,10 @@ from slopsearx.saved_store import SavedSearchStore
 from slopsearx.service import AppContext, SearchService, build_context, destroy_context
 from slopsearx.snapshot import SnapshotStore
 from slopsearx.staged import StagedSearchRunner, StagedSearchStore
+
+# FastMCP is a direct project dependency. Its HTTP application method is
+# available in v3/v4; older supported releases used the bundled SDK shape.
+_MODERN_FASTMCP = hasattr(FastMCP, "http_app")
 
 logger = logging.getLogger(__name__)
 

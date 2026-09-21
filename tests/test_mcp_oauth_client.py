@@ -21,7 +21,6 @@ except ImportError:
     import httpx
 import pytest
 import uvicorn
-from mcp.shared.memory import create_connected_server_and_client_session
 
 from slopsearx.capabilities import MCPPolicy
 from slopsearx.mcp.gateway import create_gateway
@@ -33,6 +32,7 @@ from slopsearx.mcp.oauth_client import (
 )
 from slopsearx.mcp.security import make_http_app
 from slopsearx.mcp.server import create_server
+from tests.test_mcp_gateway import _gateway_client
 
 
 def _free_port() -> int:
@@ -153,11 +153,11 @@ class TestGatewayOAuthFlow:
             oauth_redirect_handler=fake_redirect,
             oauth_callback_handler=fake_callback,
         )
-        async with create_connected_server_and_client_session(gateway) as client:
+        async with _gateway_client(gateway) as client:
             tools = await client.list_tools()
-            assert len(tools.tools) == 35
-            status = await client.call_tool("slopsearx_get_service_status", {})
-            assert status.isError is False
+            assert len(tools) == 35
+            status = await client.call_tool_mcp("slopsearx_get_service_status", {})
+            assert status.model_dump(by_alias=True)["isError"] is False
 
         assert len(redirect_calls) == 1, "exactly one authorization flow expected"
         assert token_file.exists()
@@ -173,9 +173,9 @@ class TestGatewayOAuthFlow:
             oauth_redirect_handler=should_not_redirect,
             oauth_callback_handler=fake_callback,
         )
-        async with create_connected_server_and_client_session(gateway2) as client:
+        async with _gateway_client(gateway2) as client:
             tools = await client.list_tools()
-            assert len(tools.tools) == 35
+            assert len(tools) == 35
 
     async def test_oauth_and_token_are_mutually_exclusive(self) -> None:
         with pytest.raises(ValueError):
