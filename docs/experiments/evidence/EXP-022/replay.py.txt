@@ -1,0 +1,223 @@
+"""EXP-022 frozen replay. Inert evidence, not imported by SlopSearX."""
+from __future__ import annotations
+
+import argparse
+import asyncio
+import hashlib
+import json
+import math
+import random
+import statistics
+import time
+from pathlib import Path
+
+import httpx
+
+MODEL = "jev-1.13.0"
+ENDPOINT = "https://api.typesafe.ai/v1/systemone"
+SOURCES = {
+    "npm": ("JavaScript packages", "the query names a Node or JavaScript package need"),
+    "openalex": ("scholarly works and authors", "the query seeks research literature or citation metadata"),
+    "internetarchive": ("archived web pages and historical media", "the query seeks an older or removed version"),
+}
+ARMS = ("compound", "atomic")
+
+
+def digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def save(path: Path, value: object) -> None:
+    path.write_text(json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
+
+
+def load_key(key_file: Path) -> str:
+    # Explicit key-file read avoids assuming a bare Python process loads .env.
+    for line in key_file.read_text().splitlines():
+        if line.startswith("TYPESAFE_API_KEY="):
+            value = line.split("=", 1)[1].strip().strip("\"'")
+            if value:
+                return value
+    raise RuntimeError("TYPESAFE_API_KEY missing; no call made")
+
+
+def questions(arm: str) -> dict:
+    output = {}
+    for name, (purpose, use_when) in SOURCES.items():
+        prefix = f"Specialist source: {name}. Purpose: {purpose}. Use when: {use_when}. "
+        if arm == "compound":
+            output[name] = {"type": "noul", "instructions": prefix +
+                "Assuming the source is available, would searching it add the specific missing evidence for this "
+                "task beyond the first-pass cards? Judge conceptual evidence fit, not uptime, credentials, or policy."}
+        else:
+            output[f"{name}_domain"] = {"type": "noul", "instructions": prefix +
+                "Is the kind of record required by the missing-evidence requirement within this source's "
+                "retrieval domain? Ignore present availability and whether any matching result happens to be returned."}
+            output[f"{name}_incremental"] = {"type": "noul", "instructions": prefix +
+                "If this source returned a record matching the missing-evidence requirement, would that record add "
+                "evidence absent from the first-pass cards? Ignore present availability and policy."}
+    return output
+
+
+def state(case: dict) -> dict:
+    return {key: case[key] for key in ("task", "missing_evidence", "general_cards", "general_outcomes")}
+
+
+def probabilities(arm: str, answers: dict) -> dict[str, float]:
+    if arm == "compound":
+        return {name: answers[name] for name in SOURCES}
+    return {name: min(answers[f"{name}_domain"], answers[f"{name}_incremental"])
+            for name in SOURCES}
+
+
+def thresholds(rows: list[dict]) -> dict:
+    values = sorted({v for row in rows for v in row["scores"].values()})
+    return sorted({0.0, 1.0, 1.000001, *values,
+                   *((a + b) / 2 for a, b in zip(values, values[1:]))})
+
+
+def measure(rows: list[dict], cutoff: float) -> dict:
+    useful_selected = useless_selected = missed_useful = conceptual_selected = 0
+    predictions = {}
+    for row in rows:
+        selected = {name for name, value in row["scores"].items() if value >= cutoff}
+        useful = set(row["gold_useful"])
+        conceptual = set(row["gold_conceptual"])
+        useful_selected += len(selected & useful)
+        useless_selected += len(selected - useful)
+        missed_useful += len(useful - selected)
+        conceptual_selected += len(selected & conceptual)
+        predictions[row["id"]] = sorted(selected)
+    return {"net_utility_per_query": (useful_selected - useless_selected) / len(rows),
+            "useful_selected": useful_selected, "useless_selected": useless_selected,
+            "missed_useful": missed_useful, "conceptual_selected": conceptual_selected,
+            "selected_requests": useful_selected + useless_selected,
+            "predictions": predictions}
+
+
+def select(rows: list[dict]) -> dict:
+    curve = [{"threshold": value, **measure(rows, value)} for value in thresholds(rows)]
+    chosen = max(curve, key=lambda x: (x["net_utility_per_query"],
+                  -x["missed_useful"], -x["selected_requests"], x["threshold"]))
+    return {"chosen": chosen, "curve": curve}
+
+
+def bootstrap(compound: list[dict], atomic: list[dict], c_cut: float, a_cut: float) -> list[float]:
+    by_id = {row["id"]: row for row in atomic}
+    pairs = [(row, by_id[row["id"]]) for row in compound]
+    rng = random.Random(42)
+    deltas = []
+    for _ in range(5000):
+        sample = [pairs[rng.randrange(len(pairs))] for _ in pairs]
+        c = measure([row[0] for row in sample], c_cut)["net_utility_per_query"]
+        a = measure([row[1] for row in sample], a_cut)["net_utility_per_query"]
+        deltas.append(a - c)
+    deltas.sort()
+    return [deltas[int(0.025 * len(deltas))], deltas[int(0.975 * len(deltas)) - 1]]
+
+
+async def run(args: argparse.Namespace) -> None:
+    repo = Path(args.repo).resolve()
+    out = Path(args.output).resolve()
+    if out.exists() and any(out.iterdir()):
+        raise RuntimeError("output directory is nonempty; preserve previous trials")
+    out.mkdir(parents=True, exist_ok=True)
+    root = repo / "docs/experiments/evidence/EXP-016"
+    cases_path, labels_path = root / "selected-cases.json", root / "labels.json"
+    cases = json.loads(cases_path.read_text())["planner"]
+    labels = json.loads(labels_path.read_text())["next_source"]
+    if len(cases) != 20 or len({row["id"] for row in cases}) != 20:
+        raise RuntimeError("expected 20 unique frozen planner states")
+    if sum(row["split"] == "cal" for row in cases) != 12:
+        raise RuntimeError("expected 12 calibration cases")
+    if any(set(row["specialist_outcomes"]) != set(SOURCES) for row in cases):
+        raise RuntimeError("missing acquired specialist counterfactual")
+    key = load_key(Path(args.key_file))
+    attempts, rows = [], []
+    global_retries = 0
+    started = time.monotonic()
+    async with httpx.AsyncClient(timeout=15) as client:
+        for split in ("cal", "holdout"):
+            matching = [row for row in cases if row["split"] == split]
+            for index, case in enumerate(matching):
+                order = ARMS if index % 2 == 0 else tuple(reversed(ARMS))
+                for arm in order:
+                    if len(rows) >= 40 or time.monotonic() - started > 1200:
+                        raise RuntimeError("registered call/time limit reached")
+                    qs = questions(arm)
+                    while True:
+                        tick = time.monotonic()
+                        try:
+                            response = await client.post(ENDPOINT,
+                                headers={"Authorization": f"Bearer {key}"},
+                                json={"model": MODEL, "state": state(case), "questions": qs})
+                            status = response.status_code
+                        except Exception as exc:
+                            attempts.append({"id": case["id"], "arm": arm,
+                                             "status": type(exc).__name__})
+                            save(out / "attempts.json", attempts)
+                            raise RuntimeError("transport failure; stopped") from None
+                        attempts.append({"id": case["id"], "arm": arm, "status": status,
+                                         "latency_ms": (time.monotonic() - tick) * 1000})
+                        save(out / "attempts.json", attempts)
+                        if status == 529 and global_retries < 3:
+                            global_retries += 1
+                            await asyncio.sleep(0.3 * 2**global_retries)
+                            continue
+                        if status != 200:
+                            raise RuntimeError(f"provider status {status}; stopped")
+                        body = response.json()
+                        answer_rows = body.get("answers", {})
+                        answer = {name: answer_rows.get(name, {}).get("noul") for name in qs}
+                        if body.get("model") != MODEL or any(
+                            not isinstance(value, (int, float)) or not math.isfinite(value) or
+                            not 0 <= value <= 1 for value in answer.values()
+                        ):
+                            raise RuntimeError("invalid model or answer; stopped")
+                        usage = body.get("usage", {})
+                        rows.append({"id": case["id"], "split": split, "arm": arm,
+                                     "family": case["family"], "raw_answers": answer,
+                                     "scores": probabilities(arm, answer),
+                                     "gold_useful": labels[case["id"]]["useful"],
+                                     "gold_conceptual": labels[case["id"]]["conceptual"],
+                                     "input_tokens": int(usage.get("input_tokens", 0)),
+                                     "output_tokens": int(usage.get("output_tokens", 0)),
+                                     "latency_ms": attempts[-1]["latency_ms"]})
+                        save(out / "rows-partial.json", rows)
+                        print(f"{split} {case['id']} {arm} valid", flush=True)
+                        break
+            if split == "cal":
+                cal = {arm: select([row for row in rows if row["arm"] == arm]) for arm in ARMS}
+                save(out / "calibration.json", cal)
+                print("calibration frozen before holdout", flush=True)
+    cal = json.loads((out / "calibration.json").read_text())
+    hold = {arm: [row for row in rows if row["split"] == "holdout" and row["arm"] == arm]
+            for arm in ARMS}
+    c_cut = cal["compound"]["chosen"]["threshold"]
+    a_cut = cal["atomic"]["chosen"]["threshold"]
+    c = measure(hold["compound"], c_cut)
+    a = measure(hold["atomic"], a_cut)
+    delta = a["net_utility_per_query"] - c["net_utility_per_query"]
+    summary = {"model": MODEL, "registration_commit": args.registration_commit,
+               "source_sha256": {"cases": digest(cases_path), "labels": digest(labels_path)},
+               "calls": len(rows), "provider_attempts": len(attempts),
+               "input_tokens": sum(row["input_tokens"] for row in rows),
+               "latency_ms": {arm: {"median": statistics.median(row["latency_ms"] for row in rows if row["arm"] == arm),
+                                    "p95_nearest_rank": sorted(row["latency_ms"] for row in rows if row["arm"] == arm)[18]}
+                              for arm in ARMS},
+               "thresholds": {"compound": c_cut, "atomic": a_cut},
+               "holdout": {"compound": c, "atomic": a, "delta_utility_per_query": delta,
+                           "paired_query_bootstrap_95pct": bootstrap(hold["compound"], hold["atomic"], c_cut, a_cut)},
+               "exploratory_advance_gate": delta >= 0.2 and a["missed_useful"] <= c["missed_useful"]}
+    save(out / "rows.json", rows)
+    save(out / "summary.json", summary)
+    print(json.dumps(summary, indent=2, sort_keys=True))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--repo", required=True)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--registration-commit", required=True)
+    parser.add_argument("--key-file", required=True)
+    asyncio.run(run(parser.parse_args()))

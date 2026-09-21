@@ -62,6 +62,9 @@
   immediately, including failures. A fourth overload or invalid answer stops
   the run. Never log the API key. Use pinned `jev-1.13.0`. The keyless existing
   router is unchanged; this is an inert research harness, not application code.
+- Run from the isolated experiment worktree using
+  `/Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python docs/experiments/evidence/EXP-022/replay.py.txt --repo . --output docs/experiments/evidence/EXP-022/trial1 --registration-commit 78b73f9 --key-file /Volumes/tank01/magnus/git/SlopSearX/.env`.
+  The key file is read but its contents must never be committed or printed.
 - Outcome: `supported` is reserved for a completed *fresh* confirmation that
   passes the registered bound and guardrails. Otherwise `not-supported` if a
   completed comparison rules out the minimum effect, `inconclusive` for
