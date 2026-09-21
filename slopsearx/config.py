@@ -63,6 +63,7 @@ class EngineEntry:
     rate_limit: Optional[float] = None  # requests per second
     weight: float = 1.0
     api_key: Optional[str] = None
+    api_secret: Optional[str] = None
     categories: Optional[list[str]] = None  # full override
     # scrape-specific fields
     proxy_pool: Optional[str] = None
@@ -321,7 +322,7 @@ _DEFAULT_RANKING = {"strategy": "presence"}
 
 
 def _load_env_overrides() -> dict[str, Any]:
-    """Read all ``SEARCH_*`` and ``ENGINE_*`` env vars and return a flat dict."""
+    """Read search and engine credentials/settings from the process environment."""
     overrides: dict[str, Any] = {}
     for key, value in os.environ.items():
         if key.startswith("SEARCH_"):
@@ -334,6 +335,14 @@ def _load_env_overrides() -> dict[str, Any]:
             engine_name = parts[1].lower()
             setting = parts[2].lower()
             overrides[f"engines.{engine_name}.{setting}"] = value
+
+    # HuggingFace documents HF_TOKEN as its conventional credential name,
+    # while the generic adapter configuration also accepts the prefixed
+    # ENGINE_HUGGINGFACE_API_KEY form. Prefer the explicit engine variable
+    # when both are present.
+    if "HF_TOKEN" in os.environ and "ENGINE_HUGGINGFACE_API_KEY" not in os.environ:
+        overrides["engines.huggingface.api_key"] = os.environ["HF_TOKEN"]
+
     return overrides
 
 

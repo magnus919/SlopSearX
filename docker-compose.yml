@@ -22,7 +22,13 @@ x-slopsearx-runtime: &slopsearx-runtime
   ports:
     - "8080"
   env_file:
-    - ../.env
+    # The parent file is used by the GroktoCrawl stack; the local file makes
+    # this repository's Compose entry point work from a checkout as well.
+    # When both exist, the checkout-local file wins for duplicate variables.
+    - path: ../.env
+      required: false
+    - path: .env
+      required: false
   environment:
     - VALKEY_URL=redis://valkey:6379/0
   restart: unless-stopped
