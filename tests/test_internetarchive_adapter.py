@@ -57,6 +57,24 @@ class TestInternetArchiveAdapterRegistration:
 
 
 class TestInternetArchiveWaybackSearch:
+    async def test_header_only_cdx_is_genuinely_empty(self, adapter):
+        async with MockHTTP(lambda r: httpx.Response(200, json=[CDX_RESPONSE[0]])):
+            result = await adapter.search("example.com")
+
+        assert result.status == EngineStatus.OK
+        assert result.results == []
+
+    @pytest.mark.parametrize(
+        "payload", [[], {}, [CDX_RESPONSE[0], ["bad"]], [CDX_RESPONSE[0], ["key", None, "https://example.com"]]]
+    )
+    async def test_malformed_cdx_is_error(self, adapter, payload):
+        async with MockHTTP(lambda r: httpx.Response(200, json=payload)):
+            result = await adapter.search("example.com")
+
+        assert result.status == EngineStatus.ERROR
+        assert result.results == []
+        assert result.error_message == "Invalid Internet Archive CDX response"
+
     async def test_domain_query_routes_to_wayback(self, adapter):
         captured = {}
 
@@ -167,6 +185,26 @@ class TestInternetArchiveErrors:
             result = await adapter.search("books")
 
         assert result.status == EngineStatus.TIMEOUT
+
+    @pytest.mark.parametrize("query", ["example.com", "books"])
+    @pytest.mark.parametrize("failure", ["timeout", "connection", "http"])
+    async def test_errors_do_not_expose_upstream_details(self, adapter, query, failure):
+        secret = "proxy.internal:8080?token=secret"
+
+        def _handler(request):
+            if failure == "timeout":
+                raise httpx.TimeoutException(secret, request=request)
+            if failure == "connection":
+                raise httpx.ConnectError(secret, request=request)
+            return httpx.Response(500, text=secret)
+
+        async with MockHTTP(_handler):
+            result = await adapter.search(query)
+
+        assert result.status == (EngineStatus.TIMEOUT if failure == "timeout" else EngineStatus.ERROR)
+        assert result.results == []
+        assert result.error_message
+        assert secret not in result.error_message
 
 
 class TestInternetArchiveAdapterHelpers:

@@ -21,6 +21,28 @@ def _is_domain_query(query: str) -> bool:
     return bool(re.match(r"^[\w.-]+\.[a-z]{2,}$", query.strip(), re.IGNORECASE))
 
 
+_CDX_COLUMNS = ("urlkey", "timestamp", "original")
+
+
+def _valid_cdx_rows(raw: Any) -> bool:
+    """A header-only CDX result is empty; malformed records are not."""
+    return (
+        isinstance(raw, list)
+        and bool(raw)
+        and isinstance(raw[0], list)
+        and raw[0][:3] == list(_CDX_COLUMNS)
+        and all(
+            isinstance(row, list)
+            and len(row) >= 3
+            and isinstance(row[1], str)
+            and re.fullmatch(r"\d{14}", row[1]) is not None
+            and isinstance(row[2], str)
+            and row[2].startswith(("http://", "https://"))
+            for row in raw[1:]
+        )
+    )
+
+
 @register_engine
 class InternetArchiveAdapter(EngineAdapter):
     """Internet Archive search — Wayback Machine, books, media.
@@ -79,17 +101,24 @@ class InternetArchiveAdapter(EngineAdapter):
                 resp = await client.get(url)
                 resp.raise_for_status()
                 raw = resp.json()
-        except httpx.TimeoutException as exc:
+        except httpx.TimeoutException:
             return AdapterResponse(
                 results=[],
                 status=EngineStatus.TIMEOUT,
-                error_message=str(exc),
+                error_message="Internet Archive CDX request timed out",
             )
-        except Exception as exc:
+        except Exception:
             return AdapterResponse(
                 results=[],
                 status=EngineStatus.ERROR,
-                error_message=str(exc),
+                error_message="Internet Archive CDX request failed",
+            )
+
+        if not _valid_cdx_rows(raw):
+            return AdapterResponse(
+                results=[],
+                status=EngineStatus.ERROR,
+                error_message="Invalid Internet Archive CDX response",
             )
 
         # CDX returns: [urlkey, timestamp, original, mimetype, statuscode, digest, length]
@@ -136,17 +165,17 @@ class InternetArchiveAdapter(EngineAdapter):
                 resp = await client.get(url)
                 resp.raise_for_status()
                 data = resp.json()
-        except httpx.TimeoutException as exc:
+        except httpx.TimeoutException:
             return AdapterResponse(
                 results=[],
                 status=EngineStatus.TIMEOUT,
-                error_message=str(exc),
+                error_message="Internet Archive catalog request timed out",
             )
-        except Exception as exc:
+        except Exception:
             return AdapterResponse(
                 results=[],
                 status=EngineStatus.ERROR,
-                error_message=str(exc),
+                error_message="Internet Archive catalog request failed",
             )
 
         docs = data.get("response", {}).get("docs", [])
