@@ -104,8 +104,10 @@ class GreyNoiseAdapter(EngineAdapter):
             )
 
     def _parse_ip(self, data: dict[str, Any], ip: str) -> list[SearchResult]:
-        if not data or data.get("ip") != ip:
-            return []
+        if not isinstance(data, dict):
+            raise ValueError("GreyNoise returned malformed JSON; expected an object")
+        if data.get("ip") != ip:
+            raise ValueError("GreyNoise response IP did not match the requested IP")
 
         # Community response fields
         classification = data.get("classification", "unknown")
