@@ -5,7 +5,7 @@ For optional CVE and npm/PyPI release grouping over existing snapshots, use
 versioned contract, member references, and entity pagination semantics.
 
 The Model Context Protocol (MCP) server exposes SlopSearX to AI agents as
-intent-level tools. Agents can search across 51 engines without knowing URL
+intent-level tools. Agents can search across 53 engines without knowing URL
 query strings, discover what can be searched, preview routing before spending
 rate limits, page through stable result snapshots, run bounded multi-query
 research jobs, schedule bounded change detection, and record attributed
