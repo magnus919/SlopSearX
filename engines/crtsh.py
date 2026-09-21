@@ -61,9 +61,22 @@ class CrtShAdapter(EngineAdapter):
                     return AdapterResponse(results=[], status=EngineStatus.BLOCKED, latency_ms=latency)
                 resp.raise_for_status()
 
-                data = resp.json()
+                try:
+                    data = resp.json()
+                except ValueError:
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.ERROR,
+                        error_message="CRT.sh returned malformed JSON",
+                        latency_ms=latency,
+                    )
                 if not isinstance(data, list):
-                    return AdapterResponse(results=[], status=EngineStatus.OK, latency_ms=latency)
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.ERROR,
+                        error_message="CRT.sh returned an unexpected JSON shape; expected a list",
+                        latency_ms=latency,
+                    )
 
                 results = self._parse_certs(data[:max_results])
                 return AdapterResponse(results=results, status=EngineStatus.OK, latency_ms=latency)

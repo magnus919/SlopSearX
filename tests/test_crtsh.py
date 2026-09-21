@@ -53,6 +53,27 @@ class TestCrtShAdapter:
             result = await adapter.search("nonexistent.xyz")
         assert result.status == EngineStatus.OK
         assert len(result.results) == 0
+        assert result.error_message is None
+
+    async def test_search_rejects_non_list_json(self, adapter):
+        async with MockHTTP(lambda r: httpx.Response(200, json={"error": "temporarily unavailable"})):
+            result = await adapter.search("example.com")
+        assert result.status == EngineStatus.ERROR
+        assert result.results == []
+        assert result.error_message == "CRT.sh returned an unexpected JSON shape; expected a list"
+
+    async def test_search_rejects_malformed_json(self, adapter):
+        async with MockHTTP(lambda r: httpx.Response(200, text="not json")):
+            result = await adapter.search("example.com")
+        assert result.status == EngineStatus.ERROR
+        assert result.results == []
+        assert result.error_message == "CRT.sh returned malformed JSON"
+
+    async def test_search_blocked(self, adapter):
+        async with MockHTTP(lambda r: httpx.Response(403)):
+            result = await adapter.search("example.com")
+        assert result.status == EngineStatus.BLOCKED
+        assert result.results == []
 
     async def test_search_rate_limited(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(429)):
