@@ -1,0 +1,77 @@
+{
+  "calls": 40,
+  "exploratory_advance_gate": false,
+  "holdout": {
+    "atomic": {
+      "conceptual_selected": 2,
+      "missed_useful": 2,
+      "net_utility_per_query": -0.25,
+      "predictions": {
+        "b04": [],
+        "b05": [],
+        "h04": [
+          "internetarchive"
+        ],
+        "h05": [
+          "internetarchive"
+        ],
+        "p04": [],
+        "p05": [],
+        "s04": [],
+        "s05": []
+      },
+      "selected_requests": 2,
+      "useful_selected": 0,
+      "useless_selected": 2
+    },
+    "compound": {
+      "conceptual_selected": 2,
+      "missed_useful": 2,
+      "net_utility_per_query": -0.25,
+      "predictions": {
+        "b04": [],
+        "b05": [],
+        "h04": [
+          "internetarchive"
+        ],
+        "h05": [
+          "internetarchive"
+        ],
+        "p04": [],
+        "p05": [],
+        "s04": [],
+        "s05": []
+      },
+      "selected_requests": 2,
+      "useful_selected": 0,
+      "useless_selected": 2
+    },
+    "delta_utility_per_query": 0.0,
+    "paired_query_bootstrap_95pct": [
+      0.0,
+      0.0
+    ]
+  },
+  "input_tokens": 41894,
+  "latency_ms": {
+    "atomic": {
+      "median": 173.9508539903909,
+      "p95_nearest_rank": 210.8502920018509
+    },
+    "compound": {
+      "median": 181.7194374743849,
+      "p95_nearest_rank": 221.74587502377108
+    }
+  },
+  "model": "jev-1.13.0",
+  "provider_attempts": 40,
+  "registration_commit": "78b73f9",
+  "source_sha256": {
+    "cases": "29e33900d9105d5c9c85a017948ac4dffec43fdfb6c4f0654c99b536a7333d45",
+    "labels": "3086552523237f39f02c62f717a7f73f0ee6ca2ab813df8988c87e13c6c62a39"
+  },
+  "thresholds": {
+    "atomic": 0.72,
+    "compound": 0.79
+  }
+}

@@ -73,4 +73,54 @@
 
 ## Readout
 
-Pending.
+Outcome: **inconclusive for product value; the registered exploratory advance
+gate failed**. The candidate does not advance to fresh confirmation. All 40
+valid Jev requests completed in 40 provider attempts, with 41,894 input tokens
+and zero searches (paid or free). Both arms saw the same saved first-pass cards
+and source metadata. The calibration file was written before the holdout calls.
+
+The 12 calibration cases selected `0.79` for the compound Noul and `0.72` for
+the atomic `min(domain, incremental)` score. Both selected the same seven
+sources: four actually useful, three not useful, and zero useful sources
+missed. Calibrated realized net utility was `+0.0833/query` for both.
+
+| Eight exposed holdout queries | Compound | Atomic composition |
+| --- | ---: | ---: |
+| Actually useful requests selected | 0 | 0 |
+| Useless requests selected | 2 | 2 |
+| Actually useful requests missed | 2 | 2 |
+| Net utility/query | -0.25 | -0.25 |
+| Median Jev latency | 182 ms | 174 ms |
+| Jev p95 latency | 222 ms | 211 ms |
+
+The paired difference is **0.00 utility/query**, with a query-bootstrap 95%
+interval of `[0.00, 0.00]` because the two arms selected exactly the same
+sources on every holdout query—not because uncertainty about wider use is
+zero. Both selected Internet Archive on `h04` and `h05`, where archive results
+were unavailable in the captured acquisition, while omitting the useful npm
+follow-ups on `p04` and `p05`. Archive was conceptually appropriate in those
+cases; availability is a separate deterministic gate. The `min` composition
+lowered npm's held-out scores to 0.51/0.59, below its calibration-selected
+0.72 cutoff. The compound scores were 0.68/0.78, below 0.79. This replay
+therefore provides no observed evidence that the tested decomposition improves
+the decision.
+
+The previous EXP-020 single-question run selected one useful and one useless
+specialist on these same eight cases (net 0.00/query), but that is diagnostic
+only: it used a different prompt and threshold-selection run. The current
+comparison isolates the two newly frozen question shapes on identical state.
+The holdout had already been exposed in earlier research; labels came from one
+adjudicator, only three specialist families were represented, and the
+Internet Archive availability failure dominates realized value. It cannot
+falsify all composed-workflow designs or support replacing the shipped router.
+Under the preregistered stop rule, no new synthetic corpus, Brave search, free
+search, or production modification was attempted.
+
+Raw evidence: [harness](evidence/EXP-022/replay.py.txt),
+[provider attempts](evidence/EXP-022/trial1/attempts.json),
+[pre-holdout calibration](evidence/EXP-022/trial1/calibration.json),
+[all scores](evidence/EXP-022/trial1/rows.json), and
+[summary](evidence/EXP-022/trial1/summary.json). The incremental
+[`rows-partial.json`](evidence/EXP-022/trial1/rows-partial.json) preserves the
+write-as-you-go record. Registration was committed as `78b73f9`; frozen
+harness and exact command as `5e6834f` before measurement.
