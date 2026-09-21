@@ -4,13 +4,13 @@ Active contributors: Magnus Hedemark
 
 ## Purpose
 
-SlopSearX ships with 48 pre-built engine adapters spanning 9 domains. Each engine is one file in `engines/`, registered via `@register_engine`, and requires zero changes to the orchestrator.
+SlopSearX ships with 50 pre-built engine adapters spanning 9 domains. Each engine is one file in `engines/`, registered via `@register_engine`, and requires zero changes to the orchestrator.
 
 ## Engine types
 
 | Type | Count | Description |
 |---|---|---|
-| **API** | 45 | Structured JSON API calls via httpx. Reliable, well-documented endpoints |
+| **API** | 47 | Structured JSON API calls via httpx. Reliable, well-documented endpoints |
 | **Scrape** | 3 | HTTP GET/POST with stealth headers + HTML parsing via lxml. DuckDuckGo, Google, Exploit-DB |
 
 ## Domain breakdown
@@ -26,7 +26,7 @@ SlopSearX ships with 48 pre-built engine adapters spanning 9 domains. Each engin
 | Reddit | `engines/reddit.py` | None | general, social, reddit:subreddit |
 | Wikipedia | `engines/wikipedia.py` | None | general, science, reference |
 
-### Developer / Packages (8 engines)
+### Developer / Packages (7 engines)
 
 | Engine | File | Auth | Categories |
 |---|---|---|---|
@@ -35,7 +35,6 @@ SlopSearX ships with 48 pre-built engine adapters spanning 9 domains. Each engin
 | GitHub | `engines/github.py` | `GITHUB_TOKEN` | general, reference, github:code, github:issues, github:prs |
 | npm | `engines/npm.py` | None | general, it, reference, packages |
 | PyPI | `engines/pypi.py` | None | general, it, reference, packages |
-| Repology | `engines/repology.py` | None | general, it, reference, packages |
 | RubyGems | `engines/rubygems.py` | None | general, it, reference, packages |
 | Stack Exchange | `engines/stackexchange.py` | Optional | general, reference, science, stackexchange:code, stackexchange:serverfault |
 
@@ -103,6 +102,6 @@ ENGINE_MYENG_CATEGORIES=general,news
 
 | File | Description |
 |---|---|
-| `engines/*.py` | Individual engine adapters (48 files) |
+| `engines/*.py` | Individual engine adapters (50 files) |
 | `engines/__init__.py` | Imports all engine modules, triggers registration |
 | `docs/ENGINE_ADAPTERS.md` | Full adapter reference with contract rules and built-in table |

@@ -1,6 +1,6 @@
 ---
 name: slopsearx
-description: Cloud-native, stateless meta search with 51 plugin engines, optional Jev specialist routing, SearXNG-compatible API, and agent-native YAML+Markdown output.
+description: Cloud-native, stateless meta search with 50 plugin engines, optional Jev specialist routing, SearXNG-compatible API, and agent-native YAML+Markdown output.
 ---
 
 # SlopSearX
@@ -101,7 +101,7 @@ Engines are organized by categories. Use `?categories=` to narrow scope:
 - `social` — Reddit
 - `books` — Open Library
 - `legal` — Oyez
-- `packages` — npm, PyPI, Crates.io, RubyGems, Docker Hub, Repology
+- `packages` — npm, PyPI, Crates.io, RubyGems, Docker Hub
 
 ### Engine-Specific Sub-Categories
 
@@ -204,7 +204,6 @@ The `SuggestionService` in `suggest.py` can call the Brave Suggest API (`/res/v1
 | GitHub | engines/github.py | API | `GITHUB_TOKEN` |
 | npm | engines/npm.py | API | None |
 | PyPI | engines/pypi.py | API | None |
-| Repology | engines/repology.py | API | None |
 | RubyGems | engines/rubygems.py | API | None |
 | Stack Exchange | engines/stackexchange.py | API | Optional app key |
 

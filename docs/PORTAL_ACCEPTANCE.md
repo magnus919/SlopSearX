@@ -66,6 +66,11 @@ The browser suite must cover:
     states, escaped contributor/conflict metadata, truthful ranking labels,
     and retrieval eligibility without verification language.
 
+Retired engines must be absent from the browser-visible scope/config projection
+and from deterministic search fixtures; this change retires Repology, so the
+portal must continue to render package searches using the remaining registries
+without presenting Repology as an available source.
+
 The existing MCP `state_factory` harness and SearXNG compatibility suite remain
 authoritative for machine behavior. Portal tests assert the HTML projection
 without changing those contracts.

@@ -137,7 +137,7 @@ The project is 100% Python 3.12+ with supporting YAML, JSON, and Markdown config
 | JSON | 2 | ~145 |
 | Dockerfile | 1 | ~30 |
 
-The `slopsearx/` core library is ~3,000 lines across 15 files, the `engines/` directory is ~6,700 lines across 49 files (48 adapters + `__init__.py`), and `tests/` is ~6,100 lines across 37 files.
+The `slopsearx/` core library is ~3,000 lines across 15 files, the `engines/` directory is ~6,700 lines across 51 files (50 adapters + `__init__.py`), and `tests/` is ~6,100 lines across 37 files.
 
 ## Key dependencies
 

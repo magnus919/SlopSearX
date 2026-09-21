@@ -5,7 +5,7 @@
 | Metric | Count |
 |---|---|
 | Core library modules (`slopsearx/`) | 15 |
-| Engine adapters (`engines/`) | 48 |
+| Engine adapters (`engines/`) | 50 |
 | Test files (`tests/`) | 37 |
 | Lines of Python | ~19,000 |
 | Lines of Markdown documentation | ~3,600 |
@@ -16,7 +16,7 @@
 | Domain | Engines |
 |---|---|
 | General / Web | 6 (Brave, DuckDuckGo, Google, Hacker News, Reddit, Wikipedia) |
-| Developer / Packages | 8 (Crates.io, Docker Hub, GitHub, npm, PyPI, Repology, RubyGems, Stack Exchange) |
+| Developer / Packages | 7 (Crates.io, Docker Hub, GitHub, npm, PyPI, RubyGems, Stack Exchange) |
 | Science & Research | 7 (arXiv, HuggingFace, Internet Archive, OpenAlex, Open Library, Semantic Scholar, UniProt) |
 | Medical / Health | 4 (ClinicalTrials.gov, openFDA, PubChem, PubMed) |
 | Security / Threat Intel | 17 (AbuseIPDB, AlienVault OTX, Censys, CRT.sh, CVE, DeHashed, EPSS, Exploit-DB, GreyNoise, HIBP, IntelX, MITRE ATT&CK, NVD, Shodan, URLhaus, VirusTotal, VulnCheck) |
@@ -24,13 +24,13 @@
 | Media & Entertainment | 2 (MusicBrainz, TMDB) |
 | Geography / GIS | 1 (Nominatim) |
 | Legal | 1 (Oyez) |
-| **Total** | **48** |
+| **Total** | **50** |
 
 ## Engine types
 
 | Type | Count | Examples |
 |---|---|---|
-| API | 45 | Brave, Wikipedia, GitHub, arXiv, Shodan |
+| API | 47 | Brave, Wikipedia, GitHub, arXiv, Shodan |
 | Scrape | 3 | DuckDuckGo, Google, Exploit-DB |
 
 ## API endpoints

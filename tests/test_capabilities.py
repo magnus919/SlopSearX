@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import engines  # noqa: F401 — triggers @register_engine to populate registry
-from slopsearx.adapter import COST_CLASSES, EngineAdapter
+from slopsearx.adapter import COST_CLASSES, EngineAdapter, list_engines
 from slopsearx.capabilities import (
     AUTH_NONE,
     AUTH_REQUIRED,
@@ -26,9 +26,10 @@ def _catalog(**overrides) -> CapabilityCatalog:
 class TestCatalogBasics:
     def test_includes_all_registered_engines(self) -> None:
         catalog = _catalog()
-        # Registry has 51 adapters; catalog must match the live registry,
+        # Registry has 50 adapters after Repology retirement; catalog must match the live registry,
         # not prose counts in the README.
-        assert len(catalog.all()) >= 51
+        assert len(catalog.all()) == len(list_engines())
+        assert len(catalog.all()) >= 50
         for cap in catalog.all():
             assert cap.name
             assert cap.display_name
@@ -167,7 +168,7 @@ class TestCatalogFeatureMatrix:
         assert wikipedia.cost_class == "free"
 
         # Packages: free, text-only registries.
-        for name in ("pypi", "npm", "crates", "rubygems", "dockerhub", "repology"):
+        for name in ("pypi", "npm", "crates", "rubygems", "dockerhub"):
             cap = catalog.get(name)
             assert cap is not None
             assert cap.cost_class == "free"

@@ -37,9 +37,9 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 | `GET /metrics` | OpenMetrics for Prometheus scraping |
 | `GET /config` | Categories→engines mapping for runtime discovery |
 
-## Engines (51)
+## Engines (50)
 
-The table below is maintained to match the live adapter registry (51 registered
+The table below is maintained to match the live adapter registry (50 registered
 adapters as of this writing). The MCP server's `slopsearx_list_capabilities`
 tool and the `slopsearx://capabilities` resource are generated from that same
 registry at runtime — treat them as authoritative.
@@ -64,7 +64,6 @@ registry at runtime — treat them as authoritative.
 | [GitHub](https://github.com/) | API | Optional for public repository/issues; `ENGINE_GITHUB_API_KEY` required for code search | reference, github:code, github:issues, github:prs |
 | [npm](https://www.npmjs.com/) | API | None | it, reference, packages |
 | [PyPI](https://pypi.org/) | API | None | it, reference, packages |
-| [Repology](https://repology.org/) | API | None | it, reference, packages |
 | [RubyGems](https://rubygems.org/) | API | None | it, reference, packages |
 | [Stack Exchange](https://stackexchange.com/) | API | Optional | general, reference, science, stackexchange:code, stackexchange:serverfault |
 
