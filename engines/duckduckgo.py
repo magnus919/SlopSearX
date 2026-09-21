@@ -141,12 +141,15 @@ class DuckDuckGoAdapter(ScrapeAdapter):
                 # own (rate limit / timeout / walled) — surface THAT honestly
                 # instead of folding it into the primary's outcome.
                 if fb.status in (EngineStatus.RATE_LIMITED, EngineStatus.TIMEOUT):
+                    fallback_state = (
+                        "timed out" if fb.status is EngineStatus.TIMEOUT else "was rate limited"
+                    )
                     return AdapterResponse(
                         results=[],
                         status=fb.status,
                         error_message=(
-                            f"{base_url} unusable ({outcome.error_message or 'unusable response'}); "
-                            f"{fallback_url}: {fb.error_message}"
+                            "DuckDuckGo primary search was unusable; "
+                            f"DuckDuckGo lite search {fallback_state}"
                         ),
                         latency_ms=_latency(),
                     )
@@ -342,7 +345,11 @@ class DuckDuckGoAdapter(ScrapeAdapter):
 
         except httpx.TimeoutException:
             self._report_proxy_failure(proxy)
-            return _EndpointOutcome(EngineStatus.TIMEOUT, [])
+            return _EndpointOutcome(
+                EngineStatus.TIMEOUT,
+                [],
+                f"DuckDuckGo {'lite' if parser == 'lite' else 'primary'} search timed out",
+            )
         except Exception as exc:  # noqa: BLE001 — network/HTTP layer failure
             self._report_proxy_failure(proxy)
             return _EndpointOutcome(

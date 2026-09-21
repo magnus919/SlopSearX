@@ -1,4 +1,4 @@
-"""GitHub API adapter — code, repository, and issue/PR search."""
+"""GitHub API adapter — public code, repository, and issue/PR search."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ class GitHubAdapter(EngineAdapter):
 
     # -- Declared capability metadata (audited, issue 185) --
     supported_result_types = ("text",)
-    failure_classes = ("rate_limited", "blocked", "error", "timeout")
+    failure_classes = ("rate_limited", "blocked", "error", "timeout", "unavailable")
     cost_class = "free"
 
     async def search(
@@ -39,24 +39,11 @@ class GitHubAdapter(EngineAdapter):
             return early
 
         cfg = self.config
-        token = cfg.get("api_key") or ""
+        token = str(cfg.get("api_key") or "").strip()
         base_url = cfg.get("base_url", "https://api.github.com")
         timeout_ms = cfg.get("timeout_ms", 5_000)
         max_results = cfg.get("max_results", 5)
         categories = (params or {}).get("categories", []) or ["general"]
-
-        if not token:
-            return AdapterResponse(
-                results=[],
-                status=EngineStatus.ERROR,
-                error_message="GitHub token not configured (set ENGINE_GITHUB_TOKEN)",
-            )
-
-        headers = {
-            "Accept": "application/vnd.github.v3+json",
-            "Authorization": f"Bearer {token}",
-            "User-Agent": "SlopSearX/0.1.0",
-        }
 
         # Determine sub-mode from categories
         if "github:code" in categories:
@@ -65,6 +52,26 @@ class GitHubAdapter(EngineAdapter):
             endpoint = f"{base_url}/search/issues"
         else:
             endpoint = f"{base_url}/search/repositories"
+
+        # GitHub's current search documentation requires authentication for
+        # code search, while repository and issue/PR search support public
+        # unauthenticated resources. Keep the stricter code-search boundary
+        # until the provider contract is unambiguous.
+        if "/search/code" in endpoint and not token:
+            return AdapterResponse(
+                results=[],
+                status=EngineStatus.UNAVAILABLE,
+                error_message="GitHub token required for code search (set ENGINE_GITHUB_API_KEY)",
+            )
+
+        headers = {
+            "Accept": "application/vnd.github.v3+json",
+            "User-Agent": "SlopSearX/0.1.0",
+        }
+        # A token is optional for public repository and issue/PR search. It
+        # raises the rate limit and may add access to private resources.
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
 
         params_dict: dict[str, Any] = {
             "q": query,
@@ -82,9 +89,20 @@ class GitHubAdapter(EngineAdapter):
                     return AdapterResponse(results=[], status=EngineStatus.RATE_LIMITED, latency_ms=latency)
                 if resp.status_code == 403:
                     return AdapterResponse(results=[], status=EngineStatus.BLOCKED, latency_ms=latency)
+                if resp.status_code == 401:
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.UNAVAILABLE,
+                        error_message="GitHub authentication required for this request",
+                        latency_ms=latency,
+                    )
                 if resp.status_code == 422:
-                    # Code search needs more specific qualifiers; return empty gracefully
-                    return AdapterResponse(results=[], status=EngineStatus.OK, latency_ms=latency)
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.ERROR,
+                        error_message="GitHub rejected the search query (validation failed)",
+                        latency_ms=latency,
+                    )
                 resp.raise_for_status()
 
                 data = resp.json()

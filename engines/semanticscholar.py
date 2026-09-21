@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import datetime as _dt
+import math
 import time
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 import httpx
@@ -15,6 +18,37 @@ from slopsearx.adapter import (
     register_engine,
 )
 from slopsearx.payload import DOMAIN_SCIENCE, build_payload
+from slopsearx.ratelimit import (
+    DEFAULT_UPSTREAM_COOLDOWN_SECONDS,
+    MAX_UPSTREAM_COOLDOWN_SECONDS,
+    MIN_UPSTREAM_COOLDOWN_SECONDS,
+)
+
+
+def _parse_retry_after(value: str | None, *, now: float | None = None) -> float:
+    """Return a bounded Retry-After delay, falling back safely when invalid."""
+    fallback = DEFAULT_UPSTREAM_COOLDOWN_SECONDS
+    if not value:
+        return fallback
+
+    raw = value.strip()
+    try:
+        seconds = float(raw)
+    except (TypeError, ValueError):
+        seconds = math.nan
+    if math.isfinite(seconds) and seconds >= 0:
+        return min(MAX_UPSTREAM_COOLDOWN_SECONDS, max(MIN_UPSTREAM_COOLDOWN_SECONDS, seconds))
+
+    try:
+        retry_at = parsedate_to_datetime(raw)
+        if retry_at.tzinfo is None:
+            retry_at = retry_at.replace(tzinfo=_dt.UTC)
+        remaining = retry_at.timestamp() - (time.time() if now is None else now)
+    except (TypeError, ValueError, OverflowError, IndexError):
+        return fallback
+    if not math.isfinite(remaining) or remaining <= 0:
+        return fallback
+    return min(MAX_UPSTREAM_COOLDOWN_SECONDS, max(MIN_UPSTREAM_COOLDOWN_SECONDS, remaining))
 
 
 @register_engine
@@ -64,7 +98,20 @@ class SemanticScholarAdapter(EngineAdapter):
                 latency = (time.monotonic() - start_time) * 1000
 
                 if resp.status_code == 429:
-                    return AdapterResponse(results=[], status=EngineStatus.RATE_LIMITED, latency_ms=latency)
+                    cooldown = _parse_retry_after(resp.headers.get("Retry-After"))
+                    limiter = self.rate_limiter
+                    set_cooldown = getattr(limiter, "set_upstream_cooldown", None)
+                    if set_cooldown is not None:
+                        try:
+                            await set_cooldown(self.name, cooldown)
+                        except Exception:  # noqa: BLE001 - cooldown must not break adapter classification
+                            pass
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.RATE_LIMITED,
+                        error_message=f"upstream rate limited; cooldown {cooldown:.0f}s",
+                        latency_ms=latency,
+                    )
                 resp.raise_for_status()
 
                 data = resp.json()

@@ -189,6 +189,18 @@ Engines can declare namespace-prefixed sub-categories for fine-grained routing:
 
 Sub-categories appear in `/config` output alongside base categories and are selected with `?categories=github:code`.
 
+Reddit may permit anonymous JSON search from some networks, but Reddit's
+current access guidance requires a valid OAuth token (or a logged-in session)
+for requests from hosted-service IP ranges. Set `ENGINE_REDDIT_API_KEY` to an
+approved OAuth bearer token to use the documented `oauth.reddit.com` API path;
+the adapter does not fall back to browser automation or scraping.
+
+GitHub authentication is sub-category-specific: public repository and
+issue/PR searches may run without a token, while code search requires
+`ENGINE_GITHUB_API_KEY`. The capability catalog reports authentication at the
+engine level, so its single `auth.class` cannot express this distinction;
+the adapter behavior is authoritative for the selected sub-category.
+
 ## Built-In Adapters (51)
 
 ### General / Web
@@ -199,7 +211,7 @@ Sub-categories appear in `/config` output alongside base categories and are sele
 | DuckDuckGo | `engines/duckduckgo.py` | scrape | general, news | None |
 | Google | `engines/google.py` | scrape | general, news | None |
 | Hacker News | `engines/hackernews.py` | api | general, news | None |
-| Reddit | `engines/reddit.py` | api | general, social, reddit:subreddit | None |
+| Reddit | `engines/reddit.py` | api | general, social, reddit:subreddit | Optional OAuth bearer token: `ENGINE_REDDIT_API_KEY` |
 | Wikipedia | `engines/wikipedia.py` | api | general, science, reference | None |
 
 ### Developer / Package Registries
@@ -208,7 +220,7 @@ Sub-categories appear in `/config` output alongside base categories and are sele
 |---|---|---|---|---|
 | Crates.io | `engines/crates.py` | api | general, it, reference, packages | None |
 | Docker Hub | `engines/dockerhub.py` | api | general, it, reference, packages | None |
-| GitHub | `engines/github.py` | api | general, reference, github:code, github:issues, github:prs | `GITHUB_TOKEN` |
+| GitHub | `engines/github.py` | api | general, reference, github:code, github:issues, github:prs | Optional for public repository/issues; `ENGINE_GITHUB_API_KEY` required for code search |
 | npm | `engines/npm.py` | api | general, it, reference, packages | None |
 | PyPI | `engines/pypi.py` | api | general, it, reference, packages | None |
 | Repology | `engines/repology.py` | api | general, it, reference, packages | None |
@@ -226,6 +238,11 @@ Sub-categories appear in `/config` output alongside base categories and are sele
 | Open Library | `engines/openlibrary.py` | api | general, books, reference | None |
 | Semantic Scholar | `engines/semanticscholar.py` | api | general, science, reference | Optional API key |
 | UniProt | `engines/uniprot.py` | api | general, science, reference, biology, medical | None |
+
+Semantic Scholar's API key is optional (`ENGINE_SEMANTICSCHOLAR_API_KEY`), but
+keyless access is quota-sensitive. A provider 429 is surfaced as
+`rate_limited`; its `Retry-After` value is bounded before it enters shared
+cooldown state, and rate-limited searches never count as successful coverage.
 
 ### Medical / Health
 
@@ -254,7 +271,7 @@ Sub-categories appear in `/config` output alongside base categories and are sele
 | MITRE ATT&CK | `engines/mitreattack.py` | api | security, reference | None |
 | NVD (NIST) | `engines/nvd.py` | api | it, security | `ENGINE_NVD_API_KEY` (optional) |
 | Shodan | `engines/shodan.py` | api | it, security | `ENGINE_SHODAN_API_KEY` |
-| URLhaus | `engines/urlhaus.py` | api | security, threat-intel | None |
+| URLhaus | `engines/urlhaus.py` | api | security, threat-intel | `ENGINE_URLHAUS_API_KEY` |
 | VirusTotal | `engines/virustotal.py` | api | security, malware | `ENGINE_VIRUSTOTAL_API_KEY` |
 | VulnCheck | `engines/vulncheck.py` | api | security, threat-intel | `ENGINE_VULNCHECK_API_KEY` |
 

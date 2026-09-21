@@ -16,6 +16,62 @@ from slopsearx.adapter import (
     register_engine,
 )
 
+_BLOCKED_STATUS_CODES = frozenset({403})
+_DIAGNOSTIC_LIMIT = 1000
+_MIME_TYPE_RE = re.compile(r"[a-z0-9][a-z0-9!#$&^_.+-]*/[a-z0-9][a-z0-9!#$&^_.+-]*")
+
+
+class _WikipediaStageError(Exception):
+    """Safe, stage-aware failure raised while decoding a provider response."""
+
+    def __init__(
+        self,
+        stage: str,
+        message: str,
+        *,
+        status_code: int | None = None,
+        failure: str = "error",
+    ) -> None:
+        super().__init__(message)
+        self.stage = stage
+        self.status_code = status_code
+        self.failure = failure
+
+
+def _content_type(response: httpx.Response | None) -> str:
+    if response is None:
+        return "unknown"
+    value = response.headers.get("content-type", "unknown").split(";", 1)[0].strip().lower()
+    if not value:
+        return "unknown"
+    return value if len(value) <= 64 and _MIME_TYPE_RE.fullmatch(value) else "invalid"
+
+
+def _shape_signature(value: Any) -> str:
+    """Return a body-free response-shape signature for diagnostics."""
+    if isinstance(value, list):
+        suffix = "+" if len(value) > _DIAGNOSTIC_LIMIT else ""
+        return f"list(len={min(len(value), _DIAGNOSTIC_LIMIT)}{suffix})"
+    if isinstance(value, dict):
+        suffix = "+" if len(value) > _DIAGNOSTIC_LIMIT else ""
+        return f"object(keys={min(len(value), _DIAGNOSTIC_LIMIT)}{suffix})"
+    if value is None:
+        return "null"
+    return type(value).__name__
+
+
+def _stage_diagnostic(
+    stage: str,
+    response: httpx.Response | None,
+    response_shape: str,
+    detail: str,
+) -> str:
+    status = str(response.status_code) if response is not None else "unknown"
+    return (
+        f"Wikipedia stage={stage} failed: status={status}; "
+        f"content_type={_content_type(response)}; response_shape={response_shape}; {detail}"
+    )
+
 
 @register_engine
 class WikipediaAdapter(EngineAdapter):
@@ -27,7 +83,7 @@ class WikipediaAdapter(EngineAdapter):
 
     # -- Declared capability metadata (audited, issue 185) --
     supported_result_types = ("text", "corrections", "infoboxes", "media")
-    failure_classes = ("rate_limited", "error", "timeout")
+    failure_classes = ("rate_limited", "blocked", "error", "timeout")
     cost_class = "free"
 
     async def search(
@@ -84,6 +140,22 @@ class WikipediaAdapter(EngineAdapter):
                 error_message=str(exc),
                 latency_ms=latency,
             )
+        except _WikipediaStageError as exc:
+            latency = (time.monotonic() - start_time) * 1000
+            if exc.failure == "timeout":
+                status = EngineStatus.TIMEOUT
+            elif exc.status_code == 429:
+                status = EngineStatus.RATE_LIMITED
+            elif exc.failure == "blocked":
+                status = EngineStatus.BLOCKED
+            else:
+                status = EngineStatus.ERROR
+            return AdapterResponse(
+                results=[],
+                status=status,
+                error_message=str(exc),
+                latency_ms=latency,
+            )
         except Exception as exc:  # noqa: BLE001
             latency = (time.monotonic() - start_time) * 1000
             return AdapterResponse(
@@ -109,14 +181,43 @@ class WikipediaAdapter(EngineAdapter):
             "format": "json",
             "origin": "*",
         }
-        resp = await client.get(base_url, params=params, headers=headers)
-        # HTTP-level errors (429, 5xx) bubble up to search()'s catch-all
-        resp.raise_for_status()
-        data = resp.json()
+        try:
+            resp = await client.get(base_url, params=params, headers=headers)
+            resp.raise_for_status()
+        except httpx.TimeoutException as exc:
+            raise _WikipediaStageError(
+                "opensearch",
+                _stage_diagnostic("opensearch", None, "unavailable", "timeout"),
+                failure="timeout",
+            ) from exc
+        except httpx.HTTPStatusError as exc:
+            raise _WikipediaStageError(
+                "opensearch",
+                _stage_diagnostic("opensearch", exc.response, "unparsed", "provider HTTP error"),
+                status_code=exc.response.status_code,
+                failure=("blocked" if exc.response.status_code in _BLOCKED_STATUS_CODES else "error"),
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise _WikipediaStageError(
+                "opensearch",
+                _stage_diagnostic("opensearch", None, "unavailable", "transport error"),
+            ) from exc
+
+        try:
+            data = resp.json()
+        except ValueError as exc:
+            raise _WikipediaStageError(
+                "opensearch",
+                _stage_diagnostic("opensearch", resp, "malformed_json", "malformed JSON"),
+            ) from exc
+
         # opensearch returns [query, [titles], [urls], [snippets]]
-        if len(data) >= 2 and isinstance(data[1], list):
-            return [t for t in data[1] if isinstance(t, str)][:limit]
-        return []
+        if not isinstance(data, list) or len(data) < 2 or not isinstance(data[1], list):
+            raise _WikipediaStageError(
+                "opensearch",
+                _stage_diagnostic("opensearch", resp, _shape_signature(data), "unexpected JSON shape"),
+            )
+        return [t for t in data[1] if isinstance(t, str)][:limit]
 
     async def _rich_query(
         self,
@@ -143,11 +244,48 @@ class WikipediaAdapter(EngineAdapter):
             "format": "json",
             "origin": "*",
         }
-        resp = await client.get(base_url, params=params, headers=headers)
-        resp.raise_for_status()
-        data = resp.json()
+        try:
+            resp = await client.get(base_url, params=params, headers=headers)
+            resp.raise_for_status()
+        except httpx.TimeoutException as exc:
+            raise _WikipediaStageError(
+                "rich_query",
+                _stage_diagnostic("rich_query", None, "unavailable", "timeout"),
+                failure="timeout",
+            ) from exc
+        except httpx.HTTPStatusError as exc:
+            raise _WikipediaStageError(
+                "rich_query",
+                _stage_diagnostic("rich_query", exc.response, "unparsed", "provider HTTP error"),
+                status_code=exc.response.status_code,
+                failure=("blocked" if exc.response.status_code in _BLOCKED_STATUS_CODES else "error"),
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise _WikipediaStageError(
+                "rich_query",
+                _stage_diagnostic("rich_query", None, "unavailable", "transport error"),
+            ) from exc
 
-        pages = data.get("query", {}).get("pages", {})
+        try:
+            data = resp.json()
+        except ValueError as exc:
+            raise _WikipediaStageError(
+                "rich_query",
+                _stage_diagnostic("rich_query", resp, "malformed_json", "malformed JSON"),
+            ) from exc
+
+        if not isinstance(data, dict) or not isinstance(data.get("query"), dict):
+            raise _WikipediaStageError(
+                "rich_query",
+                _stage_diagnostic("rich_query", resp, _shape_signature(data), "unexpected JSON shape"),
+            )
+        pages = data["query"].get("pages")
+        if not isinstance(pages, dict):
+            raise _WikipediaStageError(
+                "rich_query",
+                _stage_diagnostic("rich_query", resp, _shape_signature(data), "unexpected JSON shape"),
+            )
+
         results: list[SearchResult] = []
         infoboxes: list[dict[str, Any]] = []
         for idx, (page_id, page) in enumerate(pages.items()):

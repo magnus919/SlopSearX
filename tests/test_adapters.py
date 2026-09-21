@@ -638,9 +638,10 @@ class TestGitHubAdapter:
     async def test_search_missing_token(self):
         instances = discover_engines({"github": {"enabled": True, "api_key": ""}})
         adapter = instances["github"]
-        result = await adapter.search("test")
-        assert result.status == EngineStatus.ERROR
-        assert "token not configured" in (result.error_message or "").lower()
+        async with MockHTTP(lambda r: httpx.Response(200, json={"items": []})):
+            result = await adapter.search("test")
+        assert result.status == EngineStatus.OK
+        assert result.results == []
 
     async def test_search_rate_limited(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(403, content=b'{"message":"rate limit exceeded"}')):
@@ -651,8 +652,9 @@ class TestGitHubAdapter:
     async def test_search_422_graceful(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(422, content=b'{"message":"code search limited"}')):
             result = await adapter.search("test")
-        assert result.status == EngineStatus.OK
-        assert len(result.results) == 0
+        assert result.status == EngineStatus.ERROR
+        assert result.results == []
+        assert result.error_message == "GitHub rejected the search query (validation failed)"
 
 
 # ---------------------------------------------------------------------------

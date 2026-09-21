@@ -11,6 +11,8 @@ import re
 import urllib.parse
 from typing import Any
 
+import httpx
+
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult, register_engine
 
 
@@ -35,7 +37,7 @@ class InternetArchiveAdapter(EngineAdapter):
 
     # -- Declared capability metadata (audited, issue 185) --
     supported_result_types = ("text",)
-    failure_classes = ("error",)
+    failure_classes = ("error", "timeout")
     cost_class = "free"
 
     async def search(
@@ -77,6 +79,12 @@ class InternetArchiveAdapter(EngineAdapter):
                 resp = await client.get(url)
                 resp.raise_for_status()
                 raw = resp.json()
+        except httpx.TimeoutException as exc:
+            return AdapterResponse(
+                results=[],
+                status=EngineStatus.TIMEOUT,
+                error_message=str(exc),
+            )
         except Exception as exc:
             return AdapterResponse(
                 results=[],
@@ -128,6 +136,12 @@ class InternetArchiveAdapter(EngineAdapter):
                 resp = await client.get(url)
                 resp.raise_for_status()
                 data = resp.json()
+        except httpx.TimeoutException as exc:
+            return AdapterResponse(
+                results=[],
+                status=EngineStatus.TIMEOUT,
+                error_message=str(exc),
+            )
         except Exception as exc:
             return AdapterResponse(
                 results=[],

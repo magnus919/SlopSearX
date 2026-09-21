@@ -164,6 +164,69 @@ def client() -> TestClient:
 class TestSearchEndpoint:
     """GET /search endpoint."""
 
+    @pytest.mark.parametrize(
+        ("provider", "urls"),
+        [
+            (
+                "edgar",
+                [
+                    "https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928.htm",
+                    "https://www.sec.gov/Archives/edgar/data/320193/000032019325000456/0000320193-25-000456-index.html",
+                ],
+            ),
+            (
+                "openlibrary",
+                [
+                    "https://openlibrary.org/works/OL166894W",
+                    "https://openlibrary.org/works/OL321123W",
+                ],
+            ),
+        ],
+    )
+    def test_same_source_identity_urls_remain_distinct_in_http_portal(
+        self,
+        client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+        provider: str,
+        urls: list[str],
+    ) -> None:
+        """The HTTP portal preserves distinct safe links from one provider."""
+        import slopsearx.server as server_mod
+        from slopsearx.mcp.harness import InMemoryStore
+
+        monkeypatch.setattr(server_mod, "_cache", InMemoryStore())
+
+        async def identity_search(self, query, params=None):
+            return AdapterResponse(
+                results=[
+                    SearchResult(
+                        url=url,
+                        title=f"{provider} record {index}",
+                        content="identity fixture",
+                        engine=self.name,
+                        engines={self.name},
+                        position=index,
+                    )
+                    for index, url in enumerate(urls, start=1)
+                ],
+                status=EngineStatus.OK,
+            )
+
+        monkeypatch.setattr(_MockEngine, "search", identity_search)
+        query = f"portal identity {provider}"
+
+        html_response = client.get("/search", params={"q": query})
+        assert html_response.status_code == 200
+        assert html_response.headers["content-type"].startswith("text/html")
+        for url in urls:
+            assert f'class="result-link" href="{url}" target="_blank" rel="noopener noreferrer"' in (
+                html_response.text
+            )
+
+        json_response = client.get("/search", params={"q": query, "format": "json"})
+        assert json_response.status_code == 200
+        assert [result["url"] for result in json_response.json()["results"]] == urls
+
     def test_basic_search(self, client: TestClient) -> None:
         """Basic search returns JSON with results."""
         response = client.get("/search", params={"q": "test query", "format": "json"})

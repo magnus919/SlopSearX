@@ -1174,6 +1174,7 @@ class TestBiomedicalPayload:
         response = {
             "results": [
                 {
+                    "set_id": "openfda-test-drug",
                     "openfda": {
                         "brand_name": ["TestDrug"],
                         "generic_name": ["Testzol"],
@@ -1208,6 +1209,7 @@ class TestBiomedicalPayload:
         response = {
             "results": [
                 {
+                    "set_id": "openfda-test-drug-absent-fields",
                     "openfda": {"brand_name": ["TestDrug"]},
                     "purpose": [""],
                     "indications_and_usage": [""],

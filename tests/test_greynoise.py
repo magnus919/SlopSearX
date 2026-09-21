@@ -47,6 +47,26 @@ class TestGreyNoiseAdapter:
         assert result.status == EngineStatus.OK
         assert len(result.results) == 0
 
+    async def test_mismatched_ip_response_is_error(self, adapter):
+        async with MockHTTP(lambda r: httpx.Response(200, json={"ip": "1.1.1.1"})):
+            result = await adapter.search("8.8.8.8")
+        assert result.status == EngineStatus.ERROR
+        assert result.results == []
+        assert result.error_message == "GreyNoise response IP did not match the requested IP"
+
+    async def test_malformed_response_shape_is_error(self, adapter):
+        async with MockHTTP(lambda r: httpx.Response(200, json=["not", "an", "object"])):
+            result = await adapter.search("8.8.8.8")
+        assert result.status == EngineStatus.ERROR
+        assert result.results == []
+        assert result.error_message == "GreyNoise returned malformed JSON; expected an object"
+
+    async def test_invalid_json_response_is_error(self, adapter):
+        async with MockHTTP(lambda r: httpx.Response(200, text="not json")):
+            result = await adapter.search("8.8.8.8")
+        assert result.status == EngineStatus.ERROR
+        assert result.results == []
+
     async def test_rate_limited(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(429)):
             result = await adapter.search("8.8.8.8")

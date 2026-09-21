@@ -46,6 +46,9 @@ class TestInternetArchiveAdapterRegistration:
     def test_adapter_registered(self):
         assert "internetarchive" in list_engines()
 
+    def test_failure_classes_include_timeout(self):
+        assert list_engines()["internetarchive"].failure_classes == ("error", "timeout")
+
     def test_adapter_categories_excludes_general(self):
         cls = list_engines()["internetarchive"]
         assert "general" not in cls.categories
@@ -147,14 +150,23 @@ class TestInternetArchiveErrors:
 
         assert result.status == EngineStatus.ERROR
 
-    async def test_timeout(self, adapter):
+    async def test_wayback_timeout(self, adapter):
         def _handler(r):
             raise httpx.TimeoutException("timeout", request=r)
 
         async with MockHTTP(_handler):
             result = await adapter.search("example.com")
 
-        assert result.status == EngineStatus.ERROR
+        assert result.status == EngineStatus.TIMEOUT
+
+    async def test_general_timeout(self, adapter):
+        def _handler(r):
+            raise httpx.TimeoutException("timeout", request=r)
+
+        async with MockHTTP(_handler):
+            result = await adapter.search("books")
+
+        assert result.status == EngineStatus.TIMEOUT
 
 
 class TestInternetArchiveAdapterHelpers:

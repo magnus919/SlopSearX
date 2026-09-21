@@ -52,7 +52,7 @@ registry at runtime — treat them as authoritative.
 | [DuckDuckGo](https://duckduckgo.com/) | Scrape | None | general, news, images |
 | [Google](https://google.com/) | Scrape | None | general, news |
 | [Hacker News](https://news.ycombinator.com/) | API | None | general, news |
-| [Reddit](https://reddit.com/) | API | None | general, social, reddit:subreddit |
+| [Reddit](https://reddit.com/) | API | Optional OAuth bearer token: `ENGINE_REDDIT_API_KEY` | general, social, reddit:subreddit |
 | [Wikipedia](https://www.wikipedia.org/) | API | None | general, science, reference |
 
 ### Developer / Package Registries
@@ -61,12 +61,18 @@ registry at runtime — treat them as authoritative.
 |---|---|---|---|
 | [Crates.io](https://crates.io/) | API | None | it, reference, packages |
 | [Docker Hub](https://hub.docker.com/) | API | None | it, reference, packages |
-| [GitHub](https://github.com/) | API | `GITHUB_TOKEN` | reference, github:code, github:issues, github:prs |
+| [GitHub](https://github.com/) | API | Optional for public repository/issues; `ENGINE_GITHUB_API_KEY` required for code search | reference, github:code, github:issues, github:prs |
 | [npm](https://www.npmjs.com/) | API | None | it, reference, packages |
 | [PyPI](https://pypi.org/) | API | None | it, reference, packages |
 | [Repology](https://repology.org/) | API | None | it, reference, packages |
 | [RubyGems](https://rubygems.org/) | API | None | it, reference, packages |
 | [Stack Exchange](https://stackexchange.com/) | API | Optional | general, reference, science, stackexchange:code, stackexchange:serverfault |
+
+GitHub authentication is sub-category-specific: public repository and
+issue/PR searches may run without a token, while code search requires
+`ENGINE_GITHUB_API_KEY`. The capability catalog reports authentication at the
+engine level, so its single `auth.class` cannot express this distinction;
+the adapter behavior is authoritative for the selected sub-category.
 
 ### Science & Research
 
@@ -79,6 +85,11 @@ registry at runtime — treat them as authoritative.
 | [Semantic Scholar](https://www.semanticscholar.org/) | API | Optional | science, reference |
 | [UniProt](https://www.uniprot.org/) | API | None | science, reference, biology, medical |
 | [Internet Archive](https://archive.org/) | API | None | reference, web:archive, historical |
+
+Semantic Scholar accepts an optional `ENGINE_SEMANTICSCHOLAR_API_KEY`. Keyless
+access is quota-sensitive and may be rate-limited sooner than keyed access;
+the adapter reports an upstream 429 as `rate_limited`, honors a bounded
+`Retry-After`, and does not treat that response as successful coverage.
 
 ### Medical / Health
 
@@ -107,7 +118,7 @@ registry at runtime — treat them as authoritative.
 | [MITRE ATT&CK](https://attack.mitre.org/) | API | None | security, reference |
 | [NVD (NIST)](https://nvd.nist.gov/) | API | `ENGINE_NVD_API_KEY` (optional) | it, security |
 | [Shodan](https://www.shodan.io/) | API | `ENGINE_SHODAN_API_KEY` | it, security |
-| [URLhaus](https://urlhaus.abuse.ch/) | API | None | security, threat-intel |
+| [URLhaus](https://urlhaus.abuse.ch/) | API | `ENGINE_URLHAUS_API_KEY` | security, threat-intel |
 | [VirusTotal](https://www.virustotal.com/) | API | `ENGINE_VIRUSTOTAL_API_KEY` | security, malware |
 | [VulnCheck](https://vulncheck.com/) | API | `ENGINE_VULNCHECK_API_KEY` | security, threat-intel |
 

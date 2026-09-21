@@ -67,8 +67,45 @@ class RepologyAdapter(EngineAdapter):
                 if resp.status_code == 404:
                     return AdapterResponse(results=[], status=EngineStatus.OK, latency_ms=latency)
 
-                resp.raise_for_status()
-                data = resp.json()
+                if resp.status_code == 429:
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.RATE_LIMITED,
+                        error_message="Repology rate limited the request (HTTP 429)",
+                        latency_ms=latency,
+                    )
+
+                if resp.is_error:
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.ERROR,
+                        error_message=f"Repology upstream returned HTTP {resp.status_code}",
+                        latency_ms=latency,
+                    )
+
+                try:
+                    data = resp.json()
+                except ValueError:
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.ERROR,
+                        error_message="Repology returned malformed JSON; expected an object",
+                        latency_ms=latency,
+                    )
+
+                if not isinstance(data, dict) or any(
+                    not isinstance(project_name, str) or not isinstance(packages, list)
+                    for project_name, packages in data.items()
+                ):
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.ERROR,
+                        error_message=(
+                            "Repology returned an unexpected JSON shape; "
+                            "expected a mapping of project names to package lists"
+                        ),
+                        latency_ms=latency,
+                    )
 
                 results = []
                 for idx, (project_name, packages) in enumerate(data.items()):
@@ -78,10 +115,43 @@ class RepologyAdapter(EngineAdapter):
                         continue
 
                     pkg = packages[0]
+                    if not isinstance(pkg, dict):
+                        return AdapterResponse(
+                            results=[],
+                            status=EngineStatus.ERROR,
+                            error_message=(
+                                "Repology returned an unexpected JSON shape; "
+                                "package entries must be objects"
+                            ),
+                            latency_ms=latency,
+                        )
+
                     version = pkg.get("version", "")
                     summary = pkg.get("summary", "") or ""
-                    repos = list({p.get("repo", "") for p in packages})
-                    statuses = list({p.get("status", "") for p in packages})
+                    if (
+                        not isinstance(version, str)
+                        or not isinstance(summary, str)
+                        or any(
+                            not isinstance(package, dict)
+                            or not isinstance(package.get("repo", ""), str)
+                            or not isinstance(package.get("status", ""), str)
+                            for package in packages
+                        )
+                    ):
+                        return AdapterResponse(
+                            results=[],
+                            status=EngineStatus.ERROR,
+                            error_message=(
+                                "Repology returned an unexpected JSON shape; "
+                                "package fields must be strings"
+                            ),
+                            latency_ms=latency,
+                        )
+
+                    repos = list({p.get("repo", "") for p in packages if isinstance(p.get("repo", ""), str)})
+                    statuses = list(
+                        {p.get("status", "") for p in packages if isinstance(p.get("status", ""), str)}
+                    )
 
                     content = f"Repos: {', '.join(repos[:5])}"
                     if summary:
@@ -108,11 +178,24 @@ class RepologyAdapter(EngineAdapter):
         except httpx.HTTPStatusError as exc:
             latency = (time.monotonic() - start_time) * 1000
             if exc.response.status_code == 429:
-                return AdapterResponse(results=[], status=EngineStatus.RATE_LIMITED, latency_ms=latency)
+                return AdapterResponse(
+                    results=[],
+                    status=EngineStatus.RATE_LIMITED,
+                    error_message="Repology rate limited the request (HTTP 429)",
+                    latency_ms=latency,
+                )
             return AdapterResponse(
                 results=[],
                 status=EngineStatus.ERROR,
-                error_message=str(exc),
+                error_message=f"Repology upstream returned HTTP {exc.response.status_code}",
+                latency_ms=latency,
+            )
+        except httpx.HTTPError as exc:
+            latency = (time.monotonic() - start_time) * 1000
+            return AdapterResponse(
+                results=[],
+                status=EngineStatus.ERROR,
+                error_message=f"Repology request failed ({type(exc).__name__})",
                 latency_ms=latency,
             )
         except Exception as exc:  # noqa: BLE001
@@ -120,6 +203,6 @@ class RepologyAdapter(EngineAdapter):
             return AdapterResponse(
                 results=[],
                 status=EngineStatus.ERROR,
-                error_message=str(exc),
+                error_message=f"Repology adapter failure ({type(exc).__name__})",
                 latency_ms=latency,
             )

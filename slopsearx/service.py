@@ -230,6 +230,27 @@ class RateLimitExceededError(ServiceError):
 # ---------------------------------------------------------------------------
 
 
+def _normalize_engine_configs(engine_configs: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Normalize dataclass-derived engine configs before adapter discovery.
+
+    ``EngineEntry.base_url`` defaults to an empty string so that the adapter
+    can supply its provider-specific endpoint.  ``dataclasses.asdict`` cannot
+    distinguish that unset value from an explicit config mapping, however,
+    and ``dict.get``-based adapters treat a present empty value as an
+    override.  Omit only blank ``base_url`` values at this boundary; every
+    other field and non-empty override must pass through unchanged.
+    """
+
+    normalized: dict[str, dict[str, Any]] = {}
+    for name, config in engine_configs.items():
+        adapter_config = dict(config)
+        base_url = adapter_config.get("base_url")
+        if base_url is None or (isinstance(base_url, str) and not base_url.strip()):
+            adapter_config.pop("base_url", None)
+        normalized[name] = adapter_config
+    return normalized
+
+
 @dataclass
 class SearchFlights:
     """Transient coordination for concurrent callers in one runtime/event loop."""
@@ -321,7 +342,9 @@ async def build_context() -> AppContext:
         "true",
         "1",
     )
-    engine_configs = {name: dataclasses.asdict(entry) for name, entry in cfg.engines.items()}
+    engine_configs = _normalize_engine_configs(
+        {name: dataclasses.asdict(entry) for name, entry in cfg.engines.items()}
+    )
     # Opt in to Brave category-specific endpoints. The default retains
     # the established web endpoint behavior.
     brave_routing = os.environ.get("FEATURE_BRAVE_CATEGORY_ROUTING", "").lower() in ("true", "1")
@@ -862,7 +885,13 @@ class SearchService:
         engine_names: list[str] = []
         started_engines: set[str] = set()
         circuit_open: list[str] = []
+        upstream_cooldown: list[tuple[str, float]] = []
         for name, engine in target.items():
+            if self._ctx.rate_limiter is not None:
+                remaining = await self._ctx.rate_limiter.upstream_cooldown_remaining(name)
+                if remaining > 0:
+                    upstream_cooldown.append((name, remaining))
+                    continue
             if not engine.circuit_allowed():
                 circuit_open.append(name)
                 continue
@@ -884,7 +913,7 @@ class SearchService:
             suggestions_task = asyncio.create_task(self._generate_suggestions(request.query))
 
         engine_timeouts = [
-            self._resolve_engine_timeout_s(engine) for engine in target.values() if engine.circuit_allowed()
+            self._resolve_engine_timeout_s(target[name]) for name in engine_names
         ]
         # The deadline covers semaphore acquisition as well as engine work.
         # Cap the sum so the overall guard remains reachable while serialized
@@ -940,7 +969,7 @@ class SearchService:
                 )
                 if result.status in (EngineStatus.ERROR, EngineStatus.TIMEOUT):
                     engine.record_failure()
-                elif result.status != EngineStatus.UNAVAILABLE:
+                elif result.status not in (EngineStatus.UNAVAILABLE, EngineStatus.RATE_LIMITED):
                     engine.record_success()
 
             responses[name] = result
@@ -974,6 +1003,14 @@ class SearchService:
                         avg_score=avg_score,
                     )
                 )
+
+        # Add upstream-cooldown engines as rate-limited outcomes (no dispatch)
+        for name, remaining in upstream_cooldown:
+            responses[name] = AdapterResponse(
+                results=[],
+                status=EngineStatus.RATE_LIMITED,
+                error_message=f"upstream cooldown active; retry in {max(1, round(remaining))}s",
+            )
 
         # Add circuit-open engines as failures (no metrics — never dispatched)
         for name in circuit_open:

@@ -219,14 +219,46 @@ class TestDuckDuckGoResilience:
 
         def _handler(r):
             seen.append(r)
-            raise httpx.TimeoutException("timed out")
+            host = r.url.host or ""
+            if host == HOME_HOST:
+                return httpx.Response(200, content=HOME_HTML)
+            if host == HTML_HOST:
+                raise httpx.TimeoutException("primary timed out")
+            raise AssertionError(f"unexpected request to {host}")
 
         async with MockHTTP(_handler):
             resp = await adapter.search("q")
 
         assert resp.status == EngineStatus.TIMEOUT
         assert resp.results == []
+        assert resp.error_message == "DuckDuckGo primary search timed out"
+        assert HTML_HOST not in (resp.error_message or "")
+        assert "primary timed out" not in (resp.error_message or "")
         assert LITE_HOST not in _hosts(seen)
+
+    async def test_lite_timeout_is_reported_after_primary_block(self, adapter):
+        seen: list[httpx.Request] = []
+
+        def _handler(r):
+            seen.append(r)
+            host = r.url.host or ""
+            if host == HOME_HOST:
+                return httpx.Response(200, content=HOME_HTML)
+            if host == HTML_HOST:
+                return httpx.Response(403)
+            if host == LITE_HOST:
+                raise httpx.TimeoutException("lite timed out")
+            raise AssertionError(f"unexpected request to {host}")
+
+        async with MockHTTP(_handler):
+            resp = await adapter.search("q")
+
+        assert resp.status == EngineStatus.TIMEOUT
+        assert resp.results == []
+        assert resp.error_message == "DuckDuckGo primary search was unusable; DuckDuckGo lite search timed out"
+        assert LITE_HOST not in (resp.error_message or "")
+        assert "lite timed out" not in (resp.error_message or "")
+        assert _hosts(seen) == [HOME_HOST, HTML_HOST, LITE_HOST]
 
     async def test_legitimate_no_results_marker_skips_lite(self, adapter):
         seen: list[httpx.Request] = []
@@ -266,6 +298,26 @@ class TestDuckDuckGoResilience:
         assert len(resp.results) == 2
         assert LITE_HOST in _hosts(seen)
 
+    async def test_successful_primary_does_not_probe_lite(self, adapter):
+        seen: list[httpx.Request] = []
+
+        def _handler(r):
+            seen.append(r)
+            host = r.url.host or ""
+            if host == HOME_HOST:
+                return httpx.Response(200, content=HOME_HTML)
+            if host == HTML_HOST:
+                return httpx.Response(200, content=HTML_RESULTS_HTML)
+            raise AssertionError(f"unexpected request to {host}")
+
+        async with MockHTTP(_handler):
+            resp = await adapter.search("q")
+
+        assert resp.status == EngineStatus.OK
+        assert len(resp.results) == 1
+        assert resp.results[0].url == "https://example.com/one"
+        assert _hosts(seen) == [HOME_HOST, HTML_HOST]
+
     async def test_all_endpoints_structurally_empty_reports_error(self, adapter):
         def _handler(r):
             host = r.url.host or ""
@@ -281,6 +333,25 @@ class TestDuckDuckGoResilience:
         assert resp.status != EngineStatus.OK
         assert "blocked" in adapter.failure_classes
         assert resp.results == []
+
+    async def test_bootstrap_timeout_is_best_effort(self, adapter):
+        seen: list[httpx.Request] = []
+
+        def _handler(r):
+            seen.append(r)
+            host = r.url.host or ""
+            if host == HOME_HOST:
+                raise httpx.TimeoutException("bootstrap timed out")
+            if host == HTML_HOST:
+                return httpx.Response(200, content=HTML_RESULTS_HTML)
+            raise AssertionError(f"unexpected request to {host}")
+
+        async with MockHTTP(_handler):
+            resp = await adapter.search("q")
+
+        assert resp.status == EngineStatus.OK
+        assert len(resp.results) == 1
+        assert _hosts(seen) == [HOME_HOST, HTML_HOST]
 
     # -- realistic session -------------------------------------------------
 

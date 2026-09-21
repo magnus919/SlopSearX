@@ -24,6 +24,15 @@ SAMPLE_HTML = """
 
 CHALLENGE_HTML = '<html><body><div class="g-recaptcha">verify you are human</div></body></html>'
 
+UNUSUAL_TRAFFIC_HTML = """
+<html><body>
+<div id="main">
+  <p>Our systems have detected unusual traffic from your computer network.</p>
+  <p>Please try your request again later.</p>
+</div>
+</body></html>
+"""
+
 
 @pytest.fixture
 def adapter():
@@ -72,6 +81,17 @@ class TestGoogleAdapterSearch:
         assert result.status == EngineStatus.BLOCKED
         assert len(result.results) == 0
 
+    async def test_search_unusual_traffic_page(self, adapter):
+        """A 200 Google traffic challenge is blocked, never empty success."""
+        def _handler(r):
+            return httpx.Response(200, text=UNUSUAL_TRAFFIC_HTML)
+
+        async with MockHTTP(_handler):
+            result = await adapter.search("test query")
+
+        assert result.status == EngineStatus.BLOCKED
+        assert result.results == []
+
     async def test_search_rate_limited(self, adapter):
         def _handler(r):
             return httpx.Response(429)
@@ -89,6 +109,17 @@ class TestGoogleAdapterSearch:
             result = await adapter.search("test query")
 
         assert result.status == EngineStatus.BLOCKED
+
+    async def test_search_forbidden(self, adapter):
+        """An HTTP 403 block is distinct from a provider rate limit."""
+        def _handler(r):
+            return httpx.Response(403)
+
+        async with MockHTTP(_handler):
+            result = await adapter.search("test query")
+
+        assert result.status == EngineStatus.BLOCKED
+        assert result.results == []
 
     async def test_search_timeout(self, adapter):
         def _handler(r):
