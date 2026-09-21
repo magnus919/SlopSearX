@@ -1,0 +1,4720 @@
+{
+  "adapter_attempts": 100,
+  "baseline_sha": "ae5cd4c",
+  "engines": [
+    "duckduckgo",
+    "google",
+    "npm",
+    "openalex",
+    "internetarchive"
+  ],
+  "query_set_sha256": "da46d939bba455920ac2feee1d477e03499f8bdd140a9203921393fd3b330463",
+  "registration_commit": "b624f6b",
+  "rows": [
+    {
+      "family": "package",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 219.1,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 108.2,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "react npm current published release metadata",
+        "response_time_ms": 219,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "176016709288736d7a315e597421733896c374a62e9aaca64a3b3fcb0512f215"
+      },
+      "id": "p01",
+      "missing_evidence": "authoritative npm metadata with package identity and version",
+      "query": "react npm current published release metadata",
+      "specialist_focus": "npm",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 1,
+              "snippet": "Stephanie is consciously trying to make meetings better for herself by limiting distractions. A few episodes ago, Joel talked about a frustrating bug he was cha",
+              "tier": 2,
+              "title": "397: Dependency Graphs",
+              "url": "https://archive.org/details/q1nisnnjt7xz1pm6rowx0tbngq5ofhqxnc3fbboi"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 2,
+              "snippet": "On this week's episode, Steph and Chris discuss leveraging the Unix utility sed to search files and remove unnecessary test setup, using Vim's Arglist to create",
+              "tier": 2,
+              "title": "252: I'm a Designer Now",
+              "url": "https://archive.org/details/khrcohpx3j9ljkc9ejviobicfgzx7diymy97rplk"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 3,
+              "snippet": "\"The mother of all demo apps\" \u2014 Exemplary fullstack Medium.com clone powered by React, Angular, Node, Django, and many more \ud83c\udfc5 Stay on the bleeding edge \u2014 join o",
+              "tier": 2,
+              "title": "github.com-gothinkster-realworld_-_2019-07-15_19-07-55",
+              "url": "https://archive.org/details/github.com-gothinkster-realworld_-_2019-07-15_19-07-55"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 4,
+              "snippet": "OP Vault ChatGPT: Give ChatGPT long-term memory using the OP Stack (OpenAI + Pinecone Vector Database). Upload your own custom knowledge base files (PDF, txt, e",
+              "tier": 2,
+              "title": "github.com-pashpashpash-vault-ai_-_2023-06-19_00-12-17",
+              "url": "https://archive.org/details/github.com-pashpashpash-vault-ai_-_2023-06-19_00-12-17"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 5,
+              "snippet": "A collection of awesome TypeScript resources for client-side and server-side development. Write your awesome JavaScript in TypeScript Awesome TypeScript -= Awes",
+              "tier": 2,
+              "title": "github.com-dzharii-awesome-typescript_-_2017-05-20_01-35-18",
+              "url": "https://archive.org/details/github.com-dzharii-awesome-typescript_-_2017-05-20_01-35-18"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "react JavaScript package",
+          "response_time_ms": 885,
+          "result_count": 5,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "546f8d9ff861fe34f39127450e5684794304f21474a178ae26b5be91f6f6eab8"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "React is a JavaScript library for building user interfaces. \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "react@19.3.0",
+              "url": "https://www.npmjs.com/package/react"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "Brand checking of React Elements. \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "react-is@19.3.0",
+              "url": "https://www.npmjs.com/package/react-is"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "react animation library \u2014 Published by ckifer",
+              "tier": 2,
+              "title": "react-smooth@4.0.4",
+              "url": "https://www.npmjs.com/package/react-smooth"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "Declarative routing for React \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "react-router@8.4.0",
+              "url": "https://www.npmjs.com/package/react-router"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "React package for working with the DOM. \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "react-dom@19.3.0",
+              "url": "https://www.npmjs.com/package/react-dom"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 1899.0,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "react",
+          "response_time_ms": 1901,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "f84662f9dd595e084f4fd7e77e0630a59b49c4d5ce5735d32c1ef89f3b5ff784"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "DeePMD-kit is a powerful open-source software package that facilitates molecular dynamics simulations using machine learning potentials known as Deep Potential ",
+              "tier": 2,
+              "title": "DeePMD-kit v2: A software package for deep potential models",
+              "url": "https://doi.org/10.1063/5.0155600"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "",
+              "tier": 2,
+              "title": "Python Materials Genomics (pymatgen): A robust, open-source python library for materials analysis",
+              "url": "https://doi.org/10.1016/j.commatsci.2012.10.028"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "Automatic static analysis tools help developers to automatically spot code issues in their software. They can be of extreme value in languages with dynamic char",
+              "tier": 2,
+              "title": "Why and how JavaScript developers use linters",
+              "url": "https://doi.org/10.1109/ase.2017.8115668"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "This paper presents a new software framework, Sampo-UI, for developing user interfaces for semantic portals. The goal is to provide the end-user with multiple a",
+              "tier": 2,
+              "title": "Sampo-UI: A full stack JavaScript framework for developing semantic portal user interfaces",
+              "url": "https://doi.org/10.3233/sw-210428"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "Nearly every popular programming language comes with one or more open source software packaging ecosystem(s), containing a large collection of interdependent so",
+              "tier": 2,
+              "title": "An empirical comparison of dependency issues in OSS packaging ecosystems",
+              "url": "https://doi.org/10.1109/saner.2017.7884604"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 513.4,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "react JavaScript package",
+          "response_time_ms": 515,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "55ffb3cf1d294bccf2b9389fdb908a0e80c6ace47e4177ef84d2a98cf9c35b61"
+        }
+      },
+      "split": "cal",
+      "task": "Verify React's current published npm package release and identity."
+    },
+    {
+      "family": "package",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 97.5,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 53.6,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "vite npm published version metadata",
+        "response_time_ms": 98,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "11e224e18232606d886a63ab7f076a08dd0f684209d760bf0e74bdcd9bf742c6"
+      },
+      "id": "p02",
+      "missing_evidence": "authoritative npm metadata with package identity and version",
+      "query": "vite npm published version metadata",
+      "specialist_focus": "npm",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 1,
+              "snippet": "Next generation frontend tooling. It's fast! Vite \u26a1 Next Generation Frontend Tooling \ud83d\udca1 Instant Server Start \u26a1\ufe0f Lightning Fast HMR \ud83d\udee0\ufe0f Rich Features \ud83d\udce6 Optimized B",
+              "tier": 2,
+              "title": "github.com-vitejs-vite_-_2026-03-11_18-16-56",
+              "url": "https://archive.org/details/github.com-vitejs-vite_-_2026-03-11_18-16-56"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 2,
+              "snippet": "Incredibly fast JavaScript runtime, bundler, test runner, and package manager \u2013 all in one Bun Documentation \u00a0\u00a0\u2022\u00a0\u00a0 Discord \u00a0\u00a0\u2022\u00a0\u00a0 Issues \u00a0\u00a0\u2022\u00a0\u00a0 Roadmap Read the d",
+              "tier": 2,
+              "title": "github.com-oven-sh-bun_-_2026-03-11_22-25-41",
+              "url": "https://archive.org/details/github.com-oven-sh-bun_-_2026-03-11_22-25-41"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 3,
+              "snippet": "Virtual DOM into the future! \u2728\ud83e\udd81\ud83d\ude80\u2728 \ud83c\udfa6 Watch Video \ud83d\udcda Read the docs \ud83d\udcac Join our Discord What is Million? Million is a lightweight ( &lt;1kb ) Virtual DOM. It's reall",
+              "tier": 2,
+              "title": "github.com-aidenybai-million_-_2022-08-02_11-34-44",
+              "url": "https://archive.org/details/github.com-aidenybai-million_-_2022-08-02_11-34-44"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 4,
+              "snippet": "\ud83d\udcab Toolkit to help you get started with Spec-Driven Development \ud83c\udf31 Spec Kit Build high-quality software faster. An open source toolkit that allows you to focus on",
+              "tier": 2,
+              "title": "github.com-github-spec-kit_-_2026-03-11_12-57-18",
+              "url": "https://archive.org/details/github.com-github-spec-kit_-_2026-03-11_12-57-18"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 5,
+              "snippet": "Next generation frontend tooling. It's fast! Vite \u26a1 Next Generation Frontend Tooling \ud83d\udca1 Instant Server Start \u26a1\ufe0f Lightning Fast HMR \ud83d\udee0\ufe0f Rich Features \ud83d\udce6 Optimized B",
+              "tier": 2,
+              "title": "github.com-vitejs-vite_-_2021-02-20_21-03-38",
+              "url": "https://archive.org/details/github.com-vitejs-vite_-_2021-02-20_21-03-38"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "vite JavaScript package",
+          "response_time_ms": 755,
+          "result_count": 5,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "bf04b8a96efff89914b57883ffa40380af91c53cf738bfdf25aac844bb40345d"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "Native-ESM powered web dev build tool \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "vite@8.3.0",
+              "url": "https://www.npmjs.com/package/vite"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "Vite as Node.js runtime \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "vite-node@6.0.0",
+              "url": "https://www.npmjs.com/package/vite-node"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "Vite resolver for TypeScript compilerOptions.paths \u2014 Published by aleclarson",
+              "tier": 2,
+              "title": "vite-tsconfig-paths@6.1.1",
+              "url": "https://www.npmjs.com/package/vite-tsconfig-paths"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "Official Sentry Vite plugin \u2014 Published by sentry-bot",
+              "tier": 2,
+              "title": "@sentry/vite-plugin@5.4.0",
+              "url": "https://www.npmjs.com/package/@sentry/vite-plugin"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "Cloudflare plugin for Vite \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@cloudflare/vite-plugin@1.57.0",
+              "url": "https://www.npmjs.com/package/@cloudflare/vite-plugin"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 156.4,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "vite",
+          "response_time_ms": 158,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "3c4bc4d7f782b9060df1ad7eace34dd81dfbe96f0ece6d3259ba909b8099ec1f"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "Nowadays, blockchain technology and industry has developed rapidly all over the world, which is inseparable from continuous innovation and improvement on smart ",
+              "tier": 2,
+              "title": "A survey of application research based on blockchain smart contract",
+              "url": "https://doi.org/10.1007/s11276-021-02874-x"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "A growing community is constructing a next-generation file format (NGFF) for bioimaging to overcome problems of scalability and heterogeneity. Organized by the ",
+              "tier": 2,
+              "title": "OME-Zarr: a cloud-optimized bioimaging file format with international community support",
+              "url": "https://doi.org/10.1007/s00418-023-02209-1"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "Human-centered approaches to machine learning have established theoretical foundations, design principles and interaction techniques to facilitate end-user inte",
+              "tier": 2,
+              "title": "Marcelle: Composing Interactive Machine Learning Workflows and Interfaces",
+              "url": "https://doi.org/10.1145/3472749.3474734"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "",
+              "tier": 2,
+              "title": "Ouvrai opens access to remote virtual reality studies of human behavioural neuroscience",
+              "url": "https://doi.org/10.1038/s41562-024-01834-7"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "Interactive web applications created with declarative JavaScript User Interface (UI) libraries have increasingly dominated the modern internet. However, existin",
+              "tier": 2,
+              "title": "Million.js: A Fast Compiler-Augmented Virtual DOM for the Web",
+              "url": "https://doi.org/10.1145/3555776.3577683"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 181.0,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "vite JavaScript package",
+          "response_time_ms": 183,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "f7c8f486a4361321b0417f8920588fee05d0ef77bd9ae3c72722a72926737029"
+        }
+      },
+      "split": "cal",
+      "task": "Verify Vite's current published npm package release and identity."
+    },
+    {
+      "family": "package",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 101.9,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 57.6,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "typescript npm package release metadata",
+        "response_time_ms": 103,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "2959075d59eeba5c58861cc5fe27ba50a26e8988c6291f4039c1b13fe9fc341c"
+      },
+      "id": "p03",
+      "missing_evidence": "authoritative npm metadata with package identity and version",
+      "query": "typescript npm package release metadata",
+      "specialist_focus": "npm",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 1,
+              "snippet": "\"The mother of all demo apps\" \u2014 Exemplary fullstack Medium.com clone powered by React, Angular, Node, Django, and many more \ud83c\udfc5 Stay on the bleeding edge \u2014 join o",
+              "tier": 2,
+              "title": "github.com-gothinkster-realworld_-_2019-07-15_19-07-55",
+              "url": "https://archive.org/details/github.com-gothinkster-realworld_-_2019-07-15_19-07-55"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 2,
+              "snippet": "Promise based HTTP client for the browser and node.js Promise based HTTP client for the browser and node.js Website \u2022 Documentation [![npm version](https://img.",
+              "tier": 2,
+              "title": "github.com-axios-axios_-_2023-09-28_22-13-59",
+              "url": "https://archive.org/details/github.com-axios-axios_-_2023-09-28_22-13-59"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 3,
+              "snippet": "Download the bundle sveltejs-svelte_-_2019-08-20_20-10-36.bundle and run: git clone sveltejs-svelte_-_2019-08-20_20-10-36.bundle -b master Cybernetically enhanc",
+              "tier": 2,
+              "title": "github.com-sveltejs-svelte_-_2019-08-20_20-10-36",
+              "url": "https://archive.org/details/github.com-sveltejs-svelte_-_2019-08-20_20-10-36"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 4,
+              "snippet": "One framework. Mobile & desktop. Angular - One framework. Mobile & desktop. Angular is a development platform for building mobile and desktop web applications u",
+              "tier": 2,
+              "title": "github.com-angular-angular_-_2020-12-29_20-30-22",
+              "url": "https://archive.org/details/github.com-angular-angular_-_2020-12-29_20-30-22"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 5,
+              "snippet": "A collection of awesome TypeScript resources for client-side and server-side development. Write your awesome JavaScript in TypeScript Awesome TypeScript -= Awes",
+              "tier": 2,
+              "title": "github.com-dzharii-awesome-typescript_-_2017-05-20_01-35-18",
+              "url": "https://archive.org/details/github.com-dzharii-awesome-typescript_-_2017-05-20_01-35-18"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "typescript JavaScript package",
+          "response_time_ms": 665,
+          "result_count": 5,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "7d6d8203647f05e7618ce737529c0f73229d91424f849be6c2998ede7bfd5166"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "TypeScript is a language for application scale JavaScript development \u2014 Published by microsoft1es",
+              "tier": 2,
+              "title": "typescript@7.0.2",
+              "url": "https://www.npmjs.com/package/typescript"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "TypeScript plugin for ESLint \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@typescript-eslint/eslint-plugin@8.70.0",
+              "url": "https://www.npmjs.com/package/@typescript-eslint/eslint-plugin"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "TypeScript scope analyser for ESLint \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@typescript-eslint/scope-manager@8.70.0",
+              "url": "https://www.npmjs.com/package/@typescript-eslint/scope-manager"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "Babel preset for TypeScript. \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@babel/preset-typescript@8.0.1",
+              "url": "https://www.npmjs.com/package/@babel/preset-typescript"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "Types for the TypeScript-ESTree AST spec \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@typescript-eslint/types@8.70.0",
+              "url": "https://www.npmjs.com/package/@typescript-eslint/types"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 363.4,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "typescript",
+          "response_time_ms": 365,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "c2d8291af4a7c7b51984c5d4fb7c6fac839bc35d9554a6d1685d1007fe9bd64e"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "Automatic static analysis tools help developers to automatically spot code issues in their software. They can be of extreme value in languages with dynamic char",
+              "tier": 2,
+              "title": "Why and how JavaScript developers use linters",
+              "url": "https://doi.org/10.1109/ase.2017.8115668"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "With the emergence of the Node.js ecosystem, JavaScript has become a widely used programming language for implementing server-side web applications. In this art",
+              "tier": 2,
+              "title": "Study of JavaScript Static Analysis Tools for Vulnerability Detection in Node.js Packages",
+              "url": "https://doi.org/10.1109/tr.2023.3286301"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "TypeScript applications often use untyped JavaScript libraries. To support static type checking of such applications, the typed APIs of the libraries are expres",
+              "tier": 2,
+              "title": "Type test scripts for TypeScript testing",
+              "url": "https://doi.org/10.1145/3133914"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "Dynamically typed languages such as JavaScript and Python are increasingly popular, yet static typing has not been totally eclipsed: Python now supports type an",
+              "tier": 2,
+              "title": "Deep learning type inference",
+              "url": "https://doi.org/10.1145/3236024.3236051"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "The npm registry is one of the pillars of the JavaScript and Type-Script ecosystems, hosting over 1.7 million packages ranging from simple utility libraries to ",
+              "tier": 2,
+              "title": "Practical automated detection of malicious npm packages",
+              "url": "https://doi.org/10.1145/3510003.3510104"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 302.8,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "typescript JavaScript package",
+          "response_time_ms": 304,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "a29470e4601d2f611c49b5011565736da53f6675b7c198c71a72757e224f8d8a"
+        }
+      },
+      "split": "cal",
+      "task": "Verify TypeScript's current published npm package release and identity."
+    },
+    {
+      "family": "package",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 104.2,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 53.1,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "zod npm latest published package details",
+        "response_time_ms": 105,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "d1fd360d115df11f2aa21a0af74abcb74c274f5d92d74a63cd5181e9a045aa6d"
+      },
+      "id": "p04",
+      "missing_evidence": "authoritative npm metadata with package identity and version",
+      "query": "zod npm latest published package details",
+      "specialist_focus": "npm",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 1,
+              "snippet": "TypeScript-first schema validation with static type inference Zod \u2728 https://zod.dev \u2728 TypeScript-first schema validation with static type inference Documentatio",
+              "tier": 2,
+              "title": "github.com-colinhacks-zod_-_2022-12-13_18-35-56",
+              "url": "https://archive.org/details/github.com-colinhacks-zod_-_2022-12-13_18-35-56"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 2,
+              "snippet": ":memo: Today I Learned TIL Today I Learned A collection of concise write-ups on small things I learn day to day across avariety of languages and technologies. T",
+              "tier": 2,
+              "title": "github.com-jbranchaud-til_-_2023-11-09_16-13-03",
+              "url": "https://archive.org/details/github.com-jbranchaud-til_-_2023-11-09_16-13-03"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 3,
+              "snippet": "TypeScript-first schema validation with static type inference Zod \u2728 https://zod.dev \u2728 TypeScript-first schema validation with static type inference Documentatio",
+              "tier": 2,
+              "title": "github.com-colinhacks-zod_-_2022-11-27_19-19-11",
+              "url": "https://archive.org/details/github.com-colinhacks-zod_-_2022-11-27_19-19-11"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 4,
+              "snippet": "TypeScript-first schema validation with static type inference Zod \u2728 https://zod.dev \u2728 TypeScript-first schema validation with static type inference Documentatio",
+              "tier": 2,
+              "title": "github.com-colinhacks-zod_-_2022-12-16_00-09-25",
+              "url": "https://archive.org/details/github.com-colinhacks-zod_-_2022-12-16_00-09-25"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 5,
+              "snippet": "The Framework for Building Agents eve eve is a filesystem-first framework for durable AI agents. Core agent capabilities live inconventional locations, so proje",
+              "tier": 2,
+              "title": "github.com-vercel-eve_-_2026-07-01_23-18-58",
+              "url": "https://archive.org/details/github.com-vercel-eve_-_2026-07-01_23-18-58"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "zod JavaScript package",
+          "response_time_ms": 828,
+          "result_count": 5,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "d2d4e7c4ba64c61815b5a4de4523f0f37fe5d47d5caf70e9626eaed53f99e65f"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "TypeScript-first schema declaration and validation library with static type inference \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "zod@4.6.5",
+              "url": "https://www.npmjs.com/package/zod"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "Converts Zod schemas to Json Schemas \u2014 Published by stefan-terdell",
+              "tier": 2,
+              "title": "zod-to-json-schema@3.25.2",
+              "url": "https://www.npmjs.com/package/zod-to-json-schema"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "Wrap zod validation errors in user-friendly readable messages \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "zod-validation-error@5.0.0",
+              "url": "https://www.npmjs.com/package/zod-validation-error"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "Validator middleware using Zod \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@hono/zod-validator@0.9.1",
+              "url": "https://www.npmjs.com/package/@hono/zod-validator"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "Zod types for Remotion \u2014 Published by jonny",
+              "tier": 2,
+              "title": "@remotion/zod-types@4.0.526",
+              "url": "https://www.npmjs.com/package/@remotion/zod-types"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 166.7,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "zod",
+          "response_time_ms": 169,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "2271137c30f5ba74b2f7a6522eaddc0ea81229ad2fb9ee8e2df194c96189beed"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "Atomistic molecular dynamics simulations of membrane proteins have been shown to be extremely useful for characterizing the molecular features underlying their ",
+              "tier": 2,
+              "title": "MERMAID: dedicated web server to prepare and run coarse-grained membrane protein dynamics",
+              "url": "https://doi.org/10.1093/nar/gkz416"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "Software testability has long been recognized as a software quality attribute that influences testing effort and effectiveness. While prior work has extensively",
+              "tier": 2,
+              "title": "Characterizing Structural Testability in JavaScript: An Empirical Study",
+              "url": "https://openalex.org/W7171902174"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "Nowadays, the consequence of quick access to information has lead to the spread of fake news, which has a strong damaging impact on democracy, justice, and publ",
+              "tier": 2,
+              "title": "Romanian Fake News Detection Using Machine Learning and Transformer-Based Approaches",
+              "url": "https://doi.org/10.3390/app142411825"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "While Large Language Models (LLMs) have demonstrated remarkable capabilities, research shows that their effectiveness depends not only on explicit prompts but a",
+              "tier": 2,
+              "title": "Beyond the Prompt: An Empirical Study of Cursor Rules",
+              "url": "https://doi.org/10.1145/3793302.3793367"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "Opinn\u00e4ytety\u00f6ss\u00e4 vertailtiin erilaisia JavaScript-pohjaisia verkkokehitysty\u00f6kaluja ja tarkasteltiin niiden hy\u00f6dyllisyytt\u00e4 yksitt\u00e4isen kehitt\u00e4j\u00e4n n\u00e4k\u00f6kulmasta. Ny",
+              "tier": 2,
+              "title": "Verkkosovelluksen frontend-kehitys modernien verkkokehitysty\u00f6kalujen avulla",
+              "url": "https://openalex.org/W7115982338"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 127.7,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "zod JavaScript package",
+          "response_time_ms": 129,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "a99bf055c20f585c691c32300e6996a031e061df82c1f6385876f2f6d213cde7"
+        }
+      },
+      "split": "holdout",
+      "task": "Verify Zod's current published npm package release and identity."
+    },
+    {
+      "family": "package",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 98.3,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 57.6,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "next npm package current version",
+        "response_time_ms": 99,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "b77e130ba19b26884e23e972597cc6ba5f3ee1fd15368d7050b4af95fbb4eeee"
+      },
+      "id": "p05",
+      "missing_evidence": "authoritative npm metadata with package identity and version",
+      "query": "next npm package current version",
+      "specialist_focus": "npm",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 1,
+              "snippet": "Stephanie is consciously trying to make meetings better for herself by limiting distractions. A few episodes ago, Joel talked about a frustrating bug he was cha",
+              "tier": 2,
+              "title": "397: Dependency Graphs",
+              "url": "https://archive.org/details/q1nisnnjt7xz1pm6rowx0tbngq5ofhqxnc3fbboi"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 2,
+              "snippet": "A feature-rich command-line audio/video downloader [![YT-DLP](https://raw.githubusercontent.com/yt-dlp/yt-dlp/master/.github/banner.svg)](#readme)[![Release ver",
+              "tier": 2,
+              "title": "github.com-yt-dlp-yt-dlp_-_2025-11-12_01-00-03",
+              "url": "https://archive.org/details/github.com-yt-dlp-yt-dlp_-_2025-11-12_01-00-03"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 3,
+              "snippet": "What do you get when you mix a worm and a hammerhead shark? Also ants. Steph made some cool new discoveries in bug-land. She also talks about deploys versus rel",
+              "tier": 2,
+              "title": "301: Ants in the Cookie Store",
+              "url": "https://archive.org/details/dshkjx5x9lfcduy6bk4awoe0fipuzthhtwh2wadf"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 4,
+              "snippet": "Promise based HTTP client for the browser and node.js Promise based HTTP client for the browser and node.js Website \u2022 Documentation [![npm version](https://img.",
+              "tier": 2,
+              "title": "github.com-axios-axios_-_2023-09-28_22-13-59",
+              "url": "https://archive.org/details/github.com-axios-axios_-_2023-09-28_22-13-59"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 5,
+              "snippet": "A collection of awesome TypeScript resources for client-side and server-side development. Write your awesome JavaScript in TypeScript Awesome TypeScript -= Awes",
+              "tier": 2,
+              "title": "github.com-dzharii-awesome-typescript_-_2017-05-20_01-35-18",
+              "url": "https://archive.org/details/github.com-dzharii-awesome-typescript_-_2017-05-20_01-35-18"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "next JavaScript package",
+          "response_time_ms": 832,
+          "result_count": 5,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "e27e44170a803daf0dc58de7ade20f8021e96a3acd8faf7b1e67f931a5f4b1b3"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "The React Framework \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "next@16.3.5",
+              "url": "https://www.npmjs.com/package/next"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "This is the **x86_64-unknown-linux-gnu** binary for `@next/swc` \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@next/swc-linux-x64-gnu@16.3.5",
+              "url": "https://www.npmjs.com/package/@next/swc-linux-x64-gnu"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "This is the **linux-x64-musl** binary for `@next/swc` \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@next/swc-linux-x64-musl@16.3.5",
+              "url": "https://www.npmjs.com/package/@next/swc-linux-x64-musl"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "This is the **aarch64-apple-darwin** binary for `@next/swc` \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@next/swc-darwin-arm64@16.3.5",
+              "url": "https://www.npmjs.com/package/@next/swc-darwin-arm64"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "Prisma adapter for next-auth. \u2014 Published by balazsorban",
+              "tier": 2,
+              "title": "@next-auth/prisma-adapter@1.0.7",
+              "url": "https://www.npmjs.com/package/@next-auth/prisma-adapter"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 878.8,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "next",
+          "response_time_ms": 880,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "508fc9645bd4f780aac32153d2df87059e3ade46b31a8d6f4192988ee7a7aabe"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "BACKGROUND: ImageJ is an image analysis program extensively used in the biological sciences and beyond. Due to its ease of use, recordable macro language, and e",
+              "tier": 2,
+              "title": "ImageJ2: ImageJ for the next generation of scientific image data",
+              "url": "https://doi.org/10.1186/s12859-017-1934-z"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "SUMMARY: igv.js is an embeddable JavaScript implementation of the Integrative Genomics Viewer (IGV). It can be easily dropped into any web page with a single li",
+              "tier": 2,
+              "title": "igv.js: an embeddable JavaScript implementation of the Integrative Genomics Viewer (IGV)",
+              "url": "https://doi.org/10.1093/bioinformatics/btac830"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "MOTIVATION: Fast and accurate quality control is essential for studies involving next-generation sequencing data. Whilst numerous tools exist to quantify QC met",
+              "tier": 2,
+              "title": "MultiQC: summarize analysis results for multiple tools and samples in a single report",
+              "url": "https://doi.org/10.1093/bioinformatics/btw354"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "BACKGROUND: System-wide profiling of genes and proteins in mammalian cells produce lists of differentially expressed genes/proteins that need to be further anal",
+              "tier": 2,
+              "title": "Enrichr: interactive and collaborative HTML5 gene list enrichment analysis tool",
+              "url": "https://doi.org/10.1186/1471-2105-14-128"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "BACKGROUND: Venn diagrams are commonly used to display list comparison. In biology, they are widely used to show the differences between gene lists originating ",
+              "tier": 2,
+              "title": "jvenn: an interactive Venn diagram viewer",
+              "url": "https://doi.org/10.1186/1471-2105-15-293"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 188.5,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "next JavaScript package",
+          "response_time_ms": 190,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "09bcceba8d4dc4ade64c56c18a1d4fe25f356baf692306d593378cf2c72885ce"
+        }
+      },
+      "split": "holdout",
+      "task": "Verify Next.js's current published npm package release and identity."
+    },
+    {
+      "family": "scholarly",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 96.8,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 54.7,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "microplastics fish bioaccumulation primary studies",
+        "response_time_ms": 98,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "5497d29b5ed616f2f1b2e5c1608ace8f05df4834ef174138a14711eba1c5fbfb"
+      },
+      "id": "s01",
+      "missing_evidence": "a named primary publication directly studying the topic",
+      "query": "microplastics fish bioaccumulation primary studies",
+      "specialist_focus": "openalex",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 1,
+              "snippet": "",
+              "tier": 2,
+              "title": "The assessment of the bioaccumulation of microplastics in key fish species from the Bulgarian aquatory of the Black Sea",
+              "url": "https://archive.org/details/assessmentbioac22tosc"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 2,
+              "snippet": "",
+              "tier": 2,
+              "title": "Otters as bioindicators of estuarine health: Scientific gaps, field-based insights, and a framework for future research",
+              "url": "https://archive.org/details/ottersasbioindi3bezb"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 2,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "microplastics fish bioaccumulation",
+          "response_time_ms": 245,
+          "result_count": 2,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "e5ff425ee8914ac10d9b1979dc5d3f573fa07d18e85cf9d5192ea2cdc67d547b"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "Fish Audio plugin for LiveKit Node Agents \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@livekit/agents-plugin-fishaudio@1.9.0",
+              "url": "https://www.npmjs.com/package/@livekit/agents-plugin-fishaudio"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "LSP implementation for fish/fish-shell \u2014 Published by ndonfris",
+              "tier": 2,
+              "title": "fish-lsp@1.1.4",
+              "url": "https://www.npmjs.com/package/fish-lsp"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "fish.audio platform api sdk \u2014 Published by pikachubolk",
+              "tier": 2,
+              "title": "fish-audio-sdk@2025.11.29",
+              "url": "https://www.npmjs.com/package/fish-audio-sdk"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "The **[Fish Audio provider](https://ai-sdk.dev/providers/ai-sdk-providers/fish-audio)** for the [AI SDK](https://ai-sdk.dev/docs) contains speech generation (S1",
+              "tier": 2,
+              "title": "@ai-sdk/fish-audio@3.0.23",
+              "url": "https://www.npmjs.com/package/@ai-sdk/fish-audio"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "TinyFish CLI \u2014 run web automations from your terminal \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@tiny-fish/cli@0.46.0",
+              "url": "https://www.npmjs.com/package/@tiny-fish/cli"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 373.7,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "microplastics fish bioaccumulation",
+          "response_time_ms": 376,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "918f42a2ad73fb943743530e70bb171c7c9fcb76a646c3491cc561d97a32a2f3"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "",
+              "tier": 2,
+              "title": "Toxic effects on bioaccumulation, hematological parameters, oxidative stress, immune responses and neurotoxicity in fish exposed to microplastics: A review",
+              "url": "https://doi.org/10.1016/j.jhazmat.2021.125423"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "",
+              "tier": 2,
+              "title": "Interactive effects of polystyrene microplastics and roxithromycin on bioaccumulation and biochemical status in the freshwater fish red tilapia (Oreochromis niloticus)",
+              "url": "https://doi.org/10.1016/j.scitotenv.2018.08.266"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "",
+              "tier": 2,
+              "title": "Bioaccumulation and reproductive effects of fluorescent microplastics in medaka fish",
+              "url": "https://doi.org/10.1016/j.marpolbul.2020.111446"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "Microplastics pollution is a global paradigm that raises concern in relation to environmental and human health. This study investigated toxic effects of micropl",
+              "tier": 2,
+              "title": "Microplastics cause neurotoxicity, oxidative damage and energy-related changes and interact with the bioaccumulation of mercury in the European seabass, Dicentrarchus labrax (Linnaeus, 1758)",
+              "url": "https://doi.org/10.1016/j.aquatox.2017.12.008"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "PURPOSE OF REVIEW: We describe evidence regarding human exposure to microplastics via seafood and discuss potential health effects. RECENT FINDINGS: Shellfish a",
+              "tier": 2,
+              "title": "Microplastics in Seafood and the Implications for Human Health",
+              "url": "https://doi.org/10.1007/s40572-018-0206-z"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 381.2,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "microplastics bioaccumulation fish",
+          "response_time_ms": 383,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "e779faf0080b9d0df82ec56880cb5cc6b192f496ddf3ad9280bedf71443ba137"
+        }
+      },
+      "split": "cal",
+      "task": "Find primary scholarly studies on microplastics bioaccumulation in fish."
+    },
+    {
+      "family": "scholarly",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 111.4,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 55.3,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "retrieval augmented generation factuality evaluation papers",
+        "response_time_ms": 113,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "9d21ef4db6fb46473c1898a118b07f1f23c461ba58dcc6e41f46c7f377a70d9a"
+      },
+      "id": "s02",
+      "missing_evidence": "a named primary publication directly evaluating the topic",
+      "query": "retrieval augmented generation factuality evaluation papers",
+      "specialist_focus": "openalex",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 1,
+              "snippet": "Examples and guides for using the OpenAI API OpenAI Cookbook The OpenAI Cookbook shares example code for accomplishing common tasks with the [OpenAI API]. To ru",
+              "tier": 2,
+              "title": "github.com-openai-openai-cookbook_-_2023-08-02_05-51-45",
+              "url": "https://archive.org/details/github.com-openai-openai-cookbook_-_2023-08-02_05-51-45"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 2,
+              "snippet": "The paper list of the 86-page paper \"The Rise and Potential of Large Language Model Based Agents: A Survey\" by Zhiheng Xi et al. The Rise and Potential of Large",
+              "tier": 2,
+              "title": "github.com-WooooDyy-LLM-Agent-Paper-List_-_2023-09-19_18-23-28",
+              "url": "https://archive.org/details/github.com-WooooDyy-LLM-Agent-Paper-List_-_2023-09-19_18-23-28"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 3,
+              "snippet": "The paper list of the 86-page paper \"The Rise and Potential of Large Language Model Based Agents: A Survey\" by Zhiheng Xi et al. The Rise and Potential of Large",
+              "tier": 2,
+              "title": "github.com-WooooDyy-LLM-Agent-Paper-List_-_2023-09-20_05-55-01",
+              "url": "https://archive.org/details/github.com-WooooDyy-LLM-Agent-Paper-List_-_2023-09-20_05-55-01"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 4,
+              "snippet": "The paper list of the 86-page paper \"The Rise and Potential of Large Language Model Based Agents: A Survey\" by Zhiheng Xi et al. The Rise and Potential of Large",
+              "tier": 2,
+              "title": "github.com-WooooDyy-LLM-Agent-Paper-List_-_2023-09-20_15-49-52",
+              "url": "https://archive.org/details/github.com-WooooDyy-LLM-Agent-Paper-List_-_2023-09-20_15-49-52"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 5,
+              "snippet": "The paper list of the 86-page paper \"The Rise and Potential of Large Language Model Based Agents: A Survey\" by Zhiheng Xi et al. The Rise and Potential of Large",
+              "tier": 2,
+              "title": "github.com-WooooDyy-LLM-Agent-Paper-List_-_2023-09-22_13-16-49",
+              "url": "https://archive.org/details/github.com-WooooDyy-LLM-Agent-Paper-List_-_2023-09-22_13-16-49"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "retrieval augmented generation factuality",
+          "response_time_ms": 669,
+          "result_count": 5,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "b539070a7b62b1ff8dcf5cc8c55a0a043b38bade95432e51c86f7aa23e202fd7"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "The official Pinecone TypeScript SDK for building full-text and vector search applications. \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@pinecone-database/pinecone@9.0.0",
+              "url": "https://www.npmjs.com/package/@pinecone-database/pinecone"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": " \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@mastra/rag@2.6.3",
+              "url": "https://www.npmjs.com/package/@mastra/rag"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "Universal library for evaluating AI models \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "autoevals@0.3.0",
+              "url": "https://www.npmjs.com/package/autoevals"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "Various implementations of LangChain.js text splitters \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@langchain/textsplitters@1.0.1",
+              "url": "https://www.npmjs.com/package/@langchain/textsplitters"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "A a collection of languages stemmers and stopwords for Lunr Javascript library \u2014 Published by mihaivalentin",
+              "tier": 2,
+              "title": "lunr-languages@1.22.0",
+              "url": "https://www.npmjs.com/package/lunr-languages"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 386.7,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "retrieval augmented generation factuality",
+          "response_time_ms": 389,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "12bc974015990a029703a1ddf78c1212bb0809a103035b1246d2c506fbed47cd"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "Large Language Models (LLMs) showcase impressive capabilities but encounter challenges like hallucination, outdated knowledge, and non-transparent, untraceable ",
+              "tier": 2,
+              "title": "Retrieval-Augmented Generation for Large Language Models: A Survey",
+              "url": "https://doi.org/10.48550/arxiv.2312.10997"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "Shahul Es, Jithin James, Luis Espinosa Anke, Steven Schockaert. Proceedings of the 18th Conference of the European Chapter of the Association for Computational ",
+              "tier": 2,
+              "title": "RAGAs: Automated Evaluation of Retrieval Augmented Generation",
+              "url": "https://doi.org/10.18653/v1/2024.eacl-demo.16"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "Zhengbao Jiang, Frank Xu, Luyu Gao, Zhiqing Sun, Qian Liu, Jane Dwivedi-Yu, Yiming Yang, Jamie Callan, Graham Neubig. Proceedings of the 2023 Conference on Empi",
+              "tier": 2,
+              "title": "Active Retrieval Augmented Generation",
+              "url": "https://doi.org/10.18653/v1/2023.emnlp-main.495"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "BACKGROUND: Large language models (LLMs) have recently shown impressive zero-shot capabilities, whereby they can use auxiliary data, without the availability of",
+              "tier": 2,
+              "title": "Almanac \u2014 Retrieval-Augmented Language Models for Clinical Medicine",
+              "url": "https://doi.org/10.1056/aioa2300068"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "Retrieval-Augmented Generation (RAG) is a promising approach for mitigating the hallucination of large language models (LLMs). However, existing research lacks ",
+              "tier": 2,
+              "title": "Benchmarking Large Language Models in Retrieval-Augmented Generation",
+              "url": "https://doi.org/10.1609/aaai.v38i16.29728"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 264.3,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "retrieval augmented generation factuality evaluation",
+          "response_time_ms": 266,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "0559fc8df285b8fe8bba81508dbcee6a2b7002a8d4a9a5368cbe3c3e738e2bb9"
+        }
+      },
+      "split": "cal",
+      "task": "Find primary publications evaluating factuality of retrieval-augmented generation."
+    },
+    {
+      "family": "scholarly",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 104.2,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 54.6,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "metformin diabetes prevention randomized trials",
+        "response_time_ms": 105,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "9b36d0535b3ec91124def3f67ff799d4f714c3d3a371f4470015e89bd7b86157"
+      },
+      "id": "s03",
+      "missing_evidence": "a named primary randomized-trial publication",
+      "query": "metformin diabetes prevention randomized trials",
+      "specialist_focus": "openalex",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 1,
+              "snippet": "Every week \\\"In the News...\\\" brings you the top stories and headlines around the diabetes community. Top stories this week: A new treatment is being studied to",
+              "tier": 2,
+              "title": "In the News.. New way to treat hypos, Does cannabis help prevent T2D? Diabetes at the Olympics and more!",
+              "url": "https://archive.org/details/9vs62jdzyzzzj9xmbj03rssuikxvci7sixx3meyx"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 2,
+              "snippet": "This article is from Diabetes Care , volume 35 . Abstract OBJECTIVE: We tested genetic associations with weight loss and weight regain in the Diabetes Preventio",
+              "tier": 2,
+              "title": "Genetic Predictors of Weight Loss and Weight Regain After Intensive Lifestyle Modification, Metformin Treatment, or Standard Care in the Diabetes Prevention Program.",
+              "url": "https://archive.org/details/pubmed-PMC3263869"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 3,
+              "snippet": "Most of the sound frequencies used in these recordings correspond either to the molar mass or equivalent scalar octave of the related products. This work is ded",
+              "tier": 2,
+              "title": "Resonant_Therapy-Molecular_Biology_55",
+              "url": "https://archive.org/details/Resonant_Therapy-Molecular_Biology_55"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 3,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "metformin diabetes prevention trial",
+          "response_time_ms": 783,
+          "result_count": 3,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "859f7a6196681dbcb20638b62670151e9bfb99052f18be8c885093caa7403ebe"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "A lightweight cache for file metadata, ideal for processes that work on a specific set of files and only need to reprocess files that have changed since the las",
+              "tier": 2,
+              "title": "file-entry-cache@11.1.5",
+              "url": "https://www.npmjs.com/package/file-entry-cache"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "React Common package delivers common utilities that can be used with the KendoReact UI components. KendoReact Common Utilities package \u2014 Published by GitHub Act",
+              "tier": 2,
+              "title": "@progress/kendo-react-common@16.1.0",
+              "url": "https://www.npmjs.com/package/@progress/kendo-react-common"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "[WebViewer](https://www.apryse.com/webviewer) is a powerful JavaScript Document SDK and UI Component Library that is a part of the [Apryse PDF SDK](https://www.",
+              "tier": 2,
+              "title": "@pdftron/webviewer@12.1.0",
+              "url": "https://www.npmjs.com/package/@pdftron/webviewer"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "React TreeView displays hierarchical data in a traditional tree structure, supports user interaction. KendoReact TreeView package \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@progress/kendo-react-treeview@16.1.0",
+              "url": "https://www.npmjs.com/package/@progress/kendo-react-treeview"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "React PDF Processing enables you to export single- and multi-page content in PDF. KendoReact PDF Processing package \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@progress/kendo-react-pdf@16.1.0",
+              "url": "https://www.npmjs.com/package/@progress/kendo-react-pdf"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 978.7,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "metformin diabetes prevention trial",
+          "response_time_ms": 981,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "f31d0f69f4cc0057c047212d84f05357668fad0a9b9b6ca42058c1ddde4caeac"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "BACKGROUND: The metabolic syndrome is a high-risk state for diabetes and cardiovascular disease. Little is known about its prevalence and prevention in those wi",
+              "tier": 2,
+              "title": "The Effect of Metformin and Intensive Lifestyle Intervention on the Metabolic Syndrome: The Diabetes Prevention Program Randomized Trial",
+              "url": "https://doi.org/10.7326/0003-4819-142-8-200504190-00009"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "MELLITUS -Diabetes is a group of metabolic diseases characterized by hyperglycemia resulting from defects in insulin secretion, insulin action, or both.The chro",
+              "tier": 2,
+              "title": "Diagnosis and Classification of Diabetes Mellitus",
+              "url": "https://doi.org/10.2337/dc11-s062"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "CONTEXT: A past history of gestational diabetes mellitus (GDM) confers a very high risk of postpartum development of diabetes, particularly type 2 diabetes. OBJ",
+              "tier": 2,
+              "title": "Prevention of Diabetes in Women with a History of Gestational Diabetes: Effects of Metformin and Lifestyle Interventions",
+              "url": "https://doi.org/10.1210/jc.2008-0772"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "",
+              "tier": 2,
+              "title": "10-year follow-up of diabetes incidence and weight loss in the Diabetes Prevention Program Outcomes Study",
+              "url": "https://doi.org/10.1016/s0140-6736(09)61457-4"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "The Diabetes Prevention Program is a randomized clinical trial testing strategies to prevent or delay the development of type 2 diabetes in high-risk individual",
+              "tier": 2,
+              "title": "The Diabetes Prevention Program. Design and methods for a clinical trial in the prevention of type 2 diabetes.",
+              "url": "https://doi.org/10.2337/diacare.22.4.623"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 443.3,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "metformin diabetes prevention randomized trial",
+          "response_time_ms": 445,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "9602e4e159c14e69d6c1c64e2d0e108d6502c635f0a05a9f81a5308ad8090e08"
+        }
+      },
+      "split": "cal",
+      "task": "Find primary randomized-trial publications on metformin for diabetes prevention."
+    },
+    {
+      "family": "scholarly",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 94.6,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 60.3,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "JWST exoplanet atmosphere primary publications",
+        "response_time_ms": 96,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "1a8c6c5501b840447e90fb1078ca907bb82c6461179e43ec1f313a6f1c8800d7"
+      },
+      "id": "s04",
+      "missing_evidence": "a named primary publication reporting JWST exoplanet-atmosphere observations",
+      "query": "JWST exoplanet atmosphere primary publications",
+      "specialist_focus": "openalex",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 1,
+              "snippet": "",
+              "tier": 2,
+              "title": "Seeing The Universe Like We've Never Seen It Before",
+              "url": "https://archive.org/details/youtube-3jT_Zui1Am8"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 2,
+              "snippet": "NASA revealed the first five full-color images and spectrographic data from the world's most powerful space telescope, the James Webb Space Telescope, a partner",
+              "tier": 2,
+              "title": "Highlights: First Images from the James Webb Space Telescope (Official NASA Video)",
+              "url": "https://archive.org/details/nasa_tv-Highlights_-_First_Images_from_the_James_Webb_Space_Telescope_Official_NASA_Video"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 3,
+              "snippet": "Catalog comprising 70 diverse planetary types artistic depictions CC BY SA: These planet-type images are all free to use anywhere in the sizes and resolutions p",
+              "tier": 2,
+              "title": "Exoplanets illustrations",
+              "url": "https://archive.org/details/planet-types"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 4,
+              "snippet": "We present observations of WASP-63b by the Hubble Space Telescope (HST) as part of \"A Preparatory Program to Identify the Single Best Transiting Exoplanet for J",
+              "tier": 2,
+              "title": "Community targets for JWST's early release science program: evaluation of WASP-63b",
+              "url": "https://archive.org/details/arxiv-1704.07421"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 5,
+              "snippet": "To see commercial-free, full HD video episodes, join us at https://lawrencekrauss.substack.com/ Consider supporting the podcast and the Origins Project Foundati",
+              "tier": 2,
+              "title": "The Search for Exoplanets and Life Elsewhere in the Universe | Geoff Marcy",
+              "url": "https://archive.org/details/youtube-_vAyacBoMGo"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "JWST exoplanet atmosphere",
+          "response_time_ms": 614,
+          "result_count": 5,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "853c8185a9510fb8f53f0c0825f3f1af2e3134f92d127cf4082445568ebac2a1"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "A Three.js and R3F implementation of Precomputed Atmospheric Scattering \u2014 Published by shotamatsuda",
+              "tier": 2,
+              "title": "@takram/three-atmosphere@0.19.1",
+              "url": "https://www.npmjs.com/package/@takram/three-atmosphere"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "Template-related types and utilities for use in Sesimi apps and templates. \u2014 Published by myadbox-devs",
+              "tier": 2,
+              "title": "@myadbox/nebula-template-utils@0.4.65",
+              "url": "https://www.npmjs.com/package/@myadbox/nebula-template-utils"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": " \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@cdklabs/cdk-atmosphere-client@0.0.119",
+              "url": "https://www.npmjs.com/package/@cdklabs/cdk-atmosphere-client"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "TypeScript definitions for atmosphere.js \u2014 Published by types",
+              "tier": 2,
+              "title": "@types/atmosphere.js@2.1.6",
+              "url": "https://www.npmjs.com/package/@types/atmosphere.js"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "Modern TypeScript client for Atmosphere Framework - WebSocket/SSE/Comet support \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "atmosphere.js@5.0.45",
+              "url": "https://www.npmjs.com/package/atmosphere.js"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 347.2,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "JWST exoplanet atmosphere",
+          "response_time_ms": 349,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "19436d88ccbf00a6acdaad3fd6eddaf24b6d57aa558c0e59ce6ee18d1883db4c"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "The Transiting Exoplanet Survey Satellite (TESS) will search for planets transiting bright and nearby stars. TESS has been selected by NASA for launch in 2017 a",
+              "tier": 2,
+              "title": "Transiting Exoplanet Survey Satellite",
+              "url": "https://doi.org/10.1117/1.jatis.1.1.014003"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "ABSTRACT We explore how well spectra from the James Webb Space Telescope (JWST) will likely constrain bulk atmospheric properties of transiting exoplanets. We s",
+              "tier": 2,
+              "title": "CHARACTERIZING TRANSITING EXOPLANET ATMOSPHERES WITH JWST",
+              "url": "https://doi.org/10.3847/0004-637x/817/1/17"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "Abstract The James Webb Space Telescope (JWST) will offer the first opportunity to characterize terrestrial exoplanets with sufficient precision to identify hig",
+              "tier": 2,
+              "title": "The Detectability and Characterization of the TRAPPIST-1 Exoplanet Atmospheres with JWST",
+              "url": "https://doi.org/10.3847/1538-3881/ab21e0"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "We present a new method to retrieve molecular abundances and temperature profiles from exoplanet atmosphere photometry and spectroscopy. We run millions of one-",
+              "tier": 2,
+              "title": "A TEMPERATURE AND ABUNDANCE RETRIEVAL METHOD FOR EXOPLANET ATMOSPHERES",
+              "url": "https://doi.org/10.1088/0004-637x/707/1/24"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "The Transiting Exoplanet Survey Satellite (TESS ) will search for planets transiting bright and nearby stars. TESS has been selected by NASA for launch in 2017 ",
+              "tier": 2,
+              "title": "Transiting Exoplanet Survey Satellite (TESS)",
+              "url": "https://doi.org/10.1117/12.2063489"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 313.9,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "JWST exoplanet atmosphere observation",
+          "response_time_ms": 315,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "b7b9d952fed67c7107611df5f7c829eabe94d7c9fbf32a8ee59ae1c63ae95c0e"
+        }
+      },
+      "split": "holdout",
+      "task": "Find primary scholarly publications about JWST observations of exoplanet atmospheres."
+    },
+    {
+      "family": "scholarly",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 110.4,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 105.1,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "CRISPR off-target detection comparative studies",
+        "response_time_ms": 111,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "73def44f44bc3d265ce644858a1e941ae651610960d42a7feb05b8efaad14b6f"
+      },
+      "id": "s05",
+      "missing_evidence": "a named primary comparative publication on off-target detection",
+      "query": "CRISPR off-target detection comparative studies",
+      "specialist_focus": "openalex",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 1,
+              "snippet": "Human Immunodeficiency Virus (HIV) remains a major global health issue, with the persistence of latent viral reservoirs serving as a primary barrier to a functi",
+              "tier": 2,
+              "title": "Efficacy of CRISPR/Cas9 Gene Editing in Eradicating HIV Latent Reservoirs in Individuals on Long-term ART (www.kiu.ac.ug)",
+              "url": "https://archive.org/details/eurasian-experiment-journal-of-scientific-and-applied-research-73110-113"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 2,
+              "snippet": "CRISPR/Cas9 \u6280\u672f\u5728\u975e\u6a21\u5f0f\u690d\u7269\u4e2d\u7684\u5e94\u7528\u8fdb\u5c55 \u4f5c\u8005\uff1a \u767d\u82f1\u4fca 1 \u674e\u56fd\u745e 2,3,4,5 \u9ec4\u51e4\u5170 2,3,4,5 \u674e\u5a01 1 \u98ce\u5170 5 \u4f5c\u8005\u5355\u4f4d\uff1a 1. \u5185\u8499\u53e4\u6c11\u65cf\u5927\u5b66 \u519c\u5b66\u9662\uff0c\u5185\u8499\u53e4 \u901a\u8fbd 028000\uff1b\u5185\u8499\u53e4\u81ea\u6cbb\u533a\u9ad8\u6821\u84d6\u9ebb\u4ea7\u4e1a\u5de5\u7a0b\u6280\u672f\u7814\u7a76\u4e2d\u5fc3\uff0c\u5185\u8499\u53e4 \u901a\u8fbd 028000\uff1b\u5185\u8499\u53e4\u81ea\u6cbb\u533a\u84d6\u9ebb\u80b2\u79cd\u91cd\u70b9\u5b9e\u9a8c\u5ba4\uff0c\u5185\u8499\u53e4",
+              "tier": 2,
+              "title": "CRISPR/Cas9 \u6280\u672f\u5728\u975e\u6a21\u5f0f\u690d\u7269\u4e2d\u7684\u5e94\u7528\u8fdb\u5c55",
+              "url": "https://archive.org/details/ChinaXiv-201808.00140V1"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 3,
+              "snippet": "CRISPR based diagnostics represent a transformative advancement in viral detection and surveillance, offering rapid, cost effective, and highly sensitive altern",
+              "tier": 2,
+              "title": "CRISPR Based Diagnostics A New Frontier in Viral Detection and Surveillance",
+              "url": "https://archive.org/details/httpswww.ijtsrd.comother-scientific-research-areaother97127crisprbased-diagnosti"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 4,
+              "snippet": "We present the NERV, a nonmechanical, unidirectional valve, to control the locomotion of Caenorhabditis eleg ant (C. elegans) in microfluidic devices. This valv",
+              "tier": 2,
+              "title": "electrotaxis",
+              "url": "https://archive.org/details/electrotaxis"
+            },
+            {
+              "engine": "internetarchive",
+              "engines": [
+                "internetarchive"
+              ],
+              "position": 5,
+              "snippet": "This article is from Scientific Reports , volume 4 . Abstract The rapid generation of various species and strains of laboratory animals using CRISPR/Cas9 techno",
+              "tier": 2,
+              "title": "An Efficient Genotyping Method for Genome-modified Animals and Human Cells Generated with CRISPR/Cas9 System.",
+              "url": "https://archive.org/details/pubmed-PMC4168274"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "CRISPR off-target detection",
+          "response_time_ms": 420,
+          "result_count": 5,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "58443ddbb2e43f80886f2abbb27aec9fbc17d87737ec29f74641c4a385d098fa"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "Lexes CommonJS modules, returning their named exports metadata \u2014 Published by guybedford",
+              "tier": 2,
+              "title": "cjs-module-lexer@2.2.1",
+              "url": "https://www.npmjs.com/package/cjs-module-lexer"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "Lightweight browser detector \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "bowser@2.14.1",
+              "url": "https://www.npmjs.com/package/bowser"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "[![NPM version](https://img.shields.io/npm/v/@aws-sdk/middleware-recursion-detection/latest.svg)](https://www.npmjs.com/package/@aws-sdk/middleware-recursion-de",
+              "tier": 2,
+              "title": "@aws-sdk/middleware-recursion-detection@3.972.47",
+              "url": "https://www.npmjs.com/package/@aws-sdk/middleware-recursion-detection"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "Runtime agnostic JS utils \u2014 Published by pi0",
+              "tier": 2,
+              "title": "std-env@4.2.0",
+              "url": "https://www.npmjs.com/package/std-env"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "A less than 1KB css-in-js solution \u2014 Published by cristianbote",
+              "tier": 2,
+              "title": "goober@2.1.19",
+              "url": "https://www.npmjs.com/package/goober"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 462.5,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "CRISPR off-target detection",
+          "response_time_ms": 465,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "a27fc1325e24cc82492afdb503196505fd6110769739fd8a44fc8afdf33dc91f"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "",
+              "tier": 2,
+              "title": "CRISPR-based diagnostics",
+              "url": "https://doi.org/10.1038/s41551-021-00760-7"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "Gene editing stands for the methods to precisely make changes to a specific nucleic acid sequence. With the recent development of the clustered regularly inters",
+              "tier": 2,
+              "title": "Off-target effects in CRISPR/Cas9 gene editing",
+              "url": "https://doi.org/10.3389/fbioe.2023.1143157"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "",
+              "tier": 2,
+              "title": "Evolutionary classification of CRISPR\u2013Cas systems: a burst of class 2 and derived variants",
+              "url": "https://doi.org/10.1038/s41579-019-0299-x"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "",
+              "tier": 2,
+              "title": "The Biology of CRISPR-Cas: Backward and Forward",
+              "url": "https://doi.org/10.1016/j.cell.2017.11.032"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "Gene editing that makes target gene modification in the genome by deletion or addition has revolutionized the era of biomedicine. Clustered regularly interspace",
+              "tier": 2,
+              "title": "Latest Developed Strategies to Minimize the Off-Target Effects in CRISPR-Cas-Mediated Genome Editing",
+              "url": "https://doi.org/10.3390/cells9071608"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 403.3,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "CRISPR off-target detection comparative methods",
+          "response_time_ms": 405,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "e0bf317b16c612cc205daeb43ad89591dc3797bcd6302e3317fc58e02b6f8eaf"
+        }
+      },
+      "split": "holdout",
+      "task": "Find primary scholarly studies comparing CRISPR off-target detection methods."
+    },
+    {
+      "family": "historical",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 97.8,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 58.6,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "python.org homepage as it appeared in 2001",
+        "response_time_ms": 99,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "54ee6c923c4f484965d44245e9a6c6eeaadd9abc27b5da29a7d62ff53cdef732"
+      },
+      "id": "h01",
+      "missing_evidence": "an archived snapshot URL and date for the specified site near the requested year",
+      "query": "python.org homepage as it appeared in 2001",
+      "specialist_focus": "internetarchive",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": true,
+          "cards": [],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 8000.0,
+              "result_count": 0,
+              "status": "timeout"
+            }
+          ],
+          "partial": false,
+          "query": "python.org",
+          "response_time_ms": 8002,
+          "result_count": 0,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "5aba712bc3fbcaab1eff727b249a2159e5ba6bfd61d814ff054ea25d74be56f7"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "An RFC 3986/3987 compliant, scheme extendable URI/IRI parsing/validating/resolving library for JavaScript. \u2014 Published by garycourt",
+              "tier": 2,
+              "title": "uri-js@4.4.1",
+              "url": "https://www.npmjs.com/package/uri-js"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "Map and Set with automatic key interning \u2014 Published by mbostock",
+              "tier": 2,
+              "title": "internmap@2.0.3",
+              "url": "https://www.npmjs.com/package/internmap"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "Lax URL parsing with support for protocol-less URLs and IPs \u2014 Published by sindresorhus",
+              "tier": 2,
+              "title": "url-parse-lax@6.0.0",
+              "url": "https://www.npmjs.com/package/url-parse-lax"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "A library for manipulating IPv4 and IPv6 addresses in JavaScript. \u2014 Published by whitequark",
+              "tier": 2,
+              "title": "ipaddr.js@2.5.0",
+              "url": "https://www.npmjs.com/package/ipaddr.js"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "[![Build Status](https://travis-ci.org/auth0/node-xml-encryption.png)](https://travis-ci.org/auth0/node-xml-encryption) \u2014 Published by tngan",
+              "tier": 2,
+              "title": "@authenio/xml-encryption@2.0.2",
+              "url": "https://www.npmjs.com/package/@authenio/xml-encryption"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 276.5,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "python.org homepage 2001",
+          "response_time_ms": 279,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "ab030aa70295a8108ab6279a6d874898bebea2e1db44952247542a84965760ce"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "",
+              "tier": 2,
+              "title": "The probability of false positives in zero-dimensional analyses of one-dimensional kinematic, force and EMG trajectories",
+              "url": "https://doi.org/10.1016/j.jbiomech.2016.03.032"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "The interactive nature of web applications or \u201cweb apps\u201d makes them a well-suited medium for conveying complex scientific concepts to lay audiences and creating",
+              "tier": 2,
+              "title": "A new open source platform for lowering the barrier for environmental web app development",
+              "url": "https://doi.org/10.1016/j.envsoft.2016.08.003"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "We investigate possible signatures of halo assembly bias for spectroscopically selected galaxy groups from the Galaxy And Mass Assembly (GAMA) survey using weak",
+              "tier": 2,
+              "title": "A KiDS weak lensing analysis of assembly bias in GAMA galaxy groups",
+              "url": "https://doi.org/10.1093/mnras/stx705"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "Many websites offer visitors privacy controls and opt-out choices, either to comply with legal requirements or to address consumer privacy concerns. The way the",
+              "tier": 2,
+              "title": "An Empirical Analysis of Data Deletion and Opt-Out Choices on 150 Websites",
+              "url": "https://doi.org/10.1184/r1/13050419"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "The ability of metabolic engineers to conceptualize, implement, and evaluate strain designs has dramatically increased in the last decade. Unlike other engineer",
+              "tier": 2,
+              "title": "The LASER database: Formalizing design rules for metabolic engineering",
+              "url": "https://doi.org/10.1016/j.meteno.2015.06.003"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 208.1,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "python.org homepage 2001",
+          "response_time_ms": 209,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "0316d2a0a5fc623f9e1d6fa51c8129ff78d6cf2ed93b169f1fb658ce74a5ec98"
+        }
+      },
+      "split": "cal",
+      "task": "Find a historical snapshot of the python.org homepage from about 2001."
+    },
+    {
+      "family": "historical",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 142.6,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 85.3,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "npmjs.com homepage in 2015",
+        "response_time_ms": 143,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "fb13efa4905128231e79428b653884aff34fa32699ed749e5431dc65f1911a91"
+      },
+      "id": "h02",
+      "missing_evidence": "an archived snapshot URL and date for the specified site near the requested year",
+      "query": "npmjs.com homepage in 2015",
+      "specialist_focus": "internetarchive",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": true,
+          "cards": [],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 8000.0,
+              "result_count": 0,
+              "status": "timeout"
+            }
+          ],
+          "partial": false,
+          "query": "npmjs.com",
+          "response_time_ms": 8005,
+          "result_count": 0,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "3063bc0b853b685be9431291dac13964b53c5abfdd6962e37405777fe5889cfd"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "A calculator for humanity\u2019s peculiar conventions of time. \u2014 Published by mbostock",
+              "tier": 2,
+              "title": "d3-time@3.1.0",
+              "url": "https://www.npmjs.com/package/d3-time"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "A JavaScript implementation of the JSON Object Signing and Encryption (JOSE) for current web browsers and node.js-based servers \u2014 Published by justaugustus",
+              "tier": 2,
+              "title": "node-jose@2.2.0",
+              "url": "https://www.npmjs.com/package/node-jose"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "Chance - Utility library to generate anything random \u2014 Published by victorquinn",
+              "tier": 2,
+              "title": "chance@1.1.13",
+              "url": "https://www.npmjs.com/package/chance"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "Copy a descriptor from object A to object B \u2014 Published by jonschlinkert",
+              "tier": 2,
+              "title": "copy-descriptor@0.1.1",
+              "url": "https://www.npmjs.com/package/copy-descriptor"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "JavaScript parser, mangler/compressor and beautifier toolkit for ES6+ \u2014 Published by fabiosantoscode",
+              "tier": 2,
+              "title": "terser@5.51.2",
+              "url": "https://www.npmjs.com/package/terser"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 269.8,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "npmjs.com homepage 2015",
+          "response_time_ms": 272,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "2a1b9ada86b80ad4b91b0833d8c9197fd904840e579dd7bb9590e7d9bb1f017f"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "Visual Algorithm Simulation (VAS) exercises are commonly used in Computer Science education to help learners understand the logic behind the abstractions used i",
+              "tier": 2,
+              "title": "Design of an Application to Collect Data and Create Animations from Visual Algorithm Simulation Exercises",
+              "url": "https://doi.org/10.13140/rg.2.2.31151.97441"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "Business processes are part of every company\u2019s daily business. In the past hundreds of years, almost every aspect in the operation of businesses has seen a two-",
+              "tier": 2,
+              "title": "Elastic-BPM: the Design, Deployment, and Evaluation of a Cloud-Based Architecture for Enterprise Business-Process-as-a-Service",
+              "url": "https://openalex.org/W2769686708"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "This paper discusses the development of an educational system that aims to train individuals to recognize false information. The application includes a news ana",
+              "tier": 2,
+              "title": "Promoting prevention to fake news through an educational software",
+              "url": "https://doi.org/10.5753/jis.2024.3769"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "Architectural decision records answer \"why\" questions about designs and make tacit knowledge explicit.Many architectural decisions are made during development i",
+              "tier": 2,
+              "title": "The LaTeX template generator: How micro-templates reduce template maintenance effort",
+              "url": "https://doi.org/10.47397/tb/44-2/tb137kopp-microtemplates"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "Membangun sebuah sistem informasi yang kokoh memerlukan pemahaman yang seimbang antara teori perancangan dan praktik pemrograman. Buku Penerapan Framework Larav",
+              "tier": 2,
+              "title": "Penerapan Framework Laravel untuk Manajemen Fasilitas Terpadu",
+              "url": "https://openalex.org/W7164106976"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 286.8,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "npmjs.com homepage 2015",
+          "response_time_ms": 288,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "4d72a7fae70c143a9ad338c98cda3dbeeb576f36d7fd87c9904704745f089c89"
+        }
+      },
+      "split": "cal",
+      "task": "Find a historical snapshot of the npmjs.com homepage from about 2015."
+    },
+    {
+      "family": "historical",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 162.1,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 94.2,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "w3.org homepage in 1998",
+        "response_time_ms": 163,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "0bd63845dd1010b1bc37dff67a62d4f6c88faccdbbad3fd0f7f5bfe5888b658a"
+      },
+      "id": "h03",
+      "missing_evidence": "an archived snapshot URL and date for the specified site near the requested year",
+      "query": "w3.org homepage in 1998",
+      "specialist_focus": "internetarchive",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": true,
+          "cards": [],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 8000.0,
+              "result_count": 0,
+              "status": "timeout"
+            }
+          ],
+          "partial": false,
+          "query": "w3.org",
+          "response_time_ms": 8004,
+          "result_count": 0,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "11a6e0587d8732c34e9b22d0cac45a17e9ec8e1f9ca6429756b31ff8789846ef"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "List of known MathML tag names \u2014 Published by wooorm",
+              "tier": 2,
+              "title": "mathml-tag-names@4.0.0",
+              "url": "https://www.npmjs.com/package/mathml-tag-names"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "Fast and powerful CSV parser for the browser that supports web workers and streaming large files. Converts CSV to JSON and JSON to CSV. \u2014 Published by pokoli",
+              "tier": 2,
+              "title": "papaparse@5.7.0",
+              "url": "https://www.npmjs.com/package/papaparse"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "APCA: the Accessible Perceptual Contrast Algorithm, a modern contrast method that improves readability contrast on self-illuminated displays. Developed for the ",
+              "tier": 2,
+              "title": "apca-w3@0.1.9",
+              "url": "https://www.npmjs.com/package/apca-w3"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "TypeScript definitions for apca-w3 \u2014 Published by types",
+              "tier": 2,
+              "title": "@types/apca-w3@0.1.3",
+              "url": "https://www.npmjs.com/package/@types/apca-w3"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "Date formatting and parsing \u2014 Published by taylorhakes",
+              "tier": 2,
+              "title": "fecha@4.2.3",
+              "url": "https://www.npmjs.com/package/fecha"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 233.5,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "w3.org homepage 1998",
+          "response_time_ms": 236,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "019c85bc6d34adb4b0d337b814d72b521c9399577403a9ecb69a68c401f99cb1"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "In this paper we review studies of the growth of the Internet and technologies that are useful for information search and retrieval on the Web. We present data ",
+              "tier": 2,
+              "title": "Information retrieval on the web",
+              "url": "https://doi.org/10.1145/358923.358934"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "The Resource Description Framework RDF allows you to describe web documents and resources from the real world\u2014people, organisations, things\u2014in a computer-proces",
+              "tier": 2,
+              "title": "Cool URIs for the semantic web",
+              "url": "https://doi.org/10.22028/d291-25086"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "With standardization efforts of a query language for XML documents drawing to a close, researchers and users increasingly focus their attention on the database ",
+              "tier": 2,
+              "title": "The XML benchmark project",
+              "url": "https://openalex.org/W2152175785"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "",
+              "tier": 2,
+              "title": "Exploring the relationship between web accessibility and user experience",
+              "url": "https://doi.org/10.1016/j.ijhcs.2016.03.008"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "Despite a large and multifaceted effort to understand the vast landscape of phenotypic data, their current form inhibits productive data analysis. The lack of a",
+              "tier": 2,
+              "title": "Finding Our Way through Phenotypes",
+              "url": "https://doi.org/10.1371/journal.pbio.1002033"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 343.1,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "w3.org homepage 1998",
+          "response_time_ms": 345,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "67db91d02449a11ee3bc95ef8c1dbeadd1c47d86508cc31282965a6736c94254"
+        }
+      },
+      "split": "cal",
+      "task": "Find a historical snapshot of the w3.org homepage from about 1998."
+    },
+    {
+      "family": "historical",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 183.3,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 107.7,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "example.com home page in 2012",
+        "response_time_ms": 184,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "6484b867e949ba7f97cd335134512c009b6042563f1c5e796ed0e45f5e13ce92"
+      },
+      "id": "h04",
+      "missing_evidence": "an archived snapshot URL and date for the specified site near the requested year",
+      "query": "example.com home page in 2012",
+      "specialist_focus": "internetarchive",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": true,
+          "cards": [],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 8000.0,
+              "result_count": 0,
+              "status": "timeout"
+            }
+          ],
+          "partial": false,
+          "query": "example.com",
+          "response_time_ms": 8005,
+          "result_count": 0,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "861b705d2b686b68a7a2c4ddcea486627c40f6a44dfdd52c05cc77c019489bbc"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "Deb maker for Electron Forge \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@electron-forge/maker-deb@7.11.2",
+              "url": "https://www.npmjs.com/package/@electron-forge/maker-deb"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "A natural language date parser in Javascript \u2014 Published by wanasit",
+              "tier": 2,
+              "title": "chrono-node@2.10.1",
+              "url": "https://www.npmjs.com/package/chrono-node"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "Rpm maker for Electron Forge \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@electron-forge/maker-rpm@7.11.2",
+              "url": "https://www.npmjs.com/package/@electron-forge/maker-rpm"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "Resolve a URI relative to an optional base URI \u2014 Published by jridgewell",
+              "tier": 2,
+              "title": "@jridgewell/resolve-uri@3.1.2",
+              "url": "https://www.npmjs.com/package/@jridgewell/resolve-uri"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "Copy a descriptor from object A to object B \u2014 Published by jonschlinkert",
+              "tier": 2,
+              "title": "copy-descriptor@0.1.1",
+              "url": "https://www.npmjs.com/package/copy-descriptor"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 2801.2,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "example.com homepage 2012",
+          "response_time_ms": 2802,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "adb10e615e78fb65c91e469b6f31cf7ae9ebd68e77bf0322d1e7b626668ef089"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "",
+              "tier": 2,
+              "title": "WSMO-Lite and hRESTS: Lightweight semantic annotations for Web services and RESTful APIs",
+              "url": "https://doi.org/10.1016/j.websem.2014.11.006"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "DNS over TLS (DoT) protects the confidentiality and integrity of DNS communication by encrypting DNS messages transmitted between users and resolvers. In recent",
+              "tier": 2,
+              "title": "An investigation on information leakage of DNS over TLS",
+              "url": "https://doi.org/10.1145/3359989.3365429"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "This document defines extensions of the RDF data model and of the SPARQL query language that capture an alternative approach to represent statement-level metada",
+              "tier": 2,
+              "title": "Foundations of an Alternative Approach to Reification in RDF",
+              "url": "https://doi.org/10.48550/arxiv.1406.3399"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "Content Security Policy (CSP) is a recent W3C standard introduced to prevent and mitigate the impact of content injection vulnerabilities on websites. In this a",
+              "tier": 2,
+              "title": "Semantics-Based Analysis of Content Security Policy Deployment",
+              "url": "https://doi.org/10.1145/3149408"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "The blogosphere has played an instrumental role in the transition and the evolution of linking technologies and practices. This research traces and maps histori",
+              "tier": 2,
+              "title": "Where do bloggers blog? Platform transitions within the historical Dutch blogosphere",
+              "url": "https://doi.org/10.5210/fm.v17i2.3775"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 238.0,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "example.com homepage 2012",
+          "response_time_ms": 239,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "f10850dc00507b0c1d5793eeb4bbb55a348b9470c69dc2d6c3483ca4990b2dd5"
+        }
+      },
+      "split": "holdout",
+      "task": "Find a historical snapshot of the example.com homepage from about 2012."
+    },
+    {
+      "family": "historical",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 143.1,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 79.7,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "cern.ch homepage in 1994",
+        "response_time_ms": 144,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "c4c8e148d2041f06b95b6d2792b16fbfa9d0e263c5a6485f4fb0278427368dbc"
+      },
+      "id": "h05",
+      "missing_evidence": "an archived snapshot URL and date for the specified site near the requested year",
+      "query": "cern.ch homepage in 1994",
+      "specialist_focus": "internetarchive",
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": true,
+          "cards": [],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 8000.0,
+              "result_count": 0,
+              "status": "timeout"
+            }
+          ],
+          "partial": false,
+          "query": "cern.ch",
+          "response_time_ms": 8004,
+          "result_count": 0,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "fc04c5f6d6b3d1532756c2a285f33ba45886e7a7ab42bdafb1977a7873a76543"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "Copy a descriptor from object A to object B \u2014 Published by jonschlinkert",
+              "tier": 2,
+              "title": "copy-descriptor@0.1.1",
+              "url": "https://www.npmjs.com/package/copy-descriptor"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "Easily get the CWD (current working directory) of a project based on package.json, optionally starting from a given path. (node.js/javascript util) \u2014 Published ",
+              "tier": 2,
+              "title": "cwd@0.10.0",
+              "url": "https://www.npmjs.com/package/cwd"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "Fast and powerful CSV parser for the browser that supports web workers and streaming large files. Converts CSV to JSON and JSON to CSV. \u2014 Published by pokoli",
+              "tier": 2,
+              "title": "papaparse@5.7.0",
+              "url": "https://www.npmjs.com/package/papaparse"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "A Backstage plugin that helps you build a home page \u2014 Published by patriko",
+              "tier": 2,
+              "title": "@backstage/plugin-home@0.9.10",
+              "url": "https://www.npmjs.com/package/@backstage/plugin-home"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "JavaScript SDK that encapsulates the TRON HTTP API \u2014 Published by tronweb.dev",
+              "tier": 2,
+              "title": "tronweb@6.5.1",
+              "url": "https://www.npmjs.com/package/tronweb"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 469.1,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "cern.ch homepage 1994",
+          "response_time_ms": 471,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "803787c950d285d16a2fead228084bc765879ee0abd385822ff5bf5d2454dfe8"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "The past few years have seen the creation of the first production level Grid infrastructures that offer their users a dependable service at an unprecedented sca",
+              "tier": 2,
+              "title": "Programming the Grid with gLite*",
+              "url": "https://doi.org/10.12921/cmst.2006.12.01.33-45"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "We study the gravitational clustering of big bang relic neutrinos onto existing cold dark matter (CDM) and baryonic structures within the flat \u039bCDM model, using",
+              "tier": 2,
+              "title": "Gravitational clustering of relic neutrinos and implications for their detection",
+              "url": "https://doi.org/10.1088/1475-7516/2004/12/005"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "The concept of an active integrated dosimetric sensor for the radiation monitoring of the Compact Muon Solenoid experiment at the CERN (European Center for Nucl",
+              "tier": 2,
+              "title": "Conception of an integrated sensor for the radiation monitoring of the CMS experiment at the large hadron collider",
+              "url": "https://doi.org/10.1109/tns.2004.839265"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "A muon scattering tomography system which uses extruded plastic scintillator bars for muon tracking and a dedicated muon spectrometer that measures scattering t",
+              "tier": 2,
+              "title": "A plastic scintillator-based muon tomography system with an integrated muon spectrometer",
+              "url": "https://doi.org/10.1016/j.nima.2015.06.054"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "This work aims to present the current state of simulations of electroluminescence (EL) produced in gas-based detectors with special interest for NEXT \u2014 Neutrino",
+              "tier": 2,
+              "title": "Energy resolution studies for NEXT",
+              "url": "https://doi.org/10.1088/1748-0221/6/05/p05007"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 299.6,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "cern.ch homepage 1994",
+          "response_time_ms": 301,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "85994d3ce6b57c39303edf74f8aff87a07747639e57fec240e4ba7d0511f979f"
+        }
+      },
+      "split": "holdout",
+      "task": "Find a historical snapshot of the cern.ch homepage from about 1994."
+    },
+    {
+      "family": "broad",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 168.1,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 92.4,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "how to archive a Python virtual environment",
+        "response_time_ms": 169,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "34bd108594f044ce62e3b6fecc1efbc7fae7e7c740c07d33690c4703a4f630c1"
+      },
+      "id": "b01",
+      "missing_evidence": "no narrow source required if general cards give practical steps",
+      "query": "how to archive a Python virtual environment",
+      "specialist_focus": null,
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": true,
+          "cards": [],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 0,
+              "status": "error"
+            }
+          ],
+          "partial": false,
+          "query": "archive Python virtual environment",
+          "response_time_ms": 1,
+          "result_count": 0,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "503c60f11373d05f9a1aa3cdd5055219998851a265d89ac7b93c5a197fef3a7e"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "Tensorflow model converter for javascript \u2014 Published by delhibabu",
+              "tier": 2,
+              "title": "@tensorflow/tfjs-converter@4.22.0",
+              "url": "https://www.npmjs.com/package/@tensorflow/tfjs-converter"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "Webpack Virtual Modules \u2014 Published by vicvlas",
+              "tier": 2,
+              "title": "webpack-virtual-modules@0.6.2",
+              "url": "https://www.npmjs.com/package/webpack-virtual-modules"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "Python runtime and build extension for Trigger.dev \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@trigger.dev/python@4.6.3",
+              "url": "https://www.npmjs.com/package/@trigger.dev/python"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "a streaming zip archive generator. \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "zip-stream@7.0.5",
+              "url": "https://www.npmjs.com/package/zip-stream"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "A Pulumi package for creating and managing Archive cloud resources. \u2014 Published by pulumi-bot",
+              "tier": 2,
+              "title": "@pulumi/archive@0.5.2",
+              "url": "https://www.npmjs.com/package/@pulumi/archive"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 251.0,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "archive Python virtual environment",
+          "response_time_ms": 253,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "b6c30201bc74778c1a985487883a772bc29db7da9ee9bab4da14dd9320082475"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "Current neuroimaging software offer users an incredible opportunity to analyze their data in different ways, with different underlying assumptions. Several soph",
+              "tier": 2,
+              "title": "Nipype: A Flexible, Lightweight and Extensible Neuroimaging Data Processing Framework in Python",
+              "url": "https://doi.org/10.3389/fninf.2011.00013"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "We present The Virtual Brain (TVB), a neuroinformatics platform for full brain network simulations using biologically realistic connectivity. This simulation en",
+              "tier": 2,
+              "title": "The Virtual Brain: a simulator of primate brain network dynamics",
+              "url": "https://doi.org/10.3389/fninf.2013.00010"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "SciPy 2009 marks our eighth annual Python in Science conference and the second edition of the conference proceedings.The conference and these proceedings highli",
+              "tier": 2,
+              "title": "Proceedings of the 8th Python in Science Conference",
+              "url": "https://doi.org/10.25080/rjfg8479"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "The Python ARM Radar Toolkit is a package for reading, visualizing, correcting and analysing data from weather radars. Development began to meet the needs of th",
+              "tier": 2,
+              "title": "The Python ARM Radar Toolkit (Py-ART), a Library for Working with Weather Radar Data in the Python Programming Language",
+              "url": "https://doi.org/10.5334/jors.119"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "limma is an R/Bioconductor software package that provides an integrated solution for analysing data from gene expression experiments. It contains rich features ",
+              "tier": 2,
+              "title": "limma powers differential expression analyses for RNA-sequencing and microarray studies",
+              "url": "https://doi.org/10.1093/nar/gkv007"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 629.7,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "archive Python virtual environment",
+          "response_time_ms": 631,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "1f05ff987dec521188792fbc9bcde7ac5b243f11a977c2aff92406f2d05a16a8"
+        }
+      },
+      "split": "cal",
+      "task": "Explain how to archive a Python virtual environment for later reuse."
+    },
+    {
+      "family": "broad",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 97.2,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 57.1,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "what is an open access scholarly archive",
+        "response_time_ms": 98,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "c0eb17ffd9ed7b6418d15aa52b1a1565aeb5b3370f1789102d8dd05e659dae2f"
+      },
+      "id": "b02",
+      "missing_evidence": "no narrow source required if general cards define the concept",
+      "query": "what is an open access scholarly archive",
+      "specialist_focus": null,
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": true,
+          "cards": [],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 0,
+              "status": "error"
+            }
+          ],
+          "partial": false,
+          "query": "open access scholarly archive",
+          "response_time_ms": 1,
+          "result_count": 0,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "0ec4c6c0e5b1e474582406ac4141bd179f6f7c7e7522ebe1d330452a6c052eb6"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "Unzip cross-platform streaming API  \u2014 Published by zjonsson",
+              "tier": 2,
+              "title": "unzipper@0.12.5",
+              "url": "https://www.npmjs.com/package/unzipper"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "Unzip cross-platform streaming API  \u2014 Published by catamphetamine",
+              "tier": 2,
+              "title": "unzipper-esm@0.13.3",
+              "url": "https://www.npmjs.com/package/unzipper-esm"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "Creating Electron app packages \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@electron/asar@4.3.0",
+              "url": "https://www.npmjs.com/package/@electron/asar"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "a streaming zip archive generator. \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "zip-stream@7.0.5",
+              "url": "https://www.npmjs.com/package/zip-stream"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "a streaming interface for archive generation \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "archiver@8.0.0",
+              "url": "https://www.npmjs.com/package/archiver"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 189.2,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "open access scholarly archive",
+          "response_time_ms": 191,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "30082085274a037649ce8e640911746e30f47140967e0fee0a678565d66d86ed"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "",
+              "tier": 2,
+              "title": "Green open access policies of scholarly journal publishers: a study of what, when, and where self-archiving is allowed",
+              "url": "https://doi.org/10.1007/s11192-013-1205-3"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "There was a time, not so long ago, when the release of a scholarly book\u2019s paperback edition constituted what might be called its greater \u201cpublic \u201d release. Cert",
+              "tier": 2,
+              "title": "The access principle: the case for open access to research and scholarship",
+              "url": "https://doi.org/10.5860/choice.43-5607"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "There is an urgent need to improve the infrastructure supporting the reuse of scholarly data. A diverse set of stakeholders-representing academia, industry, fun",
+              "tier": 2,
+              "title": "The FAIR Guiding Principles for scientific data management and stewardship",
+              "url": "https://doi.org/10.1038/sdata.2016.18"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "Contents Executive summary \u25cf Scholarly communication \u25cf The research cycle \u25cf Types of scholarly communication \u25cf Changes in scholarly communication system \u25cf The j",
+              "tier": 2,
+              "title": "The STM Report: An overview of scientific and scholarly journal publishing",
+              "url": "https://openalex.org/W2301623411"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "Open access (OA) to the research literature has the potential to accelerate recognition and dissemination of research findings, but its actual effects are contr",
+              "tier": 2,
+              "title": "Citation Advantage of Open Access Articles",
+              "url": "https://doi.org/10.1371/journal.pbio.0040157"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 514.2,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "open access scholarly archive",
+          "response_time_ms": 516,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "4481904f576302abc4eefef5336922802a398ea3d9751ee498af2035e379c021"
+        }
+      },
+      "split": "cal",
+      "task": "Explain what an open-access scholarly archive is."
+    },
+    {
+      "family": "broad",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 102.9,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 55.5,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "how do software packages depend on each other",
+        "response_time_ms": 104,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "c2226fe1c38dce046b264d3d7191871bdf9b432646be180d90039572db013bf7"
+      },
+      "id": "b03",
+      "missing_evidence": "no narrow source required if general cards explain the concept",
+      "query": "how do software packages depend on each other",
+      "specialist_focus": null,
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": true,
+          "cards": [],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 0,
+              "status": "error"
+            }
+          ],
+          "partial": false,
+          "query": "software package dependencies",
+          "response_time_ms": 1,
+          "result_count": 0,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "fdfe5837d2ce9585503fe8b31232a0da22aac9784c79ffeaabb6a6e2081a90c5"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "Find and fix unused dependencies, exports and files in your TypeScript and JavaScript projects \u2014 Published by webpro",
+              "tier": 2,
+              "title": "knip@6.37.0",
+              "url": "https://www.npmjs.com/package/knip"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "Low-Level OAuth 2 / OpenID Connect Client API for JavaScript Runtimes \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "oauth4webapi@3.8.8",
+              "url": "https://www.npmjs.com/package/oauth4webapi"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "Public logs API for OpenTelemetry \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "@opentelemetry/api-logs@0.222.0",
+              "url": "https://www.npmjs.com/package/@opentelemetry/api-logs"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "parse SPDX license expressions \u2014 Published by kemitchell",
+              "tier": 2,
+              "title": "spdx-expression-parse@5.0.0",
+              "url": "https://www.npmjs.com/package/spdx-expression-parse"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "plug'n'play resolver for Webpack \u2014 Published by arcanis",
+              "tier": 2,
+              "title": "jest-pnp-resolver@1.2.3",
+              "url": "https://www.npmjs.com/package/jest-pnp-resolver"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 438.2,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "software package dependencies",
+          "response_time_ms": 440,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "e51e0c2937ef5f2a55c5c532876090d7822a85f9ccde4624a5449a086df1bdce"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "More than twelve years have elapsed since the first public release of WEKA. In that time, the software has been rewritten entirely from scratch, evolved substan",
+              "tier": 2,
+              "title": "The WEKA data mining software",
+              "url": "https://doi.org/10.1145/1656274.1656278"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "UNLABELLED: The two main functions of bioinformatics are the organization and analysis of biological data using computational resources. Geneious Basic has been",
+              "tier": 2,
+              "title": "Geneious Basic: An integrated and extendable desktop software platform for the organization and analysis of sequence data",
+              "url": "https://doi.org/10.1093/bioinformatics/bts199"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "We present Rsubread, a Bioconductor software package that provides high-performance alignment and read counting functions for RNA-seq reads. Rsubread is based o",
+              "tier": 2,
+              "title": "The R package Rsubread is easier, faster, cheaper and better for alignment and quantification of RNA sequencing reads",
+              "url": "https://doi.org/10.1093/nar/gkz114"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "The Bioconductor project is an initiative for the collaborative creation of extensible software for computational biology and bioinformatics. The goals of the p",
+              "tier": 2,
+              "title": "Bioconductor: open software development for computational biology and bioinformatics",
+              "url": "https://doi.org/10.1186/gb-2004-5-10-r80"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "The brms package implements Bayesian multilevel models in R using the probabilistic programming language Stan. A wide range of distributions and link functions ",
+              "tier": 2,
+              "title": "brms : An R Package for Bayesian Multilevel Models Using Stan",
+              "url": "https://doi.org/10.18637/jss.v080.i01"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 537.2,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "software package dependencies",
+          "response_time_ms": 539,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "76b32d7de8f212b74a288ec564739a87fe184e1d21796e38878ed1ca011b5d37"
+        }
+      },
+      "split": "cal",
+      "task": "Explain software package dependencies at a high level."
+    },
+    {
+      "family": "broad",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 102.1,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 70.0,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "what is the history of science fiction",
+        "response_time_ms": 103,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "0fee014fed49650cb8c9bbf70e4cf8966fca70b7e8c8d9fc090f83769b4414cb"
+      },
+      "id": "b04",
+      "missing_evidence": "no narrow source required if general cards give a reasonable overview",
+      "query": "what is the history of science fiction",
+      "specialist_focus": null,
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": true,
+          "cards": [],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 0,
+              "status": "error"
+            }
+          ],
+          "partial": false,
+          "query": "history of science fiction",
+          "response_time_ms": 1,
+          "result_count": 0,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "8b172262674ad07095c2ccc84626030eb5fe6b86f3dc839f6aada9aec7c23292"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "Data Science dictionary for cspell. -- Private until verified \u2014 Published by jason-dent",
+              "tier": 2,
+              "title": "@cspell/dict-data-science@2.0.16",
+              "url": "https://www.npmjs.com/package/@cspell/dict-data-science"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "Manage session history with JavaScript \u2014 Published by mjackson",
+              "tier": 2,
+              "title": "history@5.3.0",
+              "url": "https://www.npmjs.com/package/history"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "A JSONPath implementation based on RFC 9535 \u2014 Published by p0lip",
+              "tier": 2,
+              "title": "jsonpath-rfc9535@1.3.0",
+              "url": "https://www.npmjs.com/package/jsonpath-rfc9535"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "Undo history for ProseMirror \u2014 Published by marijn",
+              "tier": 2,
+              "title": "prosemirror-history@1.5.0",
+              "url": "https://www.npmjs.com/package/prosemirror-history"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "Provides a fallback for non-existing directories so that the HTML 5 history API can be used. \u2014 Published by bripkens",
+              "tier": 2,
+              "title": "connect-history-api-fallback@2.0.0",
+              "url": "https://www.npmjs.com/package/connect-history-api-fallback"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 336.8,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "history of science fiction",
+          "response_time_ms": 338,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "57349a6a7eed7570419572bb21ebc45399683239cd8d1bdee1fc9e70e97f6257"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "The History of Science Fiction traces the origin and development of science fiction from Ancient Greece up to the present day. The author is both an academic li",
+              "tier": 2,
+              "title": "The History of Science Fiction",
+              "url": "https://doi.org/10.1057/9780230554658"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "This book is the definitive critical history of science fiction. The 2006 first edition of this work traced the development of the genre from Ancient Greece and",
+              "tier": 2,
+              "title": "The history of science fiction",
+              "url": "https://doi.org/10.5860/choice.44-0138"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "",
+              "tier": 2,
+              "title": "Metamorphoses of Science Fiction. On the Poetics and History of a Literary Genre",
+              "url": "https://doi.org/10.2307/2906518"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "",
+              "tier": 2,
+              "title": "Billion year spree: The history of science fiction",
+              "url": "https://openalex.org/W1504243294"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "This book is the definitive critical history of science fiction. The 2006 first edition of this work traced the development of the genre from Ancient Greece and",
+              "tier": 2,
+              "title": "The History of Science Fiction",
+              "url": "https://doi.org/10.1057/978-1-137-56957-8"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 526.3,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "history of science fiction",
+          "response_time_ms": 528,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "8b0f65df59e29655b88016ede4e4eb0b07c5988711a8bfb9c8dda0687f611144"
+        }
+      },
+      "split": "holdout",
+      "task": "Give a broad overview of the history of science fiction."
+    },
+    {
+      "family": "broad",
+      "general": {
+        "all_unresponsive": true,
+        "cards": [],
+        "outcomes": [
+          {
+            "engine": "duckduckgo",
+            "latency_ms": 94.1,
+            "result_count": 0,
+            "status": "blocked"
+          },
+          {
+            "engine": "google",
+            "latency_ms": 92.5,
+            "result_count": 0,
+            "status": "blocked"
+          }
+        ],
+        "partial": false,
+        "query": "how to write a README for a code repository",
+        "response_time_ms": 96,
+        "result_count": 0,
+        "selected_engines": [
+          "duckduckgo",
+          "google"
+        ],
+        "wire_sha256": "22f8bd9101d390d32b04fff42e95db1a903181ba5a997f0afe9ae5378ff99f6a"
+      },
+      "id": "b05",
+      "missing_evidence": "no narrow source required if general cards give practical guidance",
+      "query": "how to write a README for a code repository",
+      "specialist_focus": null,
+      "specialists": {
+        "internetarchive": {
+          "all_unresponsive": true,
+          "cards": [],
+          "outcomes": [
+            {
+              "engine": "internetarchive",
+              "latency_ms": 0.0,
+              "result_count": 0,
+              "status": "error"
+            }
+          ],
+          "partial": false,
+          "query": "write README code repository",
+          "response_time_ms": 1,
+          "result_count": 0,
+          "selected_engines": [
+            "internetarchive"
+          ],
+          "wire_sha256": "d14be51281f1bedde7ecdfe584dbf50d25d3d9b29b91cafca68341746f6157ab"
+        },
+        "npm": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 1,
+              "snippet": "Read and write files atomically and reliably. \u2014 Published by fabiospampinato",
+              "tier": 2,
+              "title": "atomically@2.1.1",
+              "url": "https://www.npmjs.com/package/atomically"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 2,
+              "snippet": "Lint files staged by git \u2014 Published by GitHub Actions",
+              "tier": 2,
+              "title": "lint-staged@17.5.1",
+              "url": "https://www.npmjs.com/package/lint-staged"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 3,
+              "snippet": "google-artifactregistry-auth is an npm module that allows you to configure npm to interact with npm repositories stored in Artifact Registry. \u2014 Published by goo",
+              "tier": 2,
+              "title": "google-artifactregistry-auth@3.5.0",
+              "url": "https://www.npmjs.com/package/google-artifactregistry-auth"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 4,
+              "snippet": "Check license info for a package \u2014 Published by davglass",
+              "tier": 2,
+              "title": "license-checker@25.0.1",
+              "url": "https://www.npmjs.com/package/license-checker"
+            },
+            {
+              "engine": "npm",
+              "engines": [
+                "npm"
+              ],
+              "position": 5,
+              "snippet": "Stringify and write JSON to a file atomically \u2014 Published by sindresorhus",
+              "tier": 2,
+              "title": "write-json-file@7.0.0",
+              "url": "https://www.npmjs.com/package/write-json-file"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "npm",
+              "latency_ms": 441.2,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "write README code repository",
+          "response_time_ms": 443,
+          "result_count": 5,
+          "selected_engines": [
+            "npm"
+          ],
+          "wire_sha256": "7f73565d7f88eb99b85366bbc7608c8a0a57a178ebcbc8dfdb96e932835a8f16"
+        },
+        "openalex": {
+          "all_unresponsive": false,
+          "cards": [
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 1,
+              "snippet": "Since the classical molecular dynamics simulator LAMMPS was released as an open source code in 2004, it has become a widely-used tool for particle-based modelin",
+              "tier": 2,
+              "title": "LAMMPS - a flexible simulation tool for particle-based materials modeling at the atomic, meso, and continuum scales",
+              "url": "https://doi.org/10.1016/j.cpc.2021.108171"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 2,
+              "snippet": "We release Code Llama, a family of large language models for code based on Llama 2 providing state-of-the-art performance among open models, infilling capabilit",
+              "tier": 2,
+              "title": "Code Llama: Open Foundation Models for Code",
+              "url": "https://doi.org/10.48550/arxiv.2308.12950"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 3,
+              "snippet": "Patterns observed by examining the evolutionary relationships among proteins of common origin can reveal the structural and functional importance of specific re",
+              "tier": 2,
+              "title": "ConSurf\u2010DB: An accessible repository for the evolutionary conservation patterns of the majority of PDB proteins",
+              "url": "https://doi.org/10.1002/pro.3779"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 4,
+              "snippet": "Powered by recent advances in code-generating models, AI assistants like Github Copilot promise to change the face of programming forever. But what is this new ",
+              "tier": 2,
+              "title": "Grounded Copilot: How Programmers Interact with Code-Generating Models",
+              "url": "https://doi.org/10.1145/3586030"
+            },
+            {
+              "engine": "openalex",
+              "engines": [
+                "openalex"
+              ],
+              "position": 5,
+              "snippet": "Stephen Bach, Victor Sanh, Zheng Xin Yong, Albert Webson, Colin Raffel, Nihal V. Nayak, Abheesht Sharma, Taewoon Kim, M Saiful Bari, Thibault Fevry, Zaid Alyafe",
+              "tier": 2,
+              "title": "PromptSource: An Integrated Development Environment and Repository for Natural Language Prompts",
+              "url": "https://doi.org/10.18653/v1/2022.acl-demo.9"
+            }
+          ],
+          "outcomes": [
+            {
+              "engine": "openalex",
+              "latency_ms": 320.7,
+              "result_count": 5,
+              "status": "ok"
+            }
+          ],
+          "partial": false,
+          "query": "write README code repository",
+          "response_time_ms": 322,
+          "result_count": 5,
+          "selected_engines": [
+            "openalex"
+          ],
+          "wire_sha256": "ac6fbcb554db9af75dff73507b360fc4b8232851fe50bff2af918d311f97ae1f"
+        }
+      },
+      "split": "holdout",
+      "task": "Explain how to write a useful README for a code repository."
+    }
+  ]
+}

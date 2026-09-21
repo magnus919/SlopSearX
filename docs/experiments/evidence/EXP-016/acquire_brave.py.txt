@@ -1,0 +1,73 @@
+"""Bounded EXP-019–021 Brave first-pass acquisition; no specialist requery."""
+from __future__ import annotations
+
+import argparse
+import asyncio
+import hashlib
+import json
+import runpy
+from pathlib import Path
+
+from engines.brave import BraveAdapter
+from slopsearx.service import AppContext, SearchRequest, SearchService
+
+
+def read_key(path: Path) -> str:
+    for line in path.read_text().splitlines():
+        if line.startswith("ENGINE_BRAVE_API_KEY="):
+            key = line.split("=", 1)[1].strip().strip("\"'")
+            if key:
+                return key
+    raise RuntimeError("Brave key absent; no search attempted")
+
+
+async def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--key-file", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    root = Path(__file__).parent
+    corpus_bytes = (root / "query-set.json").read_bytes()
+    corpus = json.loads(corpus_bytes)
+    prior_bytes = (root / "acquisition.json").read_bytes()
+    prior = json.loads(prior_bytes)
+    assert len(corpus) == len(prior["rows"]) == 20
+    assert [x["id"] for x in corpus] == [x["id"] for x in prior["rows"]]
+    capture = runpy.run_path(str(root / "acquire.py.txt"))["capture"]
+    key = read_key(args.key_file)
+    brave = BraveAdapter({"api_key": key, "max_results": 5, "timeout_ms": 8000})
+    context = AppContext(active_engines={"brave": brave}, cache=None, rate_limiter=None,
+                         router=None, engine_semaphore=asyncio.Semaphore(1),
+                         tier1_engines={"brave"}, sensitive_engines=set(), jev_router=None)
+    service = SearchService(context)
+    evidence = {"registration_commit": "aefe956", "baseline_sha": "ae5cd4c",
+                "query_set_sha256": hashlib.sha256(corpus_bytes).hexdigest(),
+                "prior_acquisition_sha256": hashlib.sha256(prior_bytes).hexdigest(),
+                "engine": "brave", "adapter_attempts": 0, "rows": []}
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        for task in corpus:
+            assert evidence["adapter_attempts"] < 20
+            evidence["adapter_attempts"] += 1
+            try:
+                response = await service.search(SearchRequest(
+                    query=task["query"], engines=["brave"], max_results=5,
+                    freshness="prefer_fresh", generate_suggestions=False,
+                ))
+                result = capture(response)
+            except Exception as exc:
+                result = {"query": task["query"], "selected_engines": ["brave"],
+                          "error_type": type(exc).__name__, "outcomes": [],
+                          "result_count": 0, "cards": []}
+            evidence["rows"].append({"id": task["id"], "split": task["split"],
+                                     "family": task["family"], "general": result})
+            args.output.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n")
+            print(f"{task['id']} brave status={','.join(x['status'] for x in result['outcomes']) or 'exception'} results={result['result_count']}", flush=True)
+            await asyncio.sleep(0.2)
+    finally:
+        await brave.shutdown()
+    print(json.dumps({"rows": len(evidence["rows"]), "paid_search_attempts": evidence["adapter_attempts"]}))
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

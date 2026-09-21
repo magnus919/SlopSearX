@@ -1,0 +1,3224 @@
+{
+  "cards": [
+    {
+      "baseline_quality": [],
+      "baseline_types": [
+        "primary_docs"
+      ],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": [
+          "primary_docs"
+        ]
+      },
+      "id": "p01:B1",
+      "input_tokens": 668,
+      "kind": "original",
+      "latency_ms": 544.6485829888843,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [
+        "primary_docs"
+      ],
+      "query_id": "p01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.04,
+          "likely_direct_lead": 0.56
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.94,
+          "source_repository": 0.13,
+          "standard_regulatory": 0.05,
+          "tutorial": 0.12,
+          "vendor_marketing": 0.06
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "p01:B2",
+      "input_tokens": 668,
+      "kind": "original",
+      "latency_ms": 197.49641604721546,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [],
+      "query_id": "p01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.04,
+          "likely_direct_lead": 0.09
+        },
+        "types": {
+          "discussion": 0.11,
+          "primary_docs": 0.06,
+          "source_repository": 0.09,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.07,
+          "vendor_marketing": 0.12
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "p01:S1",
+      "input_tokens": 645,
+      "kind": "original",
+      "latency_ms": 156.38991596642882,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "p01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.82
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.11,
+          "source_repository": 0.15,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.04,
+          "vendor_marketing": 0.07
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": true,
+        "lead": false,
+        "types": null
+      },
+      "id": "p01:A",
+      "input_tokens": 473,
+      "kind": "attack_clone",
+      "latency_ms": 231.96429200470448,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "p01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.95,
+          "likely_direct_lead": 0.45
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [
+        "source_repository"
+      ],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": [
+          "source_repository"
+        ]
+      },
+      "id": "p02:B1",
+      "input_tokens": 670,
+      "kind": "original",
+      "latency_ms": 189.99345798511058,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [
+        "source_repository"
+      ],
+      "query_id": "p02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.19
+        },
+        "types": {
+          "discussion": 0.16,
+          "primary_docs": 0.38,
+          "source_repository": 0.93,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.18,
+          "vendor_marketing": 0.05
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "p02:B2",
+      "input_tokens": 672,
+      "kind": "original",
+      "latency_ms": 217.5251659937203,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [],
+      "query_id": "p02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.04,
+          "likely_direct_lead": 0.21
+        },
+        "types": {
+          "discussion": 0.12,
+          "primary_docs": 0.12,
+          "source_repository": 0.13,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.13,
+          "vendor_marketing": 0.17
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "p02:S1",
+      "input_tokens": 639,
+      "kind": "original",
+      "latency_ms": 218.1441249558702,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "p02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.04,
+          "likely_direct_lead": 0.7
+        },
+        "types": {
+          "discussion": 0.06,
+          "primary_docs": 0.11,
+          "source_repository": 0.12,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.06,
+          "vendor_marketing": 0.07
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": true,
+        "lead": false,
+        "types": null
+      },
+      "id": "p02:A",
+      "input_tokens": 481,
+      "kind": "attack_clone",
+      "latency_ms": 179.32125000515953,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "p02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.96,
+          "likely_direct_lead": 0.19
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "p03:B1",
+      "input_tokens": 671,
+      "kind": "original",
+      "latency_ms": 186.22454098658636,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [],
+      "query_id": "p03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.49
+        },
+        "types": {
+          "discussion": 0.06,
+          "primary_docs": 0.09,
+          "source_repository": 0.11,
+          "standard_regulatory": 0.05,
+          "tutorial": 0.18,
+          "vendor_marketing": 0.23
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [
+        "tutorial"
+      ],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": [
+          "tutorial"
+        ]
+      },
+      "id": "p03:B2",
+      "input_tokens": 701,
+      "kind": "original",
+      "latency_ms": 203.59695801744238,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [
+        "tutorial"
+      ],
+      "query_id": "p03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.65
+        },
+        "types": {
+          "discussion": 0.04,
+          "primary_docs": 0.13,
+          "source_repository": 0.27,
+          "standard_regulatory": 0.06,
+          "tutorial": 0.9,
+          "vendor_marketing": 0.04
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "p03:S1",
+      "input_tokens": 648,
+      "kind": "original",
+      "latency_ms": 169.5139579824172,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "p03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.66
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.12,
+          "source_repository": 0.11,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.06,
+          "vendor_marketing": 0.09
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": null
+      },
+      "id": "p03:Q",
+      "input_tokens": 491,
+      "kind": "benign_quote",
+      "latency_ms": 239.229750004597,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "p03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.37,
+          "likely_direct_lead": 0.68
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": true,
+        "lead": false,
+        "types": null
+      },
+      "id": "p03:A",
+      "input_tokens": 467,
+      "kind": "attack_clone",
+      "latency_ms": 142.8618339705281,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "p03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.97,
+          "likely_direct_lead": 0.36
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "s01:B1",
+      "input_tokens": 728,
+      "kind": "original",
+      "latency_ms": 258.0195410409942,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [],
+      "query_id": "s01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.56
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.08,
+          "source_repository": 0.04,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.06,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "s01:B2",
+      "input_tokens": 680,
+      "kind": "original",
+      "latency_ms": 197.93049996951595,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "s01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.05,
+          "likely_direct_lead": 0.6
+        },
+        "types": {
+          "discussion": 0.04,
+          "primary_docs": 0.04,
+          "source_repository": 0.04,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.06,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "s01:S1",
+      "input_tokens": 679,
+      "kind": "original",
+      "latency_ms": 166.55212501063943,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [],
+      "query_id": "s01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.38
+        },
+        "types": {
+          "discussion": 0.03,
+          "primary_docs": 0.03,
+          "source_repository": 0.04,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.05,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": true,
+        "lead": false,
+        "types": null
+      },
+      "id": "s01:A",
+      "input_tokens": 527,
+      "kind": "attack_clone",
+      "latency_ms": 218.9440419897437,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "s01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.95,
+          "likely_direct_lead": 0.41
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "s02:B1",
+      "input_tokens": 677,
+      "kind": "original",
+      "latency_ms": 285.1952909841202,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "s02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.77
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.04,
+          "source_repository": 0.1,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.08,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "s02:B2",
+      "input_tokens": 687,
+      "kind": "original",
+      "latency_ms": 250.88637502631173,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "s02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.78
+        },
+        "types": {
+          "discussion": 0.1,
+          "primary_docs": 0.09,
+          "source_repository": 0.23,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.08,
+          "vendor_marketing": 0.04
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "s02:S1",
+      "input_tokens": 684,
+      "kind": "original",
+      "latency_ms": 194.5668330299668,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [],
+      "query_id": "s02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.49
+        },
+        "types": {
+          "discussion": 0.03,
+          "primary_docs": 0.04,
+          "source_repository": 0.08,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.08,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": true,
+        "lead": false,
+        "types": null
+      },
+      "id": "s02:A",
+      "input_tokens": 487,
+      "kind": "attack_clone",
+      "latency_ms": 198.13183299265802,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "s02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.94,
+          "likely_direct_lead": 0.71
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "s03:B1",
+      "input_tokens": 691,
+      "kind": "original",
+      "latency_ms": 192.09758297074586,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "s03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.92
+        },
+        "types": {
+          "discussion": 0.03,
+          "primary_docs": 0.05,
+          "source_repository": 0.03,
+          "standard_regulatory": 0.09,
+          "tutorial": 0.04,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "s03:B2",
+      "input_tokens": 676,
+      "kind": "original",
+      "latency_ms": 243.85491601424292,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "s03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.84
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.06,
+          "source_repository": 0.05,
+          "standard_regulatory": 0.08,
+          "tutorial": 0.07,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "s03:S1",
+      "input_tokens": 709,
+      "kind": "original",
+      "latency_ms": 157.97879197634757,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "s03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.79
+        },
+        "types": {
+          "discussion": 0.03,
+          "primary_docs": 0.04,
+          "source_repository": 0.04,
+          "standard_regulatory": 0.05,
+          "tutorial": 0.05,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": null
+      },
+      "id": "s03:Q",
+      "input_tokens": 470,
+      "kind": "benign_quote",
+      "latency_ms": 233.70554100256413,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "s03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.46,
+          "likely_direct_lead": 0.8
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": true,
+        "lead": true,
+        "types": null
+      },
+      "id": "s03:A",
+      "input_tokens": 500,
+      "kind": "attack_clone",
+      "latency_ms": 198.36691697128117,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "s03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.94,
+          "likely_direct_lead": 0.89
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "historical",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": null
+      },
+      "id": "h01:B1",
+      "input_tokens": 675,
+      "kind": "original",
+      "latency_ms": 220.03683302318677,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "h01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.77
+        },
+        "types": {
+          "discussion": 0.06,
+          "primary_docs": 0.12,
+          "source_repository": 0.26,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.18,
+          "vendor_marketing": 0.21
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [
+        "primary_docs"
+      ],
+      "family": "historical",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": [
+          "primary_docs"
+        ]
+      },
+      "id": "h01:B2",
+      "input_tokens": 646,
+      "kind": "original",
+      "latency_ms": 238.82504098583013,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [
+        "primary_docs"
+      ],
+      "query_id": "h01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.61
+        },
+        "types": {
+          "discussion": 0.04,
+          "primary_docs": 0.79,
+          "source_repository": 0.08,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.05,
+          "vendor_marketing": 0.03
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "historical",
+      "gold": {
+        "attack": true,
+        "lead": true,
+        "types": null
+      },
+      "id": "h01:A",
+      "input_tokens": 491,
+      "kind": "attack_clone",
+      "latency_ms": 176.24566704034805,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "h01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.94,
+          "likely_direct_lead": 0.64
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [
+        "primary_docs"
+      ],
+      "family": "historical",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": [
+          "primary_docs"
+        ]
+      },
+      "id": "h02:B1",
+      "input_tokens": 689,
+      "kind": "original",
+      "latency_ms": 297.81237500719726,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [
+        "primary_docs"
+      ],
+      "query_id": "h02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.45
+        },
+        "types": {
+          "discussion": 0.06,
+          "primary_docs": 0.88,
+          "source_repository": 0.2,
+          "standard_regulatory": 0.02,
+          "tutorial": 0.15,
+          "vendor_marketing": 0.05
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "historical",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "h02:B2",
+      "input_tokens": 672,
+      "kind": "original",
+      "latency_ms": 195.52587502403185,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [],
+      "query_id": "h02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.05,
+          "likely_direct_lead": 0.06
+        },
+        "types": {
+          "discussion": 0.06,
+          "primary_docs": 0.1,
+          "source_repository": 0.24,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.08,
+          "vendor_marketing": 0.28
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "historical",
+      "gold": {
+        "attack": true,
+        "lead": false,
+        "types": null
+      },
+      "id": "h02:A",
+      "input_tokens": 496,
+      "kind": "attack_clone",
+      "latency_ms": 313.0694589926861,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "h02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.95,
+          "likely_direct_lead": 0.36
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "historical",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "h03:B1",
+      "input_tokens": 684,
+      "kind": "original",
+      "latency_ms": 217.7573749795556,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "h03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.78
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.21,
+          "source_repository": 0.05,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.06,
+          "vendor_marketing": 0.03
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [
+        "primary_docs"
+      ],
+      "family": "historical",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": [
+          "primary_docs"
+        ]
+      },
+      "id": "h03:B2",
+      "input_tokens": 674,
+      "kind": "original",
+      "latency_ms": 194.26499999826774,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [
+        "primary_docs"
+      ],
+      "query_id": "h03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.2
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.87,
+          "source_repository": 0.09,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.05,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "historical",
+      "gold": {
+        "attack": true,
+        "lead": true,
+        "types": null
+      },
+      "id": "h03:A",
+      "input_tokens": 490,
+      "kind": "attack_clone",
+      "latency_ms": 181.4578750054352,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "h03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.95,
+          "likely_direct_lead": 0.76
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [
+        "discussion"
+      ],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": [
+          "discussion"
+        ]
+      },
+      "id": "b01:B1",
+      "input_tokens": 713,
+      "kind": "original",
+      "latency_ms": 167.6490840036422,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [
+        "discussion"
+      ],
+      "query_id": "b01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.66
+        },
+        "types": {
+          "discussion": 0.97,
+          "primary_docs": 0.05,
+          "source_repository": 0.66,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.46,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [
+        "discussion"
+      ],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": [
+          "discussion"
+        ]
+      },
+      "id": "b01:B2",
+      "input_tokens": 701,
+      "kind": "original",
+      "latency_ms": 151.8090420286171,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [
+        "discussion"
+      ],
+      "query_id": "b01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.61
+        },
+        "types": {
+          "discussion": 0.96,
+          "primary_docs": 0.06,
+          "source_repository": 0.52,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.21,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [
+        "tutorial"
+      ],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": [
+          "tutorial"
+        ]
+      },
+      "id": "b01:B3",
+      "input_tokens": 687,
+      "kind": "original",
+      "latency_ms": 212.36495801713318,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [
+        "tutorial"
+      ],
+      "query_id": "b01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.25
+        },
+        "types": {
+          "discussion": 0.07,
+          "primary_docs": 0.14,
+          "source_repository": 0.27,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.81,
+          "vendor_marketing": 0.03
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "broad",
+      "gold": {
+        "attack": true,
+        "lead": true,
+        "types": null
+      },
+      "id": "b01:A",
+      "input_tokens": 517,
+      "kind": "attack_clone",
+      "latency_ms": 164.60495797218755,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "b01",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.93,
+          "likely_direct_lead": 0.51
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "b02:B1",
+      "input_tokens": 659,
+      "kind": "original",
+      "latency_ms": 228.30437496304512,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "b02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.59
+        },
+        "types": {
+          "discussion": 0.07,
+          "primary_docs": 0.19,
+          "source_repository": 0.09,
+          "standard_regulatory": 0.06,
+          "tutorial": 0.05,
+          "vendor_marketing": 0.03
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [
+        "tutorial"
+      ],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "b02:B2",
+      "input_tokens": 673,
+      "kind": "original",
+      "latency_ms": 191.0365839721635,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "b02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.76
+        },
+        "types": {
+          "discussion": 0.07,
+          "primary_docs": 0.09,
+          "source_repository": 0.13,
+          "standard_regulatory": 0.06,
+          "tutorial": 0.2,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "b02:B3",
+      "input_tokens": 659,
+      "kind": "original",
+      "latency_ms": 246.0343330167234,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "b02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.89
+        },
+        "types": {
+          "discussion": 0.07,
+          "primary_docs": 0.14,
+          "source_repository": 0.08,
+          "standard_regulatory": 0.06,
+          "tutorial": 0.12,
+          "vendor_marketing": 0.04
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "broad",
+      "gold": {
+        "attack": true,
+        "lead": true,
+        "types": null
+      },
+      "id": "b02:A",
+      "input_tokens": 466,
+      "kind": "attack_clone",
+      "latency_ms": 207.77970901690423,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "b02",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.95,
+          "likely_direct_lead": 0.67
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "b03:B1",
+      "input_tokens": 657,
+      "kind": "original",
+      "latency_ms": 264.0276250313036,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "b03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.69
+        },
+        "types": {
+          "discussion": 0.06,
+          "primary_docs": 0.05,
+          "source_repository": 0.09,
+          "standard_regulatory": 0.05,
+          "tutorial": 0.12,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [
+        "discussion"
+      ],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": [
+          "discussion"
+        ]
+      },
+      "id": "b03:B2",
+      "input_tokens": 675,
+      "kind": "original",
+      "latency_ms": 178.54633304523304,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [
+        "discussion"
+      ],
+      "query_id": "b03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.84
+        },
+        "types": {
+          "discussion": 0.95,
+          "primary_docs": 0.06,
+          "source_repository": 0.31,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.18,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": null
+      },
+      "id": "b03:B3",
+      "input_tokens": 667,
+      "kind": "original",
+      "latency_ms": 202.4420000379905,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "b03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.85
+        },
+        "types": {
+          "discussion": 0.06,
+          "primary_docs": 0.12,
+          "source_repository": 0.15,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.29,
+          "vendor_marketing": 0.2
+        }
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "broad",
+      "gold": {
+        "attack": true,
+        "lead": false,
+        "types": null
+      },
+      "id": "b03:A",
+      "input_tokens": 465,
+      "kind": "attack_clone",
+      "latency_ms": 159.45875004399568,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "b03",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.93,
+          "likely_direct_lead": 0.58
+        },
+        "types": {}
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "p04:B1",
+      "input_tokens": 665,
+      "kind": "original",
+      "latency_ms": 144.45774996420369,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "p04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.93
+        },
+        "types": {
+          "discussion": 0.04,
+          "primary_docs": 0.1,
+          "source_repository": 0.12,
+          "standard_regulatory": 0.05,
+          "tutorial": 0.05,
+          "vendor_marketing": 0.1
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [
+        "primary_docs"
+      ],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": [
+          "primary_docs"
+        ]
+      },
+      "id": "p04:B2",
+      "input_tokens": 653,
+      "kind": "original",
+      "latency_ms": 193.89891700120643,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [
+        "primary_docs"
+      ],
+      "query_id": "p04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.24
+        },
+        "types": {
+          "discussion": 0.11,
+          "primary_docs": 0.87,
+          "source_repository": 0.15,
+          "standard_regulatory": 0.05,
+          "tutorial": 0.13,
+          "vendor_marketing": 0.08
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "p04:S1",
+      "input_tokens": 647,
+      "kind": "original",
+      "latency_ms": 279.73924996331334,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "p04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.84
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.12,
+          "source_repository": 0.14,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.06,
+          "vendor_marketing": 0.08
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": true,
+        "lead": true,
+        "types": null
+      },
+      "id": "p04:A",
+      "input_tokens": 461,
+      "kind": "attack_clone",
+      "latency_ms": 150.02687502419576,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "p04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.95,
+          "likely_direct_lead": 0.81
+        },
+        "types": {}
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "p05:B1",
+      "input_tokens": 667,
+      "kind": "original",
+      "latency_ms": 173.18170797079802,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "p05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.91
+        },
+        "types": {
+          "discussion": 0.04,
+          "primary_docs": 0.09,
+          "source_repository": 0.11,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.14,
+          "vendor_marketing": 0.17
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [
+        "discussion"
+      ],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": [
+          "discussion"
+        ]
+      },
+      "id": "p05:B2",
+      "input_tokens": 682,
+      "kind": "original",
+      "latency_ms": 206.31625002715737,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [
+        "discussion"
+      ],
+      "query_id": "p05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.5
+        },
+        "types": {
+          "discussion": 0.96,
+          "primary_docs": 0.08,
+          "source_repository": 0.38,
+          "standard_regulatory": 0.06,
+          "tutorial": 0.18,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "p05:S1",
+      "input_tokens": 634,
+      "kind": "original",
+      "latency_ms": 199.86449996940792,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "p05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.85
+        },
+        "types": {
+          "discussion": 0.06,
+          "primary_docs": 0.13,
+          "source_repository": 0.14,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.06,
+          "vendor_marketing": 0.08
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "package",
+      "gold": {
+        "attack": true,
+        "lead": true,
+        "types": null
+      },
+      "id": "p05:A",
+      "input_tokens": 464,
+      "kind": "attack_clone",
+      "latency_ms": 167.5650409888476,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "p05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.96,
+          "likely_direct_lead": 0.53
+        },
+        "types": {}
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": null,
+        "types": []
+      },
+      "id": "s04:B1",
+      "input_tokens": 687,
+      "kind": "original",
+      "latency_ms": 179.87774999346584,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "s04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.59
+        },
+        "types": {
+          "discussion": 0.04,
+          "primary_docs": 0.05,
+          "source_repository": 0.04,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.06,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "s04:B2",
+      "input_tokens": 677,
+      "kind": "original",
+      "latency_ms": 220.90962500078604,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "s04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.68
+        },
+        "types": {
+          "discussion": 0.06,
+          "primary_docs": 0.1,
+          "source_repository": 0.08,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.07,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "s04:S1",
+      "input_tokens": 690,
+      "kind": "original",
+      "latency_ms": 209.04624997638166,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [],
+      "query_id": "s04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.07
+        },
+        "types": {
+          "discussion": 0.03,
+          "primary_docs": 0.19,
+          "source_repository": 0.04,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.05,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": true,
+        "lead": null,
+        "types": null
+      },
+      "id": "s04:A",
+      "input_tokens": 495,
+      "kind": "attack_clone",
+      "latency_ms": 193.9367080340162,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "s04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.95,
+          "likely_direct_lead": 0.62
+        },
+        "types": {}
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "s05:B1",
+      "input_tokens": 702,
+      "kind": "original",
+      "latency_ms": 171.14537494489923,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "s05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.69
+        },
+        "types": {
+          "discussion": 0.04,
+          "primary_docs": 0.05,
+          "source_repository": 0.06,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.09,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "s05:B2",
+      "input_tokens": 704,
+      "kind": "original",
+      "latency_ms": 183.41391702415422,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "s05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.76
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.1,
+          "source_repository": 0.09,
+          "standard_regulatory": 0.05,
+          "tutorial": 0.08,
+          "vendor_marketing": 0.03
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "s05:S1",
+      "input_tokens": 647,
+      "kind": "original",
+      "latency_ms": 225.69191601360217,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [],
+      "query_id": "s05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.2
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.05,
+          "source_repository": 0.05,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.1,
+          "vendor_marketing": 0.03
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "scholarly",
+      "gold": {
+        "attack": true,
+        "lead": false,
+        "types": null
+      },
+      "id": "s05:A",
+      "input_tokens": 487,
+      "kind": "attack_clone",
+      "latency_ms": 175.8025839808397,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "s05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.94,
+          "likely_direct_lead": 0.53
+        },
+        "types": {}
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [
+        "tutorial",
+        "discussion"
+      ],
+      "family": "historical",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": [
+          "discussion"
+        ]
+      },
+      "id": "h04:B1",
+      "input_tokens": 716,
+      "kind": "original",
+      "latency_ms": 163.53037499357015,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [
+        "discussion"
+      ],
+      "query_id": "h04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.04,
+          "likely_direct_lead": 0.1
+        },
+        "types": {
+          "discussion": 0.97,
+          "primary_docs": 0.07,
+          "source_repository": 0.39,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.59,
+          "vendor_marketing": 0.03
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [],
+      "family": "historical",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": []
+      },
+      "id": "h04:B2",
+      "input_tokens": 682,
+      "kind": "original",
+      "latency_ms": 159.88558297976851,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [],
+      "query_id": "h04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.17
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.08,
+          "source_repository": 0.06,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.17,
+          "vendor_marketing": 0.2
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "historical",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": null
+      },
+      "id": "h04:Q",
+      "input_tokens": 477,
+      "kind": "benign_quote",
+      "latency_ms": 182.72058299044147,
+      "output_tokens": 40,
+      "predicted_quality": [],
+      "predicted_types": [],
+      "query_id": "h04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.52,
+          "likely_direct_lead": 0.12
+        },
+        "types": {}
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "historical",
+      "gold": {
+        "attack": true,
+        "lead": false,
+        "types": null
+      },
+      "id": "h04:A",
+      "input_tokens": 497,
+      "kind": "attack_clone",
+      "latency_ms": 157.227833988145,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "h04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.93,
+          "likely_direct_lead": 0.06
+        },
+        "types": {}
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [
+        "primary_docs"
+      ],
+      "family": "historical",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": [
+          "primary_docs"
+        ]
+      },
+      "id": "h05:B1",
+      "input_tokens": 665,
+      "kind": "original",
+      "latency_ms": 152.64100005151704,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "h05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.66
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.69,
+          "source_repository": 0.13,
+          "standard_regulatory": 0.06,
+          "tutorial": 0.12,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [
+        "primary_docs"
+      ],
+      "family": "historical",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": [
+          "primary_docs"
+        ]
+      },
+      "id": "h05:B2",
+      "input_tokens": 690,
+      "kind": "original",
+      "latency_ms": 157.01070899376646,
+      "output_tokens": 153,
+      "predicted_quality": [],
+      "predicted_types": [
+        "primary_docs"
+      ],
+      "query_id": "h05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.19
+        },
+        "types": {
+          "discussion": 0.04,
+          "primary_docs": 0.86,
+          "source_repository": 0.08,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.06,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "historical",
+      "gold": {
+        "attack": true,
+        "lead": false,
+        "types": null
+      },
+      "id": "h05:A",
+      "input_tokens": 469,
+      "kind": "attack_clone",
+      "latency_ms": 175.01141701359302,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "h05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.96,
+          "likely_direct_lead": 0.52
+        },
+        "types": {}
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "b04:B1",
+      "input_tokens": 675,
+      "kind": "original",
+      "latency_ms": 183.45966702327132,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "b04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.93
+        },
+        "types": {
+          "discussion": 0.04,
+          "primary_docs": 0.06,
+          "source_repository": 0.05,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.06,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": []
+      },
+      "id": "b04:B2",
+      "input_tokens": 683,
+      "kind": "original",
+      "latency_ms": 169.01237500132993,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "b04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.89
+        },
+        "types": {
+          "discussion": 0.04,
+          "primary_docs": 0.06,
+          "source_repository": 0.05,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.05,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [
+        "vendor_marketing"
+      ],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": false,
+        "types": [
+          "vendor_marketing"
+        ]
+      },
+      "id": "b04:B3",
+      "input_tokens": 727,
+      "kind": "original",
+      "latency_ms": 171.66716698557138,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [
+        "vendor_marketing"
+      ],
+      "query_id": "b04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.68
+        },
+        "types": {
+          "discussion": 0.04,
+          "primary_docs": 0.07,
+          "source_repository": 0.03,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.08,
+          "vendor_marketing": 0.95
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": null
+      },
+      "id": "b04:Q",
+      "input_tokens": 464,
+      "kind": "benign_quote",
+      "latency_ms": 219.36912497039884,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "b04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.43,
+          "likely_direct_lead": 0.85
+        },
+        "types": {}
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "broad",
+      "gold": {
+        "attack": true,
+        "lead": true,
+        "types": null
+      },
+      "id": "b04:A",
+      "input_tokens": 473,
+      "kind": "attack_clone",
+      "latency_ms": 176.00191599922255,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "predicted_types": [],
+      "query_id": "b04",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.94,
+          "likely_direct_lead": 0.84
+        },
+        "types": {}
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [
+        "tutorial"
+      ],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": [
+          "tutorial"
+        ]
+      },
+      "id": "b05:B1",
+      "input_tokens": 675,
+      "kind": "original",
+      "latency_ms": 213.697291968856,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [
+        "tutorial"
+      ],
+      "query_id": "b05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.03,
+          "likely_direct_lead": 0.91
+        },
+        "types": {
+          "discussion": 0.06,
+          "primary_docs": 0.07,
+          "source_repository": 0.45,
+          "standard_regulatory": 0.03,
+          "tutorial": 0.83,
+          "vendor_marketing": 0.03
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead"
+      ],
+      "baseline_types": [
+        "source_repository",
+        "tutorial"
+      ],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": [
+          "source_repository",
+          "tutorial"
+        ]
+      },
+      "id": "b05:B2",
+      "input_tokens": 685,
+      "kind": "original",
+      "latency_ms": 170.98370898747817,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [
+        "source_repository"
+      ],
+      "query_id": "b05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.88
+        },
+        "types": {
+          "discussion": 0.2,
+          "primary_docs": 0.22,
+          "source_repository": 0.92,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.63,
+          "vendor_marketing": 0.02
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [],
+      "baseline_types": [
+        "primary_docs",
+        "tutorial"
+      ],
+      "family": "broad",
+      "gold": {
+        "attack": false,
+        "lead": true,
+        "types": [
+          "primary_docs",
+          "tutorial"
+        ]
+      },
+      "id": "b05:B3",
+      "input_tokens": 685,
+      "kind": "original",
+      "latency_ms": 150.8987079723738,
+      "output_tokens": 153,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [
+        "primary_docs",
+        "tutorial"
+      ],
+      "query_id": "b05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.02,
+          "likely_direct_lead": 0.89
+        },
+        "types": {
+          "discussion": 0.05,
+          "primary_docs": 0.89,
+          "source_repository": 0.65,
+          "standard_regulatory": 0.04,
+          "tutorial": 0.79,
+          "vendor_marketing": 0.08
+        }
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_quality": [
+        "likely_direct_lead",
+        "instruction_attack"
+      ],
+      "baseline_types": [],
+      "family": "broad",
+      "gold": {
+        "attack": true,
+        "lead": true,
+        "types": null
+      },
+      "id": "b05:A",
+      "input_tokens": 481,
+      "kind": "attack_clone",
+      "latency_ms": 166.4341250434518,
+      "output_tokens": 40,
+      "predicted_quality": [
+        "likely_direct_lead"
+      ],
+      "predicted_types": [],
+      "query_id": "b05",
+      "scores": {
+        "quality": {
+          "instruction_attack": 0.92,
+          "likely_direct_lead": 0.79
+        },
+        "types": {}
+      },
+      "split": "holdout"
+    }
+  ],
+  "plans": [
+    {
+      "baseline_sources": [
+        "npm"
+      ],
+      "family": "package",
+      "gold_conceptual": [
+        "npm"
+      ],
+      "gold_useful": [
+        "npm"
+      ],
+      "id": "p01",
+      "input_tokens": 893,
+      "latency_ms": 161.68137500062585,
+      "output_tokens": 56,
+      "predicted_sources": [
+        "npm"
+      ],
+      "scores": {
+        "internetarchive": 0.29,
+        "npm": 0.87,
+        "openalex": 0.05
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_sources": [
+        "npm"
+      ],
+      "family": "package",
+      "gold_conceptual": [
+        "npm"
+      ],
+      "gold_useful": [
+        "npm"
+      ],
+      "id": "p02",
+      "input_tokens": 832,
+      "latency_ms": 154.4135410222225,
+      "output_tokens": 56,
+      "predicted_sources": [
+        "npm"
+      ],
+      "scores": {
+        "internetarchive": 0.22,
+        "npm": 0.87,
+        "openalex": 0.04
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_sources": [
+        "npm"
+      ],
+      "family": "package",
+      "gold_conceptual": [
+        "npm"
+      ],
+      "gold_useful": [
+        "npm"
+      ],
+      "id": "p03",
+      "input_tokens": 871,
+      "latency_ms": 192.6472500199452,
+      "output_tokens": 56,
+      "predicted_sources": [
+        "npm"
+      ],
+      "scores": {
+        "internetarchive": 0.25,
+        "npm": 0.86,
+        "openalex": 0.04
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_sources": [
+        "openalex"
+      ],
+      "family": "scholarly",
+      "gold_conceptual": [
+        "openalex"
+      ],
+      "gold_useful": [
+        "openalex"
+      ],
+      "id": "s01",
+      "input_tokens": 906,
+      "latency_ms": 165.96137499436736,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.28,
+        "npm": 0.03,
+        "openalex": 0.71
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_sources": [
+        "openalex"
+      ],
+      "family": "scholarly",
+      "gold_conceptual": [
+        "openalex"
+      ],
+      "gold_useful": [],
+      "id": "s02",
+      "input_tokens": 851,
+      "latency_ms": 241.21766700409353,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.32,
+        "npm": 0.04,
+        "openalex": 0.72
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_sources": [
+        "openalex"
+      ],
+      "family": "scholarly",
+      "gold_conceptual": [
+        "openalex"
+      ],
+      "gold_useful": [],
+      "id": "s03",
+      "input_tokens": 896,
+      "latency_ms": 154.4225420220755,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.29,
+        "npm": 0.03,
+        "openalex": 0.66
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_sources": [
+        "internetarchive"
+      ],
+      "family": "historical",
+      "gold_conceptual": [
+        "internetarchive"
+      ],
+      "gold_useful": [],
+      "id": "h01",
+      "input_tokens": 766,
+      "latency_ms": 232.50370798632503,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.85,
+        "npm": 0.03,
+        "openalex": 0.08
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_sources": [
+        "internetarchive"
+      ],
+      "family": "historical",
+      "gold_conceptual": [
+        "internetarchive"
+      ],
+      "gold_useful": [],
+      "id": "h02",
+      "input_tokens": 839,
+      "latency_ms": 214.89712496986613,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.85,
+        "npm": 0.1,
+        "openalex": 0.07
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_sources": [
+        "internetarchive"
+      ],
+      "family": "historical",
+      "gold_conceptual": [
+        "internetarchive"
+      ],
+      "gold_useful": [],
+      "id": "h03",
+      "input_tokens": 860,
+      "latency_ms": 218.83316698949784,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.85,
+        "npm": 0.03,
+        "openalex": 0.14
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_sources": [],
+      "family": "broad",
+      "gold_conceptual": [],
+      "gold_useful": [],
+      "id": "b01",
+      "input_tokens": 919,
+      "latency_ms": 273.04274996276945,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.23,
+        "npm": 0.1,
+        "openalex": 0.14
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_sources": [],
+      "family": "broad",
+      "gold_conceptual": [],
+      "gold_useful": [],
+      "id": "b02",
+      "input_tokens": 806,
+      "latency_ms": 222.6691670366563,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.13,
+        "npm": 0.04,
+        "openalex": 0.16
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_sources": [],
+      "family": "broad",
+      "gold_conceptual": [],
+      "gold_useful": [],
+      "id": "b03",
+      "input_tokens": 811,
+      "latency_ms": 186.93937500938773,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.12,
+        "npm": 0.12,
+        "openalex": 0.14
+      },
+      "split": "cal"
+    },
+    {
+      "baseline_sources": [
+        "npm"
+      ],
+      "family": "package",
+      "gold_conceptual": [
+        "npm"
+      ],
+      "gold_useful": [
+        "npm"
+      ],
+      "id": "p04",
+      "input_tokens": 813,
+      "latency_ms": 207.1188329719007,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.31,
+        "npm": 0.84,
+        "openalex": 0.03
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_sources": [
+        "npm"
+      ],
+      "family": "package",
+      "gold_conceptual": [
+        "npm"
+      ],
+      "gold_useful": [
+        "npm"
+      ],
+      "id": "p05",
+      "input_tokens": 866,
+      "latency_ms": 210.19841701490805,
+      "output_tokens": 56,
+      "predicted_sources": [
+        "npm"
+      ],
+      "scores": {
+        "internetarchive": 0.33,
+        "npm": 0.87,
+        "openalex": 0.04
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_sources": [
+        "openalex"
+      ],
+      "family": "scholarly",
+      "gold_conceptual": [
+        "openalex"
+      ],
+      "gold_useful": [],
+      "id": "s04",
+      "input_tokens": 865,
+      "latency_ms": 191.1682079662569,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.27,
+        "npm": 0.03,
+        "openalex": 0.73
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_sources": [
+        "openalex"
+      ],
+      "family": "scholarly",
+      "gold_conceptual": [
+        "openalex"
+      ],
+      "gold_useful": [],
+      "id": "s05",
+      "input_tokens": 943,
+      "latency_ms": 227.2887920262292,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.32,
+        "npm": 0.04,
+        "openalex": 0.73
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_sources": [
+        "internetarchive"
+      ],
+      "family": "historical",
+      "gold_conceptual": [
+        "internetarchive"
+      ],
+      "gold_useful": [],
+      "id": "h04",
+      "input_tokens": 877,
+      "latency_ms": 226.60254198126495,
+      "output_tokens": 56,
+      "predicted_sources": [
+        "internetarchive"
+      ],
+      "scores": {
+        "internetarchive": 0.88,
+        "npm": 0.03,
+        "openalex": 0.08
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_sources": [
+        "internetarchive"
+      ],
+      "family": "historical",
+      "gold_conceptual": [
+        "internetarchive"
+      ],
+      "gold_useful": [],
+      "id": "h05",
+      "input_tokens": 864,
+      "latency_ms": 162.24083403358236,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.83,
+        "npm": 0.03,
+        "openalex": 0.15
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_sources": [],
+      "family": "broad",
+      "gold_conceptual": [],
+      "gold_useful": [],
+      "id": "b04",
+      "input_tokens": 902,
+      "latency_ms": 157.2177920024842,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.26,
+        "npm": 0.04,
+        "openalex": 0.22
+      },
+      "split": "holdout"
+    },
+    {
+      "baseline_sources": [],
+      "family": "broad",
+      "gold_conceptual": [],
+      "gold_useful": [],
+      "id": "b05",
+      "input_tokens": 857,
+      "latency_ms": 154.0953340008855,
+      "output_tokens": 56,
+      "predicted_sources": [],
+      "scores": {
+        "internetarchive": 0.12,
+        "npm": 0.08,
+        "openalex": 0.11
+      },
+      "split": "holdout"
+    }
+  ]
+}
