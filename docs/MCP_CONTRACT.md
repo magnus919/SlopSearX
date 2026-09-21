@@ -369,7 +369,7 @@ only from the audited `enforced_filters` adapter declaration; `supported_filters
 
 | Filter | Reported status today | Rationale |
 |---|---|---|
-| `language` | `unsupported` | No adapter enforces it. Reported for effective default `en` as well as explicit language values. |
+| `language` | `unsupported` | No adapter enforces it. Generic and targeted searches report effective default `en` as well as explicit language values. |
 | `time_range` | scope-dependent | OpenAlex enforces locally using `published_date`; mixed scopes are partial. Unknown values reject when the scope advertises enforcement. |
 | `safesearch` (moderate) | `unsupported` | No adapter enforces it. |
 | `safesearch` (strict) | `rejected` | Fail-closed before dispatch: no engine can guarantee strict filtering. |
@@ -378,9 +378,15 @@ only from the audited `enforced_filters` adapter declaration; `supported_filters
 | `date_from`, `date_to` (science) | scope-dependent | OpenAlex applies inclusive upstream publication-date filters; mixed scopes are partial and other-only scopes unsupported. Invalid/reversed bounds reject before dispatch. |
 
 This report is the machine-readable replacement for prose-only filter warnings
-(`VAL-FILTER-001`). The research path persists the same report per subquery
-(`queries[].enforcement`), so generic, targeted, specialist, cached, and
-research searches preserve the same enforcement truth.
+(`VAL-FILTER-001`). The schema and enforcement vocabulary are shared; the keys
+present depend on the search path and its requested filters. Generic and targeted
+searches report their effective language, including default `en`. Jobs reports
+requested `location` and `employment_type`; security currently returns an empty
+report; science reports requested publication-date bounds. These specialist tools
+do not expose a language parameter and do not currently emit a language entry.
+Research persists a report per subquery (`queries[].enforcement`), currently
+containing requested `time_range` only; it also omits default language. An absent
+entry must not be interpreted as proof of enforcement.
 
 ---
 
