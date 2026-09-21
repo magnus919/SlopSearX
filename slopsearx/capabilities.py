@@ -67,6 +67,7 @@ REQUIRED_KEY_ENGINES: frozenset[str] = frozenset(
         "otx",
         "shodan",
         "tmdb",
+        "urlhaus",
         "virustotal",
         "vulncheck",
     }

@@ -44,16 +44,19 @@ class TestCatalogBasics:
         catalog = _catalog()
         assert catalog.get("brave").auth_class == AUTH_REQUIRED  # type: ignore[union-attr]
         assert catalog.get("shodan").auth_class == AUTH_REQUIRED  # type: ignore[union-attr]
+        assert catalog.get("urlhaus").auth_class == AUTH_REQUIRED  # type: ignore[union-attr]
         assert catalog.get("wikipedia").auth_class == AUTH_NONE  # type: ignore[union-attr]
         assert catalog.get("reddit").auth_class == AUTH_NONE  # type: ignore[union-attr]
 
     def test_auth_configured_reflects_key_presence(self) -> None:
         config = load_config()
         config.engines["brave"] = EngineEntry(api_key="secret-key-123")
+        config.engines["urlhaus"] = EngineEntry(api_key="urlhaus-auth-key")
         config.engines["wikipedia"] = EngineEntry()
         catalog = _catalog(config=config)
 
         assert catalog.get("brave").auth_configured is True  # type: ignore[union-attr]
+        assert catalog.get("urlhaus").auth_configured is True  # type: ignore[union-attr]
         assert catalog.get("wikipedia").auth_configured is False  # type: ignore[union-attr]
 
     def test_catalog_never_leaks_secrets(self) -> None:
@@ -213,6 +216,9 @@ class TestCatalogFeatureMatrix:
         shodan = catalog.get("shodan")
         assert shodan is not None
         assert set(shodan.failure_classes) == {"rate_limited", "blocked", "error", "timeout"}
+        urlhaus = catalog.get("urlhaus")
+        assert urlhaus is not None
+        assert set(urlhaus.failure_classes) == {"rate_limited", "blocked", "error", "timeout", "unavailable"}
 
     def test_disabled_engines_expose_the_same_declarations(self) -> None:
         """include_disabled surfaces the audited matrix for disabled engines too."""
