@@ -22,7 +22,7 @@ async def test_saved_search_transport_journey(monkeypatch):
 
         async def call(name, **arguments):
             result = await client.call_tool(name, arguments)
-            assert not result.isError, result
+            assert not result.model_dump(by_alias=True)["isError"], result
             value = payload(result)
             assert "error" not in value, value
             return value
@@ -90,4 +90,4 @@ async def test_saved_search_transport_rejects_boolean_integers(monkeypatch):
         for field in ("interval_seconds", "retention_seconds", "max_results", "max_reports"):
             arguments = {"query": "q", "engines": ["wikipedia"], "interval_seconds": 60, field: True}
             result = await client.call_tool("slopsearx_create_saved_search", arguments)
-            assert result.isError
+            assert result.model_dump(by_alias=True)["isError"]

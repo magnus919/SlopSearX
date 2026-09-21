@@ -14,14 +14,14 @@ async def test_adaptive_research_journey(monkeypatch):
 
         async def call(name, **arguments):
             result = await client.call_tool(name, arguments)
-            assert not result.isError, result
+            assert not result.model_dump(by_alias=True)["isError"], result
             value = _payload(result)
             assert "error" not in value, value
             return value
 
         for field in ("max_queries", "max_attempts", "max_engine_attempts", "max_results"):
             invalid = await client.call_tool("slopsearx_start_research", {"question": "invalid", field: True})
-            assert invalid.isError, invalid
+            assert invalid.model_dump(by_alias=True)["isError"], invalid
 
         job = await call(
             "slopsearx_start_research",
@@ -93,7 +93,7 @@ async def test_budget_exhaustion_completion_replays_over_mcp_transport(monkeypat
 
         async def call(name, **arguments):
             result = await client.call_tool(name, arguments)
-            assert not result.isError, result
+            assert not result.model_dump(by_alias=True)["isError"], result
             value = _payload(result)
             assert "error" not in value, value
             return value
@@ -148,7 +148,7 @@ async def test_exact_query_cap_completion_over_mcp_transport(monkeypatch):
 
         async def call(name, **arguments):
             result = await client.call_tool(name, arguments)
-            assert not result.isError, result
+            assert not result.model_dump(by_alias=True)["isError"], result
             value = _payload(result)
             assert "error" not in value, value
             return value

@@ -36,7 +36,8 @@ async def test_entity_view_preserves_cached_flat_results(monkeypatch):
             await session.initialize()
             discovered = await session.list_tools()
             tool = next(tool for tool in discovered.tools if tool.name == "slopsearx_read_entities")
-            assert tool.inputSchema["required"] == ["cursor"]
+            schema = getattr(tool, "input_schema", None) or getattr(tool, "inputSchema")
+            assert schema["required"] == ["cursor"]
             query = {"query": "CVE-2024-12345", "engines": ["nvd"], "max_results": 1, "include": ["results"]}
             first = _payload(await session.call_tool("slopsearx_search", query))
             cursor = first["meta"]["cursor"]

@@ -41,7 +41,7 @@ async def test_supported_composition_matrix_over_authenticated_transport(monkeyp
 
         async def call(name: str, **arguments):
             response = await client.call_tool(name, arguments)
-            assert not response.isError, response
+            assert not response.model_dump(by_alias=True)["isError"], response
             value = _payload(response)
             assert "error" not in value, value
             return value
