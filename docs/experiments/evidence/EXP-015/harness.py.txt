@@ -67,14 +67,21 @@ def scores_for(case: dict, labels: list[str], answers: dict) -> dict[str, float]
     return result
 
 
-async def infer(client: httpx.AsyncClient, key: str, task: str, case: dict) -> dict:
+async def infer(client: httpx.AsyncClient, key: str, task: str, case: dict, attempts: list[dict], output: Path) -> dict:
     state = {name: value for name, value in case.items() if name not in ("id", "split", "gold")}
     questions = {label: {"type": "noul", "instructions": prompt} for label, prompt in QUESTIONS[task].items()}
-    start = time.monotonic()
-    response = await client.post(API, headers={"Authorization": f"Bearer {key}"}, json={"model": MODEL, "state": state, "questions": questions})
-    elapsed = (time.monotonic() - start) * 1000
-    if response.status_code != 200:
-        raise RuntimeError(f"provider status {response.status_code}")
+    while True:
+        start = time.monotonic()
+        response = await client.post(API, headers={"Authorization": f"Bearer {key}"}, json={"model": MODEL, "state": state, "questions": questions})
+        elapsed = (time.monotonic() - start) * 1000
+        attempts.append({"id": case["id"], "task": task, "status": response.status_code, "latency_ms": elapsed})
+        (output / "trial2_attempts.json").write_text(json.dumps(attempts, indent=2) + "\n")
+        if response.status_code == 200:
+            break
+        retries = sum(item["status"] == 529 for item in attempts)
+        if response.status_code != 529 or retries > 3:
+            raise RuntimeError(f"provider status {response.status_code}; retry budget exhausted or non-retryable")
+        await asyncio.sleep(1.0)
     body = response.json()
     if body.get("model") != MODEL:
         raise RuntimeError("unexpected provider model")
@@ -165,6 +172,7 @@ async def main() -> None:
         assert all(set(c["gold"]) <= set(LABELS[task]) for c in cases)
     key = load_key(args.key_file)
     all_rows = []
+    attempts = []
     thresholds = {}
     token_count = 0
     async with httpx.AsyncClient(timeout=30.0) as client:
@@ -173,12 +181,14 @@ async def main() -> None:
                 for case in cases:
                     if case["split"] != split:
                         continue
-                    row = await infer(client, key, task, case)
+                    row = await infer(client, key, task, case, attempts, output)
                     token_count += row["input_tokens"]
                     if token_count > 2_000_000:
                         raise RuntimeError("registered input-token budget exceeded")
                     all_rows.append(row)
+                    (output / "trial2_partial_rows.json").write_text(json.dumps(all_rows, indent=2, sort_keys=True) + "\n")
                     print(f"{split} {task} {case['id']} valid", flush=True)
+                    await asyncio.sleep(0.3)
             if split == "cal":
                 for task in LABELS:
                     task_rows = [r for r in all_rows if r["task"] == task]

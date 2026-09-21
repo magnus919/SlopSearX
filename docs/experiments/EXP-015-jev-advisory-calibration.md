@@ -18,4 +18,23 @@
 
 ## Readout
 
-Pending.
+### Trial 1 (aborted before calibration)
+
+The preregistered first run made ten valid annotation calls (`a01`–`a10`) and
+then received HTTP 529 on `a11`. It exited before writing raw rows or thresholds;
+those ten scores are irretrievable and excluded from all metrics. This is a
+harness evidence-retention defect, not a negative model result. No holdout was
+queried. Total observed provider requests: 11. No search-engine calls.
+
+### Trial 2 registration (before restart)
+
+Keep the same frozen fixtures, labels, split, question wording, threshold
+selection, baselines, primary comparisons, and interpretation limits. Make only
+transport/reproducibility changes: persist each successful call immediately,
+record non-200 attempt status, wait 0.3 seconds between calls, and retry HTTP
+529 at most three times across the entire restarted run. Trial 2 budget: 60
+fixture calls plus at most three retry attempts, under two million input tokens
+and 45 minutes. Both trials remain in the record; trial 1 is excluded from
+calibration and holdout because its scores were not retained. The combined
+request ceiling is 74 (11 plus 63). Stop on a fourth 529 or another invalid
+response. Register this amendment before trial 2.
