@@ -189,6 +189,12 @@ Engines can declare namespace-prefixed sub-categories for fine-grained routing:
 
 Sub-categories appear in `/config` output alongside base categories and are selected with `?categories=github:code`.
 
+GitHub authentication is sub-category-specific: public repository and
+issue/PR searches may run without a token, while code search requires
+`ENGINE_GITHUB_API_KEY`. The capability catalog reports authentication at the
+engine level, so its single `auth.class` cannot express this distinction;
+the adapter behavior is authoritative for the selected sub-category.
+
 ## Built-In Adapters (51)
 
 ### General / Web
@@ -208,7 +214,7 @@ Sub-categories appear in `/config` output alongside base categories and are sele
 |---|---|---|---|---|
 | Crates.io | `engines/crates.py` | api | general, it, reference, packages | None |
 | Docker Hub | `engines/dockerhub.py` | api | general, it, reference, packages | None |
-| GitHub | `engines/github.py` | api | general, reference, github:code, github:issues, github:prs | `GITHUB_TOKEN` |
+| GitHub | `engines/github.py` | api | general, reference, github:code, github:issues, github:prs | Optional for public repository/issues; `ENGINE_GITHUB_API_KEY` required for code search |
 | npm | `engines/npm.py` | api | general, it, reference, packages | None |
 | PyPI | `engines/pypi.py` | api | general, it, reference, packages | None |
 | Repology | `engines/repology.py` | api | general, it, reference, packages | None |
