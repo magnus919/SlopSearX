@@ -12,12 +12,16 @@ import socket
 import time
 from typing import Any
 
-import httpx
+try:
+    import httpx2 as httpx
+except ImportError:
+    import httpx
 import pytest
 import uvicorn
+from fastmcp import FastMCP
 from mcp.shared.memory import create_connected_server_and_client_session
 
-from slopsearx.mcp.gateway import create_gateway
+from slopsearx.mcp.gateway import _make_proxy, _register_proxy, create_gateway
 from slopsearx.mcp.security import make_http_app
 from slopsearx.mcp.server import create_server
 
@@ -62,6 +66,25 @@ async def remote_server() -> Any:
 
 
 class TestGateway:
+    async def test_dynamic_proxy_registration_preserves_remote_schema(self) -> None:
+        server = FastMCP("gateway-test")
+        proxy = _make_proxy(
+            "remote_tool",
+            {
+                "type": "object",
+                "properties": {"query": {"type": "string"}},
+                "required": ["query"],
+            },
+        )
+
+        _register_proxy(server, proxy, "remote_tool", "Remote description")
+
+        tool = await server.get_tool("remote_tool")
+        assert tool.name == "remote_tool"
+        assert tool.description == "Remote description"
+        assert tool.parameters["properties"]["query"] == {"type": "string"}
+        assert tool.parameters["required"] == ["query"]
+
     async def test_gateway_proxies_tools_and_resources(self, remote_server: Any) -> None:
         url = f"http://127.0.0.1:{remote_server}/mcp"
         gateway = create_gateway(url, token=TOKEN)

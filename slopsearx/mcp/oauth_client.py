@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import inspect
 import json
 import logging
 import os
@@ -29,11 +30,17 @@ import time
 from pathlib import Path
 from typing import Any, Awaitable, Callable, cast
 
-import httpx
+try:
+    import httpx2 as httpx  # type: ignore[import-not-found]
+except ImportError:  # MCP SDK < 2 uses the standard httpx package.
+    import httpx
 import uvicorn
 from mcp.client.auth.exceptions import OAuthFlowError
 from mcp.client.auth.oauth2 import OAuthClientProvider
+from mcp.shared import auth as _mcp_auth
 from mcp.shared.auth import OAuthClientInformationFull, OAuthClientMetadata, OAuthToken
+
+AuthorizationCodeResult: Any = getattr(_mcp_auth, "AuthorizationCodeResult", None)
 
 logger = logging.getLogger(__name__)
 
@@ -216,12 +223,24 @@ def build_oauth_http_client(
     )
     redirect = redirect_handler or (lambda url: _open_authorization_url(url, no_browser, callback))
     callback_fn = callback_handler or callback.wait
+
+    async def provider_callback() -> Any:
+        result = await callback_fn()
+        if AuthorizationCodeResult is None or not isinstance(result, tuple):
+            return result
+        code, state = result
+        return AuthorizationCodeResult(code=code, state=state)
+
+    provider_kwargs: dict[str, Any] = {
+        "redirect_handler": redirect,
+        "callback_handler": provider_callback,
+    }
+    if "timeout" in inspect.signature(OAuthClientProvider).parameters:
+        provider_kwargs["timeout"] = timeout
     provider = OAuthClientProvider(
         server_url,
         metadata,
         storage,
-        redirect_handler=redirect,
-        callback_handler=callback_fn,
-        timeout=timeout,
+        **provider_kwargs,
     )
     return httpx.AsyncClient(auth=provider, timeout=httpx.Timeout(30, read=300))

@@ -23,10 +23,18 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any, AsyncIterator, Awaitable, Callable, cast
 
-import httpx
+try:
+    import httpx2 as httpx  # type: ignore[import-not-found]
+except ImportError:  # MCP SDK < 2 uses the standard httpx package.
+    import httpx
+
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
-from mcp.server.fastmcp import FastMCP
+
+try:
+    from fastmcp import FastMCP
+except ImportError:  # FastMCP < 4 was bundled in the MCP SDK.
+    from mcp.server.fastmcp import FastMCP  # type: ignore[assignment]
 from mcp.types import CallToolResult
 
 logger = logging.getLogger(__name__)
@@ -53,6 +61,12 @@ class _GatewayState:
 
 
 _state: _GatewayState | None = None
+
+
+def _field(value: Any, snake_name: str, legacy_name: str) -> Any:
+    """Read an MCP model field across SDK v1 and SDK v2 attribute names."""
+    result = getattr(value, snake_name, None)
+    return result if result is not None else getattr(value, legacy_name, None)
 
 
 def _get_session() -> ClientSession:
@@ -83,7 +97,7 @@ def _extract_tool_result(result: CallToolResult) -> Any:
             texts.append(str(text))
     joined = "\n".join(texts).strip()
 
-    if result.isError:
+    if _field(result, "is_error", "isError"):
         return {"error": {"code": "remote_error", "message": joined or "remote tool failed"}}
     if not joined:
         return {}
@@ -156,22 +170,48 @@ def _make_proxy(tool_name: str, input_schema: dict[str, Any]) -> Callable[..., A
         return _extract_tool_result(result)
 
     params: list[inspect.Parameter] = []
+    annotations: dict[str, Any] = {}
     for name, schema in properties.items():
         default = inspect.Parameter.empty if name in required else schema.get("default", None)
+        annotation = _annotation_for(schema.get("type"))
         params.append(
             inspect.Parameter(
                 name,
                 kind=inspect.Parameter.KEYWORD_ONLY,
                 default=default,
-                annotation=_annotation_for(schema.get("type")),
+                annotation=annotation,
             )
         )
+        annotations[name] = annotation
     # mypy does not model dunder assignment on Callable; inspect honors
     # __signature__ at runtime to build the advertised tool schema.
     proxy.__signature__ = inspect.Signature(params)  # type: ignore[attr-defined]
+    # FastMCP 3/4 uses Pydantic's TypeAdapter, which resolves annotations
+    # independently of ``__signature__``.  Mirror the generated parameters
+    # there so dynamic proxies validate and advertise the remote schema.
+    annotations["return"] = Any
+    proxy.__annotations__ = annotations
     proxy.__name__ = tool_name
     proxy.__qualname__ = tool_name
     return proxy
+
+
+def _register_proxy(server: FastMCP, proxy: Callable[..., Awaitable[Any]], tool_name: str, description: str) -> None:
+    """Register a proxy with both the bundled and standalone FastMCP APIs.
+
+    FastMCP 3/4 derive the tool name and description from the callable and
+    accept only that callable.  The older SDK-bundled FastMCP accepted those
+    values as ``add_tool`` keyword arguments.  Keep the callable metadata as
+    the source of truth so the advertised schema and wire name stay stable.
+    """
+    proxy.__name__ = tool_name
+    proxy.__qualname__ = tool_name
+    proxy.__doc__ = description
+    add_tool_parameters = inspect.signature(server.add_tool).parameters
+    if "name" in add_tool_parameters:
+        server.add_tool(proxy, name=tool_name, description=description)  # type: ignore[call-arg]
+    else:
+        server.add_tool(proxy)
 
 
 # ---------------------------------------------------------------------------
@@ -359,11 +399,8 @@ async def _gateway_lifespan(
                     raise RuntimeError(f"cannot list tools from remote server at {remote_url}: {exc}") from exc
 
                 for tool in tools_result.tools:
-                    server.add_tool(
-                        _make_proxy(tool.name, tool.inputSchema),
-                        name=tool.name,
-                        description=tool.description or "",
-                    )
+                    input_schema = _field(tool, "input_schema", "inputSchema") or {}
+                    _register_proxy(server, _make_proxy(tool.name, input_schema), tool.name, tool.description or "")
                 logger.info(
                     "Remote gateway connected to %s (%d tools registered)",
                     remote_url,

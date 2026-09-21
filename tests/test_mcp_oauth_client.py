@@ -15,7 +15,10 @@ import time
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
-import httpx
+try:
+    import httpx2 as httpx
+except ImportError:
+    import httpx
 import pytest
 import uvicorn
 from mcp.shared.memory import create_connected_server_and_client_session
@@ -182,3 +185,24 @@ class TestGatewayOAuthFlow:
         client = build_oauth_http_client("http://127.0.0.1:9999/mcp", token_file="/tmp/nonexistent-oauth.json")
         assert isinstance(client, httpx.AsyncClient)
         await client.aclose()
+
+    async def test_callback_adapter_preserves_legacy_tuple_for_current_sdk(self, tmp_path) -> None:
+        """The provider callback remains compatible with the installed SDK generation."""
+        client = build_oauth_http_client(
+            "http://127.0.0.1:9999/mcp",
+            token_file=tmp_path / "oauth.json",
+            callback_handler=lambda: _callback_result(),
+        )
+        try:
+            result = await client.auth.context.callback_handler()
+            if hasattr(result, "code"):
+                assert result.code == "code"
+                assert result.state == "state"
+            else:
+                assert result == ("code", "state")
+        finally:
+            await client.aclose()
+
+
+async def _callback_result() -> tuple[str, str]:
+    return "code", "state"
