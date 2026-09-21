@@ -294,7 +294,7 @@ class TestAuditedCapabilityDeclarations:
         assert entry["enabled"] is False
         assert entry["cost_class"] == "free"
         assert entry["supported_result_types"] == ["text"]
-        assert entry["failure_classes"] == ["error"]
+        assert entry["failure_classes"] == ["rate_limited", "blocked", "error", "timeout"]
         assert entry["supported_filters"]["safesearch"] is False
 
     async def test_tool_declared_filters_are_not_enforcement_claims(self, state: McpState) -> None:
