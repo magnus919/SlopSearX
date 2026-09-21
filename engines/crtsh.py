@@ -7,6 +7,7 @@ API docs: https://crt.sh/
 
 from __future__ import annotations
 
+import re
 import time
 from typing import Any
 
@@ -36,6 +37,18 @@ class CrtShAdapter(EngineAdapter):
     failure_classes = ("rate_limited", "blocked", "error", "timeout")
     cost_class = "free"
 
+    _CHALLENGE_MARKERS = (
+        ("access_denied", "access denied"),
+        ("captcha", "captcha"),
+        ("cf_challenge", "cf-chl-"),
+        ("challenge", "challenge"),
+        ("cloudflare", "cloudflare"),
+        ("hcaptcha", "hcaptcha"),
+        ("recaptcha", "recaptcha"),
+        ("unusual_traffic", "unusual traffic"),
+        ("verify_human", "verify you are human"),
+    )
+
     async def search(
         self,
         query: str,
@@ -61,20 +74,51 @@ class CrtShAdapter(EngineAdapter):
                     return AdapterResponse(results=[], status=EngineStatus.BLOCKED, latency_ms=latency)
                 resp.raise_for_status()
 
+                content_type = resp.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+                response_context = f"HTTP {resp.status_code}, content-type {content_type or 'unknown'}"
+                if self._looks_like_html(resp):
+                    markers = self._challenge_markers(resp.text[:65_536])
+                    if markers:
+                        return AdapterResponse(
+                            results=[],
+                            status=EngineStatus.BLOCKED,
+                            error_message=(
+                                f"CRT.sh returned an upstream challenge/block page ({response_context}; "
+                                f"markers={','.join(markers)})"
+                            ),
+                            latency_ms=latency,
+                        )
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.ERROR,
+                        error_message=(f"CRT.sh returned non-JSON HTML ({response_context}; no challenge markers)"),
+                        latency_ms=latency,
+                    )
+
                 try:
                     data = resp.json()
                 except ValueError:
                     return AdapterResponse(
                         results=[],
                         status=EngineStatus.ERROR,
-                        error_message="CRT.sh returned malformed JSON",
+                        error_message=f"CRT.sh returned malformed JSON ({response_context})",
                         latency_ms=latency,
                     )
                 if not isinstance(data, list):
                     return AdapterResponse(
                         results=[],
                         status=EngineStatus.ERROR,
-                        error_message="CRT.sh returned an unexpected JSON shape; expected a list",
+                        error_message=(
+                            f"CRT.sh returned an unexpected JSON shape; expected a list ({response_context})"
+                        ),
+                        latency_ms=latency,
+                    )
+
+                if any(not isinstance(cert, dict) for cert in data):
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.ERROR,
+                        error_message=f"CRT.sh returned a malformed certificate row ({response_context})",
                         latency_ms=latency,
                     )
 
@@ -92,6 +136,18 @@ class CrtShAdapter(EngineAdapter):
                 error_message=str(exc),
                 latency_ms=latency,
             )
+
+    @staticmethod
+    def _looks_like_html(resp: httpx.Response) -> bool:
+        content_type = resp.headers.get("content-type", "").lower()
+        if "html" in content_type:
+            return True
+        return bool(re.match(rb"\s*<!doctype\s+html|\s*<html\b", resp.content[:256], re.I))
+
+    @classmethod
+    def _challenge_markers(cls, body: str) -> list[str]:
+        lowered = body.lower()
+        return [name for name, marker in cls._CHALLENGE_MARKERS if marker in lowered]
 
     def _parse_certs(self, certs: list[dict[str, Any]]) -> list[SearchResult]:
         results: list[SearchResult] = []

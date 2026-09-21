@@ -60,14 +60,58 @@ class TestCrtShAdapter:
             result = await adapter.search("example.com")
         assert result.status == EngineStatus.ERROR
         assert result.results == []
-        assert result.error_message == "CRT.sh returned an unexpected JSON shape; expected a list"
+        assert result.error_message == (
+            "CRT.sh returned an unexpected JSON shape; expected a list (HTTP 200, content-type application/json)"
+        )
 
     async def test_search_rejects_malformed_json(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(200, text="not json")):
             result = await adapter.search("example.com")
         assert result.status == EngineStatus.ERROR
         assert result.results == []
-        assert result.error_message == "CRT.sh returned malformed JSON"
+        assert result.error_message == "CRT.sh returned malformed JSON (HTTP 200, content-type text/plain)"
+
+    async def test_search_classifies_html_challenge_without_body(self, adapter):
+        html = "<html><body><div class='captcha'>verify you are human</div></body></html>"
+        async with MockHTTP(
+            lambda r: httpx.Response(
+                200,
+                text=html,
+                headers={"content-type": "text/html; charset=UTF-8"},
+            )
+        ):
+            result = await adapter.search("github.com")
+        assert result.status == EngineStatus.BLOCKED
+        assert result.results == []
+        assert result.error_message == (
+            "CRT.sh returned an upstream challenge/block page "
+            "(HTTP 200, content-type text/html; markers=captcha,verify_human)"
+        )
+        assert html not in (result.error_message or "")
+
+    async def test_search_classifies_nonchallenge_html_as_upstream_error(self, adapter):
+        async with MockHTTP(
+            lambda r: httpx.Response(
+                200,
+                text="<html><body>maintenance</body></html>",
+                headers={"content-type": "text/html; charset=UTF-8"},
+            )
+        ):
+            result = await adapter.search("github.com")
+        assert result.status == EngineStatus.ERROR
+        assert result.results == []
+        assert result.error_message == (
+            "CRT.sh returned non-JSON HTML (HTTP 200, content-type text/html; no challenge markers)"
+        )
+
+    async def test_search_rejects_malformed_certificate_row(self, adapter):
+        async with MockHTTP(lambda r: httpx.Response(200, json=[{"id": 1}, "not-a-certificate-row"])):
+            result = await adapter.search("example.com")
+        assert result.status == EngineStatus.ERROR
+        assert result.results == []
+        assert result.error_message == (
+            "CRT.sh returned a malformed certificate row (HTTP 200, content-type application/json)"
+        )
 
     async def test_search_blocked(self, adapter):
         async with MockHTTP(lambda r: httpx.Response(403)):
