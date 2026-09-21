@@ -81,6 +81,30 @@ async def test_budget_completion_survives_valkey_reconnect_and_preserves_executi
     assert await reloaded_snapshots.read(before.queries[0].cursor)
 
 
+async def test_exact_query_cap_completion_survives_valkey_reload(state, backend):  # noqa: F811
+    first = await start(state, max_queries=1)
+    before = await state.job_store.load(first["job_id"])
+    assert before.stop_reason == "query_budget_exhausted"
+    before.deadline = 1.0
+    await state.job_store.save(before)
+    completed = await t.slopsearx_update_research(
+        first["job_id"], {"a": "resolved"}, complete=True, rationale="query cap was enough"
+    )
+    assert completed["caller_completed"] is True
+    assert completed["stop_reason"] == "query_budget_exhausted"
+
+    reloaded = await ResearchJobStore(backend).load(first["job_id"])
+    assert reloaded is not None
+    assert reloaded.state == before.state == "succeeded"
+    assert reloaded.stop_reason == "query_budget_exhausted"
+    assert reloaded.caller_completed is True
+    assert reloaded.completion_rationale == "query cap was enough"
+    assert reloaded.completion_subquestion_states == {"a": "resolved"}
+    assert reloaded.budget_used == before.budget_used
+    assert reloaded.queries == before.queries
+    assert await SnapshotStore(backend).read(before.queries[0].cursor)
+
+
 @pytest.mark.parametrize("max_attempts", [1, 2])
 async def test_recovery_charges_uncertain_attempt_and_fences_same_owner_token(
     state,

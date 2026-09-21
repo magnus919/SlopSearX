@@ -61,9 +61,10 @@ Record your own assessment with `slopsearx_update_research`:
 This preserves the unresolved `alternatives` subquestion, sets
 `caller_completed` and, for an otherwise active job, retains the historical
 `stop_reason: caller_completed` behavior. If bounded execution already stopped
-with `result_budget_exhausted`, `attempt_budget_exhausted`, or
-`engine_budget_exhausted`, completion is metadata-only: the execution `state`
-and `stop_reason` remain unchanged, while the caller flag and rationale are
+with `query_budget_exhausted`, `result_budget_exhausted`,
+`attempt_budget_exhausted`, or `engine_budget_exhausted`, completion is
+metadata-only: the execution `state` and `stop_reason` remain unchanged, while
+the caller flag and rationale are
 recorded separately. This metadata-only completion remains allowed after the
 dispatch deadline under the same fenced lease; it never reopens retry or
 follow-up dispatch. Identical completion requests replay the persisted summary;
@@ -104,11 +105,13 @@ completion, cancellation, execution failure and deadline expiry. Deadline
 expiry stops further dispatch; already returned evidence remains readable.
 Omitting discovered records because of the admission cap reports
 `result_budget_exhausted`; exactly filling the cap without omissions can still
-report `plan_executed`. A `max_queries` limit can reject a follow-up before
-admission with the existing `job_budget_exceeded` response; that does not imply
-that a new `query_budget_exhausted` stop reason was persisted. In every budget
-case, no new dispatch occurs and `caller_completed` stays false until the
-caller explicitly completes the job. Storage TTL expiry is separate: once
+report `plan_executed`. When all planned queries succeed and their count reaches
+the job's query cap, the retained job instead reports
+`query_budget_exhausted`, unless a result, attempt, or engine budget reason
+already applies. A follow-up beyond `max_queries` still receives the existing
+pre-admission `job_budget_exceeded` response. In every budget case, no new
+dispatch occurs and `caller_completed` stays false until the caller explicitly
+completes the job. Storage TTL expiry is separate: once
 stored records expire, their handles are no longer available.
 
 Every dispatch, including retry and recovered work, rechecks current research

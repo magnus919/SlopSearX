@@ -408,7 +408,14 @@ class ResearchJobRunner:
         else:
             job.state = "failed"
         if job.stop_reason is None:
-            job.stop_reason = "plan_executed" if job.state == "succeeded" else "execution_failed"
+            if (
+                job.state == "succeeded"
+                and job.workflow.get("kind") != "dependency_dossier"
+                and len(job.queries) >= job.budget_limits["queries"]
+            ):
+                job.stop_reason = "query_budget_exhausted"
+            else:
+                job.stop_reason = "plan_executed" if job.state == "succeeded" else "execution_failed"
         if not await store.save_if_owned(job):
             raise LeaseLostError(job.job_id)
         return job

@@ -785,6 +785,7 @@ class ResearchJobStore:
             current.cancel_requested = current.cancel_requested or job.cancel_requested
             budget_terminal = current.stop_reason in {
                 "result_budget_exhausted",
+                "query_budget_exhausted",
                 "attempt_budget_exhausted",
                 "engine_budget_exhausted",
             }

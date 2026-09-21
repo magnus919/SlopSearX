@@ -2399,6 +2399,7 @@ async def slopsearx_update_research(
             target.completion_subquestion_states = dict(subquestion_states)
             if target.stop_reason not in {
                 "result_budget_exhausted",
+                "query_budget_exhausted",
                 "attempt_budget_exhausted",
                 "engine_budget_exhausted",
             }:

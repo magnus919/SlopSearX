@@ -149,11 +149,48 @@ async def test_every_execution_budget_stops_dispatch_without_caller_completion(s
     if follow_up:
         response = await t.slopsearx_extend_research(first["job_id"], "next", engines=["wikipedia"])
         assert response["error"]["code"] == "job_budget_exceeded"
+        if "max_queries" in kwargs:
+            assert first["stop_reason"] == "query_budget_exhausted"
     else:
         assert first["stop_reason"] == "result_budget_exhausted"
     current = await state.job_store.load(first["job_id"])
     assert current.caller_completed is False
     assert state.ctx.active_engines["wikipedia"].calls == calls
+
+
+async def test_exact_query_cap_can_be_completed_after_deadline_without_changing_execution(state):
+    first = await start(state, max_queries=1)
+    before = await state.job_store.load(first["job_id"])
+    assert before.state == "succeeded"
+    assert before.stop_reason == "query_budget_exhausted"
+    assert before.caller_completed is False
+    before.deadline = time.time() - 1
+    await state.job_store.save(before)
+    before_payload = _job_to_payload(before)
+
+    completed = await t.slopsearx_update_research(
+        first["job_id"], {"a": "resolved"}, complete=True, rationale="query cap was enough"
+    )
+    assert completed["state"] == "succeeded"
+    assert completed["stop_reason"] == "query_budget_exhausted"
+    assert completed["caller_completed"] is True
+    after = await state.job_store.load(first["job_id"])
+    for field in ("state", "stop_reason", "queries", "budget_limits", "budget_used", "seen_lead_ids"):
+        assert _job_to_payload(after)[field] == before_payload[field]
+    assert state.ctx.active_engines["wikipedia"].calls == 1
+    replay = await t.slopsearx_update_research(
+        first["job_id"], {"a": "resolved"}, complete=True, rationale="query cap was enough"
+    )
+    assert replay == completed
+    assert await state.job_store.load(first["job_id"]) == after
+
+
+async def test_result_exhaustion_takes_precedence_over_exact_query_cap(state):
+    first = await start(state, max_queries=1, max_results=1)
+    assert first["state"] == "succeeded"
+    assert first["stop_reason"] == "result_budget_exhausted"
+    assert first["caller_completed"] is False
+    assert state.ctx.active_engines["wikipedia"].calls == 1
 
 
 async def test_budget_exhausted_completion_is_metadata_only_after_deadline(state):
