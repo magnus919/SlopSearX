@@ -195,6 +195,12 @@ issue/PR searches may run without a token, while code search requires
 engine level, so its single `auth.class` cannot express this distinction;
 the adapter behavior is authoritative for the selected sub-category.
 
+Reddit may permit anonymous JSON search from some networks, but Reddit's
+current access guidance requires a valid OAuth token (or a logged-in session)
+for requests from hosted-service IP ranges. Set `ENGINE_REDDIT_API_KEY` to an
+approved OAuth bearer token to use the documented `oauth.reddit.com` API path;
+the adapter does not fall back to browser automation or scraping.
+
 ## Built-In Adapters (51)
 
 ### General / Web
@@ -205,7 +211,7 @@ the adapter behavior is authoritative for the selected sub-category.
 | DuckDuckGo | `engines/duckduckgo.py` | scrape | general, news | None |
 | Google | `engines/google.py` | scrape | general, news | None |
 | Hacker News | `engines/hackernews.py` | api | general, news | None |
-| Reddit | `engines/reddit.py` | api | general, social, reddit:subreddit | None |
+| Reddit | `engines/reddit.py` | api | general, social, reddit:subreddit | Optional OAuth bearer token: `ENGINE_REDDIT_API_KEY` |
 | Wikipedia | `engines/wikipedia.py` | api | general, science, reference | None |
 
 ### Developer / Package Registries

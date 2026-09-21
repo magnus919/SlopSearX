@@ -52,7 +52,7 @@ registry at runtime — treat them as authoritative.
 | [DuckDuckGo](https://duckduckgo.com/) | Scrape | None | general, news, images |
 | [Google](https://google.com/) | Scrape | None | general, news |
 | [Hacker News](https://news.ycombinator.com/) | API | None | general, news |
-| [Reddit](https://reddit.com/) | API | None | general, social, reddit:subreddit |
+| [Reddit](https://reddit.com/) | API | Optional OAuth bearer token: `ENGINE_REDDIT_API_KEY` | general, social, reddit:subreddit |
 | [Wikipedia](https://www.wikipedia.org/) | API | None | general, science, reference |
 
 ### Developer / Package Registries

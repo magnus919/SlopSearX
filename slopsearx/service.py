@@ -230,6 +230,27 @@ class RateLimitExceededError(ServiceError):
 # ---------------------------------------------------------------------------
 
 
+def _normalize_engine_configs(engine_configs: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Normalize dataclass-derived engine configs before adapter discovery.
+
+    ``EngineEntry.base_url`` defaults to an empty string so that the adapter
+    can supply its provider-specific endpoint.  ``dataclasses.asdict`` cannot
+    distinguish that unset value from an explicit config mapping, however,
+    and ``dict.get``-based adapters treat a present empty value as an
+    override.  Omit only blank ``base_url`` values at this boundary; every
+    other field and non-empty override must pass through unchanged.
+    """
+
+    normalized: dict[str, dict[str, Any]] = {}
+    for name, config in engine_configs.items():
+        adapter_config = dict(config)
+        base_url = adapter_config.get("base_url")
+        if base_url is None or (isinstance(base_url, str) and not base_url.strip()):
+            adapter_config.pop("base_url", None)
+        normalized[name] = adapter_config
+    return normalized
+
+
 @dataclass
 class SearchFlights:
     """Transient coordination for concurrent callers in one runtime/event loop."""
@@ -321,7 +342,7 @@ async def build_context() -> AppContext:
         "true",
         "1",
     )
-    engine_configs = {name: dataclasses.asdict(entry) for name, entry in cfg.engines.items()}
+    engine_configs = _normalize_engine_configs({name: dataclasses.asdict(entry) for name, entry in cfg.engines.items()})
     # Opt in to Brave category-specific endpoints. The default retains
     # the established web endpoint behavior.
     brave_routing = os.environ.get("FEATURE_BRAVE_CATEGORY_ROUTING", "").lower() in ("true", "1")

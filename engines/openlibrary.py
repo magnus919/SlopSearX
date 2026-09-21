@@ -6,6 +6,7 @@ Docs: https://openlibrary.org/developers/api
 
 from __future__ import annotations
 
+import re
 import time
 from typing import Any
 
@@ -18,6 +19,73 @@ from slopsearx.adapter import (
     SearchResult,
     register_engine,
 )
+
+_WORK_KEY_RE = re.compile(r"^(?:/)?works/(OL\d+W)$")
+_EDITION_KEY_RE = re.compile(r"^(?:/)?books/(OL\d+M)$")
+_BARE_WORK_KEY_RE = re.compile(r"^(OL\d+W)$")
+_BARE_EDITION_KEY_RE = re.compile(r"^(OL\d+M)$")
+_ISBN_RE = re.compile(r"(?:[0-9]{9}[0-9Xx]|[0-9]{13})")
+
+
+def _openlibrary_key_url(value: Any, kind: str) -> str | None:
+    """Return a canonical Open Library URL for a validated record key."""
+    if not isinstance(value, str):
+        return None
+
+    value = value.strip()
+    if kind == "work":
+        match = _WORK_KEY_RE.fullmatch(value) or _BARE_WORK_KEY_RE.fullmatch(value)
+        if match:
+            return f"https://openlibrary.org/works/{match.group(1)}"
+    elif kind == "edition":
+        match = _EDITION_KEY_RE.fullmatch(value) or _BARE_EDITION_KEY_RE.fullmatch(value)
+        if match:
+            return f"https://openlibrary.org/books/{match.group(1)}"
+    return None
+
+
+def _openlibrary_isbn_url(values: Any) -> str | None:
+    """Return an ISBN URL for the first safe ISBN in a provider field."""
+    if isinstance(values, str):
+        values = [values]
+    if not isinstance(values, (list, tuple)):
+        return None
+
+    for value in values:
+        if not isinstance(value, (str, int)):
+            continue
+        isbn = str(value).replace("-", "").replace(" ", "").strip()
+        if _ISBN_RE.fullmatch(isbn):
+            return f"https://openlibrary.org/isbn/{isbn}"
+    return None
+
+
+def _result_url(doc: dict[str, Any]) -> str | None:
+    """Build a stable, item-specific URL from an Open Library document.
+
+    Work keys are the canonical identity when present. Edition keys and ISBNs
+    provide progressively narrower identifiers for records without a work key.
+    Documents without one of these stable identifiers are omitted by the
+    adapter rather than represented by a non-canonical search URL.
+    """
+    work_url = _openlibrary_key_url(doc.get("key"), "work")
+    if work_url:
+        return work_url
+
+    edition_keys = doc.get("edition_key")
+    if isinstance(edition_keys, str):
+        edition_keys = [edition_keys]
+    if isinstance(edition_keys, (list, tuple)):
+        for edition_key in edition_keys:
+            edition_url = _openlibrary_key_url(edition_key, "edition")
+            if edition_url:
+                return edition_url
+
+    isbn_url = _openlibrary_isbn_url(doc.get("isbn"))
+    if isbn_url:
+        return isbn_url
+
+    return None
 
 
 @register_engine
@@ -64,15 +132,17 @@ class OpenLibraryAdapter(EngineAdapter):
                 resp.raise_for_status()
                 data = resp.json()
 
-                results = []
+                results: list[SearchResult] = []
                 docs = data.get("docs", [])
-                for idx, doc in enumerate(docs[:max_results]):
+                for doc in docs[:max_results]:
+                    result_url = _result_url(doc)
+                    if result_url is None:
+                        continue
+
                     title = doc.get("title", "")
                     author = doc.get("author_name", [None])
                     author_name = author[0] if author else ""
                     year = doc.get("first_publish_year", "")
-                    isbn = doc.get("isbn", [None])
-                    isbn_str = isbn[0] if isbn else ""
                     cover_id = doc.get("cover_i")
                     edition_count = doc.get("edition_count", 0)
 
@@ -88,13 +158,11 @@ class OpenLibraryAdapter(EngineAdapter):
 
                     results.append(
                         SearchResult(
-                            url=f"https://openlibrary.org/isbn/{isbn_str}"
-                            if isbn_str
-                            else f"https://openlibrary.org/search?q={query}",
+                            url=result_url,
                             title=title,
                             content=content[:500],
                             engine=self.name,
-                            position=idx + 1,
+                            position=len(results) + 1,
                             score=float(doc.get("ratings_count", 0) or 0),
                             thumbnail=thumbnail,
                         ),
