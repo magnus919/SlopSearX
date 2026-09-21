@@ -11,6 +11,7 @@ Backpressure: rate-limited engines get 30s cooldown.
 from __future__ import annotations
 
 import logging
+import math
 import os
 import time
 from abc import ABC, abstractmethod
@@ -18,6 +19,23 @@ from dataclasses import dataclass
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+# Upstream Retry-After values are operator input from an external service.
+# Keep the fallback and cap bounded so one malformed or hostile header cannot
+# stall an engine indefinitely.
+DEFAULT_UPSTREAM_COOLDOWN_SECONDS = 30.0
+MIN_UPSTREAM_COOLDOWN_SECONDS = 1.0
+MAX_UPSTREAM_COOLDOWN_SECONDS = 300.0
+
+_SET_OR_EXTEND_UPSTREAM_COOLDOWN = """
+local requested = math.ceil(tonumber(ARGV[1]))
+local current = redis.call('TTL', KEYS[1])
+if current < requested then
+  redis.call('SET', KEYS[1], '1', 'EX', requested)
+  return requested
+end
+return current
+"""
 
 
 # --- Strategy interface ---
@@ -40,6 +58,14 @@ class RateLimitStrategy(ABC):
 
     async def shutdown(self) -> None:
         """Optional: called at graceful shutdown."""
+
+    async def set_upstream_cooldown(self, engine: str, seconds: float) -> None:
+        """Optionally publish a provider-imposed cooldown for ``engine``."""
+
+    async def upstream_cooldown_remaining(self, engine: str) -> float:
+        """Return shared provider cooldown seconds remaining, if any."""
+        del engine
+        return 0.0
 
 
 # --- Local token bucket (dev / 1-3 replicas) ---
@@ -172,6 +198,48 @@ class ValkeySlidingWindow(RateLimitStrategy):
             self._client = None
             return not self._fail_closed
 
+    @staticmethod
+    def _cooldown_key(engine: str) -> str:
+        return f"ratelimit:upstream-cooldown:{engine}"
+
+    async def set_upstream_cooldown(self, engine: str, seconds: float) -> None:
+        """Publish a bounded upstream cooldown for all replicas."""
+        if not math.isfinite(seconds):
+            seconds = DEFAULT_UPSTREAM_COOLDOWN_SECONDS
+        seconds = min(MAX_UPSTREAM_COOLDOWN_SECONDS, max(MIN_UPSTREAM_COOLDOWN_SECONDS, seconds))
+        if not self._connected or self._client is None:
+            if self._url:
+                await self._try_reconnect()
+        if not self._connected or self._client is None:
+            return
+        try:
+            await self._client.eval(
+                _SET_OR_EXTEND_UPSTREAM_COOLDOWN,
+                1,
+                self._cooldown_key(engine),
+                str(seconds),
+            )
+        except Exception as exc:  # noqa: BLE001 - shared state is best effort
+            logger.debug("Could not publish upstream cooldown for %s: %s", engine, exc)
+            self._connected = False
+            self._client = None
+
+    async def upstream_cooldown_remaining(self, engine: str) -> float:
+        """Read a shared upstream cooldown without failing search closed."""
+        if not self._connected or self._client is None:
+            if self._url:
+                await self._try_reconnect()
+        if not self._connected or self._client is None:
+            return 0.0
+        try:
+            ttl = await self._client.ttl(self._cooldown_key(engine))
+            return max(0.0, float(ttl)) if ttl is not None and float(ttl) >= 0 else 0.0
+        except Exception as exc:  # noqa: BLE001 - shared state is best effort
+            logger.debug("Could not read upstream cooldown for %s: %s", engine, exc)
+            self._connected = False
+            self._client = None
+            return 0.0
+
     async def warmup(self) -> None:
         if self._url and not self._connected:
             await self._connect()
@@ -195,6 +263,7 @@ class _EngineState:
 
     consecutive_failures: int = 0
     cooldown_until: float = 0.0
+    upstream_cooldown_until: float = 0.0
     deactivated: bool = False
 
 
@@ -221,11 +290,21 @@ class RateLimiter:
         if state.deactivated:
             return False
 
+        now = time.monotonic()
+        if state.upstream_cooldown_until > now:
+            return False
+
+        shared_remaining = await self._strategy.upstream_cooldown_remaining(engine)
+        if shared_remaining > 0:
+            state.upstream_cooldown_until = max(state.upstream_cooldown_until, now + shared_remaining)
+            return False
+
         allowed = await self._strategy.acquire(engine, cost)
 
         if allowed:
             state.consecutive_failures = 0
             state.cooldown_until = 0.0
+            state.upstream_cooldown_until = 0.0
         else:
             state.consecutive_failures += 1
             state.cooldown_until = time.monotonic() + 30.0  # 30s cooldown
@@ -238,6 +317,32 @@ class RateLimiter:
 
         return allowed
 
+    async def set_upstream_cooldown(self, engine: str, seconds: float) -> float:
+        """Apply a bounded provider cooldown without counting a local strike."""
+        try:
+            requested = float(seconds)
+        except (TypeError, ValueError):
+            requested = DEFAULT_UPSTREAM_COOLDOWN_SECONDS
+        if not math.isfinite(requested) or requested <= 0:
+            requested = DEFAULT_UPSTREAM_COOLDOWN_SECONDS
+        bounded = min(MAX_UPSTREAM_COOLDOWN_SECONDS, max(MIN_UPSTREAM_COOLDOWN_SECONDS, requested))
+
+        state = self._states.setdefault(engine, _EngineState())
+        state.upstream_cooldown_until = max(state.upstream_cooldown_until, time.monotonic() + bounded)
+        await self._strategy.set_upstream_cooldown(engine, bounded)
+        return bounded
+
+    async def upstream_cooldown_remaining(self, engine: str) -> float:
+        """Return provider cooldown seconds remaining for service routing."""
+        state = self._states.get(engine)
+        local_remaining = 0.0
+        if state is not None:
+            local_remaining = max(0.0, state.upstream_cooldown_until - time.monotonic())
+        shared_remaining = await self._strategy.upstream_cooldown_remaining(engine)
+        if state is not None and shared_remaining > 0:
+            state.upstream_cooldown_until = max(state.upstream_cooldown_until, time.monotonic() + shared_remaining)
+        return max(local_remaining, shared_remaining)
+
     def reactivate(self, engine: str) -> None:
         """Reactivate a deactivated engine (called after health check passes)."""
         state = self._states.get(engine)
@@ -245,6 +350,7 @@ class RateLimiter:
             state.deactivated = False
             state.consecutive_failures = 0
             state.cooldown_until = 0.0
+            state.upstream_cooldown_until = 0.0
 
     @property
     def deactivated_engines(self) -> set[str]:
