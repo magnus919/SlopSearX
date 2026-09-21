@@ -819,6 +819,7 @@ class TestEdgarAdapter:
                             "description": "Annual report for fiscal year 2024",
                             "filed_at": "2024-10-31T00:00:00Z",
                             "cik": "320193",
+                            "accession_no": "0000320193-24-000123",
                         },
                         "_score": 10.5,
                     },
@@ -832,6 +833,9 @@ class TestEdgarAdapter:
         assert result.status == EngineStatus.OK
         assert len(result.results) == 1
         assert "Apple" in result.results[0].title
+        assert result.results[0].url == (
+            "https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/0000320193-24-000123-index.html"
+        )
 
     def test_adapter_registered(self):
         from slopsearx.adapter import list_engines
