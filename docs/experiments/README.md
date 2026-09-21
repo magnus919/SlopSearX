@@ -126,6 +126,7 @@ PRs or deploy changes.
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
+| [EXP-022](EXP-022-jev-composed-next-source.md) | Do atomic Jev judgments composed in code improve realized next-source value over a same-state compound Jev judgment? | registered | Bounded replay on the exposed EXP-020 capture first; fresh free-engine confirmation only if its advance gate passes. | None |
 | [EXP-021](EXP-021-jev-card-triage-brave-e2e.md) | Does Jev improve additive quality triage on actual Brave-backed cards, including prompt-injection controls? | inconclusive | F1 0.851 vs 0.667 baseline, but query-bootstrap interval includes a non-useful effect and one injected attack was missed; no security-gate use. [Readout](JEV-ADVISORY-E2E-RESULTS.md). | None |
 | [EXP-020](EXP-020-jev-next-source-brave-e2e.md) | Does Jev improve realized next-source value after a Brave-backed first pass? | inconclusive | Net utility/query 0.00 vs -0.25 baseline; wide interval, one useful npm source missed, archive availability confounded value. [Readout](JEV-ADVISORY-E2E-RESULTS.md). | None |
 | [EXP-019](EXP-019-jev-annotations-brave-e2e.md) | Does Jev improve multi-label annotations on actual Brave-backed result cards? | inconclusive | Held-out F1 0.900 vs 0.957 deterministic baseline; wide interval and taxonomy gaps. [Readout](JEV-ADVISORY-E2E-RESULTS.md). | None |
