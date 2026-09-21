@@ -43,6 +43,7 @@ from slopsearx.mcp.harness import (
     make_fixture_http_app,
 )
 from slopsearx.mcp.security import make_http_app
+from slopsearx.mcp.server import _fastmcp_constructor_kwargs
 from slopsearx.mcp.tool_registry import tool_names
 from slopsearx.service import AppContext
 
@@ -486,6 +487,26 @@ class TestAuthenticatedTransport:
                     json={"jsonrpc": "2.0", "method": "tools/list", "id": 1},
                 )
                 assert resp.status_code == 401
+
+
+class TestFastMCPCompatibility:
+    def test_modern_oauth_provider_is_passed_as_auth(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("slopsearx.mcp.server._MODERN_FASTMCP", True)
+        provider = object()
+        assert _fastmcp_constructor_kwargs(oauth=object(), oauth_provider=provider) == {"auth": provider}
+
+    def test_legacy_oauth_settings_keep_sdk_provider_argument(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("slopsearx.mcp.server._MODERN_FASTMCP", False)
+        settings = object()
+        provider = object()
+        assert _fastmcp_constructor_kwargs(oauth=settings, oauth_provider=provider) == {
+            "auth": settings,
+            "auth_server_provider": provider,
+        }
+
+    def test_oauth_requires_a_provider(self) -> None:
+        with pytest.raises(ValueError, match="oauth_provider is required"):
+            _fastmcp_constructor_kwargs(oauth=object(), oauth_provider=None)
 
 
 class TestCli:

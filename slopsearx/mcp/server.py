@@ -25,7 +25,17 @@ from importlib.metadata import version as _pkg_version
 from typing import Any, AsyncIterator, Awaitable, Callable
 
 import uvicorn
-from mcp.server.fastmcp import FastMCP
+
+try:
+    # FastMCP 3.x/4.x is a standalone package. Keep the fallback for the
+    # older MCP SDK-bundled server used by the v3 deployment line.
+    from fastmcp import FastMCP
+
+    _MODERN_FASTMCP = True
+except ImportError:  # pragma: no cover - exercised only with the v3 SDK
+    from mcp.server.fastmcp import FastMCP
+
+    _MODERN_FASTMCP = False
 
 import engines  # noqa: F401 — triggers @register_engine to populate the registry
 from slopsearx import metrics as m
@@ -242,6 +252,22 @@ def _instrumented(fn: Any) -> Any:
     return wrapper
 
 
+def _fastmcp_constructor_kwargs(*, oauth: Any, oauth_provider: Any) -> dict[str, Any]:
+    """Return auth constructor arguments for the installed FastMCP API.
+
+    FastMCP 3/4 owns OAuth configuration on an ``OAuthProvider`` passed as
+    ``auth``. The older MCP SDK API instead takes ``AuthSettings`` as
+    ``auth`` and the provider as ``auth_server_provider``.
+    """
+    if oauth is None:
+        return {}
+    if oauth_provider is None:
+        raise ValueError("oauth_provider is required when oauth settings are provided")
+    if _MODERN_FASTMCP:
+        return {"auth": oauth_provider}
+    return {"auth": oauth, "auth_server_provider": oauth_provider}
+
+
 def create_server(
     host: str = "127.0.0.1",
     port: int = 8000,
@@ -265,12 +291,12 @@ def create_server(
     budget are derived from (see :func:`_lifespan`); when omitted the
     ambient layered config is loaded.
     """
-    kwargs: dict[str, Any] = {}
-    if oauth is not None:
-        if oauth_provider is None:
-            raise ValueError("oauth_provider is required when oauth settings are provided")
-        kwargs["auth"] = oauth
-        kwargs["auth_server_provider"] = oauth_provider
+    kwargs = _fastmcp_constructor_kwargs(oauth=oauth, oauth_provider=oauth_provider)
+    constructor_kwargs: dict[str, Any] = {}
+    # Modern FastMCP moved host/port to the transport runner/app. The legacy
+    # SDK still accepts these constructor arguments.
+    if not _MODERN_FASTMCP:
+        constructor_kwargs.update(host=host, port=port)
 
     mcp = FastMCP(
         "slopsearx",
@@ -278,9 +304,8 @@ def create_server(
         lifespan=lambda server: _lifespan(
             server, oauth_provider=oauth_provider, state_factory=state_factory, config=config
         ),
-        host=host,
-        port=port,
         **kwargs,
+        **constructor_kwargs,
     )
 
     # --- tools ---------------------------------------------------------
@@ -406,7 +431,7 @@ def main(argv: list[str] | None = None) -> None:
     except ValueError:
         port = 8000
 
-    if args.transport == "http":
+    if args.transport in ("http", "streamable-http"):
         policy = load_mcp_policy()
         oauth_settings, oauth_provider = oauth_settings_from_policy(policy)
         if oauth_settings is not None:
