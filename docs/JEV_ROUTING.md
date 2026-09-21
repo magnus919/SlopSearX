@@ -42,10 +42,12 @@ No separate enablement flag is required. Docker/Compose deployments may pass
 the variable through their environment or configured env file. A project-root
 `.env` file is ignored by Git, but the application process must actually load
 or receive that file; a bare Python process does not automatically read it.
-The HTTP API/portal and MCP run as separate services in the production Compose
-stack: pass the key to each container that should use Jev. Compose's own
+The HTTP API/portal and direct SlopSearX MCP run as separate services in the
+GroktoCrawl production Compose stack (the MCP companion uses the `mcp` profile).
+The stack must pass the key to each container that should use Jev. Compose's
 interpolation `.env` is not, by itself, a container environment declaration;
-verify the resolved service configuration without printing the key.
+the GroktoCrawl stack maps a nonempty `TYPESAFE_API_KEY` to both services as the
+operator's explicit opt-in. Verify presence without printing the key.
 
 Optional tuning variables are available for operators who need them:
 
