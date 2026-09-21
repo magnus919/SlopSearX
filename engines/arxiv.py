@@ -51,10 +51,14 @@ class ArxivAdapter(EngineAdapter):
         # arXiv's unquoted ``all:`` query tokenizes a natural-language query
         # with implicit OR semantics.  That makes a phrase such as
         # "graph neural networks" drift toward generic neural-network papers.
-        # Preserve explicit query syntax, but make plain multi-word queries a
-        # phrase search so the provider's relevance ordering is topical.
-        if " " in query.strip() and not any(token in query for token in ("\"", "(", ")")):
-            search_query = f'all:"{query.strip()}"'
+        # Quote only plain word/number queries. Field prefixes, boolean
+        # operators, quotes, and other explicit arXiv syntax keep the old
+        # request form.
+        stripped_query = query.strip()
+        plain_terms = re.fullmatch(r"[\w-]+(?:\s+[\w-]+)+", stripped_query)
+        has_boolean_operator = any(term.upper() in {"AND", "OR", "ANDNOT"} for term in stripped_query.split())
+        if plain_terms and not has_boolean_operator:
+            search_query = f'all:"{stripped_query}"'
         else:
             search_query = f"all:{query}"
         url_params: dict[str, Any] = {

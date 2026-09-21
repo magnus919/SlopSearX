@@ -46,8 +46,15 @@ def adapter():
     ("query", "expected"),
     (
         ("graph neural networks", 'all:"graph neural networks"'),
+        ("protein-protein interactions", 'all:"protein-protein interactions"'),
         ("graph", "all:graph"),
         ('ti:"graph neural networks"', 'all:ti:"graph neural networks"'),
+        ("ti:graph neural", "all:ti:graph neural"),
+        ("graph AND neural", "all:graph AND neural"),
+        ("graph OR neural", "all:graph OR neural"),
+        ("graph ANDNOT neural", "all:graph ANDNOT neural"),
+        ("graph and neural", "all:graph and neural"),
+        ("graph (neural networks)", "all:graph (neural networks)"),
     ),
 )
 async def test_plain_multiword_queries_use_phrase_search(adapter, query, expected):
