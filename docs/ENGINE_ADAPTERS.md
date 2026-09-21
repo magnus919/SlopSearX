@@ -189,6 +189,12 @@ Engines can declare namespace-prefixed sub-categories for fine-grained routing:
 
 Sub-categories appear in `/config` output alongside base categories and are selected with `?categories=github:code`.
 
+GitHub authentication is sub-category-specific: public repository and
+issue/PR searches may run without a token, while code search requires
+`ENGINE_GITHUB_API_KEY`. The capability catalog reports authentication at the
+engine level, so its single `auth.class` cannot express this distinction;
+the adapter behavior is authoritative for the selected sub-category.
+
 Reddit may permit anonymous JSON search from some networks, but Reddit's
 current access guidance requires a valid OAuth token (or a logged-in session)
 for requests from hosted-service IP ranges. Set `ENGINE_REDDIT_API_KEY` to an
@@ -214,7 +220,7 @@ the adapter does not fall back to browser automation or scraping.
 |---|---|---|---|---|
 | Crates.io | `engines/crates.py` | api | general, it, reference, packages | None |
 | Docker Hub | `engines/dockerhub.py` | api | general, it, reference, packages | None |
-| GitHub | `engines/github.py` | api | general, reference, github:code, github:issues, github:prs | `GITHUB_TOKEN` |
+| GitHub | `engines/github.py` | api | general, reference, github:code, github:issues, github:prs | Optional for public repository/issues; `ENGINE_GITHUB_API_KEY` required for code search |
 | npm | `engines/npm.py` | api | general, it, reference, packages | None |
 | PyPI | `engines/pypi.py` | api | general, it, reference, packages | None |
 | Repology | `engines/repology.py` | api | general, it, reference, packages | None |

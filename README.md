@@ -61,12 +61,18 @@ registry at runtime — treat them as authoritative.
 |---|---|---|---|
 | [Crates.io](https://crates.io/) | API | None | it, reference, packages |
 | [Docker Hub](https://hub.docker.com/) | API | None | it, reference, packages |
-| [GitHub](https://github.com/) | API | `GITHUB_TOKEN` | reference, github:code, github:issues, github:prs |
+| [GitHub](https://github.com/) | API | Optional for public repository/issues; `ENGINE_GITHUB_API_KEY` required for code search | reference, github:code, github:issues, github:prs |
 | [npm](https://www.npmjs.com/) | API | None | it, reference, packages |
 | [PyPI](https://pypi.org/) | API | None | it, reference, packages |
 | [Repology](https://repology.org/) | API | None | it, reference, packages |
 | [RubyGems](https://rubygems.org/) | API | None | it, reference, packages |
 | [Stack Exchange](https://stackexchange.com/) | API | Optional | general, reference, science, stackexchange:code, stackexchange:serverfault |
+
+GitHub authentication is sub-category-specific: public repository and
+issue/PR searches may run without a token, while code search requires
+`ENGINE_GITHUB_API_KEY`. The capability catalog reports authentication at the
+engine level, so its single `auth.class` cannot express this distinction;
+the adapter behavior is authoritative for the selected sub-category.
 
 ### Science & Research
 
