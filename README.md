@@ -65,7 +65,7 @@ registry at runtime — treat them as authoritative.
 | [npm](https://www.npmjs.com/) | API | None | it, reference, packages |
 | [PyPI](https://pypi.org/) | API | None | it, reference, packages |
 | [RubyGems](https://rubygems.org/) | API | None | it, reference, packages |
-| [Stack Exchange](https://stackexchange.com/) | API | Optional | general, reference, science, stackexchange:code, stackexchange:serverfault |
+| [Stack Exchange](https://stackexchange.com/) | API | Optional app key: `ENGINE_STACKEXCHANGE_API_KEY` | general, reference, science, stackexchange:code, stackexchange:serverfault |
 
 GitHub authentication is sub-category-specific: public repository and
 issue/PR searches may run without a token, while code search requires
@@ -78,7 +78,7 @@ the adapter behavior is authoritative for the selected sub-category.
 | Engine | Type | Auth | Categories |
 |---|---|---|---|
 | [arXiv](https://arxiv.org/) | API | None | science, reference |
-| [HuggingFace](https://huggingface.co/) | API | `HF_TOKEN` (optional) | science, huggingface:datasets, huggingface:papers |
+| [HuggingFace](https://huggingface.co/) | API | `HF_TOKEN` or `ENGINE_HUGGINGFACE_API_KEY` (optional) | science, huggingface:datasets, huggingface:papers |
 | [OpenAlex](https://openalex.org/) | API | None | science, reference |
 | [Open Library](https://openlibrary.org/) | API | None | books, reference |
 | [Semantic Scholar](https://www.semanticscholar.org/) | API | Optional | science, reference |

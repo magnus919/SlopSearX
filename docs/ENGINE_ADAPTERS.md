@@ -246,14 +246,14 @@ the adapter does not fall back to browser automation or scraping.
 | npm | `engines/npm.py` | api | general, it, reference, packages | None |
 | PyPI | `engines/pypi.py` | api | general, it, reference, packages | None |
 | RubyGems | `engines/rubygems.py` | api | general, it, reference, packages | None |
-| Stack Exchange | `engines/stackexchange.py` | api | general, reference, science, stackexchange:code, stackexchange:serverfault | Optional app key |
+| Stack Exchange | `engines/stackexchange.py` | api | general, reference, science, stackexchange:code, stackexchange:serverfault | Optional app key: `ENGINE_STACKEXCHANGE_API_KEY` |
 
 ### Science & Research
 
 | Adapter | File | Type | Categories | Auth |
 |---|---|---|---|---|
 | arXiv | `engines/arxiv.py` | api | general, science, reference | None |
-| HuggingFace | `engines/huggingface.py` | api | general, science, huggingface:datasets, huggingface:papers | `HF_TOKEN` (optional) |
+| HuggingFace | `engines/huggingface.py` | api | general, science, huggingface:datasets, huggingface:papers | `HF_TOKEN` or `ENGINE_HUGGINGFACE_API_KEY` (optional) |
 | Internet Archive | `engines/internetarchive.py` | api | reference, web:archive, historical | None |
 | OpenAlex | `engines/openalex.py` | api | general, science, reference | None |
 | Open Library | `engines/openlibrary.py` | api | general, books, reference | None |
