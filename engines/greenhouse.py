@@ -47,7 +47,11 @@ class GreenhouseAdapter(EngineAdapter):
 
         company_slug, company_name = extract_company(query)
         if company_slug is None:
-            return AdapterResponse(results=[], status=EngineStatus.OK)
+            return AdapterResponse(
+                results=[],
+                status=EngineStatus.UNAVAILABLE,
+                error_message="company-scoped search requires a company name",
+            )
 
         cfg = self.config
         base_url = cfg.get("base_url", "https://boards-api.greenhouse.io/v1/boards")

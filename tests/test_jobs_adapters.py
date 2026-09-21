@@ -171,7 +171,8 @@ class TestGreenhouseAdapter:
 
     async def test_search_no_company_returns_empty(self, adapter):
         result = await adapter.search("python jobs")
-        assert result.status == EngineStatus.OK
+        assert result.status == EngineStatus.UNAVAILABLE
+        assert result.error_message == "company-scoped search requires a company name"
         assert result.results == []
 
     async def test_search_404_returns_empty(self, adapter):
@@ -184,6 +185,7 @@ class TestGreenhouseAdapter:
         async with MockHTTP(lambda r: httpx.Response(200, json={"jobs": []})):
             result = await adapter.search("Engineer at SomeCo")
         assert result.status == EngineStatus.OK
+        assert result.error_message is None
         assert result.results == []
 
     async def test_search_rate_limited(self, adapter):
@@ -269,7 +271,8 @@ class TestAshbyAdapter:
 
     async def test_search_no_company_returns_empty(self, adapter):
         result = await adapter.search("python jobs")
-        assert result.status == EngineStatus.OK
+        assert result.status == EngineStatus.UNAVAILABLE
+        assert result.error_message == "company-scoped search requires a company name"
         assert result.results == []
 
     async def test_search_404_returns_empty(self, adapter):
@@ -282,6 +285,7 @@ class TestAshbyAdapter:
         async with MockHTTP(lambda r: httpx.Response(200, json={"data": {"jobBoard": {"jobPostings": []}}})):
             result = await adapter.search("Engineer at SomeCo")
         assert result.status == EngineStatus.OK
+        assert result.error_message is None
         assert result.results == []
 
     async def test_search_rate_limited(self, adapter):
@@ -395,7 +399,8 @@ class TestLeverAdapter:
 
     async def test_search_no_company_returns_empty(self, adapter):
         result = await adapter.search("python jobs")
-        assert result.status == EngineStatus.OK
+        assert result.status == EngineStatus.UNAVAILABLE
+        assert result.error_message == "company-scoped search requires a company name"
         assert result.results == []
 
     async def test_search_404_returns_empty(self, adapter):
@@ -408,6 +413,7 @@ class TestLeverAdapter:
         async with MockHTTP(lambda r: httpx.Response(200, json=[])):
             result = await adapter.search("Engineer at SomeCo")
         assert result.status == EngineStatus.OK
+        assert result.error_message is None
         assert result.results == []
 
     async def test_search_rate_limited(self, adapter):
