@@ -43,3 +43,15 @@ changes and ensure no unnecessary personal fields were retained. Fixture
 sanitization intentionally omits abstracts and npm popularity metadata; crates
 download counts are retained because its parser uses them. Ordinary unit tests
 remain necessary for adapter branches whose fields were omitted.
+
+The Internet Archive adapter's domain path first queries the Wayback CDX API. If
+that request fails or times out, it makes at most one bounded request to the
+official Availability API for the requested domain. A valid `closest` record
+produces exactly one result (for example, a `whitehouse.gov` snapshot), with an
+HTTPS-normalized `web.archive.org` URL. It is explicitly described as one
+closest snapshot, not as a CDX history. Missing snapshots remain an honest
+empty result; malformed or untrusted returned URLs, blocked responses, and
+timeouts remain classified failures. The CDX and fallback calls share one
+aggregate timeout, with a reserved budget for the fallback. See the Internet
+Archive's [official Wayback developer resources](https://archivesupport.zendesk.com/hc/en-us/articles/360001495812-Developer-Resources)
+for the upstream API reference.

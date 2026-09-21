@@ -203,8 +203,7 @@ class TestCatalogFeatureMatrix:
         catalog = _catalog()
         # OpenAlex distinguishes upstream/local throttling, timeouts, and errors.
         assert catalog.get("openalex").failure_classes == ["rate_limited", "error", "timeout"]  # type: ignore[union-attr]
-        # Internet Archive classifies upstream errors as a generic ERROR.
-        assert catalog.get("internetarchive").failure_classes == ["error"]  # type: ignore[union-attr]
+        assert catalog.get("internetarchive").failure_classes == ["rate_limited", "blocked", "error", "timeout"]  # type: ignore[union-attr]
         # Two-class failures.
         assert catalog.get("hackernews").failure_classes == ["error", "timeout"]  # type: ignore[union-attr]
         assert catalog.get("pypi").failure_classes == ["error", "timeout"]  # type: ignore[union-attr]
@@ -222,7 +221,7 @@ class TestCatalogFeatureMatrix:
         assert internetarchive.enabled is False
         assert internetarchive.cost_class == "free"
         assert internetarchive.supported_result_types == ["text"]
-        assert internetarchive.failure_classes == ["error"]
+        assert internetarchive.failure_classes == ["rate_limited", "blocked", "error", "timeout"]
         assert internetarchive.supported_filters["safesearch"] is False
 
     def test_catalog_reflects_instance_declarations_consistently(self) -> None:
