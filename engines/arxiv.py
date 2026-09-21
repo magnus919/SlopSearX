@@ -48,8 +48,19 @@ class ArxivAdapter(EngineAdapter):
         timeout_ms = cfg.get("timeout_ms", 10_000)
         max_results = cfg.get("max_results", 5)
 
-        # arXiv ToS: max 1 request per 3 seconds — enforced here
-        search_query = f"all:{query}"
+        # arXiv's unquoted ``all:`` query tokenizes a natural-language query
+        # with implicit OR semantics.  That makes a phrase such as
+        # "graph neural networks" drift toward generic neural-network papers.
+        # Quote only plain word/number queries. Field prefixes, boolean
+        # operators, quotes, and other explicit arXiv syntax keep the old
+        # request form.
+        stripped_query = query.strip()
+        plain_terms = re.fullmatch(r"[\w-]+(?:\s+[\w-]+)+", stripped_query)
+        has_boolean_operator = any(term.upper() in {"AND", "OR", "ANDNOT"} for term in stripped_query.split())
+        if plain_terms and not has_boolean_operator:
+            search_query = f'all:"{stripped_query}"'
+        else:
+            search_query = f"all:{query}"
         url_params: dict[str, Any] = {
             "search_query": search_query,
             "start": 0,
