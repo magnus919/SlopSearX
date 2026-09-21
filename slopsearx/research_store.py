@@ -14,6 +14,7 @@ from dataclasses import replace
 from typing import Any, Callable
 
 from slopsearx import metrics as m
+from slopsearx.research_budget import ResearchMutationError
 from slopsearx.research_models import (
     LeaseLostError,
     ResearchJob,
@@ -753,6 +754,7 @@ class ResearchJobStore:
         owner_id: str,
         lease_ttl: int,
         mutate: Callable[[ResearchJob], None] | None = None,
+        metadata_only: bool = False,
     ) -> ResearchJob | None:
         """Claim a job under a fresh lease, re-applying the caller's mutation.
 
@@ -781,8 +783,25 @@ class ResearchJobStore:
             current.lease_token = token
             current.lease_expires_at = time.time() + lease_ttl
             current.cancel_requested = current.cancel_requested or job.cancel_requested
-            if current.state in ("cancelled", "expired") or current.caller_completed:
+            budget_terminal = current.stop_reason in {
+                "result_budget_exhausted",
+                "attempt_budget_exhausted",
+                "engine_budget_exhausted",
+            }
+            if current.state in ("cancelled", "expired"):
                 pass
+            elif current.caller_completed and metadata_only:
+                if mutate is not None:
+                    mutate(current)
+            elif current.caller_completed:
+                pass
+            elif metadata_only and budget_terminal:
+                if mutate is not None:
+                    mutate(current)
+            elif metadata_only and time.time() >= current.deadline:
+                raise ResearchMutationError(
+                    "deadline_exceeded", "metadata-only completion is not allowed for this execution outcome"
+                )
             elif time.time() >= current.deadline:
                 for query in current.queries:
                     if query.state in ("pending", "running"):

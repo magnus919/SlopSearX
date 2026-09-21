@@ -2,6 +2,7 @@
 
 import asyncio
 import copy
+import time
 
 import pytest
 
@@ -26,12 +27,17 @@ def state():
 
 
 async def start(state, **kwargs):
+    subquestions = (
+        [{"id": "a", "question": "maintenance?"}]
+        if kwargs.get("max_queries") == 1
+        else [{"id": "a", "question": "maintenance?"}, {"id": "b", "question": "alternatives?"}]
+    )
     args = {
         "question": "investigate",
         "max_queries": 3,
         "max_attempts": 3,
         "initial_plan": [{"query": "first", "engines": ["wikipedia"], "subquestion_id": "a", "rationale": "baseline"}],
-        "subquestions": [{"id": "a", "question": "maintenance?"}, {"id": "b", "question": "alternatives?"}],
+        "subquestions": subquestions,
     }
     args.update(kwargs)
     response = await t.slopsearx_start_research(**args)
@@ -126,6 +132,103 @@ async def test_result_budget_admits_records_without_truncating_snapshot(state):
     assert len(flat["results"]) == 3
     next_query = await t.slopsearx_extend_research(first["job_id"], "next", engines=["wikipedia"])
     assert next_query["error"]["code"] == "job_budget_exceeded"
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "follow_up"),
+    [
+        ({"max_queries": 1}, True),
+        ({"max_results": 1}, False),
+        ({"max_attempts": 1}, True),
+        ({"max_engine_attempts": 1}, True),
+    ],
+)
+async def test_every_execution_budget_stops_dispatch_without_caller_completion(state, kwargs, follow_up):
+    first = await start(state, **kwargs)
+    calls = state.ctx.active_engines["wikipedia"].calls
+    if follow_up:
+        response = await t.slopsearx_extend_research(first["job_id"], "next", engines=["wikipedia"])
+        assert response["error"]["code"] == "job_budget_exceeded"
+    else:
+        assert first["stop_reason"] == "result_budget_exhausted"
+    current = await state.job_store.load(first["job_id"])
+    assert current.caller_completed is False
+    assert state.ctx.active_engines["wikipedia"].calls == calls
+
+
+async def test_budget_exhausted_completion_is_metadata_only_after_deadline(state):
+    first = await start(state, max_results=1)
+    before = await state.job_store.load(first["job_id"])
+    before_payload = _job_to_payload(before)
+    before.deadline = time.time() - 1
+    await state.job_store.save(before)
+
+    completed = await t.slopsearx_update_research(
+        first["job_id"], {"a": "resolved"}, complete=True, rationale="enough evidence"
+    )
+    assert completed["state"] == before.state == "succeeded"
+    assert completed["stop_reason"] == "result_budget_exhausted"
+    assert completed["caller_completed"] is True
+    assert completed["completion_rationale"] == "enough evidence"
+    after = await state.job_store.load(first["job_id"])
+    after_payload = _job_to_payload(after)
+    assert after_payload["caller_completed"] is True
+    assert after_payload["completion_rationale"] == "enough evidence"
+    for field in ("state", "stop_reason", "queries", "budget_limits", "budget_used", "seen_lead_ids"):
+        assert after_payload[field] == before_payload[field]
+    assert state.ctx.active_engines["wikipedia"].calls == 1
+
+    replay = await t.slopsearx_update_research(
+        first["job_id"], {"a": "resolved"}, complete=True, rationale="enough evidence"
+    )
+    assert replay == completed
+    conflict = await t.slopsearx_update_research(
+        first["job_id"], {"a": "unresolved"}, complete=True, rationale="different"
+    )
+    assert conflict["error"]["code"] == "idempotency_conflict"
+    assert await state.job_store.load(first["job_id"]) == after
+
+
+async def test_completion_conflict_is_fenced_against_stale_preflight_copy(state, monkeypatch):
+    first = await start(state, max_results=1)
+    stale = await state.job_store.load(first["job_id"])
+    accepted = await t.slopsearx_update_research(
+        first["job_id"], {"a": "resolved"}, complete=True, rationale="first decision"
+    )
+    assert accepted["caller_completed"] is True
+    original_load = state.job_store.load
+    returned_stale = False
+
+    async def stale_once(job_id):
+        nonlocal returned_stale
+        if not returned_stale:
+            returned_stale = True
+            return stale
+        return await original_load(job_id)
+
+    monkeypatch.setattr(state.job_store, "load", stale_once)
+    conflict = await t.slopsearx_update_research(
+        first["job_id"], {"a": "unresolved"}, complete=True, rationale="different decision"
+    )
+    assert conflict["error"]["code"] == "idempotency_conflict"
+    current = await original_load(first["job_id"])
+    assert current.caller_completed is True
+    assert current.completion_rationale == "first decision"
+
+
+async def test_metadata_only_completion_does_not_expire_non_budget_terminal_job(state):
+    first = await start(state)
+    current = await state.job_store.load(first["job_id"])
+    current.deadline = time.time() - 1
+    await state.job_store.save(current)
+    response = await t.slopsearx_update_research(
+        first["job_id"], {"a": "resolved"}, complete=True, rationale="late decision"
+    )
+    assert response["error"]["code"] == "deadline_exceeded"
+    unchanged = await state.job_store.load(first["job_id"])
+    assert unchanged.state == "succeeded"
+    assert unchanged.stop_reason == "plan_executed"
+    assert unchanged.caller_completed is False
 
 
 async def test_lower_attempt_budget_survives_retry(state):

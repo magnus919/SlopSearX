@@ -452,6 +452,7 @@ class ResearchJobRunner:
         *,
         mutate: Callable[[ResearchJob], None] | None = None,
         execute: bool = True,
+        metadata_only: bool = False,
     ) -> ResearchJob:
         """Apply a mutation and optionally execute while holding a fenced lease.
 
@@ -459,7 +460,9 @@ class ResearchJobRunner:
         apply a stale caller copy or write after releasing lease ownership.
         """
         store = self._jobs_for(job.tenant)
-        claimed = await store._claim_prepared(job, self._owner_id, self._lease_ttl, mutate=mutate)
+        claimed = await store._claim_prepared(
+            job, self._owner_id, self._lease_ttl, mutate=mutate, metadata_only=metadata_only
+        )
         if claimed is None:
             raise JobStillRunningError(job.job_id)
         token = claimed.lease_token
