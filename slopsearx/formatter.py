@@ -894,6 +894,11 @@ def format_html(
     scope_note = (
         f"{scope_label} · {responded_count} of {selected_count} sources answered" if selected_count else scope_label
     )
+    jev_added = _portal_state_value(state, "jev_added_engines", [])
+    jev_note = ""
+    if isinstance(jev_added, (list, tuple)) and jev_added:
+        names = ", ".join(html_lib.escape(str(name), quote=True) for name in jev_added)
+        jev_note = f'<br><span class="scope-summary">Specialists added by Jev: {names}</span>'
     current_page = max(1, int(_portal_state_value(state, "page", 1) or 1))
     previous = current_page > 1
     # Most upstream engines do not expose an authoritative total.  Callers
@@ -964,7 +969,7 @@ def format_html(
 <main class="portal">
   <header class="masthead"><a class="brand" href="/"><span class="brand-mark"><span>⌁</span></span><span>SLOPSEARX</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Darker mode</button></header>
   <section class="results-shell" aria-labelledby="results-title">
-    <div class="results-top"><div><div class="eyebrow">Search results</div><h1 id="results-title">{escaped_query}</h1></div><p class="summary">{len(results)} results · {elapsed} ms<br>{scope_note}</p></div>
+    <div class="results-top"><div><div class="eyebrow">Search results</div><h1 id="results-title">{escaped_query}</h1></div><p class="summary">{len(results)} results · {elapsed} ms<br>{scope_note}{jev_note}</p></div>
     <section class="search-panel" aria-label="Refine search"><form class="search-form" action="/search" method="get"><label class="sr-only" for="portal-query">Search SlopSearX</label><input class="search-input" id="portal-query" name="q" type="search" value="{escaped_query}" required>{search_hidden}<button class="search-button" type="submit">Search ↗</button></form></section>
     {_portal_scope_panel(state)}
     {unavailable}
@@ -1046,6 +1051,8 @@ def format_yaml_markdown(
             "deadline_exceeded": meta.get("deadline_exceeded", False),
             "query_id": meta.get("query_id", ""),
         }
+        if "jev_routing" in meta:
+            yaml_section["meta"]["jev_routing"] = meta["jev_routing"]
         # Count responsive engines from engine_status
         if "engine_status" in meta:
             yaml_section["meta"]["engine_count"] = len(meta["engine_status"])

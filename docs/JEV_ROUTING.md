@@ -25,6 +25,13 @@ The response records successful additions under `meta.jev_routing`, including
 the selected engine names and their scores. The API key is never included in
 logs, cache keys, responses, or routing metadata.
 
+JSON and YAML HTTP output, including `ssx` output, carry this metadata. MCP
+search and scope-preview output carry the same additions under `jev_routing`.
+The web portal names added specialists beside the result count. Routing scores
+describe estimated retrieval fit; they are not confidence that a result is true.
+MCP scope preview does not dispatch search engines, but may incur one billable
+Jev request on a cache miss. A later search can reroute if eligibility changes.
+
 ## Configuration
 
 ```bash
@@ -35,6 +42,12 @@ No separate enablement flag is required. Docker/Compose deployments may pass
 the variable through their environment or configured env file. A project-root
 `.env` file is ignored by Git, but the application process must actually load
 or receive that file; a bare Python process does not automatically read it.
+The HTTP API/portal and direct SlopSearX MCP run as separate services in the
+GroktoCrawl production Compose stack (the MCP companion uses the `mcp` profile).
+The stack must pass the key to each container that should use Jev. Compose's
+interpolation `.env` is not, by itself, a container environment declaration;
+the GroktoCrawl stack maps a nonempty `TYPESAFE_API_KEY` to both services as the
+operator's explicit opt-in. Verify presence without printing the key.
 
 Optional tuning variables are available for operators who need them:
 

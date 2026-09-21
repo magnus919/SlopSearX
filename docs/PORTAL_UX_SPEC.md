@@ -58,6 +58,9 @@ return to the same query by copying the URL.
    Ranking is described as ordering rather than confidence, and retrieval
    eligibility never implies that a page was fetched, safe, correct, or
    verified.
+   When optional Jev routing adds specialists to an automatic search, the
+   results summary names those engines. It does not present routing scores as
+   factual confidence or imply that a source verified the result.
 4. **Recover from partial search:** a partial banner names the unavailable or
    empty sources and keeps successful results usable. An all-source failure
    explains that no result was available and offers a retry.

@@ -80,6 +80,7 @@ def test_results_journey_keeps_links_and_escaped_content() -> None:
         "responsive_engine_count": 1,
         "category_options": ["general"],
         "scope_label": "general",
+        "jev_added_engines": ["pubmed"],
     }
 
     with playwright.sync_playwright() as api:
@@ -93,6 +94,7 @@ def test_results_journey_keeps_links_and_escaped_content() -> None:
         assert page.get_by_role("article").get_by_text("Wikipedia").first.is_visible()
         assert page.get_by_role("link", name="Open JSON view ↗", exact=True).is_visible()
         assert page.get_by_role("complementary", name="Search summary").is_visible()
+        assert page.get_by_text("Specialists added by Jev: pubmed").is_visible()
         assert page.get_by_role("link", name="Previous result page").get_attribute("href")
         assert page.get_by_role("link", name="Try next result page").get_attribute("href")
         assert page.get_by_role("combobox", name="Scope").is_visible()

@@ -550,6 +550,27 @@ class TestPortalHtml:
         assert 'href="#"' in output
         assert "javascript:" not in output
 
+    def test_jev_specialists_are_named_without_trusting_engine_text(self) -> None:
+        result = _make_result("https://example.com", "A result")
+        output = format_html(
+            [result],
+            "query",
+            portal_state={"jev_added_engines": ["pubmed", "<script>bad</script>"]},
+        )
+        assert "Specialists added by Jev: pubmed, &lt;script&gt;bad&lt;/script&gt;" in output
+        assert "<script>bad</script>" not in output
+
+    def test_yaml_retains_jev_routing_metadata(self) -> None:
+        output = format_yaml_markdown(
+            [_make_result("https://example.com", "A result")],
+            "query",
+            meta={"jev_routing": {"added_engines": ["pubmed"], "scores": {"pubmed": 0.91}}},
+        )
+        assert next(yaml.safe_load_all(output))["meta"]["jev_routing"] == {
+            "added_engines": ["pubmed"],
+            "scores": {"pubmed": 0.91},
+        }
+
     def test_result_page_restores_only_safe_highlight_tags(self) -> None:
         result = _make_result(
             "https://example.com",

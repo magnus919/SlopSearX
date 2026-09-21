@@ -617,6 +617,7 @@ def _portal_state(
         "scope_note": warnings[0] if warnings else "",
         "selected_engine_count": len(selected),
         "responsive_engine_count": sum(1 for outcome in response.engine_outcomes if outcome.status == "ok"),
+        "jev_added_engines": list(response.scope.jev_added_engines),
         "filter_enforcement": enforcement,
         "ranking_explanation": response.ranking_explanation,
         "grouping_status": grouping_status,

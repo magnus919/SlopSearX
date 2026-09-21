@@ -217,6 +217,8 @@ def _snapshot_from_payload(payload: dict[str, Any]) -> SearchSnapshot:
             routing_rule=str(scope.get("routing_rule") or ""),
             matched_topic=scope.get("matched_topic"),
             warnings=list(scope.get("warnings") or []),
+            jev_added_engines=list(scope.get("jev_added_engines") or []),
+            jev_scores={str(name): float(score) for name, score in (scope.get("jev_scores") or {}).items()},
         ),
         total=int(payload.get("total", 0)),
         tenant=str(payload.get("tenant", "")),

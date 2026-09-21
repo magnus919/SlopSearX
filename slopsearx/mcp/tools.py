@@ -144,7 +144,6 @@ from slopsearx.service import (
     QueryValidationError,
     RateLimitExceededError,
     ScopeDecision,
-    ScopeResolver,
     SearchRequest,
 )
 
@@ -356,38 +355,22 @@ def _safesearch_warning(state: McpState, selected_engines: list[str], safesearch
     return ["moderate safesearch is requested but may not be enforced by every adapter"]
 
 
-def _preview_selected_engines(
+async def _preview_selected_engines(
     state: McpState,
     query: str,
     categories: list[str] | None,
     engines: list[str] | None,
     media_type: str | None = None,
-) -> list[str]:
+) -> ScopeDecision:
     """Preview the engine scope that would execute for a request (no dispatch).
 
-    Mirrors the service's scope resolution exactly (same active engines,
-    router, tier-1 set, sensitive set, capability catalog, routing budget,
-    and media-type constraint) so mandatory-constraint checks can fail closed
-    *before* any engine is dispatched. The real ``query`` is passed through
-    so auto-intent topic routing previews the same scope the service will
-    dispatch — an empty-query preview would fall back to the tier-1 set and
-    mask non-conforming topic scopes. The catalog comes from the shared
-    context (wired by the server lifespan) so the preview and the executed
-    scope agree on cost/coverage-aware automatic routing (issue 192), and the
-    media-type constraint keeps the media intents' scope consistent (issue
-    188).
+    Uses the same service path as execution, including optional Jev advice.
+    No engine searches run, but a Jev cache miss can incur a provider request.
     """
-    resolver = ScopeResolver(
-        active_engines=state.ctx.active_engines,
-        router=state.ctx.router,
-        tier1_engines=state.ctx.tier1_engines,
-        sensitive_engines=state.ctx.sensitive_engines,
-        catalog=state.ctx.catalog,
-        budget=state.ctx.routing_budget,
-    )
-    return resolver.explain(
+    decision = await state.service.resolve_scope(
         SearchRequest(query=query, categories=categories, engines=engines, media_type=media_type)
-    ).selected_engines
+    )
+    return decision
 
 
 def _strict_safesearch_satisfiable(state: McpState, selected_engines: list[str]) -> bool:
@@ -537,6 +520,11 @@ def _envelope(
         "excluded_engines": excluded_engines,
         "routing": _routing_scope_block(response.scope),
     }
+    if response.scope.jev_added_engines:
+        scope["jev_routing"] = {
+            "added_engines": list(response.scope.jev_added_engines),
+            "scores": dict(response.scope.jev_scores),
+        }
     if response.all_unresponsive:
         return _error(
             "all_engines_failed",
@@ -610,6 +598,7 @@ async def _run_search(
     enforcement: dict[str, Any] | None = None,
     core_filters: dict[str, Any] | None = None,
     include_payload: bool = False,
+    resolved_scope: ScopeDecision | None = None,
 ) -> dict[str, Any]:
     """Execute one search through the service and build the envelope.
 
@@ -624,7 +613,7 @@ async def _run_search(
     actually ran once per-engine ``supported_filters`` are declared.
     """
     try:
-        response = await state.service.search(request)
+        response = await state.service.search(request, resolved_scope=resolved_scope)
     except QueryValidationError as exc:
         rejected = _error("invalid_input", str(exc), field=exc.field)
         if exc.field != "query":
@@ -783,7 +772,10 @@ async def slopsearx_search(
 
     # Preview the scope that will execute so strict SafeSearch and the filter
     # warnings are resolved against the same engine set the report will name.
-    selected = _preview_selected_engines(state, query, resolved_categories, resolved_engines, resolved_media_type)
+    preview_scope = await _preview_selected_engines(
+        state, query, resolved_categories, resolved_engines, resolved_media_type
+    )
+    selected = preview_scope.selected_engines
 
     # A media-intent search that resolves to no engines reports the coverage
     # gap explicitly instead of surfacing a misleading "all engines failed".
@@ -833,6 +825,7 @@ async def slopsearx_search(
         max_results=max_results,
         core_filters={"language": language, "time_range": time_range, "safesearch": safesearch},
         include_payload="payload" in include_set,
+        resolved_scope=preview_scope,
     )
 
 
@@ -1264,9 +1257,10 @@ async def slopsearx_explain_search_scope(
 ) -> dict[str, Any]:
     """Dry-run routing preview: which engines would run and why.
 
-    Executes no searches and spends no rate limits. Useful to correct
-    scope before dispatching. ``media_type`` (image | video) constrains the
-    preview to engines that advertise the requested media type.
+    Executes no engine searches and spends no engine rate limits. With Jev
+    enabled, an unscoped preview may make one billable Jev call on a cache
+    miss. ``media_type`` (image | video) constrains the preview to engines
+    that advertise the requested media type.
     """
     state = get_state()
     error = _validate_query(query, state)
@@ -1293,15 +1287,7 @@ async def slopsearx_explain_search_scope(
         if policy_error:
             return policy_error
 
-    resolver = ScopeResolver(
-        active_engines=state.ctx.active_engines,
-        router=state.ctx.router,
-        tier1_engines=state.ctx.tier1_engines,
-        sensitive_engines=state.policy.sensitive_engines,
-        catalog=state.ctx.catalog,
-        budget=state.ctx.routing_budget,
-    )
-    decision = resolver.explain(
+    decision = await state.service.resolve_scope(
         SearchRequest(
             query=query,
             categories=resolved_categories,
@@ -1309,7 +1295,7 @@ async def slopsearx_explain_search_scope(
             media_type=resolved_media_type,
         )
     )
-    return {
+    result = {
         "selected_engines": decision.selected_engines,
         "excluded_engines": _excluded_engines_list(decision),
         "routing": _routing_scope_block(decision),
@@ -1323,6 +1309,12 @@ async def slopsearx_explain_search_scope(
         "media_type": resolved_media_type,
         "warnings": warnings + decision.warnings,
     }
+    if decision.jev_added_engines:
+        result["jev_routing"] = {
+            "added_engines": list(decision.jev_added_engines),
+            "scores": dict(decision.jev_scores),
+        }
+    return result
 
 
 def _engine_health_by_class(state: McpState) -> dict[str, Any]:

@@ -643,8 +643,12 @@ whether credentials are configured; **never the key values**).
 ### 6.7 `slopsearx_explain_search_scope`
 
 Dry-run routing preview: which engines would run, which were excluded and
-why, the routing rule, and the matched topic. Executes nothing and spends
-no rate limits — call it before dispatching a costly search.
+why, the routing rule, and the matched topic. It makes no engine search calls
+and spends no engine rate limits. With `TYPESAFE_API_KEY` configured on the MCP
+service, an unscoped preview includes Jev-added specialists and may make one
+billable Jev request on a routing-cache miss. The preview and search expose
+those additions and routing scores in `jev_routing`; scores estimate specialist
+retrieval fit, not factual confidence.
 
 ### 6.8 `slopsearx_get_service_status`
 
@@ -946,7 +950,10 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
 ## 8. Agent usage guide
 
 - **Prefer intent over explicit engines.** `intent=auto` uses query-topic
-  routing with a tier-1 fallback. Preview it with `slopsearx_explain_search_scope`.
+  routing with a tier-1 fallback and, when configured, additive Jev specialist
+  routing. Preview it with `slopsearx_explain_search_scope` when the preview's
+  possible Jev cost is warranted. Explicit engine/category/media scopes do not
+  invoke Jev.
 - **Check `engine_outcomes`.** Partial results are normal — some sources
   block, time out, or rate-limit. Absence from a source is not proof of
   absence of the thing searched.

@@ -30,6 +30,23 @@ proxy. For a public deployment, require TLS and proxy authentication before
 forwarding to port 8080. The application does not trust arbitrary forwarded
 headers, and engine API keys remain server-side.
 
+Optional Jev specialist routing is enabled independently in each container
+that receives `TYPESAFE_API_KEY`. The portal and HTTP API share one process;
+direct SlopSearX MCP is a separate container under the production Compose
+stack's `mcp` profile. The GroktoCrawl stack maps a nonempty key from its
+`.env` to both services as the operator's explicit cost opt-in. If the key is
+absent, both retain deterministic routing. A Compose `.env` used for variable
+interpolation is not automatically inherited by containers; check each
+service's `environment` wiring. Verify presence without displaying the secret:
+
+```bash
+docker compose exec -T slopsearx sh -c 'test -n "$TYPESAFE_API_KEY"'
+docker compose --profile mcp exec -T slopsearx-mcp sh -c 'test -n "$TYPESAFE_API_KEY"'
+```
+
+Do not put the key in a ConfigMap, image, URL, or logs. A keyless deployment
+requires no Jev configuration and remains fully functional.
+
 The separately gated protected workflow portal follows
 [`ADR 002`](adr/002-browser-identity-and-tenant-isolation.md). Its primary
 identity mode is a dedicated OIDC client with an opaque server-side session;
