@@ -1,0 +1,986 @@
+[
+  {
+    "arm": "compound",
+    "family": "package",
+    "gold_conceptual": [
+      "npm"
+    ],
+    "gold_useful": [
+      "npm"
+    ],
+    "id": "p01",
+    "input_tokens": 980,
+    "latency_ms": 387.05404195934534,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.2,
+      "npm": 0.92,
+      "openalex": 0.04
+    },
+    "scores": {
+      "internetarchive": 0.2,
+      "npm": 0.92,
+      "openalex": 0.04
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "atomic",
+    "family": "package",
+    "gold_conceptual": [
+      "npm"
+    ],
+    "gold_useful": [
+      "npm"
+    ],
+    "id": "p01",
+    "input_tokens": 1177,
+    "latency_ms": 158.15699996892363,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.24,
+      "internetarchive_incremental": 0.62,
+      "npm_domain": 0.96,
+      "npm_incremental": 0.86,
+      "openalex_domain": 0.04,
+      "openalex_incremental": 0.21
+    },
+    "scores": {
+      "internetarchive": 0.24,
+      "npm": 0.86,
+      "openalex": 0.04
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "atomic",
+    "family": "package",
+    "gold_conceptual": [
+      "npm"
+    ],
+    "gold_useful": [
+      "npm"
+    ],
+    "id": "p02",
+    "input_tokens": 1116,
+    "latency_ms": 171.47704196395352,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.29,
+      "internetarchive_incremental": 0.64,
+      "npm_domain": 0.95,
+      "npm_incremental": 0.91,
+      "openalex_domain": 0.04,
+      "openalex_incremental": 0.28
+    },
+    "scores": {
+      "internetarchive": 0.29,
+      "npm": 0.91,
+      "openalex": 0.04
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "compound",
+    "family": "package",
+    "gold_conceptual": [
+      "npm"
+    ],
+    "gold_useful": [
+      "npm"
+    ],
+    "id": "p02",
+    "input_tokens": 919,
+    "latency_ms": 221.74587502377108,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.23,
+      "npm": 0.91,
+      "openalex": 0.03
+    },
+    "scores": {
+      "internetarchive": 0.23,
+      "npm": 0.91,
+      "openalex": 0.03
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "compound",
+    "family": "package",
+    "gold_conceptual": [
+      "npm"
+    ],
+    "gold_useful": [
+      "npm"
+    ],
+    "id": "p03",
+    "input_tokens": 958,
+    "latency_ms": 165.23187496932223,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.24,
+      "npm": 0.87,
+      "openalex": 0.04
+    },
+    "scores": {
+      "internetarchive": 0.24,
+      "npm": 0.87,
+      "openalex": 0.04
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "atomic",
+    "family": "package",
+    "gold_conceptual": [
+      "npm"
+    ],
+    "gold_useful": [
+      "npm"
+    ],
+    "id": "p03",
+    "input_tokens": 1155,
+    "latency_ms": 183.9794159750454,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.32,
+      "internetarchive_incremental": 0.62,
+      "npm_domain": 0.95,
+      "npm_incremental": 0.85,
+      "openalex_domain": 0.04,
+      "openalex_incremental": 0.25
+    },
+    "scores": {
+      "internetarchive": 0.32,
+      "npm": 0.85,
+      "openalex": 0.04
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "atomic",
+    "family": "scholarly",
+    "gold_conceptual": [
+      "openalex"
+    ],
+    "gold_useful": [
+      "openalex"
+    ],
+    "id": "s01",
+    "input_tokens": 1190,
+    "latency_ms": 153.7336659966968,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.29,
+      "internetarchive_incremental": 0.55,
+      "npm_domain": 0.02,
+      "npm_incremental": 0.18,
+      "openalex_domain": 0.95,
+      "openalex_incremental": 0.72
+    },
+    "scores": {
+      "internetarchive": 0.29,
+      "npm": 0.02,
+      "openalex": 0.72
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "compound",
+    "family": "scholarly",
+    "gold_conceptual": [
+      "openalex"
+    ],
+    "gold_useful": [
+      "openalex"
+    ],
+    "id": "s01",
+    "input_tokens": 993,
+    "latency_ms": 188.91258398070931,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.18,
+      "npm": 0.02,
+      "openalex": 0.79
+    },
+    "scores": {
+      "internetarchive": 0.18,
+      "npm": 0.02,
+      "openalex": 0.79
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "compound",
+    "family": "scholarly",
+    "gold_conceptual": [
+      "openalex"
+    ],
+    "gold_useful": [],
+    "id": "s02",
+    "input_tokens": 938,
+    "latency_ms": 215.33920796355233,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.18,
+      "npm": 0.04,
+      "openalex": 0.66
+    },
+    "scores": {
+      "internetarchive": 0.18,
+      "npm": 0.04,
+      "openalex": 0.66
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "atomic",
+    "family": "scholarly",
+    "gold_conceptual": [
+      "openalex"
+    ],
+    "gold_useful": [],
+    "id": "s02",
+    "input_tokens": 1135,
+    "latency_ms": 210.8502920018509,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.26,
+      "internetarchive_incremental": 0.52,
+      "npm_domain": 0.03,
+      "npm_incremental": 0.26,
+      "openalex_domain": 0.95,
+      "openalex_incremental": 0.53
+    },
+    "scores": {
+      "internetarchive": 0.26,
+      "npm": 0.03,
+      "openalex": 0.53
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "atomic",
+    "family": "scholarly",
+    "gold_conceptual": [
+      "openalex"
+    ],
+    "gold_useful": [],
+    "id": "s03",
+    "input_tokens": 1180,
+    "latency_ms": 196.46233302773908,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.37,
+      "internetarchive_incremental": 0.38,
+      "npm_domain": 0.02,
+      "npm_incremental": 0.12,
+      "openalex_domain": 0.95,
+      "openalex_incremental": 0.42
+    },
+    "scores": {
+      "internetarchive": 0.37,
+      "npm": 0.02,
+      "openalex": 0.42
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "compound",
+    "family": "scholarly",
+    "gold_conceptual": [
+      "openalex"
+    ],
+    "gold_useful": [],
+    "id": "s03",
+    "input_tokens": 983,
+    "latency_ms": 180.22437498439103,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.17,
+      "npm": 0.02,
+      "openalex": 0.51
+    },
+    "scores": {
+      "internetarchive": 0.17,
+      "npm": 0.02,
+      "openalex": 0.51
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "compound",
+    "family": "historical",
+    "gold_conceptual": [
+      "internetarchive"
+    ],
+    "gold_useful": [],
+    "id": "h01",
+    "input_tokens": 853,
+    "latency_ms": 185.45824999455363,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.91,
+      "npm": 0.03,
+      "openalex": 0.04
+    },
+    "scores": {
+      "internetarchive": 0.91,
+      "npm": 0.03,
+      "openalex": 0.04
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "atomic",
+    "family": "historical",
+    "gold_conceptual": [
+      "internetarchive"
+    ],
+    "gold_useful": [],
+    "id": "h01",
+    "input_tokens": 1050,
+    "latency_ms": 162.7712080371566,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.97,
+      "internetarchive_incremental": 0.86,
+      "npm_domain": 0.03,
+      "npm_incremental": 0.18,
+      "openalex_domain": 0.03,
+      "openalex_incremental": 0.21
+    },
+    "scores": {
+      "internetarchive": 0.86,
+      "npm": 0.03,
+      "openalex": 0.03
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "atomic",
+    "family": "historical",
+    "gold_conceptual": [
+      "internetarchive"
+    ],
+    "gold_useful": [],
+    "id": "h02",
+    "input_tokens": 1123,
+    "latency_ms": 195.8699999959208,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.97,
+      "internetarchive_incremental": 0.9,
+      "npm_domain": 0.16,
+      "npm_incremental": 0.62,
+      "openalex_domain": 0.03,
+      "openalex_incremental": 0.22
+    },
+    "scores": {
+      "internetarchive": 0.9,
+      "npm": 0.16,
+      "openalex": 0.03
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "compound",
+    "family": "historical",
+    "gold_conceptual": [
+      "internetarchive"
+    ],
+    "gold_useful": [],
+    "id": "h02",
+    "input_tokens": 926,
+    "latency_ms": 168.09125000145286,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.93,
+      "npm": 0.21,
+      "openalex": 0.04
+    },
+    "scores": {
+      "internetarchive": 0.93,
+      "npm": 0.21,
+      "openalex": 0.04
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "compound",
+    "family": "historical",
+    "gold_conceptual": [
+      "internetarchive"
+    ],
+    "gold_useful": [],
+    "id": "h03",
+    "input_tokens": 947,
+    "latency_ms": 205.8124170289375,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.91,
+      "npm": 0.03,
+      "openalex": 0.06
+    },
+    "scores": {
+      "internetarchive": 0.91,
+      "npm": 0.03,
+      "openalex": 0.06
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "atomic",
+    "family": "historical",
+    "gold_conceptual": [
+      "internetarchive"
+    ],
+    "gold_useful": [],
+    "id": "h03",
+    "input_tokens": 1144,
+    "latency_ms": 153.18070899229497,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.96,
+      "internetarchive_incremental": 0.87,
+      "npm_domain": 0.03,
+      "npm_incremental": 0.18,
+      "openalex_domain": 0.04,
+      "openalex_incremental": 0.25
+    },
+    "scores": {
+      "internetarchive": 0.87,
+      "npm": 0.03,
+      "openalex": 0.04
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "atomic",
+    "family": "broad",
+    "gold_conceptual": [],
+    "gold_useful": [],
+    "id": "b01",
+    "input_tokens": 1203,
+    "latency_ms": 173.42204099986702,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.13,
+      "internetarchive_incremental": 0.36,
+      "npm_domain": 0.05,
+      "npm_incremental": 0.14,
+      "openalex_domain": 0.08,
+      "openalex_incremental": 0.28
+    },
+    "scores": {
+      "internetarchive": 0.13,
+      "npm": 0.05,
+      "openalex": 0.08
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "compound",
+    "family": "broad",
+    "gold_conceptual": [],
+    "gold_useful": [],
+    "id": "b01",
+    "input_tokens": 1006,
+    "latency_ms": 171.50087497429922,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.14,
+      "npm": 0.04,
+      "openalex": 0.08
+    },
+    "scores": {
+      "internetarchive": 0.14,
+      "npm": 0.04,
+      "openalex": 0.08
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "compound",
+    "family": "broad",
+    "gold_conceptual": [],
+    "gold_useful": [],
+    "id": "b02",
+    "input_tokens": 893,
+    "latency_ms": 183.2302080001682,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.1,
+      "npm": 0.03,
+      "openalex": 0.15
+    },
+    "scores": {
+      "internetarchive": 0.1,
+      "npm": 0.03,
+      "openalex": 0.15
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "atomic",
+    "family": "broad",
+    "gold_conceptual": [],
+    "gold_useful": [],
+    "id": "b02",
+    "input_tokens": 1090,
+    "latency_ms": 169.50612503569573,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.14,
+      "internetarchive_incremental": 0.31,
+      "npm_domain": 0.04,
+      "npm_incremental": 0.15,
+      "openalex_domain": 0.38,
+      "openalex_incremental": 0.41
+    },
+    "scores": {
+      "internetarchive": 0.14,
+      "npm": 0.04,
+      "openalex": 0.38
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "atomic",
+    "family": "broad",
+    "gold_conceptual": [],
+    "gold_useful": [],
+    "id": "b03",
+    "input_tokens": 1095,
+    "latency_ms": 166.6198330349289,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.13,
+      "internetarchive_incremental": 0.28,
+      "npm_domain": 0.39,
+      "npm_incremental": 0.5,
+      "openalex_domain": 0.1,
+      "openalex_incremental": 0.33
+    },
+    "scores": {
+      "internetarchive": 0.13,
+      "npm": 0.39,
+      "openalex": 0.1
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "compound",
+    "family": "broad",
+    "gold_conceptual": [],
+    "gold_useful": [],
+    "id": "b03",
+    "input_tokens": 898,
+    "latency_ms": 149.96220800094306,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.1,
+      "npm": 0.19,
+      "openalex": 0.11
+    },
+    "scores": {
+      "internetarchive": 0.1,
+      "npm": 0.19,
+      "openalex": 0.11
+    },
+    "split": "cal"
+  },
+  {
+    "arm": "compound",
+    "family": "package",
+    "gold_conceptual": [
+      "npm"
+    ],
+    "gold_useful": [
+      "npm"
+    ],
+    "id": "p04",
+    "input_tokens": 900,
+    "latency_ms": 154.55366595415398,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.17,
+      "npm": 0.68,
+      "openalex": 0.03
+    },
+    "scores": {
+      "internetarchive": 0.17,
+      "npm": 0.68,
+      "openalex": 0.03
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "atomic",
+    "family": "package",
+    "gold_conceptual": [
+      "npm"
+    ],
+    "gold_useful": [
+      "npm"
+    ],
+    "id": "p04",
+    "input_tokens": 1097,
+    "latency_ms": 190.2072920347564,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.35,
+      "internetarchive_incremental": 0.57,
+      "npm_domain": 0.97,
+      "npm_incremental": 0.51,
+      "openalex_domain": 0.04,
+      "openalex_incremental": 0.18
+    },
+    "scores": {
+      "internetarchive": 0.35,
+      "npm": 0.51,
+      "openalex": 0.04
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "atomic",
+    "family": "package",
+    "gold_conceptual": [
+      "npm"
+    ],
+    "gold_useful": [
+      "npm"
+    ],
+    "id": "p05",
+    "input_tokens": 1150,
+    "latency_ms": 239.77533302968368,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.32,
+      "internetarchive_incremental": 0.59,
+      "npm_domain": 0.97,
+      "npm_incremental": 0.59,
+      "openalex_domain": 0.04,
+      "openalex_incremental": 0.19
+    },
+    "scores": {
+      "internetarchive": 0.32,
+      "npm": 0.59,
+      "openalex": 0.04
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "compound",
+    "family": "package",
+    "gold_conceptual": [
+      "npm"
+    ],
+    "gold_useful": [
+      "npm"
+    ],
+    "id": "p05",
+    "input_tokens": 953,
+    "latency_ms": 177.4880419834517,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.18,
+      "npm": 0.78,
+      "openalex": 0.03
+    },
+    "scores": {
+      "internetarchive": 0.18,
+      "npm": 0.78,
+      "openalex": 0.03
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "compound",
+    "family": "scholarly",
+    "gold_conceptual": [
+      "openalex"
+    ],
+    "gold_useful": [],
+    "id": "s04",
+    "input_tokens": 952,
+    "latency_ms": 170.56879197480157,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.18,
+      "npm": 0.02,
+      "openalex": 0.77
+    },
+    "scores": {
+      "internetarchive": 0.18,
+      "npm": 0.02,
+      "openalex": 0.77
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "atomic",
+    "family": "scholarly",
+    "gold_conceptual": [
+      "openalex"
+    ],
+    "gold_useful": [],
+    "id": "s04",
+    "input_tokens": 1149,
+    "latency_ms": 193.10591701650992,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.33,
+      "internetarchive_incremental": 0.51,
+      "npm_domain": 0.02,
+      "npm_incremental": 0.21,
+      "openalex_domain": 0.96,
+      "openalex_incremental": 0.68
+    },
+    "scores": {
+      "internetarchive": 0.33,
+      "npm": 0.02,
+      "openalex": 0.68
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "atomic",
+    "family": "scholarly",
+    "gold_conceptual": [
+      "openalex"
+    ],
+    "gold_useful": [],
+    "id": "s05",
+    "input_tokens": 1227,
+    "latency_ms": 195.6870419671759,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.3,
+      "internetarchive_incremental": 0.49,
+      "npm_domain": 0.03,
+      "npm_incremental": 0.29,
+      "openalex_domain": 0.94,
+      "openalex_incremental": 0.64
+    },
+    "scores": {
+      "internetarchive": 0.3,
+      "npm": 0.03,
+      "openalex": 0.64
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "compound",
+    "family": "scholarly",
+    "gold_conceptual": [
+      "openalex"
+    ],
+    "gold_useful": [],
+    "id": "s05",
+    "input_tokens": 1030,
+    "latency_ms": 158.7124580400996,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.22,
+      "npm": 0.04,
+      "openalex": 0.74
+    },
+    "scores": {
+      "internetarchive": 0.22,
+      "npm": 0.04,
+      "openalex": 0.74
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "compound",
+    "family": "historical",
+    "gold_conceptual": [
+      "internetarchive"
+    ],
+    "gold_useful": [],
+    "id": "h04",
+    "input_tokens": 964,
+    "latency_ms": 185.30375004047528,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.94,
+      "npm": 0.03,
+      "openalex": 0.03
+    },
+    "scores": {
+      "internetarchive": 0.94,
+      "npm": 0.03,
+      "openalex": 0.03
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "atomic",
+    "family": "historical",
+    "gold_conceptual": [
+      "internetarchive"
+    ],
+    "gold_useful": [],
+    "id": "h04",
+    "input_tokens": 1161,
+    "latency_ms": 174.47966698091477,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.97,
+      "internetarchive_incremental": 0.92,
+      "npm_domain": 0.03,
+      "npm_incremental": 0.23,
+      "openalex_domain": 0.03,
+      "openalex_incremental": 0.21
+    },
+    "scores": {
+      "internetarchive": 0.92,
+      "npm": 0.03,
+      "openalex": 0.03
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "atomic",
+    "family": "historical",
+    "gold_conceptual": [
+      "internetarchive"
+    ],
+    "gold_useful": [],
+    "id": "h05",
+    "input_tokens": 1148,
+    "latency_ms": 182.1618330432102,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.96,
+      "internetarchive_incremental": 0.9,
+      "npm_domain": 0.02,
+      "npm_incremental": 0.14,
+      "openalex_domain": 0.03,
+      "openalex_incremental": 0.25
+    },
+    "scores": {
+      "internetarchive": 0.9,
+      "npm": 0.02,
+      "openalex": 0.03
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "compound",
+    "family": "historical",
+    "gold_conceptual": [
+      "internetarchive"
+    ],
+    "gold_useful": [],
+    "id": "h05",
+    "input_tokens": 951,
+    "latency_ms": 137.15749996481463,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.91,
+      "npm": 0.03,
+      "openalex": 0.06
+    },
+    "scores": {
+      "internetarchive": 0.91,
+      "npm": 0.03,
+      "openalex": 0.06
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "compound",
+    "family": "broad",
+    "gold_conceptual": [],
+    "gold_useful": [],
+    "id": "b04",
+    "input_tokens": 989,
+    "latency_ms": 213.36654102196917,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.19,
+      "npm": 0.03,
+      "openalex": 0.18
+    },
+    "scores": {
+      "internetarchive": 0.19,
+      "npm": 0.03,
+      "openalex": 0.18
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "atomic",
+    "family": "broad",
+    "gold_conceptual": [],
+    "gold_useful": [],
+    "id": "b04",
+    "input_tokens": 1186,
+    "latency_ms": 151.17054100846872,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.24,
+      "internetarchive_incremental": 0.37,
+      "npm_domain": 0.04,
+      "npm_incremental": 0.12,
+      "openalex_domain": 0.23,
+      "openalex_incremental": 0.45
+    },
+    "scores": {
+      "internetarchive": 0.24,
+      "npm": 0.04,
+      "openalex": 0.23
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "atomic",
+    "family": "broad",
+    "gold_conceptual": [],
+    "gold_useful": [],
+    "id": "b05",
+    "input_tokens": 1141,
+    "latency_ms": 159.66745797777548,
+    "output_tokens": 123,
+    "raw_answers": {
+      "internetarchive_domain": 0.11,
+      "internetarchive_incremental": 0.29,
+      "npm_domain": 0.16,
+      "npm_incremental": 0.35,
+      "openalex_domain": 0.08,
+      "openalex_incremental": 0.28
+    },
+    "scores": {
+      "internetarchive": 0.11,
+      "npm": 0.16,
+      "openalex": 0.08
+    },
+    "split": "holdout"
+  },
+  {
+    "arm": "compound",
+    "family": "broad",
+    "gold_conceptual": [],
+    "gold_useful": [],
+    "id": "b05",
+    "input_tokens": 944,
+    "latency_ms": 183.21449996437877,
+    "output_tokens": 56,
+    "raw_answers": {
+      "internetarchive": 0.11,
+      "npm": 0.13,
+      "openalex": 0.08
+    },
+    "scores": {
+      "internetarchive": 0.11,
+      "npm": 0.13,
+      "openalex": 0.08
+    },
+    "split": "holdout"
+  }
+]
