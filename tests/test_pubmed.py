@@ -30,6 +30,7 @@ class FakeClock:
 class Stage:
     payload: Any = None
     elapsed: float = 0.0
+    parse_elapsed: float = 0.0
     status_code: int = 200
     timeout: bool = False
 
@@ -61,7 +62,16 @@ class PubMedFixture:
             self.clock.advance(timeout)
             raise httpx.ReadTimeout(f"{stage_name} timeout")
         self.clock.advance(stage.elapsed)
-        return httpx.Response(stage.status_code, json=stage.payload, request=httpx.Request("GET", url))
+        response = httpx.Response(stage.status_code, json=stage.payload, request=httpx.Request("GET", url))
+        if stage.parse_elapsed:
+            original_json = response.json
+
+            def delayed_json() -> Any:
+                self.clock.advance(stage.parse_elapsed)
+                return original_json()
+
+            response.json = delayed_json  # type: ignore[method-assign]
+        return response
 
 
 class FixtureContext:
@@ -156,6 +166,25 @@ async def test_aggregate_deadline_bounds_second_stage(monkeypatch, adapter):
     assert response.latency_ms == pytest.approx(4_500)
     assert fixture.timeouts == [pytest.approx(4.5), pytest.approx(0.3)]
     assert fixture.clock.value == pytest.approx(104.5)
+
+
+async def test_aggregate_deadline_covers_response_parsing(monkeypatch, adapter):
+    fixture = PubMedFixture(
+        {
+            "esearch": Stage(payload={"esearchresult": {"idlist": ["1"]}}, elapsed=0.2),
+            "esummary": Stage(
+                payload=summary(("1", {"title": "One"})).payload,
+                elapsed=0.2,
+                parse_elapsed=4.2,
+            ),
+        }
+    )
+
+    response = await run_fixture(monkeypatch, adapter, fixture)
+
+    assert response.status == EngineStatus.TIMEOUT
+    assert response.results == []
+    assert response.latency_ms == pytest.approx(4_600)
 
 
 async def test_service_dispatch_deadline_is_not_the_timeout_observed_by_pubmed(monkeypatch, adapter):

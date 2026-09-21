@@ -107,6 +107,11 @@ class PubMedAdapter(EngineAdapter):
 
             request_timeout = request_timeout_ms / 1000.0
             deadline = start_time + aggregate_timeout_ms / 1000.0
+
+            def ensure_deadline() -> None:
+                if time.monotonic() >= deadline:
+                    raise TimeoutError("PubMed aggregate deadline exceeded")
+
             async with self.http_client(timeout=request_timeout) as client:
 
                 async def bounded_get(url: str, **kwargs: Any) -> httpx.Response:
@@ -132,9 +137,11 @@ class PubMedAdapter(EngineAdapter):
                 )
                 esearch_resp.raise_for_status()
                 esearch_data = esearch_resp.json()
+                ensure_deadline()
 
                 id_list = self._id_list(esearch_data)
                 if not id_list:
+                    ensure_deadline()
                     latency = (time.monotonic() - start_time) * 1000
                     return AdapterResponse(results=[], status=EngineStatus.OK, latency_ms=latency)
 
@@ -151,6 +158,7 @@ class PubMedAdapter(EngineAdapter):
                 latency = (time.monotonic() - start_time) * 1000
                 esummary_resp.raise_for_status()
                 summary_data = esummary_resp.json()
+                ensure_deadline()
 
                 if not isinstance(summary_data, dict):
                     raise ValueError("ESummary payload must be an object")
@@ -215,6 +223,8 @@ class PubMedAdapter(EngineAdapter):
                         ),
                     )
 
+                ensure_deadline()
+                latency = (time.monotonic() - start_time) * 1000
                 return AdapterResponse(results=results, status=EngineStatus.OK, latency_ms=latency)
 
         except (httpx.TimeoutException, TimeoutError):
