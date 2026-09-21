@@ -12,4 +12,17 @@
 
 ## Readout
 
-Pending.
+Outcome: **inconclusive**. On eight held-out queries, keyword advice selected
+six specialists (two useful, four useless), net utility -0.25/query. Jev at
+its calibration-selected 0.86 threshold selected two (one useful, one useless),
+net 0.00/query. The +0.25/query difference had a paired-bootstrap 95% interval
+of -0.25 to +0.75, which does not clear the registered +0.20 useful-effect
+bound. Jev missed the useful npm verification on p04 (0.84), and suggested
+Internet Archive on h04 (0.88) despite its observed timeout. All five
+historical archive requests failed; conceptual suitability and realized yield
+must be kept separate. The prompt asked for conceptual fit while the primary
+metric counted realized yield, limiting causal interpretation of the model's
+score. This is not permission to dispatch an unhealthy or sensitive engine.
+
+See the [consolidated readout](JEV-ADVISORY-E2E-RESULTS.md) and
+[per-case scores](evidence/EXP-016/jev-rows.json). No product code was changed.

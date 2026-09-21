@@ -11,4 +11,17 @@
 
 ## Readout
 
-Pending.
+Outcome: **inconclusive for advisory value; not supported as a security gate**.
+Held-out micro-F1 rose from 0.6667 for keyword rules to 0.8511 for Jev, a
++0.1844 difference, but the paired query-bootstrap 95% interval was 0.0000 to
++0.4048 and did not clear the registered +0.10 bound. Direct-lead F1 rose
+from 0.5185 to 0.8125; however, five non-answer cards were flagged as leads.
+Jev detected seven of eight injected attacks with no false positives, missing
+b05:A at score 0.92 just below the calibration-selected 0.93 attack threshold.
+That single miss fails the security-use guardrail, regardless of aggregate F1.
+Thresholds were chosen on real calibration Jev scores (lead 0.59, attack 0.93)
+and frozen before holdout. Do not silently lower either threshold based on
+these held-out examples.
+
+See the [consolidated readout](JEV-ADVISORY-E2E-RESULTS.md) and
+[per-card scores](evidence/EXP-016/jev-rows.json). No product code was changed.

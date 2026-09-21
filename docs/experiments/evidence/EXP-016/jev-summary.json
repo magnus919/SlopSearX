@@ -1,0 +1,186 @@
+{
+  "annotations": {
+    "baseline": {
+      "f1": 0.9565217391304348,
+      "fn": 0,
+      "fp": 1,
+      "precision": 0.9166666666666666,
+      "recall": 1.0,
+      "tp": 11
+    },
+    "delta_f1": -0.05652173913043479,
+    "jev": {
+      "f1": 0.9,
+      "fn": 2,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 0.8181818181818182,
+      "tp": 9
+    },
+    "judged_cards": 22,
+    "paired_query_bootstrap_95pct_delta_f1": [
+      -0.17647058823529416,
+      0.16666666666666674
+    ]
+  },
+  "calls": 99,
+  "estimated_input_usd": 0.002775696,
+  "input_tokens": 66088,
+  "labels_sha256": "3086552523237f39f02c62f717a7f73f0ee6ca2ab813df8988c87e13c6c62a39",
+  "latency_ms": {
+    "median": 193.89891700120643,
+    "p95_nearest_rank": 279.73924996331334
+  },
+  "model": "jev-1.13.0",
+  "next_source": {
+    "baseline": {
+      "f1": 0.5,
+      "fn": 0,
+      "fp": 4,
+      "precision": 0.3333333333333333,
+      "recall": 1.0,
+      "selected_requests": 6,
+      "tp": 2,
+      "utility_per_query": -0.25
+    },
+    "delta_utility_per_query": 0.25,
+    "jev": {
+      "f1": 0.5,
+      "fn": 1,
+      "fp": 1,
+      "precision": 0.5,
+      "recall": 0.5,
+      "selected_requests": 2,
+      "tp": 1,
+      "utility_per_query": 0.0
+    },
+    "paired_query_bootstrap_95pct_delta_utility": [
+      -0.25,
+      0.75
+    ]
+  },
+  "provider_attempts": 99,
+  "quality": {
+    "baseline": {
+      "micro": {
+        "f1": 0.6666666666666666,
+        "fn": 7,
+        "fp": 8,
+        "precision": 0.6521739130434783,
+        "recall": 0.6818181818181818,
+        "tp": 15
+      },
+      "per_label": {
+        "instruction_attack": {
+          "f1": 0.888888888888889,
+          "fn": 0,
+          "fp": 2,
+          "precision": 0.8,
+          "recall": 1.0,
+          "tp": 8
+        },
+        "likely_direct_lead": {
+          "f1": 0.5185185185185186,
+          "fn": 7,
+          "fp": 6,
+          "precision": 0.5384615384615384,
+          "recall": 0.5,
+          "tp": 7
+        }
+      }
+    },
+    "delta_f1": 0.18439716312056753,
+    "jev": {
+      "micro": {
+        "f1": 0.8510638297872342,
+        "fn": 2,
+        "fp": 5,
+        "precision": 0.8,
+        "recall": 0.9090909090909091,
+        "tp": 20
+      },
+      "per_label": {
+        "instruction_attack": {
+          "f1": 0.9333333333333333,
+          "fn": 1,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.875,
+          "tp": 7
+        },
+        "likely_direct_lead": {
+          "f1": 0.8125000000000001,
+          "fn": 1,
+          "fp": 5,
+          "precision": 0.7222222222222222,
+          "recall": 0.9285714285714286,
+          "tp": 13
+        }
+      }
+    },
+    "judged_original_leads": 21,
+    "paired_query_bootstrap_95pct_delta_f1": [
+      0.0,
+      0.40476190476190477
+    ]
+  },
+  "safety_replay": {
+    "candidate_canonical_equal": true,
+    "no_key_canonical_equal": true,
+    "provider_error_canonical_equal": true,
+    "scope": "experiment-only sidecar on a formatter fixture, not a production HTTP/MCP integration test"
+  },
+  "selected_cases_sha256": "29e33900d9105d5c9c85a017948ac4dffec43fdfb6c4f0654c99b536a7333d45",
+  "thresholds": {
+    "annotations": {
+      "f1": 1.0,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "threshold": 0.79,
+      "tp": 10
+    },
+    "next_source": {
+      "f1": 0.8571428571428571,
+      "fn": 1,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 0.75,
+      "selected_requests": 3,
+      "threshold": 0.86,
+      "tp": 3,
+      "utility_per_query": 0.25
+    },
+    "quality": {
+      "attack_threshold": 0.93,
+      "lead_threshold": 0.59,
+      "micro": {
+        "f1": 0.8450704225352113,
+        "fn": 1,
+        "fp": 10,
+        "precision": 0.75,
+        "recall": 0.967741935483871,
+        "tp": 30
+      },
+      "per_label": {
+        "instruction_attack": {
+          "f1": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "tp": 12
+        },
+        "likely_direct_lead": {
+          "f1": 0.7659574468085106,
+          "fn": 1,
+          "fp": 10,
+          "precision": 0.6428571428571429,
+          "recall": 0.9473684210526315,
+          "tp": 18
+        }
+      }
+    }
+  }
+}

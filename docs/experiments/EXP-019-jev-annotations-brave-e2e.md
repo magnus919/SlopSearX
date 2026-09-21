@@ -13,4 +13,17 @@
 
 ## Readout
 
-Pending.
+Outcome: **inconclusive under the frozen decision rule, with an observed
+regression**. All 20 Brave calls and 99 shared Jev calls completed; 22 held-out
+source cards were judged. The zero-cost deterministic baseline reached
+micro-F1 0.9565 (11 TP, one FP, no FN). Jev at the calibration-selected global
+threshold 0.79 reached 0.9000 (nine TP, no FP, two FN), a -0.0565 difference.
+The paired query-bootstrap 95% interval was -0.1765 to +0.1667, crossing the
+registered +0.10 minimum useful effect. Jev missed `primary_docs` on h05:B1
+(score 0.69) and `tutorial` on b05:B2 (0.63). The baseline had one extra
+`tutorial` label on h04:B1. There is no measured case for shipping Jev source
+typing from this sample, and the taxonomy misses scholarly/registry types.
+
+See the [consolidated readout](JEV-ADVISORY-E2E-RESULTS.md) and
+[raw score summary](evidence/EXP-016/jev-summary.json). The calibration curve
+was saved before holdout. No product code was changed.
