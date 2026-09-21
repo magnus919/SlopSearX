@@ -56,9 +56,11 @@
   Persist all attempts and scores incrementally. Stop on unexpected cost,
   invalid response, or fourth overload. Pin `jev-1.13.0`; zero search calls,
   no personal queries, and no production code or configuration changes.
-- Exact command will be frozen with the inert `.py.txt` harness in a signed
-  commit before measurement. The key must be read from the ignored project
-  `.env` without printing or copying its value to experiment evidence.
+- Run from the isolated worktree using
+  `/Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python docs/experiments/evidence/EXP-023/replay.py.txt --repo . --output docs/experiments/evidence/EXP-023/trial1 --registration-commit dd350c3 --key-file /Volumes/tank01/magnus/git/SlopSearX/.env`.
+  The key must be read from the ignored project `.env` without printing or
+  copying its value to experiment evidence. Freeze this inert `.py.txt`
+  harness in a signed commit before measurement.
 
 ## Readout
 
