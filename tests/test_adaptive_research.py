@@ -174,6 +174,7 @@ async def test_budget_exhausted_completion_is_metadata_only_after_deadline(state
     after_payload = _job_to_payload(after)
     assert after_payload["caller_completed"] is True
     assert after_payload["completion_rationale"] == "enough evidence"
+    assert after_payload["completion_subquestion_states"] == {"a": "resolved"}
     for field in ("state", "stop_reason", "queries", "budget_limits", "budget_used", "seen_lead_ids"):
         assert after_payload[field] == before_payload[field]
     assert state.ctx.active_engines["wikipedia"].calls == 1
@@ -187,6 +188,62 @@ async def test_budget_exhausted_completion_is_metadata_only_after_deadline(state
     )
     assert conflict["error"]["code"] == "idempotency_conflict"
     assert await state.job_store.load(first["job_id"]) == after
+
+
+async def test_completion_replay_requires_original_subquestion_request(state):
+    first = await start(state, max_results=1)
+    original = {"a": "resolved"}
+    accepted = await t.slopsearx_update_research(first["job_id"], original, complete=True, rationale="enough evidence")
+    empty = await t.slopsearx_update_research(first["job_id"], {}, complete=True, rationale="enough evidence")
+    assert empty["error"]["code"] == "idempotency_conflict"
+    assert (
+        await t.slopsearx_update_research(first["job_id"], original, complete=True, rationale="enough evidence")
+        == accepted
+    )
+    assert (await state.job_store.load(first["job_id"])).completion_subquestion_states == original
+
+
+async def test_legacy_completed_record_replay_requires_matching_nonempty_assertion(state):
+    first = await start(state, max_results=1)
+    completed = await t.slopsearx_update_research(
+        first["job_id"], {"a": "resolved"}, complete=True, rationale="enough evidence"
+    )
+    assert completed["caller_completed"] is True
+    current = await state.job_store.load(first["job_id"])
+    payload = _job_to_payload(current)
+    payload.pop("completion_subquestion_states")
+    legacy = _job_from_payload(payload)
+    assert legacy.completion_subquestion_states is None
+    await state.job_store.save(legacy)
+    replay = await t.slopsearx_update_research(first["job_id"], {}, complete=True, rationale="enough evidence")
+    assert replay["error"]["code"] == "idempotency_conflict"
+    compatible = await t.slopsearx_update_research(
+        first["job_id"], {"a": "resolved"}, complete=True, rationale="enough evidence"
+    )
+    assert compatible["caller_completed"] is True
+    assert compatible["stop_reason"] == "result_budget_exhausted"
+    assert (await state.job_store.load(first["job_id"])).completion_subquestion_states is None
+
+
+async def test_deadline_crossing_between_preflight_and_fenced_claim(state, monkeypatch):
+    first = await start(state, max_results=1)
+    original_acquire = state.job_store._lease_acquire
+
+    async def cross_deadline(key, token, ttl):
+        acquired = await original_acquire(key, token, ttl)
+        current = await state.job_store.load(first["job_id"])
+        current.deadline = time.time() - 1
+        await state.job_store.save(current)
+        return acquired
+
+    monkeypatch.setattr(state.job_store, "_lease_acquire", cross_deadline)
+    completed = await t.slopsearx_update_research(
+        first["job_id"], {"a": "resolved"}, complete=True, rationale="enough evidence"
+    )
+    assert completed["caller_completed"] is True
+    assert completed["stop_reason"] == "result_budget_exhausted"
+    assert completed["state"] == "succeeded"
+    assert state.ctx.active_engines["wikipedia"].calls == 1
 
 
 async def test_completion_conflict_is_fenced_against_stale_preflight_copy(state, monkeypatch):

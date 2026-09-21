@@ -14,10 +14,10 @@ from dataclasses import replace
 from typing import Any, Callable
 
 from slopsearx import metrics as m
-from slopsearx.research_budget import ResearchMutationError
 from slopsearx.research_models import (
     LeaseLostError,
     ResearchJob,
+    ResearchMutationError,
     _job_from_payload,
     _job_to_payload,
     generate_lease_token,

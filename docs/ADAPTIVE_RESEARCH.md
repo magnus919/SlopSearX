@@ -67,9 +67,12 @@ and `stop_reason` remain unchanged, while the caller flag and rationale are
 recorded separately. This metadata-only completion remains allowed after the
 dispatch deadline under the same fenced lease; it never reopens retry or
 follow-up dispatch. Identical completion requests replay the persisted summary;
-different rationale or requested subquestion states return
-`idempotency_conflict`. Omit `complete` to update progress and keep the job
-open. Progress is a caller declaration, not SlopSearX certification.
+different rationale or requested subquestion state maps (including an omitted
+map) return `idempotency_conflict`. Older completed records without a stored
+request map accept a matching rationale and nonempty subquestion state assertion
+that matches the retained state. Empty maps conflict because equivalence cannot
+be proven. Omit `complete` to update progress and keep the job open. Progress
+is a caller declaration, not SlopSearX certification.
 
 ## Budgets and evidence
 

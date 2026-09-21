@@ -75,6 +75,7 @@ async def test_budget_completion_survives_valkey_reconnect_and_preserves_executi
     assert reloaded.stop_reason == "result_budget_exhausted"
     assert reloaded.caller_completed is True
     assert reloaded.completion_rationale == "evidence is sufficient"
+    assert reloaded.completion_subquestion_states == {"a": "resolved"}
     assert reloaded.budget_used == before.budget_used
     assert reloaded.queries == before.queries
     assert await reloaded_snapshots.read(before.queries[0].cursor)
