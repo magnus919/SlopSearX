@@ -109,6 +109,18 @@ def test_existing_compose_source_build_remains_fail_closed() -> None:
     assert "build" in build.get("profiles", [])
 
 
+def test_compose_passes_parent_and_checkout_env_files_to_each_variant() -> None:
+    """Engine credentials in either supported .env location reach the app."""
+    compose = yaml.safe_load((ROOT / "docker-compose.yml").read_text())
+    expected_env_files = [
+        {"path": "../.env", "required": False},
+        {"path": ".env", "required": False},
+    ]
+
+    for service_name in ("slopsearx", "slopsearx-build"):
+        assert compose["services"][service_name]["env_file"] == expected_env_files
+
+
 def test_kubernetes_consumes_pinned_ghcr_artifact() -> None:
     deployment = yaml.safe_load((ROOT / "k8s/deployment.yaml").read_text())
     container = deployment["spec"]["template"]["spec"]["containers"][0]

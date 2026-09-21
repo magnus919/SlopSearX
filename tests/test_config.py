@@ -167,3 +167,22 @@ class TestLoadConfig:
             assert config.engines["brave"].api_key == "super-secret-key"
         finally:
             del os.environ["ENGINE_BRAVE_API_KEY"]
+
+    def test_huggingface_token_alias_from_env(self, monkeypatch) -> None:
+        """The documented HF_TOKEN alias should configure HuggingFace."""
+        monkeypatch.delenv("ENGINE_HUGGINGFACE_API_KEY", raising=False)
+        monkeypatch.setenv("HF_TOKEN", "hf-test-token")
+
+        config = load_config()
+
+        assert config.engines["huggingface"].api_key == "hf-test-token"
+
+    def test_censys_api_secret_from_env(self, monkeypatch) -> None:
+        """Censys' second credential must survive config-to-adapter conversion."""
+        monkeypatch.setenv("ENGINE_CENSYS_API_KEY", "censys-test-id")
+        monkeypatch.setenv("ENGINE_CENSYS_API_SECRET", "censys-test-secret")
+
+        config = load_config()
+
+        assert config.engines["censys"].api_key == "censys-test-id"
+        assert config.engines["censys"].api_secret == "censys-test-secret"
