@@ -7,6 +7,7 @@ from typing import Any
 
 import httpx
 import pytest
+from fastapi.testclient import TestClient
 
 import engines  # noqa: F401 - populate the engine registry
 from slopsearx.adapter import AdapterResponse, EngineAdapter, EngineStatus, SearchResult
@@ -196,3 +197,62 @@ def test_snapshot_rehydrates_jev_scope_provenance() -> None:
     )
     assert snapshot.scope.jev_added_engines == ["pubmed"]
     assert snapshot.scope.jev_scores == {"pubmed": 0.91}
+
+
+async def test_http_startup_retains_jev_router_in_request_context(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The HTTP adapter must not drop the router created by build_context."""
+    import slopsearx.server as server_mod
+
+    router = _JevStub()
+
+    async def fake_build_context() -> AppContext:
+        return AppContext(active_engines={}, jev_router=router)  # type: ignore[arg-type]
+
+    for name in (
+        "_active_engines",
+        "_cache",
+        "_rate_limiter",
+        "_router",
+        "_jev_router",
+        "_suggestion_service",
+        "_stats_tracker",
+        "_audit_logger",
+        "_engine_semaphore",
+        "_client_rate_window",
+        "_empty_scrape_diagnostics_enabled",
+        "_portal_policy",
+        "_routing_budget_cache",
+    ):
+        monkeypatch.setattr(server_mod, name, getattr(server_mod, name))
+    monkeypatch.setattr(server_mod, "_active_engines", {})
+    monkeypatch.setattr(server_mod, "_workflow_portal_runtime", object())
+    monkeypatch.setattr(server_mod, "build_context", fake_build_context)
+
+    await server_mod._startup()
+
+    assert server_mod._jev_router is router
+    assert server_mod._current_context().jev_router is router
+
+
+@pytest.mark.parametrize("path", ["/search", "/"])
+def test_http_and_portal_search_routes_expose_jev_additions(monkeypatch: pytest.MonkeyPatch, path: str) -> None:
+    """Both HTTP entry points use the same Jev-enabled search context."""
+    import slopsearx.server as server_mod
+
+    with TestClient(server_mod.app) as client:
+        monkeypatch.setattr(
+            server_mod,
+            "_active_engines",
+            {name: _Engine(name) for name in ("brave", "duckduckgo", "pubmed", "arxiv")},
+        )
+        monkeypatch.setattr(server_mod, "_router", QueryRouter())
+        monkeypatch.setattr(server_mod, "_jev_router", _JevStub())
+        monkeypatch.setattr(server_mod, "_cache", None)
+        response = client.get(path, params={"q": "medical evidence", "format": "json"})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["meta"]["jev_routing"]["added_engines"] == ["pubmed", "arxiv"]
+    assert {"duckduckgo", "pubmed", "arxiv"}.issubset(
+        {engine for result in payload["results"] for engine in result["engines"]}
+    )
