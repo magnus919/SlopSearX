@@ -61,6 +61,7 @@ REQUIRED_KEY_ENGINES: frozenset[str] = frozenset(
         "brave",
         "censys",
         "dehashed",
+        "exa",
         "fred",
         "hibp",
         "intelx",

@@ -6,7 +6,7 @@ This document helps AI coding agents understand the project structure, architect
 
 ```
 slopsearx/
-├── engines/            # Engine adapter plugins (one file per engine, 51 total)
+├── engines/            # Engine adapter plugins (one file per engine, 52 total)
 │   ├── arxiv.py           brave.py           crates.py
 │   ├── censys.py          clinicaltrials.py  courtlistener.py (removed)
 │   ├── crtsh.py           cve.py             dehashed.py
@@ -24,7 +24,7 @@ slopsearx/
 │   ├── tmdb.py            uniprot.py         urlhaus.py
 │   ├── virustotal.py      vulncheck.py       wikipedia.py
 │   ├── abuseipdb.py       ashby.py           greenhouse.py
-│   └── lever.py
+│   └── lever.py           exa.py
 ├── slopsearx/          # Core library
 │   ├── adapter.py      # EngineAdapter base class + ScrapeAdapter
 │   ├── service.py      # Normalized search pipeline (SearchService, ScopeResolver, AppContext)

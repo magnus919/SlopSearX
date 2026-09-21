@@ -197,6 +197,18 @@ _DEFAULT_ENGINES: dict[str, dict[str, Any]] = {
         "rate_limit": 200,
         "weight": 0.9,
     },
+    # Commercial web-search API. Inert without a configured key: it is listed
+    # here so ENGINE_EXA_* env overrides resolve onto a config entry, which is
+    # what lets the capability catalog report auth_configured and the
+    # cost/coverage router admit it once an operator supplies a credential.
+    "exa": {
+        "base_url": "https://api.exa.ai",
+        "type": "api",
+        "timeout_ms": 8_000,
+        "max_results": 10,
+        "rate_limit": 5.0,
+        "weight": 0.8,
+    },
     "nvd": {
         "base_url": "https://services.nvd.nist.gov/rest/json/cves/2.0",
         "type": "api",

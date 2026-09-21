@@ -69,16 +69,16 @@ The endpoint has important behavior that an MCP layer must preserve and explain:
 
 ### 1.2 The current adapter registry is larger than the documentation says
 
-The live source registry contains 51 adapters, discovered by importing `engines/` and registering classes with `@register_engine`. The source-level count includes the job adapters `ashby`, `greenhouse`, and `lever`.
+The live source registry contains 52 adapters, discovered by importing `engines/` and registering classes with `@register_engine`. The source-level count includes the job adapters `ashby`, `greenhouse`, and `lever`.
 
 The repository's README and adapter reference previously described the system
-as having 48 engines; that count has since been reconciled to the live 51-adapter
+as having 48 engines; that count has since been reconciled to the live 52-adapter
 registry (`docs/ENGINE_ADAPTERS.md`, `README.md`). The MCP capability catalog is
 generated from the runtime registry, not copied from those prose counts.
 
 The registry spans these capability families:
 
-- General and web: Brave, DuckDuckGo, Google, Hacker News, Reddit, Wikipedia
+- General and web: Brave, DuckDuckGo, Exa, Google, Hacker News, Reddit, Wikipedia
 - Developer and packages: GitHub, Stack Exchange, npm, PyPI, Crates.io, RubyGems, Docker Hub, Repology
 - Science and research: arXiv, Hugging Face, Internet Archive, OpenAlex, Open Library, Semantic Scholar, UniProt
 - Medical and health: ClinicalTrials.gov, openFDA, PubChem, PubMed
