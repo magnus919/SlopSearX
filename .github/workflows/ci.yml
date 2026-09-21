@@ -112,6 +112,30 @@ jobs:
       - name: Check pinned SearXNG API contract
         run: pytest --no-cov -q tests/test_searxng_api_contract.py
 
+  jev-optional-modes:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - mode: keyless
+            expected: "0"
+            key: ""
+          - mode: enhanced
+            expected: "1"
+            key: ci-synthetic-key
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Check ${{ matrix.mode }} search path
+        env:
+          TYPESAFE_API_KEY: ${{ matrix.key }}
+          JEV_CI_EXPECT_ENABLED: ${{ matrix.expected }}
+        run: pytest --no-cov -q tests/test_jev.py::test_ci_keyless_and_enhanced_search_paths
+
   portal-contract:
     runs-on: ubuntu-latest
     steps:

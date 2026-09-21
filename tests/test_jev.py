@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -76,6 +77,50 @@ def test_api_key_presence_is_the_only_enablement_switch(monkeypatch: pytest.Monk
     assert JevSpecialistRouter.from_environment() is None
     monkeypatch.setenv("TYPESAFE_API_KEY", "test-key")
     assert JevSpecialistRouter.from_environment() is not None
+
+
+async def test_ci_keyless_and_enhanced_search_paths(monkeypatch: pytest.MonkeyPatch) -> None:
+    """CI runs this contract in both explicit deployment modes without paid calls."""
+    expected_mode = os.environ.get("JEV_CI_EXPECT_ENABLED")
+    if expected_mode not in {"0", "1"}:
+        pytest.skip("deployment-mode contract is run by the dedicated CI matrix")
+
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        body = __import__("json").loads(request.content)
+        answers = {name: {"noul": 0.95} for name in body["questions"]}
+        return httpx.Response(200, json={"model": "jev-1.13.0", "answers": answers})
+
+    real_client = httpx.AsyncClient
+
+    def client_factory(*_args: Any, **kwargs: Any) -> httpx.AsyncClient:
+        kwargs["transport"] = httpx.MockTransport(handler)
+        return real_client(**kwargs)
+
+    monkeypatch.setattr("slopsearx.jev.httpx.AsyncClient", client_factory)
+    active: dict[str, EngineAdapter] = {name: _Engine(name) for name in ("brave", "pubmed")}
+    context = AppContext(
+        active_engines=active,
+        router=QueryRouter(),
+        tier1_engines={"brave"},
+        sensitive_engines=set(),
+        jev_router=JevSpecialistRouter.from_environment(),
+    )
+    response = await SearchService(context).search(SearchRequest(query="synthetic biomedical literature"))
+
+    assert "brave" in response.scope.selected_engines
+    assert active["brave"].calls == 1
+    if expected_mode == "1":
+        assert context.jev_router is not None
+        assert len(requests) == 1
+        assert response.scope.jev_added_engines == ["pubmed"]
+        assert active["pubmed"].calls == 1
+    else:
+        assert context.jev_router is None
+        assert requests == []
+        assert response.scope.jev_added_engines == []
 
 
 async def test_router_scores_specialists_in_one_request_and_applies_threshold(
