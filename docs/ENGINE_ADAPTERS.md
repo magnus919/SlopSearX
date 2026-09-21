@@ -266,7 +266,7 @@ the adapter does not fall back to browser automation or scraping.
 | MITRE ATT&CK | `engines/mitreattack.py` | api | security, reference | None |
 | NVD (NIST) | `engines/nvd.py` | api | it, security | `ENGINE_NVD_API_KEY` (optional) |
 | Shodan | `engines/shodan.py` | api | it, security | `ENGINE_SHODAN_API_KEY` |
-| URLhaus | `engines/urlhaus.py` | api | security, threat-intel | None |
+| URLhaus | `engines/urlhaus.py` | api | security, threat-intel | `ENGINE_URLHAUS_API_KEY` |
 | VirusTotal | `engines/virustotal.py` | api | security, malware | `ENGINE_VIRUSTOTAL_API_KEY` |
 | VulnCheck | `engines/vulncheck.py` | api | security, threat-intel | `ENGINE_VULNCHECK_API_KEY` |
 

@@ -113,7 +113,7 @@ the adapter behavior is authoritative for the selected sub-category.
 | [MITRE ATT&CK](https://attack.mitre.org/) | API | None | security, reference |
 | [NVD (NIST)](https://nvd.nist.gov/) | API | `ENGINE_NVD_API_KEY` (optional) | it, security |
 | [Shodan](https://www.shodan.io/) | API | `ENGINE_SHODAN_API_KEY` | it, security |
-| [URLhaus](https://urlhaus.abuse.ch/) | API | None | security, threat-intel |
+| [URLhaus](https://urlhaus.abuse.ch/) | API | `ENGINE_URLHAUS_API_KEY` | security, threat-intel |
 | [VirusTotal](https://www.virustotal.com/) | API | `ENGINE_VIRUSTOTAL_API_KEY` | security, malware |
 | [VulnCheck](https://vulncheck.com/) | API | `ENGINE_VULNCHECK_API_KEY` | security, threat-intel |
 
