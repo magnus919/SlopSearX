@@ -731,6 +731,7 @@ class TestOpenFDAAdapter:
         return {
             "results": [
                 {
+                    "set_id": "test-openfda-label",
                     "openfda": {
                         "brand_name": ["Aspirin"],
                         "generic_name": ["Acetylsalicylic Acid"],
