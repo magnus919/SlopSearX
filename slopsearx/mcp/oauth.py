@@ -27,6 +27,7 @@ import secrets
 import time
 from typing import Any, cast
 
+from fastmcp.server.auth import OAuthProvider
 from mcp.server.auth.provider import (
     AccessToken,
     AuthorizationCode,
@@ -34,7 +35,7 @@ from mcp.server.auth.provider import (
     RefreshToken,
     construct_redirect_uri,
 )
-from mcp.server.auth.settings import AuthSettings
+from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions, RevocationOptions
 from mcp.shared.auth import OAuthClientInformationFull, OAuthToken
 
 from slopsearx.capabilities import MCPPolicy
@@ -101,7 +102,7 @@ class OAuthStateStore:
         self._mem.pop(key, None)
 
 
-class SlopSearxOAuthProvider:
+class SlopSearxOAuthProvider(OAuthProvider):
     """Auto-approving OAuth 2.1 authorization server for the MCP server.
 
     Implements the ``OAuthAuthorizationServerProvider`` protocol used by
@@ -119,7 +120,19 @@ class SlopSearxOAuthProvider:
         refresh_token_ttl_seconds: int = 2_592_000,  # 30 days
         authorization_code_ttl_seconds: int = 600,
         subject: str = "operator",
+        base_url: str = "http://localhost",
+        issuer_url: str | None = None,
     ) -> None:
+        # FastMCP 3 and 4 both require an AuthProvider instance for HTTP auth.
+        # Keep the public SlopSearX constructor compatible with the original
+        # SDK-protocol implementation while initializing the inherited OAuth
+        # route and token-verification machinery.
+        super().__init__(
+            base_url=base_url,
+            issuer_url=issuer_url or base_url,
+            client_registration_options=ClientRegistrationOptions(enabled=True),
+            revocation_options=RevocationOptions(enabled=True),
+        )
         self._store = OAuthStateStore(cache)
         self._access_ttl = access_token_ttl_seconds
         self._refresh_ttl = refresh_token_ttl_seconds
@@ -297,5 +310,7 @@ def oauth_settings_from_policy(
         None,
         access_token_ttl_seconds=policy.oauth_access_token_ttl_seconds,
         refresh_token_ttl_seconds=policy.oauth_refresh_token_ttl_seconds,
+        base_url=issuer,
+        issuer_url=issuer,
     )
     return settings, provider
