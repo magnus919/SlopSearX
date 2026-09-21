@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 import httpx
 import pytest
 
 import engines  # noqa: F401 — trigger @register_engine
 from slopsearx.adapter import EngineStatus, discover_engines, list_engines
+from slopsearx.config import EngineEntry
 from tests.test_adapters import MockHTTP
 
 # ---------------------------------------------------------------------------
@@ -172,6 +175,109 @@ class TestRedditAdapterSearch:
             result = await adapter.search("test query")
 
         assert result.status == EngineStatus.RATE_LIMITED
+
+    async def test_search_oauth_uses_documented_api_host_and_path(self):
+        """An OAuth token uses oauth.reddit.com and the documented /search path."""
+        oauth_adapter = discover_engines({"reddit": {"api_key": "oauth-token"}})["reddit"]
+        request = {}
+
+        def _handler(r):
+            request["url"] = str(r.url)
+            request["authorization"] = r.headers.get("Authorization")
+            return httpx.Response(200, json={"data": {"children": []}})
+
+        async with MockHTTP(_handler):
+            result = await oauth_adapter.search("test query")
+
+        assert result.status == EngineStatus.OK
+        assert request["url"].startswith("https://oauth.reddit.com/search?")
+        assert "/search.json" not in request["url"]
+        assert request["authorization"] == "Bearer oauth-token"
+
+    async def test_engine_entry_token_config_uses_oauth_default_host(self):
+        """An EngineEntry-shaped config preserves OAuth routing after asdict."""
+        config = dataclasses.asdict(EngineEntry(api_key="oauth-token"))
+        oauth_adapter = discover_engines({"reddit": config})["reddit"]
+        request = {}
+
+        def _handler(r):
+            request["url"] = str(r.url)
+            request["authorization"] = r.headers.get("Authorization")
+            return httpx.Response(200, json={"data": {"children": []}})
+
+        async with MockHTTP(_handler):
+            result = await oauth_adapter.search("test query")
+
+        assert result.status == EngineStatus.OK
+        assert request["url"].startswith("https://oauth.reddit.com/search?")
+        assert request["authorization"] == "Bearer oauth-token"
+
+    async def test_search_preserves_explicit_custom_base_url(self):
+        """A configured non-default endpoint remains authoritative."""
+        custom_adapter = discover_engines(
+            {"reddit": {"base_url": "https://reddit.example.test/api", "api_key": "oauth-token"}},
+        )["reddit"]
+        requested_url = ""
+
+        def _handler(r):
+            nonlocal requested_url
+            requested_url = str(r.url)
+            return httpx.Response(200, json={"data": {"children": []}})
+
+        async with MockHTTP(_handler):
+            result = await custom_adapter.search("test query")
+
+        assert result.status == EngineStatus.OK
+        assert requested_url.startswith("https://reddit.example.test/api/search?")
+        assert "oauth.reddit.com" not in requested_url
+
+    async def test_search_blocked_without_oauth_explains_hosted_access_boundary(self, adapter):
+        """Anonymous 403s remain blocked and explain the supported auth path."""
+        async with MockHTTP(lambda r: httpx.Response(403)):
+            result = await adapter.search("test query")
+
+        assert result.status == EngineStatus.BLOCKED
+        assert result.error_message is not None
+        assert "unauthenticated" in result.error_message
+        assert "ENGINE_REDDIT_API_KEY" in result.error_message
+
+    async def test_search_blocked_with_oauth_reports_provider_policy(self):
+        """OAuth 403s do not claim that credentials are absent."""
+        oauth_adapter = discover_engines({"reddit": {"api_key": "oauth-token"}})["reddit"]
+        async with MockHTTP(lambda r: httpx.Response(403)):
+            result = await oauth_adapter.search("test query")
+
+        assert result.status == EngineStatus.BLOCKED
+        assert result.error_message == (
+            "Reddit blocked the authenticated request; verify OAuth approval, scope, and access policy"
+        )
+
+    async def test_search_rejected_oauth_is_unavailable(self):
+        """A rejected bearer token is distinct from a public empty result."""
+        oauth_adapter = discover_engines({"reddit": {"api_key": "oauth-token"}})["reddit"]
+        async with MockHTTP(lambda r: httpx.Response(401)):
+            result = await oauth_adapter.search("test query")
+
+        assert result.status == EngineStatus.UNAVAILABLE
+        assert result.error_message == "Reddit rejected the OAuth access token; configure a valid approved token"
+
+    async def test_search_malformed_json_is_error(self, adapter):
+        """A successful response with invalid JSON is not a zero-result search."""
+        async with MockHTTP(lambda r: httpx.Response(200, content=b"{not-json")):
+            result = await adapter.search("test query")
+
+        assert result.status == EngineStatus.ERROR
+        assert result.results == []
+        assert result.error_message == "Reddit returned invalid JSON"
+
+    async def test_search_malformed_listing_is_error(self, adapter):
+        """A successful response with the wrong listing shape is observable."""
+        async with MockHTTP(lambda r: httpx.Response(200, json={"data": {"children": {}}})):
+            result = await adapter.search("test query")
+
+        assert result.status == EngineStatus.ERROR
+        assert result.results == []
+        assert result.error_message == "Reddit returned an invalid listing children field"
 
     async def test_search_blocked(self, adapter):
         """403 returns BLOCKED status."""
