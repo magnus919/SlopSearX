@@ -64,4 +64,56 @@
 
 ## Readout
 
-Pending.
+Outcome: **inconclusive for product adoption; this frozen composition failed
+its exploratory advancement gate**. All 60 calls returned valid responses in
+60 attempts. The run used 251,098 Jev input tokens, no search-engine calls,
+no retries, and no production changes. The preflight recorded 32 eligible
+specialists, the exact 12/18 split, and the query-corpus checksum. Development
+metrics were saved before evaluation; no threshold or weight was tuned.
+
+| 18 exposed evaluation queries | Shipped single-Noul rule | Composed primary/secondary rule | Keyless resolver, diagnostic |
+| --- | ---: | ---: | ---: |
+| Essential engines selected / missed | 14 / 1 | 15 / 0 | 1 / 14 |
+| Useful secondary engines selected / missed | 3 / 4 | 7 / 0 | 1 / 6 |
+| Irrelevant specialist requests | 0 | 8 | 2 |
+| Selection precision | 1.000 | 0.733 | 0.500 |
+| Broad-query abstention | 3/3 | 3/3 | 3/3 |
+| Weighted utility/query | 1.722 | 1.611 | 0.056 |
+
+The composed-minus-shipped difference was **-0.111 utility/query**; a paired
+query-bootstrap 95% interval was **[-0.667, +0.500]**. The interval is wide,
+and these were already-exposed synthetic labels—not population evidence. The
+candidate gained the missed `github` primary source on `q25` and four useful
+secondary sources, but eight irrelevant requests outweighed those gains under
+the preregistered costs. Three irrelevant science sources on `q10` and two
+irrelevant security sources on `q14` were notable clusters. Both arms abstained
+on all three broad/no-specialist controls.
+
+The candidate's Noul values are not empirically calibrated probabilities of
+the gold labels. Consequently, the code's utility expression is a useful
+*decision heuristic*, not a guaranteed expectation. The strong shipped-rule
+precision on this corpus also reflects that EXP-014 was used to select its
+0.65 threshold; this is not an independent product comparison. Median Jev
+latency was 185 ms for the shipped question and 186 ms for the composed one;
+nearest-rank p95 was 265 and 255 ms. Across 30 calls per arm, the composed
+questions used 166,889 input tokens versus 84,209 for the shipped question:
+roughly twice the Jev input cost with no measured utility gain. This excludes
+network and search-engine costs; the per-call usage is preserved.
+
+The registered +0.25/query advance gate failed. We therefore did not author
+a fresh corpus, retune the formula, acquire any search results, or change
+SlopSearX. This finding does not rule out other TypeSafe workflow structures;
+it rules out advancing this exact one on the present evidence. A new design
+would need its own registration and fresh evidence, especially if it adds a
+calibrated abstention or source-specific cost rule.
+
+Evidence: [frozen harness](evidence/EXP-023/replay.py.txt),
+[preflight](evidence/EXP-023/trial1/preflight.json),
+[provider attempts](evidence/EXP-023/trial1/attempts.json),
+[development readout](evidence/EXP-023/trial1/development.json),
+[per-arm raw scores](evidence/EXP-023/trial1/arm-rows.json),
+[paired rows](evidence/EXP-023/trial1/joined-rows.json), and
+[summary](evidence/EXP-023/trial1/summary.json). The incremental
+[`arm-rows-partial.json`](evidence/EXP-023/trial1/arm-rows-partial.json) records
+write-as-you-go evidence. Registration commit `dd350c3`, frozen harness
+commit `0c84e1e`.

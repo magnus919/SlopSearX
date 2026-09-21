@@ -1,0 +1,556 @@
+[
+  {
+    "composed": [
+      "crates",
+      "github"
+    ],
+    "essential": [
+      "crates"
+    ],
+    "family": "packages",
+    "id": "q01",
+    "no_key": [
+      "github"
+    ],
+    "production": [
+      "crates"
+    ],
+    "query": "Rust crate for reading Apache Avro files",
+    "split": "development",
+    "useful": [
+      "github"
+    ]
+  },
+  {
+    "composed": [
+      "dockerhub",
+      "github"
+    ],
+    "essential": [
+      "dockerhub"
+    ],
+    "family": "packages",
+    "id": "q02",
+    "no_key": [
+      "github"
+    ],
+    "production": [
+      "dockerhub"
+    ],
+    "query": "official PostgreSQL container image tags",
+    "split": "development",
+    "useful": []
+  },
+  {
+    "composed": [
+      "github",
+      "rubygems"
+    ],
+    "essential": [
+      "rubygems"
+    ],
+    "family": "packages",
+    "id": "q03",
+    "no_key": [],
+    "production": [
+      "rubygems"
+    ],
+    "query": "Ruby gem for parsing TOML documents",
+    "split": "evaluation",
+    "useful": [
+      "github"
+    ]
+  },
+  {
+    "composed": [
+      "github",
+      "npm"
+    ],
+    "essential": [
+      "npm"
+    ],
+    "family": "packages",
+    "id": "q04",
+    "no_key": [
+      "github"
+    ],
+    "production": [
+      "npm"
+    ],
+    "query": "npm library for validating OpenAPI schemas",
+    "split": "evaluation",
+    "useful": [
+      "github"
+    ]
+  },
+  {
+    "composed": [
+      "repology"
+    ],
+    "essential": [
+      "repology"
+    ],
+    "family": "packages",
+    "id": "q05",
+    "no_key": [
+      "github"
+    ],
+    "production": [
+      "repology"
+    ],
+    "query": "compare sqlite package versions across Linux distributions",
+    "split": "evaluation",
+    "useful": []
+  },
+  {
+    "composed": [
+      "arxiv",
+      "clinicaltrials",
+      "openalex",
+      "openfda",
+      "pubmed",
+      "semanticscholar"
+    ],
+    "essential": [
+      "clinicaltrials"
+    ],
+    "family": "science_medical",
+    "id": "q06",
+    "no_key": [],
+    "production": [
+      "clinicaltrials",
+      "pubmed"
+    ],
+    "query": "registered trials of MDMA assisted therapy for PTSD",
+    "split": "development",
+    "useful": [
+      "pubmed"
+    ]
+  },
+  {
+    "composed": [
+      "arxiv",
+      "github",
+      "huggingface",
+      "openalex",
+      "semanticscholar"
+    ],
+    "essential": [
+      "arxiv"
+    ],
+    "family": "science_medical",
+    "id": "q07",
+    "no_key": [
+      "github"
+    ],
+    "production": [
+      "arxiv",
+      "huggingface",
+      "openalex",
+      "semanticscholar"
+    ],
+    "query": "preprints on sparse autoencoders for language models",
+    "split": "development",
+    "useful": [
+      "openalex",
+      "semanticscholar"
+    ]
+  },
+  {
+    "composed": [
+      "openfda",
+      "pubmed"
+    ],
+    "essential": [
+      "openfda"
+    ],
+    "family": "science_medical",
+    "id": "q08",
+    "no_key": [
+      "github"
+    ],
+    "production": [
+      "openfda"
+    ],
+    "query": "FDA label boxed warnings for clozapine",
+    "split": "evaluation",
+    "useful": [
+      "pubmed"
+    ]
+  },
+  {
+    "composed": [
+      "openfda",
+      "pubchem"
+    ],
+    "essential": [
+      "pubchem"
+    ],
+    "family": "science_medical",
+    "id": "q09",
+    "no_key": [],
+    "production": [
+      "pubchem"
+    ],
+    "query": "chemical structure and identifiers for ibuprofen",
+    "split": "evaluation",
+    "useful": []
+  },
+  {
+    "composed": [
+      "arxiv",
+      "openalex",
+      "pubmed",
+      "semanticscholar",
+      "uniprot"
+    ],
+    "essential": [
+      "uniprot"
+    ],
+    "family": "science_medical",
+    "id": "q10",
+    "no_key": [],
+    "production": [
+      "pubmed",
+      "uniprot"
+    ],
+    "query": "reviewed human TP53 protein record and function",
+    "split": "evaluation",
+    "useful": [
+      "pubmed"
+    ]
+  },
+  {
+    "composed": [
+      "cve",
+      "epss",
+      "nvd"
+    ],
+    "essential": [
+      "nvd",
+      "epss"
+    ],
+    "family": "security",
+    "id": "q11",
+    "no_key": [],
+    "production": [
+      "cve",
+      "epss",
+      "nvd"
+    ],
+    "query": "NVD severity and EPSS probability for CVE-2023-4863",
+    "split": "development",
+    "useful": [
+      "cve"
+    ]
+  },
+  {
+    "composed": [
+      "mitreattack"
+    ],
+    "essential": [
+      "mitreattack"
+    ],
+    "family": "security",
+    "id": "q12",
+    "no_key": [],
+    "production": [
+      "mitreattack"
+    ],
+    "query": "MITRE ATT&CK mitigations for process injection",
+    "split": "development",
+    "useful": []
+  },
+  {
+    "composed": [
+      "crtsh"
+    ],
+    "essential": [
+      "crtsh"
+    ],
+    "family": "security",
+    "id": "q13",
+    "no_key": [],
+    "production": [
+      "crtsh"
+    ],
+    "query": "certificate transparency records for openai.com",
+    "split": "evaluation",
+    "useful": []
+  },
+  {
+    "composed": [
+      "cve",
+      "exploitdb",
+      "github",
+      "mitreattack",
+      "nvd"
+    ],
+    "essential": [
+      "exploitdb"
+    ],
+    "family": "security",
+    "id": "q14",
+    "no_key": [],
+    "production": [
+      "cve",
+      "exploitdb",
+      "nvd"
+    ],
+    "query": "known exploit records for EternalBlue",
+    "split": "evaluation",
+    "useful": [
+      "nvd",
+      "cve"
+    ]
+  },
+  {
+    "composed": [
+      "crtsh",
+      "urlhaus"
+    ],
+    "essential": [
+      "urlhaus"
+    ],
+    "family": "security",
+    "id": "q15",
+    "no_key": [],
+    "production": [
+      "urlhaus"
+    ],
+    "query": "malicious URL records for hxxp://example.invalid/loader",
+    "split": "evaluation",
+    "useful": []
+  },
+  {
+    "composed": [
+      "openlibrary"
+    ],
+    "essential": [
+      "openlibrary"
+    ],
+    "family": "structured",
+    "id": "q16",
+    "no_key": [],
+    "production": [
+      "openlibrary"
+    ],
+    "query": "edition and ISBN records for The Dispossessed",
+    "split": "development",
+    "useful": []
+  },
+  {
+    "composed": [
+      "nominatim"
+    ],
+    "essential": [
+      "nominatim"
+    ],
+    "family": "structured",
+    "id": "q17",
+    "no_key": [],
+    "production": [],
+    "query": "coordinates for Angkor Wat",
+    "split": "development",
+    "useful": []
+  },
+  {
+    "composed": [
+      "musicbrainz"
+    ],
+    "essential": [
+      "musicbrainz"
+    ],
+    "family": "structured",
+    "id": "q18",
+    "no_key": [],
+    "production": [
+      "musicbrainz"
+    ],
+    "query": "release credits for the album Hounds of Love",
+    "split": "evaluation",
+    "useful": []
+  },
+  {
+    "composed": [
+      "oyez"
+    ],
+    "essential": [
+      "oyez"
+    ],
+    "family": "structured",
+    "id": "q19",
+    "no_key": [],
+    "production": [
+      "oyez"
+    ],
+    "query": "Supreme Court oral argument in New York Times v Sullivan",
+    "split": "evaluation",
+    "useful": []
+  },
+  {
+    "composed": [
+      "edgar"
+    ],
+    "essential": [
+      "edgar"
+    ],
+    "family": "structured",
+    "id": "q20",
+    "no_key": [],
+    "production": [
+      "edgar"
+    ],
+    "query": "Amazon annual report filings in SEC EDGAR",
+    "split": "evaluation",
+    "useful": []
+  },
+  {
+    "composed": [
+      "ashby"
+    ],
+    "essential": [
+      "ashby"
+    ],
+    "family": "jobs_ml",
+    "id": "q21",
+    "no_key": [
+      "arxiv",
+      "openalex",
+      "semanticscholar"
+    ],
+    "production": [
+      "ashby"
+    ],
+    "query": "machine learning engineer openings hosted by Ashby",
+    "split": "development",
+    "useful": []
+  },
+  {
+    "composed": [
+      "greenhouse"
+    ],
+    "essential": [
+      "greenhouse"
+    ],
+    "family": "jobs_ml",
+    "id": "q22",
+    "no_key": [],
+    "production": [
+      "greenhouse"
+    ],
+    "query": "security engineer positions hosted on Greenhouse",
+    "split": "development",
+    "useful": []
+  },
+  {
+    "composed": [
+      "lever"
+    ],
+    "essential": [
+      "lever"
+    ],
+    "family": "jobs_ml",
+    "id": "q23",
+    "no_key": [],
+    "production": [
+      "lever"
+    ],
+    "query": "backend engineering jobs hosted by Lever",
+    "split": "evaluation",
+    "useful": []
+  },
+  {
+    "composed": [
+      "github",
+      "huggingface"
+    ],
+    "essential": [
+      "huggingface"
+    ],
+    "family": "jobs_ml",
+    "id": "q24",
+    "no_key": [],
+    "production": [
+      "huggingface"
+    ],
+    "query": "Hugging Face dataset for table question answering",
+    "split": "evaluation",
+    "useful": []
+  },
+  {
+    "composed": [
+      "github",
+      "pypi"
+    ],
+    "essential": [
+      "github"
+    ],
+    "family": "jobs_ml",
+    "id": "q25",
+    "no_key": [
+      "github"
+    ],
+    "production": [],
+    "query": "GitHub repository for the Ruff Python linter",
+    "split": "evaluation",
+    "useful": [
+      "pypi"
+    ]
+  },
+  {
+    "composed": [],
+    "essential": [],
+    "family": "general",
+    "id": "q26",
+    "no_key": [],
+    "production": [],
+    "query": "how to prepare a house for a winter storm",
+    "split": "development",
+    "useful": []
+  },
+  {
+    "composed": [],
+    "essential": [],
+    "family": "general",
+    "id": "q27",
+    "no_key": [],
+    "production": [],
+    "query": "ideas for celebrating a tenth wedding anniversary",
+    "split": "development",
+    "useful": []
+  },
+  {
+    "composed": [],
+    "essential": [],
+    "family": "general",
+    "id": "q28",
+    "no_key": [],
+    "production": [],
+    "query": "how to teach a child to ride a bicycle",
+    "split": "evaluation",
+    "useful": []
+  },
+  {
+    "composed": [],
+    "essential": [],
+    "family": "general",
+    "id": "q29",
+    "no_key": [],
+    "production": [],
+    "query": "tips for hosting an outdoor movie night",
+    "split": "evaluation",
+    "useful": []
+  },
+  {
+    "composed": [],
+    "essential": [],
+    "family": "general",
+    "id": "q30",
+    "no_key": [],
+    "production": [],
+    "query": "what to consider when adopting a cat",
+    "split": "evaluation",
+    "useful": []
+  }
+]
