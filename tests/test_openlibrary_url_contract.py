@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import httpx
+import pytest
 
 from engines.openlibrary import OpenLibraryAdapter
 from slopsearx.formatter import format_json
@@ -76,6 +77,19 @@ async def test_identifier_free_records_are_omitted() -> None:
     )
 
     assert results == []
+
+
+@pytest.mark.parametrize("invalid_isbn", ["12345678901", "123456789012", "1234X67890", "978044117271X"])
+async def test_invalid_isbn_shapes_are_omitted(invalid_isbn: str) -> None:
+    results = await search_docs([{"title": "Invalid ISBN", "isbn": [invalid_isbn]}])
+
+    assert results == []
+
+
+async def test_isbn_ten_allows_terminal_x_check_character() -> None:
+    results = await search_docs([{"title": "Valid ISBN-10", "isbn": ["030640615X"]}])
+
+    assert [result.url for result in results] == ["https://openlibrary.org/isbn/030640615X"]
 
 
 async def test_distinct_urls_survive_merger_and_json_formatting() -> None:

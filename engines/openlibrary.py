@@ -24,7 +24,7 @@ _WORK_KEY_RE = re.compile(r"^(?:/)?works/(OL\d+W)$")
 _EDITION_KEY_RE = re.compile(r"^(?:/)?books/(OL\d+M)$")
 _BARE_WORK_KEY_RE = re.compile(r"^(OL\d+W)$")
 _BARE_EDITION_KEY_RE = re.compile(r"^(OL\d+M)$")
-_ISBN_RE = re.compile(r"^[0-9Xx]{10,13}$")
+_ISBN_RE = re.compile(r"(?:[0-9]{9}[0-9Xx]|[0-9]{13})")
 
 
 def _openlibrary_key_url(value: Any, kind: str) -> str | None:
