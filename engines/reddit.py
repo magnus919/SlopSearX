@@ -1,7 +1,10 @@
-"""Reddit adapter — public JSON search API.
+"""Reddit adapter — Reddit Data API search.
 
-Free, public JSON API. No auth or API key required.
-Rate limit: ~60 req/min per IP. Respect Retry-After header.
+Reddit may allow anonymous JSON access from some networks, but its current
+access guidance requires a valid OAuth token (or a logged-in session) when
+requests originate from hosted-service IP ranges.  This adapter never falls
+back to browser automation or scraping: an optional OAuth bearer token is
+used when configured, and an upstream block is reported honestly otherwise.
 
 Sub-category routing:
 - ``reddit:subreddit`` → scoped to a specific subreddit.
@@ -37,8 +40,9 @@ class RedditAdapter(EngineAdapter):
 
     # -- Declared capability metadata (audited, issue 185) --
     supported_result_types = ("text", "media")
-    failure_classes = ("rate_limited", "blocked", "error", "timeout")
+    failure_classes = ("rate_limited", "blocked", "error", "timeout", "unavailable")
     cost_class = "free"
+    _DEFAULT_BASE_URL = "https://www.reddit.com"
 
     async def search(
         self,
@@ -49,7 +53,18 @@ class RedditAdapter(EngineAdapter):
             return early
 
         cfg = self.config
-        base_url = cfg.get("base_url", "https://www.reddit.com")
+        # ``AppContext`` passes ``dataclasses.asdict(EngineEntry)`` into the
+        # adapter.  An operator who configures only ``api_key`` therefore
+        # supplies ``base_url=""`` explicitly, which must mean "use the
+        # built-in default" rather than producing a relative request URL.
+        base_url = str(cfg.get("base_url") or self._DEFAULT_BASE_URL).rstrip("/")
+        token = str(cfg.get("access_token") or cfg.get("api_key") or "").strip()
+        # Reddit's documented API host for OAuth-authenticated requests is
+        # oauth.reddit.com. Preserve an explicitly configured test/operator
+        # endpoint, but route the built-in public default through OAuth when a
+        # token is present.
+        if token and base_url == self._DEFAULT_BASE_URL:
+            base_url = "https://oauth.reddit.com"
         timeout_ms = cfg.get("timeout_ms", 5_000)
         max_results = cfg.get("max_results", 10)
         search_params = params or {}
@@ -59,9 +74,14 @@ class RedditAdapter(EngineAdapter):
         subreddit = search_params.get("subreddit", "all")
 
         if "reddit:subreddit" in categories:
-            endpoint = f"{base_url}/r/{subreddit}/search.json"
+            endpoint = f"{base_url}/r/{subreddit}/search"
         else:
-            endpoint = f"{base_url}/search.json"
+            endpoint = f"{base_url}/search"
+
+        # Keep the legacy public JSON extension for anonymous requests. The
+        # OAuth endpoint uses the documented API path and raw_json explicitly.
+        if not token:
+            endpoint += ".json"
 
         query_params: dict[str, str | int] = {
             "q": query,
@@ -75,6 +95,8 @@ class RedditAdapter(EngineAdapter):
             "User-Agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
             "Accept": "application/json",
         }
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
 
         start_time = time.monotonic()
         try:
@@ -90,16 +112,55 @@ class RedditAdapter(EngineAdapter):
                         error_message="rate limited by Reddit",
                     )
                 if resp.status_code == 403:
+                    if token:
+                        message = (
+                            "Reddit blocked the authenticated request; verify OAuth approval, scope, and access policy"
+                        )
+                    else:
+                        message = (
+                            "Reddit blocked unauthenticated API access; set ENGINE_REDDIT_API_KEY to an approved "
+                            "OAuth access token for hosted/provider IPs"
+                        )
                     return AdapterResponse(
                         results=[],
                         status=EngineStatus.BLOCKED,
                         latency_ms=latency,
-                        error_message="blocked by Reddit",
+                        error_message=message,
+                    )
+                if resp.status_code == 401:
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.UNAVAILABLE,
+                        latency_ms=latency,
+                        error_message="Reddit rejected the OAuth access token; configure a valid approved token",
                     )
                 resp.raise_for_status()
 
-                data = resp.json()
-                children = data.get("data", {}).get("children", [])
+                try:
+                    data = resp.json()
+                except ValueError:
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.ERROR,
+                        latency_ms=latency,
+                        error_message="Reddit returned invalid JSON",
+                    )
+
+                if not isinstance(data, dict) or not isinstance(data.get("data"), dict):
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.ERROR,
+                        latency_ms=latency,
+                        error_message="Reddit returned an invalid listing shape",
+                    )
+                children = data["data"].get("children")
+                if not isinstance(children, list):
+                    return AdapterResponse(
+                        results=[],
+                        status=EngineStatus.ERROR,
+                        latency_ms=latency,
+                        error_message="Reddit returned an invalid listing children field",
+                    )
                 results = self._parse_listing(children)
                 return AdapterResponse(results=results, status=EngineStatus.OK, latency_ms=latency)
 
