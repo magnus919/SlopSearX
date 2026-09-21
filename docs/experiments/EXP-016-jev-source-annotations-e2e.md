@@ -17,7 +17,7 @@
 
 ## Readout
 
-Pending. Pre-measurement registration correction: the initial `pypi` candidate
+Pre-measurement registration correction: the initial `pypi` candidate
 was replaced with `npm` and the five package tasks were rewritten to npm
 packages. The PyPI adapter's fallback fetches the entire simple index for
 non-package queries and its card does not expose dependencies; npm's bounded
@@ -27,3 +27,20 @@ are frozen in a second commit before acquisition.
 The shell's global `python3` lacks the project's `structlog` dependency; the
 registered execution commands now use the existing project virtualenv. This
 was found by an import check, not a search or Jev measurement.
+
+Outcome: **inconclusive (acquisition gate failed)**. The frozen 20-query run
+completed 100 free adapter attempts through `SearchService`: 40 general
+attempts (20 DuckDuckGo, 20 Google) and 60 specialist attempts. Every general
+attempt was classified `blocked`; no query returned a general result card.
+Thus the preregistered >=16/20 general-card gate failed, there were no cards
+eligible for the primary annotation comparison, and no Jev calls or threshold
+selection occurred. npm and OpenAlex each returned results on all 20 queries;
+Internet Archive returned results on 10, timed out on five historical domain
+queries, and errored on five broad queries. This is an upstream availability
+result, not evidence against Jev annotations. No Brave or paid search call was
+made. The acquisition file SHA-256 is
+`464e066d59ee890f4ad166d6ee9bda008dea79554e340b03f54af1b6bba0daaa`.
+See [raw acquisition evidence](evidence/EXP-016/acquisition.json).
+
+A separately registered EXP-019–021 retry may reuse these specialist results
+with a paid but bounded general source. It must not overwrite this outcome.

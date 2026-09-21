@@ -12,4 +12,10 @@
 
 ## Readout
 
-Pending.
+Outcome: **inconclusive (shared acquisition gate failed)**. The 40 free
+general-adapter attempts in EXP-016 all returned `blocked`, leaving no real
+first-pass cards for the registered quality-triage sample or its attack clones.
+No Jev score or threshold was measured, and no paid search call was made.
+The complete classified outcomes are preserved in
+[EXP-016 acquisition evidence](evidence/EXP-016/acquisition.json). A separate
+registered retry is needed rather than selecting easier cards after the fact.

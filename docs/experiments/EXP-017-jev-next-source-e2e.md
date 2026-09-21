@@ -13,4 +13,11 @@
 
 ## Readout
 
-Pending.
+Outcome: **inconclusive (shared acquisition gate failed)**. All 40 general
+DDG/Google attempts in EXP-016 were classified `blocked`. Jev had no first-pass
+general response to inspect, so next-source advice, calibration, and holdout
+were not run. The 60 specialist outcomes are preserved in
+[EXP-016 acquisition evidence](evidence/EXP-016/acquisition.json), but they
+cannot by themselves establish the value of an *incremental* next source. Zero
+Jev and zero paid search calls in this trial. A separate registered retry is
+required; do not repurpose these unavailable general results as negatives.
