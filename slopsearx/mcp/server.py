@@ -25,17 +25,11 @@ from importlib.metadata import version as _pkg_version
 from typing import Any, AsyncIterator, Awaitable, Callable
 
 import uvicorn
+from fastmcp import FastMCP
 
-try:
-    # FastMCP 3.x/4.x is a standalone package. Keep the fallback for the
-    # older MCP SDK-bundled server used by the v3 deployment line.
-    from fastmcp import FastMCP
-
-    _MODERN_FASTMCP = True
-except ImportError:  # pragma: no cover - exercised only with the v3 SDK
-    from mcp.server.fastmcp import FastMCP
-
-    _MODERN_FASTMCP = False
+# FastMCP is a direct project dependency. Its HTTP application method is
+# available in v3/v4; older supported releases used the bundled SDK shape.
+_MODERN_FASTMCP = hasattr(FastMCP, "http_app")
 
 import engines  # noqa: F401 — triggers @register_engine to populate the registry
 from slopsearx import metrics as m

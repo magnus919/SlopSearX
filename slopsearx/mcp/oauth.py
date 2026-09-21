@@ -27,9 +27,8 @@ import secrets
 import time
 from typing import Any, cast
 
-from fastmcp.server.auth import OAuthProvider
+from fastmcp.server.auth import AccessToken, OAuthProvider
 from mcp.server.auth.provider import (
-    AccessToken,
     AuthorizationCode,
     AuthorizationParams,
     RefreshToken,
