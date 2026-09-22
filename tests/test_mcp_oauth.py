@@ -301,9 +301,9 @@ class TestOAuthOverHTTP:
                     "client_id": client_id,
                 },
             )
-            # FastMCP's OAuth handler follows MCP's invalid-grant challenge
-            # semantics: a rejected authorization code receives HTTP 401.
-            assert bad.status_code == 401, bad.text
+            # The bundled SDK returns 400 and FastMCP 4 returns 401 for an
+            # invalid grant; both must reject the incorrect PKCE verifier.
+            assert bad.status_code in {400, 401}, bad.text
 
             # Correct verifier succeeds
             token = await client.post(

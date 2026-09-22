@@ -20,12 +20,12 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
+from importlib import import_module
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _pkg_version
-from typing import Any, AsyncIterator, Awaitable, Callable
+from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Callable
 
 import uvicorn
-from fastmcp import FastMCP
 
 import engines  # noqa: F401 — triggers @register_engine to populate the registry
 from slopsearx import metrics as m
@@ -52,6 +52,14 @@ from slopsearx.saved_store import SavedSearchStore
 from slopsearx.service import AppContext, SearchService, build_context, destroy_context
 from slopsearx.snapshot import SnapshotStore
 from slopsearx.staged import StagedSearchRunner, StagedSearchStore
+
+# Keep the established SDK server for FastMCP 3. FastMCP 4 requires its own
+# server implementation, while the SDK's v1 server retains its v3 lifecycle.
+_FAST_MCP_V4 = int(_pkg_version("fastmcp").split(".", 1)[0]) >= 4
+if TYPE_CHECKING:
+    from fastmcp import FastMCP
+else:
+    FastMCP = import_module("fastmcp" if _FAST_MCP_V4 else "mcp.server.fastmcp").FastMCP
 
 # FastMCP is a direct project dependency. Its HTTP application method is
 # available in v3/v4; older supported releases used the bundled SDK shape.
