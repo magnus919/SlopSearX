@@ -21,6 +21,8 @@ except ImportError:
     import httpx
 import pytest
 import uvicorn
+from mcp import ClientSession
+from mcp.client.streamable_http import streamable_http_client
 
 from slopsearx.capabilities import MCPPolicy
 from slopsearx.mcp.gateway import create_gateway
@@ -166,16 +168,19 @@ class TestGatewayOAuthFlow:
         async def should_not_redirect(authorization_url: str) -> None:
             raise AssertionError(f"re-authorized unexpectedly: {authorization_url}")
 
-        gateway2 = create_gateway(
+        # Verify a fresh OAuth client can reuse the persisted grant without
+        # starting a second gateway ASGI lifespan in the same event loop.
+        async with build_oauth_http_client(
             remote_url,
-            oauth=True,
-            oauth_token_file=str(token_file),
-            oauth_redirect_handler=should_not_redirect,
-            oauth_callback_handler=fake_callback,
-        )
-        async with _gateway_client(gateway2) as client:
-            tools = await client.list_tools()
-            assert len(tools) == 35
+            token_file=str(token_file),
+            redirect_handler=should_not_redirect,
+            callback_handler=fake_callback,
+        ) as authorized:
+            async with streamable_http_client(remote_url, http_client=authorized) as streams:
+                async with ClientSession(streams[0], streams[1]) as session:
+                    await session.initialize()
+                    tools = await session.list_tools()
+                    assert len(tools.tools) == 35
 
     async def test_oauth_and_token_are_mutually_exclusive(self) -> None:
         with pytest.raises(ValueError):
