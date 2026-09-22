@@ -111,15 +111,15 @@ class TestBearerAuth:
     async def test_make_http_app_uses_modern_http_app(self) -> None:
         class _Server:
             def __init__(self) -> None:
-                self.calls: list[str] = []
+                self.calls: list[dict[str, Any]] = []
                 self._inner = _PassThroughApp()
 
-            def http_app(self, *, transport: str) -> Any:
-                self.calls.append(transport)
+            def http_app(self, **kwargs: Any) -> Any:
+                self.calls.append(kwargs)
                 return self._inner
 
         server = _Server()
         app = make_http_app(server, "")
         messages = await _collect(app, _http_scope())
         assert messages[0]["status"] == 200
-        assert server.calls == ["streamable-http"]
+        assert server.calls == [{"transport": "streamable-http", "stateless_http": True, "json_response": True}]

@@ -213,6 +213,11 @@ slopsearx-mcp
 # → streamable HTTP on 127.0.0.1:8000, endpoint path /mcp
 ```
 
+The endpoint uses stateless streamable HTTP with JSON responses. Clients send
+MCP requests with `POST /mcp`; session-resumption `GET /mcp` is not supported.
+This allows replicas to share only Valkey-backed application state instead of
+depending on an individual replica's MCP session.
+
 Remote clients (SlopSearX on a different host than the MCP client):
 
 ```bash

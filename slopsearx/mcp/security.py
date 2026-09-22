@@ -65,11 +65,13 @@ def make_http_app(server: Any, token: str) -> ASGIApp:
     """Build streamable HTTP, preserving static and OAuth auth boundaries.
 
     FastMCP 3/4 exposes ``http_app`` and owns OAuth middleware on that app.
+    Its stateless JSON mode avoids keeping MCP sessions in individual replicas;
+    the service's shared state lives in Valkey.
     The legacy MCP SDK exposes ``streamable_http_app`` instead. Static bearer
     authentication remains this outer wrapper in both generations.
     """
     if hasattr(server, "http_app"):
-        app: ASGIApp = server.http_app(transport="streamable-http")
+        app: ASGIApp = server.http_app(transport="streamable-http", stateless_http=True, json_response=True)
     else:  # pragma: no cover - exercised only with the legacy MCP SDK
         app = server.streamable_http_app()
     if token:

@@ -344,7 +344,13 @@ class TestOAuthOverHTTP:
             async with httpx.AsyncClient(
                 headers={"Authorization": f"Bearer {tokens['access_token']}"}, timeout=15
             ) as authed:
-                probe = await authed.get(f"{base}/mcp")
+                # POST is the request method for stateless streamable HTTP;
+                # GET is legitimately 405 before authentication in that mode.
+                probe = await authed.post(
+                    f"{base}/mcp",
+                    json={"jsonrpc": "2.0", "id": 1, "method": "ping"},
+                    headers={"Accept": "application/json, text/event-stream"},
+                )
                 assert probe.status_code == 401
 
     async def test_oauth_settings_from_policy(self) -> None:
