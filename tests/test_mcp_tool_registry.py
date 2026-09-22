@@ -109,4 +109,6 @@ async def test_fastmcp_discovery_is_registry_ordered_and_described() -> None:
     discovered = await create_server().list_tools()
     assert tuple(tool.name for tool in discovered) == tool_names()
     for tool, definition in zip(discovered, TOOL_DEFINITIONS, strict=True):
-        assert tool.description == definition.description
+        # FastMCP dedents callable docstrings before advertising them; the
+        # registry remains the authoritative source of their actual wording.
+        assert " ".join(tool.description.split()) == " ".join(definition.description.split())

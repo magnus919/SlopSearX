@@ -20,12 +20,12 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
+from importlib import import_module
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _pkg_version
-from typing import Any, AsyncIterator, Awaitable, Callable
+from typing import TYPE_CHECKING, Any, AsyncIterator, Awaitable, Callable
 
 import uvicorn
-from mcp.server.fastmcp import FastMCP
 
 import engines  # noqa: F401 — triggers @register_engine to populate the registry
 from slopsearx import metrics as m
@@ -52,6 +52,18 @@ from slopsearx.saved_store import SavedSearchStore
 from slopsearx.service import AppContext, SearchService, build_context, destroy_context
 from slopsearx.snapshot import SnapshotStore
 from slopsearx.staged import StagedSearchRunner, StagedSearchStore
+
+# Keep the established SDK server for FastMCP 3. FastMCP 4 requires its own
+# server implementation, while the SDK's v1 server retains its v3 lifecycle.
+_FAST_MCP_V4 = int(_pkg_version("fastmcp").split(".", 1)[0]) >= 4
+if TYPE_CHECKING:
+    from fastmcp import FastMCP
+else:
+    FastMCP = import_module("fastmcp" if _FAST_MCP_V4 else "mcp.server.fastmcp").FastMCP
+
+# FastMCP is a direct project dependency. Its HTTP application method is
+# available in v3/v4; older supported releases used the bundled SDK shape.
+_MODERN_FASTMCP = hasattr(FastMCP, "http_app")
 
 logger = logging.getLogger(__name__)
 
@@ -242,6 +254,22 @@ def _instrumented(fn: Any) -> Any:
     return wrapper
 
 
+def _fastmcp_constructor_kwargs(*, oauth: Any, oauth_provider: Any) -> dict[str, Any]:
+    """Return auth constructor arguments for the installed FastMCP API.
+
+    FastMCP 3/4 owns OAuth configuration on an ``OAuthProvider`` passed as
+    ``auth``. The older MCP SDK API instead takes ``AuthSettings`` as
+    ``auth`` and the provider as ``auth_server_provider``.
+    """
+    if oauth is None:
+        return {}
+    if oauth_provider is None:
+        raise ValueError("oauth_provider is required when oauth settings are provided")
+    if _MODERN_FASTMCP:
+        return {"auth": oauth_provider}
+    return {"auth": oauth, "auth_server_provider": oauth_provider}
+
+
 def create_server(
     host: str = "127.0.0.1",
     port: int = 8000,
@@ -265,12 +293,12 @@ def create_server(
     budget are derived from (see :func:`_lifespan`); when omitted the
     ambient layered config is loaded.
     """
-    kwargs: dict[str, Any] = {}
-    if oauth is not None:
-        if oauth_provider is None:
-            raise ValueError("oauth_provider is required when oauth settings are provided")
-        kwargs["auth"] = oauth
-        kwargs["auth_server_provider"] = oauth_provider
+    kwargs = _fastmcp_constructor_kwargs(oauth=oauth, oauth_provider=oauth_provider)
+    constructor_kwargs: dict[str, Any] = {}
+    # Modern FastMCP moved host/port to the transport runner/app. The legacy
+    # SDK still accepts these constructor arguments.
+    if not _MODERN_FASTMCP:
+        constructor_kwargs.update(host=host, port=port)
 
     mcp = FastMCP(
         "slopsearx",
@@ -278,9 +306,8 @@ def create_server(
         lifespan=lambda server: _lifespan(
             server, oauth_provider=oauth_provider, state_factory=state_factory, config=config
         ),
-        host=host,
-        port=port,
         **kwargs,
+        **constructor_kwargs,
     )
 
     # --- tools ---------------------------------------------------------
@@ -406,7 +433,7 @@ def main(argv: list[str] | None = None) -> None:
     except ValueError:
         port = 8000
 
-    if args.transport == "http":
+    if args.transport in ("http", "streamable-http"):
         policy = load_mcp_policy()
         oauth_settings, oauth_provider = oauth_settings_from_policy(policy)
         if oauth_settings is not None:

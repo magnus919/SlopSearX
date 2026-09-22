@@ -62,8 +62,16 @@ def _safe_equal(value: bytes, expected: bytes) -> bool:
 
 
 def make_http_app(server: Any, token: str) -> ASGIApp:
-    """Build the streamable-HTTP ASGI app, wrapped with auth when a token is set."""
-    app: ASGIApp = server.streamable_http_app()
+    """Build streamable HTTP, preserving static and OAuth auth boundaries.
+
+    FastMCP 3/4 exposes ``http_app`` and owns OAuth middleware on that app.
+    The legacy MCP SDK exposes ``streamable_http_app`` instead. Static bearer
+    authentication remains this outer wrapper in both generations.
+    """
+    if hasattr(server, "http_app"):
+        app: ASGIApp = server.http_app(transport="streamable-http")
+    else:  # pragma: no cover - exercised only with the legacy MCP SDK
+        app = server.streamable_http_app()
     if token:
         return bearer_auth_app(app, token)
     return app

@@ -31,7 +31,7 @@ async def test_saved_event_transport_read_restart_and_ack(monkeypatch):
                 "start_immediately": True,
             },
         )
-        assert not created_result.isError
+        assert not created_result.model_dump(by_alias=True)["isError"]
         async with asyncio.timeout(5):
             while True:
                 read = _payload(

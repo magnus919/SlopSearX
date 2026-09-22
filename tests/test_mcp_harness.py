@@ -24,7 +24,10 @@ from contextlib import asynccontextmanager, suppress
 from types import SimpleNamespace
 from typing import Any, AsyncIterator
 
-import httpx
+try:
+    import httpx2 as httpx  # type: ignore[import-not-found]
+except ImportError:  # MCP SDK v1 uses httpx rather than httpx2.
+    import httpx
 import pytest
 import uvicorn
 from mcp import ClientSession
@@ -43,6 +46,7 @@ from slopsearx.mcp.harness import (
     make_fixture_http_app,
 )
 from slopsearx.mcp.security import make_http_app
+from slopsearx.mcp.server import _fastmcp_constructor_kwargs
 from slopsearx.mcp.tool_registry import tool_names
 from slopsearx.service import AppContext
 
@@ -90,7 +94,8 @@ async def _session(url: str, token: str = "") -> AsyncIterator[tuple[ClientSessi
     """Open a streamable-HTTP MCP client session against ``url``."""
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     async with httpx.AsyncClient(headers=headers) as client:
-        async with streamable_http_client(url, http_client=client) as (read, write, _get_session_id):
+        async with streamable_http_client(url, http_client=client) as streams:
+            read, write = streams[0], streams[1]
             async with ClientSession(read, write) as session:
                 yield session, client
 
@@ -486,6 +491,26 @@ class TestAuthenticatedTransport:
                     json={"jsonrpc": "2.0", "method": "tools/list", "id": 1},
                 )
                 assert resp.status_code == 401
+
+
+class TestFastMCPCompatibility:
+    def test_modern_oauth_provider_is_passed_as_auth(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("slopsearx.mcp.server._MODERN_FASTMCP", True)
+        provider = object()
+        assert _fastmcp_constructor_kwargs(oauth=object(), oauth_provider=provider) == {"auth": provider}
+
+    def test_legacy_oauth_settings_keep_sdk_provider_argument(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("slopsearx.mcp.server._MODERN_FASTMCP", False)
+        settings = object()
+        provider = object()
+        assert _fastmcp_constructor_kwargs(oauth=settings, oauth_provider=provider) == {
+            "auth": settings,
+            "auth_server_provider": provider,
+        }
+
+    def test_oauth_requires_a_provider(self) -> None:
+        with pytest.raises(ValueError, match="oauth_provider is required"):
+            _fastmcp_constructor_kwargs(oauth=object(), oauth_provider=None)
 
 
 class TestCli:

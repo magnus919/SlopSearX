@@ -14,17 +14,19 @@ import hashlib
 import secrets
 import socket
 import time
+from importlib import import_module
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 import httpx
 import pytest
 import uvicorn
+from fastmcp import Client
+from fastmcp.server.auth import OAuthProvider
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 from mcp.server.auth.provider import AuthorizationParams
-from mcp.shared.memory import create_connected_server_and_client_session
-from mcp.types import AnyUrl
+from mcp.shared.auth import AnyUrl
 
 from slopsearx.capabilities import MCPPolicy
 from slopsearx.mcp.oauth import (
@@ -33,6 +35,11 @@ from slopsearx.mcp.oauth import (
 )
 from slopsearx.mcp.security import make_http_app
 from slopsearx.mcp.server import create_server
+
+try:
+    mcp_httpx = import_module("httpx2")
+except ModuleNotFoundError:
+    mcp_httpx = httpx
 
 
 def _free_port() -> int:
@@ -68,6 +75,10 @@ def _pkce_pair() -> tuple[str, str]:
 
 
 class TestProvider:
+    async def test_is_fastmcp_oauth_provider(self) -> None:
+        provider = SlopSearxOAuthProvider(None)
+        assert isinstance(provider, OAuthProvider)
+
     async def test_register_and_get_client(self) -> None:
         provider = SlopSearxOAuthProvider(None)
         from mcp.shared.auth import OAuthClientInformationFull
@@ -165,6 +176,38 @@ class TestProvider:
         # Client B must not be able to load or exchange A's code
         assert await provider.load_authorization_code(await provider.get_client("b"), code_str) is None  # type: ignore[arg-type]
 
+    async def test_tokens_are_bound_to_client_and_expire(self) -> None:
+        from mcp.shared.auth import OAuthClientInformationFull
+
+        provider = SlopSearxOAuthProvider(None, access_token_ttl_seconds=1)
+        client = OAuthClientInformationFull(
+            client_id="owner",
+            redirect_uris=["http://localhost/cb"],
+            token_endpoint_auth_method="none",
+            grant_types=["authorization_code"],
+            response_types=["code"],
+        )
+        other = client.model_copy(update={"client_id": "other"})
+        await provider.register_client(client)
+        await provider.register_client(other)
+        params = AuthorizationParams(
+            state=None,
+            scopes=[],
+            code_challenge="ch",
+            redirect_uri=AnyUrl("http://localhost/cb"),
+            redirect_uri_provided_explicitly=True,
+        )
+        url = await provider.authorize(client, params)
+        code_str = parse_qs(urlparse(url).query)["code"][0]
+        code = await provider.load_authorization_code(client, code_str)
+        assert code is not None
+        token = await provider.exchange_authorization_code(client, code)
+
+        assert await provider.load_refresh_token(other, token.refresh_token) is None
+        assert await provider.load_access_token("not-a-token") is None
+        await asyncio.sleep(1.1)
+        assert await provider.load_access_token(token.access_token) is None
+
 
 # ---------------------------------------------------------------------------
 # Full OAuth flow over HTTP
@@ -258,7 +301,9 @@ class TestOAuthOverHTTP:
                     "client_id": client_id,
                 },
             )
-            assert bad.status_code == 400, bad.text
+            # The bundled SDK returns 400 and FastMCP 4 returns 401 for an
+            # invalid grant; both must reject the incorrect PKCE verifier.
+            assert bad.status_code in {400, 401}, bad.text
 
             # Correct verifier succeeds
             token = await client.post(
@@ -277,10 +322,11 @@ class TestOAuthOverHTTP:
             assert "refresh_token" in tokens
 
             # Access token works against /mcp
-            async with httpx.AsyncClient(
+            async with mcp_httpx.AsyncClient(
                 headers={"Authorization": f"Bearer {tokens['access_token']}"}, timeout=15
             ) as authed:
-                async with streamable_http_client(f"{base}/mcp", http_client=authed) as (read, write, _):
+                async with streamable_http_client(f"{base}/mcp", http_client=authed) as streams:
+                    read, write = streams[0], streams[1]
                     async with ClientSession(read, write) as session:
                         await session.initialize()
                         tools = await session.list_tools()
@@ -305,7 +351,7 @@ class TestOAuthOverHTTP:
         policy = MCPPolicy(oauth_enabled=True, oauth_issuer_url="https://mcp.example.com/")
         settings, provider = oauth_settings_from_policy(policy)
         assert settings is not None
-        assert str(settings.issuer_url) == "https://mcp.example.com/"
+        assert str(settings.issuer_url).rstrip("/") == "https://mcp.example.com"
         assert str(settings.resource_server_url) == "https://mcp.example.com/mcp"
         assert settings.client_registration_options is not None
         assert settings.client_registration_options.enabled is True
@@ -326,6 +372,6 @@ class TestOAuthOverHTTP:
         policy = MCPPolicy(oauth_enabled=True, oauth_issuer_url=f"http://127.0.0.1:{port}")
         settings, provider = oauth_settings_from_policy(policy)
         server = create_server(host="127.0.0.1", port=port, oauth=settings, oauth_provider=provider)
-        async with create_connected_server_and_client_session(server) as client:
+        async with Client(server) as client:
             tools = await client.list_tools()
-            assert len(tools.tools) == 35
+            assert len(tools) == 35
