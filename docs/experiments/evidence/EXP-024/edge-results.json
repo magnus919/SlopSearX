@@ -1,0 +1,241 @@
+{
+  "input_urls": [
+    "https://example.org",
+    "HTTPS://EXAMPLE.ORG/a",
+    "https://example.org/a#part",
+    "https://example.org/a?",
+    "https://example.org/a?utm_source=x&v=1",
+    "https://example.org/?a=1&a=2&b=",
+    "relative/path",
+    "http://[broken",
+    "https://example.org/?q=\ud800"
+  ],
+  "baseline": [
+    {
+      "url": "https://example.org",
+      "title": "0",
+      "content": "fixture",
+      "engine": "a",
+      "engines": [
+        "a",
+        "b"
+      ],
+      "score": 2.0,
+      "position": 1,
+      "category": "general",
+      "published_date": null,
+      "thumbnail": null,
+      "img_src": null,
+      "tier": 1,
+      "media": null,
+      "payload": null
+    },
+    {
+      "url": "HTTPS://EXAMPLE.ORG/a",
+      "title": "1",
+      "content": "fixture",
+      "engine": "a",
+      "engines": [
+        "a",
+        "b"
+      ],
+      "score": 2.0,
+      "position": 2,
+      "category": "general",
+      "published_date": null,
+      "thumbnail": null,
+      "img_src": null,
+      "tier": 1,
+      "media": null,
+      "payload": null
+    },
+    {
+      "url": "https://example.org/a#part",
+      "title": "2",
+      "content": "fixture",
+      "engine": "a",
+      "engines": [
+        "a",
+        "b"
+      ],
+      "score": 2.0,
+      "position": 3,
+      "category": "general",
+      "published_date": null,
+      "thumbnail": null,
+      "img_src": null,
+      "tier": 1,
+      "media": null,
+      "payload": null
+    },
+    {
+      "url": "https://example.org/a?",
+      "title": "3",
+      "content": "fixture",
+      "engine": "a",
+      "engines": [
+        "a",
+        "b"
+      ],
+      "score": 2.0,
+      "position": 4,
+      "category": "general",
+      "published_date": null,
+      "thumbnail": null,
+      "img_src": null,
+      "tier": 1,
+      "media": null,
+      "payload": null
+    },
+    {
+      "url": "https://example.org/a?utm_source=x&v=1",
+      "title": "4",
+      "content": "fixture",
+      "engine": "b",
+      "engines": [
+        "b"
+      ],
+      "score": 1.0,
+      "position": 5,
+      "category": "general",
+      "published_date": null,
+      "thumbnail": null,
+      "img_src": null,
+      "tier": 2,
+      "media": null,
+      "payload": null
+    },
+    {
+      "url": "https://example.org/?a=1&a=2&b=",
+      "title": "5",
+      "content": "fixture",
+      "engine": "b",
+      "engines": [
+        "b"
+      ],
+      "score": 1.0,
+      "position": 6,
+      "category": "general",
+      "published_date": null,
+      "thumbnail": null,
+      "img_src": null,
+      "tier": 2,
+      "media": null,
+      "payload": null
+    }
+  ],
+  "candidate": [
+    {
+      "url": "https://example.org",
+      "title": "0",
+      "content": "fixture",
+      "engine": "a",
+      "engines": [
+        "a",
+        "b"
+      ],
+      "score": 2.0,
+      "position": 1,
+      "category": "general",
+      "published_date": null,
+      "thumbnail": null,
+      "img_src": null,
+      "tier": 1,
+      "media": null,
+      "payload": null
+    },
+    {
+      "url": "HTTPS://EXAMPLE.ORG/a",
+      "title": "1",
+      "content": "fixture",
+      "engine": "a",
+      "engines": [
+        "a",
+        "b"
+      ],
+      "score": 2.0,
+      "position": 2,
+      "category": "general",
+      "published_date": null,
+      "thumbnail": null,
+      "img_src": null,
+      "tier": 1,
+      "media": null,
+      "payload": null
+    },
+    {
+      "url": "https://example.org/a#part",
+      "title": "2",
+      "content": "fixture",
+      "engine": "a",
+      "engines": [
+        "a",
+        "b"
+      ],
+      "score": 2.0,
+      "position": 3,
+      "category": "general",
+      "published_date": null,
+      "thumbnail": null,
+      "img_src": null,
+      "tier": 1,
+      "media": null,
+      "payload": null
+    },
+    {
+      "url": "https://example.org/a?",
+      "title": "3",
+      "content": "fixture",
+      "engine": "a",
+      "engines": [
+        "a",
+        "b"
+      ],
+      "score": 2.0,
+      "position": 4,
+      "category": "general",
+      "published_date": null,
+      "thumbnail": null,
+      "img_src": null,
+      "tier": 1,
+      "media": null,
+      "payload": null
+    },
+    {
+      "url": "https://example.org/a?utm_source=x&v=1",
+      "title": "4",
+      "content": "fixture",
+      "engine": "b",
+      "engines": [
+        "b"
+      ],
+      "score": 1.0,
+      "position": 5,
+      "category": "general",
+      "published_date": null,
+      "thumbnail": null,
+      "img_src": null,
+      "tier": 2,
+      "media": null,
+      "payload": null
+    },
+    {
+      "url": "https://example.org/?a=1&a=2&b=",
+      "title": "5",
+      "content": "fixture",
+      "engine": "b",
+      "engines": [
+        "b"
+      ],
+      "score": 1.0,
+      "position": 6,
+      "category": "general",
+      "published_date": null,
+      "thumbnail": null,
+      "img_src": null,
+      "tier": 2,
+      "media": null,
+      "payload": null
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+Completed plain-0
+Completed plain-10
+Completed plain-20
+Completed mixed-0
+Completed mixed-10
+Completed mixed-20
+Completed tracking-0
+Completed tracking-10
+Completed tracking-20
+{
+  "measured_calls": 14400,
+  "blocks": 360,
+  "means": [
+    {
+      "cell": "plain-0",
+      "baseline_ms": 0.35033077875,
+      "candidate_ms": 0.3541566125
+    },
+    {
+      "cell": "plain-10",
+      "baseline_ms": 0.33387772,
+      "candidate_ms": 0.298926825
+    },
+    {
+      "cell": "plain-20",
+      "baseline_ms": 0.30868005875,
+      "candidate_ms": 0.2374591325
+    },
+    {
+      "cell": "mixed-0",
+      "baseline_ms": 0.44545149,
+      "candidate_ms": 0.4501515675
+    },
+    {
+      "cell": "mixed-10",
+      "baseline_ms": 0.42191693375,
+      "candidate_ms": 0.36327549875
+    },
+    {
+      "cell": "mixed-20",
+      "baseline_ms": 0.40455895625,
+      "candidate_ms": 0.2791026025
+    },
+    {
+      "cell": "tracking-0",
+      "baseline_ms": 0.50901371375,
+      "candidate_ms": 0.51405035875
+    },
+    {
+      "cell": "tracking-10",
+      "baseline_ms": 0.49081990125,
+      "candidate_ms": 0.40922293625
+    },
+    {
+      "cell": "tracking-20",
+      "baseline_ms": 0.462574795,
+      "candidate_ms": 0.296855535
+    }
+  ],
+  "baseline_ms": 0.4141360386111111,
+  "candidate_ms": 0.3559112298611111,
+  "absolute_saving_ms": 0.05822480874999997,
+  "relative_saving": 0.14059343626618115,
+  "absolute_95_interval_ms": [
+    0.05745893166666666,
+    0.058978614166666665
+  ],
+  "relative_95_interval": [
+    0.13886965451578748,
+    0.14228078922180243
+  ],
+  "responses_equal": true,
+  "cell_latency_guardrail": true,
+  "environment": {
+    "python": "3.12.11",
+    "system": "Darwin",
+    "machine": "arm64",
+    "registration_commit": "16c054f0e93b87567bb0290338b40afe97d8c264",
+    "packages": {
+      "httpx": "0.28.1",
+      "pydantic": "2.13.4",
+      "fastapi": "0.136.3"
+    }
+  }
+}
