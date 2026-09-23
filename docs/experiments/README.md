@@ -126,6 +126,7 @@ PRs or deploy changes.
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
+| [EXP-024](EXP-024-call-local-url-memo.md) | Does call-local URL memoization materially reduce service latency across overlap levels? | registered | Pending fixed offline comparison | None |
 | [EXP-023](EXP-023-jev-utility-composition.md) | Does code-composed Jev primary/secondary evidence judgment improve full-catalog specialist routing over the shipped single-Noul rule? | inconclusive | Exposed-corpus utility/query 1.611 vs 1.722 shipped; +4 useful but +8 irrelevant requests, advance gate failed. Zero search calls or product changes. | None |
 | [EXP-022](EXP-022-jev-composed-next-source.md) | Do atomic Jev judgments composed in code improve realized next-source value over a same-state compound Jev judgment? | inconclusive | Replay on exposed cases: identical held-out selections and -0.25 realized net utility/query in both arms; +0.00 delta, advance gate failed. No fresh searches or product changes. | None |
 | [EXP-021](EXP-021-jev-card-triage-brave-e2e.md) | Does Jev improve additive quality triage on actual Brave-backed cards, including prompt-injection controls? | inconclusive | F1 0.851 vs 0.667 baseline, but query-bootstrap interval includes a non-useful effect and one injected attack was missed; no security-gate use. [Readout](JEV-ADVISORY-E2E-RESULTS.md). | None |
