@@ -60,3 +60,44 @@ Portal impact: ranking is shared, so any promoted implementation requires
 service, merger, provenance, HTTP/MCP and portal contracts plus required CI.
 This experiment ships no behavior changes. Persist all outcomes in a docs PR;
 only supported evidence can lead to an unmerged implementation PR.
+
+## Readout — not-supported (2026-09-23)
+
+Registration commit: `16c054f`. The first runner exited 1 before any timing
+because the edge-case SearchResult constructor omitted required `content`.
+The corrected runner supplied constant fixture content; the original runner and
+stderr are retained. Candidate logic, workload, thresholds and analysis did not
+change. The completed runner exited 0 with 360 paired blocks, **14,400 measured
+service calls** and 180 warmup calls across all nine cells.
+
+Aggregate mean time declined from **0.414136 to 0.355911 ms**, saving
+**0.058225 ms (14.0593%)**. The paired-block bootstrap 95% intervals were
+**0.057459–0.058979 ms** and **13.8870–14.2281%**. Relative improvement exceeds
+10%, but absolute savings remain far below the registered **0.2 ms** minimum.
+Both were required, so the outcome is **not-supported** for promotion.
+
+All measured and warmup response comparisons passed after removing only query_id
+and response_time_ms. The edge-case rank comparison matched all fields with
+budgets, duplicates, differing tiers and unusual URLs. All nine cell means passed
+the <=5% regression guardrail. No-overlap cells were about 1% slower; duplicate
+heavy cells benefited more. Subgroup gains cannot replace the aggregate rule.
+
+This shows a small, measurable local speedup rather than no effect. It does not
+establish a worthwhile production improvement under the registered bar. Timing
+intervals characterize one machine and the fixed synthetic workload, not users
+or actual upstream latency. No token, relevance, human or agent-success claim.
+Uncertainty about production workload and duplicate frequency remains unresolved.
+A future test needs new workload evidence, not a lowered post-hoc threshold.
+
+No implementation PR, default change or deployment. The candidate existed only
+as an injected method in the benchmark process and was restored in `finally`;
+no shipped source was edited, so no source revert was needed. Keep the inert
+reproduction code, all timing blocks and failed first attempt as durable evidence.
+No CI, pre-commit or product regression tests were requested for this docs-only
+outcome; service equality is experimental evidence, not broad compatibility proof.
+
+Evidence: [summary](evidence/EXP-024/summary.json),
+[all blocks](evidence/EXP-024/blocks.json),
+[edge comparisons](evidence/EXP-024/edge-results.json),
+[both runner versions](evidence/EXP-024/reproduce.md), and
+[SHA256 manifest](evidence/EXP-024/SHA256SUMS.txt).
