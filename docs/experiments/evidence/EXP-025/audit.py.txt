@@ -1,0 +1,22 @@
+from pathlib import Path
+import hashlib,json,subprocess,platform
+root=Path.cwd(); out=root/'docs/experiments/evidence/EXP-025';out.mkdir(exist_ok=True)
+paths=subprocess.check_output(['git','ls-files','tests/fixtures','docs/experiments/evidence'],text=True).splitlines()
+inv=[]
+for name in paths:
+ p=root/name
+ row={'path':name,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+ if p.suffix=='.json':
+  try:
+   d=json.loads(p.read_text());row['type']=type(d).__name__;row['size']=len(d) if isinstance(d,(dict,list)) else None
+   if isinstance(d,dict):row['keys']=sorted(d)
+  except (ValueError,UnicodeError) as e:row['parse_error']=str(e)
+ inv.append(row)
+(out/'inventory.json').write_text(json.dumps(inv,indent=2)+'\n')
+selected=['EXP-004/rows.json','EXP-005/rows.json','EXP-006/rows.json','EXP-014/queries-v1.json','EXP-016/acquisition.json','EXP-016/brave-acquisition.json','EXP-016/labels.json']
+summary={}
+for name in selected:
+ d=json.loads((root/'docs/experiments/evidence'/name).read_text());rows=d if isinstance(d,list) else d.get('rows',d.get('queries',[]))
+ summary[name]={'row_count':len(rows),'first_row_keys':sorted(rows[0]) if rows else [],'families':sorted(set(r.get('family','unspecified') for r in rows))}
+(out/'audit.json').write_text(json.dumps({'baseline':'1cbde5b07e5c546d955d23ca1eb01652e9f353d6','registration':'dcb52f8','python':platform.python_version(),'tracked_artifacts':len(inv),'selected_schemas':summary,'outcome':'blocked','eligible_corpus_identified':False,'measurement_calls':0,'paid_calls':0},indent=2)+'\n')
+print(json.dumps(summary,indent=2))

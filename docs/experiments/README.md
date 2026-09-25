@@ -126,6 +126,7 @@ PRs or deploy changes.
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
+| [EXP-025](EXP-025-captured-ranking.md) | Does opt-in RRF improve captured-query nDCG@10 over presence? | blocked | No eligible independently judged captured relevance pool; no ranking replay or effect measured. | None |
 | [EXP-024](EXP-024-call-local-url-memo.md) | Does call-local URL memoization materially reduce service latency across overlap levels? | not-supported | 14.06% / 0.0582 ms saving; misses 0.2 ms minimum. All 14,400 service response comparisons passed. | None |
 | [EXP-023](EXP-023-jev-utility-composition.md) | Does code-composed Jev primary/secondary evidence judgment improve full-catalog specialist routing over the shipped single-Noul rule? | inconclusive | Exposed-corpus utility/query 1.611 vs 1.722 shipped; +4 useful but +8 irrelevant requests, advance gate failed. Zero search calls or product changes. | None |
 | [EXP-022](EXP-022-jev-composed-next-source.md) | Do atomic Jev judgments composed in code improve realized next-source value over a same-state compound Jev judgment? | inconclusive | Replay on exposed cases: identical held-out selections and -0.25 realized net utility/query in both arms; +0.00 delta, advance gate failed. No fresh searches or product changes. | None |
