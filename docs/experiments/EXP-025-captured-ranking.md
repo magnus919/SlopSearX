@@ -47,3 +47,25 @@
 - Portal impact: ranking would affect displayed order; no product change in
   this audit. Any later implementation requires portal contract coverage.
 - No implementation PR unless the full registered comparison supports it.
+
+## Readout — blocked (2026-09-25)
+
+Registration committed as `dcb52f8` before the eligibility audit. The baseline
+and proposed candidate remain the same source SHA; no implementation was made.
+The audit found no corpus meeting the registered prerequisites in the tracked
+fixture/evidence collection. See [assessment and reproduction](evidence/EXP-025/reproduce.md),
+[artifact inventory](evidence/EXP-025/inventory.json) and
+[schema observations](evidence/EXP-025/audit.json).
+
+Baseline nDCG, candidate nDCG, effect and confidence interval are **unmeasured**.
+This is missing evidence, not a zero effect or a failed ranker. Existing routing,
+source-type and target-match labels cannot silently become independently judged
+full-pool relevance grades. No service replay, tests, upstream requests or paid
+calls ran. Statistical and response-equivalence guardrails were not evaluated;
+no runtime, portal, policy, cache or API behavior changed.
+
+The registered prerequisite stopping rule was followed without deviations.
+Only documentation and inert audit evidence are retained; there is no candidate
+implementation to discard and no implementation PR. Documentation is persisted
+through the accompanying automatically merged experiment PR. Resume only after
+a suitable new corpus exists; do not spend daily cycles repeating this blocker.
