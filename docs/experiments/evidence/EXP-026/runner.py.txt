@@ -1,0 +1,61 @@
+import asyncio,copy,hashlib,inspect,json,platform,textwrap
+from pathlib import Path
+from importlib.metadata import version
+from slopsearx import cache as cm
+from slopsearx.adapter import EngineAdapter,AdapterResponse,SearchResult,EngineStatus
+from slopsearx.service import AppContext,SearchService,SearchRequest,search_response_to_payload
+out=Path('docs/experiments/evidence/EXP-026');out.mkdir(exist_ok=True)
+input_path=Path('docs/experiments/evidence/EXP-016/brave-acquisition.json')
+inputs=json.loads(input_path.read_text())['rows']
+baseline=cm.SearchCache.set
+source=textwrap.dedent(inspect.getsource(baseline));assert source.count('json.dumps(value)')==1
+source=source.replace('json.dumps(value)','json.dumps(value, separators=(",", ":"))')
+ns=dict(cm.__dict__);exec(source,ns);candidate=ns['set']
+class Store:
+ def __init__(self):self.data={};self.writes=[]
+ async def setex(self,key,ttl,value):
+  encoded=value.encode('utf-8');self.data[key]=encoded;self.writes.append((key,ttl,encoded))
+ async def get(self,key):return self.data.get(key)
+class Fixture(EngineAdapter):
+ name='brave'
+ def __init__(self,cards):super().__init__();self.cards=cards;self.calls=0
+ async def search(self,query,params=None):
+  self.calls+=1
+  return AdapterResponse(status=EngineStatus.OK,latency_ms=0,results=[SearchResult(url=c['url'],title=c['title'],content=c['snippet'],engine=c['engine'],engines=set(c['engines']),tier=c['tier']) for c in self.cards])
+def normalize(p):
+ p=copy.deepcopy(p);p['query_id']='0'*32;p['response_time_ms']=0;return p
+def make_cache():
+ c=cm.SearchCache();s=Store();c._client=s;c._connected=True;return c,s
+async def main():
+ rows=[];refs={};edges=[]
+ try:
+  for rep in range(2):
+   for i,row in enumerate(inputs):
+    pair={'id':row['id'],'repetition':rep,'family':row['family']};values={}
+    for arm in (['baseline','candidate'] if (i+rep)%2==0 else ['candidate','baseline']):
+     cm.SearchCache.set=baseline if arm=='baseline' else candidate
+     c,s=make_cache();f=Fixture(row['general']['cards']);svc=SearchService(AppContext(active_engines={'brave':f},cache=c))
+     req=SearchRequest(query=row['general'].get('query',row['id']),engines=['brave'])
+     fresh=await svc.search(req);hit=await svc.search(req)
+     assert hit.cached and f.calls==1,(row['id'],arm,'cache hit')
+     assert normalize(search_response_to_payload(fresh))==normalize(search_response_to_payload(hit))
+     assert len(s.writes)==1
+     key,ttl,data=s.writes[0];payload=normalize(json.loads(data))
+     # Re-serialize the normalized canonical payload through the same cache method.
+     await c.set(key,payload,ttl);normalized=s.writes[-1][2]
+     values[arm]=(key,ttl,payload)
+     pair[arm+'_bytes']=len(normalized)
+     pair[arm+'_sha256']=hashlib.sha256(normalized).hexdigest()
+    assert values['baseline']==values['candidate']
+    reference=values['baseline']
+    if row['id'] in refs:assert refs[row['id']]==reference
+    refs[row['id']]=reference;pair['equivalent']=True;rows.append(pair)
+  for i,payload in enumerate([{}, {'nested':[None,True,False,0,1.5,{'text':'quote"\n\t'}]}, {'text':'café 中文 🦑'}, {'text':'\ud800'}]):
+   for arm,fn in [('baseline',baseline),('candidate',candidate)]:
+    cm.SearchCache.set=fn;c,s=make_cache();await c.set('edge',payload,123);assert await c.get('edge')==payload
+    assert s.writes[0][:2]==('edge',123);edges.append({'case':i,'arm':arm,'round_trip':True,'bytes':len(s.writes[0][2])})
+ finally:cm.SearchCache.set=baseline
+ b=sum(r['baseline_bytes'] for r in rows);c=sum(r['candidate_bytes'] for r in rows)
+ summary={'baseline_bytes':b,'candidate_bytes':c,'saving_bytes':b-c,'saving_fraction':1-c/b,'decision':'supported' if 1-c/b>=.1 else 'not-supported','guardrails_passed':True,'query_rows':len(inputs),'repetitions':2,'write_hit_pairs':len(rows)*2,'service_calls':len(rows)*4,'edges':edges,'input_sha256':hashlib.sha256(input_path.read_bytes()).hexdigest(),'environment':{'python':platform.python_version(),'platform':platform.platform(),'packages':{p:version(p) for p in ['httpx','pydantic','valkey']}}}
+ (out/'rows.json').write_text(json.dumps(rows,indent=2)+'\n');(out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary,indent=2))
+asyncio.run(main())
