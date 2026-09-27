@@ -1,0 +1,72 @@
+{
+  "baseline_bytes": 134620,
+  "candidate_bytes": 126460,
+  "saving_bytes": 8160,
+  "saving_fraction": 0.060615064626355686,
+  "decision": "not-supported",
+  "guardrails_passed": true,
+  "query_rows": 20,
+  "repetitions": 2,
+  "write_hit_pairs": 80,
+  "service_calls": 160,
+  "edges": [
+    {
+      "case": 0,
+      "arm": "baseline",
+      "round_trip": true,
+      "bytes": 2
+    },
+    {
+      "case": 0,
+      "arm": "candidate",
+      "round_trip": true,
+      "bytes": 2
+    },
+    {
+      "case": 1,
+      "arm": "baseline",
+      "round_trip": true,
+      "bytes": 64
+    },
+    {
+      "case": 1,
+      "arm": "candidate",
+      "round_trip": true,
+      "bytes": 57
+    },
+    {
+      "case": 2,
+      "arm": "baseline",
+      "round_trip": true,
+      "bytes": 47
+    },
+    {
+      "case": 2,
+      "arm": "candidate",
+      "round_trip": true,
+      "bytes": 46
+    },
+    {
+      "case": 3,
+      "arm": "baseline",
+      "round_trip": true,
+      "bytes": 18
+    },
+    {
+      "case": 3,
+      "arm": "candidate",
+      "round_trip": true,
+      "bytes": 17
+    }
+  ],
+  "input_sha256": "bda41e595a347ec51a993ea5a3b94512f120f6a4202f2e72cf6c0608389366b1",
+  "environment": {
+    "python": "3.12.11",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "packages": {
+      "httpx": "0.28.1",
+      "pydantic": "2.13.4",
+      "valkey": "6.1.1"
+    }
+  }
+}
