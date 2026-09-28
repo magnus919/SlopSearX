@@ -126,6 +126,7 @@ PRs or deploy changes.
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
+| [EXP-027](EXP-027-utf8-cache.md) | Does literal UTF-8 reduce cache bytes without losing cacheable responses? | not-supported | Lone-surrogate cache write lost; adapter dispatched twice instead of once. Stopped before byte comparison. | None |
 | [EXP-026](EXP-026-compact-cache-json.md) | Does compact cache JSON save at least 10% of response bytes? | not-supported | 6.06% cache-value byte saving, below 10% minimum; all 80 cache round trips passed. | None |
 | [EXP-025](EXP-025-captured-ranking.md) | Does opt-in RRF improve captured-query nDCG@10 over presence? | blocked | No eligible independently judged captured relevance pool; no ranking replay or effect measured. | None |
 | [EXP-024](EXP-024-call-local-url-memo.md) | Does call-local URL memoization materially reduce service latency across overlap levels? | not-supported | 14.06% / 0.0582 ms saving; misses 0.2 ms minimum. All 14,400 service response comparisons passed. | None |
