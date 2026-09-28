@@ -1,0 +1,47 @@
+import asyncio,inspect,json,copy,textwrap,platform
+from pathlib import Path
+from importlib.metadata import version
+from valkey.connection import Encoder
+from slopsearx import cache as cm
+from slopsearx.adapter import EngineAdapter,AdapterResponse,SearchResult,EngineStatus
+from slopsearx.service import AppContext,SearchService,SearchRequest,search_response_to_payload
+out=Path('docs/experiments/evidence/EXP-027');out.mkdir(exist_ok=True)
+baseline=cm.SearchCache.set
+source=textwrap.dedent(inspect.getsource(baseline));assert source.count('json.dumps(value)')==1
+source=source.replace('json.dumps(value)','json.dumps(value, ensure_ascii=False)')
+ns=dict(cm.__dict__);exec(source,ns);candidate=ns['set']
+class Store:
+ def __init__(self):self.data={};self.writes=[];self.errors=[];self.encoder=Encoder('utf-8','strict',False)
+ async def get(self,k):return self.data.get(k)
+ async def setex(self,k,ttl,v):
+  try:b=self.encoder.encode(v)
+  except Exception as e:self.errors.append({'type':type(e).__name__,'message':str(e)});raise
+  self.data[k]=b;self.writes.append({'key':k,'ttl':ttl,'bytes':len(b)})
+class Fixture(EngineAdapter):
+ name='brave'
+ def __init__(self,title):super().__init__();self.title=title;self.calls=0
+ async def search(self,q,params=None):
+  self.calls+=1
+  return AdapterResponse(status=EngineStatus.OK,latency_ms=0,results=[SearchResult(url='https://example.org/encoding',title=self.title,content='fixture',engine='brave')])
+def norm(r):
+ p=search_response_to_payload(r);p['query_id']='0'*32;p['response_time_ms']=0;return p
+async def main():
+ rows=[];failed=False
+ try:
+  for label,title in [('ascii','ASCII'),('accented','café'),('cjk','中文'),('emoji','🦑'),('lone_surrogate','\ud800')]:
+   row={'case':label};values={}
+   for arm,fn in [('baseline',baseline),('candidate',candidate)]:
+    cm.SearchCache.set=fn;c=cm.SearchCache();s=Store();c._client=s;c._connected=True;f=Fixture(title)
+    svc=SearchService(AppContext(active_engines={'brave':f},cache=c));req=SearchRequest(query='encoding fixture',engines=['brave'])
+    fresh=await svc.search(req);second=await svc.search(req)
+    values[arm]=norm(second)
+    row[arm]={'cached':second.cached,'adapter_calls':f.calls,'writes':s.writes,'errors':s.errors,'fresh_matches_second':norm(fresh)==norm(second)}
+   row['payloads_equal']=values['baseline']==values['candidate']
+   row['guard_pass']=all(row[a]['cached'] and row[a]['adapter_calls']==1 and not row[a]['errors'] and row[a]['fresh_matches_second'] for a in ['baseline','candidate']) and row['payloads_equal'] and [(w['key'],w['ttl']) for w in row['baseline']['writes']]==[(w['key'],w['ttl']) for w in row['candidate']['writes']]
+   rows.append(row)
+   if not row['guard_pass']:failed=True;break
+ finally:cm.SearchCache.set=baseline
+ summary={'decision':'not-supported' if failed else 'compatibility-passed','stop_reason':'guardrail breach' if failed else 'continue registered corpus','guard_cases':len(rows),'service_calls':len(rows)*4,'primary_bytes':None,'primary_effect':None,'captured_replay_ran':False,'environment':{'python':platform.python_version(),'platform':platform.platform(),'valkey':version('valkey')},'rows':rows}
+ (out/'screen.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary,indent=2))
+ if not failed:raise RuntimeError('Compatibility passed: continue corpus with EXP-026 harness and registered encoder change')
+asyncio.run(main())

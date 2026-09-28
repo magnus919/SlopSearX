@@ -45,3 +45,27 @@
 - Portal: cache loss could change latency and redispatch; no product change
   authorized by this experiment. Supported implementation needs normal checks.
 - EXP-025 remains blocked with no new corpus. No unfinished experiment can run.
+
+## Readout — not-supported
+
+Registration `3fdf05b` preceded the candidate. Five compatibility cases were
+completed (20 service calls); ASCII, accented, CJK and emoji cases passed.
+The U+D800 title failed: baseline wrote one value, served a cache hit and called
+its adapter once; the candidate wrote no value, missed cache and called the
+adapter twice. The installed Valkey encoder raised UnicodeEncodeError on both
+candidate writes. SearchCache caught the errors as designed, so the response
+remained available but cache behavior regressed. Decoded response equality alone
+would have missed this regression.
+
+The zero-tolerance cache-preservation guard failed. Per the frozen stop rule,
+no captured-corpus byte comparison ran. Primary bytes/effect and statistical
+uncertainty are **unmeasured**, not zero. Exact fixed-case behavior is sufficient
+to reject this candidate, not to estimate production frequency or user impact.
+No paid/upstream calls, runtime source edits, CI, pre-commit or implementation
+PR. There were no method changes or reruns after observing the failure.
+
+[Screen evidence](evidence/EXP-027/screen.json) and
+[reproduction](evidence/EXP-027/reproduce.md) preserve the candidate and all cases.
+The in-memory method was restored; only documentation and inert evidence remain.
+Persist through the accompanying documentation-only PR. Any future UTF-8
+candidate must preserve surrogate handling before efficiency can justify it.
