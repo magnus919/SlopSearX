@@ -41,3 +41,30 @@
 - Portal impact: no proposed presentation changes; preserve canonical cache
   semantics. Candidate injected in memory only and restored after measurement.
 - EXP-025 has no new inputs; no eligible unfinished work precedes this cycle.
+
+## Readout — not-supported
+
+Registration b9794df preceded implementation. All six compatibility cases
+passed, including both high and low lone surrogates: cache writes succeeded,
+second requests hit cache, and adapters dispatched once. Then all 80 captured
+write/hit pairs passed payload, key, TTL and redispatch guards; supplementary
+round trips passed. Total service calls: 24 screen + 160 corpus = 184.
+
+Primary bytes across both passes: **134,620 baseline → 134,196 candidate**,
+a saving of **424 bytes / 0.31496%**, below the registered 10% minimum.
+Per single corpus pass: 67,310 → 67,098 bytes, saving 212 bytes. Repetitions
+agreed exactly. No statistical interval applies to this fixed deterministic
+corpus; effect on unseen workloads is unknown. CPU cost of the extra encoding
+check, real Valkey allocation, latency and human/agent benefit are unmeasured.
+
+[Summary](evidence/EXP-028/summary.json), [compatibility](evidence/EXP-028/screen.json),
+[raw rows](evidence/EXP-028/rows.json), [families](evidence/EXP-028/families.json)
+and [reproduction](evidence/EXP-028/reproduce.md) preserve all evidence.
+There were no deviations, retries, paid/upstream calls or production edits.
+The in-memory candidate was restored after each stage. No implementation PR;
+retain only documentation and inert evidence in the accompanying auto-merged PR.
+
+This resolves EXP-027's specific failure but does not meet the advancement bar.
+Do not repeat separator/Unicode cache experiments on this same corpus. Revisit
+only with a justified different workload or a distinct observed bottleneck;
+do not lower the threshold or combine rejected candidates after seeing results.
