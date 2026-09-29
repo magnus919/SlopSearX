@@ -1,0 +1,202 @@
+{
+  "decision": "compatibility-passed",
+  "stop_reason": "continue registered corpus",
+  "guard_cases": 6,
+  "service_calls": 24,
+  "primary_bytes": null,
+  "primary_effect": null,
+  "captured_replay_ran": false,
+  "environment": {
+    "python": "3.12.11",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "valkey": "6.1.1"
+  },
+  "rows": [
+    {
+      "case": "ascii",
+      "baseline": {
+        "cached": true,
+        "adapter_calls": 1,
+        "writes": [
+          {
+            "key": "search:v2:26e78bdfcd1355a876d2e4495ef6f207b6810b1448433c426761028b8c00edb0:routing:12f20dd285658967:suggestions:1",
+            "ttl": 3600,
+            "bytes": 1068
+          }
+        ],
+        "errors": [],
+        "fresh_matches_second": true
+      },
+      "candidate": {
+        "cached": true,
+        "adapter_calls": 1,
+        "writes": [
+          {
+            "key": "search:v2:26e78bdfcd1355a876d2e4495ef6f207b6810b1448433c426761028b8c00edb0:routing:12f20dd285658967:suggestions:1",
+            "ttl": 3600,
+            "bytes": 1068
+          }
+        ],
+        "errors": [],
+        "fresh_matches_second": true
+      },
+      "payloads_equal": true,
+      "guard_pass": true
+    },
+    {
+      "case": "accented",
+      "baseline": {
+        "cached": true,
+        "adapter_calls": 1,
+        "writes": [
+          {
+            "key": "search:v2:26e78bdfcd1355a876d2e4495ef6f207b6810b1448433c426761028b8c00edb0:routing:12f20dd285658967:suggestions:1",
+            "ttl": 3600,
+            "bytes": 1072
+          }
+        ],
+        "errors": [],
+        "fresh_matches_second": true
+      },
+      "candidate": {
+        "cached": true,
+        "adapter_calls": 1,
+        "writes": [
+          {
+            "key": "search:v2:26e78bdfcd1355a876d2e4495ef6f207b6810b1448433c426761028b8c00edb0:routing:12f20dd285658967:suggestions:1",
+            "ttl": 3600,
+            "bytes": 1068
+          }
+        ],
+        "errors": [],
+        "fresh_matches_second": true
+      },
+      "payloads_equal": true,
+      "guard_pass": true
+    },
+    {
+      "case": "cjk",
+      "baseline": {
+        "cached": true,
+        "adapter_calls": 1,
+        "writes": [
+          {
+            "key": "search:v2:26e78bdfcd1355a876d2e4495ef6f207b6810b1448433c426761028b8c00edb0:routing:12f20dd285658967:suggestions:1",
+            "ttl": 3600,
+            "bytes": 1075
+          }
+        ],
+        "errors": [],
+        "fresh_matches_second": true
+      },
+      "candidate": {
+        "cached": true,
+        "adapter_calls": 1,
+        "writes": [
+          {
+            "key": "search:v2:26e78bdfcd1355a876d2e4495ef6f207b6810b1448433c426761028b8c00edb0:routing:12f20dd285658967:suggestions:1",
+            "ttl": 3600,
+            "bytes": 1069
+          }
+        ],
+        "errors": [],
+        "fresh_matches_second": true
+      },
+      "payloads_equal": true,
+      "guard_pass": true
+    },
+    {
+      "case": "emoji",
+      "baseline": {
+        "cached": true,
+        "adapter_calls": 1,
+        "writes": [
+          {
+            "key": "search:v2:26e78bdfcd1355a876d2e4495ef6f207b6810b1448433c426761028b8c00edb0:routing:12f20dd285658967:suggestions:1",
+            "ttl": 3600,
+            "bytes": 1075
+          }
+        ],
+        "errors": [],
+        "fresh_matches_second": true
+      },
+      "candidate": {
+        "cached": true,
+        "adapter_calls": 1,
+        "writes": [
+          {
+            "key": "search:v2:26e78bdfcd1355a876d2e4495ef6f207b6810b1448433c426761028b8c00edb0:routing:12f20dd285658967:suggestions:1",
+            "ttl": 3600,
+            "bytes": 1067
+          }
+        ],
+        "errors": [],
+        "fresh_matches_second": true
+      },
+      "payloads_equal": true,
+      "guard_pass": true
+    },
+    {
+      "case": "lone_surrogate",
+      "baseline": {
+        "cached": true,
+        "adapter_calls": 1,
+        "writes": [
+          {
+            "key": "search:v2:26e78bdfcd1355a876d2e4495ef6f207b6810b1448433c426761028b8c00edb0:routing:12f20dd285658967:suggestions:1",
+            "ttl": 3600,
+            "bytes": 1069
+          }
+        ],
+        "errors": [],
+        "fresh_matches_second": true
+      },
+      "candidate": {
+        "cached": true,
+        "adapter_calls": 1,
+        "writes": [
+          {
+            "key": "search:v2:26e78bdfcd1355a876d2e4495ef6f207b6810b1448433c426761028b8c00edb0:routing:12f20dd285658967:suggestions:1",
+            "ttl": 3600,
+            "bytes": 1069
+          }
+        ],
+        "errors": [],
+        "fresh_matches_second": true
+      },
+      "payloads_equal": true,
+      "guard_pass": true
+    },
+    {
+      "case": "low_surrogate",
+      "baseline": {
+        "cached": true,
+        "adapter_calls": 1,
+        "writes": [
+          {
+            "key": "search:v2:26e78bdfcd1355a876d2e4495ef6f207b6810b1448433c426761028b8c00edb0:routing:12f20dd285658967:suggestions:1",
+            "ttl": 3600,
+            "bytes": 1069
+          }
+        ],
+        "errors": [],
+        "fresh_matches_second": true
+      },
+      "candidate": {
+        "cached": true,
+        "adapter_calls": 1,
+        "writes": [
+          {
+            "key": "search:v2:26e78bdfcd1355a876d2e4495ef6f207b6810b1448433c426761028b8c00edb0:routing:12f20dd285658967:suggestions:1",
+            "ttl": 3600,
+            "bytes": 1069
+          }
+        ],
+        "errors": [],
+        "fresh_matches_second": true
+      },
+      "payloads_equal": true,
+      "guard_pass": true
+    }
+  ]
+}
