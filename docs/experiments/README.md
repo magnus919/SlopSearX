@@ -126,7 +126,7 @@ PRs or deploy changes.
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
-| [EXP-029](EXP-029-empty-search-recovery.md) | Does an empty-search hint improve human recovery within two minutes? | registered | Participant-evidence prerequisite audit. | None |
+| [EXP-029](EXP-029-empty-search-recovery.md) | Does an empty-search hint improve human recovery within two minutes? | blocked | No available participant cohort or measured recovery baseline; no UI change or effect measured. | None |
 | [EXP-028](EXP-028-safe-utf8-cache.md) | Can UTF-8 with ASCII fallback preserve caching and save 10% of bytes? | not-supported | Fallback passed all guards; 0.315% byte saving misses 10% minimum. | None |
 | [EXP-027](EXP-027-utf8-cache.md) | Does literal UTF-8 reduce cache bytes without losing cacheable responses? | not-supported | Lone-surrogate cache write lost; adapter dispatched twice instead of once. Stopped before byte comparison. | None |
 | [EXP-026](EXP-026-compact-cache-json.md) | Does compact cache JSON save at least 10% of response bytes? | not-supported | 6.06% cache-value byte saving, below 10% minimum; all 80 cache round trips passed. | None |

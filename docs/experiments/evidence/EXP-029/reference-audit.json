@@ -1,0 +1,378 @@
+{
+  "baseline": "cb46b990a9df2bed5bd620808146db2efd5bd0c7",
+  "registration": "5420464",
+  "command": "git ls-files docs tests; inspect text references to participant, usability, recovery",
+  "tracked_paths_scanned": 465,
+  "references": [
+    {
+      "path": "docs/ADAPTIVE_RESEARCH.md",
+      "sha256": "c7a316ec16fc6571d74f3cb9be915fa0a9e9baf0bf7f533bb13fc73995c4e714",
+      "matches": [
+        {
+          "line": 88,
+          "text": "dies after reservation, recovery marks its outcome `interrupted` and retains"
+        }
+      ]
+    },
+    {
+      "path": "docs/MCP_CONTRACT.md",
+      "sha256": "33506e31f31cb74200c2f1972767cd8677dfde5c4d6984a89b770f114f1c4ae1",
+      "matches": [
+        {
+          "line": 136,
+          "text": "| `corrections` | `list[str]` | `corrections` (envelope) | Same envelope-recovery rule as `answers`. |"
+        },
+        {
+          "line": 137,
+          "text": "| `infoboxes` | `list[dict]` | `infoboxes` (envelope) | Same envelope-recovery rule as `answers`. |"
+        }
+      ]
+    },
+    {
+      "path": "docs/PORTAL_ACCEPTANCE.md",
+      "sha256": "91c04b60f7a5f146f61f439731605ad1855530163782cee62e236a59b9997e99",
+      "matches": [
+        {
+          "line": 108,
+          "text": "   unavailable object, and signed-out recovery pass keyboard, live-region,"
+        }
+      ]
+    },
+    {
+      "path": "docs/PORTAL_UX_SPEC.md",
+      "sha256": "80f6ab5089fbf0c68802365884cf63d0dd12c8e57dad43ccebacaf6fc105b262",
+      "matches": [
+        {
+          "line": 80,
+          "text": "| State | Required content and recovery |"
+        },
+        {
+          "line": 91,
+          "text": "Sign-in, sign-out, tenant selection, and mutation recovery are keyboard"
+        },
+        {
+          "line": 153,
+          "text": "representative participant checks are recorded in the linked issue before"
+        }
+      ]
+    },
+    {
+      "path": "docs/RESEARCH_QUEUE.md",
+      "sha256": "9799f0c9525b154ffbc9529cbfd268b4e45ec50d412178f6de01e861c96115ed",
+      "matches": [
+        {
+          "line": 43,
+          "text": "workers, lease renewal, orphan recovery, stale-token fencing, terminal cleanup,"
+        }
+      ]
+    },
+    {
+      "path": "docs/adr/002-browser-identity-and-tenant-isolation.md",
+      "sha256": "33736ebab907c32efd5fef75afc6881c97969e72974effea6ec332ed476aada0",
+      "matches": [
+        {
+          "line": 189,
+          "text": "| `GET /auth/login`, `GET /auth/callback` | Login transaction | OIDC protocol endpoints, rate-limited; callback failure shows a generic recovery page. |"
+        },
+        {
+          "line": 274,
+          "text": "workflow cookie. Browser fixtures cover sign-in recovery, tenant selection,"
+        },
+        {
+          "line": 276,
+          "text": "signed-out recovery at narrow and desktop viewports."
+        }
+      ]
+    },
+    {
+      "path": "docs/alerting/README.md",
+      "sha256": "d27b8f4be34976b00137d5b8c83ca9e44cf0993b690abf880678acfd117706f1",
+      "matches": [
+        {
+          "line": 49,
+          "text": "`cancelled`, and `expired`. Lease recovery records `interrupted` when an"
+        },
+        {
+          "line": 51,
+          "text": "worker-loss interruptions and rely on the separate lease-recovery signal."
+        },
+        {
+          "line": 53,
+          "text": "Counters cover accepted work, terminal outcomes, retries, lease recovery,"
+        },
+        {
+          "line": 70,
+          "text": "- `WorkflowLeaseRecoveryBurst`: inspect restarts, event-loop stalls, and lease"
+        },
+        {
+          "line": 71,
+          "text": "  renewal failures. A recovery is safe because writes remain token-fenced."
+        }
+      ]
+    },
+    {
+      "path": "docs/experiments/EXP-003-default-language-report.md",
+      "sha256": "29a136da88e60ebeee8e1f4af0f23d35653c329896df297849f04029ad7a4677",
+      "matches": [
+        {
+          "line": 26,
+          "text": "availability and contract compliance, not agent success or human usability."
+        }
+      ]
+    },
+    {
+      "path": "docs/experiments/EXP-026-compact-cache-json.md",
+      "sha256": "ea7c948c3f2e10be430173643c7b37bcda1a28187bba537326b3ff55b34341c8",
+      "matches": [
+        {
+          "line": 58,
+          "text": "human usability and agent task success remain unmeasured."
+        }
+      ]
+    },
+    {
+      "path": "docs/experiments/EXP-029-empty-search-recovery.md",
+      "sha256": "cf27674e05e9282e6da8cfcaa6cb9d05f151d15f1f7b304479f0c004350ee935",
+      "matches": [
+        {
+          "line": 1,
+          "text": "# EXP-029: Guidance for recovery from an empty portal search"
+        },
+        {
+          "line": 8,
+          "text": "  supplied suggestions, but without suggestions has no scope-recovery hint."
+        },
+        {
+          "line": 12,
+          "text": "  immediately after the empty-result explanation increases successful recovery"
+        },
+        {
+          "line": 18,
+          "text": "- Primary metric: participant-level completion fraction difference, candidate"
+        },
+        {
+          "line": 23,
+          "text": "  intended to help recovery. Secondary time-to-completion cannot rescue failure."
+        },
+        {
+          "line": 28,
+          "text": "- Participant plan: 30 consenting representative users, each does one baseline"
+        },
+        {
+          "line": 31,
+          "text": "  viewport users; no developer/script actions counted as participant evidence."
+        },
+        {
+          "line": 32,
+          "text": "- Evidence gate before UI implementation: a documented available participant"
+        },
+        {
+          "line": 33,
+          "text": "  cohort and approved participant-study scope, plus an observation/scoring plan"
+        },
+        {
+          "line": 37,
+          "text": "- Analysis: paired completion difference; 10,000 participant-cluster bootstrap"
+        },
+        {
+          "line": 45,
+          "text": "  visual review required for supported implementation, not proof of usability."
+        },
+        {
+          "line": 47,
+          "text": "  not a measured participant baseline. Do not invent a numeric rate."
+        },
+        {
+          "line": 53,
+          "text": "- Audit command: git ls-files docs tests; inspect participant/recovery/usability"
+        }
+      ]
+    },
+    {
+      "path": "docs/experiments/README.md",
+      "sha256": "82aa3aaa078f8d78bb5864b579afe078db05073418baf15d1be7491441ddb520",
+      "matches": [
+        {
+          "line": 88,
+          "text": "Automated browser actions measure scripted flows, not human usability. Human"
+        },
+        {
+          "line": 89,
+          "text": "usability claims require actual participant evidence. Agent task-success claims"
+        },
+        {
+          "line": 114,
+          "text": "traffic, production writes, new spend, or participant recruitment require scope"
+        },
+        {
+          "line": 129,
+          "text": "| [EXP-029](EXP-029-empty-search-recovery.md) | Does an empty-search hint improve human recovery within two minutes? | registered | Participant-evidence prerequisite audit. | None |"
+        },
+        {
+          "line": 161,
+          "text": "  agent task without reducing task completion or provenance usability."
+        },
+        {
+          "line": 163,
+          "text": "  UX specification; measure a defined recovery task before proposing changes."
+        }
+      ]
+    },
+    {
+      "path": "docs/experiments/evidence/EXP-016/brave-acquisition.json",
+      "sha256": "bda41e595a347ec51a993ea5a3b94512f120f6a4202f2e72cf6c0608389366b1",
+      "matches": [
+        {
+          "line": 1109,
+          "text": "            \"url\": \"https://baymard.com/homepage-and-category-usability/benchmark/page-types/homepage\""
+        }
+      ]
+    },
+    {
+      "path": "docs/runbooks.md",
+      "sha256": "41cea3dd6c3fe49b904039fb1a2c668ddae1db7965b4c6ad1e195b2f493ff43e",
+      "matches": [
+        {
+          "line": 5,
+          "text": "## Health Check Recovery"
+        }
+      ]
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "sha256": "9cbd9291d640a2b1faa85aca14b42c37e122c1239cc0c31490907c5a6a552e9e",
+      "matches": [
+        {
+          "line": 381,
+          "text": "async def test_legacy_running_attempt_is_charged_once_before_recovery(state, prior_history):"
+        },
+        {
+          "line": 536,
+          "text": "    \"\"\"A snapshot written before job linkage stays immutable through recovery.\"\"\""
+        }
+      ]
+    },
+    {
+      "path": "tests/test_adaptive_valkey.py",
+      "sha256": "a402ce88a8048b30a1c24dcf4f99e30595e4b72d74111fd8babb81ac8fe0ced4",
+      "matches": [
+        {
+          "line": 1,
+          "text": "\"\"\"Adaptive research lease races and recovery against isolated real Valkey.\"\"\""
+        },
+        {
+          "line": 109,
+          "text": "async def test_recovery_charges_uncertain_attempt_and_fences_same_owner_token("
+        }
+      ]
+    },
+    {
+      "path": "tests/test_cache_integration.py",
+      "sha256": "44e2809b7f3f73421441b33f0675e530cff91d579357580363c5600bcb2bb1d7",
+      "matches": [
+        {
+          "line": 127,
+          "text": "async def test_expired_lease_recovery_fences_stale_writes(cache: SearchCache, namespace: str) -> None:"
+        }
+      ]
+    },
+    {
+      "path": "tests/test_fail_closed.py",
+      "sha256": "dcd82fe0faeb5c3ea601946dce187cd75afc34a44ff088f6b30371013492aaf1",
+      "matches": [
+        {
+          "line": 6,
+          "text": "  VAL-M5-003  Valkey recovery restores normal operation"
+        },
+        {
+          "line": 139,
+          "text": "# VAL-M5-003: Valkey recovery restores normal operation"
+        },
+        {
+          "line": 143,
+          "text": "class TestValkeyRecovery:"
+        }
+      ]
+    },
+    {
+      "path": "tests/test_mcp_tools.py",
+      "sha256": "a691851bfea61dc5161a73572ce71cc28169a296bbf59be966296e8334521642",
+      "matches": [
+        {
+          "line": 323,
+          "text": "    \"\"\"Envelope recovery: answers/corrections/infoboxes/empty_engines/cached_error are surfaced."
+        },
+        {
+          "line": 325,
+          "text": "    Covers VAL-SEARCH-007, the empty-engines recovery precondition, and the"
+        }
+      ]
+    },
+    {
+      "path": "tests/test_research_durability.py",
+      "sha256": "e83447b1e3f2e0477f739d9f7e6fbadb0fe9f823e947a1b04f59374bc69bf02a",
+      "matches": [
+        {
+          "line": 538,
+          "text": "    async def test_claim_resets_running_query_on_orphan_recovery(self, monkeypatch: pytest.MonkeyPatch) -> None:"
+        },
+        {
+          "line": 546,
+          "text": "        monkeypatch.setattr(research_store_mod.m, \"record_workflow_recovery\", recoveries.append)"
+        },
+        {
+          "line": 982,
+          "text": "    async def test_worker_loss_orphan_recovery_preserves_evidence(self) -> None:"
+        }
+      ]
+    },
+    {
+      "path": "tests/test_research_queue_integration.py",
+      "sha256": "fc7ceebd07d884bdc2fa204efad3b387d766dabc923d7e2fd7379b607f9c3757",
+      "matches": [
+        {
+          "line": 109,
+          "text": "async def test_fenced_predispatch_charge_survives_recovery(backend: Store) -> None:"
+        }
+      ]
+    },
+    {
+      "path": "tests/test_saved_searches.py",
+      "sha256": "6c90ec7cbac3f2bcfb817014819c002b3da89b722e4a98d5b2f8d66c31495013",
+      "matches": [
+        {
+          "line": 157,
+          "text": "async def test_expired_lease_recovery_normalizes_running_gauge(saved_state, monkeypatch: pytest.MonkeyPatch):"
+        },
+        {
+          "line": 171,
+          "text": "    monkeypatch.setattr(saved_runner_mod.m, \"record_workflow_recovery\", recoveries.append)"
+        }
+      ]
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "sha256": "fa65ce4ba759cbbf3c8ccbcde75af80dea4cf6a9580e280f0abc72da3b5287f6",
+      "matches": [
+        {
+          "line": 226,
+          "text": "async def test_orphan_recovery_records_interrupted_outcome(staged_state, monkeypatch: pytest.MonkeyPatch) -> None:"
+        }
+      ]
+    },
+    {
+      "path": "tests/test_workflow_metrics.py",
+      "sha256": "ecd288c89f1a146541a5665667c271bc4ba0c6c103e64202983ac7ee3b7374b4",
+      "matches": [
+        {
+          "line": 37,
+          "text": "    m.record_workflow_recovery(workflow)"
+        },
+        {
+          "line": 51,
+          "text": "def test_reconciliation_replaces_stale_gauges_after_recovery(workflow_metrics: None) -> None:"
+        }
+      ]
+    }
+  ]
+}

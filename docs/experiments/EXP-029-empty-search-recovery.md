@@ -58,3 +58,22 @@
   comparison: inconclusive; absent prerequisite evidence/resources: blocked.
 - Any implementation remains a reviewed PR, never automatic merge or deploy.
 - EXP-025 remains blocked; EXP-026–028 complete. No unfinished runnable work.
+
+## Readout — blocked
+
+Registration 5420464 froze the plan before the prerequisite audit. The available
+tracked portal evidence provides maintainer walkthroughs and scripted contracts,
+not an available authorized participant cohort or measured recovery observations.
+See [assessment](evidence/EXP-029/assessment.md) and
+[reference audit](evidence/EXP-029/reference-audit.json).
+
+Baseline rate, candidate rate, absolute effect and interval are **unmeasured**.
+No comparison or guardrail performance result is claimed. The gate stopped this
+cycle before candidate rendering or code changes; no recruitment, participant
+contact, service calls, paid calls, tests, CI or pre-commit ran. No exclusions,
+reruns or criteria changes. There is no candidate implementation to discard.
+
+Persist this blocked protocol through the accompanying documentation-only PR.
+Resume after the resources described in the assessment exist; avoid repeating
+an identical audit on subsequent daily cycles. Scope-recovery guidance remains
+a hypothesis, not a proven user benefit or a deployed behavior.
