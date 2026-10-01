@@ -43,3 +43,24 @@
   is written before the path gate, no automatic implementation merge/deploy.
 - Earlier EXP-025/029 remain blocked with unchanged resources; completed
   serialization experiments will not be repeated on their existing corpus.
+
+## Readout — blocked
+
+Registration 5e31742 preceded the frozen AST audit. The tracked production
+source contains one set_error definition and **zero calls or attribute
+references** to it. SearchCache construction is reachable at service startup,
+but the intended negative-write benefit has no identified current service path.
+Normal service cache writes use cache.set; all-unresponsive writes are skipped.
+
+The path prerequisite failed, so no constructor/candidate comparison was run.
+Primary rejection rate, effect, statistical uncertainty, valid-setting guards
+and real dispatch savings are **unmeasured**. This is absent mechanism evidence,
+not proof that a validator could never be useful to an external consumer.
+No candidate source changes, runtime replay, tests, paid calls or CI/pre-commit.
+No retries, exclusions or criterion changes. No candidate implementation exists
+to discard, and no implementation PR is justified.
+
+[Audit](evidence/EXP-030/audit.json) and [reproduction](evidence/EXP-030/reproduce.md)
+preserve the inventory and limitations. Persist through the documentation-only
+PR. Resume only with new writer/failure evidence; do not activate a dormant
+policy or tighten startup configuration solely to manufacture a measurable win.
