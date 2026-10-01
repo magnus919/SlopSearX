@@ -1,0 +1,92 @@
+name: SlopSearX protected source context probe (disabled)
+
+on:
+  pull_request_target:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: protected-source-context-${{ github.repository_id }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  observe:
+    if: false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Check out only the protected event revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          path: target-protected-revision
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.13'
+
+      - name: Fetch the trusted probe at its immutable revision outside the target workspace
+        env:
+          RUNNER_TEMP: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import subprocess
+          from pathlib import Path
+
+          repository = "groktopus/codereview"
+          revision = "7eaddf7c549c8060045578bc1702e394a35dfa2d"
+          destination = Path(os.environ["RUNNER_TEMP"]) / "trusted-review-harness"
+          subprocess.run(
+              ["git", "clone", "--no-checkout", "--filter=blob:none", f"https://github.com/{repository}.git", str(destination)],
+              check=True,
+              stdin=subprocess.DEVNULL,
+              timeout=120,
+          )
+          subprocess.run(
+              ["git", "-C", str(destination), "checkout", "--detach", revision],
+              check=True,
+              stdin=subprocess.DEVNULL,
+              timeout=30,
+          )
+          actual = subprocess.check_output(
+              ["git", "-C", str(destination), "rev-parse", "HEAD"], text=True, timeout=10
+          ).strip()
+          if actual != revision:
+              raise SystemExit("trusted_probe_revision_mismatch")
+          PY
+
+      - name: Record bounded, sanitized read-only context observations
+        timeout-minutes: 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_WORKFLOW_REF: ${{ github.workflow_ref }}
+          GITHUB_WORKFLOW_SHA: ${{ github.workflow_sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RUNNER_TEMP: ${{ runner.temp }}
+          PYTHONPATH: ${{ runner.temp }}/trusted-review-harness/src
+        run: python "${RUNNER_TEMP}/trusted-review-harness/scripts/protected_source_context_probe.py"

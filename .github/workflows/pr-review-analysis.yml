@@ -1,0 +1,49 @@
+# Copy to .github/workflows only after reviewing the pinned reusable workflow,
+# target-repository policy, and secret exposure. This template is inert as saved.
+name: SlopSearX protected PR review analysis
+
+on:
+  pull_request_target:
+    branches:
+      - main # Verified target default branch at preparation time.
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+  checks: read
+  pull-requests: read
+  actions: read
+
+concurrency:
+  group: protected-pr-review-${{ github.repository_id }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    # Deliberate hard stop. Remove only in a separately reviewed target-repo change.
+    if: false
+    uses: groktopus/codereview/.github/workflows/pr-analysis.yml@7eaddf7c549c8060045578bc1702e394a35dfa2d
+    permissions:
+      contents: read
+      checks: read
+      pull-requests: read
+      actions: read
+    with:
+      harness_repository: groktopus/codereview
+      harness_sha: 7eaddf7c549c8060045578bc1702e394a35dfa2d
+      target_repository: ${{ github.repository }}
+      pull_request_number: ${{ github.event.pull_request.number }}
+      base_ref: ${{ github.event.pull_request.base.ref }}
+      base_sha: ${{ github.event.pull_request.base.sha }}
+      head_sha: ${{ github.event.pull_request.head.sha }}
+      emit_publication_bundle: true
+    secrets:
+      LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+      LLM_MODEL: ${{ secrets.LLM_MODEL }}
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      JEV_BASE_URL: ${{ secrets.JEV_BASE_URL }}
+      JEV_MODEL: ${{ secrets.JEV_MODEL }}
+      JEV_API_KEY: ${{ secrets.JEV_API_KEY }}
