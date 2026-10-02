@@ -79,3 +79,7 @@ When adding an engine:
 
 Changing cards, the model, or the threshold changes routing behavior and must
 include focused tests plus a portal impact review.
+
+## Result reranking is separate
+
+The same `TYPESAFE_API_KEY` now enables [bounded result-card reranking](JEV_RERANKING.md). Explicit scopes bypass specialist routing, but can still rerank retrieved cards. Sensitive-engine scopes never send cards. Scope previews do not rerank. The existing specialist-promotion prefix remains authoritative after within-tier reranking.

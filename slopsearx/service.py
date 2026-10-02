@@ -29,6 +29,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from typing import Any
+from urllib.parse import urlsplit
 
 from slopsearx import metrics as m
 from slopsearx.adapter import (
@@ -59,6 +60,18 @@ from slopsearx.logging import capture_exception
 from slopsearx.merger import create_ranker, extract_empty_scrape_engines, ranking_explanation
 from slopsearx.payload import _json_safe, payload_for_persistence, payload_from_dict
 from slopsearx.ratelimit import LocalTokenBucket, RateLimiter, RateLimitStrategy, ValkeySlidingWindow
+from slopsearx.rerank import (
+    MAX_CANDIDATES,
+    MAX_QUERY_BYTES,
+    MAX_SNIPPET_BYTES,
+    MAX_TITLE_BYTES,
+    MAX_URL_BYTES,
+    RERANK_TIMEOUT_S,
+    JevReranker,
+    RerankCandidate,
+    RerankDecision,
+    RerankProvider,
+)
 from slopsearx.router import QueryRouter
 from slopsearx.routing import (
     RoutingBudget,
@@ -289,6 +302,7 @@ class AppContext:
     routing_budget: RoutingBudget | None = None
     ranking_strategy: str = "presence"
     jev_router: JevSpecialistRouter | None = None
+    rerank_provider: RerankProvider | None = None
 
 
 async def build_context() -> AppContext:
@@ -391,6 +405,7 @@ async def build_context() -> AppContext:
         routing_budget=routing_budget,
         ranking_strategy=cfg.ranking.strategy,
         jev_router=JevSpecialistRouter.from_environment(),
+        rerank_provider=JevReranker.from_environment(),
     )
 
 
@@ -1022,8 +1037,27 @@ class SearchService:
             request.query,
             search_params,
         )
+        rerank_status = "skipped"
+        effective_ranking = self._ranking_explanation
+        if (
+            self._ctx.rerank_provider is not None
+            and len(ranked) > 1
+            and not set(scope.selected_engines) & set(self._ctx.sensitive_engines)
+            and not any((result.engines | {result.engine}) & set(self._ctx.sensitive_engines) for result in ranked)
+        ):
+            rerank_timeout = RERANK_TIMEOUT_S
+            if interactive:
+                rerank_timeout = min(
+                    rerank_timeout, max(0.0, dispatch_deadline_s - (time.monotonic() - dispatch_started))
+                )
+            if rerank_timeout > 0:
+                ranked, rerank_status = await self._rerank_results(request.query, ranked, rerank_timeout)
+            if rerank_status == "applied":
+                effective_ranking = "tier_then_semantic_rerank"
         if scope.jev_added_engines:
             ranked = _promote_jev_specialists(ranked, responses, scope)
+        if rerank_status == "applied":
+            ranked = [dataclasses.replace(result, position=index) for index, result in enumerate(ranked, 1)]
 
         elapsed_ms = (time.monotonic() - t_start) * 1000
 
@@ -1093,14 +1127,68 @@ class SearchService:
             deadline_exceeded=deadline_exceeded,
             all_unresponsive=all_unresponsive,
             empty_engines=empty_engines,
-            ranking_explanation=self._ranking_explanation,
+            ranking_explanation=effective_ranking,
             dispatched_engine_count=len(started_engines),
         )
 
-        if not deadline_exceeded:
+        if not deadline_exceeded and rerank_status != "fallback":
             await self._write_cache(request, canonical, all_unresponsive, routing_digest)
 
         return canonical, responses
+
+    async def _rerank_results(
+        self, query: str, ranked: list[SearchResult], timeout_s: float
+    ) -> tuple[list[SearchResult], str]:
+        """Apply a checked permutation within tiers; never accept provider-authored results."""
+        provider = self._ctx.rerank_provider
+        if provider is None or len(query.encode("utf-8", errors="replace")) > MAX_QUERY_BYTES:
+            return ranked, "skipped"
+        shortlist = ranked[:MAX_CANDIDATES]
+        candidates = tuple(
+            RerankCandidate(
+                id=f"c{index}",
+                title=_rerank_text(result.title, MAX_TITLE_BYTES),
+                url=_rerank_url(result.url),
+                snippet=_rerank_text(result.content, MAX_SNIPPET_BYTES),
+            )
+            for index, result in enumerate(shortlist)
+        )
+        started = time.monotonic()
+        status = "fallback"
+        try:
+            decision = await asyncio.wait_for(provider.rerank(query, candidates), timeout=timeout_s)
+            ids = [candidate.id for candidate in candidates]
+            if not isinstance(decision, RerankDecision):
+                raise ValueError("missing rerank decision")
+            if (
+                len(decision.ordered_ids) != len(ids)
+                or any(type(candidate_id) is not str for candidate_id in decision.ordered_ids)
+                or set(decision.ordered_ids) != set(ids)
+            ):
+                raise ValueError("invalid candidate membership")
+            by_id = dict(zip(ids, shortlist))
+            by_tier: dict[int, list[SearchResult]] = {}
+            for candidate_id in decision.ordered_ids:
+                result = by_id[candidate_id]
+                by_tier.setdefault(result.tier, []).append(result)
+            tier_offsets: dict[int, int] = {}
+            reordered = []
+            for original in shortlist:
+                offset = tier_offsets.get(original.tier, 0)
+                reordered.append(by_tier[original.tier][offset])
+                tier_offsets[original.tier] = offset + 1
+            status = "applied"
+            return reordered + ranked[MAX_CANDIDATES:], status
+        except Exception as exc:  # noqa: BLE001 - providers are advisory
+            logger.warning("Result rerank fallback: %s", type(exc).__name__)
+            return ranked, status
+        finally:
+            logger.info(
+                "Result rerank outcome: status=%s candidates=%d latency_ms=%.1f",
+                status,
+                len(candidates),
+                (time.monotonic() - started) * 1000,
+            )
 
     # -- Cache ----------------------------------------------------------
 
@@ -1359,6 +1447,25 @@ def generate_query_id() -> str:
     return f"ssx-{uuid.uuid4().hex[:8]}"
 
 
+def _rerank_text(value: str, limit: int) -> str:
+    return value.encode("utf-8", errors="replace")[:limit].decode("utf-8", errors="ignore")
+
+
+def _rerank_url(value: str) -> str:
+    # Query parameters, userinfo and fragments can carry upstream credentials.
+    try:
+        parts = urlsplit(value)
+        if parts.scheme not in {"http", "https"} or not parts.hostname:
+            return ""
+        host = parts.hostname
+        if ":" in host:
+            host = f"[{host}]"
+        port = f":{parts.port}" if parts.port is not None else ""
+        return _rerank_text(f"{parts.scheme}://{host}{port}{parts.path}", MAX_URL_BYTES)
+    except ValueError:
+        return ""
+
+
 def _promote_jev_specialists(
     ranked: list[SearchResult], responses: dict[str, AdapterResponse], scope: ScopeDecision
 ) -> list[SearchResult]:
@@ -1441,6 +1548,7 @@ def _routing_cache_digest(ctx: AppContext) -> str:
                 )
     parts.append("sensitive=" + ",".join(sorted(ctx.sensitive_engines)))
     parts.append("ranking=v2:" + ctx.ranking_strategy)
+    parts.append("rerank=" + (ctx.rerank_provider.cache_identity() if ctx.rerank_provider is not None else "none"))
     parts.append("tier1=" + ",".join(sorted(ctx.tier1_engines)))
     if budget is None:
         parts.append("budget=none")
