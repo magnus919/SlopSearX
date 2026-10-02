@@ -126,6 +126,7 @@ PRs or deploy changes.
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
+| [EXP-031](EXP-031-filter-warning-truth.md) | Does enforcement-specific prose eliminate false consumption warnings? | registered | Normal MCP transport comparison planned. | None |
 | [EXP-030](EXP-030-negative-cache-path.md) | Can TTL validation prevent silent negative-cache loss on the service path? | blocked | No current production set_error caller; intended service benefit cannot be replayed. | None |
 | [EXP-029](EXP-029-empty-search-recovery.md) | Does an empty-search hint improve human recovery within two minutes? | blocked | No available participant cohort or measured recovery baseline; no UI change or effect measured. | None |
 | [EXP-028](EXP-028-safe-utf8-cache.md) | Can UTF-8 with ASCII fallback preserve caching and save 10% of bytes? | not-supported | Fallback passed all guards; 0.315% byte saving misses 10% minimum. | None |
