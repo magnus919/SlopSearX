@@ -334,7 +334,7 @@ def _filter_warnings(state: McpState, selected_engines: list[str], language: str
     Gated on the resolved enforcement status so the prose never contradicts
     the machine-readable report: a filter that any selected adapter enforces
     (``enforced``/``partially_enforced``) must not be described as "not
-    consumed by any adapter". The report is derived via
+    enforced by selected adapters". The report is derived via
     :func:`_core_filter_enforcement` against the same scope the search will
     dispatch.
     """
@@ -343,9 +343,9 @@ def _filter_warnings(state: McpState, selected_engines: list[str], language: str
     )
     warnings: list[str] = []
     if report.get("language", {}).get("status") == "unsupported":
-        warnings.append(f"language '{language}' is not consumed by any adapter")
+        warnings.append(f"language '{language}' is not enforced by selected adapters")
     if report.get("time_range", {}).get("status") == "unsupported":
-        warnings.append(f"time_range '{time_range}' is not consumed by any adapter")
+        warnings.append(f"time_range '{time_range}' is not enforced by selected adapters")
     return warnings
 
 

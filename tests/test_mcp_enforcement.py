@@ -370,3 +370,34 @@ class TestEnforcedFiltersConsistency:
         entry = result["enforcement"]["time_range"]
         assert entry["status"] == "enforced"
         assert set(entry["enforced_by"]) == {"upstream:brave", "upstream:duckduckgo"}
+
+
+class TestWarningTruthfulness:
+    @pytest.mark.parametrize("consumes", [False, True])
+    @pytest.mark.parametrize("targeted", [False, True])
+    async def test_unsupported_warning_describes_enforcement(
+        self, state: McpState, consumes: bool, targeted: bool
+    ) -> None:
+        state.ctx.active_engines = {
+            "wikipedia": _MockEngine("wikipedia", supported_filters={"language": consumes, "time_range": consumes})
+        }
+        kwargs = {"engines": ["wikipedia"], "language": "en", "time_range": "month"}
+        if targeted:
+            result = await t.slopsearx_search_targeted("fixture", **kwargs)
+        else:
+            result = await t.slopsearx_search("fixture", **kwargs)
+        assert "error" not in result
+        for field, value in [("language", "en"), ("time_range", "month")]:
+            assert result["enforcement"][field]["status"] == "unsupported"
+            assert f"{field} '{value}' is not enforced by selected adapters" in result["warnings"]
+        assert not any("not consumed" in warning for warning in result["warnings"])
+
+    @pytest.mark.parametrize("enforcing", [1, 2])
+    async def test_enforced_or_partial_filter_has_no_unsupported_warning(self, state: McpState, enforcing: int) -> None:
+        state.ctx.active_engines = {
+            name: _MockEngine(name, enforced_filters={"time_range": "upstream"} if i < enforcing else {})
+            for i, name in enumerate(["wikipedia", "duckduckgo"])
+        }
+        result = await t.slopsearx_search_targeted("fixture", engines=["wikipedia", "duckduckgo"], time_range="month")
+        assert result["enforcement"]["time_range"]["status"] == ("enforced" if enforcing == 2 else "partially_enforced")
+        assert not any(warning.startswith("time_range ") for warning in result["warnings"])
