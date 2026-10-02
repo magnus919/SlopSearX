@@ -29,5 +29,12 @@ repeatability, not independent people or query distributions.
 Contract truthfulness is evaluated against the permitted adapter consumption
 and audited-enforcement distinction. There are no current built-in language
 consumers; this proves an extension-contract defect, not its prevalence in live
-traffic or a measured human/agent completion benefit. candidate.patch.txt and
+traffic or a measured human/agent completion benefit. candidate.patch.json and
 validation.md preserve the proposed implementation and its promotion blockers.
+
+Raw logs and the unified patch that contained trailing space padding are stored
+as base64 JSON containers to preserve their exact bytes without introducing
+whitespace-hook failures. artifact-encoding.json maps original filenames to
+containers and original checksums. Decode the data field with base64.b64decode
+and verify original_sha256 before use; this is representation only, not a new
+trial or a change to the observations.

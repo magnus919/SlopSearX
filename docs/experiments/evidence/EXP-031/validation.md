@@ -1,7 +1,7 @@
 # Implementation validation and promotion blocker
 
 Candidate local signed commit: f3e9faa7fd9b00a0ebefb4a83651adbfc9ce2c31.
-The inert candidate.patch.txt preserves source/tests/docs against baseline.
+The inert candidate.patch.json preserves source/tests/docs against baseline.
 No implementation PR or push; required checks are not fully green.
 
 - Relevant final slice: pytest --no-cov -q tests/test_filter_semantics.py
@@ -33,3 +33,10 @@ No implementation PR or push; required checks are not fully green.
 No baseline browser/hook source/config was changed to force promotion. Resume
 implementation delivery after those required checks can pass. The semantic
 finding is supported on the fixed contract corpus; delivery remains blocked.
+
+Raw logs and the unified patch that contained trailing space padding are stored
+as base64 JSON containers to preserve their exact bytes without introducing
+whitespace-hook failures. artifact-encoding.json maps original filenames to
+containers and original checksums. Decode the data field with base64.b64decode
+and verify original_sha256 before use; this is representation only, not a new
+trial or a change to the observations.
