@@ -1,0 +1,134 @@
+diff --git a/docs/MCP_CONTRACT.md b/docs/MCP_CONTRACT.md
+index 1f18b3d..4fee7a2 100644
+--- a/docs/MCP_CONTRACT.md
++++ b/docs/MCP_CONTRACT.md
+@@ -377,6 +377,9 @@ only from the audited `enforced_filters` adapter declaration; `supported_filters
+ | `location`, `employment_type` (jobs) | `unsupported` | Not consumed by current ATS adapters. |
+ | `date_from`, `date_to` (science) | scope-dependent | OpenAlex applies inclusive upstream publication-date filters; mixed scopes are partial and other-only scopes unsupported. Invalid/reversed bounds reject before dispatch. |
+ 
++Unsupported-filter prose describes lack of enforcement by the selected adapters;
++it does not infer whether an adapter consumes the parameter.
++
+ This report is the machine-readable replacement for prose-only filter warnings
+ (`VAL-FILTER-001`). The schema and enforcement vocabulary are shared; the keys
+ present depend on the search path and its requested filters. Generic and targeted
+diff --git a/slopsearx/mcp/tools.py b/slopsearx/mcp/tools.py
+index 9d30e4c..2daaee9 100644
+--- a/slopsearx/mcp/tools.py
++++ b/slopsearx/mcp/tools.py
+@@ -323,7 +323,7 @@ def _filter_warnings(state: McpState, selected_engines: list[str], language: str
+     Gated on the resolved enforcement status so the prose never contradicts
+     the machine-readable report: a filter that any selected adapter enforces
+     (``enforced``/``partially_enforced``) must not be described as "not
+-    consumed by any adapter". The report is derived via
++    enforced by selected adapters". The report is derived via
+     :func:`_core_filter_enforcement` against the same scope the search will
+     dispatch.
+     """
+@@ -332,9 +332,9 @@ def _filter_warnings(state: McpState, selected_engines: list[str], language: str
+     )
+     warnings: list[str] = []
+     if report.get("language", {}).get("status") == "unsupported":
+-        warnings.append(f"language '{language}' is not consumed by any adapter")
++        warnings.append(f"language '{language}' is not enforced by selected adapters")
+     if report.get("time_range", {}).get("status") == "unsupported":
+-        warnings.append(f"time_range '{time_range}' is not consumed by any adapter")
++        warnings.append(f"time_range '{time_range}' is not enforced by selected adapters")
+     return warnings
+ 
+ 
+diff --git a/tests/test_filter_semantics.py b/tests/test_filter_semantics.py
+index 0497daa..7c724c4 100644
+--- a/tests/test_filter_semantics.py
++++ b/tests/test_filter_semantics.py
+@@ -448,7 +448,7 @@ class TestEnforcementLayer:
+ 
+     async def test_time_range_warning_absent_when_enforced(self, state: McpState) -> None:
+         """Prose warnings must not contradict the report: when every selected
+-        adapter enforces time_range, no 'not consumed by any adapter' warning."""
++        adapter enforces time_range, no 'not enforced by selected adapters' warning."""
+         state.ctx.active_engines = {
+             "arxiv": _MockEngine("arxiv", enforced_filters={"time_range": "local"}),
+             "brave": _MockEngine("brave", enforced_filters={"time_range": "upstream"}),
+@@ -456,10 +456,10 @@ class TestEnforcementLayer:
+         result = await t.slopsearx_search_targeted("hello", engines=["arxiv", "brave"], time_range="week")
+ 
+         assert result["enforcement"]["time_range"]["status"] == "enforced"
+-        assert not any("time_range" in w and "not consumed" in w for w in result["warnings"])
++        assert not any("time_range" in w and "not enforced" in w for w in result["warnings"])
+ 
+     async def test_time_range_warning_absent_when_partially_enforced(self, state: McpState) -> None:
+-        """partially_enforced scopes also must not emit the 'not consumed' warning."""
++        """partially_enforced scopes also must not emit the 'not enforced' warning."""
+         state.ctx.active_engines = {
+             "arxiv": _MockEngine("arxiv", enforced_filters={"time_range": "upstream"}),
+             "duckduckgo": _MockEngine("duckduckgo"),
+@@ -467,14 +467,14 @@ class TestEnforcementLayer:
+         result = await t.slopsearx_search_targeted("hello", engines=["arxiv", "duckduckgo"], time_range="week")
+ 
+         assert result["enforcement"]["time_range"]["status"] == "partially_enforced"
+-        assert not any("time_range" in w and "not consumed" in w for w in result["warnings"])
++        assert not any("time_range" in w and "not enforced" in w for w in result["warnings"])
+ 
+     async def test_time_range_warning_emitted_when_unsupported(self, state: McpState) -> None:
+         """The warning stays for genuinely unenforced time_range values."""
+         result = await t.slopsearx_search("hello", time_range="month")
+ 
+         assert result["enforcement"]["time_range"]["status"] == "unsupported"
+-        assert any("time_range 'month'" in w and "not consumed" in w for w in result["warnings"])
++        assert any("time_range 'month'" in w and "not enforced" in w for w in result["warnings"])
+ 
+ 
+ class TestModerateSafesearchWarning:
+diff --git a/tests/test_mcp_enforcement.py b/tests/test_mcp_enforcement.py
+index bfbf9b7..e422d79 100644
+--- a/tests/test_mcp_enforcement.py
++++ b/tests/test_mcp_enforcement.py
+@@ -370,3 +370,34 @@ class TestEnforcedFiltersConsistency:
+         entry = result["enforcement"]["time_range"]
+         assert entry["status"] == "enforced"
+         assert set(entry["enforced_by"]) == {"upstream:brave", "upstream:duckduckgo"}
++
++
++class TestWarningTruthfulness:
++    @pytest.mark.parametrize("consumes", [False, True])
++    @pytest.mark.parametrize("targeted", [False, True])
++    async def test_unsupported_warning_describes_enforcement(
++        self, state: McpState, consumes: bool, targeted: bool
++    ) -> None:
++        state.ctx.active_engines = {
++            "wikipedia": _MockEngine("wikipedia", supported_filters={"language": consumes, "time_range": consumes})
++        }
++        kwargs = {"engines": ["wikipedia"], "language": "en", "time_range": "month"}
++        if targeted:
++            result = await t.slopsearx_search_targeted("fixture", **kwargs)
++        else:
++            result = await t.slopsearx_search("fixture", **kwargs)
++        assert "error" not in result
++        for field, value in [("language", "en"), ("time_range", "month")]:
++            assert result["enforcement"][field]["status"] == "unsupported"
++            assert f"{field} '{value}' is not enforced by selected adapters" in result["warnings"]
++        assert not any("not consumed" in warning for warning in result["warnings"])
++
++    @pytest.mark.parametrize("enforcing", [1, 2])
++    async def test_enforced_or_partial_filter_has_no_unsupported_warning(self, state: McpState, enforcing: int) -> None:
++        state.ctx.active_engines = {
++            name: _MockEngine(name, enforced_filters={"time_range": "upstream"} if i < enforcing else {})
++            for i, name in enumerate(["wikipedia", "duckduckgo"])
++        }
++        result = await t.slopsearx_search_targeted("fixture", engines=["wikipedia", "duckduckgo"], time_range="month")
++        assert result["enforcement"]["time_range"]["status"] == ("enforced" if enforcing == 2 else "partially_enforced")
++        assert not any(warning.startswith("time_range ") for warning in result["warnings"])
+diff --git a/tests/test_mcp_harness.py b/tests/test_mcp_harness.py
+index 5845b2d..5907fa0 100644
+--- a/tests/test_mcp_harness.py
++++ b/tests/test_mcp_harness.py
+@@ -351,7 +351,7 @@ class TestDeterministicSearchEnvelope:
+                 assert entry["status"] == "unsupported"
+                 assert entry["reason"]
+                 assert entry["enforced_by"] == []
+-                assert f"language '{language or 'en'}' is not consumed by any adapter" in data["warnings"]
++                assert f"language '{language or 'en'}' is not enforced by selected adapters" in data["warnings"]
+ 
+ 
+ class TestLifespanSensitiveSync:

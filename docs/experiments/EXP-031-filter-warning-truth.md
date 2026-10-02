@@ -60,3 +60,31 @@ so both tool paths start from identical cold stores. Candidate, corpus, warning
 rubric, sample size, normalization, thresholds and stopping rules are unchanged.
 Run all eight pairs afresh; preserve trial 2 separately. This is a corrected
 fixture setup, not relaxed response equality or a removed guard.
+
+## Readout — supported for contract truthfulness; implementation checks blocked
+
+Corrected trial 2 completed eight pairs (16 MCP search calls). Truthful warning
+entries improved **8/16 (50%) → 16/16 (100%)**, +50 percentage points. Every
+other normalized response field matched, reports remained unsupported, dispatch
+params matched, and normalized byte growth was **0.4928%**, below the 5% guard.
+Two arm orders repeated exactly; no population confidence interval applies.
+All 281 relevant filter/MCP/portal regression checks pass. The metric establishes
+truthful prose on a fixed allowed adapter-contract corpus, not task success or
+production prevalence. Built-in language adapters currently declare no consumption.
+
+Trial 1's setup failure and correction are preserved, with no changed decision
+rule. See [summary](evidence/EXP-031/trial2/summary.json),
+[raw pairs](evidence/EXP-031/trial2/rows.json),
+[reproduction](evidence/EXP-031/reproduce.md) and
+[validation and blockers](evidence/EXP-031/validation.md).
+
+Focused issue: [#488](https://github.com/magnus919/SlopSearX/issues/488).
+Candidate retained in local signed commit f3e9faa7fd9b00a0ebefb4a83651adbfc9ce2c31
+and inert patch. No implementation PR: a workflow-browser failure and isolated
+hook type-check failures also reproduce on unchanged baseline source, so the
+required-check promotion gate is not green. No unrelated fixes or deployment.
+Installed-runtime type checking passes; this does not erase the hook failure.
+
+Persist the supported finding through the accompanying docs-only PR now.
+Resume delivery when baseline checks are resolved; do not rerun the experiment
+or create a new hypothesis merely to bypass those gates.
