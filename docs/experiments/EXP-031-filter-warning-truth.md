@@ -47,3 +47,16 @@
 - Supported implementation needs focused issue, regression tests and reviewed PR;
   docs/evidence may merge separately. No automatic code merge or deployment.
 - No unfinished runnable experiment. Prior resource blockers remain unchanged.
+
+## Measurement setup correction — before retry
+
+Trial 1 completed all four generic pairs, then stopped at targeted nonconsumer
+pair 1: baseline cached=false, candidate cached=true. The targeted signature
+lacks freshness; the extra argument did not force a fresh call. The differing
+cache state is an arm-order confound, not evidence of a candidate cache change.
+Retain all trial-1 raw outputs and assertion failure. Do not score it as a full
+comparison. Trial 2 empties all fixture InMemoryStore instances before each arm
+so both tool paths start from identical cold stores. Candidate, corpus, warning
+rubric, sample size, normalization, thresholds and stopping rules are unchanged.
+Run all eight pairs afresh; preserve trial 2 separately. This is a corrected
+fixture setup, not relaxed response equality or a removed guard.
