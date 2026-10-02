@@ -1,7 +1,7 @@
 # SlopSearX production image
 # Target: ~200MB, cold start <2s, Python 3.14
 # Dependabot maintains this versioned Docker Official Image tag and digest.
-FROM python:3.14.7-slim-trixie@sha256:caaf356f40667c496d405780745b9ac25771c189a51dfcc42430d531ea09f8a2
+FROM python:3.14.7-slim-trixie@sha256:51dafde81dbdb6ebde285137a295cf18a47ca95234fe388a343719cb97305b3d
 
 LABEL org.opencontainers.image.title="SlopSearX"
 LABEL org.opencontainers.image.description="Cloud-native, stateless, AI-agent-first meta search engine"
