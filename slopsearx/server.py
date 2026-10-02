@@ -48,6 +48,7 @@ from slopsearx.logging import setup_logging
 from slopsearx.mcp.entity_projection import entity_groups
 from slopsearx.middleware import RequestIDMiddleware
 from slopsearx.ratelimit import RateLimiter, RateLimitStrategy, ValkeySlidingWindow
+from slopsearx.rerank import RerankProvider
 from slopsearx.router import QueryRouter
 from slopsearx.routing import RoutingBudget, load_routing_budget
 
@@ -90,6 +91,7 @@ _cache: SearchCache | None = None
 _rate_limiter: RateLimiter | None = None
 _router: QueryRouter | None = None
 _jev_router: JevSpecialistRouter | None = None
+_rerank_provider: RerankProvider | None = None
 _suggestion_service: SuggestionService | None = None
 _stats_tracker: EngineStatsTracker | None = None
 _audit_logger: QueryAuditLogger | None = None
@@ -113,7 +115,7 @@ async def _startup() -> None:
     global _active_engines, _cache, _rate_limiter  # noqa: PLW0603
     global _engine_semaphore, _client_rate_window  # noqa: PLW0603
     global _empty_scrape_diagnostics_enabled  # noqa: PLW0603
-    global _router, _jev_router, _suggestion_service, _stats_tracker, _audit_logger  # noqa: PLW0603
+    global _router, _jev_router, _rerank_provider, _suggestion_service, _stats_tracker, _audit_logger  # noqa: PLW0603
     global _portal_policy, _workflow_portal_runtime  # noqa: PLW0603
     global _routing_budget_cache  # noqa: PLW0603
 
@@ -127,6 +129,7 @@ async def _startup() -> None:
     _rate_limiter = ctx.rate_limiter
     _router = ctx.router
     _jev_router = ctx.jev_router
+    _rerank_provider = ctx.rerank_provider
     _suggestion_service = ctx.suggestion_service
     _stats_tracker = ctx.stats_tracker
     _audit_logger = ctx.audit_logger
@@ -247,6 +250,7 @@ def _current_context() -> AppContext:
         rate_limiter=_rate_limiter,
         router=_router,
         jev_router=_jev_router,
+        rerank_provider=_rerank_provider,
         suggestion_service=_suggestion_service,
         stats_tracker=_stats_tracker,
         audit_logger=_audit_logger,
