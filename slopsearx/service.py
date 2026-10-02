@@ -83,6 +83,7 @@ from slopsearx.stats import EngineStatsTracker
 from slopsearx.suggest import SuggestionService
 
 logger = logging.getLogger(__name__)
+RERANK_POLICY_VERSION = "global-shortlist-no-promotion-v2"
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -1053,8 +1054,8 @@ class SearchService:
             if rerank_timeout > 0:
                 ranked, rerank_status = await self._rerank_results(request.query, ranked, rerank_timeout)
             if rerank_status == "applied":
-                effective_ranking = "tier_then_semantic_rerank"
-        if scope.jev_added_engines:
+                effective_ranking = "semantic_shortlist_rerank"
+        if scope.jev_added_engines and self._ctx.rerank_provider is None:
             ranked = _promote_jev_specialists(ranked, responses, scope)
         if rerank_status == "applied":
             ranked = [dataclasses.replace(result, position=index) for index, result in enumerate(ranked, 1)]
@@ -1139,7 +1140,7 @@ class SearchService:
     async def _rerank_results(
         self, query: str, ranked: list[SearchResult], timeout_s: float
     ) -> tuple[list[SearchResult], str]:
-        """Apply a checked permutation within tiers; never accept provider-authored results."""
+        """Apply relevance order across source tiers; never accept provider-authored results."""
         provider = self._ctx.rerank_provider
         if provider is None or len(query.encode("utf-8", errors="replace")) > MAX_QUERY_BYTES:
             return ranked, "skipped"
@@ -1167,16 +1168,7 @@ class SearchService:
             ):
                 raise ValueError("invalid candidate membership")
             by_id = dict(zip(ids, shortlist))
-            by_tier: dict[int, list[SearchResult]] = {}
-            for candidate_id in decision.ordered_ids:
-                result = by_id[candidate_id]
-                by_tier.setdefault(result.tier, []).append(result)
-            tier_offsets: dict[int, int] = {}
-            reordered = []
-            for original in shortlist:
-                offset = tier_offsets.get(original.tier, 0)
-                reordered.append(by_tier[original.tier][offset])
-                tier_offsets[original.tier] = offset + 1
+            reordered = [by_id[candidate_id] for candidate_id in decision.ordered_ids]
             status = "applied"
             return reordered + ranked[MAX_CANDIDATES:], status
         except Exception as exc:  # noqa: BLE001 - providers are advisory
@@ -1549,6 +1541,8 @@ def _routing_cache_digest(ctx: AppContext) -> str:
     parts.append("sensitive=" + ",".join(sorted(ctx.sensitive_engines)))
     parts.append("ranking=v2:" + ctx.ranking_strategy)
     parts.append("rerank=" + (ctx.rerank_provider.cache_identity() if ctx.rerank_provider is not None else "none"))
+    if ctx.rerank_provider is not None:
+        parts.append("rerank_policy=" + RERANK_POLICY_VERSION)
     parts.append("tier1=" + ",".join(sorted(ctx.tier1_engines)))
     if budget is None:
         parts.append("budget=none")

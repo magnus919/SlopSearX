@@ -27,21 +27,30 @@ with sensitive-engine provenance, stay deterministic and send no cards to the re
    `jev-1.13.0`. It orders by the returned ordinal `score`, descending, with
    stable original-order ties. No custom nonlinear weights or fixed fusion.
 4. The host accepts only an exact permutation of the supplied opaque IDs.
-   Apply that order **within each original source tier**. The remaining tail
-   stays in deterministic order. All original content, URLs, filters,
+   Apply that order **across general and specialist source tiers** within the
+   scored shortlist. Source tiers are retrieval-preference metadata, not a
+   relevance override. The remaining unscored tail stays behind the scored
+   pool in deterministic order. All original content, URLs, filters,
    provenance, source scores and metadata remain host-owned.
-5. Apply the existing specialist promotion: one original first result from
-   each responding Jev-selected specialist remains promoted in routing-score
-   order. Reranking cannot override this prefix. Successful enhanced results
-   receive positions consistent with the final order.
+5. A configured reranker disables specialist promotion, even if advice fails
+   or is skipped. Engine-selection confidence does not establish relevance of
+   an engine's first result. Successful enhanced results receive positions
+   consistent with the final order. Keyless searches preserve legacy behavior.
 
 The shortlist bound limits work; it does not prove that it covers all relevant
 results. The original numeric `score` field remains the source-fusion score,
 not Jev relevance or confidence. `ranking_explanation` is
-`tier_then_semantic_rerank` only after valid advice; HTTP, MCP, CLI, snapshots
+`semantic_shortlist_rerank` only after valid advice; HTTP, MCP, CLI, snapshots
 and the portal use the same canonical result. The portal explains the semantic
 order and the meaning of the displayed score. Invalid/unavailable advice keeps
-the configured deterministic explanation and ordering, including promotion.
+the configured deterministic explanation and ordering, without specialist
+promotion when the reranker is configured. Sensitive scopes still send no cards
+and also receive no promotion in this enabled mode.
+
+The first-40 selection remains deterministic and can miss specialists when
+general feeds fill the pool. Global relevance competition is guaranteed only
+inside the eligible scored pool, not over the complete retrieval corpus. No
+forced source quota or automatic promotion is substituted for model relevance.
 
 ## Data, resilience and caching
 
@@ -66,7 +75,7 @@ existing shared search-flight lifecycle cancels pending work. A provider might
 still charge an already accepted request; cancellation cannot promise zero cost.
 
 Successful advice is part of the existing full-response cache. Backend/model,
-rubric version and request-shaping identity separate enhanced, changed-provider
+rubric version, host ordering-policy version and request-shaping identity separate enhanced, changed-provider
 and keyless cache entries. Cache hits and simultaneous equivalent callers do
 not repeat reranking. Prefer-fresh requests deliberately bypass reuse. Reranker
 failures do not write the canonical response cache, allowing a later request to
@@ -88,7 +97,7 @@ cached order. `AppContext.rerank_provider` injects it independently of the
 Jev-specific routing object. Another backend can implement this contract without
 changing HTTP/MCP/portal paths. No other backend is implemented here.
 
-The host enforces membership, source tiers, promotion, shared-flight ownership,
+The host enforces membership, pool/tail placement, shared-flight ownership,
 cache separation and timeout. Backend implementations own scoring, transport,
 credentials and concurrency. They must treat supplied cards as immutable and
 return IDs only. This is a replaceable ordering seam, not a general autonomous

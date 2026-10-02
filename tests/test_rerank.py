@@ -71,7 +71,7 @@ async def test_keyless_preserves_configured_ranking(strategy: str) -> None:
     ctx = AppContext(active_engines={"brave": Feed()}, ranking_strategy=strategy)
     result = await SearchService(ctx).search(request())
     assert [r.url for r in result.results] == ["https://example.org/a", "https://example.org/b"]
-    assert result.ranking_explanation != "tier_then_semantic_rerank"
+    assert result.ranking_explanation != "semantic_shortlist_rerank"
 
 
 def test_key_enables_jev_reranker(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -87,7 +87,7 @@ async def test_provider_neutral_order_preserves_provenance_filters_and_wire_cont
     enhanced = await SearchService(ctx).search(request())
     ctx.rerank_provider = None
     base = await SearchService(ctx).search(request())
-    assert enhanced.ranking_explanation == "tier_then_semantic_rerank"
+    assert enhanced.ranking_explanation == "semantic_shortlist_rerank"
     assert [r.url for r in enhanced.results] == list(reversed([r.url for r in base.results]))
     for result in enhanced.results:
         original = next(r for r in base.results if r.url == result.url)
@@ -99,7 +99,7 @@ async def test_provider_neutral_order_preserves_provenance_filters_and_wire_cont
     assert set(format_json(enhanced.results, enhanced.query)) == set(format_json(base.results, base.query))
 
 
-async def test_tiers_and_unshortlisted_tail_stay_fixed() -> None:
+async def test_relevance_crosses_source_tiers_and_unshortlisted_tail_stays_fixed() -> None:
     results = [SearchResult(f"https://example.org/{i}", str(i), "", "brave", tier=1 if i < 3 else 2) for i in range(45)]
     provider = Provider()
     specialist = Feed(results[3:])
@@ -108,10 +108,9 @@ async def test_tiers_and_unshortlisted_tail_stay_fixed() -> None:
         AppContext(active_engines={"brave": Feed(results[:3]), "pubmed": specialist}, rerank_provider=provider)
     ).search(SearchRequest(query="public", engines=["brave", "pubmed"]))
     assert len(provider.candidates) == 40
-    assert [r.title for r in response.results[:3]] == ["2", "1", "0"]
-    assert [r.title for r in response.results[3:40]] == [str(i) for i in reversed(range(3, 40))]
+    assert [r.title for r in response.results[:40]] == [str(i) for i in reversed(range(40))]
     assert [r.title for r in response.results[40:]] == [str(i) for i in range(40, 45)]
-    assert [r.tier for r in response.results] == [1] * 3 + [2] * 42
+    assert [r.tier for r in response.results] == [2] * 37 + [1] * 3 + [2] * 5
 
 
 @pytest.mark.parametrize("ids", [("c0",), ("c0", "c0"), ("c0", "invented"), ("c0", "c1", "invented")])
@@ -127,7 +126,7 @@ async def test_membership_invalid_advice_falls_back_without_caching(ids: tuple[s
     for _ in range(2):
         result = await SearchService(ctx).search(request())
         assert result.results[0].url == "https://example.org/a"
-        assert result.ranking_explanation != "tier_then_semantic_rerank"
+        assert result.ranking_explanation != "semantic_shortlist_rerank"
     assert provider.calls == 2
     assert not cache.values
 
@@ -170,20 +169,74 @@ async def test_cache_hit_skips_provider_and_identity_separates_paths() -> None:
     assert (await SearchService(ctx).search(request())).results[0].url.endswith("/a")
 
 
-async def test_specialist_promotion_remains_authoritative() -> None:
+async def test_host_ordering_policy_change_does_not_reuse_prior_cached_order(monkeypatch: pytest.MonkeyPatch) -> None:
     provider = Provider()
+    feed = Feed()
+    ctx = AppContext(active_engines={"brave": feed}, cache=MemoryCache(), rerank_provider=provider)  # type: ignore[arg-type]
+    await SearchService(ctx).search(request())
+    monkeypatch.setattr("slopsearx.service.RERANK_POLICY_VERSION", "future-ordering-policy")
+    await SearchService(ctx).search(request())
+    assert feed.calls == provider.calls == 2
+
+
+@pytest.mark.parametrize("mode", ["success", "error", "timeout", "invalid", "skipped", "keyless"])
+async def test_enabled_reranker_disables_specialist_promotion_in_every_outcome(
+    mode: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class Advice(Provider):
+        async def rerank(self, query: str, candidates: tuple[RerankCandidate, ...]) -> RerankDecision:
+            self.calls += 1
+            if mode == "error":
+                raise RuntimeError("public test error")
+            if mode == "timeout":
+                await asyncio.sleep(1)
+            if mode == "invalid":
+                return RerankDecision(("unknown",))
+            return RerankDecision(tuple(c.id for c in candidates))
+
+    monkeypatch.setattr("slopsearx.service.RERANK_TIMEOUT_S", 0.01)
+    provider = Advice()
     broad = Feed()
-    specialist = Feed([SearchResult("https://example.org/s", "Specialist first lead", "", "pubmed", tier=2)])
+    specialist = Feed([SearchResult("https://example.org/s", "Weak specialist lead", "", "pubmed", tier=2)])
     specialist.name = "pubmed"
     scope = ScopeDecision(
         selected_engines=["brave", "pubmed"], jev_added_engines=["pubmed"], jev_scores={"pubmed": 0.9}
     )
-    ctx = AppContext(active_engines={"brave": broad, "pubmed": specialist}, rerank_provider=provider)
-    result = await SearchService(ctx).search(request(), resolved_scope=scope)
-    assert result.results[0].url.endswith("/s")
-    assert result.results[1].url.endswith("/b")
-    assert [r.position for r in result.results] == [1, 2, 3]
+    ctx = AppContext(
+        active_engines={"brave": broad, "pubmed": specialist}, rerank_provider=None if mode == "keyless" else provider
+    )
+    query = SearchRequest(query="q" * 4097 if mode == "skipped" else "public", engines=["brave", "pubmed"])
+    result = await SearchService(ctx).search(query, resolved_scope=scope)
+    suffixes = [r.url.rsplit("/", 1)[-1] for r in result.results]
+    assert suffixes == (["s", "a", "b"] if mode == "keyless" else ["a", "b", "s"])
+    assert result.ranking_explanation == (
+        "semantic_shortlist_rerank" if mode == "success" else "tier_then_cross_engine_presence"
+    )
     assert result.scope.jev_added_engines == ["pubmed"]
+    assert provider.calls == (0 if mode in {"skipped", "keyless"} else 1)
+
+
+async def test_same_candidates_can_gain_or_lose_between_general_and_specialist() -> None:
+    class Relevant(Provider):
+        async def rerank(self, query: str, candidates: tuple[RerankCandidate, ...]) -> RerankDecision:
+            return RerankDecision(("c3", "c0", "c1", "c2"))
+
+    broad = Feed()
+    specialist = Feed(
+        [
+            SearchResult("https://example.org/weak", "Weak first lead", "unrelated", "pubmed"),
+            SearchResult("https://example.org/strong", "Relevant specialist", "direct evidence", "pubmed"),
+        ]
+    )
+    specialist.name = "pubmed"
+    scope = ScopeDecision(
+        selected_engines=["brave", "pubmed"], jev_added_engines=["pubmed"], jev_scores={"pubmed": 0.9}
+    )
+    ctx = AppContext(active_engines={"brave": broad, "pubmed": specialist}, rerank_provider=Relevant())
+    result = await SearchService(ctx).search(request(), resolved_scope=scope)
+    assert [r.url.rsplit("/", 1)[-1] for r in result.results] == ["strong", "a", "b", "weak"]
+    assert [r.tier for r in result.results] == [2, 1, 1, 2]
+    assert [r.position for r in result.results] == [1, 2, 3, 4]
 
 
 async def test_sensitive_scope_is_not_sent_to_reranker() -> None:
