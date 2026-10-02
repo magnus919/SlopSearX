@@ -268,7 +268,8 @@ the key, or if Jev is unavailable, the existing deterministic routing path is
 used unchanged. Explicit engine, category, and media scopes bypass Jev routing.
 
 After retrieval, Jev orders a bounded result-card shortlist using ordinary Score,
-within existing tiers, before the existing specialist-promotion step. Without
+across general and specialist source tiers. A configured reranker disables
+specialist promotion, including when advice fails. Without
 the key, or on invalid/unavailable reranking advice, results retain the configured
 deterministic presence/RRF order. Providing the key opts into sending query,
 bounded titles, sanitized URLs and snippets to TypeSafe; sensitive-engine scopes

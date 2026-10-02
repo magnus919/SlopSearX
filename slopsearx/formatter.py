@@ -572,6 +572,11 @@ def _portal_source_counts(results: list[SearchResult]) -> list[tuple[str, int]]:
 
 def _portal_ranking_explanation(strategy: str, tier: int) -> str:
     """Describe ordering as ranking arithmetic, never confidence."""
+    if strategy == "semantic_shortlist_rerank":
+        return (
+            "Semantic relevance orders the bounded shortlist across general and specialist sources. "
+            "The displayed score is the original source-fusion score, not model confidence."
+        )
     if strategy == "tier_then_semantic_rerank":
         return (
             "Semantic relevance orders the bounded shortlist within source tiers; selected specialist leads stay "
