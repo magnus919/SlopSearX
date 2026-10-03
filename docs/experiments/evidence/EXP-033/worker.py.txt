@@ -1,0 +1,59 @@
+import asyncio,dataclasses,json,os
+from pathlib import Path
+import engines
+from fastapi.testclient import TestClient
+from slopsearx import server
+from slopsearx.capabilities import CapabilityCatalog,MCPPolicy
+from slopsearx.config import load_config
+from slopsearx.router import QueryRouter
+from slopsearx.mcp import tools
+from slopsearx.mcp.state import set_state
+from tests.test_mcp_tools import _build_state,_MockEngine
+
+out=Path(os.environ['EXP033_OUTPUT']);out.mkdir(parents=True,exist_ok=True)
+rows=[]
+scenarios=['five','six','large','disabled','auth','unrelated','sensitive','enabled','topic','automatic','explicit']
+def catalog_for(scenario):
+ c=CapabilityCatalog(config=load_config())
+ changes={'brave':{'enabled':scenario in ['enabled','auth','automatic','five','six','large'],'categories':['general'],'auth_class':'required','auth_configured':scenario in ['enabled','automatic','five','six','large'],'sensitive':scenario=='sensitive'},'wikipedia':{'enabled':True,'auth_class':'none','auth_configured':True,'categories':['general','science']}}
+ c._by_name={name:dataclasses.replace(c.get(name),**values) for name,values in changes.items()}
+ return c
+for scenario in scenarios:
+ query='paper task' if scenario=='topic' else 'neutral task'
+ categories=['science'] if scenario=='unrelated' else (['general'] if scenario not in ['topic','automatic','explicit'] else None)
+ requested=['wikipedia','brave'] if scenario=='explicit' else None
+ router=QueryRouter({'topics':[{'keywords':['paper'],'engines':['wikipedia','brave']}]}) if scenario=='topic' else None
+ expected=['engine_disabled'] if scenario in ['disabled','topic','explicit'] else (['credentials_missing'] if scenario=='auth' else [])
+ if scenario in ['topic','automatic']:expected+=['not_available']
+ if scenario in ['six','large']:expected+=['not_available']
+ for surface in ['http','mcp']:
+  catalog=catalog_for(scenario)
+  if surface=='http':
+   with TestClient(server.app) as client:
+    engine=_MockEngine('wikipedia',count=({'five':5,'six':6,'large':60}.get(scenario,1)),categories=['general','science'])
+    server._active_engines={'wikipedia':engine};server._router=router;server._jev_router=None
+    server._rate_limiter=None;server._client_rate_window=None;server._cache=None
+    server._health_catalog=lambda:catalog
+    params={'q':query,'format':'json'}
+    if categories:params['categories']=','.join(categories)
+    if requested:params['engines']=','.join(requested)
+    response=client.get('/search',params=params);body=response.json();calls=engine.calls
+  else:
+   state=_build_state(['wikipedia'],policy=MCPPolicy(),router=router)
+   state.catalog=catalog;state.ctx.catalog=catalog
+   state.ctx.tier1_engines={'wikipedia','brave'}
+   state.ctx.active_engines['wikipedia']._count={'five':5,'six':6,'large':60}.get(scenario,1)
+   state.ctx.active_engines['wikipedia'].categories=['general','science']
+   set_state(state)
+   body=asyncio.run(tools.slopsearx_search(query,categories=categories,engines=requested))
+   calls=state.ctx.active_engines['wikipedia'].calls
+   response=None
+   set_state(None)
+  notes=body.get('meta',{}).get('advisories',[])
+  reasons=[n['reason'] for n in notes]
+  correct=sorted(reasons)==sorted(expected)
+  guards=all(n['action']['actor']=='operator' and n['expected_quality_gain']=='unmeasured' for n in notes) and len(notes)<=3 and all(n.get('engine')!='brave' for n in notes) if scenario=='sensitive' else all(n['action']['actor']=='operator' and n['expected_quality_gain']=='unmeasured' for n in notes) and len(notes)<=3
+  rows.append({'scenario':scenario,'surface':surface,'expected':expected,'actual':reasons,'correct':correct,'guards':guards,'adapter_calls':calls,'body':body})
+(out/'rows.json').write_text(json.dumps(rows,indent=2)+'\n')
+summary={'cases':len(rows),'eligible':sum(bool(r['expected']) for r in rows),'eligible_correct':sum(bool(r['expected']) and r['correct'] for r in rows),'controls_correct':sum(not r['expected'] and r['correct'] for r in rows),'guards':all(r['guards'] for r in rows)}
+(out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary))
