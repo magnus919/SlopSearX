@@ -22,3 +22,42 @@
 ## Readout
 
 Pending execution. Registration commit will be recorded in the evidence manifest without amending this plan.
+
+## Readout — first screen
+
+The eight registered searches produced 20–45 results; two exceeded the current
+shortlist bound. Fourteen Jev requests returned valid exact-membership scores;
+168,657 input and 6,496 output tokens were reported. The rerank and scholarly
+module hashes match the reviewed source. The deployed shared service hash differs,
+and HTTP output does not expose the applied ranking explanation. This is a
+returned-order replay, not a claim of exact pre-rerank incumbent reconstruction.
+
+Single requests scored the complete 44/45-result sets in 410/263 ms observed
+provider time. Against first-40 replay, nDCG@10 changed by 0.000/-0.0051
+(mean -0.0026; exploratory two-query bootstrap 95% interval [-0.0051, 0.000]).
+The 0.05 advancement effect was not met, and n=2 is inadequate for generalization.
+All first-40 and whole-set top tens contained ten assistant-labeled useful cards.
+Whole-set scoring did not promote a tail card into these top tens.
+
+Naive global sorting of separately scored batches promoted useful tail cards,
+but harmed the second query's judged nDCG@10 (0.9184 → 0.7507).
+Scores changed by up to 2.11 points across whole/batched contexts, and by up to
+1.67 when batch placement changed. Do not ship naive cross-batch score fusion.
+The observed maximum over all fourteen provider requests was410 ms; this does
+not establish a production p95, concurrent deadline behavior or provider bounds
+for larger sets. Reference labels are assistant card judgments, not independent
+gold, and no answer-quality gain was measured.
+
+**Decision:** whole-set single-request feasibility is demonstrated at44/45;
+quality uplift remains inconclusive; naive cross-batch sorting is not supported
+on this screen. No runtime change or deployment. Retain frozen cards, labels,
+usage, all requests and the inert harness in [evidence/EXP-033](evidence/EXP-033/).
+Reproduction uses the pinned source environment, frozen inputs and a supplied
+credential-safe proxy; model replay may differ. Provider costs are not inferred
+from token telemetry. See `analysis.json` and `summary.json` for complete trials.
+
+A next mechanism study will test documented structured questions: put each card
+in its own question and share only the query in state. This removes unrelated
+candidate context from each individual judgment while retaining batched transport.
+It requires its own preregistration and cannot be promoted from exposed cases
+alone. Historical snapshots and this negative result remain intact.
