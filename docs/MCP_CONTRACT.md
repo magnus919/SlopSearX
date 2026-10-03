@@ -377,6 +377,9 @@ only from the audited `enforced_filters` adapter declaration; `supported_filters
 | `location`, `employment_type` (jobs) | `unsupported` | Not consumed by current ATS adapters. |
 | `date_from`, `date_to` (science) | scope-dependent | OpenAlex applies inclusive upstream publication-date filters; mixed scopes are partial and other-only scopes unsupported. Invalid/reversed bounds reject before dispatch. |
 
+Unsupported-filter prose describes lack of enforcement by the selected adapters;
+it does not infer whether an adapter consumes the parameter.
+
 This report is the machine-readable replacement for prose-only filter warnings
 (`VAL-FILTER-001`). The schema and enforcement vocabulary are shared; the keys
 present depend on the search path and its requested filters. Generic and targeted

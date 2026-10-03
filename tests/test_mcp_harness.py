@@ -351,7 +351,7 @@ class TestDeterministicSearchEnvelope:
                 assert entry["status"] == "unsupported"
                 assert entry["reason"]
                 assert entry["enforced_by"] == []
-                assert f"language '{language or 'en'}' is not consumed by any adapter" in data["warnings"]
+                assert f"language '{language or 'en'}' is not enforced by selected adapters" in data["warnings"]
 
 
 class TestLifespanSensitiveSync:
