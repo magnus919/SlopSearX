@@ -15,3 +15,10 @@ user-oriented research queries. It does not train a scorer or alter runtime.
 - Budget:8searches; candidate<=20Jevrequests plus atmost8 configured search rerank requests;1rootlaneinflight; <=500k reported candidate inputtokens,60minutes. Labels/public research cases only; no credentials/private endpoints published. Actual search rerank usage may be unavailable and must remain distinct, notzero.
 - Fixed analysis: query bootstrap10,000 resamples seed504; report all exclusions and strata. Invalid transport/output unevaluated, deterministic replay comparison available; no retries except identified setup repair with preserved attempts and unchanged labels/questions.
 - Evidenceunder`evidence/EXP-035`, frozen inputs/labels/digests, source hashes, all calls/usage, inert harness and readout. No deployment/default change. Fresh measured benefit and guardrails are required before an implementation recommendation; a negative screen remains useful evidence.
+
+
+## User-directed breadth extension (registered before additional acquisition)
+
+After the original eight searches returned only 30–35 cards each, Magnus suggested topics with abundant general and academic coverage. Add two separately reported breadth probes: `climate change impacts mitigation adaptation research` and `cardiac health cardiovascular disease prevention research`. This is a prospective user-directed extension, not an unmodified preregistered eight-query result or post-hoc selection of favorable rankings. No medical or climate guidance is being assessed.
+
+Expanded ceiling: ten total search acquisitions, at most ten configured search-rerank requests, at most 22 candidate Jev requests, and 600,000 reported candidate input tokens. Permit 60 additional minutes for these two probes; the original eight-query deadline and quality gates remain unchanged. Freeze cards and assistant labels before candidate calls. Report original eight and extra two separately; no change to the requirement for at least four natural pools above 40 before a tail-benefit conclusion. All text bounds, membership, source coverage, stability, no-deployment, and no-silent-truncation rules remain.
