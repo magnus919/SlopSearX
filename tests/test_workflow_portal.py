@@ -540,7 +540,10 @@ def test_authenticated_workflow_route_is_keyboard_usable_at_narrow_width(
         page = browser.new_page(viewport={"width": 320, "height": 640})
         page.set_content(markup)
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
-        assert page.get_by_text("Submit to confirm.").count() == 2
+        # This fixture grants cancellation, not research retry. Verify that
+        # every permitted form has its confirmation and no retry is exposed.
+        assert page.get_by_text("Submit to confirm.").count() == 1
+        assert page.get_by_role("button", name="Retry failed work").count() == 0
         assert page.locator("script").count() == 0
         page.keyboard.press("Tab")
         assert page.get_by_role("link", name="SlopSearX").evaluate("el => document.activeElement === el")
