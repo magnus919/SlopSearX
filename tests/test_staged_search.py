@@ -93,9 +93,7 @@ async def test_clean_empty_runs_disjoint_fallback(staged_state) -> None:
 
 
 async def test_partial_empty_initial_stage_does_not_dispatch_fallback(staged_state) -> None:
-    staged_state.ctx.active_engines["wikipedia"] = _MockEngine(
-        "wikipedia", status=EngineStatus.TIMEOUT
-    )
+    staged_state.ctx.active_engines["wikipedia"] = _MockEngine("wikipedia", status=EngineStatus.TIMEOUT)
     staged_state.ctx.active_engines["brave"] = _MockEngine("brave", count=0)
     staged_state.ctx.active_engines["duckduckgo"] = _MockEngine("duckduckgo")
     arguments = {
@@ -120,14 +118,11 @@ async def test_partial_empty_initial_stage_does_not_dispatch_fallback(staged_sta
     assert completed["budget"]["remaining"] == 1
     assert completed["stages"][0]["state"] == "failed"
     statuses = {
-        outcome["engine"]: outcome["status"]
-        for outcome in completed["stages"][0]["attempts"][0]["engine_outcomes"]
+        outcome["engine"]: outcome["status"] for outcome in completed["stages"][0]["attempts"][0]["engine_outcomes"]
     }
     assert statuses == {"brave": "ok", "wikipedia": "timeout"}
     assert completed["stages"][1]["state"] == "pending"
-    assert completed["objectives"]["unmet"] == [
-        {"objective": "fallback", "reason": "initial_stage_failed"}
-    ]
+    assert completed["objectives"]["unmet"] == [{"objective": "fallback", "reason": "initial_stage_failed"}]
     assert staged_state.ctx.active_engines["duckduckgo"].calls == 0
 
 

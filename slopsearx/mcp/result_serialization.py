@@ -16,6 +16,7 @@ from slopsearx.payload import (
     payload_serialized_size,
     payload_to_dict,
 )
+from slopsearx.publication_metadata import projected_paper
 from slopsearx.retrieval_url import RETRIEVAL_URL_STATUS_OK, _retrieval_url
 from slopsearx.snapshot import SearchSnapshot
 
@@ -191,6 +192,7 @@ def _result_to_dict(
     inline = _payload_inline(result, requested=include_payload)
     if inline is not None:
         card["payload"] = inline
+    card.update(projected_paper(result))
     return card
 
 
@@ -257,4 +259,5 @@ def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: st
     }
     if not content_available:
         record["content_unavailable_note"] = CONTENT_UNAVAILABLE_NOTE
+    record.update(projected_paper(result))
     return record

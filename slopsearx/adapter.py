@@ -246,6 +246,8 @@ class SearchResult:
     # None means the result has no domain-specific structured payload and the
     # common envelope is the complete representation.
     payload: Optional[dict[str, Any]] = None
+    # Bounded internal work/member provenance; never a default HTTP wire field.
+    work_group: Optional[dict[str, Any]] = None
 
 
 class EngineStatus(enum.Enum):

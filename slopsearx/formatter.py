@@ -29,6 +29,7 @@ from slopsearx.payload import (
     payload_serialized_size,
     payload_to_dict,
 )
+from slopsearx.publication_metadata import projected_paper
 from slopsearx.retrieval_url import RETRIEVAL_URL_STATUS_OK, classify_retrieval_url
 
 # ---------------------------------------------------------------------------
@@ -68,7 +69,7 @@ def _result_to_searxng(result: SearchResult) -> dict[str, Any]:
     All 23 SearXNG fields are present. Null fields are preserved as
     None for JSON serialization.
     """
-    return {
+    output = {
         "url": result.url,
         "title": result.title,
         "content": result.content,
@@ -96,6 +97,11 @@ def _result_to_searxng(result: SearchResult) -> dict[str, Any]:
         "close_group": False,
         "priority": "",
     }
+
+    if paper := projected_paper(result):
+        output.update(paper)
+        output["template"] = "paper.html"
+    return output
 
 
 def _parsed_url(url: str | None) -> list[str] | None:
@@ -585,7 +591,7 @@ def _portal_ranking_explanation(strategy: str, tier: int) -> str:
     if strategy == "tier_then_reciprocal_rank_fusion_k60":
         method = "Reciprocal rank fusion (k=60) combines each source's result order"
     else:
-        method = "Cross-source presence counts configured sources returning the same normalized URL"
+        method = "Cross-source presence counts configured sources returning the same URL or identified work"
     return f"{method}, after configured tier {tier}. The score controls ordering; it is not confidence."
 
 
@@ -807,8 +813,8 @@ def format_html(
         )
         consensus_count = len(engines)
         consensus = (
-            f'<span class="result-pill consensus" title="Same URL returned by {consensus_count} configured engines" '
-            f'aria-label="Same URL returned by {consensus_count} configured engines">Matched {consensus_count} sources</span>'
+            f'<span class="result-pill consensus" title="Same result or identified work found by {consensus_count} configured engines" '
+            f'aria-label="Same result or identified work found by {consensus_count} configured engines">Matched {consensus_count} sources</span>'
             if consensus_count > 1
             else ""
         )
@@ -1082,6 +1088,7 @@ def format_yaml_markdown(
             "tier": r.tier,
             "media": media_to_dict(r.media),
             "payload": _payload_for_output(r.payload),
+            **projected_paper(r),
         }
         for r in results
     ]

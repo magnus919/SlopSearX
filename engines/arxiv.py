@@ -19,7 +19,7 @@ from slopsearx.adapter import (
 )
 from slopsearx.payload import DOMAIN_SCIENCE, build_payload
 
-ARXIV_NS = {"atom": "http://www.w3.org/2005/Atom"}
+ARXIV_NS = {"atom": "http://www.w3.org/2005/Atom", "arxiv": "http://arxiv.org/schemas/atom"}
 
 
 @register_engine
@@ -165,6 +165,17 @@ class ArxivAdapter(EngineAdapter):
                 "publication",
                 {
                     "publication_id": arxiv_id or None,
+                    "arxiv_id": arxiv_id or None,
+                    "doi": entry.findtext("arxiv:doi", namespaces=ARXIV_NS),
+                    "authors": [
+                        node.text.strip()
+                        for node in entry.findall("atom:author/atom:name", ARXIV_NS)
+                        if node.text and node.text.strip()
+                    ]
+                    or None,
+                    "journal": entry.findtext("arxiv:journal_ref", namespaces=ARXIV_NS),
+                    "comments": entry.findtext("arxiv:comment", namespaces=ARXIV_NS),
+                    "revision_date": entry.findtext("atom:updated", namespaces=ARXIV_NS),
                     "abstract": abstract or None,
                 },
                 engine=self.name,
