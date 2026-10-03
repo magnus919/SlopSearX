@@ -1215,13 +1215,19 @@ class SearchService:
                 ranking_explanation=self._ranking_explanation,
             )
 
+        try:
+            response = search_response_from_payload(payload)
+            response.cached = True
+            # The stored entry is canonical; derive the current caller's view.
+            response = self._view_for_request(request, response)
+        except (AttributeError, TypeError, ValueError, OverflowError) as exc:
+            # Optional cached data must not prevent fresh retrieval. Log only
+            # the failure class, never the payload, query or exception text.
+            logger.warning("Ignoring malformed search cache entry (%s)", type(exc).__name__)
+            m.cache_hits.inc({"type": "miss"})
+            return None
         m.cache_hits.inc({"type": "hit"})
-        response = search_response_from_payload(payload)
-        response.cached = True
-        # The stored entry is the canonical full response; derive the view
-        # requested by THIS request (include filtering + max_results slicing)
-        # so a cache hit never leaks fields from the populating request.
-        return self._view_for_request(request, response)
+        return response
 
     async def _write_cache(
         self, request: SearchRequest, response: SearchResponse, all_unresponsive: bool, routing_digest: str

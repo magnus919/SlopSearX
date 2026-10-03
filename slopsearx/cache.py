@@ -177,7 +177,11 @@ class SearchCache:
             data = await self._client.get(key)
             if data is None:
                 return None
-            return cast("dict[str, Any]", json.loads(data))
+            payload = json.loads(data)
+            if not isinstance(payload, dict):
+                logger.debug("Cache get ignored a non-object JSON value")
+                return None
+            return cast("dict[str, Any]", payload)
         except Exception as e:
             logger.debug("Cache get error: %s", e)
             return None

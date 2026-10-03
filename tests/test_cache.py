@@ -399,3 +399,13 @@ def test_relative_window_cache_identity_changes_with_day(monkeypatch) -> None:
     )
     assert cache_key("q", time_range="week") != before
     assert cache_key("q") == timeless
+
+
+@pytest.mark.parametrize("raw", ["[]", "42", '"broken"', "null"])
+async def test_nonobject_cache_json_is_a_miss(raw: str) -> None:
+    cache = SearchCache("redis://unused:6379")
+    cache._connected = True
+    cache._client = AsyncMock()
+    cache._client.get.return_value = raw
+    assert await cache.get("key") is None
+    await cache.close()
