@@ -170,6 +170,17 @@ server_requests = Counter(
     "Total search requests handled",
 )
 
+# Completed application-boundary HTTP searches. Closed outcome labels only;
+# exclusions and denominator are documented in docs/SLO.md.
+http_search_completed = Counter(
+    "slopsearx_http_search_completed_total",
+    "Completed HTTP searches by outcome (success, rejected, failure)",
+)
+http_search_duration = Histogram(
+    "slopsearx_http_search_duration_seconds",
+    "HTTP search application duration including response rendering, by outcome",
+)
+
 # Product analytics: per-category and per-format request counts.
 # Enables operators to understand *what* is being searched and in
 # which format, without collecting any user-identifiable data.
@@ -422,6 +433,8 @@ def render_metrics() -> str:
         engine_status.render(),
         cache_hits.render(),
         server_requests.render(),
+        http_search_completed.render(),
+        http_search_duration.render(),
         server_requests_by_category.render(),
         server_requests_by_format.render(),
         server_errors_total.render(),

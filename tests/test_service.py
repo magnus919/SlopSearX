@@ -1423,3 +1423,36 @@ async def test_deep_and_cyclic_answer_values_are_bounded() -> None:
     for response in responses:
         assert "<max depth exceeded>" in json.dumps(response.answers)
         assert response.infoboxes == [{"self": "<circular reference>"}]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "corrupt",
+    [
+        {"scope": "broken"},
+        {"results": ["broken"]},
+        {"response_time_ms": "broken"},
+        {"dispatched_engine_count": "broken"},
+        {"scope": {"jev_scores": {"okeng": "broken"}}},
+        {"response_time_ms": float("inf")},
+    ],
+)
+async def test_malformed_cached_response_recovers_and_repairs(
+    corrupt: dict[str, Any], caplog: pytest.LogCaptureFixture
+) -> None:
+    engine = _OkEngine(count=1)
+    cache = _FakeCache()
+    service = _service(engines={"okeng": engine}, cache=cache)
+    fresh = await service.search(_req())
+    key = next(iter(cache._data))
+    cache._data[key].update(corrupt)
+    recovered = await service.search(_req())
+    assert not recovered.cached
+    assert recovered.results == fresh.results
+    assert engine.calls == 2
+    repaired = await service.search(_req())
+    assert repaired.cached
+    assert repaired.results == fresh.results
+    assert engine.calls == 2
+    assert "Ignoring malformed search cache entry" in caplog.text
+    assert "broken" not in caplog.text
