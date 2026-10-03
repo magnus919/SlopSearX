@@ -320,17 +320,7 @@ def _enforce_policy(
         details = dict(rejection)
         code = str(details.pop("code"))
         message = str(details.pop("message"))
-        rejected = _error(code, message, field=field, **details)
-        advisories = search_advisories(
-            SearchRequest(query="", engines=engines),
-            ScopeDecision(),
-            state.ctx,
-            catalog=state.catalog,
-            sensitive_engines=state.policy.sensitive_engines,
-        )
-        if advisories:
-            rejected["meta"] = {"advisories": advisories}
-        return rejected
+        return _error(code, message, field=field, **details)
     return None
 
 
