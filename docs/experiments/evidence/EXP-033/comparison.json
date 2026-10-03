@@ -1,0 +1,29 @@
+{
+  "cases": 22,
+  "eligible_baseline": 0,
+  "eligible_candidate": 14,
+  "eligible_total": 14,
+  "quiet_controls": 8,
+  "effect_percentage_points": 100,
+  "adapter_calls_identical": true,
+  "stable_payloads_identical": true,
+  "normalization_excluded_keys": [
+    "advisories",
+    "query_id",
+    "response_time_ms",
+    "cursor",
+    "result_id",
+    "id",
+    "source_ref",
+    "search_id",
+    "snapshot_id",
+    "created_at",
+    "expires_at",
+    "dispatch_duration_ms",
+    "elapsed_ms"
+  ],
+  "candidate_sha": "f4ab41d486f77725304aa1b58dac9c03fb5ae0f3",
+  "baseline_sha": "ad03963",
+  "quality_uplift": "unmeasured",
+  "production_claim": "operator reported; no raw measurements provided"
+}

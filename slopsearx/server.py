@@ -30,6 +30,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Res
 import engines  # noqa: F401 — triggers @register_engine to populate registry
 from slopsearx import metrics as m
 from slopsearx.adapter import EngineAdapter
+from slopsearx.advisories import search_advisories
 from slopsearx.audit import QueryAuditLogger
 from slopsearx.cache import SearchCache
 from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, build_engine_health, load_mcp_policy
@@ -940,6 +941,14 @@ async def _search_endpoint_impl(request: Request) -> Any:
             output_format, 429, error="rate_limited", message="Too many requests. Please slow down."
         )
 
+    advisories = search_advisories(
+        search_request,
+        response.scope,
+        _current_context(),
+        result_count=len(response.results),
+        sensitive_engines=_portal_policy_snapshot().sensitive_engines,
+    )
+
     if response.cached_error:
         # Negative cache hit — 503 without dispatching.
         return _format_error_response(
@@ -947,7 +956,7 @@ async def _search_endpoint_impl(request: Request) -> Any:
             503,
             error="service_unavailable",
             message="Temporarily unavailable (cached error)",
-            extra={"meta": {"cached": True, "query_id": response.query_id}},
+            extra={"meta": {"cached": True, "query_id": response.query_id, "advisories": advisories}},
         )
 
     if response.all_unresponsive and not response.engine_outcomes:
@@ -963,6 +972,7 @@ async def _search_endpoint_impl(request: Request) -> Any:
                 "cached": False,
                 "query_id": response.query_id,
                 "engine_status": {},
+                "advisories": advisories,
             },
             portal_state=_portal_state(
                 query=q,
@@ -978,6 +988,8 @@ async def _search_endpoint_impl(request: Request) -> Any:
 
     unresponsive = unresponsive_from_outcomes(response.engine_outcomes)
     meta = build_response_meta(response)
+    if advisories:
+        meta["advisories"] = advisories
 
     status_code = 503 if response.all_unresponsive else 200
 

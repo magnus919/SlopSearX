@@ -1,11 +1,17 @@
 # Instructions for one improvement cycle
 
 Read AGENTS.md, CONTRIBUTING.md, docs/experiments/README.md, the experiment
-ledger and relevant project contracts. Inspect current main, open issues and
+ledger, DESIGN.md and relevant project contracts. Inspect current main, open issues and
 PRs, and unfinished experiments before choosing work. Preserve unrelated files.
 
-Resume an unfinished experiment, or select one evidence-based improvement to
-search usefulness, human experience, or agent experience. Register a falsifiable
+Finish delivery of supported candidates first. For new work, identify a
+consequential user/agent problem and an observable before/after example. Rank
+opportunities by severity, affected tasks, evidence, useful effect and feasible
+measurement; trace the reachable normal service path before selecting one.
+Review the latest seven completed experiments and verified delivery outcomes.
+Avoid repeating an unchanged blocker or doing tiny changes only because they
+are easy to measure. If evaluation prerequisites are missing, address a bounded
+prerequisite explicitly; do not claim it as product-quality uplift. Register a falsifiable
 hypothesis using TEMPLATE.md and commit the frozen plan before candidate work.
 Run one bounded experiment in an isolated worktree using the registered metric,
 minimum useful effect, guardrails, sample plan, and stopping rule. Default to
@@ -28,6 +34,17 @@ rule below. Do not deploy automatically. Report the
 experiment ID, measured effect and uncertainty, guardrails, decision, evidence
 location, PR links, and unresolved blockers. Do not describe work as running in
 the background unless a scheduler has actually been configured.
+
+## Operator boundary
+
+SLOs are documentation suggestions and SLI surfaces are optional operator tools.
+Do not operationalize production SLOs, configure or send alerts, deploy changes,
+or treat unavailable production telemetry as a prerequisite for repository work.
+Use supplied operator evidence when available and label its origin. Report
+measured effect separately from merged delivery and unverified release status.
+The schedule stays daily; deduplicate using the Eastern calendar start date,
+never finish time or rolling 24-hour elapsed time. Default to one bounded
+experiment, 45 minutes, offline replay, zero paid calls.
 
 ## Standing implementation merge rule — authorized 2026-10-03
 

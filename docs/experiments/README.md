@@ -2,16 +2,20 @@
 
 SlopSearX experiments improve useful search, human task completion, or agent
 task completion while preserving the shared service and compatibility contracts.
-The deliverable is evidence and a decision; a code change is optional.
+The objective is material, evidenced improvements delivered to the repository.
+Every experiment also produces evidence and a decision; weak candidates are
+rejected. Follow [the loop design](DESIGN.md) for opportunity selection, evidence
+standards and delivery accounting. Production operation belongs to operators.
 
 ## Run one cycle
 
 1. Read this ledger, relevant project contracts, current issues and open PRs.
    Resume an unfinished experiment before proposing another. Do not duplicate
    rejected work without stating what new evidence makes a retry worthwhile.
-2. Select one bounded hypothesis from an observed problem. Prefer the smallest
-   change with a useful, affordable measurement. Check accepted design and
-   discovery prerequisites before changing portal behavior.
+2. Select the strongest consequential opportunity using [DESIGN.md](DESIGN.md):
+   identify the affected task, before/after behavior, practical effect and
+   reachable measurement path before registration. Resume supported delivery
+   first, and avoid repeating unchanged blockers. Check portal prerequisites.
 3. Copy [TEMPLATE.md](TEMPLATE.md) to `EXP-NNN-short-name.md`, assign the next
    unused ID, and add it to the ledger. Complete and commit the registration
    **before implementing or measuring the candidate**. Record the baseline SHA,
@@ -142,8 +146,9 @@ experiment PRs as described below; merge implementation PRs only under the stand
 | [EXP-036](EXP-036-heldout-complete-set-reranking.md) | Does fresh complete-set card-local ranking improve task usefulness? | quality gate not met; tail benefit inconclusive | Seven valid paired original queries: mean nDCG delta +0.0104 root / +0.0327 Luna, below +0.05. Cardiac breadth case has 44 cards and regresses under both references; 21/22 candidate responses accepted. No runtime change. | Pending evidence PR |
 | [EXP-035](EXP-035-card-local-whole-set-reranking.md) | Does card-local question context stabilize complete-set reranking? | supported mechanism; quality adoption pending | 21/21 valid; maximum whole/batch drift 2.11→0.41; top-ten overlap 0.9–1.0; constructed 80-card request 388ms. Exposed RAG nDCG regressed 0.0497; fresh validation required. | None |
 | [EXP-034](EXP-034-whole-set-jev-reranking.md) | Can whole-set scoring improve relevant-tail access over first40? | feasible; quality inconclusive; naive batches not supported | Two real44/45-card pools,14/14 valid; nDCG mean delta -0.0026. Batch composition drift up to2.11 and one ranking regression. | None |
+| [EXP-033](EXP-033-capability-advisories.md) | Can bounded capability advisories truthfully disclose relevant limitations? | supported for disclosure | 0/14 to 14/14 eligible notes; 8/8 quiet controls. [Readout](EXP-033-results.md). Query benefit unmeasured. | [PR #506](https://github.com/magnus919/SlopSearX/pull/506), merged 2026-10-03 |
 | [EXP-032](EXP-032-corrupt-cache-recovery.md) | Can corrupt-cache fallback restore correct search completion? | supported | Real-Valkey fault replay: 0/16 → 16/16 correct completions; repaired hits and controls pass. Production prevalence unknown. | [PR #500](https://github.com/magnus919/SlopSearX/pull/500), merged 2026-10-03 |
-| [EXP-031](EXP-031-filter-warning-truth.md) | Does enforcement-specific prose eliminate false consumption warnings? | supported | Warning truthfulness 50%→100%; +0.493% bytes, other fields equal. Oct 3: mypy hook resolved; browser contract still blocks promotion. | Pending, [issue #488](https://github.com/magnus919/SlopSearX/issues/488) |
+| [EXP-031](EXP-031-filter-warning-truth.md) | Does enforcement-specific prose eliminate false consumption warnings? | supported | Warning truthfulness 50%→100%; +0.493% bytes, other fields equal. Oct 3: prior blockers resolved; full checks and review pass. | [PR #510](https://github.com/magnus919/SlopSearX/pull/510), merged 2026-10-03 |
 | [EXP-030](EXP-030-negative-cache-path.md) | Can TTL validation prevent silent negative-cache loss on the service path? | blocked | No current production set_error caller; intended service benefit cannot be replayed. | None |
 | [EXP-029](EXP-029-empty-search-recovery.md) | Does an empty-search hint improve human recovery within two minutes? | blocked | No available participant cohort or measured recovery baseline; no UI change or effect measured. | None |
 | [EXP-028](EXP-028-safe-utf8-cache.md) | Can UTF-8 with ASCII fallback preserve caching and save 10% of bytes? | not-supported | Fallback passed all guards; 0.315% byte saving misses 10% minimum. | None |

@@ -235,3 +235,42 @@ def test_dependabot_tracks_docker_digest_updates() -> None:
     assert any(
         update["package-ecosystem"] == "docker" and update["directory"] == "/" for update in dependabot["updates"]
     )
+
+
+def test_container_publication_requires_both_native_architectures() -> None:
+    workflow = yaml.safe_load((ROOT / ".github/workflows/docker.yml").read_text())
+    build = workflow["jobs"]["build-and-push"]
+    assert build["strategy"]["matrix"]["include"] == [
+        {"arch": "amd64", "runner": "ubuntu-24.04"},
+        {"arch": "arm64", "runner": "ubuntu-24.04-arm"},
+    ]
+    steps = build["steps"]
+    names = [step.get("name") for step in steps]
+    push_index = names.index("Push tested architecture image")
+    for gate in ("Scan image with Trivy", "Smoke test container", "Smoke test configured Darker default"):
+        index = names.index(gate)
+        assert index < push_index
+        assert not steps[index].get("continue-on-error", False)
+    build_options = steps[names.index("Build and load image")]["with"]
+    assert build_options["platforms"] == "linux/${{ matrix.arch }}"
+    assert build_options["load"] is True
+    assert build_options["push"] is False
+    assert steps[push_index]["if"] == "github.event_name == 'push'"
+
+    publish = workflow["jobs"]["publish-manifest"]
+    assert publish["needs"] == "build-and-push"
+    assert publish["if"] == "github.event_name == 'push'"
+    command = next(
+        step["run"] for step in publish["steps"] if step.get("name") == "Publish manifest from tested digests"
+    )
+    assert '"$(cat digests/amd64)" "$(cat digests/arm64)"' in command
+    assert 'assert platforms == {("linux", "amd64"), ("linux", "arm64")}' in command
+
+
+def test_architecture_tags_follow_commit_retention_instead_of_each_run() -> None:
+    workflow = yaml.safe_load((ROOT / ".github/workflows/docker.yml").read_text())
+    steps = workflow["jobs"]["build-and-push"]["steps"]
+    tag_command = next(step["run"] for step in steps if step.get("name") == "Set architecture image tag")
+    assert "${GITHUB_SHA::7}-${{ matrix.arch }}" in tag_command
+    assert "GITHUB_RUN_ID" not in tag_command
+    assert "GITHUB_RUN_ATTEMPT" not in tag_command

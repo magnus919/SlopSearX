@@ -15,6 +15,9 @@ Thanks for your interest. This project is in early development — the spec is s
 ## Measured improvement experiments
 
 For hypothesis-driven improvements, follow the [experiment loop](docs/experiments/README.md).
+Use the [material improvement design](docs/experiments/DESIGN.md) to select
+consequential problems and match evidence to the intended benefit. SLOs are
+optional operator guidance; the runner does not operate production or send alerts.
 Register the metric and decision rule before testing, retain every outcome, and
 submit implementation PRs only when the evidence supports a useful improvement
 and all compatibility guardrails pass. Negative and inconclusive experiments

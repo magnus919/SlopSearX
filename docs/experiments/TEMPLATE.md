@@ -4,7 +4,9 @@
 
 - State: registered
 - Date, owner, related issue:
-- Problem and observed evidence:
+- Problem, affected task, observable before/after example and evidence origin:
+- Opportunity priority and why this effect is material:
+- Evidence class and reachable service path; measurement-readiness check:
 - Intended beneficiary and project objective:
 - Hypothesis: changing X will improve Y by at least Z under conditions C.
 - Baseline SHA and configuration:
@@ -41,4 +43,6 @@
 - Release/production verification status (do not infer from merge):
 - Documentation persistence PR/commit (all outcomes):
 - Candidate cleanup / rollback:
-- Follow-up question and what would justify a retry:
+- Delivered product effect versus prerequisite/disclosure-only evidence:
+- Actual elapsed time, provider requests/cost (unknown values stay unknown):
+- Follow-up question and new evidence required for retry:

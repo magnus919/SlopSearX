@@ -19,6 +19,7 @@ from pydantic import StrictInt
 
 from slopsearx import metrics as m
 from slopsearx.adapter import OBSERVED_STATUS_VOCAB, SUPPORTED_MEDIA_TYPES
+from slopsearx.advisories import search_advisories
 from slopsearx.artifacts import artifact_ref, composite_artifact_id, lineage_edge
 from slopsearx.capabilities import INTENT_PROFILES, build_engine_health, engine_policy_rejection, resolve_intent
 from slopsearx.filters import (
@@ -279,12 +280,22 @@ def _validate_engines(state: McpState, engines: list[str]) -> dict[str, Any] | N
     if unknown or inactive:
         problems = [f"{name} (unknown)" for name in unknown] + [f"{name} (inactive)" for name in inactive]
         valid = sorted(name for name in known if bool(state.catalog.get(name) and state.catalog.get(name).enabled))  # type: ignore[union-attr]
-        return _error(
+        rejected = _error(
             "invalid_scope",
             "unknown or inactive engines: " + ", ".join(problems),
             field="engines",
             valid_alternatives=valid,
         )
+        advisories = search_advisories(
+            SearchRequest(query="", engines=engines),
+            ScopeDecision(),
+            state.ctx,
+            catalog=state.catalog,
+            sensitive_engines=state.policy.sensitive_engines,
+        )
+        if advisories:
+            rejected["meta"] = {"advisories": advisories}
+        return rejected
     return None
 
 
@@ -323,7 +334,7 @@ def _filter_warnings(state: McpState, selected_engines: list[str], language: str
     Gated on the resolved enforcement status so the prose never contradicts
     the machine-readable report: a filter that any selected adapter enforces
     (``enforced``/``partially_enforced``) must not be described as "not
-    consumed by any adapter". The report is derived via
+    enforced by selected adapters". The report is derived via
     :func:`_core_filter_enforcement` against the same scope the search will
     dispatch.
     """
@@ -332,9 +343,9 @@ def _filter_warnings(state: McpState, selected_engines: list[str], language: str
     )
     warnings: list[str] = []
     if report.get("language", {}).get("status") == "unsupported":
-        warnings.append(f"language '{language}' is not consumed by any adapter")
+        warnings.append(f"language '{language}' is not enforced by selected adapters")
     if report.get("time_range", {}).get("status") == "unsupported":
-        warnings.append(f"time_range '{time_range}' is not consumed by any adapter")
+        warnings.append(f"time_range '{time_range}' is not enforced by selected adapters")
     return warnings
 
 
@@ -651,7 +662,7 @@ async def _run_search(
         warnings = warnings + ["snapshot store unavailable — pagination cursor not created"]
     if max_results is not None and max_results > 0:
         response.results = response.results[:max_results]
-    return _envelope(
+    envelope = _envelope(
         state,
         response,
         requested_intent=requested_intent,
@@ -662,6 +673,17 @@ async def _run_search(
         enforcement=enforcement,
         include_payload=include_payload,
     )
+    advisories = search_advisories(
+        request,
+        response.scope,
+        state.ctx,
+        result_count=total,
+        catalog=state.catalog,
+        sensitive_engines=state.policy.sensitive_engines,
+    )
+    if advisories:
+        envelope.setdefault("meta", {})["advisories"] = advisories
+    return envelope
 
 
 def _deadline_iso(deadline: float) -> str:
