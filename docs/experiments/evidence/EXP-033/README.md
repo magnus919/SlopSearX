@@ -18,3 +18,8 @@ them by retaining the original metadata-free policy rejection.
 comparison.json excludes listed volatile identity/timing fields and advisories
 from payload equality. It also verifies exact adapter-call equality. These are
 contract measurements, not agent or human relevance/task-success measurements.
+
+Reviewed candidate 876da1b retains the same matrix results after Droid's two
+boundary corrections. Final SHA 6c590affdee8a9ecfb203be413547136e48cabc1 changes
+only test isolation; merge-gate.json and merge.json retain CI/review/delivery.
+Delivery-validation.json preserves the failed CI and local transport traces.
