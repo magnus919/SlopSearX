@@ -1,0 +1,43 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_authenticated_workflow_route_is_keyboard_usable_at_narrow_width _____
+
+portal = (<starlette.testclient.TestClient object at 0x109f46e70>, FakeWorkflows(calls=0, ack_calls=0, compose_calls=0, policy=...', 'workflow.compose', 'workflow.read', 'workflow.saved.ack'}), revision=1, enabled=True),), revision=1, enabled=True))
+
+    def test_authenticated_workflow_route_is_keyboard_usable_at_narrow_width(
+        portal: tuple[TestClient, FakeWorkflows, PortalPrincipal],
+    ) -> None:
+        playwright = pytest.importorskip("playwright.sync_api")
+        client, _workflows, _principal = portal
+        sign_in(client)
+        markup = client.get("/workflows/research/job-1").text
+        with playwright.sync_playwright() as api:
+            browser = api.chromium.launch()
+            page = browser.new_page(viewport={"width": 320, "height": 640})
+            page.set_content(markup)
+            assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+>           assert page.get_by_text("Submit to confirm.").count() == 2
+E           assert 1 == 2
+E            +  where 1 = count()
+E            +    where count = <Locator frame=<Frame name= url='about:blank'> selector='internal:text="Submit to confirm."i'>.count
+E            +      where <Locator frame=<Frame name= url='about:blank'> selector='internal:text="Submit to confirm."i'> = get_by_text('Submit to confirm.')
+E            +        where get_by_text = <Page url='about:blank'>.get_by_text
+
+tests/test_workflow_portal.py:543: AssertionError
+----------------------------- Captured stderr call -----------------------------
+HTTP Request: GET https://testserver/auth/login?return_to=/workflows "HTTP/1.1 303 See Other"
+HTTP Request: GET https://testserver/auth/callback?code=good "HTTP/1.1 303 See Other"
+HTTP Request: GET https://testserver/workflows/research/job-1 "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET https://testserver/auth/login?return_to=/workflows "HTTP/1.1 303 See Other"
+INFO     httpx:_client.py:1025 HTTP Request: GET https://testserver/auth/callback?code=good "HTTP/1.1 303 See Other"
+INFO     httpx:_client.py:1025 HTTP Request: GET https://testserver/workflows/research/job-1 "HTTP/1.1 200 OK"
+=============================== warnings summary ===============================
+../../../Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_workflow_portal.py::test_authenticated_workflow_route_is_keyboard_usable_at_narrow_width
+1 failed, 1 warning in 2.29s
