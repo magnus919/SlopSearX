@@ -174,3 +174,26 @@ def test_conflicting_payload_identifier_cannot_override_url_identity(url, target
     results = ranked({"a": [paper(url, **data), paper(target, **data)]})
     assert len(results) == 2
     assert all(len(result.work_group["members"]) == 1 for result in results)
+
+
+def test_scholarly_duplicates_do_not_consume_fusion_positions_or_engine_budget():
+    rows = [
+        paper("https://a.test/first", doi="10.1234/shared"),
+        paper("https://a.test/copy", doi="10.1234/shared"),
+        paper("https://a.test/distinct", doi="10.1234/distinct"),
+    ]
+    results = ranked({"a": rows}, ranker=ReciprocalRankFusionRanker())
+    assert results[1].score == pytest.approx(1 / 62)
+    assert [member["original_position"] for member in results[0].work_group["members"]] == [1, 2]
+    assert results[1].work_group["members"][0]["original_position"] == 3
+    budgeted = ranked({"a": rows}, ranker=PresenceRanker(per_engine_budget={"a": 2}))
+    assert len(budgeted) == 2
+
+
+def test_ordinary_url_duplicates_retain_existing_rrf_feed_positions():
+    rows = [
+        SearchResult(url=url, title="Ordinary web", content="", engine="a")
+        for url in ["https://a.test/first", "https://a.test/first", "https://a.test/distinct"]
+    ]
+    results = ranked({"a": rows}, ranker=ReciprocalRankFusionRanker())
+    assert results[1].score == pytest.approx(1 / 63)

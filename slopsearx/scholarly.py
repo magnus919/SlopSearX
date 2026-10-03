@@ -271,8 +271,14 @@ def group_publications(feeds: dict[str, list[SearchResult]], query: str = "") ->
                 "warnings": warnings,
             }
         representatives[group_key] = replace(selected, engines=set(selected.engines), work_group=group)
+    engine_work_seen: dict[str, set[int]] = {engine: set() for engine in feeds}
     for i, (engine, _, original) in enumerate(entries):
-        result = representatives[root(i)]
+        group_key = root(i)
+        result = representatives[group_key]
+        if result.work_group:
+            if group_key in engine_work_seen[engine]:
+                continue
+            engine_work_seen[engine].add(group_key)
         output[engine].append(
             replace(
                 result, engine=engine, engines={engine}, tier=original.tier, work_group=copy.deepcopy(result.work_group)

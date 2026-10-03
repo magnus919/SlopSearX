@@ -17,8 +17,9 @@ Publication and indexing dates alone never select a newer revision.
 
 Each admitted member retains its engine, original feed position, URL, title,
 snippet, publication date, identifiers and source payload in the internal
-`work_group` cache/snapshot record. No engine contributes more than once to a
-work's presence or RRF score. Existing tier priority remains intact. Groups have
+`work_group` cache/snapshot record. Each engine feed is compacted to one entry per admitted scholarly work before
+fusion; original member positions remain in provenance. No engine contributes
+more than once to a work's presence or RRF score. Existing tier priority remains intact. Groups have
 at most 64 members and 64,000 bytes of member records; serialized internal records
 have a separate 128,000-byte cap. A merge that exceeds the bound is declined,
 so exceptionally large groups can still occupy multiple results. Individual source payloads beyond 64,000 bytes decline grouping and retain
