@@ -156,3 +156,21 @@ def test_conflicting_known_pubmed_ids_do_not_merge_on_shared_doi():
         paper("https://a.test/2", doi="10.1234/shared", pmid="2"),
     ]
     assert len(ranked({"a": rows})) == 2
+
+
+@pytest.mark.parametrize(
+    "url,target,data",
+    [
+        ("https://pubmed.ncbi.nlm.nih.gov/1/", "https://pubmed.ncbi.nlm.nih.gov/2/", {"pmid": "2"}),
+        (
+            "https://pmc.ncbi.nlm.nih.gov/articles/PMC1/",
+            "https://pmc.ncbi.nlm.nih.gov/articles/PMC2/",
+            {"pmcid": "PMC2"},
+        ),
+        ("https://arxiv.org/abs/2401.00001v1", "https://arxiv.org/abs/2402.00001v1", {"arxiv_id": "2402.00001v1"}),
+    ],
+)
+def test_conflicting_payload_identifier_cannot_override_url_identity(url, target, data):
+    results = ranked({"a": [paper(url, **data), paper(target, **data)]})
+    assert len(results) == 2
+    assert all(len(result.work_group["members"]) == 1 for result in results)
