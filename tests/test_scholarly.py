@@ -218,3 +218,10 @@ def test_oversized_arxiv_version_is_not_converted_to_an_integer():
     (result,) = ranked({"brave": rows})
     assert result.url == url
     assert result.work_group is None
+
+
+@pytest.mark.parametrize("malformed", [None, False, {}, "Retracted Publication"])
+def test_malformed_publication_status_metadata_does_not_crash_grouping(malformed):
+    (result,) = ranked({"a": [paper("https://a.test/work", doi="10.1234/work", publication_types=malformed)]})
+    assert result.work_group["warnings"] == []
+    assert "comments" not in _result_to_searxng(result)
