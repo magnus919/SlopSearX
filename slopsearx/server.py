@@ -942,7 +942,11 @@ async def _search_endpoint_impl(request: Request) -> Any:
         )
 
     advisories = search_advisories(
-        search_request, response.scope, _current_context(), result_count=len(response.results)
+        search_request,
+        response.scope,
+        _current_context(),
+        result_count=len(response.results),
+        sensitive_engines=_portal_policy_snapshot().sensitive_engines,
     )
 
     if response.cached_error:

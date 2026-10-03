@@ -36,6 +36,12 @@ def search_advisories(
         else:
             routed = ctx.router.route(request.query) if ctx.router is not None else None
             relevant = set(routed) if routed is not None else set(ctx.tier1_engines)
+        if request.media_type is not None:
+            relevant = {
+                name
+                for name in relevant
+                if (cap := catalog.get(name)) is not None and request.media_type in cap.supported_media_types
+            }
         for name in sorted(relevant):
             cap = catalog.get(name)
             if cap is None or cap.sensitive or name in hidden:

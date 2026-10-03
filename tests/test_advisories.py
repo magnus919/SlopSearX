@@ -178,3 +178,38 @@ def test_cached_mcp_response_uses_current_availability() -> None:
         assert state.ctx.active_engines["wikipedia"].calls == 1
     finally:
         set_state(None)
+
+
+@pytest.mark.parametrize("explicit", [False, True])
+def test_media_intersects_requested_source_scope(explicit: bool) -> None:
+    catalog = catalog_for(brave={"enabled": False, "categories": ["general"], "supported_media_types": []})
+    ctx = AppContext(active_engines={}, catalog=catalog)
+    request = SearchRequest(
+        query="x",
+        media_type="images",
+        engines=["brave"] if explicit else None,
+        categories=None if explicit else ["general"],
+    )
+    assert search_advisories(request, ScopeDecision(), ctx) == []
+
+
+def test_http_uses_operator_sensitive_policy(monkeypatch: pytest.MonkeyPatch) -> None:
+    from fastapi.testclient import TestClient
+
+    from slopsearx import server
+    from slopsearx.capabilities import MCPPolicy
+    from tests.test_mcp_tools import _MockEngine
+
+    catalog = catalog_for(
+        brave={"enabled": False, "categories": ["general"], "sensitive": False},
+        wikipedia={"enabled": True, "categories": ["general"], "auth_class": "none"},
+    )
+    with TestClient(server.app) as client:
+        monkeypatch.setattr(server, "_active_engines", {"wikipedia": _MockEngine("wikipedia", count=1)})
+        monkeypatch.setattr(server, "_portal_policy", MCPPolicy(sensitive_engines={"brave"}))
+        monkeypatch.setattr(server, "_health_catalog", lambda: catalog)
+        monkeypatch.setattr(server, "_cache", None)
+        monkeypatch.setattr(server, "_rate_limiter", None)
+        monkeypatch.setattr(server, "_client_rate_window", None)
+        body = client.get("/search", params={"q": "x", "categories": "general", "format": "json"}).json()
+    assert body.get("meta", {}).get("advisories", []) == []
