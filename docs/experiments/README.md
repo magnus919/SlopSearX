@@ -139,7 +139,7 @@ experiment PRs as described below; merge implementation PRs only under the stand
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
-| [EXP-033](EXP-033-capability-advisories.md) | Can bounded capability advisories truthfully disclose relevant limitations? | supported for disclosure | 0/14 to 14/14 eligible notes; 8/8 quiet controls. [Readout](EXP-033-results.md). Query benefit unmeasured. | [PR #506](https://github.com/magnus919/SlopSearX/pull/506), pending |
+| [EXP-033](EXP-033-capability-advisories.md) | Can bounded capability advisories truthfully disclose relevant limitations? | supported for disclosure | 0/14 to 14/14 eligible notes; 8/8 quiet controls. [Readout](EXP-033-results.md). Query benefit unmeasured. | [PR #506](https://github.com/magnus919/SlopSearX/pull/506), merged 2026-10-03 |
 | [EXP-032](EXP-032-corrupt-cache-recovery.md) | Can corrupt-cache fallback restore correct search completion? | supported | Real-Valkey fault replay: 0/16 → 16/16 correct completions; repaired hits and controls pass. Production prevalence unknown. | [PR #500](https://github.com/magnus919/SlopSearX/pull/500), merged 2026-10-03 |
 | [EXP-031](EXP-031-filter-warning-truth.md) | Does enforcement-specific prose eliminate false consumption warnings? | supported | Warning truthfulness 50%→100%; +0.493% bytes, other fields equal. Oct 3: mypy hook resolved; browser contract still blocks promotion. | Pending, [issue #488](https://github.com/magnus919/SlopSearX/issues/488) |
 | [EXP-030](EXP-030-negative-cache-path.md) | Can TTL validation prevent silent negative-cache loss on the service path? | blocked | No current production set_error caller; intended service benefit cannot be replayed. | None |
