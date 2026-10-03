@@ -1,8 +1,12 @@
-# SlopSearX service-level objectives
+# Suggested service-level objectives and SLI surfaces
 
-Status: draft, 2026-10-03. Service owner: Magnus. No numerical objectives or
-production error-budget policies are approved by this document. No production
-baseline was available during the one-off code audit. Targets remain unset.
+Status: optional operator guidance, 2026-10-03. These definitions are suggestions,
+not platform commitments or a requirement to run an SLO program. Operators
+choose whether to adopt objectives, collect telemetry, select numerical targets
+and windows, or deploy changes. The improvement loop does not operationalize
+production SLOs or configure/send alerts. It can offer justified SLI surfaces
+and improve repository behavior without production monitoring. No production
+baseline was supplied during the one-off audit; numerical targets remain unset.
 
 ## User journeys and proposed indicators
 
@@ -16,8 +20,8 @@ baseline was available during the one-off code audit. Targets remain unset.
 
 Proposed reporting window: 28 days rolling, evaluated daily. Show sample count,
 coverage and missing-data status. Zero observations do not mean 100% success.
-Choose thresholds from observed distributions and user tolerances before enabling
-budget-based prioritization. Do not copy generic availability targets.
+Operators adopting these suggestions can choose thresholds from their observed
+distributions and user tolerances. No target or budget policy is imposed.
 
 ## HTTP instrumentation boundary
 
@@ -31,7 +35,8 @@ are excluded. Labels are the closed vocabulary `success`, `rejected`, `failure`:
 - rejected: returned status 400–499 except 429. Track separately; do not count
   as good events. Audit rejection rates for service-caused or surprising rejections.
 - failure: status 429 or 500+, or unhandled exception/cancellation. Capacity
-  rejection consumes budget. Total upstream failure is 503 and consumes budget.
+  rejection counts as failure in this indicator. Total upstream failure is 503
+  and also counts as failure.
 
 `slopsearx_http_search_duration_seconds{outcome}` observes the same attempt from
 entry into the endpoint wrapper through response generation, including validation,
@@ -53,7 +58,7 @@ histogram bucket divided by all eligible attempts (success plus failure), so fas
 failures cannot improve it. Do not average replica percentiles. Cache-hit and
 uncached cohorts are not yet separated by these metrics.
 
-## Gaps before approving production SLOs
+## Optional operator considerations and surface limitations
 
 1. External/client evidence covering DNS, TLS, proxy failure, response transfer,
    and application downtime; reconcile with application observations.
@@ -62,13 +67,11 @@ uncached cohorts are not yet separated by these metrics.
 3. MCP application-result classification and async accepted-job cohorts. Do not
    divide workflow terminal counts by acceptance counts from mismatched cohorts.
 4. Independently scored task benchmark; result count is not useful evidence.
-5. Owner-reviewed targets, deadlines and budget policy. Define urgent actionable
-   burn alerts separately from daily improvement scheduling; one daily run is not
-   an incident response mechanism.
+5. Operator-selected targets, deadlines and reporting windows, if adopted.
+   The daily improvement loop is not an incident response or alerting service.
 
-Once approved, the daily improvement runner should prioritize consequential
-budget-consuming failure classes, or task-quality gaps when reliability is healthy.
-A candidate needs a reproduced failure, bounded scope, frozen practical acceptance
-criteria, normal checks/review, delivery tracking and post-release observation.
-Supported replay is not proof of improved production SLOs. No automated production
-mitigation, rollout, rollback, alert routing or schedule change is authorized here.
+These considerations are guidance for operators, not unfinished operational work
+owned by this project. The repository loop prioritizes consequential reproducible
+defects, task-quality gaps and useful service-path improvements. Operator-supplied
+SLI observations may strengthen evidence but are not mandatory. Supported replay
+proves only its registered claim; it does not prove a production SLO gain.

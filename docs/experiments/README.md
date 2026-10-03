@@ -2,16 +2,20 @@
 
 SlopSearX experiments improve useful search, human task completion, or agent
 task completion while preserving the shared service and compatibility contracts.
-The deliverable is evidence and a decision; a code change is optional.
+The objective is material, evidenced improvements delivered to the repository.
+Every experiment also produces evidence and a decision; weak candidates are
+rejected. Follow [the loop design](DESIGN.md) for opportunity selection, evidence
+standards and delivery accounting. Production operation belongs to operators.
 
 ## Run one cycle
 
 1. Read this ledger, relevant project contracts, current issues and open PRs.
    Resume an unfinished experiment before proposing another. Do not duplicate
    rejected work without stating what new evidence makes a retry worthwhile.
-2. Select one bounded hypothesis from an observed problem. Prefer the smallest
-   change with a useful, affordable measurement. Check accepted design and
-   discovery prerequisites before changing portal behavior.
+2. Select the strongest consequential opportunity using [DESIGN.md](DESIGN.md):
+   identify the affected task, before/after behavior, practical effect and
+   reachable measurement path before registration. Resume supported delivery
+   first, and avoid repeating unchanged blockers. Check portal prerequisites.
 3. Copy [TEMPLATE.md](TEMPLATE.md) to `EXP-NNN-short-name.md`, assign the next
    unused ID, and add it to the ledger. Complete and commit the registration
    **before implementing or measuring the candidate**. Record the baseline SHA,
