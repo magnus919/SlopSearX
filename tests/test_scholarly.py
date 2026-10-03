@@ -210,3 +210,11 @@ def test_recognized_nature_article_numbers_match_reported_doi(identifier):
     (result,) = ranked({"brave": [rows[0]], "openalex": [rows[1]]})
     assert result.engines == {"brave", "openalex"}
     assert _result_to_searxng(result)["doi"] == "10.1038/" + identifier
+
+
+def test_oversized_arxiv_version_is_not_converted_to_an_integer():
+    url = "https://arxiv.org/abs/2401.00001v" + "9" * 5000
+    rows = [SearchResult(url=url, title="Public adversarial identifier fixture", content="", engine="brave")]
+    (result,) = ranked({"brave": rows})
+    assert result.url == url
+    assert result.work_group is None

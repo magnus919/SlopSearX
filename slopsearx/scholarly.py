@@ -24,7 +24,7 @@ MAX_RECORD_BYTES = 128_000
 VERSION_RELATIONS = frozenset(
     {"isversionof", "hasversion", "isnewversionof", "ispreviousversionof", "ispreprintof", "haspreprint"}
 )
-ARXIV = re.compile(r"(?P<base>\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?/\d{7})(?:v(?P<version>[1-9]\d*))?", re.IGNORECASE)
+ARXIV = re.compile(r"(?P<base>\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?/\d{7})(?:v(?P<version>[1-9]\d{0,5}))?", re.IGNORECASE)
 
 
 def _data(result: SearchResult) -> dict[str, Any]:
