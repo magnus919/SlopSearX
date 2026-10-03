@@ -42,3 +42,8 @@ deployment. [Evidence](evidence/EXP-034/) includes all frozen inputs, receipts,
 comparisons and an inert reproduction harness; caller supplies credential-safe
 transport. Request receipts preserve model, complete membership, timing, usage
 and digests without credentials or private deployment metadata.
+
+
+### Reproduction correction
+
+Independent review found that the original token tally counted only receipts ending in `-0.json`, omitting later batches. EXP-034 also used 500,000 rather than its registered 400,000 input-token ceiling. The observed complete receipt totals remain below the registered 400,000 ceiling, but the original stopping guard did not enforce the protocol correctly. Preserve the executed original as `harness-original.py.txt`; the reproduction harness now counts all JSON receipt usage and uses the registered ceiling. This correction changes no captured judgments or reported results.

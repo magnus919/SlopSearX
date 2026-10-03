@@ -61,3 +61,8 @@ in its own question and share only the query in state. This removes unrelated
 candidate context from each individual judgment while retaining batched transport.
 It requires its own preregistration and cannot be promoted from exposed cases
 alone. Historical snapshots and this negative result remain intact.
+
+
+### Reproduction correction
+
+Independent review found that the original token tally counted only receipts ending in `-0.json`, omitting later batches. The observed complete receipt totals remain below the registered 500,000 ceiling, but the original stopping guard did not enforce the protocol correctly. Preserve the executed original as `harness-original.py.txt`; the reproduction harness now counts all JSON receipt usage and uses the registered ceiling. This correction changes no captured judgments or reported results.

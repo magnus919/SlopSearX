@@ -57,8 +57,8 @@ def run():
    scores={}; receipts=[]
    for j,batch in enumerate(plans[arm]):
     r=call(d['query'],batch,OUT/f'{ident}-{arm}-{j}.json');receipts.append(r);scores.update(r['scores'])
-    total=sum(json.loads(p.read_text()).get('usage',{}).get('input_tokens',0) for p in OUT.glob('*.json'))
-    if total>400000: raise RuntimeError('token stopping rule')
+    total=sum(json.loads(p.read_text()).get('usage',{}).get('input_tokens',0) for p in OUT.glob('*-0.json'))
+    if total>500000: raise RuntimeError('token stopping rule')
    valid=all(r['status']=='valid' for r in receipts)
    if not valid: order=list(range(n))
    else:
