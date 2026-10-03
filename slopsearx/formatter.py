@@ -904,6 +904,12 @@ def format_html(
         unavailable = f'<div class="notice" role="status"><strong>No results from some sources.</strong> No results: {empty_labels}. Other results remain usable.</div>'
     else:
         unavailable = ""
+    advisories = (meta or {}).get("advisories", [])
+    if advisories:
+        messages = "".join(
+            f"<li>{html_lib.escape(str(note.get('message', '')), quote=True)}</li>" for note in advisories[:3]
+        )
+        unavailable += f'<details class="notice"><summary>Source availability</summary><ul>{messages}</ul></details>'
     scope_label = html_lib.escape(str(_portal_state_value(state, "scope_label", "All sources")), quote=True)
     selected_count = int(_portal_state_value(state, "selected_engine_count", 0) or 0)
     responded_count = int(_portal_state_value(state, "responsive_engine_count", 0) or 0)
@@ -1067,6 +1073,8 @@ def format_yaml_markdown(
             "deadline_exceeded": meta.get("deadline_exceeded", False),
             "query_id": meta.get("query_id", ""),
         }
+        if "advisories" in meta:
+            yaml_section["meta"]["advisories"] = meta["advisories"]
         if "jev_routing" in meta:
             yaml_section["meta"]["jev_routing"] = meta["jev_routing"]
         # Count responsive engines from engine_status

@@ -527,3 +527,25 @@ that the record path would return as `null`. Tradeoff: a payload between 512
 bytes and `PAYLOAD_MAX_PERSIST_BYTES` is hidden on cards but fully preserved on
 `slopsearx_read_result`; a payload above the persistence bound is dropped from
 the persisted form and therefore reads back as `null` on `slopsearx_read_result`.
+
+## Capability advisories
+
+Search responses may include up to three structured `meta.advisories`, derived
+from current runtime configuration at the read boundary. Notes identify relevant
+public sources that are disabled or lack required credentials. Sensitive sources
+are never advertised. Actions belong to the platform operator; agents should not
+request secrets from searching users or enable paid services on their behalf.
+
+When more than five canonical results are available and reranking is unavailable,
+a Jev reranking recommendation attributes substantial ranking gains to operator
+production experience. Automatic searches may separately recommend Jev specialist
+query planning, based on the operator's reported production results. These notes
+carry `quality_evidence: operator_reported_production` and
+`expected_quality_gain: unmeasured`: they do not establish uplift for this query.
+Reranking and routing notes precede source notes; total disclosure is bounded.
+Presentation slicing does not change the threshold. Notes are not cached and do
+not alter dispatch, policy, enforcement or ranking. HTTP JSON, YAML and MCP expose
+the metadata; HTML shows escaped messages in a collapsed Source availability
+disclosure. Explicit invalid MCP scopes may include public-source advisories
+alongside their unchanged error. Validation errors without a resolved search
+scope need not include advisories.
