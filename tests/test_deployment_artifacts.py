@@ -265,3 +265,12 @@ def test_container_publication_requires_both_native_architectures() -> None:
     )
     assert '"$(cat digests/amd64)" "$(cat digests/arm64)"' in command
     assert 'assert platforms == {("linux", "amd64"), ("linux", "arm64")}' in command
+
+
+def test_architecture_tags_follow_commit_retention_instead_of_each_run() -> None:
+    workflow = yaml.safe_load((ROOT / ".github/workflows/docker.yml").read_text())
+    steps = workflow["jobs"]["build-and-push"]["steps"]
+    tag_command = next(step["run"] for step in steps if step.get("name") == "Set architecture image tag")
+    assert "${GITHUB_SHA::7}-${{ matrix.arch }}" in tag_command
+    assert "GITHUB_RUN_ID" not in tag_command
+    assert "GITHUB_RUN_ATTEMPT" not in tag_command

@@ -54,7 +54,9 @@ jobs:
 
       - name: Set architecture image tag
         id: tag
-        run: echo "ref=${IMAGE_NAME}:build-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${{ matrix.arch }}" >> "$GITHUB_OUTPUT"
+        # Match the lifetime of the existing short-SHA manifest tag. Reruns
+        # supersede these tags, allowing orphaned children to age out too.
+        run: echo "ref=${IMAGE_NAME}:${GITHUB_SHA::7}-${{ matrix.arch }}" >> "$GITHUB_OUTPUT"
 
       - name: Verify pinned Docker base digest
         run: python3 scripts/verify_docker_base_digest.py
