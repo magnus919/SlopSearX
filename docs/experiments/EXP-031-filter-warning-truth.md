@@ -98,3 +98,31 @@ the hook now passes. The unchanged workflow browser test still fails at line
 543 (one confirmation match instead of two), so required checks remain blocked.
 No new hypothesis or measurement, implementation PR, code merge or deployment.
 See [today's delivery evidence](evidence/EXP-031/delivery-2026-10-03/README.md).
+
+## Final delivery resume — 2026-10-03
+
+The maintainer explicitly authorized completing this retained experiment. The
+old browser blocker was fixed on main by PR #498; all three explicit browser
+smoke journeys now pass. Rebased the unchanged supported candidate onto current
+main and opened ready PR #510. No new hypothesis or altered decision rule.
+
+Current candidate `e05beed6f34cb5886c2354eb46e0a7d095c33819` passed 291 contract
+tests, three browser journeys, full real-Valkey regression (2,356 passed, two
+skipped; 86.75% coverage), mypy and changed-file hooks. Historical immutable
+evidence whitespace remains the all-file hook limitation. All applicable CI
+passed on that exact SHA. Droid's substantive positive review names the SHA and
+reports no actionable issues. The runner also recorded its current-SHA review.
+
+[PR #510](https://github.com/magnus919/SlopSearX/pull/510) merged at 2026-10-03T21:05:11Z as `f75c659e96b6275c2c0fad3d51dff8ae39750b2f`.
+
+[Delivery evidence](evidence/EXP-031/delivery-finish-2026-10-03/README.md) retains
+the setup failure, corrected validation, review and CI/merge verification.
+Frozen effect: warning truthfulness 50% to 100%; original +0.493% payload
+overhead, other fields equal in that fixed comparison. No independent agent-task
+benefit or production SLO gain is inferred. Deployment remains operator-owned.
+
+The loop design was completed separately in PR #509 and the existing daily
+automation updated. SLOs remain optional guidance with SLI surfaces; no production
+SLO operation or alerting belongs to this runner. The design now prioritizes
+consequential problems, measurement readiness, appropriate evidence and verified
+delivery. Schedule and Eastern start-date deduplication are unchanged.
