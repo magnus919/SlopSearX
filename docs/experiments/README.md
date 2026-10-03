@@ -32,8 +32,8 @@ The deliverable is evidence and a decision; a code change is optional.
    work as `registered` or `running`, never as a completed result.
 7. For `supported`, open a focused, ready-for-review implementation PR with the
    experiment, evidence, practical effect, limitations, tests, portal impact,
-   and rollback. Follow DCO, pre-commit, CI, and review requirements. Opening
-   a PR does not authorize merging, deployment, or changing production defaults.
+   and rollback. Follow DCO, pre-commit, CI, and review requirements. The standing implementation merge rule below authorizes merging after
+   passing CI and review; it does not authorize deployment or changing production defaults.
 8. For other outcomes, discard candidate implementation changes after retaining
    the readout and sufficient reproduction material (a small sanitized patch
    or durable candidate commit). Preserve the experiment on a documentation-only
@@ -56,11 +56,25 @@ not shipped. Verify the documentation PR actually merged and update the local
 main checkout with a fast-forward when safe, preserving unrelated work.
 If branch protection prevents merging without checks or review, report that
 specific blocker; do not disable repository protections. Mixed documentation and
-implementation PRs retain the normal review and CI requirements.
+implementation PRs retain normal checks and the standing merge rule below.
 
 Experiment records are append-only history: corrections and subsequent trials
 must identify the earlier result. Record persistence is required for every
 outcome; failed implementation work must not disappear with its branch.
+
+## Standing implementation merge rule — authorized 2026-10-03
+
+Implementation or mixed PRs authored under `magnus919` are authorized for
+merge once all applicable CI checks pass and Droid supplies a positive substantive
+code review. A green review job without usable review text is insufficient.
+If Droid is unavailable, fails or supplies no usable review, the runner must
+perform and record its own substantive review of the current candidate. Fix
+findings and rerun affected checks before merging. No human self-approval is
+required. Verify the PR author, candidate SHA, review evidence and complete CI suite;
+never bypass branch protection. Verify the merge, update delivery in the ledger
+and safely fast-forward local main. This authorizes repository merging, not
+production deployment. Retarget stacked PRs after prerequisites merge; if
+retargeting does not trigger CI, refresh the branch to trigger normal CI.
 
 ## Decide before seeing results
 
@@ -119,14 +133,13 @@ A recurring runner should read [RUNNER.md](RUNNER.md). The scheduler determines
 cadence; this document does not itself start background work. If a previous
 cycle is still active or its documentation is not persisted, resume it instead
 of opening a competing experiment. Automatically merge documentation-only
-experiment PRs as described below; do not automatically merge implementation
-PRs or deploy changes.
+experiment PRs as described below; merge implementation PRs only under the standing rule below. Do not deploy automatically.
 
 ## Ledger
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
-| [EXP-032](EXP-032-corrupt-cache-recovery.md) | Can corrupt-cache fallback restore correct search completion? | supported | Real-Valkey fault replay: 0/16 → 16/16 correct completions; repaired hits and controls pass. Production prevalence unknown. | [PR #500](https://github.com/magnus919/SlopSearX/pull/500), stacked on #498; pending |
+| [EXP-032](EXP-032-corrupt-cache-recovery.md) | Can corrupt-cache fallback restore correct search completion? | supported | Real-Valkey fault replay: 0/16 → 16/16 correct completions; repaired hits and controls pass. Production prevalence unknown. | [PR #500](https://github.com/magnus919/SlopSearX/pull/500), merged 2026-10-03 |
 | [EXP-031](EXP-031-filter-warning-truth.md) | Does enforcement-specific prose eliminate false consumption warnings? | supported | Warning truthfulness 50%→100%; +0.493% bytes, other fields equal. Oct 3: mypy hook resolved; browser contract still blocks promotion. | Pending, [issue #488](https://github.com/magnus919/SlopSearX/issues/488) |
 | [EXP-030](EXP-030-negative-cache-path.md) | Can TTL validation prevent silent negative-cache loss on the service path? | blocked | No current production set_error caller; intended service benefit cannot be replayed. | None |
 | [EXP-029](EXP-029-empty-search-recovery.md) | Does an empty-search hint improve human recovery within two minutes? | blocked | No available participant cohort or measured recovery baseline; no UI change or effect measured. | None |

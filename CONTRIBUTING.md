@@ -22,7 +22,11 @@ remain in the documentation ledger even when their candidate code is discarded.
 Documentation-only experiment PRs are automatically merged without code review,
 CI, or pre-commit; follow the scope verification and signed `[skip ci]` commit
 procedure in the experiment guide. Implementation or mixed PRs retain the normal
-checks and review requirements.
+checks and review requirements. For experiment-loop implementation PRs authored
+under magnus919, the maintainer authorizes merging after all applicable CI passes
+and a positive Droid review, or a recorded substantive runner review if Droid
+is unavailable or not working. See the experiment guide for the exact gate.
+No production deployment is authorized by this standing rule.
 
 ## Development Setup
 

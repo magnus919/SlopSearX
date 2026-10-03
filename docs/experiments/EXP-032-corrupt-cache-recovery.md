@@ -71,3 +71,19 @@ merged or deployed by this experiment. Evidence: [reproduction](evidence/EXP-032
 [candidate](evidence/EXP-032/candidate/summary.json).
 
 Persist this supported finding through a documentation-only PR separately.
+
+## Delivery confirmation — 2026-10-03
+
+The maintainer authorized a standing CI-plus-review merge gate, including a
+substantive runner-review fallback when Droid supplies no usable review.
+Prerequisite PR #498 merged as b7d31a4093aec1153f379639bf3540ca706a3fe9.
+Retargeting #500 did not trigger normal CI; rebasing onto main produced candidate
+c1c83f88b04e145b4d1c944a19004f1d6b04d0ef with the same implementation diff.
+Droid's original-patch reviews were positive. The runner also reviewed the
+current SHA, recording [no actionable findings](https://github.com/magnus919/SlopSearX/pull/500#issuecomment-5972732719).
+All 15 applicable CI checks passed on that exact SHA, including Python 3.12/3.13,
+Valkey integration, portal contracts/browser, analysis and build. PR #500 merged
+at 2026-10-03T19:32:12Z as 039fc696e64d9d07b66379b9d21627888ed7db79.
+The earlier pending delivery statements are superseded; original evidence and
+candidate patch remain unchanged. This confirms repository integration, not
+production deployment or observed SLO improvement.

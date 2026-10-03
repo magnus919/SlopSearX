@@ -36,6 +36,9 @@
 - Interpretation, limits, and what this does not establish:
 - Decision and rationale:
 - Implementation PR (supported only):
+- Candidate SHA, substantive review evidence and CI status:
+- Merge SHA/time and local main synchronization (if delivered):
+- Release/production verification status (do not infer from merge):
 - Documentation persistence PR/commit (all outcomes):
 - Candidate cleanup / rollback:
 - Follow-up question and what would justify a retry:
