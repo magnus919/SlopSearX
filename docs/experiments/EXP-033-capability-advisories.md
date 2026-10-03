@@ -35,3 +35,18 @@
 - Budget 45 minutes, offline replay, no paid/live model or provider calls.
 - Required portal impact review, HTTP/MCP/cache contracts, full regression/CI,
   signed commits and review before merge under the standing maintainer rule.
+
+## Preregistered revision: operator production evidence
+
+Before extending the candidate, the maintainer reports excellent production gains
+from Jev reranking and specialist query planning. No raw production measurements
+were supplied; this is operator-reported evidence, not this experiment's result.
+Recommend optional Jev reranking when the full canonical result count exceeds five
+and the runtime reranker is absent. Do not tie the recommendation to the current
+40-candidate limit or guarantee uplift for the individual query. Suppress it for
+sensitive scopes. Report specialist routing separately for automatic searches.
+Jev notes identify evidence as operator_reported_production and per-query gain as
+unmeasured. Keep at most three notes, prioritizing reranking, then routing, then
+public-source limitations. Add boundary cases at five/six results and a configured
+reranker control; measure canonical counts before presentation slicing. Other
+registered metrics, guardrails and offline limits remain unchanged.
