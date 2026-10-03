@@ -696,3 +696,90 @@ def test_invalid_date_window_reports_filter_error(monkeypatch: pytest.MonkeyPatc
     assert response.json()["error"] == "invalid_filter"
     assert response.json()["field"] == "time_range"
     assert "q" not in response.json()["message"].split()
+
+
+@pytest.mark.parametrize(
+    ("params", "status", "outcome"),
+    [
+        ({"q": "ok", "format": "json"}, 200, "success"),
+        ({"q": "error", "format": "json"}, 503, "failure"),
+        ({"q": "timeout_sim", "format": "json"}, 503, "failure"),
+        ({"q": "ok", "format": "json", "pageno": "bad"}, 400, "rejected"),
+        ({"q": "ok", "format": "unknown"}, 400, "rejected"),
+        ({"format": "json"}, 400, "rejected"),
+    ],
+)
+def test_completed_search_metrics_cover_early_returns(
+    client: TestClient, params: dict[str, str], status: int, outcome: str
+) -> None:
+    from slopsearx import metrics as m
+
+    key = f'outcome="{outcome}"'
+    before = m.http_search_completed._values.get(key, 0)
+    duration_before = m.http_search_duration._values.get(key)
+    samples_before = duration_before.count if duration_before is not None else 0
+    response = client.get("/search", params=params)
+    assert response.status_code == status
+    assert m.http_search_completed._values.get(key, 0) == before + 1
+    assert m.http_search_duration._values[key].count == samples_before + 1
+    exported = client.get("/metrics").text
+    assert f"slopsearx_http_search_completed_total{{{key}}}" in exported
+    assert f"slopsearx_http_search_duration_seconds_count{{{key}}}" in exported
+
+
+def test_landing_and_health_do_not_count_as_completed_searches(client: TestClient) -> None:
+    from slopsearx import metrics as m
+
+    before = dict(m.http_search_completed._values)
+    assert client.get("/").status_code == 200
+    assert client.get("/health").status_code == 200
+    assert dict(m.http_search_completed._values) == before
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status,outcome", [(429, "failure"), (403, "rejected"), (200, "success")])
+async def test_completed_search_outcome_classification(
+    monkeypatch: pytest.MonkeyPatch, status: int, outcome: str
+) -> None:
+    from starlette.requests import Request
+    from starlette.responses import Response
+
+    from slopsearx import metrics as m
+    from slopsearx import server as server_mod
+
+    async def respond(request: Request) -> Response:
+        return Response(status_code=status)
+
+    monkeypatch.setattr(server_mod, "_search_endpoint_impl", respond)
+    before = dict(m.http_search_completed._values)
+    request = Request({"type": "http", "method": "GET", "path": "/search", "query_string": b"q=ok", "headers": []})
+    result = await server_mod._search_endpoint(request)
+    assert result.status_code == status
+    key = f'outcome="{outcome}"'
+    assert m.http_search_completed._values[key] == before.get(key, 0) + 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("cancelled", [False, True])
+async def test_completed_search_records_unhandled_failure_without_swallowing(
+    monkeypatch: pytest.MonkeyPatch, cancelled: bool
+) -> None:
+    import asyncio
+
+    from starlette.requests import Request
+
+    from slopsearx import metrics as m
+    from slopsearx import server as server_mod
+
+    error = asyncio.CancelledError if cancelled else RuntimeError
+
+    async def fail(request: Request) -> None:
+        raise error("test failure")
+
+    monkeypatch.setattr(server_mod, "_search_endpoint_impl", fail)
+    key = 'outcome="failure"'
+    before = m.http_search_completed._values.get(key, 0)
+    request = Request({"type": "http", "method": "GET", "path": "/search", "query_string": b"q=ok", "headers": []})
+    with pytest.raises(error):
+        await server_mod._search_endpoint(request)
+    assert m.http_search_completed._values[key] == before + 1

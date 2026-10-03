@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import time
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from importlib.metadata import PackageNotFoundError
@@ -786,7 +787,7 @@ async def search_validation_error(request: Request, exc: RequestValidationError)
     )
 
 
-async def _search_endpoint(request: Request) -> Any:
+async def _search_endpoint_impl(request: Request) -> Any:
     """Execute a search across all enabled engines.
 
     Accepts all standard SearXNG query parameters. Returns HTML by default;
@@ -1004,6 +1005,35 @@ async def _search_endpoint(request: Request) -> Any:
             response=response,
         ),
     )
+
+
+async def _search_endpoint(request: Request) -> Any:
+    """Observe every search result, including early validation and failures.
+
+    This is an application boundary, not network availability or relevance.
+    Keep authorization/input rejections separate from capacity failures.
+    """
+    started = time.monotonic()
+    outcome = "failure"
+    landing = False
+    try:
+        response = await _search_endpoint_impl(request)
+        status = response.status_code
+        landing = (
+            request.url.path == "/"
+            and request.method == "GET"
+            and not request.query_params.get("q", "").strip()
+            and status == 200
+        )
+        if 200 <= status < 400:
+            outcome = "success"
+        elif 400 <= status < 500 and status != 429:
+            outcome = "rejected"
+        return response
+    finally:
+        if not landing:
+            m.http_search_completed.inc({"outcome": outcome})
+            m.http_search_duration.observe({"outcome": outcome}, time.monotonic() - started)
 
 
 @app.api_route("/", methods=["GET", "POST"])
