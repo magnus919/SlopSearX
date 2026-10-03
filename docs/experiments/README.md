@@ -126,6 +126,7 @@ PRs or deploy changes.
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
+| [EXP-032](EXP-032-corrupt-cache-recovery.md) | Can corrupt-cache fallback restore correct search completion? | supported | Real-Valkey fault replay: 0/16 → 16/16 correct completions; repaired hits and controls pass. Production prevalence unknown. | [PR #500](https://github.com/magnus919/SlopSearX/pull/500), stacked on #498; pending |
 | [EXP-031](EXP-031-filter-warning-truth.md) | Does enforcement-specific prose eliminate false consumption warnings? | supported | Warning truthfulness 50%→100%; +0.493% bytes, other fields equal. Oct 3: mypy hook resolved; browser contract still blocks promotion. | Pending, [issue #488](https://github.com/magnus919/SlopSearX/issues/488) |
 | [EXP-030](EXP-030-negative-cache-path.md) | Can TTL validation prevent silent negative-cache loss on the service path? | blocked | No current production set_error caller; intended service benefit cannot be replayed. | None |
 | [EXP-029](EXP-029-empty-search-recovery.md) | Does an empty-search hint improve human recovery within two minutes? | blocked | No available participant cohort or measured recovery baseline; no UI change or effect measured. | None |
