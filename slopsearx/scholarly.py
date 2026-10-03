@@ -17,7 +17,7 @@ from slopsearx.merger import _normalise_url
 from slopsearx.payload import payload_for_persistence, payload_serialized_size
 from slopsearx.publication_metadata import normalize_doi, validate_paper_fields
 
-POLICY_VERSION = "scholarly-work-v1"
+POLICY_VERSION = "scholarly-work-v2"
 MAX_MEMBERS = 64
 MAX_GROUP_BYTES = 64_000
 MAX_RECORD_BYTES = 128_000
