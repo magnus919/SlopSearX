@@ -88,3 +88,13 @@ Installed-runtime type checking passes; this does not erase the hook failure.
 Persist the supported finding through the accompanying docs-only PR now.
 Resume delivery when baseline checks are resolved; do not rerun the experiment
 or create a new hypothesis merely to bypass those gates.
+
+## Delivery resume — 2026-10-03
+
+Cycle started 2026-10-03T13:00:58.739Z. Refreshed retained candidate onto main
+8f3577d, producing signed candidate 297223107217494a686c0867bf036090e7295ccb.
+Main's FastMCP hook dependency correction resolves the isolated mypy failure:
+the hook now passes. The unchanged workflow browser test still fails at line
+543 (one confirmation match instead of two), so required checks remain blocked.
+No new hypothesis or measurement, implementation PR, code merge or deployment.
+See [today's delivery evidence](evidence/EXP-031/delivery-2026-10-03/README.md).
