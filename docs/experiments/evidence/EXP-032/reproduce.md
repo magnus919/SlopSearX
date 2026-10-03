@@ -33,3 +33,6 @@ Final full validation with a disposable SLOPSEARX_TEST_VALKEY_URL: 2,319 passed,
 2 skipped, 86.70% coverage. All changed-file hooks and 117-file mypy pass.
 All-files hooks retain the historical evidence-whitespace blocker; automatic
 changes to those historical records were restored to preserve their hashes.
+
+Validation files are summaries. The initial pytest summary is prefixed to avoid
+its seven-equals decoration being interpreted as a Git conflict marker.
