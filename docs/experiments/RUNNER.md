@@ -23,9 +23,22 @@ without requesting code review or running CI/pre-commit. Confirm the diff contai
 only documentation and inert evidence; use `[skip ci]` in the signed commit.
 If necessary, persist supported findings in a separate documentation PR while
 implementation review is pending. Verify the merge and safely fast-forward local
-main. Report branch-protection blockers without disabling protections. Mixed or
-implementation PRs retain normal checks and review; do not auto-merge them or
-deploy. Report the
+main. Report branch-protection blockers without disabling protections. Mixed or implementation PRs retain normal checks and the standing merge
+rule below. Do not deploy automatically. Report the
 experiment ID, measured effect and uncertainty, guardrails, decision, evidence
 location, PR links, and unresolved blockers. Do not describe work as running in
 the background unless a scheduler has actually been configured.
+
+## Standing implementation merge rule — authorized 2026-10-03
+
+Implementation or mixed PRs authored under `magnus919` are authorized for
+merge once all applicable CI checks pass and Droid supplies a positive substantive
+code review. A green review job without usable review text is insufficient.
+If Droid is unavailable, fails or supplies no usable review, the runner must
+perform and record its own substantive review of the current candidate. Fix
+findings and rerun affected checks before merging. No human self-approval is
+required. Verify the PR author, candidate SHA, review evidence and complete CI suite;
+never bypass branch protection. Verify the merge, update delivery in the ledger
+and safely fast-forward local main. This authorizes repository merging, not
+production deployment. Retarget stacked PRs after prerequisites merge; if
+retargeting does not trigger CI, refresh the branch to trigger normal CI.

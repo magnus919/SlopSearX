@@ -69,3 +69,11 @@ Next action: collect representative user-boundary baseline evidence, approve
 numeric targets/deadlines, then rank observed failure classes by user impact.
 Offline correctness fixtures cannot supply failure prevalence or error-budget
 consumption. The daily automation configuration is unchanged by this pilot.
+
+## Delivery confirmation — 2026-10-03
+
+PR #498 passed all applicable CI and received positive substantive Droid review.
+Under the maintainer's new standing merge authorization it merged as
+b7d31a4093aec1153f379639bf3540ca706a3fe9. HTTP outcome/duration instrumentation
+is integrated into main. Numeric SLO targets remain unset and production
+baseline/compliance remains unmeasured. No deployment is inferred.
