@@ -197,3 +197,16 @@ def test_ordinary_url_duplicates_retain_existing_rrf_feed_positions():
     ]
     results = ranked({"a": rows}, ranker=ReciprocalRankFusionRanker())
     assert results[1].score == pytest.approx(1 / 63)
+
+
+@pytest.mark.parametrize("identifier", ["s41586-020-2649-2", "s41586-021-03819-2"])
+def test_recognized_nature_article_numbers_match_reported_doi(identifier):
+    rows = [
+        SearchResult(
+            url="https://www.nature.com/articles/" + identifier, title="Public paper", content="", engine="brave"
+        ),
+        paper("https://doi.org/10.1038/" + identifier, "openalex", doi="10.1038/" + identifier),
+    ]
+    (result,) = ranked({"brave": [rows[0]], "openalex": [rows[1]]})
+    assert result.engines == {"brave", "openalex"}
+    assert _result_to_searxng(result)["doi"] == "10.1038/" + identifier

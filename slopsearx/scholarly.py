@@ -48,7 +48,7 @@ def _url_ids(url: str) -> dict[str, str]:
         doi = normalize_doi(path)
         return {"doi": doi} if doi else {}
     if host in {"nature.com", "www.nature.com"} and re.fullmatch(
-        r"articles/s\d{5}-\d{3}-\d{5}-[a-z0-9]", path, re.IGNORECASE
+        r"articles/s\d{5}-\d{3}-\d{4,5}-[a-z0-9]", path, re.IGNORECASE
     ):
         return {"doi": "10.1038/" + path.split("/")[1].casefold()}
     if host == "pubmed.ncbi.nlm.nih.gov" and path.isdigit():
