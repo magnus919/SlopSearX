@@ -204,12 +204,16 @@ def test_http_uses_operator_sensitive_policy(monkeypatch: pytest.MonkeyPatch) ->
         brave={"enabled": False, "categories": ["general"], "sensitive": False},
         wikipedia={"enabled": True, "categories": ["general"], "auth_class": "none"},
     )
-    with TestClient(server.app) as client:
-        monkeypatch.setattr(server, "_active_engines", {"wikipedia": _MockEngine("wikipedia", count=1)})
-        monkeypatch.setattr(server, "_portal_policy", MCPPolicy(sensitive_engines={"brave"}))
-        monkeypatch.setattr(server, "_health_catalog", lambda: catalog)
-        monkeypatch.setattr(server, "_cache", None)
-        monkeypatch.setattr(server, "_rate_limiter", None)
-        monkeypatch.setattr(server, "_client_rate_window", None)
-        body = client.get("/search", params={"q": "x", "categories": "general", "format": "json"}).json()
+    client = TestClient(server.app)
+    monkeypatch.setattr(server, "_active_engines", {"wikipedia": _MockEngine("wikipedia", count=1)})
+    monkeypatch.setattr(server, "_portal_policy", MCPPolicy(sensitive_engines={"brave"}))
+    monkeypatch.setattr(server, "_health_catalog", lambda: catalog)
+    monkeypatch.setattr(server, "_cache", None)
+    monkeypatch.setattr(server, "_rerank_provider", None)
+    monkeypatch.setattr(server, "_jev_router", None)
+    monkeypatch.setattr(server, "_router", None)
+    monkeypatch.setattr(server, "_rate_limiter", None)
+    monkeypatch.setattr(server, "_client_rate_window", None)
+    body = client.get("/search", params={"q": "x", "categories": "general", "format": "json"}).json()
+    client.close()
     assert body.get("meta", {}).get("advisories", []) == []
