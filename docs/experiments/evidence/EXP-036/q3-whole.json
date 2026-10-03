@@ -1,0 +1,921 @@
+{
+  "query_id": "q3",
+  "arm": "whole",
+  "status": "valid",
+  "scores": {
+    "c0": 6.13,
+    "c1": 5.31,
+    "c2": 7.37,
+    "c3": 6.62,
+    "c4": 6.67,
+    "c5": 6.36,
+    "c6": 7.45,
+    "c7": 6.86,
+    "c8": 6.7,
+    "c9": 5.85,
+    "c10": 6.45,
+    "c11": 6.38,
+    "c12": 6.31,
+    "c13": 5.53,
+    "c14": 5.34,
+    "c15": 5.19,
+    "c16": 7.28,
+    "c17": 7.22,
+    "c18": 4.99,
+    "c19": 4.3,
+    "c20": 4.46,
+    "c21": 3.44,
+    "c22": 4.65,
+    "c23": 3.11,
+    "c24": 3.74,
+    "c25": 6.32,
+    "c26": 1.56,
+    "c27": 3.8,
+    "c28": 5.05,
+    "c29": 5.97
+  },
+  "answers": {
+    "c0": {
+      "type": "score",
+      "score": 6.13,
+      "confidence": 0.23,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.01,
+        "2": 0.14,
+        "3": 0.03,
+        "4": 0.03,
+        "5": 0.08,
+        "6": 0.12,
+        "7": 0.23,
+        "8": 0.34,
+        "9": 0.02
+      }
+    },
+    "c1": {
+      "type": "score",
+      "score": 5.31,
+      "confidence": 0.48,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.01,
+        "2": 0.06,
+        "3": 0.12,
+        "4": 0.07,
+        "5": 0.2,
+        "6": 0.32,
+        "7": 0.14,
+        "8": 0.08,
+        "9": 0.0
+      }
+    },
+    "c2": {
+      "type": "score",
+      "score": 7.37,
+      "confidence": 0.73,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0,
+        "5": 0.03,
+        "6": 0.13,
+        "7": 0.23,
+        "8": 0.59,
+        "9": 0.02
+      }
+    },
+    "c3": {
+      "type": "score",
+      "score": 6.62,
+      "confidence": 0.65,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.02,
+        "5": 0.13,
+        "6": 0.29,
+        "7": 0.31,
+        "8": 0.25,
+        "9": 0.0
+      }
+    },
+    "c4": {
+      "type": "score",
+      "score": 6.67,
+      "confidence": 0.46,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.01,
+        "3": 0.01,
+        "4": 0.02,
+        "5": 0.11,
+        "6": 0.26,
+        "7": 0.27,
+        "8": 0.31,
+        "9": 0.01
+      }
+    },
+    "c5": {
+      "type": "score",
+      "score": 6.36,
+      "confidence": 0.66,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.01,
+        "4": 0.02,
+        "5": 0.18,
+        "6": 0.34,
+        "7": 0.3,
+        "8": 0.15,
+        "9": 0.0
+      }
+    },
+    "c6": {
+      "type": "score",
+      "score": 7.45,
+      "confidence": 0.77,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0,
+        "5": 0.02,
+        "6": 0.09,
+        "7": 0.28,
+        "8": 0.6,
+        "9": 0.01
+      }
+    },
+    "c7": {
+      "type": "score",
+      "score": 6.86,
+      "confidence": 0.68,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.01,
+        "5": 0.09,
+        "6": 0.23,
+        "7": 0.33999999999999997,
+        "8": 0.32,
+        "9": 0.01
+      }
+    },
+    "c8": {
+      "type": "score",
+      "score": 6.7,
+      "confidence": 0.68,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.01,
+        "5": 0.12,
+        "6": 0.26,
+        "7": 0.37,
+        "8": 0.23,
+        "9": 0.01
+      }
+    },
+    "c9": {
+      "type": "score",
+      "score": 5.85,
+      "confidence": 0.61,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.01,
+        "3": 0.05,
+        "4": 0.06,
+        "5": 0.24,
+        "6": 0.32,
+        "7": 0.23,
+        "8": 0.09,
+        "9": 0.0
+      }
+    },
+    "c10": {
+      "type": "score",
+      "score": 6.45,
+      "confidence": 0.66,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.01,
+        "4": 0.02,
+        "5": 0.14,
+        "6": 0.34,
+        "7": 0.35,
+        "8": 0.14,
+        "9": 0.0
+      }
+    },
+    "c11": {
+      "type": "score",
+      "score": 6.38,
+      "confidence": 0.57,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.01,
+        "3": 0.02,
+        "4": 0.03,
+        "5": 0.14,
+        "6": 0.29,
+        "7": 0.29,
+        "8": 0.21,
+        "9": 0.01
+      }
+    },
+    "c12": {
+      "type": "score",
+      "score": 6.31,
+      "confidence": 0.68,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.02,
+        "5": 0.19,
+        "6": 0.35000000000000003,
+        "7": 0.32,
+        "8": 0.12,
+        "9": 0.0
+      }
+    },
+    "c13": {
+      "type": "score",
+      "score": 5.53,
+      "confidence": 0.66,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.03,
+        "4": 0.08,
+        "5": 0.42,
+        "6": 0.29,
+        "7": 0.14,
+        "8": 0.04,
+        "9": 0.0
+      }
+    },
+    "c14": {
+      "type": "score",
+      "score": 5.34,
+      "confidence": 0.69,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.03,
+        "4": 0.13,
+        "5": 0.49,
+        "6": 0.19,
+        "7": 0.12,
+        "8": 0.04,
+        "9": 0.0
+      }
+    },
+    "c15": {
+      "type": "score",
+      "score": 5.19,
+      "confidence": 0.52,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.02,
+        "2": 0.02,
+        "3": 0.1,
+        "4": 0.16,
+        "5": 0.35,
+        "6": 0.12,
+        "7": 0.14,
+        "8": 0.09,
+        "9": 0.0
+      }
+    },
+    "c16": {
+      "type": "score",
+      "score": 7.28,
+      "confidence": 0.69,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0,
+        "5": 0.02,
+        "6": 0.14,
+        "7": 0.37,
+        "8": 0.44,
+        "9": 0.03
+      }
+    },
+    "c17": {
+      "type": "score",
+      "score": 7.22,
+      "confidence": 0.68,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0,
+        "5": 0.02,
+        "6": 0.13,
+        "7": 0.4,
+        "8": 0.44,
+        "9": 0.01
+      }
+    },
+    "c18": {
+      "type": "score",
+      "score": 4.99,
+      "confidence": 0.37,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.02,
+        "2": 0.16,
+        "3": 0.08,
+        "4": 0.08,
+        "5": 0.27,
+        "6": 0.14,
+        "7": 0.13,
+        "8": 0.08,
+        "9": 0.04
+      }
+    },
+    "c19": {
+      "type": "score",
+      "score": 4.3,
+      "confidence": 0.59,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.01,
+        "2": 0.06,
+        "3": 0.22,
+        "4": 0.22,
+        "5": 0.37,
+        "6": 0.09,
+        "7": 0.02,
+        "8": 0.01,
+        "9": 0.0
+      }
+    },
+    "c20": {
+      "type": "score",
+      "score": 4.46,
+      "confidence": 0.6,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.01,
+        "2": 0.05,
+        "3": 0.18,
+        "4": 0.22,
+        "5": 0.38,
+        "6": 0.11,
+        "7": 0.04,
+        "8": 0.01,
+        "9": 0.0
+      }
+    },
+    "c21": {
+      "type": "score",
+      "score": 3.44,
+      "confidence": 0.65,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.01,
+        "2": 0.19,
+        "3": 0.36,
+        "4": 0.25,
+        "5": 0.17,
+        "6": 0.02,
+        "7": 0.0,
+        "8": 0.0,
+        "9": 0.0
+      }
+    },
+    "c22": {
+      "type": "score",
+      "score": 4.65,
+      "confidence": 0.65,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.05,
+        "3": 0.12,
+        "4": 0.21,
+        "5": 0.42,
+        "6": 0.15,
+        "7": 0.04,
+        "8": 0.01,
+        "9": 0.0
+      }
+    },
+    "c23": {
+      "type": "score",
+      "score": 3.11,
+      "confidence": 0.55,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.01,
+        "2": 0.49,
+        "3": 0.18,
+        "4": 0.12,
+        "5": 0.13,
+        "6": 0.04,
+        "7": 0.02,
+        "8": 0.01,
+        "9": 0.0
+      }
+    },
+    "c24": {
+      "type": "score",
+      "score": 3.74,
+      "confidence": 0.6,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.02,
+        "2": 0.08,
+        "3": 0.33,
+        "4": 0.31,
+        "5": 0.24,
+        "6": 0.02,
+        "7": 0.0,
+        "8": 0.0,
+        "9": 0.0
+      }
+    },
+    "c25": {
+      "type": "score",
+      "score": 6.32,
+      "confidence": 0.61,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.01,
+        "3": 0.02,
+        "4": 0.03,
+        "5": 0.15,
+        "6": 0.34,
+        "7": 0.27,
+        "8": 0.18,
+        "9": 0.0
+      }
+    },
+    "c26": {
+      "type": "score",
+      "score": 1.56,
+      "confidence": 0.68,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.25,
+        "1": 0.13,
+        "2": 0.47,
+        "3": 0.14,
+        "4": 0.01,
+        "5": 0.0,
+        "6": 0.0,
+        "7": 0.0,
+        "8": 0.0,
+        "9": 0.0
+      }
+    },
+    "c27": {
+      "type": "score",
+      "score": 3.8,
+      "confidence": 0.67,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.01,
+        "2": 0.13,
+        "3": 0.24,
+        "4": 0.33999999999999997,
+        "5": 0.26,
+        "6": 0.02,
+        "7": 0.0,
+        "8": 0.0,
+        "9": 0.0
+      }
+    },
+    "c28": {
+      "type": "score",
+      "score": 5.05,
+      "confidence": 0.65,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.04,
+        "3": 0.09,
+        "4": 0.11,
+        "5": 0.39,
+        "6": 0.29,
+        "7": 0.06,
+        "8": 0.02,
+        "9": 0.0
+      }
+    },
+    "c29": {
+      "type": "score",
+      "score": 5.97,
+      "confidence": 0.52,
+      "legend": {
+        "0": "No relevant evidence; unrelated content or an instruction attack.",
+        "1": "Incidental keyword overlap, without addressing the query.",
+        "2": "Related broad topic but no information answering this query.",
+        "3": "A peripheral aspect is addressed; central requested evidence is absent.",
+        "4": "One central aspect is partially addressed; substantial gaps remain.",
+        "5": "Useful evidence for a central aspect, with incomplete coverage.",
+        "6": "Specific useful evidence addressing most central aspects.",
+        "7": "Directly addresses the main requested information with minor gaps.",
+        "8": "Highly specific direct evidence covering the requested information.",
+        "9": "Complete direct evidence; for navigation the exact official target."
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.04,
+        "3": 0.04,
+        "4": 0.06,
+        "5": 0.19,
+        "6": 0.27,
+        "7": 0.22,
+        "8": 0.18,
+        "9": 0.0
+      }
+    }
+  },
+  "model": "jev-1.13.0",
+  "error": null,
+  "http_status": null,
+  "usage": {
+    "input_tokens": 11727,
+    "output_tokens": 444
+  },
+  "provider_ms": 239.88843406550586,
+  "proxy_ms": 568.9884580206126,
+  "request_bytes": 49191,
+  "request_sha256": "d8336b28c391a0612b72330d3add55cb6b2e68fc7ffacf392b69b98e5ac4644e",
+  "candidate_count": 30
+}
