@@ -339,3 +339,5 @@ and troubleshooting runbook.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+Scholarly results are grouped by [identified work](docs/SCHOLARLY_WORK_GROUPING.md) before reranking, with bounded internal source provenance and optional SearXNG Paper metadata.

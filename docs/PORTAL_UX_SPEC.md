@@ -152,3 +152,5 @@ without reading documentation. This is a product acceptance target, not a
 claim about unmeasured user research. Maintainer walkthroughs and any
 representative participant checks are recorded in the linked issue before
 release.
+
+The source agreement indicator counts configured engines returning the same URL or identified scholarly work. Version grouping follows the bounded [publication identity contract](SCHOLARLY_WORK_GROUPING.md); it does not certify relevance or validity.

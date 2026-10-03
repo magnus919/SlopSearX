@@ -79,6 +79,8 @@ from slopsearx.routing import (
     load_routing_budget,
     select_cost_coverage,
 )
+from slopsearx.scholarly import MAX_RECORD_BYTES, group_publications
+from slopsearx.scholarly import POLICY_VERSION as WORK_GROUP_POLICY_VERSION
 from slopsearx.stats import EngineStatsTracker
 from slopsearx.suggest import SuggestionService
 
@@ -1034,10 +1036,13 @@ class SearchService:
 
         # Merge and rank
         ranked = self._ranker.rank(
-            {name: resp.results for name, resp in responses.items()},
+            group_publications({name: resp.results for name, resp in responses.items()}, request.query),
             request.query,
             search_params,
         )
+        for result in ranked:
+            if result.work_group:
+                result.engine = result.work_group["representative_engine"]
         rerank_status = "skipped"
         effective_ranking = self._ranking_explanation
         if (
@@ -1540,6 +1545,7 @@ def _routing_cache_digest(ctx: AppContext) -> str:
                 )
     parts.append("sensitive=" + ",".join(sorted(ctx.sensitive_engines)))
     parts.append("ranking=v2:" + ctx.ranking_strategy)
+    parts.append("work_group=" + WORK_GROUP_POLICY_VERSION)
     parts.append("rerank=" + (ctx.rerank_provider.cache_identity() if ctx.rerank_provider is not None else "none"))
     if ctx.rerank_provider is not None:
         parts.append("rerank_policy=" + RERANK_POLICY_VERSION)
@@ -1641,6 +1647,7 @@ def search_result_to_dict(result: SearchResult) -> dict[str, Any]:
         "media": media_to_dict(result.media),
         "tier": result.tier,
         "payload": payload_for_persistence(result.payload),
+        "work_group": payload_for_persistence(result.work_group, max_bytes=MAX_RECORD_BYTES),
     }
 
 
@@ -1791,6 +1798,7 @@ def search_result_from_dict(data: dict[str, Any]) -> SearchResult:
         media=media_from_dict(data.get("media")),
         tier=int(raw_tier) if raw_tier is not None else 1,
         payload=payload_from_dict(data.get("payload")),
+        work_group=payload_from_dict(data.get("work_group")),
     )
 
 

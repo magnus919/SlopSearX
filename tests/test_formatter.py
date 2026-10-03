@@ -660,7 +660,7 @@ class TestPortalHtml:
         )
 
         assert "Matched 2 sources" in output
-        assert 'title="Same URL returned by 2 configured engines"' in output
+        assert 'title="Same result or identified work found by 2 configured engines"' in output
         assert "Research" in output
         assert "Brave" in output and "Wikipedia" in output
         assert "Open result ↗" in output

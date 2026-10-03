@@ -181,6 +181,8 @@ class SemanticScholarAdapter(EngineAdapter):
                             "doi": external_ids.get("DOI") or None,
                             "pmid": external_ids.get("PubMed") or None,
                             "pmcid": external_ids.get("PubMedCentral") or None,
+                            "arxiv_id": external_ids.get("ArXiv") or None,
+                            "authors": author_names or None,
                         },
                         engine=self.name,
                     ),
