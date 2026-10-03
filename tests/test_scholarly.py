@@ -225,3 +225,37 @@ def test_malformed_publication_status_metadata_does_not_crash_grouping(malformed
     (result,) = ranked({"a": [paper("https://a.test/work", doi="10.1234/work", publication_types=malformed)]})
     assert result.work_group["warnings"] == []
     assert "comments" not in _result_to_searxng(result)
+
+
+@pytest.mark.parametrize("pmcid", ["8371605", "PMC8371605", "pmc8371605"])
+def test_numeric_and_prefixed_pmcid_bridge_publisher_and_repository(pmcid):
+    feeds = {
+        "web": [
+            paper("https://www.nature.com/articles/s41586-021-03819-2", "web"),
+            paper("https://pmc.ncbi.nlm.nih.gov/articles/PMC8371605/", "web"),
+        ],
+        "semanticscholar": [
+            paper(
+                "https://www.semanticscholar.org/paper/public-id",
+                "semanticscholar",
+                doi="10.1038/s41586-021-03819-2",
+                pmcid=pmcid,
+            )
+        ],
+    }
+    (result,) = ranked(feeds)
+    assert len(result.work_group["members"]) == 3
+    assert result.engines == {"web", "semanticscholar"}
+    bridge = next(member for member in result.work_group["members"] if member["engine"] == "semanticscholar")
+    assert bridge["identifiers"]["pmcid"] == "PMC8371605"
+    assert bridge["payload"]["data"]["pmcid"] == pmcid
+
+
+def test_numeric_pmcid_conflicting_with_url_does_not_bridge_doi():
+    feeds = {
+        "a": [
+            paper("https://pmc.ncbi.nlm.nih.gov/articles/PMC1/", pmcid="2", doi="10.1234/work"),
+            paper("https://doi.org/10.1234/work"),
+        ]
+    }
+    assert len(ranked(feeds)) == 2

@@ -81,10 +81,13 @@ def publication_ids(result: SearchResult) -> dict[str, str]:
         ids["doi"] = doi
     for key in ("pmid", "pmcid"):
         raw = data.get(key)
-        if isinstance(raw, str) and re.fullmatch(r"\d+" if key == "pmid" else r"PMC\d+", raw, re.IGNORECASE):
-            if key in ids and ids[key] != raw.upper():
+        if isinstance(raw, str) and re.fullmatch(r"\d+" if key == "pmid" else r"(?:PMC)?\d+", raw, re.IGNORECASE):
+            canonical = raw.upper()
+            if key == "pmcid" and not canonical.startswith("PMC"):
+                canonical = "PMC" + canonical
+            if key in ids and ids[key] != canonical:
                 return {}
-            ids[key] = raw.upper()
+            ids[key] = canonical
     raw_arxiv = data.get("arxiv_id") or (data.get("publication_id") if result.engine == "arxiv" else None)
     if isinstance(raw_arxiv, str) and ARXIV.fullmatch(raw_arxiv):
         if "arxiv" in ids and ids["arxiv"] != raw_arxiv.casefold():
