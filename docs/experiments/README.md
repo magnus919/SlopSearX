@@ -153,6 +153,13 @@ PRs or deploy changes.
 | [EXP-001](EXP-001-results-only.md) | Can results-only MCP output save >=10% bytes without losing interpretation facts? | not-supported | Completed isolated retry: 6.97% smaller (target 10%); explicit engine outcome facts lost. All eight pairs completed. | None |
 | Historical reference | Would RRF improve all three synthetic query families? | not-supported | [Existing evaluation](../RETRIEVAL_QUALITY_EVALUATION.md): two improve, science regresses. Retrospective reference, not a preregistered experiment or a new run. | None from this loop |
 
+## One-off loop redesign pilot
+
+[SLO-PILOT-001](SLO-PILOT-001.md) audits measurement readiness and adds a draft
+[SLO declaration](../SLO.md). It is an explicitly requested extra run, not a
+scheduled experiment or evidence of improved production availability. Its
+implementation delivery remains subject to normal review and CI.
+
 ## Candidate backlog (not yet tested by this loop)
 
 These are investigation leads, not accepted hypotheses or promised benefits.
