@@ -11,3 +11,34 @@
 - Fixed stopping rule: <=24 Jev requests,1 root call in flight, <=400k reported input tokens,45minutes, no newsearches. Report latency/timeouts and usage for every call, provider model `jev-1.13.0`; same ten-level rubric and card bounds. Whole request must meet existing128k byte bound; any oversized/failure is explicit incomplete/fallback.
 - No automaticretry/no production change/no deployment. Invalid or incomplete answers remain unevaluated. Keyless and sensitive/policy contracts unchanged. Implementation requires supported mechanism plus meaningful larger-set and failure regression coverage; a quality adoption claim requires fresh held-out comparisons.
 - Evidence under `evidence/EXP-034`, record label origins, input digests, all receipts and reproduction harness. No credentials/private deployment details.
+
+## Readout
+
+All21 requests returned valid pinned-model scores;304,723 input and11,874 output
+tokens were reported. Complete44/45-result requests took399/359ms and the
+constructed80-card request took388ms. No transport/provider failure occurred;
+maximum observed provider time including repeats was630ms. These observations
+are not a production latency percentile or a universal context-size guarantee.
+
+Card-local questions reduced maximum whole/batch score drift from2.11 inEXP-033
+to0.41 here; maximum drift including repeated whole sets was0.45. Top-ten overlap
+was0.9–1.0 across batch placement/repeat treatments. The drift, membership and
+observed latency mechanism checks passed. A relevant tail repository entered
+the software-benchmark top ten without displacing a useful card under the fixed
+assistant labels.
+
+Quality did not establish superiority: the benchmark query stayed at nDCG@10
+1.000; the agentic-RAG query changed from0.9184 incumbent replay to0.8687
+(-0.0497), narrowly inside the registered -0.05 tolerance. The latter is a real
+warning, not an improvement claim. The80-card mixed-query stress set is constructed
+and its placeholder labels are excluded from quality conclusions. Inputs are
+exposed and reference labels are best-effort assistant assessments. No fresh
+held-out answer-quality validation has occurred.
+
+**Decision:** the card-local complete-set transport mechanism merits fresh
+held-out evaluation. Do not substitute naive cross-batch fusion or claim a
+quality/default adoption decision from this screen. No runtime implementation or
+deployment. [Evidence](evidence/EXP-034/) includes all frozen inputs, receipts,
+comparisons and an inert reproduction harness; caller supplies credential-safe
+transport. Request receipts preserve model, complete membership, timing, usage
+and digests without credentials or private deployment metadata.
