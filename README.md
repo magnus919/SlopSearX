@@ -287,7 +287,7 @@ warnings rather than failures because a search can legitimately have no matches.
 FEATURE_EMPTY_SCRAPE_DIAGNOSTICS=true
 ```
 
-Pre-built Docker images are available from GitHub Container Registry. Builds run automatically on every push to `main` (`latest`, `unstable`) and on version tags (`stable`, `X`, `X.Y`, `X.Y.Z`).
+Pre-built Docker images are available from GitHub Container Registry for `linux/amd64` and `linux/arm64`. Docker selects the native architecture automatically, including on Apple Silicon. Builds run on every push to `main` (`latest` and a short commit SHA) and on version tags (`X.Y` and `X.Y.Z`, plus a short commit SHA). Each architecture is built on a native runner, Trivy-scanned, and smoke-tested before the combined manifest is published. Pull requests validate both architectures without publishing. Existing deployment digest pins retain their original platforms until promoted to a new multi-platform image digest.
 
 The repository's own deployment surfaces (`docker-compose.yml`, `k8s/deployment.yaml`) pin the image **by digest**, so they always run exactly the artifact that CI built, Trivy-scanned, and smoke-tested. To deploy the same verified artifact as a given commit, resolve its short-SHA tag to the current digest:
 
