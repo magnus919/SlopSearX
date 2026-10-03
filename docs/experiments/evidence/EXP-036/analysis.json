@@ -1,0 +1,145 @@
+{
+  "pairs": [
+    {
+      "query_id": "q1",
+      "stratum": "original",
+      "paired_valid": true,
+      "delta_root": 0.07827697731332106,
+      "delta_peer": -0.008444274731270629,
+      "useful_first40": 10,
+      "useful_whole": 10,
+      "useful_tail_promotions": 0,
+      "lost_facets": []
+    },
+    {
+      "query_id": "q2",
+      "stratum": "original",
+      "paired_valid": true,
+      "delta_root": -0.01707574153232394,
+      "delta_peer": 0.03635473611368667,
+      "useful_first40": 10,
+      "useful_whole": 10,
+      "useful_tail_promotions": 0,
+      "lost_facets": []
+    },
+    {
+      "query_id": "q3",
+      "stratum": "original",
+      "paired_valid": true,
+      "delta_root": 0.001504820145964092,
+      "delta_peer": 0.07711351351797668,
+      "useful_first40": 10,
+      "useful_whole": 10,
+      "useful_tail_promotions": 0,
+      "lost_facets": []
+    },
+    {
+      "query_id": "q4",
+      "stratum": "original",
+      "paired_valid": true,
+      "delta_root": 0.03967498396387259,
+      "delta_peer": 0.04886169578494082,
+      "useful_first40": 10,
+      "useful_whole": 10,
+      "useful_tail_promotions": 0,
+      "lost_facets": []
+    },
+    {
+      "query_id": "q5",
+      "stratum": "original",
+      "paired_valid": true,
+      "delta_root": 0.04020893534965564,
+      "delta_peer": 0.04020893534965564,
+      "useful_first40": 10,
+      "useful_whole": 10,
+      "useful_tail_promotions": 0,
+      "lost_facets": []
+    },
+    {
+      "query_id": "q6",
+      "stratum": "original",
+      "paired_valid": true,
+      "delta_root": 0.0034455083988018664,
+      "delta_peer": -0.030348843572761464,
+      "useful_first40": 10,
+      "useful_whole": 10,
+      "useful_tail_promotions": 0,
+      "lost_facets": []
+    },
+    {
+      "query_id": "q7",
+      "stratum": "original",
+      "paired_valid": false,
+      "delta_root": null,
+      "delta_peer": null,
+      "useful_first40": null,
+      "useful_whole": 10,
+      "useful_tail_promotions": 0,
+      "lost_facets": []
+    },
+    {
+      "query_id": "q8",
+      "stratum": "original",
+      "paired_valid": true,
+      "delta_root": -0.07348947989258459,
+      "delta_peer": 0.06523606625628398,
+      "useful_first40": 10,
+      "useful_whole": 10,
+      "useful_tail_promotions": 0,
+      "lost_facets": []
+    },
+    {
+      "query_id": "q9",
+      "stratum": "extension",
+      "paired_valid": true,
+      "delta_root": 0.02477671761756195,
+      "delta_peer": -0.009365768794786011,
+      "useful_first40": 9,
+      "useful_whole": 9,
+      "useful_tail_promotions": 0,
+      "lost_facets": []
+    },
+    {
+      "query_id": "q10",
+      "stratum": "extension",
+      "paired_valid": true,
+      "delta_root": -0.12867792700869307,
+      "delta_peer": -0.11039589317617726,
+      "useful_first40": 10,
+      "useful_whole": 9,
+      "useful_tail_promotions": 0,
+      "lost_facets": []
+    }
+  ],
+  "original_eight_metrics": {
+    "root": {
+      "paired_queries": 7,
+      "mean_delta": 0.010363714820958103,
+      "bootstrap95": [
+        -0.022384199019481205,
+        0.042825714729593956
+      ],
+      "minimum_uplift_met": false,
+      "per_query_guard_met": false
+    },
+    "peer": {
+      "paired_queries": 7,
+      "mean_delta": 0.03271168981693024,
+      "bootstrap95": [
+        0.004151017694837944,
+        0.05794680051245057
+      ],
+      "minimum_uplift_met": false,
+      "per_query_guard_met": true
+    }
+  },
+  "candidate_calls": 22,
+  "valid_candidate_calls": 21,
+  "input_tokens": 290226,
+  "output_tokens": 10938,
+  "maximum_provider_ms": 362.31097020208836,
+  "maximum_proxy_ms": 757.89187499322,
+  "natural_pools_above40": 1,
+  "tail_benefit_gate": "inconclusive fewer than four natural above40 pools",
+  "decision": "no adoption recommendation from this screen; retain current runtime"
+}

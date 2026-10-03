@@ -1,8 +1,8 @@
-# EXP-035: Fresh task-specific complete-set reranking
+# EXP-036: Fresh task-specific complete-set reranking
 
 ## Registration
 
-Registered2026-10-03 before acquisition/labels/model calls; followsEXP-033/034
+Registered2026-10-03 before acquisition/labels/model calls; followsEXP-034/034
 and#504. This fresh screen evaluates the card-local mechanism on eight specified
 user-oriented research queries. It does not train a scorer or alter runtime.
 
@@ -14,7 +14,7 @@ user-oriented research queries. It does not train a scorer or alter runtime.
 - Stability guard: one repeated complete-set request on two predesignated queries1/3, membership100%, top10overlap>=0.8; no observed provider timeout in complete requests under the incumbent1s deadline. Measure all observed times and do not call8queries productionp95.
 - Budget:8searches; candidate<=20Jevrequests plus atmost8 configured search rerank requests;1rootlaneinflight; <=500k reported candidate inputtokens,60minutes. Labels/public research cases only; no credentials/private endpoints published. Actual search rerank usage may be unavailable and must remain distinct, notzero.
 - Fixed analysis: query bootstrap10,000 resamples seed504; report all exclusions and strata. Invalid transport/output unevaluated, deterministic replay comparison available; no retries except identified setup repair with preserved attempts and unchanged labels/questions.
-- Evidenceunder`evidence/EXP-035`, frozen inputs/labels/digests, source hashes, all calls/usage, inert harness and readout. No deployment/default change. Fresh measured benefit and guardrails are required before an implementation recommendation; a negative screen remains useful evidence.
+- Evidenceunder`evidence/EXP-036`, frozen inputs/labels/digests, source hashes, all calls/usage, inert harness and readout. No deployment/default change. Fresh measured benefit and guardrails are required before an implementation recommendation; a negative screen remains useful evidence.
 
 
 ## User-directed breadth extension (registered before additional acquisition)
@@ -43,4 +43,9 @@ Climate returned 38 cards and therefore remained a cutoff control. Cardiac healt
 
 **Decision:** retain the current runtime. The earlier transport feasibility finding survives, but the fresh screen does not support adopting the new request shape or whole-set ranking as a quality improvement. Follow-up question design should distinguish a relevant bibliographic lead from substantive evidence already present in the card, and assess their downstream value after acquisition rather than infer either from a title. Additional naturally long pools are needed for tail-benefit evidence; do not assemble synthetic pools and describe them as ordinary search output. No deployment or default changed.
 
-[Evidence](evidence/EXP-035/) preserves frozen queries/cards, both reference sets and pre-call rationale corrections, exact scorer contract, all sanitized receipts, summary, analysis, and an inert replay harness. Original eight queries and user-directed extension remain separate.
+[Evidence](evidence/EXP-036/) preserves frozen queries/cards, both reference sets and pre-call rationale corrections, exact scorer contract, all sanitized receipts, summary, analysis, and an inert replay harness. Original eight queries and user-directed extension remain separate.
+
+
+### Publication identifier reconciliation
+
+The original signed registration used `EXP-035`. Concurrent upstream work reserved that shared ledger sequence before publication. This study is published under the identifier in this filename; the original signed commit history remains intact. No inputs, judgments, labels, or gates changed during identifier reconciliation.

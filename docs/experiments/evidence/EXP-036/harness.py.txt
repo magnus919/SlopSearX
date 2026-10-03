@@ -1,0 +1,54 @@
+import json,pathlib,subprocess,time,math,random,hashlib,sys
+from slopsearx.rerank import MODEL,LEVELS,INSTRUCTIONS
+ROOT=pathlib.Path(sys.argv[2]);OUT=ROOT/'receipts';OUT.mkdir(mode=0o700,exist_ok=True)
+LIMIT=600000;MAXCALLS=22;MAXBYTES=128000
+
+def call(d,arm):
+ cs=d['candidates'];cards=cs[:40] if arm=='first40' else cs
+ if arm=='first40':
+  body={'model':MODEL,'state':{'query':d['query'],'candidates':cards},'questions':{c['id']:{'type':'score','instructions':INSTRUCTIONS.format(id=c['id']),'criteria':LEVELS} for c in cards}}
+ else:
+  body={'model':MODEL,'state':{'query':d['query']},'questions':{c['id']:{'type':'score','instructions':{'candidate':{k:v for k,v in c.items() if k!='id'},'question':INSTRUCTIONS.replace('candidate `{id}`','`candidate`').format(id=c['id'])},'criteria':LEVELS} for c in cards}}
+ encoded=json.dumps(body,ensure_ascii=False,allow_nan=False).encode();receipt=OUT/f"{d['id']}-{arm}.json"
+ if receipt.exists():return json.loads(receipt.read_text())
+ done=[json.loads(p.read_text()) for p in OUT.glob('q*-*.json')]
+ total=sum(r.get('usage',{}).get('input_tokens',0) for r in done)
+ if len(encoded)>MAXBYTES:return {'status':'unevaluated','reason':'request_byte_limit','request_bytes':len(encoded)}
+ if len(done)>=MAXCALLS or total>=LIMIT:raise RuntimeError('registered stopping rule')
+ started=time.monotonic();proc=subprocess.run(json.loads(sys.argv[3]),input=encoded,capture_output=True,timeout=45)
+ try:raw=json.loads(proc.stdout) if proc.returncode==0 else {'error':'transport'}
+ except Exception:raw={'error':'malformed_proxy_json'}
+ valid=raw.get('model')==MODEL and set(raw.get('answers',{}))=={c['id'] for c in cards}
+ scores={};answers={}
+ for c in cards:
+  a=raw.get('answers',{}).get(c['id'],{});s=a.get('score');prob=a.get('probabilities');conf=a.get('confidence')
+  good=a.get('type')=='score' and type(s) in (int,float) and math.isfinite(s) and 0<=s<=9 and isinstance(prob,dict) and set(prob)=={str(i) for i in range(10)} and all(type(v) in (float,int) and math.isfinite(v) and 0<=v<=1 for v in prob.values()) and abs(sum(prob.values())-1)<=.02 and abs(sum(int(k)*v for k,v in prob.items())-s)<=.1 and type(conf) in(float,int) and math.isfinite(conf) and 0<=conf<=1
+  if not good:valid=False
+  else:scores[c['id']]=s;answers[c['id']]=a
+ row={'query_id':d['id'],'arm':arm,'status':'valid' if valid else 'unevaluated','scores':scores if valid else {},'answers':answers if valid else {},'model':raw.get('model'),'error':raw.get('error'),'http_status':raw.get('status'),'usage':raw.get('usage',{}),'provider_ms':raw.get('_elapsed_ms'),'proxy_ms':1000*(time.monotonic()-started),'request_bytes':len(encoded),'request_sha256':hashlib.sha256(encoded).hexdigest(),'candidate_count':len(cards)}
+ receipt.write_text(json.dumps(row,indent=2));receipt.chmod(0o600)
+ print(json.dumps({k:row[k] for k in ['query_id','arm','status','provider_ms','request_bytes']}),flush=True)
+ if total+row['usage'].get('input_tokens',0)>LIMIT:raise RuntimeError('registered input-token ceiling exceeded on completed request; stop all subsequent calls')
+ return row
+
+def ndcg(order,grades):
+ def dcg(seq):return sum((2**grades[i]-1)/math.log2(k+2) for k,i in enumerate(seq[:10]))
+ den=dcg(sorted(range(len(grades)),key=lambda i:-grades[i]));return dcg(order)/den if den else None
+
+started=time.monotonic();summaries=[]
+for n in range(1,int(sys.argv[1]) + 1):
+ if time.monotonic()-started>3600:raise RuntimeError('registered wall clock stopping rule')
+ d=json.loads((ROOT/f'q{n}-frozen.json').read_text());cs=d['candidates'];grades=d['grades']
+ arms=['first40','whole'];random.Random(504+n).shuffle(arms)
+ if n in [1,3]:arms.append('whole_repeat')
+ for arm in arms:
+  r=call(d,arm)
+  if r['status']=='valid':
+   scores=r['scores'];order=sorted(range(min(40,len(cs)) if arm=='first40' else len(cs)),key=lambda i:-scores[cs[i]['id']])
+   if arm=='first40':order+=list(range(40,len(cs)))
+   assert sorted(order)==list(range(len(cs)))
+   summaries.append({'query_id':d['id'],'arm':arm,'status':'valid','order':order,'ndcg10':ndcg(order,grades),'ndcg10_peer':ndcg(order,d['grades_peer']),'useful_at10':sum(grades[i]>=2 for i in order[:10]),'tail_at10':sum(i>=40 and grades[i]>=2 for i in order[:10]),'facet_coverage':sorted(set(f for i in order[:10] if grades[i]>=2 for f in d['facets'][i])),'provider_ms':r['provider_ms']})
+  else:summaries.append({'query_id':d['id'],'arm':arm,'status':'unevaluated','reason':r.get('reason') or r.get('error') or 'invalid_contract'})
+ summaries.append({'query_id':d['id'],'arm':'deterministic_pool','order':list(range(len(cs))),'ndcg10':ndcg(list(range(len(cs))),grades),'useful_at10':sum(g>=2 for g in grades[:10])})
+(ROOT/'summary.json').write_text(json.dumps(summaries,indent=2))
+print('complete',len(summaries),flush=True)
