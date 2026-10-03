@@ -1,0 +1,2726 @@
+{
+  "schema_version": "exp035-card-labels/1",
+  "label_provenance": "independent assistant-proposed reviewer (Luna); labels assigned before seeing any Jev outputs",
+  "independent_gold": false,
+  "blinded_to_scores_and_pool_order": true,
+  "evidence_basis": "captured card title, snippet, and URL only; no page opens or additional searches",
+  "pool_counts": {
+    "q1": 34,
+    "q2": 33,
+    "q3": 30,
+    "q4": 35,
+    "q5": 30,
+    "q6": 31,
+    "q7": 34,
+    "q8": 30
+  },
+  "labels": [
+    {
+      "query_id": "q1",
+      "candidate_id": "c0",
+      "grade": 3,
+      "facet_ids": [
+        "benchmark",
+        "coordination_measurement"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for benchmark, coordination_measurement: AsynCodeBench analyzes dependencies and coordination in asynchronous coding agents."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c1",
+      "grade": 3,
+      "facet_ids": [
+        "benchmark",
+        "collaboration_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for benchmark, collaboration_conflict: CooperBench is described as measuring cooperation on coding tasks with potential conflicts."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c10",
+      "grade": 2,
+      "facet_ids": [
+        "benchmark",
+        "collaboration_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for benchmark, collaboration_conflict: the article reports collaboration-related benchmark findings for AI engineering teams."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c11",
+      "grade": 3,
+      "facet_ids": [
+        "benchmark",
+        "collaboration_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for benchmark, collaboration_conflict: the CooperBench card describes 600+ collaborative coding tasks with coordination conflicts."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c12",
+      "grade": 1,
+      "facet_ids": [
+        "collaboration_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: general multi-agent coordination and planning are discussed without coding benchmarks."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c13",
+      "grade": 2,
+      "facet_ids": [
+        "collaboration_conflict",
+        "coordination_measurement"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for collaboration_conflict, coordination_measurement: Agyn studies a coordinated autonomous software team and uses SWE-bench post hoc."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c14",
+      "grade": 2,
+      "facet_ids": [
+        "coordination_conflict",
+        "benchmark"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for coordination_conflict, benchmark: a coding competition protocol uses cross-verification and reports Codeforces results."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c15",
+      "grade": 1,
+      "facet_ids": [
+        "coordination_measurement"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card describes coordinated specialist agents but focuses on long-horizon evolution, not collaboration measurement."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c16",
+      "grade": 3,
+      "facet_ids": [
+        "benchmark",
+        "collaboration_conflict",
+        "coordination_measurement"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for benchmark, collaboration_conflict, coordination_measurement: the review explicitly describes coordination, dependencies, and conflict negotiation as benchmark dimensions."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c17",
+      "grade": 2,
+      "facet_ids": [
+        "benchmark",
+        "coordination_measurement"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for benchmark, coordination_measurement: the card recommends comparing collaboration patterns in developer workflows."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c18",
+      "grade": 2,
+      "facet_ids": [
+        "benchmark",
+        "collaboration_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for benchmark, collaboration_conflict: MultiAgentBench measures collaboration across interactive scenarios, without coding specificity."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c19",
+      "grade": 2,
+      "facet_ids": [
+        "collaboration_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for collaboration_conflict: the dataset provides merge-conflict labels for AI coding-agent pull requests."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c2",
+      "grade": 3,
+      "facet_ids": [
+        "benchmark",
+        "collaboration_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for benchmark, collaboration_conflict: CooperBench has collaborative coding tasks whose features may conflict without coordination."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c20",
+      "grade": 2,
+      "facet_ids": [
+        "coordination_measurement"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for coordination_measurement: the protocol addresses coordination among independent agents editing shared repositories."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c21",
+      "grade": 3,
+      "facet_ids": [
+        "coordination_measurement",
+        "collaboration_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for coordination_measurement, collaboration_conflict: the study measures communication, reads, and writes among coding agents over time."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c22",
+      "grade": 1,
+      "facet_ids": [
+        "coordination_measurement"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the thesis defines coordination broadly but not coding-agent benchmarks or conflicts."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c23",
+      "grade": 3,
+      "facet_ids": [
+        "coordination_conflict",
+        "benchmark"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for coordination_conflict, benchmark: STORM addresses concurrent code edits and integration conflicts."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c24",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card concerns collaboration in blockchain systems rather than software engineering."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c25",
+      "grade": 2,
+      "facet_ids": [
+        "coordination_measurement"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for coordination_measurement: SPOQ uses task-dependency waves and validation gates for software engineering agents."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c26",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card describes coordinated agents for household entity resolution, outside software engineering."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c27",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card concerns autonomous agents for the Agentic Web, not coding-team collaboration evaluation."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c28",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card concerns GUI-agent engineering and validation, not multi-agent coding collaboration."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c29",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card concerns reward design in general multi-agent reinforcement learning."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c3",
+      "grade": 3,
+      "facet_ids": [
+        "benchmark",
+        "coordination_measurement"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for benchmark, coordination_measurement: CAID is evaluated on Commit0 and PaperBench as shared-artifact coordination tasks."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c30",
+      "grade": 3,
+      "facet_ids": [
+        "benchmark",
+        "coordination_measurement"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for benchmark, coordination_measurement: the empirical study evaluates coordination modes in from-scratch multi-agent coding."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c31",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card describes a cloud-native coding assistant but gives no collaboration evaluation evidence."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c32",
+      "grade": 2,
+      "facet_ids": [
+        "collaboration_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for collaboration_conflict: the work applies competitive multi-agent debate to software issue resolution."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c33",
+      "grade": 3,
+      "facet_ids": [
+        "benchmark",
+        "collaboration_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for benchmark, collaboration_conflict: OpenCollab is a multi-agent coding framework whose evaluations examine collaboration behavior."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c4",
+      "grade": 2,
+      "facet_ids": [
+        "benchmark",
+        "coordination_measurement",
+        "coordination_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for benchmark, coordination_measurement, coordination_conflict: MultiAgentBench scenarios measure adaptability, conflict resolution, and negotiation but are not coding-specific."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c5",
+      "grade": 3,
+      "facet_ids": [
+        "coordination_measurement",
+        "coordination_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for coordination_measurement, coordination_conflict: STORM detects and resolves conflicting edits and reports benchmark results."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c6",
+      "grade": 3,
+      "facet_ids": [
+        "benchmark",
+        "coordination_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for benchmark, coordination_conflict: AsynCodeBench is explicitly a dependency-centric collaboration benchmark."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c7",
+      "grade": 3,
+      "facet_ids": [
+        "benchmark",
+        "collaboration_conflict",
+        "coordination_measurement"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for benchmark, collaboration_conflict, coordination_measurement: the review explicitly proposes benchmarks for delegation, dependencies, conflict, and negotiation."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c8",
+      "grade": 3,
+      "facet_ids": [
+        "benchmark",
+        "collaboration_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for benchmark, collaboration_conflict: CooperBench specifies 652 coding tasks across repositories and conflicting agent features."
+    },
+    {
+      "query_id": "q1",
+      "candidate_id": "c9",
+      "grade": 2,
+      "facet_ids": [
+        "benchmark",
+        "collaboration_conflict"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for benchmark, collaboration_conflict: the article reports CooperBench scale and findings on collaborative coding."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c0",
+      "grade": 3,
+      "facet_ids": [
+        "approvals",
+        "audit_trails",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for approvals, audit_trails, policy_controls: the product card describes tamper-proof records and sign-off for high-impact actions."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c1",
+      "grade": 2,
+      "facet_ids": [
+        "approvals",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for approvals, policy_controls: Microsoft guidance assigns humans approval and compliance monitoring responsibilities."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c10",
+      "grade": 3,
+      "facet_ids": [
+        "approvals",
+        "audit_trails",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for approvals, audit_trails, policy_controls: the guide names scoped permissions, human approvals, immutable logs, and redaction."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c11",
+      "grade": 2,
+      "facet_ids": [
+        "audit_trails",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for audit_trails, policy_controls: the card discusses sanctioned enterprise tools and audit logging, with little action-control detail."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c12",
+      "grade": 3,
+      "facet_ids": [
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for policy_controls: the snippet describes live policy checks on proposed actions."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c13",
+      "grade": 2,
+      "facet_ids": [
+        "audit_trails"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for audit_trails: the banking example emphasizes complete audit trails for decisions and transactions."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c14",
+      "grade": 3,
+      "facet_ids": [
+        "approvals",
+        "audit_trails"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for approvals, audit_trails: the card explicitly lists approval thresholds, owners, decision logs, and audit trails."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c15",
+      "grade": 3,
+      "facet_ids": [
+        "approvals",
+        "audit_trails",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for approvals, audit_trails, policy_controls: the guide describes governed processes, continuous monitoring, auditability, and escalation."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c16",
+      "grade": 2,
+      "facet_ids": [
+        "audit_trails",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for audit_trails, policy_controls: the card names access restrictions, audit logging, and intervention triggers."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c17",
+      "grade": 2,
+      "facet_ids": [
+        "audit_trails",
+        "approvals"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for audit_trails, approvals: the card describes audit attribution and notes approval need varies by action."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c18",
+      "grade": 3,
+      "facet_ids": [
+        "approvals",
+        "audit_trails",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for approvals, audit_trails, policy_controls: the framework defines allowed actions, approval points, and audit records."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c19",
+      "grade": 3,
+      "facet_ids": [
+        "policy_controls",
+        "audit_trails"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for policy_controls, audit_trails: the card defines ownership, allowed actions/data, and review of agent behavior."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c2",
+      "grade": 3,
+      "facet_ids": [
+        "approvals",
+        "audit_trails"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for approvals, audit_trails: the guide specifies workflow approvals and reconstructable audit trails across agent actions."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c20",
+      "grade": 3,
+      "facet_ids": [
+        "policy_controls",
+        "approvals"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for policy_controls, approvals: the access-control study includes least privilege and human approval."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c21",
+      "grade": 2,
+      "facet_ids": [
+        "audit_trails",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for audit_trails, policy_controls: the proposed assurance layer concerns auditable, policy-aligned enterprise decisions."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c22",
+      "grade": 2,
+      "facet_ids": [
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for policy_controls: the framework addresses enterprise agent governance across systems, with limited control details in the snippet."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c23",
+      "grade": 2,
+      "facet_ids": [
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for policy_controls: the framework addresses governance for agents that execute actions across enterprise systems."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c24",
+      "grade": 3,
+      "facet_ids": [
+        "approvals",
+        "audit_trails",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for approvals, audit_trails, policy_controls: CAGE-1 evaluates authorization, applicable policy, and evidence for enterprise agent actions."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c25",
+      "grade": 3,
+      "facet_ids": [
+        "approvals",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for approvals, policy_controls: the runtime firewall governs agent actions and execution."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c26",
+      "grade": 3,
+      "facet_ids": [
+        "policy_controls",
+        "approvals"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for policy_controls, approvals: the abstract describes risk-adaptive controls and human approval for autonomous agents."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c27",
+      "grade": 3,
+      "facet_ids": [
+        "policy_controls",
+        "approvals"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for policy_controls, approvals: the runtime-monitor proposal targets policy enforcement for tool-using agents in high-stakes workflows."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c28",
+      "grade": 2,
+      "facet_ids": [
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for policy_controls: the framework concerns scalable agent governance but the snippet gives few concrete controls."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c29",
+      "grade": 3,
+      "facet_ids": [
+        "policy_controls",
+        "approvals"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for policy_controls, approvals: the architecture is a governance kernel for authorization and guardrails across agent systems."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c3",
+      "grade": 3,
+      "facet_ids": [
+        "audit_trails",
+        "approvals"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for audit_trails, approvals: the platform records prompts, retrieval, tools, approvals, and outputs."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c30",
+      "grade": 3,
+      "facet_ids": [
+        "policy_controls",
+        "approvals"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for policy_controls, approvals: the Unified Policy Architecture is described as enterprise agent governance."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c31",
+      "grade": 2,
+      "facet_ids": [
+        "audit_trails"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for audit_trails: the abstract focuses on tamper-evident, independently verifiable execution records."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c32",
+      "grade": 3,
+      "facet_ids": [
+        "audit_trails",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for audit_trails, policy_controls: the title and abstract describe immutable audit trails and policy-enforced enterprise workflows."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c4",
+      "grade": 3,
+      "facet_ids": [
+        "approvals",
+        "audit_trails",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for approvals, audit_trails, policy_controls: the repository describes pending writes held for human approval with tamper-evident logs."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c5",
+      "grade": 2,
+      "facet_ids": [
+        "audit_trails"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for audit_trails: the observability platform focuses on observing AI activity rather than approval policy."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c6",
+      "grade": 2,
+      "facet_ids": [
+        "audit_trails",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for audit_trails, policy_controls: the card discusses audit evidence and gaps between user access controls and orchestration."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c7",
+      "grade": 3,
+      "facet_ids": [
+        "approvals",
+        "audit_trails",
+        "policy_controls"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for approvals, audit_trails, policy_controls: the card lists oversight, logging, risk management, and governance functions."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c8",
+      "grade": 2,
+      "facet_ids": [
+        "approvals",
+        "audit_trails"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for approvals, audit_trails: the guide maps compliance obligations to approvals and evidence records."
+    },
+    {
+      "query_id": "q2",
+      "candidate_id": "c9",
+      "grade": 3,
+      "facet_ids": [
+        "policy_controls",
+        "audit_trails"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for policy_controls, audit_trails: the guide explicitly requires policy, RBAC, and audit logging specifications."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c0",
+      "grade": 3,
+      "facet_ids": [
+        "durable_recovery",
+        "replay",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for durable_recovery, replay, external_effects_idempotency: the guide directly summarizes checkpoints, recovery, replay, and avoiding duplicated effects."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c1",
+      "grade": 3,
+      "facet_ids": [
+        "durable_recovery",
+        "replay",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for durable_recovery, replay, external_effects_idempotency: the card names replay, recovery, idempotency, and durable state semantics."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c10",
+      "grade": 2,
+      "facet_ids": [
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for external_effects_idempotency: the article explains retry duplication risk and idempotency around side effects."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c11",
+      "grade": 2,
+      "facet_ids": [
+        "durable_recovery",
+        "replay",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for durable_recovery, replay, external_effects_idempotency: the issue states replay-safe state and recorded I/O/idempotent recovery semantics."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c12",
+      "grade": 2,
+      "facet_ids": [
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for external_effects_idempotency: the article warns that retried activities may repeat and side effects must be idempotent."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c13",
+      "grade": 2,
+      "facet_ids": [
+        "durable_recovery",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for durable_recovery, external_effects_idempotency: the issue describes idempotent retry of interrupted workflow dispatches."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c14",
+      "grade": 3,
+      "facet_ids": [
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for external_effects_idempotency: the article directly cautions that durable execution does not make payments exactly-once."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c15",
+      "grade": 2,
+      "facet_ids": [
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for external_effects_idempotency: the issue requires explicit idempotency and recovery semantics for external effects."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c16",
+      "grade": 3,
+      "facet_ids": [
+        "durable_recovery",
+        "replay",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for durable_recovery, replay, external_effects_idempotency: the guide describes recovery of recorded steps and safe API idempotency."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c17",
+      "grade": 3,
+      "facet_ids": [
+        "durable_recovery",
+        "replay",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for durable_recovery, replay, external_effects_idempotency: the guide connects replayed results to crash recovery and preventing duplicate side effects."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c18",
+      "grade": 1,
+      "facet_ids": [
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the title names AWS idempotency docs but the visible snippet gives no concrete behavior."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c19",
+      "grade": 2,
+      "facet_ids": [
+        "replay",
+        "durable_recovery"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for replay, durable_recovery: the paper addresses replay compatibility across durable workflow upgrades."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c2",
+      "grade": 3,
+      "facet_ids": [
+        "durable_recovery",
+        "replay",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for durable_recovery, replay, external_effects_idempotency: the issue specifies replay, crash recovery, and explicit effect identities."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c20",
+      "grade": 2,
+      "facet_ids": [
+        "replay",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for replay, external_effects_idempotency: the paper addresses replay-resistant authorization when agents retry and resume."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c21",
+      "grade": 2,
+      "facet_ids": [
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for external_effects_idempotency: the study concerns idempotency and exactly-once semantics in distributed events."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c22",
+      "grade": 3,
+      "facet_ids": [
+        "durable_recovery",
+        "replay"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for durable_recovery, replay: the architecture centers on durable execution journals and deterministic replay."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c23",
+      "grade": 2,
+      "facet_ids": [
+        "durable_recovery"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for durable_recovery: the paper addresses persistent state and reliable progress in durable functions."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c24",
+      "grade": 2,
+      "facet_ids": [
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for external_effects_idempotency: the card covers payment idempotency and retry/failover semantics, not workflow replay."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c25",
+      "grade": 3,
+      "facet_ids": [
+        "external_effects_idempotency",
+        "durable_recovery"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for external_effects_idempotency, durable_recovery: the paper addresses partial, duplicate, and irreversible effects in agent workflows."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c26",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "uncertain",
+      "rationale": "Only contextual/background evidence: the title concerns authorization-bound execution, while the snippet is empty and does not establish durability or replay."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c27",
+      "grade": 2,
+      "facet_ids": [
+        "durable_recovery"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for durable_recovery: the paper describes persisted execution state and recovery after failure."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c28",
+      "grade": 3,
+      "facet_ids": [
+        "durable_recovery",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for durable_recovery, external_effects_idempotency: the paper describes missing or duplicated effects under workflow failures and retries."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c29",
+      "grade": 3,
+      "facet_ids": [
+        "durable_recovery",
+        "replay",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for durable_recovery, replay, external_effects_idempotency: the paper concerns replayable agent workflows and duplicate external effects."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c3",
+      "grade": 3,
+      "facet_ids": [
+        "durable_recovery",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for durable_recovery, external_effects_idempotency: the guide discusses recovering agent runtimes without duplicating non-idempotent effects."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c4",
+      "grade": 3,
+      "facet_ids": [
+        "durable_recovery",
+        "replay",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for durable_recovery, replay, external_effects_idempotency: the issue covers recovery when an external outcome is unknown and safe replay conditions."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c5",
+      "grade": 3,
+      "facet_ids": [
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for external_effects_idempotency: the docs state external effects need idempotency, inbox/outbox, or compensation."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c6",
+      "grade": 3,
+      "facet_ids": [
+        "replay",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for replay, external_effects_idempotency: the article ties deterministic replay to idempotent or recorded external effects."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c7",
+      "grade": 2,
+      "facet_ids": [
+        "durable_recovery",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for durable_recovery, external_effects_idempotency: the issue describes safe recovery without repeating external operations."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c8",
+      "grade": 3,
+      "facet_ids": [
+        "replay",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for replay, external_effects_idempotency: the docs distinguish idempotent external effects from deterministic replay."
+    },
+    {
+      "query_id": "q3",
+      "candidate_id": "c9",
+      "grade": 3,
+      "facet_ids": [
+        "replay",
+        "external_effects_idempotency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for replay, external_effects_idempotency: the guide separates replay, idempotent external effects, and versioning."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c0",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, leakage_contamination: the OpenAI card compares SWE-Bench Pro and Verified for contamination."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c1",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "temporal_integrity",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, temporal_integrity, leakage_contamination: SWE-Bench+ uses issues after training cutoffs to test contamination."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c10",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination",
+        "temporal_integrity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, leakage_contamination, temporal_integrity: the study argues SWE-bench performance may reflect memory and calls for temporal controls."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c11",
+      "grade": 2,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination",
+        "temporal_integrity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for swe_bench, leakage_contamination, temporal_integrity: the card discusses SWE-bench leakage and instance/repository/temporal controls."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c12",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, leakage_contamination: the paper addresses leakage and contamination in SWE-bench successors."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c13",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, leakage_contamination: SWE-Bench Pro is explicitly designed to address contamination in software-agent evaluation."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c14",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, leakage_contamination: the card summarizes solution leakage in SWE-bench Verified."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c15",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "temporal_integrity",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, temporal_integrity, leakage_contamination: SWE-rebench is described as a decontaminated benchmark with fresh tasks."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c16",
+      "grade": 2,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for swe_bench, leakage_contamination: the discussion describes SWE-bench leakage and memorized issue solutions."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c17",
+      "grade": 2,
+      "facet_ids": [
+        "swe_bench",
+        "temporal_integrity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for swe_bench, temporal_integrity: SWE-rebench provides transparent continuously evolving evaluations, relevant to test freshness."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c18",
+      "grade": 2,
+      "facet_ids": [
+        "swe_bench",
+        "temporal_integrity",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for swe_bench, temporal_integrity, leakage_contamination: the article describes post-cutoff task filtering to reduce SWE-bench contamination."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c19",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, leakage_contamination: the page reports SWE-bench solution leakage and contamination concerns."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c2",
+      "grade": 2,
+      "facet_ids": [
+        "swe_bench",
+        "temporal_integrity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for swe_bench, temporal_integrity: SWE-bench Live uses newly collected tasks and reports their temporal distribution."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c20",
+      "grade": 2,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for swe_bench, leakage_contamination: the card discusses memorization risk in repository-level benchmarks including SWE-bench."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c21",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "temporal_integrity",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, temporal_integrity, leakage_contamination: the report discloses using held-out tests as a stopping signal, a benchmark-protocol violation."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c22",
+      "grade": 1,
+      "facet_ids": [
+        "swe_bench"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card evaluates software-agent memory hygiene, not task contamination/time splits."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c23",
+      "grade": 0,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "The card concerns the card concerns entertainment-content promotion, not SWE-bench, outside the query's requested facets."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c24",
+      "grade": 0,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "The card concerns the card concerns EVA operations evaluation, not SWE-bench, outside the query's requested facets."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c25",
+      "grade": 1,
+      "facet_ids": [
+        "swe_bench"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card concerns software-agent memory evaluation, not benchmark leakage or temporal integrity."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c26",
+      "grade": 2,
+      "facet_ids": [
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for leakage_contamination: RustMizan addresses public training-corpus contamination in software benchmarks."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c27",
+      "grade": 0,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "The card concerns the card concerns natural-language-to-TLA specification benchmarks, outside the query's requested facets."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c28",
+      "grade": 0,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "The card concerns the card evaluates World Cup forecasts rather than coding-agent benchmarks, outside the query's requested facets."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c29",
+      "grade": 0,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "The card concerns the card concerns optimization R&D agents rather than SWE-bench evaluation integrity, outside the query's requested facets."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c3",
+      "grade": 2,
+      "facet_ids": [
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for leakage_contamination: the card explains training-data leakage, but gives little SWE-bench-specific detail."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c30",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, leakage_contamination: SWE-MERA targets contamination issues in SWE-bench."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c31",
+      "grade": 2,
+      "facet_ids": [
+        "leakage_contamination",
+        "temporal_integrity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for leakage_contamination, temporal_integrity: JavaVulBench offers leakage-aware realistic splits, a transferable evaluation method."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c32",
+      "grade": 0,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "The card concerns the card is about ECG biometric evaluation, not SWE-bench or coding-agent contamination, outside the query's requested facets."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c33",
+      "grade": 0,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "The card concerns the card is about channel foundation models rather than software-agent benchmarks, outside the query's requested facets."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c34",
+      "grade": 1,
+      "facet_ids": [
+        "temporal_integrity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the review concerns evaluation rigor generally but not SWE-bench or contamination specifically."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c4",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, leakage_contamination: SWE-MERA describes static-data reuse as a source of leakage."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c5",
+      "grade": 2,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination",
+        "temporal_integrity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for swe_bench, leakage_contamination, temporal_integrity: the guide describes leakage checks including date-based splits for coding benchmarks."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c6",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "temporal_integrity",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, temporal_integrity, leakage_contamination: dated GitHub PRs permit temporally separated SWE-Bench++ evaluation."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c7",
+      "grade": 2,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for swe_bench, leakage_contamination: the article reports a claimed SWE-bench leakage rate, though it is secondary commentary."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c8",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination",
+        "temporal_integrity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, leakage_contamination, temporal_integrity: the overview discusses decontamination, fresh tasks, temporal validation, and solution leakage."
+    },
+    {
+      "query_id": "q4",
+      "candidate_id": "c9",
+      "grade": 3,
+      "facet_ids": [
+        "swe_bench",
+        "leakage_contamination"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for swe_bench, leakage_contamination: the card explicitly identifies leakage and hidden-test reward hacking in SWE-Bench Pro Verified."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c0",
+      "grade": 3,
+      "facet_ids": [
+        "verification",
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification, threat_model_limits: the official page states verifier goals and mapped SLSA threats."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c1",
+      "grade": 3,
+      "facet_ids": [
+        "verification",
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification, threat_model_limits: the SLSA provenance page describes verifier trust assessment and threats."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c10",
+      "grade": 2,
+      "facet_ids": [
+        "builder_identity_authenticity",
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for builder_identity_authenticity, threat_model_limits: the card explains identity-bound certificates and transparency-log threat controls."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c11",
+      "grade": 3,
+      "facet_ids": [
+        "builder_identity_authenticity",
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for builder_identity_authenticity, threat_model_limits: the checklist requires verified builder identity and documented L3 isolation threats."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c12",
+      "grade": 3,
+      "facet_ids": [
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for threat_model_limits: the card describes SLSA provenance threat coverage and limits."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c13",
+      "grade": 3,
+      "facet_ids": [
+        "verification",
+        "builder_identity_authenticity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification, builder_identity_authenticity: the repository card describes builder identity bound to signer."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c14",
+      "grade": 3,
+      "facet_ids": [
+        "verification",
+        "builder_identity_authenticity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification, builder_identity_authenticity: the passage identifies DSSE and builder identity in SLSA provenance."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c15",
+      "grade": 3,
+      "facet_ids": [
+        "verification",
+        "threat_model_limits",
+        "builder_identity_authenticity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification, threat_model_limits, builder_identity_authenticity: the card describes a compromised runner whose signed provenance can pass identity checks."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c16",
+      "grade": 3,
+      "facet_ids": [
+        "verification",
+        "builder_identity_authenticity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification, builder_identity_authenticity: the verifier validates expected builders and source metadata."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c17",
+      "grade": 3,
+      "facet_ids": [
+        "verification",
+        "builder_identity_authenticity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification, builder_identity_authenticity: the repository card describes the same builder-identity verification control."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c18",
+      "grade": 3,
+      "facet_ids": [
+        "verification",
+        "builder_identity_authenticity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification, builder_identity_authenticity: the consumer must verify signature, digest, builder, source, and policy."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c19",
+      "grade": 2,
+      "facet_ids": [
+        "threat_model_limits",
+        "builder_identity_authenticity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for threat_model_limits, builder_identity_authenticity: the overview connects supply-chain attacks with signed in-toto attestations."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c2",
+      "grade": 3,
+      "facet_ids": [
+        "verification",
+        "builder_identity_authenticity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification, builder_identity_authenticity: the card describes SLSA provenance as signed DSSE associated with artifact subject."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c20",
+      "grade": 1,
+      "facet_ids": [
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card is general SLSA compliance background without verifier specifics."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c21",
+      "grade": 2,
+      "facet_ids": [
+        "builder_identity_authenticity",
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for builder_identity_authenticity, threat_model_limits: the attested build ties provenance to a TEE report and hardware signature."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c22",
+      "grade": 1,
+      "facet_ids": [
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card concerns agent lifecycle assurance but not SLSA verifier behavior."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c23",
+      "grade": 2,
+      "facet_ids": [
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for threat_model_limits: the O-RAN rubric proposes a software-supply-chain lifecycle threat model."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c24",
+      "grade": 2,
+      "facet_ids": [
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for threat_model_limits: the TEE framework cautions that attestation cannot rule out all vulnerabilities."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c25",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card proposes trusted module repositories without SLSA verifier or threat-model details."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c26",
+      "grade": 0,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "The card concerns the card concerns code entropy in AI-first repositories, not SLSA, outside the query's requested facets."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c27",
+      "grade": 1,
+      "facet_ids": [
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card concerns AI-pipeline accountability rather than SLSA verification."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c28",
+      "grade": 1,
+      "facet_ids": [
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: SCAI is adjacent supply-chain integrity work but does not address SLSA verifier behavior."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c29",
+      "grade": 0,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "The card concerns the NIST identification disclaimer is unrelated to SLSA verification, outside the query's requested facets."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c3",
+      "grade": 3,
+      "facet_ids": [
+        "verification"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification: the repository shows a concrete successful SLSA provenance verification."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c4",
+      "grade": 2,
+      "facet_ids": [
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for threat_model_limits: the article distinguishes build-path tampering from human malice."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c5",
+      "grade": 3,
+      "facet_ids": [
+        "verification",
+        "builder_identity_authenticity",
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification, builder_identity_authenticity, threat_model_limits: the OpenSSF post describes consumers verifying the expected builder and source."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c6",
+      "grade": 3,
+      "facet_ids": [
+        "verification",
+        "threat_model_limits"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification, threat_model_limits: the official v1.2 page states verification goals and covered threats."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c7",
+      "grade": 3,
+      "facet_ids": [
+        "verification",
+        "builder_identity_authenticity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification, builder_identity_authenticity: the verification checks signature identity and provenance artifact digest."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c8",
+      "grade": 2,
+      "facet_ids": [
+        "verification",
+        "builder_identity_authenticity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for verification, builder_identity_authenticity: the guide explains signed provenance and builder identity but not verifier policy."
+    },
+    {
+      "query_id": "q5",
+      "candidate_id": "c9",
+      "grade": 3,
+      "facet_ids": [
+        "verification",
+        "builder_identity_authenticity"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for verification, builder_identity_authenticity: the verifier binds builder identity to the signing identity."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c0",
+      "grade": 3,
+      "facet_ids": [
+        "otel_conventions",
+        "agent_tool_spans"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for otel_conventions, agent_tool_spans: the official OTel example shows invoke_agent with chat and execute_tool child spans."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c1",
+      "grade": 2,
+      "facet_ids": [
+        "otel_conventions",
+        "attributes_context"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for otel_conventions, attributes_context: the card describes a standard schema for prompts, model responses, and tool calls."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c10",
+      "grade": 2,
+      "facet_ids": [
+        "otel_conventions",
+        "agent_tool_spans"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for otel_conventions, agent_tool_spans: the card identifies four agent activity span types."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c11",
+      "grade": 2,
+      "facet_ids": [
+        "otel_conventions",
+        "attributes_context"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for otel_conventions, attributes_context: the guide describes standardized span and attribute names across agent frameworks."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c12",
+      "grade": 3,
+      "facet_ids": [
+        "otel_conventions",
+        "agent_tool_spans"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for otel_conventions, agent_tool_spans: the guide covers GenAI spans and multi-step/sub-agent trace trees."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c13",
+      "grade": 2,
+      "facet_ids": [
+        "otel_conventions",
+        "attributes_context"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for otel_conventions, attributes_context: the guide describes standardized GenAI span names, attribute keys, and metrics."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c14",
+      "grade": 2,
+      "facet_ids": [
+        "otel_conventions",
+        "attributes_context"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for otel_conventions, attributes_context: the docs describe GenAI span attributes and an OTel convention extension."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c15",
+      "grade": 3,
+      "facet_ids": [
+        "otel_conventions",
+        "agent_tool_spans"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for otel_conventions, agent_tool_spans: the article maps agent SDK traces to invoke_agent, chat, and execute_tool spans."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c16",
+      "grade": 2,
+      "facet_ids": [
+        "otel_conventions",
+        "attributes_context"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for otel_conventions, attributes_context: the docs explain exporting MLflow traces using GenAI convention attributes."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c17",
+      "grade": 1,
+      "facet_ids": [
+        "agent_tool_spans"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the implementation guide explains generic span structure without GenAI-specific conventions."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c18",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card discusses general observability and evaluation without concrete OTel convention details."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c19",
+      "grade": 1,
+      "facet_ids": [
+        "otel_conventions"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the official page explains that spans need operation-specific attributes, but not GenAI conventions."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c2",
+      "grade": 2,
+      "facet_ids": [
+        "otel_conventions",
+        "attributes_context"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for otel_conventions, attributes_context: the article explains trace-context propagation and MCP span enrichment."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c20",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the profiler concerns agent hotspots and cost, not OTel semantic-convention usage."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c21",
+      "grade": 1,
+      "facet_ids": [
+        "otel_conventions"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the paper mentions OTel collection but focuses on runtime enforcement rather than conventions."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c22",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the paper concerns tamper-evident agent run records rather than OTel conventions."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c23",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the paper concerns reasoning analytics beyond standard OTel tracing conventions."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c24",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "uncertain",
+      "rationale": "Only contextual/background evidence: the paper concerns governance mining rather than OTel semantic conventions."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c25",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the paper concerns action approvals and attestations, not OpenTelemetry conventions."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c26",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the paper concerns evaluation infrastructure rather than OTel tracing conventions."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c27",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the paper proposes a custom trace model without OTel semantic-convention details."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c28",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the paper concerns governance-evidence reconstruction, not OTel semantic conventions."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c29",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the article focuses on claim-aware scientific-agent observability, not OTel conventions."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c3",
+      "grade": 2,
+      "facet_ids": [
+        "otel_conventions",
+        "agent_tool_spans"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for otel_conventions, agent_tool_spans: the glossary describes a vendor-neutral GenAI schema for model, tool, and agent spans."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c30",
+      "grade": 2,
+      "facet_ids": [
+        "otel_conventions",
+        "agent_tool_spans"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for otel_conventions, agent_tool_spans: the abstract identifies agent orchestration phases missing from existing GenAI conventions."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c4",
+      "grade": 2,
+      "facet_ids": [
+        "agent_tool_spans"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for agent_tool_spans: the guide describes tool, LLM, and retrieval operations as child spans."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c5",
+      "grade": 2,
+      "facet_ids": [
+        "otel_conventions",
+        "agent_tool_spans"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for otel_conventions, agent_tool_spans: the guide lists spans and events for model, tool, retrieval, memory, and agent runs."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c6",
+      "grade": 1,
+      "facet_ids": [
+        "otel_conventions"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the official page indicates where GenAI conventions moved but gives little convention content."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c7",
+      "grade": 2,
+      "facet_ids": [
+        "otel_conventions",
+        "attributes_context"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for otel_conventions, attributes_context: the conventions guidance explains custom conversation-ID attributes."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c8",
+      "grade": 2,
+      "facet_ids": [
+        "otel_conventions",
+        "attributes_context"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for otel_conventions, attributes_context: the guide describes standardized gen_ai attribute names across providers."
+    },
+    {
+      "query_id": "q6",
+      "candidate_id": "c9",
+      "grade": 3,
+      "facet_ids": [
+        "otel_conventions",
+        "agent_tool_spans",
+        "attributes_context"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for otel_conventions, agent_tool_spans, attributes_context: the guide names chat, invoke_agent, execute_tool spans and their attributes."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c0",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "contradiction_sufficiency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, contradiction_sufficiency: the card reports passage-level verification and conservative contradiction recall."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c1",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: DeepSciVerify addresses scientific claim-citation alignment."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c10",
+      "grade": 2,
+      "facet_ids": [
+        "claim_evidence_support"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for claim_evidence_support: the tool checks whether a cited paper supports a claim and shows a passage."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c11",
+      "grade": 1,
+      "facet_ids": [
+        "claim_evidence_support"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: general writing advice covers evidence and contradictions but not claim-passage verification."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c12",
+      "grade": 2,
+      "facet_ids": [
+        "contradiction_sufficiency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for contradiction_sufficiency: the study examines annotator disagreement over evidence/veracity labels."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c13",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support: the system ranks evidence snippets by relevance to citation claims."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c14",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: the study benchmarks LLM assessment of claims against cited evidence."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c15",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: CiteVQA scores answers jointly with citations to specific document regions."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c16",
+      "grade": 2,
+      "facet_ids": [
+        "claim_evidence_support",
+        "contradiction_sufficiency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for claim_evidence_support, contradiction_sufficiency: the issue illustrates partial support where evidence does not measure the claimed construct."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c17",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "contradiction_sufficiency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, contradiction_sufficiency: FactReview distinguishes full support, partial support, and direct conflict."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c18",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: ClaimVer performs claim verification and evidence attribution."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c19",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: the paper directly evaluates scientific claim verification using citation text."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c2",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: the ledger adjudicates claim evidence and uses independently labeled sources."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c20",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: Peerify verifies whether reviewer claims are supported by manuscript passages."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c21",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: the verifier decomposes claims, retrieves evidence, applies NLI, and returns citations."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c22",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: the study evaluates citation quality for claim-to-source attribution judgments."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c23",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: RefVerifier verifies citation-backed manuscript claims."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c24",
+      "grade": 3,
+      "facet_ids": [
+        "contradiction_sufficiency",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for contradiction_sufficiency, benchmark_eval: BioDivergence evaluates context-dependent contradictions in scientific claims."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c25",
+      "grade": 3,
+      "facet_ids": [
+        "contradiction_sufficiency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for contradiction_sufficiency: ConRAG addresses conflicting retrieved evidence and unstable claim stances."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c26",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "contradiction_sufficiency",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, contradiction_sufficiency, benchmark_eval: the benchmark evaluates evidence that supports, contradicts, or leaves claims unaddressed."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c27",
+      "grade": 2,
+      "facet_ids": [
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for benchmark_eval: HALLMARK diagnoses citation-verifier failures and provides a benchmark."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c28",
+      "grade": 1,
+      "facet_ids": [
+        "benchmark_eval"
+      ],
+      "label_status": "uncertain",
+      "rationale": "Only contextual/background evidence: the title signals research verification systems, but the snippet is empty."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c29",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: Peerispect verifies claim grounding in submitted peer reviews."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c3",
+      "grade": 3,
+      "facet_ids": [
+        "benchmark_eval",
+        "contradiction_sufficiency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for benchmark_eval, contradiction_sufficiency: the card describes citation claims and scientific claim-verification benchmarks."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c30",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "contradiction_sufficiency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, contradiction_sufficiency: SURE-RAG checks whether relevant retrieved evidence is sufficient to justify an answer."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c31",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: SciCiteVal is a dataset for scientific citation verification."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c32",
+      "grade": 2,
+      "facet_ids": [
+        "contradiction_sufficiency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for contradiction_sufficiency: the study addresses multi-source disagreement in claim verification."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c33",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "contradiction_sufficiency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, contradiction_sufficiency: MedRAGChecker targets unsupported and contradictory claims."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c4",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "contradiction_sufficiency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, contradiction_sufficiency: the issue specifies exact claim/citation pairs including contradiction and insufficient-support cases."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c5",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "contradiction_sufficiency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, contradiction_sufficiency: ClaimVer includes support, contradiction, insufficiency, and span attribution examples."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c6",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: RefVerifier evaluates citation-bearing claims and localizes evidence."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c7",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "contradiction_sufficiency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, contradiction_sufficiency: the system ranks snippets for citation claims including supporting or contradicting evidence."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c8",
+      "grade": 2,
+      "facet_ids": [
+        "claim_evidence_support",
+        "contradiction_sufficiency"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for claim_evidence_support, contradiction_sufficiency: the worksheet emphasizes claim-specific support, date alignment, and unresolved contradiction."
+    },
+    {
+      "query_id": "q7",
+      "candidate_id": "c9",
+      "grade": 3,
+      "facet_ids": [
+        "claim_evidence_support",
+        "benchmark_eval"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for claim_evidence_support, benchmark_eval: the framework generates evidence-grounded rationales and uses benchmarks."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c0",
+      "grade": 3,
+      "facet_ids": [
+        "stopping_criteria",
+        "evidence_gaps_coverage",
+        "uncertainty"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for stopping_criteria, evidence_gaps_coverage, uncertainty: the guide links stopping to adequate coverage and whether more search can resolve uncertainty."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c1",
+      "grade": 3,
+      "facet_ids": [
+        "stopping_criteria",
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for stopping_criteria, evidence_gaps_coverage: the paper studies stopping rules for systematic-review screening and recall risk."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c10",
+      "grade": 3,
+      "facet_ids": [
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for evidence_gaps_coverage: the scoping review links synthesis outputs to research priorities and gaps."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c11",
+      "grade": 3,
+      "facet_ids": [
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for evidence_gaps_coverage: the guidance requires comprehensive reproducible searches and reporting coverage gaps."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c12",
+      "grade": 3,
+      "facet_ids": [
+        "evidence_gaps_coverage",
+        "uncertainty"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for evidence_gaps_coverage, uncertainty: the guide prioritizes missing versus weak evidence using uncertainty and decision relevance."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c13",
+      "grade": 1,
+      "facet_ids": [
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the title indicates a research-gap framework, but the snippet only shows browser blocking."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c14",
+      "grade": 1,
+      "facet_ids": [
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card indicates a chapter on research gaps but gives no usable method detail."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c15",
+      "grade": 2,
+      "facet_ids": [
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for evidence_gaps_coverage: the methods concern identifying and displaying gaps in research evidence."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c16",
+      "grade": 3,
+      "facet_ids": [
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for evidence_gaps_coverage: the scoping review describes methods for identifying and prioritizing health-research gaps."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c17",
+      "grade": 2,
+      "facet_ids": [
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for evidence_gaps_coverage: the guide connects research questions to finding and filling evidence gaps."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c18",
+      "grade": 1,
+      "facet_ids": [
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the title concerns research-gap methods, but the captured snippet is a browser check."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c19",
+      "grade": 3,
+      "facet_ids": [
+        "evidence_gaps_coverage",
+        "uncertainty"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for evidence_gaps_coverage, uncertainty: the review states feasibility scans leave uncertainty about the true evidence base."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c2",
+      "grade": 3,
+      "facet_ids": [
+        "stopping_criteria",
+        "uncertainty"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for stopping_criteria, uncertainty: the study relates information-search stopping to evidence and posterior uncertainty."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c20",
+      "grade": 3,
+      "facet_ids": [
+        "evidence_gaps_coverage",
+        "uncertainty"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for evidence_gaps_coverage, uncertainty: the survey explicitly studies verification gaps in autonomous research agents."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c21",
+      "grade": 0,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "The card concerns the card concerns clinical diagnosis forecasting rather than research search or stopping, outside the query's requested facets."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c22",
+      "grade": 1,
+      "facet_ids": [
+        "uncertainty"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the thesis concerns decisions under uncertainty but not research-agent search behavior."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c23",
+      "grade": 2,
+      "facet_ids": [
+        "uncertainty"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for uncertainty: the work evaluates calibrated uncertainty traces during agent trajectories."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c24",
+      "grade": 1,
+      "facet_ids": [
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the framework includes evidence appraisal but is domain-specific and does not address stopping."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c25",
+      "grade": 2,
+      "facet_ids": [
+        "uncertainty",
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for uncertainty, evidence_gaps_coverage: the fact-checking system abstains when retrieved evidence is insufficient."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c26",
+      "grade": 2,
+      "facet_ids": [
+        "stopping_criteria",
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for stopping_criteria, evidence_gaps_coverage: the POMDP paper studies iterative context gathering and redundant search loops."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c27",
+      "grade": 3,
+      "facet_ids": [
+        "stopping_criteria"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for stopping_criteria: the paper directly studies when deep-research agents should terminate search."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c28",
+      "grade": 1,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "Only contextual/background evidence: the card concerns molecular optimization-state management, not stopping or evidence coverage."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c29",
+      "grade": 2,
+      "facet_ids": [
+        "stopping_criteria",
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for stopping_criteria, evidence_gaps_coverage: the system describes iterative evidence acquisition and verification for deep research."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c3",
+      "grade": 3,
+      "facet_ids": [
+        "stopping_criteria",
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for stopping_criteria, evidence_gaps_coverage: the study examines long-horizon search-agent stopping based on sufficient evidence."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c4",
+      "grade": 2,
+      "facet_ids": [
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for evidence_gaps_coverage: the material describes evidence mapping and stakeholder prioritization of gaps."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c5",
+      "grade": 3,
+      "facet_ids": [
+        "evidence_gaps_coverage",
+        "uncertainty"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for evidence_gaps_coverage, uncertainty: the guide asks whether uncertainty remains after considering all evidence."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c6",
+      "grade": 2,
+      "facet_ids": [
+        "evidence_gaps_coverage"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for evidence_gaps_coverage: the report gives screening inclusion reasons for a research-gap framework."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c7",
+      "grade": 3,
+      "facet_ids": [
+        "evidence_gaps_coverage",
+        "uncertainty"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for evidence_gaps_coverage, uncertainty: the guide says to describe insufficient or inconsistent evidence and remaining uncertainty."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c8",
+      "grade": 3,
+      "facet_ids": [
+        "evidence_gaps_coverage",
+        "uncertainty"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for evidence_gaps_coverage, uncertainty: the guide distinguishes important uncertainty from mere missing literature."
+    },
+    {
+      "query_id": "q8",
+      "candidate_id": "c9",
+      "grade": 2,
+      "facet_ids": [
+        "evidence_gaps_coverage",
+        "uncertainty"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for evidence_gaps_coverage, uncertainty: the paper discusses research gaps and uncertainty in systematic reviews."
+    }
+  ]
+}
