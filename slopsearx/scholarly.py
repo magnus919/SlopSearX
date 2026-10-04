@@ -17,7 +17,7 @@ from slopsearx.merger import _normalise_url
 from slopsearx.payload import payload_for_persistence, payload_serialized_size
 from slopsearx.publication_metadata import normalize_doi, validate_paper_fields
 
-POLICY_VERSION = "scholarly-work-v2"
+POLICY_VERSION = "scholarly-work-v3"
 MAX_MEMBERS = 64
 MAX_GROUP_BYTES = 64_000
 MAX_RECORD_BYTES = 128_000
@@ -65,7 +65,11 @@ def _url_ids(url: str) -> dict[str, str]:
         if match:
             return {"pmcid": match[1].upper()}
     if host in {"arxiv.org", "www.arxiv.org", "export.arxiv.org"}:
-        identifier = re.sub(r"^(?:abs|pdf)/", "", path).removesuffix(".pdf")
+        identifier = (
+            path.removeprefix("html/")
+            if path.startswith("html/")
+            else re.sub(r"^(?:abs|pdf)/", "", path).removesuffix(".pdf")
+        )
         if ARXIV.fullmatch(identifier):
             return {"arxiv": identifier.casefold()}
     return {}

@@ -200,4 +200,4 @@ These are investigation leads, not accepted hypotheses or promised benefits.
 Promote a lead into a registered experiment only after inspecting its real
 production path and establishing a measurable baseline.
 
-| [EXP-041](EXP-041-arxiv-html-identity.md) | Do official arXiv HTML representations group with their abstract/PDF work without false merges? | registered | Exact identity regression; zero provider/search calls; functional matrix and compatibility guards pending. | #527; prerequisite for clean future ranking pools |
+| [EXP-041](EXP-041-arxiv-html-identity.md) | Do official arXiv HTML representations group with their abstract/PDF work without false merges? | supported; implementation pending | Old final fixture: 14 failures/7 passes; candidate grouping 55 passed; full suite 2,333 passed, 85.41% coverage. Zero provider/search calls. | #527; CI/review pending; no deployment |
