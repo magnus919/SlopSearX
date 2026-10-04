@@ -1,0 +1,127 @@
+{
+  "schema": "exp056-normal-run/1",
+  "synthetic": false,
+  "mode": "live",
+  "qualification_sha256": "9e59f64d355582da55813eedb38b61c5e42de9dee1c86b45c20e4efb09c30eb1",
+  "neutral": {
+    "status": "valid",
+    "usage": {
+      "input_tokens": 39355,
+      "output_tokens": 2044
+    },
+    "remote_http_ms": 505.0206249579787,
+    "response_sha256": "ed018d8381d36acdbd16e929f9978f56abe70e0ac15334a7ee5bd330bbfc659e"
+  },
+  "budget": {
+    "attempts": 36,
+    "input_tokens": 1008976,
+    "output_tokens": 56565,
+    "unknown_usage": false
+  },
+  "search_calls": 0,
+  "brave_attempts": 0,
+  "candidate_quality_established": false,
+  "quality_analysis_performed": false,
+  "new_jev_attempts": 36,
+  "private_run_sha256": "07e0863b41c429f2a36a4d971de33560aa65728bc26b4f5212cfe21a5c9728f2",
+  "operations": {
+    "status": "incomplete",
+    "uninvoked_ids": [
+      "research-d",
+      "research-d-repeat",
+      "research-d-rotated20",
+      "evaluation-d",
+      "evaluation-d-repeat",
+      "evaluation-d-rotated20",
+      "constructed80-d",
+      "constructed80-d-repeat",
+      "constructed80-d-rotated20"
+    ],
+    "results": [
+      {
+        "operation_id": "q1-d",
+        "status": "valid",
+        "remote_total_ms": 1513.2357310503721,
+        "reason": null,
+        "discarded_action_count": 0
+      },
+      {
+        "operation_id": "q2-d",
+        "status": "valid",
+        "remote_total_ms": 1935.0028671324253,
+        "reason": null,
+        "discarded_action_count": 0
+      },
+      {
+        "operation_id": "q3-d",
+        "status": "valid",
+        "remote_total_ms": 1312.0829579420388,
+        "reason": null,
+        "discarded_action_count": 0
+      },
+      {
+        "operation_id": "q4-d",
+        "status": "valid",
+        "remote_total_ms": 1309.2466408852488,
+        "reason": null,
+        "discarded_action_count": 0
+      },
+      {
+        "operation_id": "q5-d",
+        "status": "valid",
+        "remote_total_ms": 1969.7361700236797,
+        "reason": null,
+        "discarded_action_count": 0
+      },
+      {
+        "operation_id": "q6-d",
+        "status": "valid",
+        "remote_total_ms": 1982.8584289643914,
+        "reason": null,
+        "discarded_action_count": 0
+      },
+      {
+        "operation_id": "q7-d",
+        "status": "valid",
+        "remote_total_ms": 1592.4077252857387,
+        "reason": null,
+        "discarded_action_count": 0
+      },
+      {
+        "operation_id": "q8-d",
+        "status": "valid",
+        "remote_total_ms": 1037.0561189483851,
+        "reason": null,
+        "discarded_action_count": 0
+      },
+      {
+        "operation_id": "q9-d",
+        "status": "valid",
+        "remote_total_ms": 1463.1773761939257,
+        "reason": null,
+        "discarded_action_count": 0
+      },
+      {
+        "operation_id": "cardiac-d",
+        "status": "valid",
+        "remote_total_ms": 1761.4309107884765,
+        "reason": null,
+        "discarded_action_count": 0
+      },
+      {
+        "operation_id": "cardiac-d-repeat",
+        "status": "valid",
+        "remote_total_ms": 1468.3688837103546,
+        "reason": null,
+        "discarded_action_count": 0
+      },
+      {
+        "operation_id": "cardiac-d-rotated20",
+        "status": "failed",
+        "remote_total_ms": 2056.067814817652,
+        "reason": "operation-timing-cap",
+        "discarded_action_count": 3
+      }
+    ]
+  }
+}
