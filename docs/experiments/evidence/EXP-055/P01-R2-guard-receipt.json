@@ -1,0 +1,40 @@
+{
+  "unit": "P01-R2",
+  "events": [
+    {
+      "original_output_text": "{\"event\":\"draft\",\"attempt\":1,\"valid\":true,\"errors\":[],\"sha256\":\"f0ad7920b8e3f4f20b6b7e384f5c842a75e76fb733da2b92c9e0527ca64a0feb\"}\r\n",
+      "event": {
+        "event": "draft",
+        "attempt": 1,
+        "valid": true,
+        "errors": [],
+        "sha256": "f0ad7920b8e3f4f20b6b7e384f5c842a75e76fb733da2b92c9e0527ca64a0feb"
+      }
+    },
+    {
+      "original_output_text": "{\"event\":\"final\",\"valid\":true,\"sha256\":\"f0ad7920b8e3f4f20b6b7e384f5c842a75e76fb733da2b92c9e0527ca64a0feb\",\"error\":null}\r\n",
+      "event": {
+        "event": "final",
+        "valid": true,
+        "sha256": "f0ad7920b8e3f4f20b6b7e384f5c842a75e76fb733da2b92c9e0527ca64a0feb",
+        "error": null
+      }
+    }
+  ],
+  "tool_source_receipts": [
+    {
+      "call_id": "call_J2EhjyUUo470GXp9X2MLPsWP",
+      "original_tool_source_sha256": "54fdb80de05e3e03e4a93547a449e56e2d57d7e09374999b2f20227adfb8fb3f"
+    },
+    {
+      "call_id": "call_8GvGzU4CbvWjIuBKzf67phuI",
+      "original_tool_source_sha256": "9e584a4e52a27d1214c9d7d6fb2f8f3f996dd6b6e9e1e96fab8e9369b2d2003c"
+    },
+    {
+      "call_id": "call_tSWdijxy9BRpUqEi5gRXasX6",
+      "original_tool_source_sha256": "f240c846704591815038b61f4fa311840af3c448c917050653476a8d9f3db9db"
+    }
+  ],
+  "raw_transaction_retention": "private original tool records retained; public receipt excludes local command paths",
+  "process_exit_metadata": "not printed by reviewer"
+}
