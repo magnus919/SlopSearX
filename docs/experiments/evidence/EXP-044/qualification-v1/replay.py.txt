@@ -193,16 +193,17 @@ def _pair_order(pool, variant, specs, receipts, w0):
     try: return selector(dr["scores"],fr["nouls"],f["facets"],d["candidate_ids"])
     except (TypeError,ValueError,KeyError,OverflowError): return fallback("full_w0_invalid_pair_answers")
 
-def analysis_references(data,grouped):
-    """Use the pinned EXP-043 adapter's already-transposed A/B -> pool -> rows shape."""
-    refs,hashes=BASE.validate_refs(EXP043,data,grouped,True)
+def transpose_references(pool_ref):
     expected=set(SOFTWARE)|set(NATURAL)
-    if type(refs)is not dict or set(refs)!={"A","B"}: raise ValueError("EXP-043 references are not A/B keyed")
-    for ref in ("A","B"):
-        if type(refs[ref])is not dict or set(refs[ref])!=expected: raise ValueError(f"EXP-043 reference pool inventory mismatch: {ref}")
-        for pool in expected:
-            if set(refs[ref][pool])!={c["id"] for c in grouped[pool]}: raise ValueError(f"EXP-043 representative reference membership mismatch: {ref}/{pool}")
-    return refs,hashes
+    if set(pool_ref)!=expected: raise ValueError("EXP-043 reference pool inventory mismatch")
+    refs={"A":{},"B":{}}
+    for pool,byref in pool_ref.items():
+        if set(byref)!={"A","B"}: raise ValueError(f"missing references for {pool}")
+        ids={cid for cid in byref["A"]}
+        if set(byref["B"])!=ids: raise ValueError(f"reference membership mismatch for {pool}")
+        for ref in ("A","B"): refs[ref][pool]=byref[ref]
+    if any(set(refs[r])!=expected for r in refs): raise ValueError("reference transpose lost a pool")
+    return refs
 
 def analyze_rankings(ranks, refs, facets, callbacks=None):
     callbacks=callbacks or (H.ndcg_at_10,H.paired_bootstrap)
@@ -242,7 +243,7 @@ def compute_report(root):
     chain=validate_published_result()
     data=source_data(); grouped=groups_in_memory(data); specs=specs_in_memory(data,grouped); receipts=chain["receipts"]
     ranks,diagnostics,nav,facet_ids=build_rankings(data,grouped,specs,receipts)
-    refs,_=analysis_references(data,grouped)
+    pool_ref,_=BASE.validate_refs(EXP043,data,grouped,True); refs=transpose_references(pool_ref)
     analysis=analyze_rankings(ranks,refs,facet_ids)
     return {"schema":"exp044-report/1","decision":"supports_optional_mode_for_untouched_confirmation_only" if analysis["development_screen_passed"] and all(x["passed"] for x in nav) else "unsupported_for_selection","development_analysis":analysis,"navigation":{"controls":nav,"passed":all(x["passed"] for x in nav),"facet_policy_bypassed":True},"selector_trace":diagnostics,"source_integrity":{"result_files":EXPECTED_RESULT_FILES,"validated_receipts":EXPECTED_REQUESTS,"attempts_sha256":_hash(EXP043/"attempts.jsonl")},"limitations":["EXP-043 outputs and references are exposed development data","Noul values are conditional on the full candidate set and are not calibrated truth","historical usage and HTTP timing are not new cost or end-to-end latency measurements","constructed80 has 79 grouped representatives and is operational-only"]}
 

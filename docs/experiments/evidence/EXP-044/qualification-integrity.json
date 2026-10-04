@@ -1,24 +1,35 @@
 {
   "schema": "exp044-qualification-integrity/1",
-  "status": "passed",
+  "status": "passed_after_reference_interface_correction",
   "files": {
     "registration-review.md": "afe0f58f53210e4637377bf9f77240facd4033e7da214389aae421bae6fe7102",
     "source-pins.json": "4f206b889d5b35ca19069ed8872073d62b63c17e5e9659319bf79354ae882098",
-    "replay.py.txt": "ad84904514c94244b1537751ff2aafbed04264d5f26165948f53a0ec28f96e16",
+    "replay.py.txt": "aa7e0e38490da87ee9603eed20a87af831184f4b2bbe283c83b878c32705aba5",
     "prepared-plan.json": "8d40d32a7c217c1edb08a2d57c1810e51f4d99bd9a7e8ed68b9d8196d9b410fa",
-    "qualification-result.json": "7df2f748892145fed3fc7623242e0a7bd1f24f295bdb85f2055c8d67566ce47a",
+    "qualification-result.json": "1ff6d3586943ae65b135c97bd1ee2c10c78d179e25780161ded6ba09d210a8a0",
+    "reference-fix-review.md": "06383b98e0b11d281edb3475a68dd8371b3e663bb4329eb5dd46730f1841d13c",
     "independent-runner-review.md": "afb90fcbe174c4f56bea183c1f95368a8ebf94835912368e7130cedac6bfa94a",
     "registration-integrity.json": "c23b264d2a46d4482d3b0ab50ac26e0ca9fb0bfbe453c95b522c0394600339f4",
     "manual-selector-checks.py.txt": "ad85a4ef6c96e2f88b970af6d562307ed29a3d895f523bd0f0cf14f60e6d9693",
-    "qualification-review.md": "3399d785bd1c84f2f67e884545909eac61318bc43ad126b4b4f057b2d4e8148b",
+    "qualification-review.md": "310442b84b8dc5237384dd9ffa162d44bc9c8e43155cffbbad8cb923ba440586",
     "manual-check-output.txt": "b677c223d220450a6c845f210f8300249ddbe4268f8c20e0f8d460f6704b83d3",
-    "qualification-input-hashes.json": "b1b7ac07f147d571ecafdb3722f2b9268b231470c23ef740f0109f67fff2d937",
+    "replay-attempt-1.json": "8d906e388a7c5ba82524d348e281540d6a935bc586c8c5063832e83075df303a",
+    "qualification-input-hashes.json": "db5c5cd2788f39a69d0c341bc8a23871f8f883a5166948b2e53ccc1ef8e72d2a",
     "prepared-plan.sha256": "fb1a5401a464c8bd69583d447f5d9787111e1ddc903d9d69c5aacdc47eb6e006",
-    "fixture-test-output.txt": "7cf876c968892641941d25dec01649b0cd5c1a96ad6bdda620e212955f86cb90",
-    "fixture_tests.py.txt": "702b2b3b0027ef5b9e20cc7903fc1595fdedd1663e39876916fa4e1307da3ea3"
+    "fixture-test-output.txt": "e224d259bb5ea0131450b7d220f75b95250cb7d4e404cb053dcd699b6d007433",
+    "fixture_tests.py.txt": "a82c522ed4723d7174be4365c68730347a57bbf1464ab89cab750797313414eb",
+    "qualification-v1/retention.json": "6b5624a6ed81761642b27dca719c92fd0d45c6e930012fdb0c0e806bad132958",
+    "qualification-v1/replay.py.txt": "ad84904514c94244b1537751ff2aafbed04264d5f26165948f53a0ec28f96e16",
+    "qualification-v1/qualification-result.json": "7df2f748892145fed3fc7623242e0a7bd1f24f295bdb85f2055c8d67566ce47a",
+    "qualification-v1/qualification-integrity.json": "d10d88b1209eb10201884d0e3fc5ab14a67e5ccb793193db7001b7e96e031d27",
+    "qualification-v1/independent-runner-review.md": "afb90fcbe174c4f56bea183c1f95368a8ebf94835912368e7130cedac6bfa94a",
+    "qualification-v1/qualification-review.md": "3399d785bd1c84f2f67e884545909eac61318bc43ad126b4b4f057b2d4e8148b",
+    "qualification-v1/qualification-input-hashes.json": "b1b7ac07f147d571ecafdb3722f2b9268b231470c23ef740f0109f67fff2d937",
+    "qualification-v1/fixture_tests.py.txt": "702b2b3b0027ef5b9e20cc7903fc1595fdedd1663e39876916fa4e1307da3ea3"
   },
   "provider_calls": 0,
   "search_calls": 0,
   "brave_attempts_used": 0,
-  "actual_replay_run": false
+  "actual_replay_run": false,
+  "prior_failed_attempt": "replay-attempt-1.json"
 }

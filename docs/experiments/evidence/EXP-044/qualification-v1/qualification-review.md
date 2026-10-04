@@ -13,9 +13,3 @@ No new provider or search calls were made for this qualification. Brave attempts
 ## Final acceptance
 
 Root independently reran all 11 author fixtures and eight manual checks on the final copied files; all passed. Independent Luna review found no remaining blocker on runner `ad84904514c94244b1537751ff2aafbed04264d5f26165948f53a0ec28f96e16` and fixtures `702b2b3b0027ef5b9e20cc7903fc1595fdedd1663e39876916fa4e1307da3ea3`. The bound qualification receipt is accepted. Verification reconstructed all 65 records and validated all 219 source artifacts without computing E44. Initial findings above are resolved, with corruption/fallback/gate regression coverage retained. Actual replay must wait until this milestone is published.
-
-## Reference-interface correction
-
-The first actual replay after PR #538 failed before analysis because EXP-044 transposed the EXP-043 helper's already reference-keyed labels a second time. The original milestone is retained under `qualification-v1/`, with merge revision and hashes, and `replay-attempt-1.json` preserves the failure. No analysis artifact or external call was produced.
-
-The correction validates and forwards the already A/B-keyed references without changing labels, ranking policy, source bodies, response receipts, or quality gates. The synthetic 65-response integration test now reads references through that exact helper before actual analysis; a separate neutral-label analysis within the same fixture retains the neutral-quality-failure assertion. All 11 fixtures and eight independent checks pass again. The updated input/result receipts bind the corrected files. Actual replay must wait for publication of this correction.
