@@ -1,0 +1,225 @@
+"""No-network qualification fixtures for EXP-043; all fake transport is local."""
+from __future__ import annotations
+import contextlib, importlib.machinery, importlib.util, json, pathlib, shutil, subprocess, sys, tempfile, unittest, io
+HERE=pathlib.Path(__file__).resolve().parent
+L=importlib.machinery.SourceFileLoader("exp043_replay",str(HERE/"replay.py.txt")); S=importlib.util.spec_from_loader(L.name,L); R=importlib.util.module_from_spec(S); L.exec_module(R)
+
+class Exp043Fixtures(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.inputs,cls.pins=R.verify_inputs(HERE); cls.data=R.data_sources(HERE); cls._scratch=tempfile.TemporaryDirectory(); cls.grouped,cls.groupdoc=R.groups(pathlib.Path(cls._scratch.name),cls.data); cls.specs=R.expected_specs(HERE,cls.data,cls.grouped)
+
+    @classmethod
+    def tearDownClass(cls): cls._scratch.cleanup()
+
+    def _ready(self,root):
+        root.mkdir()
+        for name in ("protocol.json","facet-contract.json","input-hashes.json","source-pins.json","registration-integrity.json","registration-review.md","replay.py.txt","fixture_tests.py.txt"):
+            shutil.copyfile(HERE/name,root/name)
+        _,groupdoc=R.groups(root,self.data)
+        local={name:R.sha((root/name).read_bytes()) for name in ("replay.py.txt","fixture_tests.py.txt","protocol.json","facet-contract.json","input-hashes.json","source-pins.json","registration-integrity.json")}
+        local["postgroup-qualification.json"]=R.sha((root/"postgroup-qualification.json").read_bytes())
+        qh={"schema":"exp043-qualified-inputs/1","registration_revision":R.REG_REVISION,"source_pins_sha256":R.sha((root/"source-pins.json").read_bytes()),"local_files":local}
+        (root/"qualification-input-hashes.json").write_bytes(R.pretty(qh))
+        with contextlib.redirect_stdout(io.StringIO()): R.prepare(root)
+        return root
+
+    def test_pins_group_counts_65_plan_and_complete_pair_membership(self):
+        self.assertEqual(len(self.pins),22); self.assertEqual(len(self.specs),65)
+        self.assertEqual({k:sum(x["kind"]==k for x in self.specs) for k in ("W0","D","F")},{"W0":18,"D":26,"F":21})
+        self.assertEqual({p:len(c) for p,c in self.grouped.items()},{"q1":32,"q2":33,"q3":30,"q4":35,"q5":30,"q6":31,"q7":32,"q8":30,"q9":38,"cardiac":44,"research":44,"evaluation":44,"constructed80":79})
+        by={s["id"]:s for s in self.specs}
+        for pool in (*R.SOFTWARE,*R.EXTENDED):
+            variants=("main",) if pool in R.SOFTWARE else ("main","repeat","rotated20")
+            for variant in variants:
+                suffix="" if variant=="main" else "-"+variant
+                d,f=by[f"{pool}-d{suffix}"],by[f"{pool}-f{suffix}"]
+                self.assertEqual(d["candidate_ids"],f["candidate_ids"])
+                self.assertEqual(d["task"],f["task"])
+                self.assertEqual(set(d["candidate_ids"]),set(self.grouped[pool][i]["id"] for i in range(len(self.grouped[pool]))))
+                body=R.strict_json(f["body"]); self.assertEqual(set(body["state"]),{"query","candidates","requested_facets"})
+                self.assertEqual(len(body["questions"]),len(d["candidate_ids"])*len(f["facets"]))
+                self.assertTrue(all(q["type"]=="noul" and set(q)=={"type","instructions"} for q in body["questions"].values()))
+                self.assertEqual(f["score_ids"],[])
+        self.assertEqual(len(by["constructed80-f"]["candidate_ids"]),79)
+
+    def test_w0_wire_matches_base_and_facets_fail_closed(self):
+        base=R.BASE.expected_specs(R.EXP042,self.data,self.grouped,R.contracts(self.data)) if hasattr(R,"contracts") else R.BASE.expected_specs(R.EXP042,self.data,self.grouped,R.BASE.validate_contracts(R.EXP042,self.data[5],self.data[6]))
+        old={s["id"]:s for s in base}
+        for spec in self.specs:
+            if spec["kind"]=="W0": self.assertEqual(spec["body"],old[spec["id"]]["body"])
+        with self.assertRaises(ValueError): R.validate_facets([])
+        with self.assertRaises(ValueError): R.validate_facets([{"id":"same","description":"a"},{"id":"same","description":"b"}])
+        with self.assertRaises(ValueError): R.validate_facets([{"id":"Upper","description":"a"}])
+        with self.assertRaises(ValueError): R.validate_facets([{"id":"ok","description":"é"*129}])
+
+    def test_max_fields_80_candidate_fails_before_transport_and_preserves_ids(self):
+        cards=[{"id":"i"+f"{i:079d}","title":"t"*256,"url":"https://x/"+"u"*502,"snippet":"s"*1200} for i in range(80)]
+        facets=[{"id":f"f{i}"+"x"*62,"description":"d"*256} for i in range(4)]
+        body=R.wire(R.candidate_body("F","q"*4096,cards,facets,{})); ids=[c["id"] for c in cards]
+        spec={"kind":"F","candidate_ids":ids,"question_ids":[f"facet-{i:03d}-{j:02d}" for i in range(80) for j in range(4)],"request_bytes":len(body),"state_bytes":len(R.wire(R.strict_json(body)["state"])),"request_cap":R.CAP_DF}
+        for card in cards:
+            self.assertEqual([len(card[k].encode()) for k in ("id","title","url","snippet")],[80,256,512,1200])
+        gate=R.request_eligibility(spec); self.assertFalse(gate["eligible"]); self.assertGreater(spec["state_bytes"],R.CAP_STATE); self.assertEqual(gate["fallback_order_ids"],ids)
+
+    def test_selector_pair_failure_uses_full_w0(self):
+        ids=[f"c{i}" for i in range(12)]; facets=[{"id":"f","description":"facet"}]
+        scores={cid:float(i) for i,cid in enumerate(ids)}; nouls={cid:{0:1.0} for cid in ids}; w0=list(reversed(ids))
+        d={"status":"valid","scores":scores}; f={"status":"invalid","nouls":nouls}
+        out,source=R.combined_order({"candidate_ids":ids,"facets":facets},d,{"candidate_ids":ids,"facets":facets},f,w0)
+        self.assertEqual((out,source),(w0,"w0_pair_fallback"))
+        out,source=R.combined_order({"candidate_ids":ids,"facets":facets},None,{"candidate_ids":ids,"facets":facets},f,w0)
+        self.assertEqual((out,source),(w0,"w0_pair_fallback"))
+
+    def test_full_fake65_receipt_to_analysis_both_refs_and_tamper_binding(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=self._ready(pathlib.Path(td)/"EXP-043")
+            script="""import json,sys\nr=sys.stdin.buffer.read(); b=json.loads(r); a={}\nfor k,q in b['questions'].items(): a[k]={'type':'score','score':4.25} if q['type']=='score' else {'type':'noul','noul':0.0}\nprint(json.dumps({'model':'jev-1.13.0','answers':a,'usage':{'input_tokens':100,'output_tokens':len(a)},'_elapsed_ms':2.0},separators=(',',':')))\n"""
+            argv=root/"transport-argv.json"; argv.write_bytes(R.pretty([sys.executable,"-c",script]))
+            with contextlib.redirect_stdout(io.StringIO()): R.run(root,argv)
+            with contextlib.redirect_stdout(io.StringIO()): report=R.analyze(root)
+            self.assertEqual(report["operational"]["valid_calls"],65)
+            self.assertEqual(report["operational"]["arm_counts"],{"W0":18,"D":26,"F":21})
+            analysis=report["development_analysis"]; self.assertTrue(analysis["membership"]["passed"])
+            self.assertFalse(analysis["development_screen_passed"],"neutral all-equal fixture must not pass quality")
+            self.assertEqual(set(analysis["primary"]),{"A","B"})
+            for ref in ("A","B"): self.assertEqual(set(analysis["primary"][ref]["paired_deltas"]),set(R.PRIMARY))
+            self.assertEqual(set(analysis["membership"]["by_pool"]),set(R.SOFTWARE)|set(R.EXTENDED))
+            for pool in (*R.SOFTWARE,*R.EXTENDED):
+                checks=analysis["membership"]["by_pool"][pool]
+                expected_count=len(self.grouped[pool])
+                self.assertTrue(checks["passed"])
+                expected_arms={"w0","d_star","e"}|({"repeat","rotated"} if pool in R.EXTENDED else set())
+                self.assertEqual(set(checks["arms"]),expected_arms)
+                for arm,check in checks["arms"].items():
+                    self.assertTrue(check["passed"],(pool,arm))
+                    self.assertEqual((check["count"],check["expected_count"]),(expected_count,expected_count))
+                    self.assertEqual((check["duplicates"],check["missing"],check["unexpected"]),([],[],[]))
+            # Tamper raw and structured receipt together with unchanged usage; only the durable finish hash binds the result.
+            recpath=root/"receipts"/"q1-d.json"; blobpath=root/"receipts"/"q1-d.response.bin"; oldrec=recpath.read_bytes(); oldblob=blobpath.read_bytes()
+            rec=R.load_json(recpath); raw=R.strict_json(oldblob); cid=next(iter(raw["answers"])); raw["answers"][cid]["score"]=8.0; altered=json.dumps(raw,separators=(",",":"),ensure_ascii=False).encode(); blobpath.write_bytes(altered)
+            rec["answers"]=raw["answers"]; rec["response_bytes"]=len(altered); rec["response_sha256"]=R.sha(altered); recpath.write_bytes(R.pretty(rec))
+            with self.assertRaises(ValueError): R.run(root,argv)
+            with self.assertRaises(ValueError): R.analyze(root)
+            blobpath.write_bytes(oldblob); recpath.write_bytes(oldrec)
+
+    def test_failed_f_stops_and_records_whole_w0_fallback(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=self._ready(pathlib.Path(td)/"EXP-043"); count=root/"calls.txt"
+            script=f"""import json,sys,pathlib\np=pathlib.Path({str(count)!r}); n=int(p.read_text())+1 if p.exists() else 1; p.write_text(str(n)); raw=sys.stdin.buffer.read(); b=json.loads(raw); qs=b['questions']; a={{}}\nfor i,(k,q) in enumerate(qs.items()):\n if q['type']=='score': a[k]={{'type':'score','score':float((i if n==1 else len(qs)-1-i)%10)}}\n else: a[k]={{'type':'noul','noul':True}}\nprint(json.dumps({{'model':'jev-1.13.0','answers':a,'usage':{{'input_tokens':10,'output_tokens':len(a)}},'_elapsed_ms':1.0}}))\n"""
+            argv=root/"transport-argv.json"; argv.write_bytes(R.pretty([sys.executable,"-c",script]))
+            with contextlib.redirect_stdout(io.StringIO()): R.run(root,argv)
+            self.assertEqual(count.read_text(),"3")
+            w0=R.load_json(root/"receipts"/"q1-w0.json"); fallback=R.load_json(root/"receipts"/"q1-f.json")
+            self.assertEqual(fallback["status"],"invalid"); self.assertEqual(fallback["fallback_source"],"w0")
+            order=R.score_order(next(s for s in self.specs if s["id"]=="q1-w0"),{"scores":R.validate_answer({"model":w0["model"],"answers":w0["answers"],"usage":w0["usage"],"_elapsed_ms":w0["remote_http_ms"]},next(s for s in self.specs if s["id"]=="q1-w0"))[0]})
+            self.assertEqual(fallback["fallback_order_ids"],order)
+            with self.assertRaises(ValueError): R.run(root,argv)
+            self.assertEqual(count.read_text(),"3")
+
+    def _fake_runner(self,root,override=None):
+        calls=[]
+        def transport(argv,body,deadline):
+            obj=R.strict_json(body); answers={k:({'type':'score','score':4.0} if q['type']=='score' else {'type':'noul','noul':0.0}) for k,q in obj['questions'].items()}
+            result={'model':R.MODEL,'answers':answers,'usage':{'input_tokens':100,'output_tokens':len(answers)},'_elapsed_ms':1.0}
+            calls.append(obj)
+            if override: result=override(result,len(calls))
+            return R.wire(result),0,3.0,False,False
+        argv=root/'fake-argv.json'; argv.write_bytes(R.pretty([sys.executable,'-c','raise RuntimeError("must be mocked")']))
+        return calls,transport,argv
+
+    def test_strict_parser_and_typed_80_card_answers(self):
+        cards=[{'id':f'n{i}','title':'title','url':'https://example.org/'+str(i),'snippet':'snippet'} for i in range(80)]
+        fs=[{'id':'visible','description':'visible evidence'}]
+        spec=R._make_candidate_spec('neutral','neutral','F','F','purpose',cards,fs,self.data[6])
+        response={'model':R.MODEL,'answers':{qid:{'type':'noul','noul':0.8} for qid in spec['question_ids']},'usage':{'input_tokens':64000,'output_tokens':80},'_elapsed_ms':1000.0}
+        _,values,errors=R.validate_answer(response,spec); self.assertEqual(errors,[]); self.assertEqual(len(values),80)
+        for value in (True,-0.1,1.1,float('nan'),float('inf'),'0.8'):
+            changed=json.loads(json.dumps(response)); changed['answers'][spec['question_ids'][0]]['noul']=value
+            self.assertTrue(R.validate_answer(changed,spec)[2])
+        for field,value in (('input_tokens',True),('input_tokens',64001),('output_tokens',-1)):
+            changed=json.loads(json.dumps(response)); changed['usage'][field]=value
+            self.assertTrue(R.validate_answer(changed,spec)[2])
+        for blob in (b'{"x":1,"x":2}',b'{"x":NaN}',b'{"x":Infinity}'):
+            with self.assertRaises(ValueError): R.strict_json(blob)
+        changed=dict(response); changed['_elapsed_ms']=1000.01; self.assertTrue(R.validate_answer(changed,spec)[2])
+        changed=dict(response); changed['unregistered']=1; self.assertTrue(R.validate_answer(changed,spec)[2])
+
+    def test_selector_all_low_ties_protection_and_complete_tail(self):
+        ids=[f'c{i}' for i in range(12)]; scores={cid:6.0 for cid in ids}; facets=[{'id':'a','description':'a'},{'id':'b','description':'b'}]
+        low={cid:{0:0.0,1:0.0} for cid in ids}
+        order,inserts=R.BASE.selector(scores,low,facets,ids); self.assertEqual(order,ids); self.assertEqual(inserts,[])
+        high={cid:dict(row) for cid,row in low.items()}; high['c0'][0]=1.0; high['c10'][1]=1.0
+        order,inserts=R.BASE.selector(scores,high,facets,ids)
+        self.assertIn('c0',order[:10]); self.assertIn('c10',order[:10]); self.assertNotIn('c9',order[:10]); self.assertEqual(set(order),set(ids)); self.assertEqual(len(order),12)
+        self.assertEqual(inserts[0]['evicted'],'c9')
+        cards=[{'id':cid,'title':'t','url':'https://example.org/'+cid,'snippet':'s'} for cid in ids]
+        d=R._make_candidate_spec('neutral-d','neutral','D','D','purpose',cards,[],self.data[6]); f=R._make_candidate_spec('neutral-f','neutral','F','F','purpose',cards,facets,self.data[6])
+        order,source=R.combined_order(d,{'status':'valid','scores':scores},f,{'status':'valid','nouls':low},list(reversed(ids)))
+        self.assertEqual(order,ids); self.assertEqual(source,'candidate_pair')
+
+    def test_orphan_uncertain_unknown_history_and_usage_budget_zero_retry(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as td:
+            root=self._ready(pathlib.Path(td)/'EXP-043'); calls,fake,argv=self._fake_runner(root)
+            (root/'receipts').mkdir(); (root/'receipts'/'orphan.json').write_text('{}')
+            with patch.object(R.H,'bounded_process',side_effect=fake), self.assertRaises(ValueError): R.run(root,argv)
+            self.assertEqual(calls,[]); (root/'receipts'/'orphan.json').unlink()
+            with patch.object(R.H,'bounded_process',side_effect=fake),patch.object(R,'MAX_TOTAL_INPUT',200),contextlib.redirect_stdout(io.StringIO()): R.run(root,argv)
+            self.assertEqual(len(calls),0)
+            with patch.object(R.H,'bounded_process',side_effect=fake),self.assertRaises(ValueError): R.run(root,argv)
+            self.assertEqual(len(calls),0)
+            original=(root/'attempts.jsonl').read_bytes(); (root/'attempts.jsonl').write_bytes(original+b'{"event":"unknown"}\n')
+            with self.assertRaises(ValueError): R.read_history(root,R.load_json(root/'prepared-manifest.json'),R.verify(root,True)['reference_hashes'])
+        with tempfile.TemporaryDirectory() as td:
+            root=self._ready(pathlib.Path(td)/'EXP-043'); calls,fake,argv=self._fake_runner(root)
+            def uncertain(*args): raise KeyboardInterrupt('neutral uncertain process')
+            with patch.object(R.H,'bounded_process',side_effect=uncertain),self.assertRaises(KeyboardInterrupt): R.run(root,argv)
+            with patch.object(R.H,'bounded_process',side_effect=fake),self.assertRaises(ValueError): R.run(root,argv)
+            self.assertEqual(calls,[])
+
+    def test_response_overflow_sentinel_is_auditable_and_terminal(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as td:
+            root=self._ready(pathlib.Path(td)/'EXP-043'); calls,fake,argv=self._fake_runner(root)
+            def overflow(*args):
+                calls.append('overflow'); return b'x'*(R.MAX_RESPONSE+1),0,1.0,True,False
+            with patch.object(R.H,'bounded_process',side_effect=overflow),contextlib.redirect_stdout(io.StringIO()): R.run(root,argv)
+            receipt=R.load_json(root/'receipts'/'q1-w0.json')
+            self.assertEqual(receipt['error'],'response_overflow'); self.assertEqual(receipt['response_bytes'],R.MAX_RESPONSE+1)
+            with self.assertRaisesRegex(ValueError,'terminal stop is durable'):
+                R.read_history(root,R.load_json(root/'prepared-manifest.json'),R.verify(root,True)['reference_hashes'])
+            with patch.object(R.H,'bounded_process',side_effect=overflow),self.assertRaises(ValueError): R.run(root,argv)
+            self.assertEqual(len(calls),1)
+
+    def test_actual_aggregate_input_budget_preserves_known_failed_usage(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as td:
+            root=self._ready(pathlib.Path(td)/'EXP-043')
+            calls,fake,argv=self._fake_runner(root,lambda r,n:dict(r,usage={'input_tokens':64000,'output_tokens':1}))
+            with patch.object(R.H,'bounded_process',side_effect=fake),contextlib.redirect_stdout(io.StringIO()): R.run(root,argv)
+            ledger=[R.strict_json(line) for line in (root/'attempts.jsonl').read_bytes().splitlines()]
+            finished=[event for event in ledger if event['event']=='attempt_finished']
+            self.assertEqual(len(calls),47); self.assertEqual(len(finished),47)
+            self.assertEqual(finished[-1]['error'],'actual_input_budget_exceeded')
+            self.assertEqual(finished[-1]['input_tokens'],64000)
+            valid_usage=sum(event['input_tokens'] for event in finished if event['status']=='valid')
+            self.assertEqual(valid_usage,46*64000); self.assertLessEqual(valid_usage,R.MAX_TOTAL_INPUT)
+            with patch.object(R.H,'bounded_process',side_effect=fake),self.assertRaises(ValueError): R.run(root,argv)
+            self.assertEqual(len(calls),47)
+
+    def test_deadline_provider_error_and_usage_rejections_are_terminal(self):
+        from unittest.mock import patch
+        variants=[lambda r,n:dict(r,usage={'input_tokens':100,'output_tokens':160001}),lambda r,n:dict(r,_elapsed_ms=1000.01),lambda r,n:dict(r,usage={'input_tokens':64001,'output_tokens':1}),lambda r,n:{'error':'provider_http','status':400,'_elapsed_ms':1.0,'provider_error_bytes':12,'provider_error_sha256':'0'*64,'provider_error_code':'context_length_exceeded'}]
+        for variant in variants:
+            with self.subTest(variant=variants.index(variant)),tempfile.TemporaryDirectory() as td:
+                root=self._ready(pathlib.Path(td)/'EXP-043'); calls,fake,argv=self._fake_runner(root,variant)
+                with patch.object(R.H,'bounded_process',side_effect=fake),contextlib.redirect_stdout(io.StringIO()): R.run(root,argv)
+                self.assertEqual(len(calls),1)
+                receipt=R.load_json(root/'receipts'/'q1-w0.json'); self.assertEqual(receipt['status'],'invalid'); self.assertEqual(receipt['fallback_source'],'startup_incumbent'); self.assertEqual(receipt['fallback_order_ids'],self.grouped['q1'] and [c['id'] for c in self.grouped['q1']])
+                with patch.object(R.H,'bounded_process',side_effect=fake),self.assertRaises(ValueError): R.run(root,argv)
+                self.assertEqual(len(calls),1)
+        raw,exitcode,wall,overflow,timedout=R.H.bounded_process([sys.executable,'-c','import time;time.sleep(1)'],b'{}',0.05)
+        self.assertTrue(timedout); self.assertFalse(overflow); self.assertLess(wall,1000.0)
+
+if __name__=="__main__": unittest.main(verbosity=2)

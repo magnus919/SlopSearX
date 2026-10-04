@@ -1,0 +1,27 @@
+{
+  "schema": "exp043-root-request-plan-check/1",
+  "stage": "final qualified runner and prepared manifest",
+  "request_count": 65,
+  "pair_count": 21,
+  "arms": {
+    "W0": 18,
+    "D": 26,
+    "F": 21
+  },
+  "max_request_utf8_bytes": 193528,
+  "max_state_utf8_bytes": 38522,
+  "source_integrity_verified": true,
+  "checks": [
+    "All 21 D/F pairs have identical complete ordered card state and purpose.",
+    "D state contains only query and candidates.",
+    "F state contains only query, candidates and requested_facets.",
+    "Every F question is typed Noul with trusted instructions and no Score criteria.",
+    "Every F question count equals the complete card count times facet count."
+  ],
+  "provider_calls": 0,
+  "new_search_calls": 0,
+  "limitation": "These are byte and schema observations; they do not establish provider token fit or quality.",
+  "replay_sha256": "b42facd902471b8ec8821051de53ed006afa726ae9fc7c08694199005c0e6867",
+  "fixture_sha256": "f5a320340a616ea27167cd8b82a01424bdbd398f6be13741c56a0ebfeb241526",
+  "prepared_manifest_sha256": "c6983a1cb01c72e3092325e561fedf704878390ea50b19f99839687de6b58f81"
+}
