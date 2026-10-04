@@ -1,0 +1,54 @@
+{
+  "schema": "exp039-task-contexts/1",
+  "status": "frozen_for_EXP039_development",
+  "source": "EXP-036 saved q1-q9 query topics and facets; wording proposed by the corpus review agent after EXP-038",
+  "limitation": "These are constructed caller-purpose contexts, not recovered user intent, not user-authored tasks, and not fresh search queries. The frozen result cards and keyword queries are unchanged.",
+  "contexts": [
+    {
+      "query_id": "q1",
+      "keyword_query": "multi-agent coding agent collaboration benchmark coordination conflict resolution software engineering",
+      "caller_purpose": "I am preparing a literature review on how software-engineering coding agents collaborate. Help me find benchmarks and studies to read about coordination, asynchronous work, and conflict resolution. Prefer empirical evaluations; do not answer from titles alone."
+    },
+    {
+      "query_id": "q2",
+      "keyword_query": "enterprise AI agent governance human approval audit logging policy controls",
+      "caller_purpose": "I am preparing a review of enterprise AI-agent governance. Help me find primary guidance and studies to read about human approval, audit logging, and policy controls. I want candidate sources, not a conclusion about which controls work."
+    },
+    {
+      "query_id": "q3",
+      "keyword_query": "durable workflow execution replay recovery idempotency external side effects",
+      "caller_purpose": "I am researching durable execution for agent and workflow systems. Help me find technical papers and documentation to read about replay, recovery, idempotency, and external side effects. Prioritize direct material on safe recovery."
+    },
+    {
+      "query_id": "q4",
+      "keyword_query": "SWE-bench evaluation data leakage contamination temporal split benchmark",
+      "caller_purpose": "I am preparing an evaluation brief on SWE-bench contamination and temporal evaluation. Help me find benchmark documentation and studies to read about leakage, decontamination, live evaluation, and time splits."
+    },
+    {
+      "query_id": "q5",
+      "keyword_query": "SLSA provenance verifier threat model verification builder identity attestation",
+      "caller_purpose": "I am reviewing SLSA provenance verification. Help me locate the official verifier/specification documents and analyses to read about the threat model, builder identity, and attestations. Distinguish canonical documents from explanatory sources."
+    },
+    {
+      "query_id": "q6",
+      "keyword_query": "OpenTelemetry semantic conventions AI agents GenAI traces tool calls spans",
+      "caller_purpose": "I am implementing OpenTelemetry tracing for AI-agent tool calls. Help me locate official semantic-convention documentation and technical sources to read about spans and attributes. A source lead is useful, but its title/snippet alone does not establish the convention details."
+    },
+    {
+      "query_id": "q7",
+      "keyword_query": "claim passage evidence support contradiction citation verification benchmark",
+      "caller_purpose": "I am preparing a literature review on systems that verify scientific claims against cited passages. Help me find original methods and benchmarks to read about support, contradiction, citation alignment, and evaluation."
+    },
+    {
+      "query_id": "q8",
+      "keyword_query": "research agent search stopping criteria evidence gaps uncertainty coverage",
+      "caller_purpose": "I am designing search-stopping criteria for research agents. Help me find papers and systematic-review methods to read about stopping, coverage, uncertainty, and evidence gaps. Separate direct methods from general background."
+    },
+    {
+      "query_id": "q9",
+      "keyword_query": "climate change impacts mitigation adaptation research",
+      "caller_purpose": "I am preparing a reading list on climate-change impacts, adaptation, and mitigation research. Help me identify reviews and primary studies to read across all three topics. This is source discovery, not a request for climate advice or a synthesis from snippets."
+    }
+  ],
+  "arm_rule": "A/C use keyword_query; B/D use caller_purpose in the shared state query field. No extra purpose field and no concatenation."
+}
