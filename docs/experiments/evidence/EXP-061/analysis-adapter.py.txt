@@ -1,0 +1,35 @@
+"""Expose the unchanged EXP060 metrics for explicitly exposed arm artifacts.
+
+Only schema/provenance admission and output naming change. No metric, threshold,
+reference, timing, membership or completeness validation is modified.
+"""
+from pathlib import Path
+import copy
+import hashlib
+import types
+
+HERE=Path(__file__).resolve().parent
+SOURCE=HERE.parent / "EXP-060" / "analyze.py.txt"
+SOURCE_SHA="4fc8bfbfe687dc27209d8864e767687d24f7d2115c6482543279f1f32117c067"
+
+def analyzer():
+    raw=SOURCE.read_bytes()
+    if hashlib.sha256(raw).hexdigest()!=SOURCE_SHA:raise ValueError("analysis-source-changed")
+    source=raw.decode()
+    changes={
+        'run.get("schema") != "exp060-run-artifacts/1"':'run.get("schema") != "exp061-arm-artifacts/1"',
+        'run.get("reference_source") != "fresh_exp060" or run.get("historical_labels_reused") is not False':'run.get("reference_source") != "exp060_exposed" or run.get("historical_labels_reused") is not True',
+    }
+    for old,new in changes.items():
+        if source.count(old)!=1:raise ValueError("analysis-adapter-contract")
+        source=source.replace(old,new)
+    module=types.ModuleType("exp061_original_metrics")
+    module.__file__=str(SOURCE)
+    exec(compile(source,str(SOURCE),"exec"),module.__dict__)
+    return module
+
+def analyze_arm(run):
+    result=analyzer().analyze(copy.deepcopy(run))
+    result.update(schema="exp061-arm-analysis/1",evidence_mode="exposed development",adoption_eligible=False,metric_source_sha256=SOURCE_SHA)
+    if result.get("outcome")=="development_confirmation_passed":result["outcome"]="exposed_screen_passed"
+    return result

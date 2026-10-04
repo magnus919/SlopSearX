@@ -1,0 +1,38 @@
+from pathlib import Path
+import importlib.machinery,importlib.util,copy,unittest
+HERE=Path(__file__).resolve().parent
+
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+
+A=load("exp061_analysis_adapter",HERE / "analysis-adapter.py.txt")
+FIX=load("exp061_analysis_fixture",HERE.parent / "EXP-060" / "analysis-tests.py.txt")
+
+class Tests(unittest.TestCase):
+    def test_exposed_provenance_cannot_be_mislabeled_as_fresh(self):
+        run=FIX.fixture()
+        out=A.analyze_arm(run)
+        self.assertFalse(out["adoption_eligible"])
+        self.assertFalse(out["quality_analysis_performed"])
+
+    def test_original_gates_and_metrics_are_identical(self):
+        original=FIX.fixture()
+        baseline=FIX.analysis.analyze(original)
+        exposed=copy.deepcopy(original)
+        exposed.update(schema="exp061-arm-artifacts/1",reference_source="exp060_exposed",historical_labels_reused=True)
+        result=A.analyze_arm(exposed)
+        for key in ("gates","references","coverage","stability","navigation"):
+            self.assertEqual(result[key],baseline[key])
+        self.assertEqual(result["outcome"],"exposed_screen_passed")
+        self.assertFalse(result["adoption_eligible"])
+
+    def test_incomplete_operations_still_fail_closed(self):
+        run=FIX.fixture()
+        run.update(schema="exp061-arm-artifacts/1",reference_source="exp060_exposed",historical_labels_reused=True)
+        run["operations"].pop()
+        result=A.analyze_arm(run)
+        self.assertEqual(result["outcome"],"inconclusive")
+        self.assertFalse(result["adoption_eligible"])
+
+if __name__=="__main__":unittest.main()
