@@ -1,0 +1,5 @@
+# EXP-047 result: incomplete
+
+Both fresh Luna reviewers reported that their single permitted file-read output was truncated and stopped without retry. Neither supplied a complete review; no answerability or preference findings are available. Preserve this as an execution failure rather than a negative assessment of the cards or Jev. Two reviewer invocations, zero Jev calls, zero searches and zero Brave attempts occurred. The preflight byte/word guard did not establish actual tool-delivery fit, as the registration cautioned.
+
+No reviewer substitution, partial-packet grading or protocol repair was performed. A follow-up must preregister a delivery method that preserves complete pool cards while fitting the actual file-output limit, qualify that delivery before reviewer invocation, and retain this failed run. Independent execution auditing remains limited; statements about reviewer behavior are reported observations and self-report. The production selector and GroktoCrawl X integration goal remains open.
