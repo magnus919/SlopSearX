@@ -20,6 +20,8 @@ def verify_method(root,base,registered_commit,registered_sha,qualification_sha):
  commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,stderr=subprocess.DEVNULL).decode().strip()
  raw=base._git(root,registered_commit,METHOD_REL)
  if base.sha(raw)!=registered_sha or raw!=base._git(root,commit,METHOD_REL):raise ValueError('method-pin-mismatch')
+ method_file=root/METHOD_REL
+ if method_file.is_symlink() or not method_file.is_file() or method_file.read_bytes()!=raw:raise ValueError('method-current-bytes-mismatch')
  obj=base.strict(raw)
  if not base.exact(obj,{'schema','files','baseline_validator_sha256','reference_invocations','meaning'}) or obj['schema']!='exp055-registration-integrity/1' or obj['baseline_validator_sha256']!=BASE_SHA or obj['reference_invocations']!=0 or not isinstance(obj['files'],dict) or not obj['files']:raise ValueError('method-registration-invalid')
  own=Path(__file__).resolve().relative_to(root.resolve()).as_posix()
