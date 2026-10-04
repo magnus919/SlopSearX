@@ -1,0 +1,161 @@
+{
+  "schema": "exp055-normal-cli-qualification/1",
+  "status": "passed",
+  "commit": "a5a94f8b922d1f57166891f29c66294d1039fd18",
+  "checks": [
+    "P01-committed-normal-cli",
+    "P02-committed-normal-cli",
+    "P03-committed-normal-cli",
+    "P04-committed-normal-cli",
+    "P05-committed-normal-cli",
+    "P06-committed-normal-cli",
+    "reject-pin---registration-commit",
+    "reject-pin---method-sha256",
+    "reject-pin---qualification-sha256",
+    "reject-pin---registration-commit-shape",
+    "reject-current-tamper-registration-integrity.json",
+    "reject-current-tamper-execution-qualification.json",
+    "reject-current-tamper-output-guard.py.txt",
+    "bounded-pre-final-structural-correction-no-coercion"
+  ],
+  "count": 14,
+  "neutral_records": [
+    {
+      "pool": "P01",
+      "events": [
+        {
+          "event": "ready",
+          "max_drafts": 2
+        },
+        {
+          "event": "draft",
+          "attempt": 1,
+          "valid": true,
+          "errors": [],
+          "sha256": "76ebf22317f09407a258875e62da6ecea7835ded64bdfd5e01db71acaf134257"
+        },
+        {
+          "event": "final",
+          "valid": true,
+          "sha256": "76ebf22317f09407a258875e62da6ecea7835ded64bdfd5e01db71acaf134257",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pool": "P02",
+      "events": [
+        {
+          "event": "ready",
+          "max_drafts": 2
+        },
+        {
+          "event": "draft",
+          "attempt": 1,
+          "valid": true,
+          "errors": [],
+          "sha256": "be97f9fbd9327235fd6247a6385625f63bb13e156df5240b0ffd11677175c377"
+        },
+        {
+          "event": "final",
+          "valid": true,
+          "sha256": "be97f9fbd9327235fd6247a6385625f63bb13e156df5240b0ffd11677175c377",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pool": "P03",
+      "events": [
+        {
+          "event": "ready",
+          "max_drafts": 2
+        },
+        {
+          "event": "draft",
+          "attempt": 1,
+          "valid": true,
+          "errors": [],
+          "sha256": "fe57345bfdda5a4a929c268f4aa5fcb890a4f89ebaad40719797c4dfa1ed5438"
+        },
+        {
+          "event": "final",
+          "valid": true,
+          "sha256": "fe57345bfdda5a4a929c268f4aa5fcb890a4f89ebaad40719797c4dfa1ed5438",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pool": "P04",
+      "events": [
+        {
+          "event": "ready",
+          "max_drafts": 2
+        },
+        {
+          "event": "draft",
+          "attempt": 1,
+          "valid": true,
+          "errors": [],
+          "sha256": "e3b2f83e1a8fef0a39ad3383a0f518fcb02f48c832d69f84f62e42c6dbeddb45"
+        },
+        {
+          "event": "final",
+          "valid": true,
+          "sha256": "e3b2f83e1a8fef0a39ad3383a0f518fcb02f48c832d69f84f62e42c6dbeddb45",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pool": "P05",
+      "events": [
+        {
+          "event": "ready",
+          "max_drafts": 2
+        },
+        {
+          "event": "draft",
+          "attempt": 1,
+          "valid": true,
+          "errors": [],
+          "sha256": "48803db26994d1b87cd2c0ada2743921a3331f1f80ebf60309898dba0e4654ba"
+        },
+        {
+          "event": "final",
+          "valid": true,
+          "sha256": "48803db26994d1b87cd2c0ada2743921a3331f1f80ebf60309898dba0e4654ba",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pool": "P06",
+      "events": [
+        {
+          "event": "ready",
+          "max_drafts": 2
+        },
+        {
+          "event": "draft",
+          "attempt": 1,
+          "valid": true,
+          "errors": [],
+          "sha256": "6c04e3f4532af6731b4dbb579fca029a1cd612340218884029629298ba254288"
+        },
+        {
+          "event": "final",
+          "valid": true,
+          "sha256": "6c04e3f4532af6731b4dbb579fca029a1cd612340218884029629298ba254288",
+          "error": null
+        }
+      ]
+    }
+  ],
+  "method_registration_sha256": "c635fbc0c5e0317487846b8a94d4d8d4eca4f7ae72656704661b7d18ffb32713",
+  "guard_sha256": "fb474c67841fe8b5e3a4a917042071624139be17365158618bfa4f34806c640d",
+  "qualification_sha256": "7d505c9937b345a9e340b55ed170dba67d45fea9fded504db2e9de1b83046570",
+  "reference_invocations": 0,
+  "brave_attempts": 0
+}

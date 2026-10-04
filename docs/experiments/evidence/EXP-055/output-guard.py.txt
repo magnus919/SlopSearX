@@ -1,5 +1,5 @@
 """Offline, two-draft structural guard. No network or filesystem writes."""
-import argparse, hashlib, json, re, subprocess, sys, types
+import argparse, hashlib, json, re, subprocess, sys, termios, types
 from pathlib import Path
 BASE_REL='docs/experiments/evidence/EXP-054/review-validator.py.txt'
 BASE_SHA='a913ba320675a02488f69e657cb75e84d0fbb57917cfbcf1e358cfc6728379c6'
@@ -82,6 +82,11 @@ def main():
   if a.pool not in base.POOL_ORDER or a.reviewer not in (a.pool+'-R1',a.pool+'-R2'):raise ValueError('assigned-unit-invalid')
  except Exception:
   print('{"event":"closed","valid":false,"error":"guard-trust-invalid"}',flush=True);return 2
- events=run_session(sys.stdin.buffer,sys.stdout,lambda raw:validate_bytes(base,raw,a.delivery,a.reviewer,a.pool,root),base.strict)
+ saved=None
+ if sys.stdin.isatty():
+  saved=termios.tcgetattr(sys.stdin.fileno());mode=termios.tcgetattr(sys.stdin.fileno());mode[3]&=~(termios.ICANON|termios.ECHO);mode[6][termios.VMIN]=1;mode[6][termios.VTIME]=0;termios.tcsetattr(sys.stdin.fileno(),termios.TCSANOW,mode)
+ try:events=run_session(sys.stdin.buffer,sys.stdout,lambda raw:validate_bytes(base,raw,a.delivery,a.reviewer,a.pool,root),base.strict)
+ finally:
+  if saved is not None:termios.tcsetattr(sys.stdin.fileno(),termios.TCSANOW,saved)
  return 0 if events[-1]['event']=='final' and events[-1]['valid'] else 2
 if __name__=='__main__':raise SystemExit(main())
