@@ -1,0 +1,9 @@
+# Live development result: original quality screen passed
+
+The one-shot EXP-059 study completed all twenty-one operations with twenty-one Jev attempts, known usage of 726,176 input and 40,986 output tokens, and zero Brave/search attempts. The eighty-card/eighty-four-question neutral request was accepted. Three swaps were admitted; seventeen operations stopped without an admissible swap and four stopped successfully at the inherited remote-budget guard. Exact full-pool membership, all five navigation controls, extended stability, quality/coverage safeguards and resource guards passed.
+
+Under original reference A, E-W0 primary mean gain was +0.215735, with lower 95% bound +0.131130. Under B, mean gain was +0.067716, with lower bound +0.004150. The unchanged original conjunctive development screen passed under both references. Exact full analysis and original owned request/response receipts are retained; labels, thresholds and cases were not changed.
+
+All eight primary-query outputs exactly retained purpose-scored D. The three swaps occurred in the base/repeat/rotated versions of the extended research pool. Primary gains over W0 therefore come from inherited purpose scoring, while this new filter preserved those rankings; this study does not show that its swaps improve primary relevance beyond D. Unlike EXP-058, this run retained the stronger primary rankings; the extended research case supplied the required coverage improvement. Separate live runs do not isolate a causal effect of the extra gate from provider variability.
+
+This is exposed-corpus development evidence. It permits a separately registered untouched confirmation; it does not establish general performance, calibration, unseen source quality, or production readiness. Timing combines historical D/F measurements with fresh candidate HTTP measurements, and is not fresh end-to-end production latency. Runtime integration and review/CI/implementation merges remain outstanding.
