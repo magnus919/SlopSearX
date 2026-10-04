@@ -1,0 +1,7 @@
+# EXP-061 setup-only termination
+
+The registered runner's first live invocation terminated at q1-base W0: the owned HTTP child exited 2 with `owned-http-URLError`, empty stdout and no model response. One dispatch attempt is retained with unknown usage; neither candidate arm was invoked and the remaining twenty operations are explicitly uninvoked. Both arm analyses are inconclusive with quality analysis unavailable and adoption ineligible. This is not a negative ranking result, and no retry occurred.
+
+A separate credential-free resolver check failed inside the restricted executor (gaierror 8), while the same public TypeSafe hostname resolved in the authorized network context. This verifies an executor setup problem; it does not retroactively turn unknown receipt usage into known zero. The original one-shot record and failure remain intact. A subsequent execution requires an explicitly registered corrected invocation and network preflight; do not silently remove its lease or describe a rerun as the initial attempt.
+
+PR #599 merged the reviewed registration and offline qualification at `b5333b82e871735d1359b1a5485a4a9cec00f604`. Nineteen offline tests passed and the owned fixture run completed 21 operations / 127 child receipts. The public setup packet and both inconclusive analyses passed exact-secret and private-pattern scanning across three JSON files and two decoded hexadecimal blocks. No new Brave searches, runtime changes, deployment or production-readiness claim followed.
