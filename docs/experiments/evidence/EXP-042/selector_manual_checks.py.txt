@@ -1,0 +1,39 @@
+"""Root neutral manual selector checks; no provider or search path."""
+import importlib.machinery
+import importlib.util
+import sys
+
+
+def run(selector):
+    ids=[f"t{i:02d}" for i in range(1,11)]
+    def check(name, base_scores, outsiders, probabilities, facet_names, expected):
+        input_ids=ids+list(outsiders)
+        scores=dict(zip(ids,base_scores)) | outsiders
+        facets=[{"id":x,"description":x} for x in facet_names]
+        nouls={i:{j:0.0 for j in range(len(facets))} for i in input_ids}
+        for candidate, values in probabilities.items():
+            for facet, value in values.items(): nouls[candidate][facet_names.index(facet)]=value
+        result, diagnostics=selector(scores,nouls,facets,input_ids)
+        assert result==expected,(name,result,expected)
+        assert len(result)==len(input_ids) and set(result)==set(input_ids),name
+        again,_=selector(scores,nouls,facets,input_ids)
+        assert again==result,name
+        print(name+": passed")
+    check("count-before-score and inclusive boundaries",[9,8.8,8,7,6.9,6.8,6.7,6.6,6.5,6],{"x":5,"y":5.5},{"t01":{"a":.8},"x":{"b":.8,"c":.8},"y":{"b":1}},["a","b","c"],ids[:9]+["x","t10","y"])
+    check("later-original eviction tie",[9,8.8,8,7,6.9,6.8,6.7,6.6,6,6],{"x":5},{"x":{"a":.8}},["a"],ids[:9]+["x","t10"])
+    check("sole representative and reservations protected",[9,8.8,8,7,6.9,6.8,6.7,6.6,6,6],{"x":5,"z":5,"w":5},{"t10":{"a":.8},"x":{"b":.8},"z":{"d":.8},"w":{"c":.8}},["a","b","c","d"],ids[:6]+["t10","x","z","w","t07","t08","t09"])
+    check("no qualifying outsider unchanged",[9,8.8,8,7.8,7.5,7.2,6.9,6.6,6.3,6],{"x":5},{"x":{"a":.79}},["a"],ids+["x"])
+    short=ids[:5]
+    scores={c:float(9-i) for i,c in enumerate(short)}
+    result,_=selector(scores,{c:{0:0.0} for c in short},[{"id":"a","description":"a"}],short)
+    assert result==short
+    result,_=selector({}, {},[{"id":"a","description":"a"}],[])
+    assert result==[]
+    print("min10 and empty: passed")
+
+if __name__=="__main__":
+    loader=importlib.machinery.SourceFileLoader("root_exp042_neutral",sys.argv[1])
+    spec=importlib.util.spec_from_loader(loader.name,loader)
+    module=importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    run(module.selector)

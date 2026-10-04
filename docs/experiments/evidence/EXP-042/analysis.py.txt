@@ -1,0 +1,427 @@
+"""Pure EXP-042 analysis; callbacks are supplied by the pinned replay helper."""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any
+
+PRIMARY = tuple(f"q{i}" for i in range(1, 9))
+Q9 = "q9"
+NATURAL = ("cardiac", "research", "evaluation")
+EXTENDED = (*NATURAL, "constructed80")
+GUARD_POOLS = (*PRIMARY, *NATURAL)
+ARMS = ("w0", "d_star", "e")
+
+
+def _top(order: Sequence[str]) -> list[str]:
+    return list(order[:10])
+
+
+def _grades(rows: Mapping[str, Mapping[str, Any]]) -> dict[str, int]:
+    return {cid: int(row["lead"]) for cid, row in rows.items()}
+
+
+def _useful_ids(order: Sequence[str], rows: Mapping[str, Mapping[str, Any]]) -> set[str]:
+    return {cid for cid in _top(order) if cid in rows and int(rows[cid]["lead"]) >= 2}
+
+
+def _covered_facets(
+    order: Sequence[str], rows: Mapping[str, Mapping[str, Any]], facet_ids: Sequence[str]
+) -> set[str]:
+    allowed = set(facet_ids)
+    return {
+        facet
+        for cid in _top(order)
+        if cid in rows
+        if int(rows[cid]["lead"]) >= 2
+        for facet in rows[cid].get("facets", ())
+        if facet in allowed
+    }
+
+
+def _macro_coverage(
+    orders: Mapping[str, Sequence[str]],
+    refs: Mapping[str, Mapping[str, Mapping[str, Any]]],
+    facets: Mapping[str, Sequence[str]],
+    pools: Sequence[str],
+) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for ref_name, ref_pools in refs.items():
+        per_pool: dict[str, Any] = {}
+        eligible_deltas: dict[str, float] = {}
+        macro_by_arm: dict[str, list[float]] = {arm: [] for arm in ("w0", "d_star", "e")}
+        zero_denominator: list[str] = []
+        opportunity: dict[str, int] = {}
+        missing_orders: list[str] = []
+        for pool in pools:
+            rows = ref_pools.get(pool)
+            if rows is None or pool not in orders:
+                continue
+            missing = [arm for arm in ("w0", "d_star", "e") if arm not in orders[pool]]
+            if missing:
+                missing_orders.append(pool)
+                per_pool[pool] = {"missing_orders": missing, "coverage": None}
+                continue
+            facet_ids = list(facets.get(pool, ()))
+            evaluable = {
+                facet
+                for facet in facet_ids
+                if any(
+                    int(row["lead"]) >= 2 and facet in row.get("facets", ())
+                    for row in rows.values()
+                )
+            }
+            opportunity[pool] = len(evaluable)
+            facet_inventory: dict[str, Any] = {}
+            for facet in facet_ids:
+                tagged_useful = sorted(
+                    cid for cid, row in rows.items()
+                    if int(row["lead"]) >= 2 and facet in row.get("facets", ())
+                )
+                uncertain_tagged = sorted(
+                    cid for cid in tagged_useful if bool(rows[cid].get("uncertain", False))
+                )
+                facet_inventory[facet] = {
+                    "evaluable": facet in evaluable,
+                    "tagged_useful_ids": tagged_useful,
+                    "tagged_useful_count": len(tagged_useful),
+                    "uncertain_tagged_useful_ids": uncertain_tagged,
+                    "uncertain_tagged_useful_count": len(uncertain_tagged),
+                    "covered_ids_at_10": {
+                        arm: sorted(
+                            cid for cid in _top(orders[pool][arm])
+                            if cid in rows and int(rows[cid]["lead"]) >= 2
+                            and facet in rows[cid].get("facets", ())
+                        )
+                        for arm in ("w0", "d_star", "e")
+                    },
+                }
+            if not evaluable:
+                zero_denominator.append(pool)
+                per_pool[pool] = {
+                    "evaluable_facets": [],
+                    "unsupported_facet_ids": sorted(set(facet_ids)),
+                    "facet_opportunity_ceiling": {
+                        "count": 0,
+                        "total": len(facet_ids),
+                        "fraction": 0.0 if facet_ids else None,
+                    },
+                    "facet_inventory": facet_inventory,
+                    "coverage": None,
+                }
+                continue
+            coverage: dict[str, float] = {}
+            covered_ids: dict[str, list[str]] = {}
+            for arm in ("w0", "d_star", "e"):
+                covered = _covered_facets(orders[pool][arm], rows, facet_ids) & evaluable
+                covered_ids[arm] = sorted(covered)
+                coverage[arm] = len(covered) / len(evaluable)
+                macro_by_arm[arm].append(coverage[arm])
+            delta = coverage["e"] - coverage["d_star"]
+            eligible_deltas[pool] = delta
+            per_pool[pool] = {
+                "evaluable_facets": sorted(evaluable),
+                "unsupported_facet_ids": sorted(set(facet_ids) - evaluable),
+                "facet_opportunity_ceiling": {
+                    "count": len(evaluable),
+                    "total": len(facet_ids),
+                    "fraction": len(evaluable) / len(facet_ids) if facet_ids else None,
+                },
+                "facet_inventory": facet_inventory,
+                "covered_facets": covered_ids,
+                "coverage": coverage,
+                "e_minus_d_star": delta,
+            }
+        means = {
+            arm: (sum(values) / len(values) if values else None)
+            for arm, values in macro_by_arm.items()
+        }
+        result[ref_name] = {
+            "per_pool": per_pool,
+            "macro_coverage_at_10": means,
+            "e_minus_d_star": (
+                None
+                if means["e"] is None or means["d_star"] is None
+                else means["e"] - means["d_star"]
+            ),
+            "zero_denominator_pools": zero_denominator,
+            "missing_order_pools": missing_orders,
+            "facet_opportunity_ceiling": opportunity,
+            "eligible_pool_count": len(macro_by_arm["e"]),
+            "strict_improvement_pool_ids": [p for p, d in eligible_deltas.items() if d > 0],
+        }
+    deltas = [v["e_minus_d_star"] for v in result.values()]
+    numeric = [v for v in deltas if v is not None]
+    nondecrease = bool(numeric) and all(v >= 0 for v in numeric)
+    strict_any = any(
+        v["e_minus_d_star"] is not None and v["e_minus_d_star"] > 0
+        for v in result.values()
+    )
+    no_missing_orders = all(not entry["missing_order_pools"] for entry in result.values())
+    return {
+        "by_reference": result,
+        "nondecrease_both_references": nondecrease and len(numeric) == len(refs),
+        "strict_improvement_at_least_one_reference": strict_any,
+        "passed": nondecrease and strict_any and len(numeric) == len(refs) and no_missing_orders,
+    }
+
+
+def _top10_diagnostics(
+    order: Sequence[str], rows: Mapping[str, Mapping[str, Any]]
+) -> dict[str, Any]:
+    ids = [cid for cid in _top(order) if cid in rows]
+    visible = [int(rows[cid]["visible"]) for cid in ids if "visible" in rows[cid]]
+    uncertain_ids = [cid for cid in ids if bool(rows[cid].get("uncertain", False))]
+    uncertain_useful = [cid for cid in uncertain_ids if int(rows[cid]["lead"]) >= 2]
+    return {
+        "useful_ids": sorted(_useful_ids(order, rows)),
+        "useful_count": len(_useful_ids(order, rows)),
+        "uncertain_ids": uncertain_ids,
+        "uncertain_count": len(uncertain_ids),
+        "uncertain_useful_ids": uncertain_useful,
+        "uncertain_useful_count": len(uncertain_useful),
+        "visible_mean_at_10": sum(visible) / len(visible) if visible else None,
+    }
+
+
+def _membership(
+    rankings: Mapping[str, Mapping[str, Sequence[str]]],
+    references: Mapping[str, Mapping[str, Mapping[str, Mapping[str, Any]]]],
+) -> dict[str, Any]:
+    by_pool: dict[str, Any] = {}
+    all_valid = True
+    pools = sorted(set(rankings) | {p for rp in references.values() for p in rp})
+    for pool in pools:
+        orders = rankings.get(pool, {})
+        ref_sets = [set(rp[pool]) for rp in references.values() if pool in rp]
+        reference_sets_match = all(ids == ref_sets[0] for ids in ref_sets[1:]) if ref_sets else True
+        expected = ref_sets[0] if ref_sets else set(orders.get("w0", ()))
+        checks: dict[str, Any] = {}
+        for arm, order in orders.items():
+            ids = list(order)
+            ok = len(ids) == len(expected) and len(set(ids)) == len(ids) and set(ids) == expected
+            duplicate_ids = sorted({cid for cid in ids if ids.count(cid) > 1})
+            checks[arm] = {
+                "passed": ok,
+                "count": len(ids),
+                "expected_count": len(expected),
+                "duplicates": duplicate_ids,
+                "missing": sorted(expected - set(ids)),
+                "unexpected": sorted(set(ids) - expected),
+            }
+            all_valid = all_valid and ok
+        required_missing = [arm for arm in ARMS if arm not in orders]
+        ok = reference_sets_match and not required_missing and all(v["passed"] for v in checks.values())
+        all_valid = all_valid and ok
+        by_pool[pool] = {
+            "passed": ok,
+            "reference_id_sets_match": reference_sets_match,
+            "missing_required_arms": required_missing,
+            "arms": checks,
+        }
+    return {"passed": all_valid, "by_pool": by_pool}
+
+
+def _reviewer_disagreement(
+    refs: Mapping[str, Mapping[str, Mapping[str, Mapping[str, Any]]]], pools: Sequence[str]
+) -> dict[str, Any]:
+    a, b = refs.get("A", {}), refs.get("B", {})
+    result: dict[str, Any] = {}
+    for pool in pools:
+        if pool not in a or pool not in b:
+            continue
+        differences = []
+        for cid in sorted(set(a[pool]) & set(b[pool])):
+            ra, rb = a[pool][cid], b[pool][cid]
+            item = {"id": cid}
+            for field in ("lead", "visible", "facets", "uncertain"):
+                va, vb = ra.get(field), rb.get(field)
+                if field == "facets":
+                    va, vb = sorted(va or ()), sorted(vb or ())
+                if va != vb:
+                    item[field] = {"A": va, "B": vb}
+            if len(item) > 1:
+                differences.append(item)
+        result[pool] = {"count": len(differences), "items": differences}
+    return result
+
+
+def _valid_order(order: Sequence[str], rows: Mapping[str, Mapping[str, Any]]) -> bool:
+    ids = list(order)
+    expected = set(rows)
+    return len(ids) == len(expected) and len(set(ids)) == len(ids) and set(ids) == expected
+
+
+def analyze(
+    rankings: Mapping[str, Mapping[str, Sequence[str]]],
+    references: Mapping[str, Mapping[str, Mapping[str, Mapping[str, Any]]]],
+    facets: Mapping[str, Sequence[str]],
+    ndcg_fn: Callable[[Sequence[str], Mapping[str, int]], float],
+    bootstrap_fn: Callable[..., Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Return JSON-safe EXP-042 screens and diagnostics; never edits labels."""
+    membership = _membership(rankings, references)
+    pools = set(rankings)
+    pool_metrics: dict[str, Any] = {}
+    primary: dict[str, Any] = {}
+    ordinal_noninferiority: dict[str, Any] = {}
+    quality_guard_ok = True
+
+    for ref_name, ref_pools in references.items():
+        per_ref: dict[str, Any] = {}
+        primary_deltas: dict[str, float] = {}
+        ordinal_deltas: dict[str, float] = {}
+        for pool, orders in rankings.items():
+            rows = ref_pools.get(pool)
+            if rows is None:
+                continue
+            grades = _grades(rows)
+            arm_metrics: dict[str, Any] = {}
+            for arm, order in orders.items():
+                valid = _valid_order(order, rows)
+                arm_metrics[arm] = {
+                    "ndcg_at_10": float(ndcg_fn(order, grades)) if valid else None,
+                    **_top10_diagnostics(order, rows),
+                }
+            comparisons: dict[str, Any] = {}
+            for comparator in ("w0", "d_star"):
+                if comparator not in orders or "e" not in orders:
+                    continue
+                comp_useful = _useful_ids(orders[comparator], rows)
+                e_useful = _useful_ids(orders["e"], rows)
+                lost_facets = sorted(
+                    _covered_facets(orders[comparator], rows, facets.get(pool, ()))
+                    - _covered_facets(orders["e"], rows, facets.get(pool, ()))
+                )
+                loss = len(comp_useful) - len(e_useful)
+                e_ndcg = arm_metrics["e"]["ndcg_at_10"]
+                comp_ndcg = arm_metrics[comparator]["ndcg_at_10"]
+                delta = e_ndcg - comp_ndcg if e_ndcg is not None and comp_ndcg is not None else None
+                guard_pool = pool in GUARD_POOLS
+                baseline10_ok = len(comp_useful) < 10 or len(e_useful) >= 9
+                comparison_pass = loss <= 1 and baseline10_ok and not lost_facets
+                if guard_pool:
+                    quality_guard_ok = quality_guard_ok and comparison_pass
+                    if comparator == "d_star" and (delta is None or delta < -0.03):
+                        quality_guard_ok = False
+                comparisons[comparator] = {
+                    "inserted_id_diagnostic_basis": "E top-ten set minus comparator top-ten; selector reservation history is not available here",
+                    "ndcg_delta_e_minus_comparator": delta,
+                    "useful_loss": loss,
+                    "useful_count_comparator": len(comp_useful),
+                    "useful_count_e": len(e_useful),
+                    "baseline10_requires_e_at_least9": len(comp_useful) < 10 or len(e_useful) >= 9,
+                    "lost_useful_ids": sorted(comp_useful - e_useful),
+                    "gained_useful_ids": sorted(e_useful - comp_useful),
+                    "displaced_ids": sorted(set(_top(orders[comparator])) - set(_top(orders["e"]))),
+                    "inserted_ids": sorted(set(_top(orders["e"])) - set(_top(orders[comparator]))),
+                    "nonuseful_insertions": sorted(
+                        cid for cid in set(_top(orders["e"])) - set(_top(orders[comparator]))
+                        if int(rows[cid]["lead"]) < 2
+                    ),
+                    "unsupported_facet_insertions": sorted(
+                        cid for cid in set(_top(orders["e"])) - set(_top(orders[comparator]))
+                        if not _covered_facets([cid], rows, facets.get(pool, ()))
+                    ),
+                    "lost_useful_facets": lost_facets,
+                    "passed": comparison_pass and delta is not None,
+                }
+            if pool in PRIMARY and all(k in arm_metrics for k in ("w0", "e")):
+                e_ndcg, w0_ndcg = arm_metrics["e"]["ndcg_at_10"], arm_metrics["w0"]["ndcg_at_10"]
+                if e_ndcg is not None and w0_ndcg is not None:
+                    primary_deltas[pool] = e_ndcg - w0_ndcg
+                dstar_delta = comparisons.get("d_star", {}).get("ndcg_delta_e_minus_comparator")
+                if dstar_delta is not None:
+                    ordinal_deltas[pool] = dstar_delta
+            per_ref[pool] = {"arms": arm_metrics, "comparisons": comparisons}
+        if ref_name in ("A", "B"):
+            if set(primary_deltas) == set(PRIMARY):
+                boot = dict(bootstrap_fn(primary_deltas, draws=10000, seed=91940))
+                mean_gain = sum(primary_deltas.values()) / len(PRIMARY)
+                primary[ref_name] = {
+                    "paired_deltas": dict(primary_deltas),
+                    "mean_gain": mean_gain,
+                    "bootstrap": boot,
+                    "passed": mean_gain >= 0.03 and float(boot["lower95"]) > 0,
+                }
+            else:
+                primary[ref_name] = {"paired_deltas": dict(primary_deltas), "passed": False, "missing_queries": sorted(set(PRIMARY) - set(primary_deltas))}
+            ordinal_mean = sum(ordinal_deltas.values()) / len(ordinal_deltas) if ordinal_deltas else None
+            ordinal_noninferiority[ref_name] = {
+                "paired_deltas": dict(ordinal_deltas),
+                "mean_e_minus_d_star": ordinal_mean,
+                "minimum_mean": -0.01,
+                "passed": set(ordinal_deltas) == set(PRIMARY) and ordinal_mean is not None and ordinal_mean >= -0.01,
+                "missing_queries": sorted(set(PRIMARY) - set(ordinal_deltas)),
+            }
+        pool_metrics[ref_name] = per_ref
+
+    primary_pass = set(primary) == {"A", "B"} and all(v.get("passed", False) for v in primary.values())
+    ordinal_noninferiority_pass = set(ordinal_noninferiority) == {"A", "B"} and all(
+        v["passed"] for v in ordinal_noninferiority.values()
+    )
+    coverage = _macro_coverage(rankings, references, facets, GUARD_POOLS)
+
+    perpool_ndcg_pass = True
+    for ref_name in references:
+        for pool in GUARD_POOLS:
+            item = pool_metrics.get(ref_name, {}).get(pool, {}).get("comparisons", {}).get("d_star")
+            if item is None or item["ndcg_delta_e_minus_comparator"] is None or item["ndcg_delta_e_minus_comparator"] < -0.03:
+                perpool_ndcg_pass = False
+
+    stability: dict[str, Any] = {}
+    for pool in EXTENDED:
+        orders = rankings.get(pool, {})
+        e = orders.get("e")
+        if e is None:
+            stability[pool] = {"passed": False, "missing": ["e", "repeat", "rotated"]}
+            continue
+        base = set(_top(e))
+        n = min(10, len(e))
+        comparisons = {}
+        for variant in ("repeat", "rotated"):
+            other = orders.get(variant)
+            overlap = (len(base & set(_top(other))) / n) if other is not None and n else (1.0 if other is not None else None)
+            comparisons[variant] = {"overlap": overlap, "passed": overlap is not None and overlap >= 0.8}
+        stability[pool] = {"comparisons": comparisons, "passed": all(v["passed"] for v in comparisons.values())}
+    stability_pass = all(stability.get(pool, {}).get("passed", False) for pool in EXTENDED)
+
+    extended_diagnostic: dict[str, Any] = {}
+    for pool in EXTENDED:
+        if not all(arm in rankings.get(pool, {}) for arm in ("d", "e")):
+            extended_diagnostic[pool] = {"available": False}
+            continue
+        extended_diagnostic[pool] = {"available": True, "by_reference": {}}
+        for ref_name, ref_pools in references.items():
+            if pool not in ref_pools:
+                continue
+            grades = _grades(ref_pools[pool])
+            if not all(_valid_order(rankings[pool][arm], ref_pools[pool]) for arm in ("d", "e")):
+                extended_diagnostic[pool]["by_reference"][ref_name] = {"valid": False}
+                continue
+            dscore = float(ndcg_fn(rankings[pool]["d"], grades))
+            escore = float(ndcg_fn(rankings[pool]["e"], grades))
+            extended_diagnostic[pool]["by_reference"][ref_name] = {"d_ndcg_at_10": dscore, "e_ndcg_at_10": escore, "e_minus_d": escore - dscore}
+
+    diagnostics = {
+        "per_reference_pool_metrics": pool_metrics,
+        "reviewer_disagreement": _reviewer_disagreement(references, (*PRIMARY, Q9, *NATURAL)),
+        "coverage": coverage,
+        "extended_diagnostic": extended_diagnostic,
+        "q9": {r: pool_metrics.get(r, {}).get(Q9) for r in references},
+        "stability": stability,
+    }
+    coverage_guard_pass = coverage["passed"]
+    all_gates = membership["passed"] and primary_pass and ordinal_noninferiority_pass and quality_guard_ok and perpool_ndcg_pass and coverage_guard_pass and stability_pass
+    return {
+        "schema": "exp042-analysis/1",
+        "membership": membership,
+        "primary": primary,
+        "ordinal_noninferiority": ordinal_noninferiority,
+        "ordinal_noninferiority_passed": ordinal_noninferiority_pass,
+        "quality_guards_passed": ordinal_noninferiority_pass and quality_guard_ok and perpool_ndcg_pass,
+        "coverage_guard_passed": coverage_guard_pass,
+        "stability_passed": stability_pass,
+        "development_screen_passed": all_gates,
+        "diagnostics": diagnostics,
+    }
