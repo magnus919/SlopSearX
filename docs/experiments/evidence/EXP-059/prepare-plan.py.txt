@@ -1,0 +1,55 @@
+"""Freeze first-round requests and branch-generator identities without calls."""
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+
+HERE=Path(__file__).resolve().parent
+
+def load(name,file):
+    l=importlib.machinery.SourceFileLoader(name,str(HERE/file));s=importlib.util.spec_from_loader(name,l)
+    m=importlib.util.module_from_spec(s);l.exec_module(m);return m
+
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+
+def neutral_request():
+    policy=load('planpolicy','policy.py.txt')
+    ids=[f'n{i}' for i in range(80)]
+    cards=[{'id':x,'title':'Synthetic public neutral card '+x,'url':'https://fixture.invalid/'+x,'snippet':'Synthetic visible text. '*30} for x in ids]
+    scores={x:9-i/10 if i<10 else 6 for i,x in enumerate(ids)}
+    facets=[{'id':f'f{i}','description':f'Synthetic facet {i}'} for i in range(4)]
+    nouls={x:{j:.9 if x==f'n{10+j}' else .1 for j in range(4)} for x in ids}
+    request,batch=policy.build_round(cards,'Find distinct useful synthetic reading leads',facets,scores,nouls,ids[:10],[],[],1)
+    if len(request['state']['candidates'])!=80 or len(request['questions'])!=84:raise ValueError('neutral-shape')
+    return request,batch
+
+def prepare():
+    replay=load('planreplay','replay.py.txt');policy=load('planpolicy','policy.py.txt');coordinator=load('plancoordinator','orchestrator.py.txt')
+    baseline,chain,data,grouped,specs,reg=replay.load_verified_baseline()
+    inventory=replay.prepare_inventory();specmap={x['id']:x for x in specs};rows=[]
+    for item in inventory['operations']:
+        d=specmap[item['d_request_id']];f=specmap[item['f_request_id']]
+        cardsmap={x['id']:x for x in grouped[item['pool']]}
+        ids=d['candidate_ids'];scores=chain['receipts'][d['id']]['scores'];nouls=chain['receipts'][f['id']]['nouls']
+        selected=policy.stable_order(scores,ids)[:min(10,len(ids))]
+        request,batch=policy.build_round([cardsmap[x] for x in ids],d['task'],f['facets'],scores,nouls,selected,[],[],1)
+        body=coordinator.wire(request)
+        rows.append({'operation_id':d['id'],'candidate_ids':ids,'selected_ids':selected,
+            'historical_d_f_remote_ms':chain['receipts'][d['id']]['remote_http_ms']+chain['receipts'][f['id']]['remote_http_ms'],
+            'round1_body_sha256':sha(body),'round1_body_bytes':len(body),'round1_state_bytes':len(coordinator.wire(request['state'])),
+            'round1_question_ids':batch['question_ids'],'round1_bindings_sha256':sha(coordinator.wire(batch['bindings'])),
+            'maximum_rounds':4})
+    neutral,batch=neutral_request();body=coordinator.wire(neutral)
+    source_files=['policy.py.txt','replay.py.txt','orchestrator.py.txt','transport.py.txt','http-wrapper.py.txt','prepare-plan.py.txt','normal-runner.py.txt']
+    return {'schema':'exp059-complete-operation-plan/1','registration_sha256':reg,
+        'operations':rows,'neutral':{'body_sha256':sha(body),'body_bytes':len(body),'state_bytes':len(coordinator.wire(neutral['state'])),'candidates':80,'questions':84,'binding_sha256':sha(coordinator.wire(batch['bindings']))},
+        'generator_hashes':{x:sha((HERE/x).read_bytes()) for x in source_files},
+        'cost_estimate':{'maximum_calls':85,'maximum_case_calls':84,'maximum_neutral_calls':1,'per_call_observed_input_cap':64000,
+            'unconstrained_worst_case_input_tokens':85*64000,'study_input_budget':3000000,'study_output_budget':100000,
+            'exact_token_counter_available':False,'output_limit_semantics':'observed fail-and-stop; no provider-side output cap documented; any overrun rejects the entire study','meaning':'Worst-case theoretical usage exceeds budget; per-call reservation guards the three-million input-token budget; output uses observed fail-and-stop semantics. Byte counts are not token counts. No guaranteed token-fit or complete-study-cost claim.'},
+        'deadlines':{'owned_child_seconds':1,'owned_operation_seconds':60,'study_seconds':14400,'historical_d_f_plus_new_remote_ms':2000},
+        'later_rounds':'Exact request bytes depend on prior validated swaps. The frozen generator, protected/evicted state and pair bindings determine every continuation; record each body before invocation.',
+        'new_jev_calls':0,'brave_attempts':0}
+
+if __name__=='__main__':print(json.dumps(prepare(),indent=2,sort_keys=True))

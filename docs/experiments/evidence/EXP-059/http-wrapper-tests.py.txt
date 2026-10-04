@@ -1,0 +1,93 @@
+"""Exact HTTP contract with fake response streams, never network requests."""
+import importlib.machinery
+import importlib.util
+import io
+import json
+import time
+from pathlib import Path
+import unittest
+
+p = Path(__file__).with_name('http-wrapper.py.txt')
+l = importlib.machinery.SourceFileLoader('httpowned', str(p))
+s = importlib.util.spec_from_loader(l.name, l)
+m = importlib.util.module_from_spec(s)
+l.exec_module(m)
+
+class Opener:
+    def __init__(self, raw, status=200): self.raw, self.status, self.calls = raw, status, []
+    def open(self, request, timeout):
+        self.calls.append((request, timeout))
+        response = io.BytesIO(self.raw)
+        response.status = self.status
+        return response
+
+BODY = json.dumps({'model': 'jev-1.13.0', 'state': {}, 'questions': {'q': {'type': 'noul', 'instructions': 'Is this useful?', 'criteria': {'true': 'yes', 'false': 'no'}}}}, indent=2).encode()
+
+class Tests(unittest.TestCase):
+    def test_exact_body_response_and_fixed_destination(self):
+        raw = b'{"unmodified": 0.5001}\n'
+        opener = Opener(raw)
+        body = BODY + b'\n'
+        self.assertEqual(m.exchange(body, 'fixture-token', opener), raw)
+        req, timeout = opener.calls[0]
+        self.assertEqual(req.full_url, m.ENDPOINT)
+        self.assertEqual(req.data, body)
+        self.assertEqual(req.method, 'POST')
+        self.assertEqual(timeout, 1)
+        self.assertEqual(req.get_header('Authorization'), 'Bearer fixture-token')
+    def test_84_questions_accepted_and_85_rejected_before_call(self):
+        data = json.loads(BODY)
+        question = data['questions']['q']
+        data['questions'] = {str(i): dict(question) for i in range(84)}
+        opener = Opener(b'{}')
+        self.assertEqual(m.exchange(json.dumps(data).encode(), 'fixture', opener), b'{}')
+        self.assertEqual(len(opener.calls), 1)
+        data['questions']['84'] = dict(question)
+        rejected = Opener(b'{}')
+        with self.assertRaises(ValueError): m.exchange(json.dumps(data).encode(), 'fixture', rejected)
+        self.assertEqual(rejected.calls, [])
+    def test_singular_instruction_rejected_before_call(self):
+        data = json.loads(BODY)
+        question = data['questions']['q']
+        question['instruction'] = question.pop('instructions')
+        opener = Opener(b'{}')
+        with self.assertRaises(ValueError): m.exchange(json.dumps(data).encode(), 'fixture', opener)
+        self.assertEqual(opener.calls, [])
+    def test_error_body_is_preserved_without_retry(self):
+        raw=b'{"error":"unavailable"}'
+        opener=Opener(raw,503)
+        with self.assertRaises(m.HTTPFailure) as caught:m.exchange(BODY,'fixture-token',opener)
+        self.assertEqual(caught.exception.raw,raw)
+        self.assertEqual(caught.exception.status,503)
+        self.assertEqual(len(opener.calls),1)
+    def test_credential_echo_is_never_returned(self):
+        with self.assertRaises(ValueError) as caught:m.exchange(BODY,'fixture-secret',Opener(b'fixture-secret',503))
+        self.assertNotIsInstance(caught.exception,m.HTTPFailure)
+        self.assertEqual(str(caught.exception),'credential-echo-suppressed')
+    def test_status_failure_never_retries(self):
+        opener = Opener(b'error', 503)
+        with self.assertRaises(ValueError): m.exchange(BODY, 'fixture', opener)
+        self.assertEqual(len(opener.calls), 1)
+    def test_exact_response_cap_and_one_more(self):
+        self.assertEqual(len(m.exchange(BODY, 'fixture', Opener(b'x'*2000000))), 2000000)
+        with self.assertRaises(ValueError): m.exchange(BODY, 'fixture', Opener(b'x'*2000001))
+    def test_request_overflow_prevents_call(self):
+        opener = Opener(b'{}')
+        with self.assertRaises(ValueError): m.exchange(b'x'*384001, 'fixture', opener)
+        self.assertEqual(opener.calls, [])
+    def test_blocking_stream_is_interrupted_by_hard_remote_timer(self):
+        class SlowResponse(io.BytesIO):
+            status = 200
+            def read(self, n): time.sleep(3); return b''
+        class SlowOpener:
+            def open(self, request, timeout): return SlowResponse(b'')
+        started = time.monotonic()
+        with self.assertRaises(TimeoutError): m.exchange(BODY,'fixture',SlowOpener())
+        self.assertLess(time.monotonic()-started,2)
+    def test_remote_clock_deadline(self):
+        ticks = iter([0, 1])
+        with self.assertRaises(TimeoutError): m.exchange(BODY, 'fixture', Opener(b'{}'), clock=lambda: next(ticks))
+    def test_redirect_handler_does_not_forward_auth(self):
+        self.assertIsNone(m.NoRedirect().redirect_request(None, None, 302, '', {}, 'https://fixture.invalid/'))
+
+if __name__ == '__main__': unittest.main()

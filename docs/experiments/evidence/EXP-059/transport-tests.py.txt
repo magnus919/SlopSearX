@@ -1,0 +1,55 @@
+"""Real owned-child lifecycle tests, using no network or provider."""
+import importlib.machinery
+import importlib.util
+from pathlib import Path
+import sys
+import unittest
+
+p = Path(__file__).with_name('transport.py.txt')
+l = importlib.machinery.SourceFileLoader('ownedtransport', str(p))
+s = importlib.util.spec_from_loader(l.name, l)
+m = importlib.util.module_from_spec(s)
+l.exec_module(m)
+
+class Tests(unittest.TestCase):
+    def test_exact_stdin_stdout(self):
+        t = m.ChildTransport([sys.executable, '-c', 'import sys;sys.stdout.buffer.write(sys.stdin.buffer.read())'])
+        raw = b'{ "unchanged": 0.5001 }\n'
+        output, elapsed = t(raw, timeout_s=1)
+        self.assertEqual(output, raw)
+        self.assertEqual(t.receipts[0]['request'], raw)
+        self.assertEqual(t.receipts[0]['stdout'], raw)
+        self.assertEqual(t.receipts[0]['exit_code'], 0)
+        self.assertGreaterEqual(elapsed, 0)
+    def test_hard_timeout_and_receipt(self):
+        t = m.ChildTransport([sys.executable, '-c', 'import time;time.sleep(10)'])
+        with self.assertRaises(TimeoutError): t(b'{}', timeout_s=.05)
+        self.assertTrue(t.receipts[0]['timed_out'])
+        self.assertIsNotNone(t.receipts[0]['exit_code'])
+        self.assertEqual(t.receipts[0]['status'], 'timeout')
+    def test_stdout_overflow_is_bounded_terminal_prefix(self):
+        t = m.ChildTransport([sys.executable, '-c', 'import sys;sys.stdout.buffer.write(b"x"*2100000)'])
+        with self.assertRaises(ValueError): t(b'{}', timeout_s=1)
+        r = t.receipts[0]
+        self.assertEqual(len(r['stdout']), 2000001)
+        self.assertFalse(r['stdout_complete'])
+        self.assertEqual(r['status'], 'stdout-overflow')
+        self.assertIsNotNone(r['exit_code'])
+    def test_stderr_overflow_is_bounded(self):
+        t = m.ChildTransport([sys.executable, '-c', 'import sys;sys.stderr.buffer.write(b"x"*65000)'])
+        with self.assertRaises(ValueError): t(b'{}', timeout_s=1)
+        self.assertEqual(len(t.receipts[0]['stderr']), 64001)
+        self.assertFalse(t.receipts[0]['stderr_complete'])
+    def test_full_request_does_not_deadlock_with_early_child_output(self):
+        t = m.ChildTransport([sys.executable, '-c', 'import sys;sys.stdout.buffer.write(b"x"*100000);sys.stdout.flush();sys.stdin.buffer.read()'])
+        out, _ = t(b' ' * 384000, timeout_s=1)
+        self.assertEqual(out, b'x' * 100000)
+        self.assertTrue(t.receipts[0]['stdout_complete'])
+    def test_failed_child_preserves_output(self):
+        t = m.ChildTransport([sys.executable, '-c', 'import sys;sys.stdout.write("bad");sys.stderr.write("reason");sys.exit(2)'])
+        with self.assertRaises(ValueError): t(b'{}', timeout_s=1)
+        self.assertEqual(t.receipts[0]['stdout'], b'bad')
+        self.assertEqual(t.receipts[0]['stderr'], b'reason')
+        self.assertEqual(t.receipts[0]['exit_code'], 2)
+
+if __name__ == '__main__': unittest.main()
