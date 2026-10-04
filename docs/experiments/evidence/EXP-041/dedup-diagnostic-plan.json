@@ -1,0 +1,17 @@
+{
+  "schema": "exp041-exposed-diagnostic-plan/1",
+  "source_revision": "af8c16bde44698ba7341d65958a7e23104cf26ef",
+  "pools": [
+    "cardiac",
+    "research",
+    "evaluation"
+  ],
+  "identity_method": "current group_publications on one declared synthetic feed with original URL/title/snippet only, keyword query unchanged; no fabricated publication metadata",
+  "representative": "existing production grouping policy, source order/version rules; never choose grade-max or score-max",
+  "ranking_method": "filter each recorded W0 and D complete ranking to deterministic representative IDs, retaining relative order; no new provider scoring",
+  "references": "unchanged sealed EXP040 A/B with original representative row, no grade aggregation",
+  "claim_limit": "exposed diagnosis only; synthetic feed cannot reconstruct unavailable engine attribution/payload or exact shared-service output; changed Jev state has not been evaluated",
+  "goal": "check all existing per-reference useful-source facets and top10; do not rescue EXP040",
+  "provider_calls": 0,
+  "brave_attempts": 0
+}

@@ -23,3 +23,7 @@ Pending. Registration commit will be recorded in a subsequent append-only entry.
 ### Functional qualification
 
 Registration commit: `9f737149eae71128fb76abcff2d2be69851bc55a`, merged in #528. The final fixed fixture fails 14 cases on the old module and passes all 55 grouping cases on the candidate. Full suite: 2,333 passed, 57 skipped, 85.41% coverage. Functional outcome supported; runtime PR, required CI and review pending. See [readout](evidence/EXP-041/readout.md) and [qualification](evidence/EXP-041/qualification.json). No provider calls or deployment.
+
+### Delivered
+
+Implementation [#529](https://github.com/magnus919/SlopSearX/pull/529) merged at `80029eb1b85a12a5d407075bf9ce091d0fa33ba0` after all applicable CI and substantive review. Issue #527 is closed. No deployment occurred. The preserved identity-only ranking diagnostic still shows the research grounding gap, supporting a separate prospective coverage experiment rather than revising EXP-040.
