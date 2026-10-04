@@ -24,4 +24,12 @@
 
 ## Readout (append after execution)
 
-Pending.
+Registration commit: `e6524b7`.
+
+- Outcome: supported for the registered deterministic engineering qualification. The final candidate passes all registered local fixtures and repository checks. This does not establish provider prevalence, quality uplift, or production peak-memory behavior.
+- Baseline reproduction: a detached checkout of `bc03032322d3f801454eb2f8119f705e9e1fd2cb` plus the candidate synthetic test fixtures yielded 5 failing selected test functions (43 deselected), reproducing oversized direct fields reaching transport, permissive acceptance of duplicate/non-finite JSON, and acceptance of streamed, gzip-decoded, and announced oversized responses. The independent readout explains the fixture-specific outcomes.
+- Candidate checks: `tests/test_rerank.py` 48 passed; formatter/server contract tests 114 passed; full pytest 2,312 passed, 57 skipped, 7 warnings, and 85.41% coverage; `pre-commit run --all-files` passed.
+- Operational change: the provider response reader rejects more than 2,000,000 accumulated decoded bytes, strict JSON rejects duplicate keys and non-finite values including exponent overflow, direct text over existing byte bounds is rejected, and cache identity moved to v2. Model, rubric, candidate cap, tie policy, deadline, semaphore, and no-retry policy did not change.
+- Historical evidence bytes are preserved. The trailing-whitespace and end-of-file mutation hooks exclude only raw evidence `.json`/`.txt` files and `docs/experiments/evidence/EXP-003/reproduce.md`; JSON syntax and the remaining checks still run.
+- No external provider calls, live searches, or fetched pages were used. Graphify had no checked-in `graphify-out/graph.json` at implementation time; the parent performed the required AST-only graph update separately.
+- Detailed fixture inventory, exact local commands, results, and the application-level memory limitation are in `evidence/EXP-037/qualification.md`.
