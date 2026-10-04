@@ -1,0 +1,6181 @@
+{
+  "schema": "exp040-analysis/1",
+  "status": "complete",
+  "decision": "not_supported_for_selection",
+  "scope": "exposed development pools and constructed stress fixture; no fresh confirmation, production adoption, or cross-domain guarantee",
+  "primary": {
+    "comparison": "complete-purpose candidate minus current W0 first40",
+    "axis": "reading_lead",
+    "query_units": [
+      "q1",
+      "q2",
+      "q3",
+      "q4",
+      "q5",
+      "q6",
+      "q7",
+      "q8"
+    ],
+    "references_independent": {
+      "A": {
+        "mean": 0.21484312412923218,
+        "lower95": 0.12831601000091147,
+        "upper95": 0.3133124388614705,
+        "draws": 10000,
+        "seed": 91940,
+        "query_units": 8
+      },
+      "B": {
+        "mean": 0.08114602679431479,
+        "lower95": 0.007095338126328454,
+        "upper95": 0.14422338583670738,
+        "draws": 10000,
+        "seed": 91940,
+        "query_units": 8
+      }
+    },
+    "minimum_mean": 0.03,
+    "required_lower95": ">0",
+    "bootstrap_draws": 10000,
+    "bootstrap_seed": 91940,
+    "passes_statistical_gate": true,
+    "useful_and_facet_guards_by_reviewer_query": {
+      "A": {
+        "q1": {
+          "baseline_useful_count": 9,
+          "candidate_useful_count": 10,
+          "useful_count_loss": -1,
+          "baseline_named_useful_facets": [
+            "asynchronous_work",
+            "benchmarks",
+            "conflict_resolution",
+            "coordination"
+          ],
+          "candidate_named_useful_facets": [
+            "asynchronous_work",
+            "benchmarks",
+            "conflict_resolution",
+            "coordination"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c5"
+          ],
+          "candidate_useful_gain_ids": [
+            "c21",
+            "c3"
+          ],
+          "passes": true
+        },
+        "q2": {
+          "baseline_useful_count": 6,
+          "candidate_useful_count": 8,
+          "useful_count_loss": -2,
+          "baseline_named_useful_facets": [
+            "audit_logging",
+            "human_approval",
+            "policy_controls"
+          ],
+          "candidate_named_useful_facets": [
+            "audit_logging",
+            "human_approval",
+            "policy_controls"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c14",
+            "c15",
+            "c2"
+          ],
+          "candidate_useful_gain_ids": [
+            "c24",
+            "c25",
+            "c26",
+            "c27",
+            "c29"
+          ],
+          "passes": true
+        },
+        "q3": {
+          "baseline_useful_count": 10,
+          "candidate_useful_count": 10,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "external_side_effects",
+            "idempotency",
+            "recovery",
+            "replay"
+          ],
+          "candidate_named_useful_facets": [
+            "external_side_effects",
+            "idempotency",
+            "recovery",
+            "replay"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c11",
+            "c12",
+            "c17",
+            "c6",
+            "c7"
+          ],
+          "candidate_useful_gain_ids": [
+            "c0",
+            "c18",
+            "c25",
+            "c28",
+            "c29"
+          ],
+          "passes": true
+        },
+        "q4": {
+          "baseline_useful_count": 7,
+          "candidate_useful_count": 9,
+          "useful_count_loss": -2,
+          "baseline_named_useful_facets": [
+            "decontamination",
+            "leakage",
+            "live_evaluation",
+            "time_splits"
+          ],
+          "candidate_named_useful_facets": [
+            "decontamination",
+            "leakage",
+            "live_evaluation",
+            "time_splits"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [],
+          "candidate_useful_gain_ids": [
+            "c30",
+            "c8"
+          ],
+          "passes": true
+        },
+        "q5": {
+          "baseline_useful_count": 6,
+          "candidate_useful_count": 8,
+          "useful_count_loss": -2,
+          "baseline_named_useful_facets": [
+            "attestations",
+            "builder_identity",
+            "threat_model",
+            "verifier_specification"
+          ],
+          "candidate_named_useful_facets": [
+            "attestations",
+            "builder_identity",
+            "threat_model",
+            "verifier_specification"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [],
+          "candidate_useful_gain_ids": [
+            "c3",
+            "c5"
+          ],
+          "passes": true
+        },
+        "q6": {
+          "baseline_useful_count": 2,
+          "candidate_useful_count": 3,
+          "useful_count_loss": -1,
+          "baseline_named_useful_facets": [
+            "semantic_conventions",
+            "spans",
+            "tool_calls"
+          ],
+          "candidate_named_useful_facets": [
+            "attributes",
+            "semantic_conventions",
+            "spans",
+            "tool_calls"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c1"
+          ],
+          "candidate_useful_gain_ids": [
+            "c6",
+            "c7"
+          ],
+          "passes": true
+        },
+        "q7": {
+          "baseline_useful_count": 10,
+          "candidate_useful_count": 10,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "citation_alignment",
+            "contradiction",
+            "evaluation",
+            "support"
+          ],
+          "candidate_named_useful_facets": [
+            "citation_alignment",
+            "contradiction",
+            "evaluation",
+            "support"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c16",
+            "c18",
+            "c21",
+            "c26"
+          ],
+          "candidate_useful_gain_ids": [
+            "c14",
+            "c23",
+            "c28",
+            "c31"
+          ],
+          "passes": true
+        },
+        "q8": {
+          "baseline_useful_count": 9,
+          "candidate_useful_count": 10,
+          "useful_count_loss": -1,
+          "baseline_named_useful_facets": [
+            "coverage",
+            "evidence_gaps",
+            "stopping",
+            "uncertainty"
+          ],
+          "candidate_named_useful_facets": [
+            "coverage",
+            "evidence_gaps",
+            "stopping",
+            "uncertainty"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c12"
+          ],
+          "candidate_useful_gain_ids": [
+            "c16",
+            "c29"
+          ],
+          "passes": true
+        }
+      },
+      "B": {
+        "q1": {
+          "baseline_useful_count": 10,
+          "candidate_useful_count": 10,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "asynchronous_work",
+            "benchmarks",
+            "conflict_resolution",
+            "coordination"
+          ],
+          "candidate_named_useful_facets": [
+            "asynchronous_work",
+            "benchmarks",
+            "conflict_resolution",
+            "coordination"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c5",
+            "c9"
+          ],
+          "candidate_useful_gain_ids": [
+            "c21",
+            "c3"
+          ],
+          "passes": true
+        },
+        "q2": {
+          "baseline_useful_count": 10,
+          "candidate_useful_count": 10,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "audit_logging",
+            "human_approval",
+            "policy_controls"
+          ],
+          "candidate_named_useful_facets": [
+            "audit_logging",
+            "human_approval",
+            "policy_controls"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c0",
+            "c10",
+            "c14",
+            "c15",
+            "c2",
+            "c3"
+          ],
+          "candidate_useful_gain_ids": [
+            "c24",
+            "c25",
+            "c26",
+            "c27",
+            "c29",
+            "c7"
+          ],
+          "passes": true
+        },
+        "q3": {
+          "baseline_useful_count": 10,
+          "candidate_useful_count": 10,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "external_side_effects",
+            "idempotency",
+            "recovery",
+            "replay"
+          ],
+          "candidate_named_useful_facets": [
+            "external_side_effects",
+            "idempotency",
+            "recovery",
+            "replay"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c11",
+            "c12",
+            "c17",
+            "c6",
+            "c7"
+          ],
+          "candidate_useful_gain_ids": [
+            "c0",
+            "c18",
+            "c25",
+            "c28",
+            "c29"
+          ],
+          "passes": true
+        },
+        "q4": {
+          "baseline_useful_count": 9,
+          "candidate_useful_count": 9,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "decontamination",
+            "leakage",
+            "live_evaluation",
+            "time_splits"
+          ],
+          "candidate_named_useful_facets": [
+            "decontamination",
+            "leakage",
+            "live_evaluation",
+            "time_splits"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c18",
+            "c7"
+          ],
+          "candidate_useful_gain_ids": [
+            "c30",
+            "c8"
+          ],
+          "passes": true
+        },
+        "q5": {
+          "baseline_useful_count": 9,
+          "candidate_useful_count": 9,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "attestations",
+            "builder_identity",
+            "threat_model",
+            "verifier_specification"
+          ],
+          "candidate_named_useful_facets": [
+            "attestations",
+            "builder_identity",
+            "threat_model",
+            "verifier_specification"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c10",
+            "c14"
+          ],
+          "candidate_useful_gain_ids": [
+            "c3",
+            "c5"
+          ],
+          "passes": true
+        },
+        "q6": {
+          "baseline_useful_count": 10,
+          "candidate_useful_count": 10,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "attributes",
+            "semantic_conventions",
+            "spans",
+            "tool_calls"
+          ],
+          "candidate_named_useful_facets": [
+            "attributes",
+            "semantic_conventions",
+            "spans",
+            "tool_calls"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c1",
+            "c13",
+            "c15",
+            "c4"
+          ],
+          "candidate_useful_gain_ids": [
+            "c17",
+            "c6",
+            "c7",
+            "c8"
+          ],
+          "passes": true
+        },
+        "q7": {
+          "baseline_useful_count": 9,
+          "candidate_useful_count": 9,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "citation_alignment",
+            "contradiction",
+            "evaluation",
+            "support"
+          ],
+          "candidate_named_useful_facets": [
+            "citation_alignment",
+            "contradiction",
+            "evaluation",
+            "support"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c16",
+            "c18",
+            "c21"
+          ],
+          "candidate_useful_gain_ids": [
+            "c14",
+            "c28",
+            "c31"
+          ],
+          "passes": true
+        },
+        "q8": {
+          "baseline_useful_count": 8,
+          "candidate_useful_count": 8,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "coverage",
+            "evidence_gaps",
+            "stopping",
+            "uncertainty"
+          ],
+          "candidate_named_useful_facets": [
+            "coverage",
+            "evidence_gaps",
+            "stopping",
+            "uncertainty"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c12"
+          ],
+          "candidate_useful_gain_ids": [
+            "c16"
+          ],
+          "passes": true
+        }
+      }
+    },
+    "passes_useful_and_facet_guards": true
+  },
+  "software_queries": {
+    "q1": {
+      "baseline_top10": [
+        "c2",
+        "c8",
+        "c1",
+        "c11",
+        "c6",
+        "c0",
+        "c5",
+        "c23",
+        "c9",
+        "c30"
+      ],
+      "candidate_top10": [
+        "c0",
+        "c6",
+        "c2",
+        "c8",
+        "c21",
+        "c1",
+        "c23",
+        "c11",
+        "c30",
+        "c3"
+      ],
+      "baseline_full_order": [
+        "c2",
+        "c8",
+        "c1",
+        "c11",
+        "c6",
+        "c0",
+        "c5",
+        "c23",
+        "c9",
+        "c30",
+        "c4",
+        "c18",
+        "c21",
+        "c19",
+        "c10",
+        "c14",
+        "c16",
+        "c3",
+        "c25",
+        "c33",
+        "c7",
+        "c13",
+        "c20",
+        "c15",
+        "c32",
+        "c17",
+        "c12",
+        "c22",
+        "c31",
+        "c29",
+        "c27",
+        "c24",
+        "c28",
+        "c26"
+      ],
+      "candidate_full_order": [
+        "c0",
+        "c6",
+        "c2",
+        "c8",
+        "c21",
+        "c1",
+        "c23",
+        "c11",
+        "c30",
+        "c3",
+        "c19",
+        "c5",
+        "c14",
+        "c25",
+        "c18",
+        "c16",
+        "c4",
+        "c33",
+        "c13",
+        "c7",
+        "c9",
+        "c32",
+        "c20",
+        "c15",
+        "c10",
+        "c17",
+        "c12",
+        "c22",
+        "c29",
+        "c27",
+        "c31",
+        "c24",
+        "c26",
+        "c28"
+      ],
+      "reference_metrics": {
+        "A": {
+          "reading_lead_ndcg10_baseline": 0.9432106656105238,
+          "reading_lead_ndcg10_candidate": 1.0,
+          "reading_lead_delta": 0.0567893343894762,
+          "visible_ndcg10_baseline_diagnostic": 0.6395397436728237,
+          "visible_ndcg10_candidate_diagnostic": 0.752025877018678,
+          "useful_guard": {
+            "baseline_useful_count": 9,
+            "candidate_useful_count": 10,
+            "useful_count_loss": -1,
+            "baseline_named_useful_facets": [
+              "asynchronous_work",
+              "benchmarks",
+              "conflict_resolution",
+              "coordination"
+            ],
+            "candidate_named_useful_facets": [
+              "asynchronous_work",
+              "benchmarks",
+              "conflict_resolution",
+              "coordination"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c5"
+            ],
+            "candidate_useful_gain_ids": [
+              "c21",
+              "c3"
+            ],
+            "passes": true
+          }
+        },
+        "B": {
+          "reading_lead_ndcg10_baseline": 0.9172083333471377,
+          "reading_lead_ndcg10_candidate": 0.9984384086111778,
+          "reading_lead_delta": 0.08123007526404014,
+          "visible_ndcg10_baseline_diagnostic": 0.7061831859346288,
+          "visible_ndcg10_candidate_diagnostic": 0.7389743044706266,
+          "useful_guard": {
+            "baseline_useful_count": 10,
+            "candidate_useful_count": 10,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "asynchronous_work",
+              "benchmarks",
+              "conflict_resolution",
+              "coordination"
+            ],
+            "candidate_named_useful_facets": [
+              "asynchronous_work",
+              "benchmarks",
+              "conflict_resolution",
+              "coordination"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c5",
+              "c9"
+            ],
+            "candidate_useful_gain_ids": [
+              "c21",
+              "c3"
+            ],
+            "passes": true
+          }
+        }
+      },
+      "identity_displacement": {
+        "A": {
+          "baseline_top10_displaced_ids": [
+            "c5",
+            "c9"
+          ],
+          "candidate_top10_gained_ids": [
+            "c21",
+            "c3"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c21": {
+              "baseline_rank": 13,
+              "candidate_rank": 5,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "coordination",
+                    "benchmarks",
+                    "asynchronous_work"
+                  ],
+                  "rationale": "Direct coding-agent coordination study proposes temporal networks of messages and file reads/writes with costs, an explicit method addressing coordination measurement."
+                }
+              }
+            },
+            "c3": {
+              "baseline_rank": 18,
+              "candidate_rank": 10,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "coordination",
+                    "asynchronous_work",
+                    "benchmarks"
+                  ],
+                  "rationale": "Direct study of asynchronous software-engineering agents on shared-artifact tasks including Commit0 and PaperBench; concrete evaluation setup is visible."
+                }
+              }
+            },
+            "c5": {
+              "baseline_rank": 7,
+              "candidate_rank": 12,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "coordination",
+                    "conflict_resolution"
+                  ],
+                  "rationale": "Review card gives a specific shared-workspace mechanism and benchmark comparisons for detecting and resolving edits at write time."
+                }
+              }
+            },
+            "c9": {
+              "baseline_rank": 9,
+              "candidate_rank": 21,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "benchmarks",
+                    "coordination"
+                  ],
+                  "rationale": "Secondary commentary repeats CooperBench scale and broad conclusion; useful pointer, but the primary benchmark cards are stronger leads."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        },
+        "B": {
+          "baseline_top10_displaced_ids": [
+            "c5",
+            "c9"
+          ],
+          "candidate_top10_gained_ids": [
+            "c21",
+            "c3"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c21": {
+              "baseline_rank": 13,
+              "candidate_rank": 5,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "coordination",
+                    "asynchronous_work"
+                  ],
+                  "rationale": "The study directly measures coordination among AI coding-agent teams through timed file and message interactions, making it a strong empirical lead."
+                }
+              }
+            },
+            "c3": {
+              "baseline_rank": 18,
+              "candidate_rank": 10,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "asynchronous_work",
+                    "coordination"
+                  ],
+                  "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: asynchronous_work, coordination. Title: Effective Strategies for Asynchronous Software Engineering Agents. Snippet: We evaluate CAID on two long-horizon, complex software engineering tasks that provide a natural testbed for shared-artifact collaboration. Specif…"
+                }
+              }
+            },
+            "c5": {
+              "baseline_rank": 7,
+              "candidate_rank": 12,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "benchmarks",
+                    "coordination",
+                    "conflict_resolution"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: benchmarks, coordination, conflict_resolution. Title: Multi-agent Collaboration with State Management · Pith Review. Snippet: STORM manages agent states by mediating their interactions with the shared workspace, ensuring that each agent operates on a consistent view of t…"
+                }
+              }
+            },
+            "c9": {
+              "baseline_rank": 9,
+              "candidate_rank": 21,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "benchmarks",
+                    "coordination"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: benchmarks, coordination. Title: Multi-Agent Software Development: AI-Native Engineering Teams in Practice | Zylos Research. Snippet: Too small and coordination overhead ... wasted effort. ... CooperBench (January 2026), the first benchmark for multi-agent coding collaboration a…"
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        }
+      }
+    },
+    "q2": {
+      "baseline_top10": [
+        "c0",
+        "c10",
+        "c18",
+        "c2",
+        "c3",
+        "c14",
+        "c20",
+        "c4",
+        "c32",
+        "c15"
+      ],
+      "candidate_top10": [
+        "c20",
+        "c24",
+        "c25",
+        "c26",
+        "c32",
+        "c4",
+        "c18",
+        "c27",
+        "c7",
+        "c29"
+      ],
+      "baseline_full_order": [
+        "c0",
+        "c10",
+        "c18",
+        "c2",
+        "c3",
+        "c14",
+        "c20",
+        "c4",
+        "c32",
+        "c15",
+        "c17",
+        "c7",
+        "c8",
+        "c24",
+        "c9",
+        "c19",
+        "c16",
+        "c26",
+        "c27",
+        "c25",
+        "c12",
+        "c6",
+        "c1",
+        "c31",
+        "c29",
+        "c30",
+        "c13",
+        "c21",
+        "c11",
+        "c22",
+        "c5",
+        "c28",
+        "c23"
+      ],
+      "candidate_full_order": [
+        "c20",
+        "c24",
+        "c25",
+        "c26",
+        "c32",
+        "c4",
+        "c18",
+        "c27",
+        "c7",
+        "c29",
+        "c14",
+        "c2",
+        "c15",
+        "c16",
+        "c31",
+        "c9",
+        "c10",
+        "c17",
+        "c30",
+        "c22",
+        "c8",
+        "c1",
+        "c19",
+        "c12",
+        "c23",
+        "c21",
+        "c3",
+        "c13",
+        "c28",
+        "c0",
+        "c5",
+        "c11",
+        "c6"
+      ],
+      "reference_metrics": {
+        "A": {
+          "reading_lead_ndcg10_baseline": 0.4061586402685602,
+          "reading_lead_ndcg10_candidate": 0.8559926354124214,
+          "reading_lead_delta": 0.44983399514386124,
+          "visible_ndcg10_baseline_diagnostic": 0.7288634331545774,
+          "visible_ndcg10_candidate_diagnostic": 0.35882398913797436,
+          "useful_guard": {
+            "baseline_useful_count": 6,
+            "candidate_useful_count": 8,
+            "useful_count_loss": -2,
+            "baseline_named_useful_facets": [
+              "audit_logging",
+              "human_approval",
+              "policy_controls"
+            ],
+            "candidate_named_useful_facets": [
+              "audit_logging",
+              "human_approval",
+              "policy_controls"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c14",
+              "c15",
+              "c2"
+            ],
+            "candidate_useful_gain_ids": [
+              "c24",
+              "c25",
+              "c26",
+              "c27",
+              "c29"
+            ],
+            "passes": true
+          }
+        },
+        "B": {
+          "reading_lead_ndcg10_baseline": 0.8075119396605234,
+          "reading_lead_ndcg10_candidate": 0.6728960359550656,
+          "reading_lead_delta": -0.13461590370545773,
+          "visible_ndcg10_baseline_diagnostic": 0.9874835786616502,
+          "visible_ndcg10_candidate_diagnostic": 0.6152583614304139,
+          "useful_guard": {
+            "baseline_useful_count": 10,
+            "candidate_useful_count": 10,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "audit_logging",
+              "human_approval",
+              "policy_controls"
+            ],
+            "candidate_named_useful_facets": [
+              "audit_logging",
+              "human_approval",
+              "policy_controls"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c0",
+              "c10",
+              "c14",
+              "c15",
+              "c2",
+              "c3"
+            ],
+            "candidate_useful_gain_ids": [
+              "c24",
+              "c25",
+              "c26",
+              "c27",
+              "c29",
+              "c7"
+            ],
+            "passes": true
+          }
+        }
+      },
+      "identity_displacement": {
+        "A": {
+          "baseline_top10_displaced_ids": [
+            "c0",
+            "c10",
+            "c14",
+            "c15",
+            "c2",
+            "c3"
+          ],
+          "candidate_top10_gained_ids": [
+            "c24",
+            "c25",
+            "c26",
+            "c27",
+            "c29",
+            "c7"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c0": {
+              "baseline_rank": 1,
+              "candidate_rank": 30,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "audit_logging",
+                    "policy_controls"
+                  ],
+                  "rationale": "Product page names tamper-proof audit records and intent checks, but offers vendor feature claims rather than independent guidance or evaluation."
+                }
+              }
+            },
+            "c10": {
+              "baseline_rank": 2,
+              "candidate_rank": 17,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "human_approval",
+                    "audit_logging",
+                    "policy_controls"
+                  ],
+                  "rationale": "Product card gives four explicit controls, including per-action permissions, human approval, and immutable logs; substantive but commercial claims."
+                }
+              }
+            },
+            "c14": {
+              "baseline_rank": 6,
+              "candidate_rank": 11,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "human_approval",
+                    "audit_logging"
+                  ],
+                  "rationale": "Governance guide gives approval thresholds, owners, decision logs, and audit trails; useful secondary checklist."
+                }
+              }
+            },
+            "c15": {
+              "baseline_rank": 10,
+              "candidate_rank": 13,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "policy_controls",
+                    "human_approval"
+                  ],
+                  "rationale": "Enterprise agent governance article describes structured workflows, approved data, configurable autonomy, and ongoing monitoring; practitioner guidance rather than primary study."
+                }
+              }
+            },
+            "c2": {
+              "baseline_rank": 4,
+              "candidate_rank": 12,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "human_approval",
+                    "audit_logging"
+                  ],
+                  "rationale": "Workflow article directly names built-in approvals and reconstructable agent behavior; useful operational guidance, not an independent study."
+                }
+              }
+            },
+            "c24": {
+              "baseline_rank": 14,
+              "candidate_rank": 2,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "policy_controls"
+                  ],
+                  "rationale": "CAGE-1 explicitly evaluates enterprise agent governance and control assurance, directly matching the requested study type; snippet lacks details of its evaluation."
+                }
+              }
+            },
+            "c25": {
+              "baseline_rank": 20,
+              "candidate_rank": 3,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "policy_controls"
+                  ],
+                  "rationale": "Runtime policy firewall targets governance for enterprise agent execution; abstract is only introductory in the visible card."
+                }
+              }
+            },
+            "c26": {
+              "baseline_rank": 18,
+              "candidate_rank": 4,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "policy_controls"
+                  ],
+                  "rationale": "Duplicate SAFE-AGENT record is still a direct research lead on runtime monitoring and policy enforcement; abstract snippet is nonspecific."
+                }
+              }
+            },
+            "c27": {
+              "baseline_rank": 19,
+              "candidate_rank": 8,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "policy_controls"
+                  ],
+                  "rationale": "SAFE-AGENT is a direct runtime-monitoring and policy-enforcement study for tool-using agents, but the visible abstract gives little specific control evidence."
+                }
+              }
+            },
+            "c29": {
+              "baseline_rank": 25,
+              "candidate_rank": 10,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "policy_controls"
+                  ],
+                  "rationale": "Duplicate UPA paper is on enterprise governance architecture, but visible abstract remains high-level."
+                }
+              }
+            },
+            "c3": {
+              "baseline_rank": 5,
+              "candidate_rank": 27,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "audit_logging"
+                  ],
+                  "rationale": "Vendor product card itemizes traces of prompts, retrieval, tools, approvals, and outputs; concrete audit lead but commercial framing."
+                }
+              }
+            },
+            "c7": {
+              "baseline_rank": 12,
+              "candidate_rank": 9,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "human_approval",
+                    "audit_logging"
+                  ],
+                  "rationale": "Commercial compliance article lists audit logging and human oversight among controls; relevant summary but not primary guidance."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        },
+        "B": {
+          "baseline_top10_displaced_ids": [
+            "c0",
+            "c10",
+            "c14",
+            "c15",
+            "c2",
+            "c3"
+          ],
+          "candidate_top10_gained_ids": [
+            "c24",
+            "c25",
+            "c26",
+            "c27",
+            "c29",
+            "c7"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c0": {
+              "baseline_rank": 1,
+              "candidate_rank": 30,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "human_approval",
+                    "audit_logging",
+                    "policy_controls"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card gives specific detail on a central task aspect. Visible facet signal: human_approval, audit_logging, policy_controls. Title: AI Agent Governance Module — RBAC, Audit Logs, Policy Engine | assistents.ai. Snippet: Tamper-proof records for audit compliance. ... Intent-to-action consistency checks ensure agents stay within their defined purpose and operationa…"
+                }
+              }
+            },
+            "c10": {
+              "baseline_rank": 2,
+              "candidate_rank": 17,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "human_approval",
+                    "audit_logging",
+                    "policy_controls"
+                  ],
+                  "rationale": "a strong direct lead for a central task facet or requested source type; the visible card gives specific detail on a central task aspect. Visible facet signal: human_approval, audit_logging, policy_controls. Title: Enterprise AI Support Tools With Governance & Audit Logs. Snippet: Four controls do most of the work: per-action permission scoping, human approval workflows for high-risk operations, immutable audit logs, and pr…"
+                }
+              }
+            },
+            "c14": {
+              "baseline_rank": 6,
+              "candidate_rank": 11,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "human_approval",
+                    "audit_logging"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: human_approval, audit_logging. Title: AI Agent Governance: Frameworks, Tools & Best Practices. Snippet: AI agent human oversight remains essential: organizations need defined approval thresholds, responsible owners, decision logs, and audit trails s…"
+                }
+              }
+            },
+            "c15": {
+              "baseline_rank": 10,
+              "candidate_rank": 13,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "human_approval",
+                    "audit_logging",
+                    "policy_controls"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: human_approval, audit_logging, policy_controls. Title: AI agent governance in enterprises: Control, oversight, and best practices. Snippet: Orchestrated and governed: AI agents operate within structured processes or cases that provide context, state awareness, and access to approved d…"
+                }
+              }
+            },
+            "c2": {
+              "baseline_rank": 4,
+              "candidate_rank": 12,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "human_approval",
+                    "audit_logging"
+                  ],
+                  "rationale": "a strong direct lead for a central task facet or requested source type; the visible card gives specific detail on a central task aspect. Visible facet signal: human_approval, audit_logging. Title: Enterprise AI Agents: Governance for Real Workflows. Snippet: Approvals must be built into the workflow from the start. Human oversight enables safe automation in many enterprise workflows. If an organizatio…"
+                }
+              }
+            },
+            "c24": {
+              "baseline_rank": 14,
+              "candidate_rank": 2,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "policy_controls"
+                  ],
+                  "rationale": "The CAGE-1 abstract asks which policy applied and who authorized an action, a visible policy-control signal; the excerpt does not show audit logging."
+                }
+              }
+            },
+            "c25": {
+              "baseline_rank": 20,
+              "candidate_rank": 3,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "policy_controls"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: policy_controls. Title: Runtime Policy Firewall: A Zero-Trust Governance Layer for Enterprise Agentic AI. Snippet: Enterprise adoption of generative AI is shifting from passive question answering to autonomous agentic execution. Modern agents can decompose goa…"
+                }
+              }
+            },
+            "c26": {
+              "baseline_rank": 18,
+              "candidate_rank": 4,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "policy_controls"
+                  ],
+                  "rationale": "The SAFE-AGENT card signals runtime policy enforcement, but the visible abstract excerpt does not identify a human-approval mechanism."
+                }
+              }
+            },
+            "c27": {
+              "baseline_rank": 19,
+              "candidate_rank": 8,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "policy_controls"
+                  ],
+                  "rationale": "The title and abstract identify runtime monitoring and policy enforcement, directly relevant to policy controls; no human-approval behavior is visible on this card."
+                }
+              }
+            },
+            "c29": {
+              "baseline_rank": 25,
+              "candidate_rank": 10,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "policy_controls"
+                  ],
+                  "rationale": "The UPA abstract explicitly names authorization, security, guardrails, and compliance mechanisms, but not audit logging in this excerpt."
+                }
+              }
+            },
+            "c3": {
+              "baseline_rank": 5,
+              "candidate_rank": 27,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "audit_logging",
+                    "human_approval"
+                  ],
+                  "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: audit_logging, human_approval. Title: AI Agent Governance Platform for Enterprise AI Control | VDF AI. Snippet: Audit logs and execution traces that capture prompts, retrieval events, tool calls, approvals, and outputs. See the observability article for adj…"
+                }
+              }
+            },
+            "c7": {
+              "baseline_rank": 12,
+              "candidate_rank": 9,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "human_approval",
+                    "audit_logging",
+                    "policy_controls"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: human_approval, audit_logging, policy_controls. Title: AI Agent Governance in the Enterprise: Audit Trails, LLM Guardrails & Compliance for 2026 | Gheware DevOps AI. Snippet: For high-risk systems, the EU AI Act requires: conformity assessments, risk management systems, data governance practices, technical documentatio…"
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        }
+      }
+    },
+    "q3": {
+      "baseline_top10": [
+        "c2",
+        "c7",
+        "c6",
+        "c3",
+        "c8",
+        "c16",
+        "c4",
+        "c17",
+        "c12",
+        "c11"
+      ],
+      "candidate_top10": [
+        "c0",
+        "c3",
+        "c29",
+        "c25",
+        "c16",
+        "c28",
+        "c4",
+        "c8",
+        "c2",
+        "c18"
+      ],
+      "baseline_full_order": [
+        "c2",
+        "c7",
+        "c6",
+        "c3",
+        "c8",
+        "c16",
+        "c4",
+        "c17",
+        "c12",
+        "c11",
+        "c5",
+        "c13",
+        "c0",
+        "c25",
+        "c10",
+        "c14",
+        "c28",
+        "c29",
+        "c1",
+        "c18",
+        "c9",
+        "c20",
+        "c24",
+        "c15",
+        "c21",
+        "c22",
+        "c19",
+        "c27",
+        "c23",
+        "c26"
+      ],
+      "candidate_full_order": [
+        "c0",
+        "c3",
+        "c29",
+        "c25",
+        "c16",
+        "c28",
+        "c4",
+        "c8",
+        "c2",
+        "c18",
+        "c6",
+        "c17",
+        "c7",
+        "c12",
+        "c11",
+        "c5",
+        "c13",
+        "c20",
+        "c10",
+        "c14",
+        "c1",
+        "c24",
+        "c23",
+        "c15",
+        "c21",
+        "c9",
+        "c22",
+        "c19",
+        "c27",
+        "c26"
+      ],
+      "reference_metrics": {
+        "A": {
+          "reading_lead_ndcg10_baseline": 0.6152583614304139,
+          "reading_lead_ndcg10_candidate": 0.8220384443096674,
+          "reading_lead_delta": 0.20678008287925354,
+          "visible_ndcg10_baseline_diagnostic": 0.8374575135818635,
+          "visible_ndcg10_candidate_diagnostic": 0.6810623977819936,
+          "useful_guard": {
+            "baseline_useful_count": 10,
+            "candidate_useful_count": 10,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "external_side_effects",
+              "idempotency",
+              "recovery",
+              "replay"
+            ],
+            "candidate_named_useful_facets": [
+              "external_side_effects",
+              "idempotency",
+              "recovery",
+              "replay"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c11",
+              "c12",
+              "c17",
+              "c6",
+              "c7"
+            ],
+            "candidate_useful_gain_ids": [
+              "c0",
+              "c18",
+              "c25",
+              "c28",
+              "c29"
+            ],
+            "passes": true
+          }
+        },
+        "B": {
+          "reading_lead_ndcg10_baseline": 0.6464744949606501,
+          "reading_lead_ndcg10_candidate": 0.8424978692871226,
+          "reading_lead_delta": 0.19602337432647243,
+          "visible_ndcg10_baseline_diagnostic": 0.8135205630926118,
+          "visible_ndcg10_candidate_diagnostic": 0.7648731687415002,
+          "useful_guard": {
+            "baseline_useful_count": 10,
+            "candidate_useful_count": 10,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "external_side_effects",
+              "idempotency",
+              "recovery",
+              "replay"
+            ],
+            "candidate_named_useful_facets": [
+              "external_side_effects",
+              "idempotency",
+              "recovery",
+              "replay"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c11",
+              "c12",
+              "c17",
+              "c6",
+              "c7"
+            ],
+            "candidate_useful_gain_ids": [
+              "c0",
+              "c18",
+              "c25",
+              "c28",
+              "c29"
+            ],
+            "passes": true
+          }
+        }
+      },
+      "identity_displacement": {
+        "A": {
+          "baseline_top10_displaced_ids": [
+            "c11",
+            "c12",
+            "c17",
+            "c6",
+            "c7"
+          ],
+          "candidate_top10_gained_ids": [
+            "c0",
+            "c18",
+            "c25",
+            "c28",
+            "c29"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c0": {
+              "baseline_rank": 13,
+              "candidate_rank": 1,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "replay",
+                    "recovery",
+                    "idempotency",
+                    "external_side_effects"
+                  ],
+                  "rationale": "Agent-runtime overview explicitly combines checkpoints, replay boundaries, and avoiding duplicated side effects; useful secondary source."
+                }
+              }
+            },
+            "c11": {
+              "baseline_rank": 10,
+              "candidate_rank": 15,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "recovery",
+                    "idempotency",
+                    "external_side_effects"
+                  ],
+                  "rationale": "Issue proposes replay-safe orchestration and recorded outcomes for external effects; concrete engineering proposal, not general documentation."
+                }
+              }
+            },
+            "c12": {
+              "baseline_rank": 9,
+              "candidate_rank": 14,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "recovery",
+                    "idempotency"
+                  ],
+                  "rationale": "Temporal data-workflow article discusses activity retry policy and limits; useful implementation background, secondary source."
+                }
+              }
+            },
+            "c17": {
+              "baseline_rank": 8,
+              "candidate_rank": 12,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "replay",
+                    "recovery"
+                  ],
+                  "rationale": "Developer guide explains recorded results restore workflow state and execution resumes after the last completed event."
+                }
+              }
+            },
+            "c18": {
+              "baseline_rank": 20,
+              "candidate_rank": 10,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "idempotency",
+                    "recovery"
+                  ],
+                  "rationale": "AWS developer documentation directly covers retries and idempotency for durable execution, but card reveals no substantive guidance."
+                }
+              }
+            },
+            "c25": {
+              "baseline_rank": 14,
+              "candidate_rank": 4,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "external_side_effects",
+                    "recovery"
+                  ],
+                  "rationale": "Atomix paper directly concerns tool-mediated external mutations and fault recovery, though snippet is introductory."
+                }
+              }
+            },
+            "c28": {
+              "baseline_rank": 17,
+              "candidate_rank": 6,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "recovery",
+                    "external_side_effects",
+                    "idempotency"
+                  ],
+                  "rationale": "Agent-tool boundary study directly examines workflow failures under retries, concurrency, and partial effects; strong lead, limited details visible."
+                }
+              }
+            },
+            "c29": {
+              "baseline_rank": 18,
+              "candidate_rank": 3,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "replay",
+                    "recovery",
+                    "external_side_effects"
+                  ],
+                  "rationale": "Agent workflow runtime explicitly targets crashes around external side effects and replayable boundaries; direct and substantive fit."
+                }
+              }
+            },
+            "c6": {
+              "baseline_rank": 3,
+              "candidate_rank": 11,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "replay",
+                    "external_side_effects",
+                    "idempotency"
+                  ],
+                  "rationale": "Technical article ties deterministic replay to side effects and idempotency; relevant backend workflow guidance."
+                }
+              }
+            },
+            "c7": {
+              "baseline_rank": 2,
+              "candidate_rank": 13,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "recovery",
+                    "external_side_effects",
+                    "idempotency"
+                  ],
+                  "rationale": "Runtime issue clearly rejects atomicity or exactly-once promises for arbitrary external calls and ties resume to durable correlated outcomes."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        },
+        "B": {
+          "baseline_top10_displaced_ids": [
+            "c11",
+            "c12",
+            "c17",
+            "c6",
+            "c7"
+          ],
+          "candidate_top10_gained_ids": [
+            "c0",
+            "c18",
+            "c25",
+            "c28",
+            "c29"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c0": {
+              "baseline_rank": 13,
+              "candidate_rank": 1,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "replay",
+                    "recovery",
+                    "idempotency",
+                    "external_side_effects"
+                  ],
+                  "rationale": "The snippet explicitly names checkpointing, replay boundaries, idempotency, recovery, and avoiding duplicated side effects."
+                }
+              }
+            },
+            "c11": {
+              "baseline_rank": 10,
+              "candidate_rank": 15,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "replay",
+                    "idempotency",
+                    "external_side_effects"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: replay, idempotency, external_side_effects. Title: Durable side-effect recovery: idempotency и recovery proofs для mutation-команд · Issue #154 · ai-development-harness/ai-development-harness-template. Snippet: Temporal формулирует полезный принцип: orchestration state должен быть replay/resume-safe, а non-deterministic I/O и side effects должны иметь от…"
+                }
+              }
+            },
+            "c12": {
+              "baseline_rank": 9,
+              "candidate_rank": 14,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "idempotency",
+                    "external_side_effects"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: idempotency, external_side_effects. Title: Temporal for Data Workflows: Durable Execution, Retries & Long-Running Pipelines | by Admin | Sep, 2026 | Medium. Snippet: The invariant: Temporal automatically retries a failed activity according to its RetryPolicy — exponential backoff, capped attempts, with certain…"
+                }
+              }
+            },
+            "c17": {
+              "baseline_rank": 8,
+              "candidate_rank": 12,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "replay",
+                    "recovery",
+                    "external_side_effects"
+                  ],
+                  "rationale": "This developer guide describes replayed recorded results, continuation after the last completed event, and avoiding duplicate effects, making it a useful but secondary lead."
+                }
+              }
+            },
+            "c18": {
+              "baseline_rank": 20,
+              "candidate_rank": 10,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "idempotency"
+                  ],
+                  "rationale": "The AWS developer-guide title directly promises idempotency guidance; the snippet is only a generic SDK description, so little substantive detail is visible."
+                }
+              }
+            },
+            "c25": {
+              "baseline_rank": 14,
+              "candidate_rank": 4,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "replay",
+                    "external_side_effects"
+                  ],
+                  "rationale": "The Atomix excerpt names tool-triggered external effects and checkpoint replay under faults and concurrent execution; a recovery facet is not directly stated."
+                }
+              }
+            },
+            "c28": {
+              "baseline_rank": 17,
+              "candidate_rank": 6,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "recovery",
+                    "external_side_effects"
+                  ],
+                  "rationale": "This agent-tool study directly analyzes missing, duplicated, and lingering external effects under retries, concurrency, speculative execution, and partial failure."
+                }
+              }
+            },
+            "c29": {
+              "baseline_rank": 18,
+              "candidate_rank": 3,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "replay",
+                    "recovery",
+                    "idempotency",
+                    "external_side_effects"
+                  ],
+                  "rationale": "The agent-workflow paper directly targets crashes, timeouts, duplicate actions, and partial external effects; the abstract establishes the problem but not its full solution."
+                }
+              }
+            },
+            "c6": {
+              "baseline_rank": 3,
+              "candidate_rank": 11,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "replay",
+                    "idempotency",
+                    "external_side_effects"
+                  ],
+                  "rationale": "The snippet explicitly connects replay with idempotent handling of database writes, API calls, and message publication."
+                }
+              }
+            },
+            "c7": {
+              "baseline_rank": 2,
+              "candidate_rank": 13,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "recovery",
+                    "external_side_effects",
+                    "idempotency"
+                  ],
+                  "rationale": "The runtime issue directly specifies safe resume after an external action, including durable outcome correlation and avoiding another operation after recovery."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        }
+      }
+    },
+    "q4": {
+      "baseline_top10": [
+        "c11",
+        "c1",
+        "c19",
+        "c7",
+        "c6",
+        "c18",
+        "c5",
+        "c0",
+        "c15",
+        "c2"
+      ],
+      "candidate_top10": [
+        "c2",
+        "c15",
+        "c1",
+        "c11",
+        "c6",
+        "c8",
+        "c19",
+        "c30",
+        "c5",
+        "c0"
+      ],
+      "baseline_full_order": [
+        "c11",
+        "c1",
+        "c19",
+        "c7",
+        "c6",
+        "c18",
+        "c5",
+        "c0",
+        "c15",
+        "c2",
+        "c8",
+        "c14",
+        "c30",
+        "c10",
+        "c12",
+        "c4",
+        "c21",
+        "c9",
+        "c3",
+        "c16",
+        "c20",
+        "c13",
+        "c17",
+        "c26",
+        "c31",
+        "c28",
+        "c22",
+        "c32",
+        "c34",
+        "c25",
+        "c27",
+        "c29",
+        "c33",
+        "c24",
+        "c23"
+      ],
+      "candidate_full_order": [
+        "c2",
+        "c15",
+        "c1",
+        "c11",
+        "c6",
+        "c8",
+        "c19",
+        "c30",
+        "c5",
+        "c0",
+        "c14",
+        "c4",
+        "c18",
+        "c10",
+        "c9",
+        "c12",
+        "c20",
+        "c17",
+        "c7",
+        "c3",
+        "c21",
+        "c13",
+        "c31",
+        "c26",
+        "c16",
+        "c28",
+        "c22",
+        "c32",
+        "c34",
+        "c25",
+        "c27",
+        "c33",
+        "c29",
+        "c24",
+        "c23"
+      ],
+      "reference_metrics": {
+        "A": {
+          "reading_lead_ndcg10_baseline": 0.6142510187936684,
+          "reading_lead_ndcg10_candidate": 0.755918681081024,
+          "reading_lead_delta": 0.1416676622873556,
+          "visible_ndcg10_baseline_diagnostic": 0.7316405678423681,
+          "visible_ndcg10_candidate_diagnostic": 0.752025877018678,
+          "useful_guard": {
+            "baseline_useful_count": 7,
+            "candidate_useful_count": 9,
+            "useful_count_loss": -2,
+            "baseline_named_useful_facets": [
+              "decontamination",
+              "leakage",
+              "live_evaluation",
+              "time_splits"
+            ],
+            "candidate_named_useful_facets": [
+              "decontamination",
+              "leakage",
+              "live_evaluation",
+              "time_splits"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [],
+            "candidate_useful_gain_ids": [
+              "c30",
+              "c8"
+            ],
+            "passes": true
+          }
+        },
+        "B": {
+          "reading_lead_ndcg10_baseline": 0.5442226830488394,
+          "reading_lead_ndcg10_candidate": 0.7069538117054798,
+          "reading_lead_delta": 0.1627311286566404,
+          "visible_ndcg10_baseline_diagnostic": 0.8532721558012799,
+          "visible_ndcg10_candidate_diagnostic": 0.8905202757957813,
+          "useful_guard": {
+            "baseline_useful_count": 9,
+            "candidate_useful_count": 9,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "decontamination",
+              "leakage",
+              "live_evaluation",
+              "time_splits"
+            ],
+            "candidate_named_useful_facets": [
+              "decontamination",
+              "leakage",
+              "live_evaluation",
+              "time_splits"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c18",
+              "c7"
+            ],
+            "candidate_useful_gain_ids": [
+              "c30",
+              "c8"
+            ],
+            "passes": true
+          }
+        }
+      },
+      "identity_displacement": {
+        "A": {
+          "baseline_top10_displaced_ids": [
+            "c18",
+            "c7"
+          ],
+          "candidate_top10_gained_ids": [
+            "c30",
+            "c8"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c18": {
+              "baseline_rank": 6,
+              "candidate_rank": 13,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "time_splits",
+                    "decontamination"
+                  ],
+                  "rationale": "Secondary explainer describes post-training-cutoff issues as a contamination control; useful context, not primary evidence."
+                }
+              }
+            },
+            "c30": {
+              "baseline_rank": 13,
+              "candidate_rank": 8,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "live_evaluation"
+                  ],
+                  "rationale": "SWE-MERA is a dynamic software-engineering evaluation benchmark; useful lead for evolving evaluations, but this excerpt does not identify leakage measures."
+                }
+              }
+            },
+            "c7": {
+              "baseline_rank": 4,
+              "candidate_rank": 19,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "leakage"
+                  ],
+                  "rationale": "Commentary reports a specific SWE-bench leakage rate and reporting change; useful pointer, but secondary claims require checking original sources."
+                }
+              }
+            },
+            "c8": {
+              "baseline_rank": 11,
+              "candidate_rank": 6,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "live_evaluation",
+                    "decontamination"
+                  ],
+                  "rationale": "Overview explicitly identifies dynamic and decontaminated benchmarking as directions, useful secondary summary."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        },
+        "B": {
+          "baseline_top10_displaced_ids": [
+            "c18",
+            "c7"
+          ],
+          "candidate_top10_gained_ids": [
+            "c30",
+            "c8"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c18": {
+              "baseline_rank": 6,
+              "candidate_rank": 13,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "time_splits",
+                    "decontamination"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: time_splits, decontamination. Title: AI Benchmark Contamination: Why SWEBench Pro Scores Should Come with an Asterisk | MindStudio. Snippet: The benchmark uses GitHub issues that post-date the training cutoffs of the models being evaluated, making prior exposure much less likely. The a…"
+                }
+              }
+            },
+            "c30": {
+              "baseline_rank": 13,
+              "candidate_rank": 8,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "leakage",
+                    "decontamination"
+                  ],
+                  "rationale": "a strong direct lead for a central task facet or requested source type; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: leakage, decontamination. Title: SWE-MERA: A Dynamic Benchmark for Agenticly Evaluating Large Language Models on Software Engineering Tasks. Snippet: The rapid advancement of Large Language Models (LLMs) in software engineering has revealed critical limitations in existing benchmarks, particula…"
+                }
+              }
+            },
+            "c7": {
+              "baseline_rank": 4,
+              "candidate_rank": 19,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "leakage"
+                  ],
+                  "rationale": "The excerpt reports SWE-bench leakage and verbatim gold-patch reproduction; it does not show a decontamination method."
+                }
+              }
+            },
+            "c8": {
+              "baseline_rank": 11,
+              "candidate_rank": 6,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "leakage",
+                    "decontamination",
+                    "live_evaluation"
+                  ],
+                  "rationale": "The SWE-bench overview discusses fresh, dynamically updated benchmarks and identifies leakage and contamination as problems; it is relevant synthesis rather than primary documentation."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        }
+      }
+    },
+    "q5": {
+      "baseline_top10": [
+        "c9",
+        "c13",
+        "c17",
+        "c6",
+        "c10",
+        "c16",
+        "c15",
+        "c0",
+        "c1",
+        "c14"
+      ],
+      "candidate_top10": [
+        "c9",
+        "c0",
+        "c6",
+        "c1",
+        "c13",
+        "c16",
+        "c3",
+        "c17",
+        "c5",
+        "c15"
+      ],
+      "baseline_full_order": [
+        "c9",
+        "c13",
+        "c17",
+        "c6",
+        "c10",
+        "c16",
+        "c15",
+        "c0",
+        "c1",
+        "c14",
+        "c8",
+        "c5",
+        "c18",
+        "c7",
+        "c11",
+        "c2",
+        "c4",
+        "c3",
+        "c21",
+        "c12",
+        "c19",
+        "c24",
+        "c28",
+        "c23",
+        "c27",
+        "c22",
+        "c20",
+        "c25",
+        "c29",
+        "c26"
+      ],
+      "candidate_full_order": [
+        "c9",
+        "c0",
+        "c6",
+        "c1",
+        "c13",
+        "c16",
+        "c3",
+        "c17",
+        "c5",
+        "c15",
+        "c10",
+        "c14",
+        "c18",
+        "c8",
+        "c2",
+        "c11",
+        "c19",
+        "c7",
+        "c4",
+        "c12",
+        "c21",
+        "c28",
+        "c20",
+        "c27",
+        "c24",
+        "c23",
+        "c22",
+        "c29",
+        "c25",
+        "c26"
+      ],
+      "reference_metrics": {
+        "A": {
+          "reading_lead_ndcg10_baseline": 0.8213688467663327,
+          "reading_lead_ndcg10_candidate": 0.9556560328434967,
+          "reading_lead_delta": 0.13428718607716394,
+          "visible_ndcg10_baseline_diagnostic": 0.9690858440911655,
+          "visible_ndcg10_candidate_diagnostic": 0.9926584476583946,
+          "useful_guard": {
+            "baseline_useful_count": 6,
+            "candidate_useful_count": 8,
+            "useful_count_loss": -2,
+            "baseline_named_useful_facets": [
+              "attestations",
+              "builder_identity",
+              "threat_model",
+              "verifier_specification"
+            ],
+            "candidate_named_useful_facets": [
+              "attestations",
+              "builder_identity",
+              "threat_model",
+              "verifier_specification"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [],
+            "candidate_useful_gain_ids": [
+              "c3",
+              "c5"
+            ],
+            "passes": true
+          }
+        },
+        "B": {
+          "reading_lead_ndcg10_baseline": 0.5974102368099553,
+          "reading_lead_ndcg10_candidate": 0.7492428740059506,
+          "reading_lead_delta": 0.15183263719599527,
+          "visible_ndcg10_baseline_diagnostic": 0.773122735452171,
+          "visible_ndcg10_candidate_diagnostic": 0.8487484903014474,
+          "useful_guard": {
+            "baseline_useful_count": 9,
+            "candidate_useful_count": 9,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "attestations",
+              "builder_identity",
+              "threat_model",
+              "verifier_specification"
+            ],
+            "candidate_named_useful_facets": [
+              "attestations",
+              "builder_identity",
+              "threat_model",
+              "verifier_specification"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c10",
+              "c14"
+            ],
+            "candidate_useful_gain_ids": [
+              "c3",
+              "c5"
+            ],
+            "passes": true
+          }
+        }
+      },
+      "identity_displacement": {
+        "A": {
+          "baseline_top10_displaced_ids": [
+            "c10",
+            "c14"
+          ],
+          "candidate_top10_gained_ids": [
+            "c3",
+            "c5"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c10": {
+              "baseline_rank": 5,
+              "candidate_rank": 11,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "builder_identity",
+                    "attestations"
+                  ],
+                  "rationale": "Explainer gives a concrete OIDC-to-certificate builder identity example, useful background but not a canonical SLSA document."
+                }
+              }
+            },
+            "c14": {
+              "baseline_rank": 10,
+              "candidate_rank": 12,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "attestations"
+                  ],
+                  "rationale": "Explainer describes JSON in-toto provenance within DSSE; useful context but secondary and not verifier guidance."
+                }
+              }
+            },
+            "c3": {
+              "baseline_rank": 18,
+              "candidate_rank": 7,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "verifier_specification",
+                    "builder_identity",
+                    "attestations"
+                  ],
+                  "rationale": "Official verifier repository shows a concrete verified builder example; direct implementation lead, though excerpt is a single example."
+                }
+              }
+            },
+            "c5": {
+              "baseline_rank": 12,
+              "candidate_rank": 9,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "threat_model",
+                    "builder_identity",
+                    "attestations"
+                  ],
+                  "rationale": "OpenSSF article explains what SLSA provenance proves about a builder and source repository, useful threat-boundary analysis."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        },
+        "B": {
+          "baseline_top10_displaced_ids": [
+            "c10",
+            "c14"
+          ],
+          "candidate_top10_gained_ids": [
+            "c3",
+            "c5"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c10": {
+              "baseline_rank": 5,
+              "candidate_rank": 11,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "builder_identity",
+                    "attestations"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: builder_identity, attestations. Title: SLSA Framework Explained: Build Provenance, Levels, and Attestation. Snippet: Fulcio is the certificate authority that issues short-lived (ten-minute) certificates bound to an OIDC identity, so the workflow signing the arte…"
+                }
+              }
+            },
+            "c14": {
+              "baseline_rank": 10,
+              "candidate_rank": 12,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "verifier_specification",
+                    "builder_identity",
+                    "attestations"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: verifier_specification, builder_identity, attestations. Title: SLSA and Provenance: Your SBOM Says What's Inside, This Says Where It Came From - ostering.com. Snippet: SLSA provenance is a JSON document in the in-toto attestation format, wrapped in a DSSE (Dead Simple Signing Envelope). Strip away the ceremony a…"
+                }
+              }
+            },
+            "c3": {
+              "baseline_rank": 18,
+              "candidate_rank": 7,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "verifier_specification",
+                    "builder_identity",
+                    "attestations"
+                  ],
+                  "rationale": "a strong direct lead for a central task facet or requested source type; the visible card gives specific detail on a central task aspect. Visible facet signal: verifier_specification, builder_identity, attestations. Title: GitHub - slsa-framework/slsa-verifier: Verify provenance from SLSA compliant builders · GitHub. Snippet: Verified build using builder https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1…"
+                }
+              }
+            },
+            "c5": {
+              "baseline_rank": 12,
+              "candidate_rank": 9,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "threat_model",
+                    "builder_identity",
+                    "attestations"
+                  ],
+                  "rationale": "OpenSSF’s analysis directly explains what provenance can establish about a builder and source, making it a strong threat-boundary lead."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        }
+      }
+    },
+    "q6": {
+      "baseline_top10": [
+        "c9",
+        "c0",
+        "c15",
+        "c12",
+        "c10",
+        "c4",
+        "c5",
+        "c3",
+        "c13",
+        "c1"
+      ],
+      "candidate_top10": [
+        "c7",
+        "c6",
+        "c5",
+        "c9",
+        "c17",
+        "c12",
+        "c8",
+        "c0",
+        "c3",
+        "c10"
+      ],
+      "baseline_full_order": [
+        "c9",
+        "c0",
+        "c15",
+        "c12",
+        "c10",
+        "c4",
+        "c5",
+        "c3",
+        "c13",
+        "c1",
+        "c8",
+        "c2",
+        "c11",
+        "c7",
+        "c17",
+        "c6",
+        "c14",
+        "c30",
+        "c16",
+        "c18",
+        "c19",
+        "c27",
+        "c23",
+        "c21",
+        "c22",
+        "c28",
+        "c26",
+        "c25",
+        "c29",
+        "c20",
+        "c24"
+      ],
+      "candidate_full_order": [
+        "c7",
+        "c6",
+        "c5",
+        "c9",
+        "c17",
+        "c12",
+        "c8",
+        "c0",
+        "c3",
+        "c10",
+        "c2",
+        "c13",
+        "c15",
+        "c1",
+        "c11",
+        "c14",
+        "c4",
+        "c19",
+        "c16",
+        "c30",
+        "c18",
+        "c27",
+        "c23",
+        "c22",
+        "c21",
+        "c29",
+        "c26",
+        "c28",
+        "c20",
+        "c25",
+        "c24"
+      ],
+      "reference_metrics": {
+        "A": {
+          "reading_lead_ndcg10_baseline": 0.3137915440004899,
+          "reading_lead_ndcg10_candidate": 0.7353813817238674,
+          "reading_lead_delta": 0.42158983772337744,
+          "visible_ndcg10_baseline_diagnostic": 0.9278511210730239,
+          "visible_ndcg10_candidate_diagnostic": 0.7078243659151081,
+          "useful_guard": {
+            "baseline_useful_count": 2,
+            "candidate_useful_count": 3,
+            "useful_count_loss": -1,
+            "baseline_named_useful_facets": [
+              "semantic_conventions",
+              "spans",
+              "tool_calls"
+            ],
+            "candidate_named_useful_facets": [
+              "attributes",
+              "semantic_conventions",
+              "spans",
+              "tool_calls"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c1"
+            ],
+            "candidate_useful_gain_ids": [
+              "c6",
+              "c7"
+            ],
+            "passes": true
+          }
+        },
+        "B": {
+          "reading_lead_ndcg10_baseline": 0.8827705038145675,
+          "reading_lead_ndcg10_candidate": 0.9048721176419502,
+          "reading_lead_delta": 0.022101613827382738,
+          "visible_ndcg10_baseline_diagnostic": 0.9114050140572659,
+          "visible_ndcg10_candidate_diagnostic": 0.5686399334899016,
+          "useful_guard": {
+            "baseline_useful_count": 10,
+            "candidate_useful_count": 10,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "attributes",
+              "semantic_conventions",
+              "spans",
+              "tool_calls"
+            ],
+            "candidate_named_useful_facets": [
+              "attributes",
+              "semantic_conventions",
+              "spans",
+              "tool_calls"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c1",
+              "c13",
+              "c15",
+              "c4"
+            ],
+            "candidate_useful_gain_ids": [
+              "c17",
+              "c6",
+              "c7",
+              "c8"
+            ],
+            "passes": true
+          }
+        }
+      },
+      "identity_displacement": {
+        "A": {
+          "baseline_top10_displaced_ids": [
+            "c1",
+            "c13",
+            "c15",
+            "c4"
+          ],
+          "candidate_top10_gained_ids": [
+            "c17",
+            "c6",
+            "c7",
+            "c8"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c1": {
+              "baseline_rank": 10,
+              "candidate_rank": 14,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "semantic_conventions",
+                    "tool_calls"
+                  ],
+                  "rationale": "Datadog documentation explicitly says conventions cover prompts, responses, tokens, and tool/agent calls; useful vendor implementation reference."
+                }
+              }
+            },
+            "c13": {
+              "baseline_rank": 9,
+              "candidate_rank": 12,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "semantic_conventions",
+                    "spans",
+                    "attributes"
+                  ],
+                  "rationale": "Secondary explainer describes standardized span names and attribute keys; useful overview, not canonical specification."
+                }
+              }
+            },
+            "c15": {
+              "baseline_rank": 3,
+              "candidate_rank": 13,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "semantic_conventions",
+                    "tool_calls",
+                    "spans"
+                  ],
+                  "rationale": "Specific guide maps SDK traces to invoke_agent, chat, and execute_tool spans; concrete but third-party."
+                }
+              }
+            },
+            "c17": {
+              "baseline_rank": 15,
+              "candidate_rank": 5,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "semantic_conventions",
+                    "spans",
+                    "attributes"
+                  ],
+                  "rationale": "Implementation guide explains signals, spans, and attributes; relevant technical detail but not official documentation."
+                }
+              }
+            },
+            "c4": {
+              "baseline_rank": 6,
+              "candidate_rank": 17,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "semantic_conventions",
+                    "tool_calls",
+                    "spans"
+                  ],
+                  "rationale": "Third-party guide explicitly maps tool calls, model invocations, and retrieval to child spans; useful implementation lead, not official."
+                }
+              }
+            },
+            "c6": {
+              "baseline_rank": 16,
+              "candidate_rank": 2,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "semantic_conventions"
+                  ],
+                  "rationale": "Official OpenTelemetry page is a direct documentation entry point and links to markdown, but the card itself exposes no convention details."
+                }
+              }
+            },
+            "c7": {
+              "baseline_rank": 14,
+              "candidate_rank": 1,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "semantic_conventions",
+                    "attributes"
+                  ],
+                  "rationale": "Official semantic-conventions repository document is a direct specification source and exposes guidance on attribute fallback values."
+                }
+              }
+            },
+            "c8": {
+              "baseline_rank": 11,
+              "candidate_rank": 7,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "semantic_conventions",
+                    "attributes"
+                  ],
+                  "rationale": "Practical guide identifies the gen_ai vocabulary as the conventions' purpose, with little concrete field detail."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        },
+        "B": {
+          "baseline_top10_displaced_ids": [
+            "c1",
+            "c13",
+            "c15",
+            "c4"
+          ],
+          "candidate_top10_gained_ids": [
+            "c17",
+            "c6",
+            "c7",
+            "c8"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c1": {
+              "baseline_rank": 10,
+              "candidate_rank": 14,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "semantic_conventions",
+                    "tool_calls",
+                    "spans",
+                    "attributes"
+                  ],
+                  "rationale": "Datadog’s article directly describes the GenAI convention schema for prompts, tokens, tools, and provider metadata, a useful explanatory source."
+                }
+              }
+            },
+            "c13": {
+              "baseline_rank": 9,
+              "candidate_rank": 12,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "semantic_conventions",
+                    "spans",
+                    "attributes"
+                  ],
+                  "rationale": "The article describes standardized GenAI span names and attribute keys, but the excerpt does not mention tool calls."
+                }
+              }
+            },
+            "c15": {
+              "baseline_rank": 3,
+              "candidate_rank": 13,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "semantic_conventions",
+                    "spans",
+                    "tool_calls",
+                    "attributes"
+                  ],
+                  "rationale": "a strong direct lead for a central task facet or requested source type; the visible card gives specific detail on a central task aspect. Visible facet signal: semantic_conventions, spans, tool_calls, attributes. Title: OpenTelemetry GenAI Semantic Conventions: Agent Spans in Tempo. Snippet: OpenTelemetry GenAI semantic conventions for AI agents: map OpenAI Agents SDK traces to invoke_agent, chat and execute_tool spans and query them…"
+                }
+              }
+            },
+            "c17": {
+              "baseline_rank": 15,
+              "candidate_rank": 5,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "semantic_conventions",
+                    "spans",
+                    "attributes"
+                  ],
+                  "rationale": "The implementation guide title names GenAI conventions and the snippet defines spans as operations with key-value attributes."
+                }
+              }
+            },
+            "c4": {
+              "baseline_rank": 6,
+              "candidate_rank": 17,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "semantic_conventions",
+                    "spans",
+                    "tool_calls"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: semantic_conventions, spans, tool_calls. Title: OpenTelemetry for AI Systems: LLM and Agent Observability (2026) | Uptrace. Snippet: Quick Answer: OpenTelemetry instruments ... semantic conventions. For agents, each tool call, LLM invocation, and retrieval step becomes a child…"
+                }
+              }
+            },
+            "c6": {
+              "baseline_rank": 16,
+              "candidate_rank": 2,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "semantic_conventions",
+                    "spans"
+                  ],
+                  "rationale": "The official OpenTelemetry page title names GenAI spans and the convention repository; the visible excerpt is a relocation notice."
+                }
+              }
+            },
+            "c7": {
+              "baseline_rank": 14,
+              "candidate_rank": 1,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "semantic_conventions",
+                    "spans",
+                    "attributes"
+                  ],
+                  "rationale": "The official conventions repository path identifies agent spans, and the excerpt names conversation ID as span/log data; tool calls are not shown."
+                }
+              }
+            },
+            "c8": {
+              "baseline_rank": 11,
+              "candidate_rank": 7,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "semantic_conventions",
+                    "spans",
+                    "attributes"
+                  ],
+                  "rationale": "The guide identifies GenAI semantic conventions, chat spans, and standardized attribute names; no tool-call details appear in this excerpt."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        }
+      }
+    },
+    "q7": {
+      "baseline_top10": [
+        "c17",
+        "c1",
+        "c0",
+        "c19",
+        "c20",
+        "c16",
+        "c18",
+        "c6",
+        "c26",
+        "c21"
+      ],
+      "candidate_top10": [
+        "c1",
+        "c19",
+        "c0",
+        "c6",
+        "c23",
+        "c31",
+        "c20",
+        "c14",
+        "c28",
+        "c17"
+      ],
+      "baseline_full_order": [
+        "c17",
+        "c1",
+        "c0",
+        "c19",
+        "c20",
+        "c16",
+        "c18",
+        "c6",
+        "c26",
+        "c21",
+        "c23",
+        "c15",
+        "c13",
+        "c3",
+        "c22",
+        "c5",
+        "c27",
+        "c14",
+        "c31",
+        "c12",
+        "c7",
+        "c24",
+        "c33",
+        "c29",
+        "c25",
+        "c9",
+        "c10",
+        "c8",
+        "c2",
+        "c30",
+        "c32",
+        "c4",
+        "c28",
+        "c11"
+      ],
+      "candidate_full_order": [
+        "c1",
+        "c19",
+        "c0",
+        "c6",
+        "c23",
+        "c31",
+        "c20",
+        "c14",
+        "c28",
+        "c17",
+        "c27",
+        "c26",
+        "c18",
+        "c15",
+        "c13",
+        "c29",
+        "c21",
+        "c22",
+        "c5",
+        "c7",
+        "c33",
+        "c24",
+        "c9",
+        "c2",
+        "c30",
+        "c25",
+        "c3",
+        "c12",
+        "c32",
+        "c16",
+        "c4",
+        "c10",
+        "c8",
+        "c11"
+      ],
+      "reference_metrics": {
+        "A": {
+          "reading_lead_ndcg10_baseline": 0.7290069328299743,
+          "reading_lead_ndcg10_candidate": 0.8255478464906179,
+          "reading_lead_delta": 0.09654091366064355,
+          "visible_ndcg10_baseline_diagnostic": 0.8166270714036942,
+          "visible_ndcg10_candidate_diagnostic": 0.676104507379532,
+          "useful_guard": {
+            "baseline_useful_count": 10,
+            "candidate_useful_count": 10,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "citation_alignment",
+              "contradiction",
+              "evaluation",
+              "support"
+            ],
+            "candidate_named_useful_facets": [
+              "citation_alignment",
+              "contradiction",
+              "evaluation",
+              "support"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c16",
+              "c18",
+              "c21",
+              "c26"
+            ],
+            "candidate_useful_gain_ids": [
+              "c14",
+              "c23",
+              "c28",
+              "c31"
+            ],
+            "passes": true
+          }
+        },
+        "B": {
+          "reading_lead_ndcg10_baseline": 0.6991332165069549,
+          "reading_lead_ndcg10_candidate": 0.8222145818795248,
+          "reading_lead_delta": 0.12308136537256986,
+          "visible_ndcg10_baseline_diagnostic": 0.7878096049681025,
+          "visible_ndcg10_candidate_diagnostic": 0.5951359141581231,
+          "useful_guard": {
+            "baseline_useful_count": 9,
+            "candidate_useful_count": 9,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "citation_alignment",
+              "contradiction",
+              "evaluation",
+              "support"
+            ],
+            "candidate_named_useful_facets": [
+              "citation_alignment",
+              "contradiction",
+              "evaluation",
+              "support"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c16",
+              "c18",
+              "c21"
+            ],
+            "candidate_useful_gain_ids": [
+              "c14",
+              "c28",
+              "c31"
+            ],
+            "passes": true
+          }
+        }
+      },
+      "identity_displacement": {
+        "A": {
+          "baseline_top10_displaced_ids": [
+            "c16",
+            "c18",
+            "c21",
+            "c26"
+          ],
+          "candidate_top10_gained_ids": [
+            "c14",
+            "c23",
+            "c28",
+            "c31"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c14": {
+              "baseline_rank": 18,
+              "candidate_rank": 8,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "citation_alignment",
+                    "evaluation"
+                  ],
+                  "rationale": "CoVeGAT benchmarks verification of quotations and citations; relevant, but visible detail is limited."
+                }
+              }
+            },
+            "c16": {
+              "baseline_rank": 6,
+              "candidate_rank": 30,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "support",
+                    "citation_alignment"
+                  ],
+                  "rationale": "Issue proposes checking whether cited source passages support manuscript claims and gives an example claim; practical design lead, not study."
+                }
+              }
+            },
+            "c18": {
+              "baseline_rank": 7,
+              "candidate_rank": 13,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "support",
+                    "citation_alignment"
+                  ],
+                  "rationale": "ClaimVer explicitly combines claim verification and evidence attribution; relevant method lead with limited specifics in the excerpt."
+                }
+              }
+            },
+            "c21": {
+              "baseline_rank": 10,
+              "candidate_rank": 17,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "support",
+                    "citation_alignment"
+                  ],
+                  "rationale": "Post-hoc verifier proposes claim decomposition, retrieval, NLI, and traceable citations; directly relevant method, though excerpt is broad."
+                }
+              }
+            },
+            "c23": {
+              "baseline_rank": 11,
+              "candidate_rank": 5,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "support",
+                    "citation_alignment"
+                  ],
+                  "rationale": "Duplicate RefVerifier entry frames the tool around citation-support checks in software-engineering review; relevant, with less benchmark detail visible."
+                }
+              }
+            },
+            "c26": {
+              "baseline_rank": 9,
+              "candidate_rank": 12,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "support",
+                    "contradiction",
+                    "evaluation"
+                  ],
+                  "rationale": "Biomedical claim-verification study evaluates supported, contradicted, and unaddressed labels and generated evidence; direct methods/benchmark lead."
+                }
+              }
+            },
+            "c28": {
+              "baseline_rank": 33,
+              "candidate_rank": 9,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "evaluation"
+                  ],
+                  "rationale": "Systematization of autonomous research verification is relevant overview, but the card has no snippet detail."
+                }
+              }
+            },
+            "c31": {
+              "baseline_rank": 19,
+              "candidate_rank": 6,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "citation_alignment",
+                    "evaluation"
+                  ],
+                  "rationale": "SciCiteVal is a multi-domain scientific citation-verification dataset, directly matching the requested benchmark type."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        },
+        "B": {
+          "baseline_top10_displaced_ids": [
+            "c16",
+            "c18",
+            "c21",
+            "c26"
+          ],
+          "candidate_top10_gained_ids": [
+            "c14",
+            "c23",
+            "c28",
+            "c31"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c14": {
+              "baseline_rank": 18,
+              "candidate_rank": 8,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "support",
+                    "citation_alignment",
+                    "evaluation"
+                  ],
+                  "rationale": "CoVeGAT directly benchmarks whether claims match their cited evidence and proposes a verification method, a strong original-method lead."
+                }
+              }
+            },
+            "c16": {
+              "baseline_rank": 6,
+              "candidate_rank": 30,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "support",
+                    "citation_alignment"
+                  ],
+                  "rationale": "The issue provides a concrete claim/source/passage audit and explains partial support, making it a useful worked example rather than a benchmark study."
+                }
+              }
+            },
+            "c18": {
+              "baseline_rank": 7,
+              "candidate_rank": 13,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "contradiction",
+                    "evaluation"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: contradiction, evaluation. Title: ClaimVer: Explainable Claim-Level Verification and Evidence Attribution of Text Through Knowledge Graphs. Snippet: Figure 1: Demonstration of ClaimVer for claim verification and evidence attribution. (A) Text labeled as Inaccurate by HealthFeedback and ClaimVe…"
+                }
+              }
+            },
+            "c21": {
+              "baseline_rank": 10,
+              "candidate_rank": 17,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "support",
+                    "citation_alignment",
+                    "evaluation"
+                  ],
+                  "rationale": "The verifier detects unsupported claims, retrieves evidence, and returns traceable citations, directly indicating support and citation alignment."
+                }
+              }
+            },
+            "c23": {
+              "baseline_rank": 11,
+              "candidate_rank": 5,
+              "references": {
+                "B": {
+                  "lead": 1,
+                  "facets": [
+                    "support",
+                    "citation_alignment"
+                  ],
+                  "rationale": "only broad or indirect task overlap; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: support, citation_alignment. Title: RefVerifier: Semi-Automated Reference Claim Verification for Scientific Manuscripts. Snippet: As software engineering research submission counts surge, peer reviewers face severe time constraints, making systematic verification of citation…"
+                }
+              }
+            },
+            "c26": {
+              "baseline_rank": 9,
+              "candidate_rank": 12,
+              "references": {
+                "B": {
+                  "lead": 0,
+                  "facets": [],
+                  "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: When Retrieval Helps and Distracts: Evaluating Evidence-Generating LLMs for Biomedical Claim Verification. Snippet: Biomedical fact-checking systems must do more than predict whether a claim is supported, contradicted, or unaddressed: they should also produce e…"
+                }
+              }
+            },
+            "c28": {
+              "baseline_rank": 33,
+              "candidate_rank": 9,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [],
+                  "rationale": "The card is only a title and empty snippet about autonomous-research verification; no listed claim-support, contradiction, citation-alignment, or evaluation facet is visible."
+                }
+              }
+            },
+            "c31": {
+              "baseline_rank": 19,
+              "candidate_rank": 6,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "citation_alignment",
+                    "evaluation"
+                  ],
+                  "rationale": "The dataset abstract names erroneous scientific citations and automated citation-verification benchmarks, but does not show passage-level support labels."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        }
+      }
+    },
+    "q8": {
+      "baseline_top10": [
+        "c0",
+        "c27",
+        "c2",
+        "c3",
+        "c8",
+        "c5",
+        "c1",
+        "c26",
+        "c12",
+        "c25"
+      ],
+      "candidate_top10": [
+        "c1",
+        "c3",
+        "c27",
+        "c2",
+        "c26",
+        "c0",
+        "c16",
+        "c5",
+        "c8",
+        "c29"
+      ],
+      "baseline_full_order": [
+        "c0",
+        "c27",
+        "c2",
+        "c3",
+        "c8",
+        "c5",
+        "c1",
+        "c26",
+        "c12",
+        "c25",
+        "c7",
+        "c29",
+        "c19",
+        "c15",
+        "c11",
+        "c16",
+        "c10",
+        "c23",
+        "c9",
+        "c24",
+        "c4",
+        "c6",
+        "c17",
+        "c28",
+        "c20",
+        "c14",
+        "c22",
+        "c21",
+        "c18",
+        "c13"
+      ],
+      "candidate_full_order": [
+        "c1",
+        "c3",
+        "c27",
+        "c2",
+        "c26",
+        "c0",
+        "c16",
+        "c5",
+        "c8",
+        "c29",
+        "c10",
+        "c12",
+        "c25",
+        "c15",
+        "c7",
+        "c11",
+        "c6",
+        "c9",
+        "c24",
+        "c19",
+        "c23",
+        "c4",
+        "c18",
+        "c20",
+        "c14",
+        "c13",
+        "c28",
+        "c17",
+        "c22",
+        "c21"
+      ],
+      "reference_metrics": {
+        "A": {
+          "reading_lead_ndcg10_baseline": 0.6060951153704752,
+          "reading_lead_ndcg10_candidate": 0.8173510962432012,
+          "reading_lead_delta": 0.211255980872726,
+          "visible_ndcg10_baseline_diagnostic": 0.7700214508479852,
+          "visible_ndcg10_candidate_diagnostic": 0.7980661035187568,
+          "useful_guard": {
+            "baseline_useful_count": 9,
+            "candidate_useful_count": 10,
+            "useful_count_loss": -1,
+            "baseline_named_useful_facets": [
+              "coverage",
+              "evidence_gaps",
+              "stopping",
+              "uncertainty"
+            ],
+            "candidate_named_useful_facets": [
+              "coverage",
+              "evidence_gaps",
+              "stopping",
+              "uncertainty"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c12"
+            ],
+            "candidate_useful_gain_ids": [
+              "c16",
+              "c29"
+            ],
+            "passes": true
+          }
+        },
+        "B": {
+          "reading_lead_ndcg10_baseline": 0.6818415349077068,
+          "reading_lead_ndcg10_candidate": 0.728625458324582,
+          "reading_lead_delta": 0.046783923416875206,
+          "visible_ndcg10_baseline_diagnostic": 0.9642140958469679,
+          "visible_ndcg10_candidate_diagnostic": 0.810053994331505,
+          "useful_guard": {
+            "baseline_useful_count": 8,
+            "candidate_useful_count": 8,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "coverage",
+              "evidence_gaps",
+              "stopping",
+              "uncertainty"
+            ],
+            "candidate_named_useful_facets": [
+              "coverage",
+              "evidence_gaps",
+              "stopping",
+              "uncertainty"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c12"
+            ],
+            "candidate_useful_gain_ids": [
+              "c16"
+            ],
+            "passes": true
+          }
+        }
+      },
+      "identity_displacement": {
+        "A": {
+          "baseline_top10_displaced_ids": [
+            "c12",
+            "c25"
+          ],
+          "candidate_top10_gained_ids": [
+            "c16",
+            "c29"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c12": {
+              "baseline_rank": 9,
+              "candidate_rank": 12,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "uncertainty",
+                    "evidence_gaps"
+                  ],
+                  "rationale": "Guide gives factors for deciding whether a gap matters, including uncertainty and consequences; useful conceptual framework."
+                }
+              }
+            },
+            "c16": {
+              "baseline_rank": 16,
+              "candidate_rank": 7,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "evidence_gaps",
+                    "coverage"
+                  ],
+                  "rationale": "Scoping review surveys methods to identify, prioritize, and display research gaps; direct systematic-review methods source."
+                }
+              }
+            },
+            "c25": {
+              "baseline_rank": 10,
+              "candidate_rank": 13,
+              "references": {
+                "A": {
+                  "lead": 0,
+                  "facets": [
+                    "uncertainty"
+                  ],
+                  "rationale": "Fact-checking uncertainty calibration is adjacent but not search stopping or research coverage."
+                }
+              }
+            },
+            "c29": {
+              "baseline_rank": 12,
+              "candidate_rank": 10,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "coverage",
+                    "uncertainty"
+                  ],
+                  "rationale": "Auditable deep-research system uses recursive search and rubric-grounded reasoning; useful agent method lead, but stopping criteria are not shown."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        },
+        "B": {
+          "baseline_top10_displaced_ids": [
+            "c12",
+            "c25"
+          ],
+          "candidate_top10_gained_ids": [
+            "c16",
+            "c29"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c12": {
+              "baseline_rank": 9,
+              "candidate_rank": 12,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "evidence_gaps",
+                    "uncertainty"
+                  ],
+                  "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: evidence_gaps, uncertainty. Title: Weak Evidence vs. Missing Evidence: Which Gap Matters More?. Snippet: Consider the importance of the underlying question, the consequences of being wrong, how much uncertainty currently exists, who is affected, whet…"
+                }
+              }
+            },
+            "c16": {
+              "baseline_rank": 16,
+              "candidate_rank": 7,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "coverage",
+                    "evidence_gaps"
+                  ],
+                  "rationale": "This scoping review directly surveys methods to identify and prioritize health research gaps and explains why gaps should guide future studies."
+                }
+              }
+            },
+            "c25": {
+              "baseline_rank": 10,
+              "candidate_rank": 13,
+              "references": {
+                "B": {
+                  "lead": 1,
+                  "facets": [
+                    "uncertainty"
+                  ],
+                  "rationale": "only broad or indirect task overlap; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: uncertainty. Title: Bridging Evidence and Uncertainty: From Explainable Weighting to Uncertainty Calibration in Fact Checking. Snippet: Automated fact-checking must do more than output a label. To be trustworthy, a system should make clear how each piece of evidence contributes to…"
+                }
+              }
+            },
+            "c29": {
+              "baseline_rank": 12,
+              "candidate_rank": 10,
+              "references": {
+                "B": {
+                  "lead": 1,
+                  "facets": [],
+                  "rationale": "The excerpt describes deep-research planning and verification limitations but does not visibly identify stopping criteria, coverage, uncertainty, or evidence gaps."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        }
+      }
+    }
+  },
+  "q9_extension_separate": {
+    "baseline_top10": [
+      "c15",
+      "c14",
+      "c0",
+      "c12",
+      "c33",
+      "c16",
+      "c24",
+      "c7",
+      "c5",
+      "c11"
+    ],
+    "candidate_top10": [
+      "c12",
+      "c15",
+      "c0",
+      "c14",
+      "c16",
+      "c33",
+      "c24",
+      "c1",
+      "c7",
+      "c11"
+    ],
+    "baseline_full_order": [
+      "c15",
+      "c14",
+      "c0",
+      "c12",
+      "c33",
+      "c16",
+      "c24",
+      "c7",
+      "c5",
+      "c11",
+      "c1",
+      "c4",
+      "c3",
+      "c2",
+      "c22",
+      "c9",
+      "c23",
+      "c10",
+      "c8",
+      "c34",
+      "c6",
+      "c35",
+      "c20",
+      "c25",
+      "c13",
+      "c26",
+      "c30",
+      "c18",
+      "c27",
+      "c32",
+      "c28",
+      "c19",
+      "c31",
+      "c17",
+      "c36",
+      "c21",
+      "c29",
+      "c37"
+    ],
+    "candidate_full_order": [
+      "c12",
+      "c15",
+      "c0",
+      "c14",
+      "c16",
+      "c33",
+      "c24",
+      "c1",
+      "c7",
+      "c11",
+      "c22",
+      "c23",
+      "c10",
+      "c35",
+      "c34",
+      "c18",
+      "c27",
+      "c25",
+      "c2",
+      "c28",
+      "c30",
+      "c5",
+      "c26",
+      "c19",
+      "c32",
+      "c9",
+      "c20",
+      "c31",
+      "c6",
+      "c13",
+      "c3",
+      "c36",
+      "c8",
+      "c4",
+      "c29",
+      "c17",
+      "c21",
+      "c37"
+    ],
+    "reference_metrics": {
+      "A": {
+        "reading_lead_ndcg10_baseline": 1.0,
+        "reading_lead_ndcg10_candidate": 1.0,
+        "reading_lead_delta": 0.0,
+        "visible_ndcg10_baseline_diagnostic": 0.8163382074416974,
+        "visible_ndcg10_candidate_diagnostic": 0.6889562271911918,
+        "useful_guard": {
+          "baseline_useful_count": 10,
+          "candidate_useful_count": 10,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "adaptation",
+            "impacts",
+            "mitigation"
+          ],
+          "candidate_named_useful_facets": [
+            "adaptation",
+            "impacts",
+            "mitigation"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c5"
+          ],
+          "candidate_useful_gain_ids": [
+            "c1"
+          ],
+          "passes": true
+        }
+      },
+      "B": {
+        "reading_lead_ndcg10_baseline": 0.9257857076266625,
+        "reading_lead_ndcg10_candidate": 0.9239702799224406,
+        "reading_lead_delta": -0.001815427704221828,
+        "visible_ndcg10_baseline_diagnostic": 0.8048644369574367,
+        "visible_ndcg10_candidate_diagnostic": 0.808340834189775,
+        "useful_guard": {
+          "baseline_useful_count": 10,
+          "candidate_useful_count": 10,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "adaptation",
+            "impacts",
+            "mitigation"
+          ],
+          "candidate_named_useful_facets": [
+            "adaptation",
+            "impacts",
+            "mitigation"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c5"
+          ],
+          "candidate_useful_gain_ids": [
+            "c1"
+          ],
+          "passes": true
+        }
+      }
+    },
+    "identity_displacement": {
+      "A": {
+        "baseline_top10_displaced_ids": [
+          "c5"
+        ],
+        "candidate_top10_gained_ids": [
+          "c1"
+        ],
+        "cards_and_fixed_reference_rationales": {
+          "c1": {
+            "baseline_rank": 11,
+            "candidate_rank": 8,
+            "references": {
+              "A": {
+                "lead": 2,
+                "facets": [
+                  "impacts",
+                  "adaptation",
+                  "mitigation"
+                ],
+                "rationale": "Review concerns ecosystem services and climate vulnerability, and defines mitigation; useful focused review lead."
+              }
+            }
+          },
+          "c5": {
+            "baseline_rank": 9,
+            "candidate_rank": 22,
+            "references": {
+              "A": {
+                "lead": 2,
+                "facets": [
+                  "adaptation",
+                  "mitigation"
+                ],
+                "rationale": "Study discusses regional mitigation efforts and why adaptation remains necessary as impacts persist; substantive synthesis, though title emphasizes imbalance."
+              }
+            }
+          }
+        },
+        "gate": "diagnostic only; identity displacement does not assert redundancy"
+      },
+      "B": {
+        "baseline_top10_displaced_ids": [
+          "c5"
+        ],
+        "candidate_top10_gained_ids": [
+          "c1"
+        ],
+        "cards_and_fixed_reference_rationales": {
+          "c1": {
+            "baseline_rank": 11,
+            "candidate_rank": 8,
+            "references": {
+              "B": {
+                "lead": 2,
+                "facets": [
+                  "adaptation",
+                  "mitigation"
+                ],
+                "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: adaptation, mitigation. Title: Mitigation and Adaptation Strategies to Reduce Climate Vulnerabilities and Maintain Ecosystem Services - PMC. Snippet: Maintaining or increasing ecosystem ... (actions that reduce anthropogenic influences on climate) (Figure 1 ). Mitigation strategies are those th…"
+              }
+            }
+          },
+          "c5": {
+            "baseline_rank": 9,
+            "candidate_rank": 22,
+            "references": {
+              "B": {
+                "lead": 2,
+                "facets": [
+                  "impacts",
+                  "adaptation",
+                  "mitigation"
+                ],
+                "rationale": "The snippet says climate impacts will persist and explains mitigation and adaptation as responses, visibly covering all three topics."
+              }
+            }
+          }
+        },
+        "gate": "diagnostic only; identity displacement does not assert redundancy"
+      }
+    }
+  },
+  "extended_pools": {
+    "cardiac": {
+      "pool_count": 44,
+      "baseline_full_order": [
+        "c6",
+        "c17",
+        "c14",
+        "c0",
+        "c10",
+        "c19",
+        "c1",
+        "c30",
+        "c3",
+        "c5",
+        "c7",
+        "c4",
+        "c28",
+        "c15",
+        "c18",
+        "c35",
+        "c37",
+        "c34",
+        "c16",
+        "c23",
+        "c26",
+        "c8",
+        "c29",
+        "c9",
+        "c2",
+        "c31",
+        "c36",
+        "c24",
+        "c27",
+        "c20",
+        "c33",
+        "c12",
+        "c32",
+        "c39",
+        "c25",
+        "c21",
+        "c38",
+        "c22",
+        "c13",
+        "c11",
+        "c40",
+        "c41",
+        "c42",
+        "c43"
+      ],
+      "candidate_full_order": [
+        "c43",
+        "c4",
+        "c27",
+        "c17",
+        "c6",
+        "c29",
+        "c35",
+        "c37",
+        "c34",
+        "c28",
+        "c7",
+        "c42",
+        "c36",
+        "c40",
+        "c5",
+        "c8",
+        "c15",
+        "c41",
+        "c24",
+        "c19",
+        "c25",
+        "c23",
+        "c10",
+        "c30",
+        "c21",
+        "c31",
+        "c11",
+        "c14",
+        "c39",
+        "c33",
+        "c20",
+        "c26",
+        "c18",
+        "c22",
+        "c1",
+        "c2",
+        "c0",
+        "c32",
+        "c3",
+        "c9",
+        "c12",
+        "c16",
+        "c38",
+        "c13"
+      ],
+      "candidate_first40_order": [
+        "c4",
+        "c27",
+        "c17",
+        "c6",
+        "c37",
+        "c35",
+        "c29",
+        "c34",
+        "c8",
+        "c28",
+        "c7",
+        "c5",
+        "c15",
+        "c36",
+        "c25",
+        "c19",
+        "c24",
+        "c23",
+        "c21",
+        "c10",
+        "c30",
+        "c31",
+        "c11",
+        "c33",
+        "c14",
+        "c39",
+        "c26",
+        "c20",
+        "c22",
+        "c18",
+        "c2",
+        "c1",
+        "c32",
+        "c3",
+        "c0",
+        "c9",
+        "c12",
+        "c16",
+        "c38",
+        "c13",
+        "c40",
+        "c41",
+        "c42",
+        "c43"
+      ],
+      "diagnostic_full_D_minus_first40_D_top10_overlap": 0.9,
+      "exact_repeat_top10_overlap": 1.0,
+      "rotated20_top10_overlap": 1.0,
+      "reference_metrics": {
+        "A": {
+          "reading_lead_ndcg10_baseline": 0.6334722053323072,
+          "reading_lead_ndcg10_candidate": 0.9239702799224406,
+          "reading_lead_delta": 0.29049807459013344,
+          "maximum_allowed_loss": -0.03,
+          "useful_guard": {
+            "baseline_useful_count": 8,
+            "candidate_useful_count": 10,
+            "useful_count_loss": -2,
+            "baseline_named_useful_facets": [
+              "interventions",
+              "lifestyle",
+              "prevention",
+              "risk_factors"
+            ],
+            "candidate_named_useful_facets": [
+              "interventions",
+              "lifestyle",
+              "prevention",
+              "risk_factors"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c0",
+              "c10",
+              "c14",
+              "c19",
+              "c30",
+              "c5"
+            ],
+            "candidate_useful_gain_ids": [
+              "c27",
+              "c28",
+              "c29",
+              "c34",
+              "c35",
+              "c37",
+              "c4",
+              "c43"
+            ],
+            "passes": true
+          },
+          "passes_per_pool_gate": true
+        },
+        "B": {
+          "reading_lead_ndcg10_baseline": 0.7097178401756364,
+          "reading_lead_ndcg10_candidate": 0.9636452638863133,
+          "reading_lead_delta": 0.2539274237106769,
+          "maximum_allowed_loss": -0.03,
+          "useful_guard": {
+            "baseline_useful_count": 10,
+            "candidate_useful_count": 10,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "interventions",
+              "lifestyle",
+              "prevention",
+              "risk_factors"
+            ],
+            "candidate_named_useful_facets": [
+              "interventions",
+              "lifestyle",
+              "prevention",
+              "risk_factors"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c0",
+              "c1",
+              "c10",
+              "c14",
+              "c19",
+              "c3",
+              "c30",
+              "c5"
+            ],
+            "candidate_useful_gain_ids": [
+              "c27",
+              "c28",
+              "c29",
+              "c34",
+              "c35",
+              "c37",
+              "c4",
+              "c43"
+            ],
+            "passes": true
+          },
+          "passes_per_pool_gate": true
+        }
+      },
+      "identity_displacement": {
+        "A": {
+          "baseline_top10_displaced_ids": [
+            "c0",
+            "c1",
+            "c10",
+            "c14",
+            "c19",
+            "c3",
+            "c30",
+            "c5"
+          ],
+          "candidate_top10_gained_ids": [
+            "c27",
+            "c28",
+            "c29",
+            "c34",
+            "c35",
+            "c37",
+            "c4",
+            "c43"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c0": {
+              "baseline_rank": 4,
+              "candidate_rank": 37,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "risk_factors",
+                    "lifestyle"
+                  ],
+                  "rationale": "Research roundup gives sedentary behavior/risk detail and mentions a risk calculator; secondary lead."
+                }
+              }
+            },
+            "c1": {
+              "baseline_rank": 7,
+              "candidate_rank": 35,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "prevention"
+                  ],
+                  "rationale": "News roundup signals heart-disease prevention research but does not identify a specific study."
+                }
+              }
+            },
+            "c10": {
+              "baseline_rank": 5,
+              "candidate_rank": 23,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "risk_factors"
+                  ],
+                  "rationale": "Population studies concern causes and prevention, but page is broad coronary research and includes non-prevention trials."
+                }
+              }
+            },
+            "c14": {
+              "baseline_rank": 3,
+              "candidate_rank": 28,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "prevention",
+                    "risk_factors"
+                  ],
+                  "rationale": "AHA summary describes CKM risk calculator and prevention/management statement; useful topical lead."
+                }
+              }
+            },
+            "c19": {
+              "baseline_rank": 6,
+              "candidate_rank": 20,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "prevention",
+                    "risk_factors",
+                    "interventions"
+                  ],
+                  "rationale": "Review discusses ML risk assessment, data sources, and precision-prevention possibilities; claims are visible as claims."
+                }
+              }
+            },
+            "c27": {
+              "baseline_rank": 29,
+              "candidate_rank": 3,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention"
+                  ],
+                  "rationale": "Title directly names primary and secondary prevention; sparse citation gives no visible detail."
+                }
+              }
+            },
+            "c28": {
+              "baseline_rank": 13,
+              "candidate_rank": 10,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "lifestyle",
+                    "interventions"
+                  ],
+                  "rationale": "Focused flavanol paper connects diet to prevention and mentions intervention studies, though excerpt is truncated."
+                }
+              }
+            },
+            "c29": {
+              "baseline_rank": 23,
+              "candidate_rank": 6,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention",
+                    "lifestyle"
+                  ],
+                  "rationale": "Focused diet-modification prevention paper is a strong topic lead, though the citation is sparse."
+                }
+              }
+            },
+            "c3": {
+              "baseline_rank": 9,
+              "candidate_rank": 39,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "prevention"
+                  ],
+                  "rationale": "Annual findings roundup mentions prevention areas without identifying a focused source in the snippet."
+                }
+              }
+            },
+            "c30": {
+              "baseline_rank": 8,
+              "candidate_rank": 24,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention",
+                    "lifestyle",
+                    "interventions"
+                  ],
+                  "rationale": "Secondary-prevention roadmap explicitly covers lifestyle and pharmacologic treatment and practice gaps."
+                }
+              }
+            },
+            "c34": {
+              "baseline_rank": 18,
+              "candidate_rank": 9,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention",
+                    "risk_factors"
+                  ],
+                  "rationale": "AHA scientific statement directly concerns timing of early prevention and cardiovascular risk in menopause."
+                }
+              }
+            },
+            "c35": {
+              "baseline_rank": 16,
+              "candidate_rank": 7,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "lifestyle",
+                    "prevention"
+                  ],
+                  "rationale": "Review title directly concerns healthy lifestyle behaviors in prevention; visible citation alone has little detail."
+                }
+              }
+            },
+            "c37": {
+              "baseline_rank": 17,
+              "candidate_rank": 8,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "lifestyle"
+                  ],
+                  "rationale": "The title directly links physical activity across life to cardiovascular disease; no findings are shown."
+                }
+              }
+            },
+            "c4": {
+              "baseline_rank": 12,
+              "candidate_rank": 2,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention",
+                    "risk_factors"
+                  ],
+                  "rationale": "Dedicated peer-reviewed prevention topic with risk prediction and public-health focus; the snippet identifies its remit, not study findings."
+                }
+              }
+            },
+            "c43": {
+              "baseline_rank": 44,
+              "candidate_rank": 1,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention"
+                  ],
+                  "rationale": "The review directly targets primary prevention in women; its citation gives no visible risk-factor detail."
+                }
+              }
+            },
+            "c5": {
+              "baseline_rank": 10,
+              "candidate_rank": 15,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "prevention",
+                    "lifestyle",
+                    "interventions"
+                  ],
+                  "rationale": "Trial directory includes a described church-based lifestyle intervention relevant to prevention."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        },
+        "B": {
+          "baseline_top10_displaced_ids": [
+            "c0",
+            "c1",
+            "c10",
+            "c14",
+            "c19",
+            "c3",
+            "c30",
+            "c5"
+          ],
+          "candidate_top10_gained_ids": [
+            "c27",
+            "c28",
+            "c29",
+            "c34",
+            "c35",
+            "c37",
+            "c4",
+            "c43"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c0": {
+              "baseline_rank": 4,
+              "candidate_rank": 37,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "risk_factors",
+                    "lifestyle",
+                    "prevention"
+                  ],
+                  "rationale": "Research roundup provides visible sedentary-behavior risk detail and a prevention-oriented risk calculator example."
+                }
+              }
+            },
+            "c1": {
+              "baseline_rank": 7,
+              "candidate_rank": 35,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "prevention",
+                    "interventions"
+                  ],
+                  "rationale": "News roundup signals recent prevention and management findings but lists topics without useful study detail."
+                }
+              }
+            },
+            "c10": {
+              "baseline_rank": 5,
+              "candidate_rank": 23,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "prevention"
+                  ],
+                  "rationale": "Population studies are said to illuminate causes and prevention, but the card identifies no specific risk factor."
+                }
+              }
+            },
+            "c14": {
+              "baseline_rank": 3,
+              "candidate_rank": 28,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "prevention",
+                    "risk_factors"
+                  ],
+                  "rationale": "Research news describes CKM measures, a heart-risk calculator, and prevention/management coverage."
+                }
+              }
+            },
+            "c19": {
+              "baseline_rank": 6,
+              "candidate_rank": 20,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "prevention",
+                    "risk_factors",
+                    "interventions"
+                  ],
+                  "rationale": "Detailed review snippet discusses risk prediction, social determinants, wearables, and emerging precision-prevention methods."
+                }
+              }
+            },
+            "c27": {
+              "baseline_rank": 29,
+              "candidate_rank": 3,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention"
+                  ],
+                  "rationale": "Title directly covers primary and secondary prevention, a central reading-list topic; citation card shows no substantive detail."
+                }
+              }
+            },
+            "c28": {
+              "baseline_rank": 13,
+              "candidate_rank": 10,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "prevention",
+                    "lifestyle",
+                    "interventions"
+                  ],
+                  "rationale": "Review lead on flavanols and diet-based prevention; snippet describes epidemiologic and small intervention evidence."
+                }
+              }
+            },
+            "c29": {
+              "baseline_rank": 23,
+              "candidate_rank": 6,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention",
+                    "lifestyle"
+                  ],
+                  "rationale": "Title directly identifies a review on diet modification for CVD prevention; no abstract detail visible."
+                }
+              }
+            },
+            "c3": {
+              "baseline_rank": 9,
+              "candidate_rank": 39,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "prevention"
+                  ],
+                  "rationale": "Research roundup names conditions with prevention and management gaps, but gives no specific risk factor or intervention detail."
+                }
+              }
+            },
+            "c30": {
+              "baseline_rank": 8,
+              "candidate_rank": 24,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention",
+                    "lifestyle",
+                    "interventions"
+                  ],
+                  "rationale": "Secondary-prevention roadmap directly covers lifestyle and pharmacologic treatment; snippet identifies gaps in practice."
+                }
+              }
+            },
+            "c34": {
+              "baseline_rank": 18,
+              "candidate_rank": 9,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention",
+                    "risk_factors"
+                  ],
+                  "rationale": "AHA scientific statement directly links menopause transition, CVD risk, and timing of early prevention; citation only."
+                }
+              }
+            },
+            "c35": {
+              "baseline_rank": 16,
+              "candidate_rank": 7,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention",
+                    "lifestyle"
+                  ],
+                  "rationale": "Review title directly targets healthy lifestyle behaviors in CVD prevention; card itself gives citation only."
+                }
+              }
+            },
+            "c37": {
+              "baseline_rank": 17,
+              "candidate_rank": 8,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "lifestyle"
+                  ],
+                  "rationale": "Lifecourse physical-activity review directly concerns CVD and lifestyle; the card does not state a prevention focus."
+                }
+              }
+            },
+            "c4": {
+              "baseline_rank": 12,
+              "candidate_rank": 2,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention"
+                  ],
+                  "rationale": "Dedicated peer-reviewed prevention research collection; snippet names risk prediction and public-health disparities, but no specific risk factor."
+                }
+              }
+            },
+            "c43": {
+              "baseline_rank": 44,
+              "candidate_rank": 1,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention"
+                  ],
+                  "rationale": "State-of-the-art review explicitly addresses primary prevention in women; citation-only snippet gives no risk-factor detail."
+                }
+              }
+            },
+            "c5": {
+              "baseline_rank": 10,
+              "candidate_rank": 15,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "prevention",
+                    "lifestyle",
+                    "interventions"
+                  ],
+                  "rationale": "Clinical-trial listing is directly about CVD prevention and exposes a lifestyle/church-based intervention example."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        }
+      },
+      "same_rubric_first40_vs_complete_diagnostic": {
+        "A": {
+          "first40_diagnostic_ndcg10": 0.8771324975457362,
+          "complete_d_ndcg10": 0.9239702799224406,
+          "complete_d_minus_first40_diagnostic_ndcg10": 0.04683778237670444,
+          "first40_diagnostic_useful10": 10,
+          "complete_d_useful10": 10,
+          "first40_diagnostic_named_facets_at10": [
+            "interventions",
+            "lifestyle",
+            "prevention",
+            "risk_factors"
+          ],
+          "complete_d_named_facets_at10": [
+            "interventions",
+            "lifestyle",
+            "prevention",
+            "risk_factors"
+          ],
+          "complete_d_tail_total_candidates": 4,
+          "complete_d_tail_useful_candidates_all_ranks": [
+            "c40",
+            "c41",
+            "c42",
+            "c43"
+          ],
+          "complete_d_tail_useful_count_all_ranks": 4,
+          "complete_d_tail_named_facets_all_ranks": [
+            "lifestyle",
+            "prevention",
+            "risk_factors"
+          ],
+          "complete_d_tail_top10_ids": [
+            "c43"
+          ],
+          "complete_d_tail_useful_top10_ids": [
+            "c43"
+          ],
+          "complete_d_tail_useful_count_top10": 1
+        },
+        "B": {
+          "first40_diagnostic_ndcg10": 0.9257857076266625,
+          "complete_d_ndcg10": 0.9636452638863133,
+          "complete_d_minus_first40_diagnostic_ndcg10": 0.03785955625965087,
+          "first40_diagnostic_useful10": 10,
+          "complete_d_useful10": 10,
+          "first40_diagnostic_named_facets_at10": [
+            "interventions",
+            "lifestyle",
+            "prevention",
+            "risk_factors"
+          ],
+          "complete_d_named_facets_at10": [
+            "interventions",
+            "lifestyle",
+            "prevention",
+            "risk_factors"
+          ],
+          "complete_d_tail_total_candidates": 4,
+          "complete_d_tail_useful_candidates_all_ranks": [
+            "c40",
+            "c41",
+            "c42",
+            "c43"
+          ],
+          "complete_d_tail_useful_count_all_ranks": 4,
+          "complete_d_tail_named_facets_all_ranks": [
+            "lifestyle",
+            "prevention",
+            "risk_factors"
+          ],
+          "complete_d_tail_top10_ids": [
+            "c43"
+          ],
+          "complete_d_tail_useful_top10_ids": [
+            "c43"
+          ],
+          "complete_d_tail_useful_count_top10": 1
+        }
+      }
+    },
+    "research": {
+      "pool_count": 45,
+      "baseline_full_order": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c7",
+        "c10",
+        "c6",
+        "c5",
+        "c9",
+        "c4",
+        "c11",
+        "c8",
+        "c15",
+        "c19",
+        "c17",
+        "c12",
+        "c13",
+        "c14",
+        "c20",
+        "c16",
+        "c27",
+        "c21",
+        "c22",
+        "c18",
+        "c25",
+        "c23",
+        "c29",
+        "c24",
+        "c26",
+        "c32",
+        "c30",
+        "c31",
+        "c34",
+        "c28",
+        "c36",
+        "c35",
+        "c33",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43",
+        "c44"
+      ],
+      "candidate_full_order": [
+        "c0",
+        "c2",
+        "c1",
+        "c3",
+        "c4",
+        "c5",
+        "c19",
+        "c7",
+        "c17",
+        "c16",
+        "c15",
+        "c9",
+        "c10",
+        "c18",
+        "c6",
+        "c11",
+        "c27",
+        "c21",
+        "c8",
+        "c29",
+        "c30",
+        "c31",
+        "c40",
+        "c36",
+        "c22",
+        "c41",
+        "c12",
+        "c23",
+        "c42",
+        "c28",
+        "c26",
+        "c44",
+        "c14",
+        "c13",
+        "c20",
+        "c43",
+        "c32",
+        "c34",
+        "c24",
+        "c25",
+        "c33",
+        "c35",
+        "c37",
+        "c38",
+        "c39"
+      ],
+      "candidate_first40_order": [
+        "c0",
+        "c2",
+        "c1",
+        "c3",
+        "c4",
+        "c19",
+        "c5",
+        "c17",
+        "c7",
+        "c16",
+        "c15",
+        "c9",
+        "c10",
+        "c11",
+        "c6",
+        "c18",
+        "c27",
+        "c30",
+        "c21",
+        "c8",
+        "c31",
+        "c29",
+        "c22",
+        "c36",
+        "c12",
+        "c28",
+        "c23",
+        "c26",
+        "c14",
+        "c13",
+        "c20",
+        "c32",
+        "c34",
+        "c24",
+        "c33",
+        "c25",
+        "c35",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43",
+        "c44"
+      ],
+      "diagnostic_full_D_minus_first40_D_top10_overlap": 1.0,
+      "exact_repeat_top10_overlap": 1.0,
+      "rotated20_top10_overlap": 0.9,
+      "reference_metrics": {
+        "A": {
+          "reading_lead_ndcg10_baseline": 0.8393199086389681,
+          "reading_lead_ndcg10_candidate": 0.9195048263992502,
+          "reading_lead_delta": 0.08018491776028214,
+          "maximum_allowed_loss": -0.03,
+          "useful_guard": {
+            "baseline_useful_count": 8,
+            "candidate_useful_count": 9,
+            "useful_count_loss": -1,
+            "baseline_named_useful_facets": [
+              "agent_orchestration",
+              "evaluation",
+              "retrieval"
+            ],
+            "candidate_named_useful_facets": [
+              "agent_orchestration",
+              "evaluation",
+              "retrieval"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c9"
+            ],
+            "candidate_useful_gain_ids": [
+              "c16",
+              "c17"
+            ],
+            "passes": true
+          },
+          "passes_per_pool_gate": true
+        },
+        "B": {
+          "reading_lead_ndcg10_baseline": 0.9887686460282258,
+          "reading_lead_ndcg10_candidate": 0.9951785714313113,
+          "reading_lead_delta": 0.006409925403085492,
+          "maximum_allowed_loss": -0.03,
+          "useful_guard": {
+            "baseline_useful_count": 10,
+            "candidate_useful_count": 10,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "agent_orchestration",
+              "evaluation",
+              "evidence_grounding",
+              "retrieval"
+            ],
+            "candidate_named_useful_facets": [
+              "agent_orchestration",
+              "evaluation",
+              "retrieval"
+            ],
+            "lost_named_useful_facets": [
+              "evidence_grounding"
+            ],
+            "baseline_useful_displaced_ids": [
+              "c10",
+              "c6",
+              "c9"
+            ],
+            "candidate_useful_gain_ids": [
+              "c16",
+              "c17",
+              "c19"
+            ],
+            "passes": false
+          },
+          "passes_per_pool_gate": false
+        }
+      },
+      "identity_displacement": {
+        "A": {
+          "baseline_top10_displaced_ids": [
+            "c10",
+            "c6",
+            "c9"
+          ],
+          "candidate_top10_gained_ids": [
+            "c16",
+            "c17",
+            "c19"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c10": {
+              "baseline_rank": 6,
+              "candidate_rank": 13,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "retrieval",
+                    "evidence_grounding"
+                  ],
+                  "rationale": "The implementation description gives document ingestion, local embedding/indexing, question answering, comparison, and citation functions."
+                }
+              }
+            },
+            "c16": {
+              "baseline_rank": 20,
+              "candidate_rank": 10,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "retrieval"
+                  ],
+                  "rationale": "Comprehensive RAG survey title is highly relevant, but snippet is a mismatched time-series fragment."
+                }
+              }
+            },
+            "c17": {
+              "baseline_rank": 15,
+              "candidate_rank": 9,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "retrieval",
+                    "agent_orchestration"
+                  ],
+                  "rationale": "The title directly identifies a scientific multi-source RAG framework, but the card has no abstract detail."
+                }
+              }
+            },
+            "c19": {
+              "baseline_rank": 14,
+              "candidate_rank": 7,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "retrieval"
+                  ],
+                  "rationale": "Survey repository offers a source trail, but the snippet is generic and points to the repo rather than the survey."
+                }
+              }
+            },
+            "c6": {
+              "baseline_rank": 7,
+              "candidate_rank": 15,
+              "references": {
+                "A": {
+                  "lead": 1,
+                  "facets": [
+                    "retrieval",
+                    "evidence_grounding"
+                  ],
+                  "rationale": "The implementation description details local document parsing, vector indexing, retrieved-text answers, comparisons, and citations."
+                }
+              }
+            },
+            "c9": {
+              "baseline_rank": 9,
+              "candidate_rank": 12,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "retrieval",
+                    "agent_orchestration"
+                  ],
+                  "rationale": "Study proposes an agent-workflow RAG chunking method and explains the fixed-chunk limitation."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        },
+        "B": {
+          "baseline_top10_displaced_ids": [
+            "c10",
+            "c6",
+            "c9"
+          ],
+          "candidate_top10_gained_ids": [
+            "c16",
+            "c17",
+            "c19"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c10": {
+              "baseline_rank": 6,
+              "candidate_rank": 13,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "retrieval",
+                    "evidence_grounding"
+                  ],
+                  "rationale": "Tool for literature review visibly parses papers and grounds answers in retrieved text; useful implementation source, not clearly an agent study."
+                }
+              }
+            },
+            "c16": {
+              "baseline_rank": 20,
+              "candidate_rank": 10,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "retrieval",
+                    "agent_orchestration"
+                  ],
+                  "rationale": "Broad RAG survey is relevant background, while snippet describes another application rather than survey coverage."
+                }
+              }
+            },
+            "c17": {
+              "baseline_rank": 15,
+              "candidate_rank": 9,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "retrieval",
+                    "agent_orchestration"
+                  ],
+                  "rationale": "Scientific multi-modal, multi-source RAG framework is directly relevant by title, but the card has no abstract details."
+                }
+              }
+            },
+            "c19": {
+              "baseline_rank": 14,
+              "candidate_rank": 7,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "retrieval",
+                    "agent_orchestration"
+                  ],
+                  "rationale": "Survey repository signals agent-enhanced RAG and provides a basic definition, but is not itself clearly an original study."
+                }
+              }
+            },
+            "c6": {
+              "baseline_rank": 7,
+              "candidate_rank": 15,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "retrieval",
+                    "evidence_grounding"
+                  ],
+                  "rationale": "Duplicate-number DOI card describes a literature-review tool grounding summaries and comparisons in retrieved papers."
+                }
+              }
+            },
+            "c9": {
+              "baseline_rank": 9,
+              "candidate_rank": 12,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "retrieval",
+                    "agent_orchestration"
+                  ],
+                  "rationale": "Study proposes agent-workflow retrieval and dynamic chunk sizing; directly relevant method, though abstract is truncated."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        }
+      },
+      "same_rubric_first40_vs_complete_diagnostic": {
+        "A": {
+          "first40_diagnostic_ndcg10": 0.9178815700902465,
+          "complete_d_ndcg10": 0.9195048263992502,
+          "complete_d_minus_first40_diagnostic_ndcg10": 0.0016232563090037289,
+          "first40_diagnostic_useful10": 9,
+          "complete_d_useful10": 9,
+          "first40_diagnostic_named_facets_at10": [
+            "agent_orchestration",
+            "evaluation",
+            "retrieval"
+          ],
+          "complete_d_named_facets_at10": [
+            "agent_orchestration",
+            "evaluation",
+            "retrieval"
+          ],
+          "complete_d_tail_total_candidates": 5,
+          "complete_d_tail_useful_candidates_all_ranks": [],
+          "complete_d_tail_useful_count_all_ranks": 0,
+          "complete_d_tail_named_facets_all_ranks": [],
+          "complete_d_tail_top10_ids": [],
+          "complete_d_tail_useful_top10_ids": [],
+          "complete_d_tail_useful_count_top10": 0
+        },
+        "B": {
+          "first40_diagnostic_ndcg10": 0.9915798629826003,
+          "complete_d_ndcg10": 0.9951785714313113,
+          "complete_d_minus_first40_diagnostic_ndcg10": 0.003598708448711019,
+          "first40_diagnostic_useful10": 10,
+          "complete_d_useful10": 10,
+          "first40_diagnostic_named_facets_at10": [
+            "agent_orchestration",
+            "evaluation",
+            "retrieval"
+          ],
+          "complete_d_named_facets_at10": [
+            "agent_orchestration",
+            "evaluation",
+            "retrieval"
+          ],
+          "complete_d_tail_total_candidates": 5,
+          "complete_d_tail_useful_candidates_all_ranks": [
+            "c40",
+            "c41",
+            "c42",
+            "c44"
+          ],
+          "complete_d_tail_useful_count_all_ranks": 4,
+          "complete_d_tail_named_facets_all_ranks": [
+            "agent_orchestration",
+            "retrieval"
+          ],
+          "complete_d_tail_top10_ids": [],
+          "complete_d_tail_useful_top10_ids": [],
+          "complete_d_tail_useful_count_top10": 0
+        }
+      }
+    },
+    "evaluation": {
+      "pool_count": 44,
+      "baseline_full_order": [
+        "c0",
+        "c1",
+        "c3",
+        "c10",
+        "c7",
+        "c5",
+        "c2",
+        "c9",
+        "c13",
+        "c4",
+        "c11",
+        "c6",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c8",
+        "c19",
+        "c18",
+        "c20",
+        "c22",
+        "c12",
+        "c26",
+        "c23",
+        "c24",
+        "c21",
+        "c25",
+        "c28",
+        "c27",
+        "c29",
+        "c35",
+        "c32",
+        "c30",
+        "c34",
+        "c31",
+        "c37",
+        "c36",
+        "c33",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43"
+      ],
+      "candidate_full_order": [
+        "c11",
+        "c6",
+        "c19",
+        "c28",
+        "c13",
+        "c0",
+        "c3",
+        "c21",
+        "c9",
+        "c5",
+        "c23",
+        "c4",
+        "c7",
+        "c14",
+        "c15",
+        "c17",
+        "c16",
+        "c2",
+        "c20",
+        "c10",
+        "c1",
+        "c22",
+        "c42",
+        "c40",
+        "c43",
+        "c29",
+        "c24",
+        "c41",
+        "c12",
+        "c26",
+        "c8",
+        "c18",
+        "c25",
+        "c27",
+        "c35",
+        "c30",
+        "c31",
+        "c32",
+        "c34",
+        "c36",
+        "c33",
+        "c37",
+        "c38",
+        "c39"
+      ],
+      "candidate_first40_order": [
+        "c11",
+        "c19",
+        "c6",
+        "c28",
+        "c0",
+        "c13",
+        "c9",
+        "c3",
+        "c5",
+        "c21",
+        "c4",
+        "c23",
+        "c7",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c2",
+        "c1",
+        "c10",
+        "c20",
+        "c22",
+        "c29",
+        "c24",
+        "c8",
+        "c26",
+        "c12",
+        "c18",
+        "c25",
+        "c27",
+        "c35",
+        "c30",
+        "c31",
+        "c32",
+        "c34",
+        "c33",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43"
+      ],
+      "diagnostic_full_D_minus_first40_D_top10_overlap": 1.0,
+      "exact_repeat_top10_overlap": 1.0,
+      "rotated20_top10_overlap": 1.0,
+      "reference_metrics": {
+        "A": {
+          "reading_lead_ndcg10_baseline": 0.8408682346129693,
+          "reading_lead_ndcg10_candidate": 0.911671805955201,
+          "reading_lead_delta": 0.0708035713422317,
+          "maximum_allowed_loss": -0.03,
+          "useful_guard": {
+            "baseline_useful_count": 10,
+            "candidate_useful_count": 10,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "limitations",
+              "measurement",
+              "software_tasks"
+            ],
+            "candidate_named_useful_facets": [
+              "limitations",
+              "measurement",
+              "reproducibility",
+              "software_tasks"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c1",
+              "c10",
+              "c2",
+              "c4",
+              "c7"
+            ],
+            "candidate_useful_gain_ids": [
+              "c11",
+              "c19",
+              "c21",
+              "c28",
+              "c6"
+            ],
+            "passes": true
+          },
+          "passes_per_pool_gate": true
+        },
+        "B": {
+          "reading_lead_ndcg10_baseline": 0.8719968219913283,
+          "reading_lead_ndcg10_candidate": 0.906160236396384,
+          "reading_lead_delta": 0.03416341440505566,
+          "maximum_allowed_loss": -0.03,
+          "useful_guard": {
+            "baseline_useful_count": 10,
+            "candidate_useful_count": 10,
+            "useful_count_loss": 0,
+            "baseline_named_useful_facets": [
+              "limitations",
+              "measurement",
+              "software_tasks"
+            ],
+            "candidate_named_useful_facets": [
+              "limitations",
+              "measurement",
+              "reproducibility",
+              "software_tasks"
+            ],
+            "lost_named_useful_facets": [],
+            "baseline_useful_displaced_ids": [
+              "c1",
+              "c10",
+              "c2",
+              "c4",
+              "c7"
+            ],
+            "candidate_useful_gain_ids": [
+              "c11",
+              "c19",
+              "c21",
+              "c28",
+              "c6"
+            ],
+            "passes": true
+          },
+          "passes_per_pool_gate": true
+        }
+      },
+      "identity_displacement": {
+        "A": {
+          "baseline_top10_displaced_ids": [
+            "c1",
+            "c10",
+            "c2",
+            "c4",
+            "c7"
+          ],
+          "candidate_top10_gained_ids": [
+            "c11",
+            "c19",
+            "c21",
+            "c28",
+            "c6"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c1": {
+              "baseline_rank": 2,
+              "candidate_rank": 21,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "software_tasks",
+                    "measurement"
+                  ],
+                  "rationale": "Live benchmark is relevant for current software tasks, but snippet gives no evaluation details."
+                }
+              }
+            },
+            "c10": {
+              "baseline_rank": 4,
+              "candidate_rank": 20,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "software_tasks",
+                    "measurement"
+                  ],
+                  "rationale": "OpenAI source describes the SWE-bench task setup: repository, issue, and resolving patch."
+                }
+              }
+            },
+            "c11": {
+              "baseline_rank": 11,
+              "candidate_rank": 1,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "limitations",
+                    "measurement"
+                  ],
+                  "rationale": "The excerpt identifies leakage, reward hacking, and task-quality problems that can inflate benchmark performance."
+                }
+              }
+            },
+            "c19": {
+              "baseline_rank": 18,
+              "candidate_rank": 3,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "reproducibility",
+                    "limitations",
+                    "measurement"
+                  ],
+                  "rationale": "Time-consistent design explicitly controls temporal leakage and derives future tasks from repository snapshots."
+                }
+              }
+            },
+            "c2": {
+              "baseline_rank": 7,
+              "candidate_rank": 18,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "software_tasks",
+                    "measurement"
+                  ],
+                  "rationale": "Leaderboard/methodology card specifies 500 isolated Docker tasks from GitHub issues; secondary source."
+                }
+              }
+            },
+            "c21": {
+              "baseline_rank": 26,
+              "candidate_rank": 8,
+              "references": {
+                "A": {
+                  "lead": 2,
+                  "facets": [
+                    "measurement"
+                  ],
+                  "rationale": "Benchmark compendium can locate relevant evaluations but is not a primary study."
+                }
+              }
+            },
+            "c28": {
+              "baseline_rank": 28,
+              "candidate_rank": 4,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "measurement",
+                    "software_tasks"
+                  ],
+                  "rationale": "The survey excerpt names coding and software-engineering benchmarks among agent evaluation domains."
+                }
+              }
+            },
+            "c4": {
+              "baseline_rank": 10,
+              "candidate_rank": 12,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "software_tasks",
+                    "measurement"
+                  ],
+                  "rationale": "Interactive long-context benchmark directly covers multi-turn interaction, tool use, and adaptive reasoning."
+                }
+              }
+            },
+            "c6": {
+              "baseline_rank": 12,
+              "candidate_rank": 2,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "software_tasks",
+                    "measurement",
+                    "limitations"
+                  ],
+                  "rationale": "Dynamic SWE benchmark directly addresses contamination and inadequate tests as limitations."
+                }
+              }
+            },
+            "c7": {
+              "baseline_rank": 5,
+              "candidate_rank": 13,
+              "references": {
+                "A": {
+                  "lead": 3,
+                  "facets": [
+                    "software_tasks",
+                    "measurement"
+                  ],
+                  "rationale": "Interactive long-context benchmark card gives scale and project diversity."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        },
+        "B": {
+          "baseline_top10_displaced_ids": [
+            "c1",
+            "c10",
+            "c2",
+            "c4",
+            "c7"
+          ],
+          "candidate_top10_gained_ids": [
+            "c11",
+            "c19",
+            "c21",
+            "c28",
+            "c6"
+          ],
+          "cards_and_fixed_reference_rationales": {
+            "c1": {
+              "baseline_rank": 2,
+              "candidate_rank": 21,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "software_tasks",
+                    "measurement"
+                  ],
+                  "rationale": "Live SWE task set and evaluation purpose are clear, but the card is a leaderboard landing page."
+                }
+              }
+            },
+            "c10": {
+              "baseline_rank": 4,
+              "candidate_rank": 20,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "software_tasks",
+                    "measurement"
+                  ],
+                  "rationale": "Original benchmark introduction explains repository-plus-issue patch generation as the task."
+                }
+              }
+            },
+            "c11": {
+              "baseline_rank": 11,
+              "candidate_rank": 1,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "limitations",
+                    "measurement"
+                  ],
+                  "rationale": "Study directly analyzes reward hacking, leakage, and task-quality problems that can distort benchmark measurement; no reproducibility method is described."
+                }
+              }
+            },
+            "c19": {
+              "baseline_rank": 18,
+              "candidate_rank": 3,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "software_tasks",
+                    "reproducibility",
+                    "limitations"
+                  ],
+                  "rationale": "Time-consistent repository benchmark explicitly addresses synthetic tasks, leakage, and temporal contamination with a T0/T1 design."
+                }
+              }
+            },
+            "c2": {
+              "baseline_rank": 7,
+              "candidate_rank": 18,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "software_tasks",
+                    "measurement"
+                  ],
+                  "rationale": "SWE-bench methodology gives task count, isolated execution, and real GitHub issue setup."
+                }
+              }
+            },
+            "c21": {
+              "baseline_rank": 26,
+              "candidate_rank": 8,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "software_tasks",
+                    "measurement"
+                  ],
+                  "rationale": "Benchmark compendium may help discover agent-evaluation sources, but it is a broad curated list."
+                }
+              }
+            },
+            "c28": {
+              "baseline_rank": 28,
+              "candidate_rank": 4,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "software_tasks",
+                    "measurement"
+                  ],
+                  "rationale": "Survey covers agent evaluation domains and names software-task benchmarks; useful synthesis lead rather than primary benchmark."
+                }
+              }
+            },
+            "c4": {
+              "baseline_rank": 10,
+              "candidate_rank": 12,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "software_tasks",
+                    "measurement"
+                  ],
+                  "rationale": "LoCoBench-Agent directly addresses interactive multi-turn work and tool use missing from single-turn evaluation."
+                }
+              }
+            },
+            "c6": {
+              "baseline_rank": 12,
+              "candidate_rank": 2,
+              "references": {
+                "B": {
+                  "lead": 3,
+                  "facets": [
+                    "software_tasks",
+                    "measurement",
+                    "limitations"
+                  ],
+                  "rationale": "Dynamic SWE benchmark directly addresses contamination and weak tests with a continuously updated design."
+                }
+              }
+            },
+            "c7": {
+              "baseline_rank": 5,
+              "candidate_rank": 13,
+              "references": {
+                "B": {
+                  "lead": 2,
+                  "facets": [
+                    "software_tasks",
+                    "measurement"
+                  ],
+                  "rationale": "LoCoBench-Agent card reports 8,000 scenarios across 1,000 projects and software-language balance."
+                }
+              }
+            }
+          },
+          "gate": "diagnostic only; identity displacement does not assert redundancy"
+        }
+      },
+      "same_rubric_first40_vs_complete_diagnostic": {
+        "A": {
+          "first40_diagnostic_ndcg10": 0.918846253041356,
+          "complete_d_ndcg10": 0.911671805955201,
+          "complete_d_minus_first40_diagnostic_ndcg10": -0.007174447086155,
+          "first40_diagnostic_useful10": 10,
+          "complete_d_useful10": 10,
+          "first40_diagnostic_named_facets_at10": [
+            "limitations",
+            "measurement",
+            "reproducibility",
+            "software_tasks"
+          ],
+          "complete_d_named_facets_at10": [
+            "limitations",
+            "measurement",
+            "reproducibility",
+            "software_tasks"
+          ],
+          "complete_d_tail_total_candidates": 4,
+          "complete_d_tail_useful_candidates_all_ranks": [
+            "c40",
+            "c41",
+            "c42",
+            "c43"
+          ],
+          "complete_d_tail_useful_count_all_ranks": 4,
+          "complete_d_tail_named_facets_all_ranks": [
+            "measurement",
+            "reproducibility",
+            "software_tasks"
+          ],
+          "complete_d_tail_top10_ids": [],
+          "complete_d_tail_useful_top10_ids": [],
+          "complete_d_tail_useful_count_top10": 0
+        },
+        "B": {
+          "first40_diagnostic_ndcg10": 0.90948048424657,
+          "complete_d_ndcg10": 0.906160236396384,
+          "complete_d_minus_first40_diagnostic_ndcg10": -0.003320247850186031,
+          "first40_diagnostic_useful10": 10,
+          "complete_d_useful10": 10,
+          "first40_diagnostic_named_facets_at10": [
+            "limitations",
+            "measurement",
+            "reproducibility",
+            "software_tasks"
+          ],
+          "complete_d_named_facets_at10": [
+            "limitations",
+            "measurement",
+            "reproducibility",
+            "software_tasks"
+          ],
+          "complete_d_tail_total_candidates": 4,
+          "complete_d_tail_useful_candidates_all_ranks": [
+            "c40",
+            "c41",
+            "c42",
+            "c43"
+          ],
+          "complete_d_tail_useful_count_all_ranks": 4,
+          "complete_d_tail_named_facets_all_ranks": [
+            "measurement",
+            "software_tasks"
+          ],
+          "complete_d_tail_top10_ids": [],
+          "complete_d_tail_useful_top10_ids": [],
+          "complete_d_tail_useful_count_top10": 0
+        }
+      }
+    },
+    "constructed80": {
+      "pool_count": 80,
+      "baseline_full_order": [
+        "c0",
+        "c1",
+        "c3",
+        "c10",
+        "c7",
+        "c5",
+        "c9",
+        "c4",
+        "c2",
+        "c13",
+        "c11",
+        "c6",
+        "c15",
+        "c16",
+        "c14",
+        "c17",
+        "c8",
+        "c19",
+        "c18",
+        "c20",
+        "c22",
+        "c12",
+        "c26",
+        "c23",
+        "c24",
+        "c21",
+        "c25",
+        "c28",
+        "c27",
+        "c29",
+        "c32",
+        "c35",
+        "c30",
+        "c34",
+        "c36",
+        "c37",
+        "c31",
+        "c33",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43",
+        "c44",
+        "c45",
+        "c46",
+        "c47",
+        "c48",
+        "c49",
+        "c50",
+        "c51",
+        "c52",
+        "c53",
+        "c54",
+        "c55",
+        "c56",
+        "c57",
+        "c58",
+        "c59",
+        "c60",
+        "c61",
+        "c62",
+        "c63",
+        "c64",
+        "c65",
+        "c66",
+        "c67",
+        "c68",
+        "c69",
+        "c70",
+        "c71",
+        "c72",
+        "c73",
+        "c74",
+        "c75",
+        "c76",
+        "c77",
+        "c78",
+        "c79"
+      ],
+      "candidate_full_order": [
+        "c11",
+        "c0",
+        "c6",
+        "c19",
+        "c13",
+        "c5",
+        "c3",
+        "c9",
+        "c21",
+        "c28",
+        "c7",
+        "c4",
+        "c23",
+        "c15",
+        "c16",
+        "c14",
+        "c17",
+        "c2",
+        "c1",
+        "c22",
+        "c10",
+        "c20",
+        "c42",
+        "c43",
+        "c40",
+        "c29",
+        "c41",
+        "c24",
+        "c26",
+        "c8",
+        "c12",
+        "c18",
+        "c25",
+        "c27",
+        "c46",
+        "c55",
+        "c49",
+        "c47",
+        "c44",
+        "c67",
+        "c45",
+        "c66",
+        "c60",
+        "c57",
+        "c48",
+        "c63",
+        "c68",
+        "c56",
+        "c64",
+        "c51",
+        "c53",
+        "c58",
+        "c59",
+        "c74",
+        "c52",
+        "c71",
+        "c69",
+        "c76",
+        "c78",
+        "c65",
+        "c62",
+        "c73",
+        "c61",
+        "c70",
+        "c75",
+        "c79",
+        "c54",
+        "c50",
+        "c77",
+        "c72",
+        "c35",
+        "c31",
+        "c30",
+        "c32",
+        "c34",
+        "c36",
+        "c33",
+        "c37",
+        "c38",
+        "c39"
+      ],
+      "candidate_first40_order": [
+        "c11",
+        "c28",
+        "c6",
+        "c19",
+        "c0",
+        "c13",
+        "c3",
+        "c9",
+        "c5",
+        "c21",
+        "c23",
+        "c4",
+        "c7",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c2",
+        "c1",
+        "c10",
+        "c20",
+        "c22",
+        "c29",
+        "c24",
+        "c26",
+        "c8",
+        "c12",
+        "c18",
+        "c25",
+        "c27",
+        "c35",
+        "c30",
+        "c31",
+        "c32",
+        "c34",
+        "c33",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43",
+        "c44",
+        "c45",
+        "c46",
+        "c47",
+        "c48",
+        "c49",
+        "c50",
+        "c51",
+        "c52",
+        "c53",
+        "c54",
+        "c55",
+        "c56",
+        "c57",
+        "c58",
+        "c59",
+        "c60",
+        "c61",
+        "c62",
+        "c63",
+        "c64",
+        "c65",
+        "c66",
+        "c67",
+        "c68",
+        "c69",
+        "c70",
+        "c71",
+        "c72",
+        "c73",
+        "c74",
+        "c75",
+        "c76",
+        "c77",
+        "c78",
+        "c79"
+      ],
+      "diagnostic_full_D_minus_first40_D_top10_overlap": 1.0,
+      "exact_repeat_top10_overlap": 1.0,
+      "rotated20_top10_overlap": 1.0,
+      "quality_gate": "excluded; constructed stress cards are not independent relevance evidence",
+      "complete_d_tail_diagnostic": {
+        "tail_candidate_count": 40,
+        "tail_ids_in_complete_d_top10": [],
+        "tail_count_in_complete_d_top10": 0
+      }
+    }
+  },
+  "extended_quality_pass": false,
+  "navigation": {
+    "q2-c1": {
+      "expected_target_url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ai-agents/governance-security-across-organization",
+      "baseline_top3": [
+        "c1",
+        "c17",
+        "c18"
+      ],
+      "candidate_top3": [
+        "c1",
+        "c16",
+        "c15"
+      ],
+      "target_id": "c1",
+      "target_rank": 1,
+      "passes": true
+    },
+    "q4-c0": {
+      "expected_target_url": "https://openai.com/index/why-we-no-longer-evaluate-swe-bench-verified/",
+      "baseline_top3": [
+        "c0",
+        "c7",
+        "c16"
+      ],
+      "candidate_top3": [
+        "c0",
+        "c7",
+        "c10"
+      ],
+      "target_id": "c0",
+      "target_rank": 1,
+      "passes": true
+    },
+    "q5-c6": {
+      "expected_target_url": "https://slsa.dev/spec/v1.2/verifying-artifacts",
+      "baseline_top3": [
+        "c6",
+        "c0",
+        "c1"
+      ],
+      "candidate_top3": [
+        "c6",
+        "c0",
+        "c1"
+      ],
+      "target_id": "c6",
+      "target_rank": 1,
+      "passes": true
+    },
+    "q6-c6": {
+      "expected_target_url": "https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/",
+      "baseline_top3": [
+        "c6",
+        "c7",
+        "c19"
+      ],
+      "candidate_top3": [
+        "c6",
+        "c7",
+        "c17"
+      ],
+      "target_id": "c6",
+      "target_rank": 1,
+      "passes": true
+    },
+    "q9-c8": {
+      "expected_target_url": "https://science.nasa.gov/climate-change/adaptation-mitigation/",
+      "baseline_top3": [
+        "c8",
+        "c4",
+        "c14"
+      ],
+      "candidate_top3": [
+        "c8",
+        "c4",
+        "c3"
+      ],
+      "target_id": "c8",
+      "target_rank": 1,
+      "passes": true
+    }
+  },
+  "navigation_pass": true,
+  "stability_pass": true,
+  "membership": {
+    "all_48_rankings_are_exact_full_permutations": true,
+    "scored_prefix_baselines_append_unchanged_original_tail": true
+  },
+  "operational": {
+    "valid_calls": 48,
+    "expected_calls": 48,
+    "actual_input_tokens": 986687,
+    "actual_output_tokens": 27957,
+    "within_registered_actual_usage_gates": true,
+    "max_remote_http_ms": 661.290522897616,
+    "within_remote_http_gate": true,
+    "all_calls_valid": true
+  },
+  "sealed_new_reference_hashes": {
+    "reference-a.json": "034dbba3a2e580ddc2fefa454e219a923826eeb64941c86d76b0cb43e7f01ef7",
+    "reference-b.json": "87ed434b89a5fae1a5d90fd0c0bcbf00e932e44edf35fcb4e14d8a832b10bd66"
+  },
+  "frozen_old_reference_hashes": {
+    "reference-a.json": "ff60cf87d657f9305de457889efb41c2e171676d54d894a053287a4470618202",
+    "reference-b.json": "07f4d5bb57adbd1066f0dcdd48a8fd4bd08a942a17ef1cb88a436ee25915cc76"
+  },
+  "prepared_manifest_sha256": "1bd551bb95b9bbcff6923acafc4d0a7ac6d3065dce8a51caaa1816367bd902cc",
+  "registered_input_hashes": {
+    "annotation-cards.json": "49a4a06b7086e55e6bf8abc15cd37052f8823c2d867ea82e9f36c0f7b70e5f4b",
+    "annotation-id-map.json": "93cb01aa669d0c172a4cd3c3952bdfa399450b80f2bc9f4d9685aa7c35f67715",
+    "annotation-output-schema.json": "09cc75804c693e2708375d19f468d05d3130dfe29e3a9670cd4f9af6780c7e20",
+    "annotation-protocol.md": "f462ecc8fd062b48ffd5051c9bf15d080d79b4d4482ec94cbe43db351cb50f99",
+    "baseline-contract.json": "b01d5ac5500da0d55746d4df0cc1a66b5c268aaa28de610345cf21da0053823a",
+    "design-review.md": "09821f13fb329ab09f76587ce74502f1bee8c71291260b3d4489f002219f922d",
+    "extended-pools.json": "649808e3e6f4f3b2acf53750426e0dee9d9ffbc2546d52008921eaf1be929e84",
+    "navigation.json": "6390e8d32ca06b2b8bbbe538ea28547193029482d72c3413fa4e7d39f5b817c9",
+    "protocol.json": "6363c6b558481344798284da04d0286945984310d62d3d9c3f34e8263d5348da",
+    "search-budget.json": "95705a391d7dfa8328b8fa50c01d39ff57565a0e986aeaf4c3d438c2e91047ff",
+    "source-pins.json": "ae8cfaeda413772a4095cf4edb8bc89a102a7219e64b28d07b9fc04599e57d8e",
+    "source-selection-contract.json": "0cdf759b83ab96bad92666bbeabbb5d232aa81876712a314f931645082291c1b",
+    "task-facets.json": "ee3ff3ab082b1e85cadc49da1c5665c24122ecb600d424e5bf801d7d09ec7ad2"
+  },
+  "limitations": [
+    "EXP-039 failed guard remains unchanged; EXP-040 uses a newly registered useful-count/facet guard and exposed development labels.",
+    "All reference grades are blinded assistant judgments, not human gold or page-truth verification.",
+    "Constructed80 is stress evidence only and adds no independent relevance unit.",
+    "A supported outcome permits only a separate untouched confirmation; no default or production adoption.",
+    "Actual token ceilings are observed-usage gates; heuristic preflight does not guarantee provider-enforced spend ceilings."
+  ],
+  "failed_gates": {
+    "primary_statistical": false,
+    "primary_useful_facet": false,
+    "extended_quality": true,
+    "navigation": false,
+    "stability": false,
+    "operational": false
+  }
+}

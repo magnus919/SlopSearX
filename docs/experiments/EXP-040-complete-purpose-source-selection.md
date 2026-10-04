@@ -17,3 +17,7 @@ The copied annotation-output schema retained EXP-039 wrapper and alias names. It
 ## Before-dispatch quality guard scope
 
 An independent tooling review identified ambiguity about how the global useful-count/facet guards combine with the extended nDCG condition. [The scope clarification](evidence/EXP-040/guard-scope-clarification.md) makes the intended intersection explicit before new outputs: primary q1–q8 and all three natural extended pools must meet coverage guards, and extended pools additionally meet their nDCG bound. Constructed80 has no relevance gate. Thresholds and the candidate remain unchanged. The boundary fixture is an executed offline rejecting path, not a claim that production fallback is already implemented.
+
+## Measured outcome
+
+All 48 calls completed with valid receipts. The registered decision is **not supported for selection**: primary uplift and guards passed, but the natural research pool lost the evidence-grounding facet under assessment B. Navigation, stability, membership, and operational gates passed. See [readout](evidence/EXP-040/readout.md) and [full analysis](evidence/EXP-040/analysis.json). No new searches or deployment changes occurred.
