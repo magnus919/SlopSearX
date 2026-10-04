@@ -1,0 +1,88 @@
+"""Offline canonical treatment preparation for EXP-061.
+
+The source-acquisition order remains provenance. Separate policy cards are copied,
+validated against the frozen EXP-059 complete-card admission policy, and ordered by
+UTF-8 bytes for URL, title, snippet, then stable ID. No card content is edited.
+"""
+from __future__ import annotations
+
+import importlib.machinery
+import importlib.util
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+
+def _load(name: str, relative: str):
+    path = REPO / relative
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    if spec is None:
+        raise ImportError(f"cannot load {relative}")
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+def _policy():
+    return _load("exp061_frozen_policy", "docs/experiments/evidence/EXP-059/policy.py.txt")
+
+
+def _prepare_module():
+    return _load("exp061_frozen_prepare", "docs/experiments/evidence/EXP-060/prepare.py.txt")
+
+
+def _sort_key(card: dict[str, str]) -> tuple[bytes, bytes, bytes, bytes]:
+    return tuple(card[field].encode("utf-8") for field in ("url", "title", "snippet", "id"))
+
+
+def canonical_policy_cards(case: dict, provenance_cards: list[dict]) -> list[dict[str, str]]:
+    """Validate a complete pool with frozen EXP-059 admission and return copied canonical cards."""
+    if type(case) is not dict or not {"purpose", "facets"} <= set(case):
+        raise ValueError("case must provide purpose and facets")
+    if type(provenance_cards) not in (list, tuple):
+        raise ValueError("cards must be a list or tuple")
+    ids = [card["id"] for card in provenance_cards if type(card) is dict and type(card.get("id")) is str]
+    policy = _policy()
+    # _project applies exact fields, unique 1..80 IDs, UTF-8 field bounds, and the
+    # frozen purpose/facet validation. Scores are placeholders used only to satisfy
+    # that admission API; no score affects card admission or ordering.
+    projected, _, _, _, _ = policy._project(
+        provenance_cards,
+        case["purpose"],
+        case["facets"],
+        {card_id: 6 for card_id in ids},
+    )
+    return sorted(projected, key=_sort_key)
+
+
+def prepare(case: dict, provenance_cards: list[dict]) -> dict:
+    """Build ordinary native-order W0 plus canonical full-pool D/F and E policy cards.
+
+    `provenance_cards` preserves the supplied acquisition order and card strings.
+    `policy_cards` is a separate complete copy for the canonical D/F and guarded E
+    operation. Pass `policy_cards` to E's guarded operation seam so its candidate
+    positions, generated question IDs, and stable ties use the same canonical order.
+    `nativeprepared` carries the ordinary W0 request built from provenance order;
+    `treatmentprepared` carries only canonical D/F requests and canonical membership.
+    """
+    prep = _prepare_module()
+    native_cards = [dict(card) for card in provenance_cards]
+    # Validate before either frozen request builder is called, including canonical
+    # treatment's complete-card admission requirements.
+    policy_cards = canonical_policy_cards(case, native_cards)
+    nativeprepared = prep.bodies(case, native_cards)
+    treatment_all = prep.bodies(case, policy_cards)
+    treatmentprepared = {
+        "d": treatment_all["d"],
+        "f": treatment_all["f"],
+        "whole_ids": list(treatment_all["whole_ids"]),
+        "tail_ids": list(treatment_all["tail_ids"]),
+    }
+    return {
+        "provenance_cards": native_cards,
+        "policy_cards": policy_cards,
+        "nativeprepared": nativeprepared,
+        "treatmentprepared": treatmentprepared,
+    }

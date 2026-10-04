@@ -1,0 +1,227 @@
+{
+  "schema": "exp061-ordering-protocol/1",
+  "status": "design under review; no calls",
+  "evidence_mode": "exposed development, not fresh confirmation",
+  "inputs": {
+    "fresh-acquisition.json": "69f72e2895031d4804733f7cdb38197a2d2c43d7cddaa8589abc9a43397d1882",
+    "fresh-references.json": "c9a6121b4267035aaefc051dce4a470fc9b9190ee3ae4105545a7cd2830c9c0e"
+  },
+  "ordered_case_plan": [
+    {
+      "id": "q1-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q1-repeat",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q1-rotate20",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q2-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q3-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q4-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q4-repeat",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q4-rotate20",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q5-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q6-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q7-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q7-repeat",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q7-rotate20",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q8-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q8-repeat",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q8-rotate20",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q9-base",
+      "arms": [
+        "w0",
+        "d",
+        "e_identity_bypass"
+      ]
+    },
+    {
+      "id": "q10-base",
+      "arms": [
+        "w0",
+        "d",
+        "e_identity_bypass"
+      ]
+    },
+    {
+      "id": "q11-base",
+      "arms": [
+        "w0",
+        "d",
+        "e_identity_bypass"
+      ]
+    },
+    {
+      "id": "q12-base",
+      "arms": [
+        "w0",
+        "d",
+        "e_identity_bypass"
+      ]
+    },
+    {
+      "id": "q13-base",
+      "arms": [
+        "w0",
+        "d",
+        "e_identity_bypass"
+      ]
+    }
+  ],
+  "arms": [
+    "native",
+    "canonical"
+  ],
+  "canonical_utf8_key": [
+    "url",
+    "title",
+    "snippet",
+    "stable acquired id"
+  ],
+  "identity_scope": "fixed acquired identities; all content and IDs preserved",
+  "arm_schedule": "native first at even zero-based operation index; canonical first at odd",
+  "shared_w0": "one fresh owned ordinary call per operation; exact receipt/order shared; physical usage counted once",
+  "maximum_calls": 223,
+  "budget": {
+    "comparator_input": 3000000,
+    "comparator_output": 160000,
+    "e_input_per_arm": 3000000,
+    "e_output_per_arm": 100000,
+    "input_reservation_per_call": 64000,
+    "e_preoperation_reservation": 256000,
+    "aggregate_input": 9000000,
+    "aggregate_output": 360000,
+    "wall_seconds": 14400,
+    "call_ms": 1000,
+    "candidate_d_f_e_ms_per_arm": 2000,
+    "owned_pair_seconds": 60
+  },
+  "failure": "atomic paired complete-incumbent fallback; retained diagnostic attempts/actions; exact uninvoked suffix; unknown usage stops",
+  "analysis": "unchanged original gates under each separate reference and arm; explicitly exposed; adoption ineligible",
+  "search_calls": 0,
+  "brave_calls": 0
+}

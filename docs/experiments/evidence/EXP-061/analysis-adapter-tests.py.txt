@@ -1,0 +1,76 @@
+from pathlib import Path
+import importlib.machinery,importlib.util,copy,unittest
+HERE=Path(__file__).resolve().parent
+
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+
+A=load("exp061_analysis_adapter",HERE / "analysis-adapter.py.txt")
+FIX=load("exp061_analysis_fixture",HERE.parent / "EXP-060" / "analysis-tests.py.txt")
+
+class Tests(unittest.TestCase):
+    def test_exposed_provenance_cannot_be_mislabeled_as_fresh(self):
+        run=FIX.fixture()
+        out=A.analyze_arm(run)
+        self.assertFalse(out["adoption_eligible"])
+        self.assertFalse(out["quality_analysis_performed"])
+
+    def test_original_gates_and_metrics_are_identical(self):
+        original=FIX.fixture()
+        baseline=FIX.analysis.analyze(original)
+        exposed=copy.deepcopy(original)
+        exposed.update(schema="exp061-arm-artifacts/1",reference_source="exp060_exposed",historical_labels_reused=True)
+        result=A.analyze_arm(exposed)
+        for key in ("gates","references","coverage","stability","navigation"):
+            self.assertEqual(result[key],baseline[key])
+        self.assertEqual(result["outcome"],"exposed_screen_passed")
+        self.assertFalse(result["adoption_eligible"])
+
+    def test_incomplete_operations_still_fail_closed(self):
+        run=FIX.fixture()
+        run.update(schema="exp061-arm-artifacts/1",reference_source="exp060_exposed",historical_labels_reused=True)
+        run["operations"].pop()
+        result=A.analyze_arm(run)
+        self.assertEqual(result["outcome"],"inconclusive")
+        self.assertFalse(result["adoption_eligible"])
+
+    def paired_fixture(self):
+        original=FIX.fixture();pairs=[]
+        for op in original["operations"]:
+            shared=[copy.deepcopy(a) for a in op["attempts"] if a["arm"]=="w0"]
+            arms=[]
+            for name in ("native","canonical"):
+                row=copy.deepcopy(op);row["arm"]=name
+                row["attempts"]=[a for a in row["attempts"] if a["arm"]!="w0"]
+                arms.append(row)
+            pairs.append({"id":op["id"],"case":op["case"],"mode":op["mode"],"status":"valid","nativeopcards":op["cards"],"arms":arms,"w0_attempts":shared,"shared_w0":{"order":op["orders"]["w0"]}})
+        return {"schema":"exp061-paired-artifacts/1","reference_source":"exp060_exposed","historical_labels_reused":True,"status":"complete","pools":original["pools"],"references":original["references"],"operations":pairs}
+
+    def test_arm_views_preserve_metrics_and_reference_shared_w0(self):
+        paired=self.paired_fixture();views=A.arm_views(paired)
+        for name,view in views.items():
+            result=A.analyze_arm(view)
+            self.assertEqual(result["outcome"],"exposed_screen_passed")
+            self.assertFalse(result["adoption_eligible"])
+            self.assertTrue(all(a["shared_receipt"] for op in view["operations"] for a in op["attempts"] if a["arm"]=="w0"))
+            self.assertNotIn("budget",view)
+        self.assertEqual(A.analyze_arm(views["native"])["gates"],A.analyze_arm(views["canonical"])["gates"])
+
+    def test_failed_suffix_without_invoked_baseline_is_inconclusive(self):
+        paired=self.paired_fixture();paired["status"]="failed"
+        for op in paired["operations"]:
+            op["status"]="not-invoked";op.pop("shared_w0");op.pop("w0_attempts")
+            for arm in op["arms"]:arm["status"]="not-invoked-suffix";arm["attempts"]=[]
+        for view in A.arm_views(paired).values():
+            result=A.analyze_arm(view)
+            self.assertEqual(result["outcome"],"inconclusive")
+            self.assertFalse(result["quality_analysis_performed"])
+            self.assertFalse(result["adoption_eligible"])
+
+    def test_arm_views_reject_unshared_baseline(self):
+        paired=self.paired_fixture()
+        paired["operations"][0]["arms"][0]["orders"]["w0"].reverse()
+        with self.assertRaisesRegex(ValueError,"unshared-baseline"):A.arm_views(paired)
+
+if __name__=="__main__":unittest.main()
