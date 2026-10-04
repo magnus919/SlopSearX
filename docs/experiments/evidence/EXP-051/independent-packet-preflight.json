@@ -1,0 +1,23 @@
+{
+  "schema": "exp051-independent-packet-preflight/1",
+  "status": "passed",
+  "builder_sha256": "61f04a44ef65389131656d7d6a4b7dbd3576c139829b35ea6c84a40c5f9ed627",
+  "checks": [
+    "exact_projection_input_hash",
+    "unique_original_visible_card_joins",
+    "all_232_metadata_rows_exact_except_digest_omission",
+    "all_original_cards_and_order",
+    "all_repeated_context_and_cases",
+    "all_chunk_markers_and_byte_limits",
+    "all_manifest_chunk_hashes"
+  ],
+  "metadata_rows_checked": 232,
+  "pool_count": 6,
+  "case_count": 12,
+  "chunk_count": 23,
+  "max_chunk_bytes": 23975,
+  "packets_written": 0,
+  "reviewer_invocations": 0,
+  "provider_calls": 0,
+  "search_calls": 0
+}
