@@ -1,0 +1,34 @@
+{
+  "schema": "exp041-public-fixture-matrix/1",
+  "scope": "exact arXiv HTML abstract/PDF publication identity; no live calls",
+  "allowed_hosts": ["arxiv.org", "www.arxiv.org", "export.arxiv.org"],
+  "positive_routes": [
+    {"html": "https://arxiv.org/html/2501.09136", "abstract": "https://arxiv.org/abs/2501.09136", "id": "2501.09136"},
+    {"html": "https://www.arxiv.org/html/2501.09136v2", "abstract": "https://export.arxiv.org/abs/2501.09136v2", "id": "2501.09136v2"},
+    {"html": "https://export.arxiv.org/html/hep-th/9901001v3", "abstract": "https://arxiv.org/abs/hep-th/9901001v3", "id": "hep-th/9901001v3"},
+    {"html": "https://arxiv.org/html/2501.09136v2", "abstract": "https://arxiv.org/pdf/2501.09136v2.pdf", "id": "2501.09136v2"}
+  ],
+  "negative_html_routes": [
+    "https://arxiv.org/html/2501.09136.pdf",
+    "https://arxiv.org/html/2501.09136/extra",
+    "https://arxiv.org/html/2501.09136v0",
+    "https://arxiv.org/html/2501.09136v9999999",
+    "https://arxiv.org.evil.test/html/2501.09136",
+    "https://evil.test/arxiv.org/html/2501.09136"
+  ],
+  "conflict_pair": [
+    {"url": "https://arxiv.org/html/2501.09136v2", "payload_arxiv_id": "2501.09136v3"},
+    {"url": "https://arxiv.org/abs/2501.09136v3", "payload_arxiv_id": "2501.09136v3"}
+  ],
+  "distinct_same_title": [
+    {"url": "https://arxiv.org/html/2501.09136", "title": "Identical title"},
+    {"url": "https://arxiv.org/html/2501.09137", "title": "Identical title"}
+  ],
+  "distinct_zenodo_doi_same_title": [
+    {"url": "https://zenodo.org/records/100001", "doi": "10.5281/zenodo.100001", "title": "Identical title"},
+    {"url": "https://zenodo.org/records/100002", "doi": "10.5281/zenodo.100002", "title": "Identical title"}
+  ],
+  "version_policy": "same base groups, highest explicit arXiv revision remains representative unless query explicitly requests an older revision; no recency for plain unversioned identity",
+  "fixed_observed_regression": "2501.09136 abstract and HTML members preserved as one publication under PresenceRanker and ReciprocalRankFusionRanker",
+  "guards": ["preserve all members", "one work vote per engine", "do not mutate inputs", "keep conflicting identifiers separate", "policy cache version changes"]
+}

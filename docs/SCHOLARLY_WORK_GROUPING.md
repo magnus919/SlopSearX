@@ -2,7 +2,9 @@
 
 SearchService groups source-reported publications before presence/RRF fusion and
 before Jev's 40-candidate shortlist. A shared recognized DOI, PMID, PMCID or exact
-arXiv identifier establishes identity. Known Nature article URLs map to their
+arXiv identifier establishes identity. Recognized arXiv `abs/`, `pdf/` and
+`html/` paper routes use the same identifier and existing base/version rules;
+malformed paths and lookalike hosts do not establish identity. Known Nature article URLs map to their
 10.1038 DOI. Equal titles, snippets, citations and indexing dates do not establish
 identity. Conflicting known identifiers decline an ordinary merge.
 

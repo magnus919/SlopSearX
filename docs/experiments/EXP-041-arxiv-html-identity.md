@@ -19,3 +19,7 @@
 ## Readout
 
 Pending. Registration commit will be recorded in a subsequent append-only entry.
+
+### Functional qualification
+
+Registration commit: `9f737149eae71128fb76abcff2d2be69851bc55a`, merged in #528. The final fixed fixture fails 14 cases on the old module and passes all 55 grouping cases on the candidate. Full suite: 2,333 passed, 57 skipped, 85.41% coverage. Functional outcome supported; runtime PR, required CI and review pending. See [readout](evidence/EXP-041/readout.md) and [qualification](evidence/EXP-041/qualification.json). No provider calls or deployment.
