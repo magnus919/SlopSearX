@@ -1,0 +1,17 @@
+{
+  "schema": "exp042-private-transport-qualification/1",
+  "transport_sha256": "c635f3db562d364566bbbed11edfd592c8c568c8ec81fa09a5fe5c2eace0876c",
+  "checks": {
+    "valid_provider_bytes_retained_when_appending_timing": "passed",
+    "duplicate_provider_keys_rejected": "passed",
+    "nonfinite_provider_constants_rejected": "passed",
+    "provider_timing_key_collision_rejected": "passed",
+    "local_request_cap_bytes": 384000,
+    "remote_http_deadline_seconds": 1,
+    "parent_process_deadline_seconds": 60,
+    "remote_response_bound_bytes": 2000000
+  },
+  "provider_calls": 0,
+  "credential_accesses": 0,
+  "scope": "Neutral fixtures with mocked transport, not live endpoint qualification. Private operational configuration excluded."
+}

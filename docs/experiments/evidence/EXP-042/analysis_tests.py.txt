@@ -1,0 +1,237 @@
+import importlib.machinery
+from pathlib import Path
+import unittest
+
+
+MODULE_PATH = Path(__file__).with_name("analysis.py.txt")
+analysis = importlib.machinery.SourceFileLoader("exp042_analysis", str(MODULE_PATH)).load_module()
+
+
+def grade_map(rows):
+    return {cid: row["lead"] for cid, row in rows.items()}
+
+
+def ndcg_at_10(order, grades):
+    def gain(g):
+        return (2**g) - 1
+
+    dcg = sum(gain(grades[cid]) / __import__("math").log2(rank + 2) for rank, cid in enumerate(order[:10]))
+    ideal = sorted(grades.values(), reverse=True)[:10]
+    idcg = sum(gain(g) / __import__("math").log2(rank + 2) for rank, g in enumerate(ideal))
+    return dcg / idcg if idcg else 0.0
+
+
+def fixture():
+    pools = [*(f"q{i}" for i in range(1, 10)), "cardiac", "research", "evaluation", "constructed80"]
+    facets = {pool: ["f"] for pool in pools}
+    refs = {name: {} for name in ("A", "B")}
+    rankings = {}
+    for pool in pools:
+        ids = [f"{pool}-{i}" for i in range(12)]
+        rows_a = {
+            cid: {
+                "lead": 3 if i == 0 else (2 if i < 10 else 1),
+                "visible": i % 4,
+                "facets": ["f"] if i == 0 else [],
+                "uncertain": i == 1,
+            }
+            for i, cid in enumerate(ids)
+        }
+        rows_b = {cid: dict(row) for cid, row in rows_a.items()}
+        if pool == "q2":
+            rows_b[ids[0]]["facets"] = []
+        refs["A"][pool] = rows_a
+        refs["B"][pool] = rows_b
+        order = list(ids)
+        arms = {"w0": order, "d_star": order[:], "e": order[:]}
+        if pool in analysis.EXTENDED:
+            arms.update({"d": order[:], "repeat": order[:], "rotated": order[:]})
+        rankings[pool] = arms
+    # q1 has no evaluable facet: one card is tagged but not useful, and useful
+    # cards have no facet tag.
+    q1 = refs["A"]["q1"]
+    q1["q1-0"]["lead"] = 1
+    q1["q1-1"]["facets"] = []
+    refs["B"]["q1"]["q1-0"]["lead"] = 1
+    refs["B"]["q1"]["q1-1"]["facets"] = []
+    return rankings, refs, facets
+
+
+class AnalysisTests(unittest.TestCase):
+    def setUp(self):
+        self.rankings, self.refs, self.facets = fixture()
+        self.bootstrap_calls = []
+
+        def bootstrap(deltas, draws=0, seed=0):
+            self.bootstrap_calls.append((dict(deltas), draws, seed))
+            values = list(deltas.values())
+            return {
+                "mean": sum(values) / len(values),
+                "lower95": 0.01,
+                "upper95": 0.05,
+                "draws": draws,
+                "seed": seed,
+                "query_units": len(values),
+            }
+
+        self.bootstrap = bootstrap
+
+    def run_analysis(self):
+        return analysis.analyze(self.rankings, self.refs, self.facets, ndcg_at_10, self.bootstrap)
+
+    def test_primary_uses_fixed_eight_paired_query_deltas_per_reference(self):
+        result = self.run_analysis()
+        self.assertEqual(set(result["primary"]), {"A", "B"})
+        self.assertEqual(len(self.bootstrap_calls), 2)
+        for deltas, draws, seed in self.bootstrap_calls:
+            self.assertEqual(set(deltas), set(analysis.PRIMARY))
+            self.assertEqual((draws, seed), (10000, 91940))
+        self.assertFalse(result["primary"]["A"]["passed"])  # equal arms yield zero gain
+
+    def test_aggregate_ordinal_noninferiority_fails_when_every_pool_guard_passes(self):
+        score_by_order = {}
+        for pool in analysis.PRIMARY:
+            ids = list(self.refs["A"][pool])
+            for reviewer in ("A", "B"):
+                for row in self.refs[reviewer][pool].values():
+                    row["lead"] = 1
+                    row["facets"] = []
+            self.facets[pool] = []
+            w0 = ids[:]
+            d_star = ids[1:] + ids[:1]
+            e = ids[2:] + ids[:2]
+            self.rankings[pool]["w0"] = w0
+            self.rankings[pool]["d_star"] = d_star
+            self.rankings[pool]["e"] = e
+            score_by_order[tuple(w0)] = 0.50
+            score_by_order[tuple(d_star)] = 0.55
+            score_by_order[tuple(e)] = 0.53
+
+        def controlled_ndcg(order, _grades):
+            return score_by_order.get(tuple(order), ndcg_at_10(order, _grades))
+
+        result = analysis.analyze(
+            self.rankings, self.refs, self.facets, controlled_ndcg, self.bootstrap
+        )
+        self.assertTrue(result["primary"]["A"]["passed"])
+        self.assertTrue(result["ordinal_noninferiority"]["A"]["mean_e_minus_d_star"] < -0.01)
+        self.assertFalse(result["ordinal_noninferiority"]["A"]["passed"])
+        for pool in analysis.PRIMARY:
+            comp = result["diagnostics"]["per_reference_pool_metrics"]["A"][pool]["comparisons"]["d_star"]
+            self.assertAlmostEqual(comp["ndcg_delta_e_minus_comparator"], -0.02)
+            self.assertGreaterEqual(comp["ndcg_delta_e_minus_comparator"], -0.03)
+        self.assertFalse(result["ordinal_noninferiority_passed"])
+
+    def test_per_facet_inventory_reports_useful_uncertain_rows_and_unsupported_ids(self):
+        result = self.run_analysis()
+        research = result["diagnostics"]["coverage"]["by_reference"]["A"]["per_pool"]["research"]
+        item = research["facet_inventory"]["f"]
+        self.assertEqual(item["tagged_useful_count"], 1)
+        self.assertEqual(item["uncertain_tagged_useful_count"], 0)
+        self.assertEqual(item["tagged_useful_ids"], ["research-0"])
+        self.assertEqual(research["unsupported_facet_ids"], [])
+        self.assertEqual(research["facet_opportunity_ceiling"], {"count": 1, "total": 1, "fraction": 1.0})
+
+    def test_all_registered_gates_can_pass_on_neutral_exposed_fixture(self):
+        rankings = {}
+        refs = {"A": {}, "B": {}}
+        facets = {}
+        pools = [*(f"q{i}" for i in range(1, 10)), "cardiac", "research", "evaluation"]
+        for pool in pools:
+            ids = [f"{pool}-{i}" for i in range(12)]
+            dstar = ids[:]
+            e = ids[:]
+            w0 = ids[1:] + ids[:1]
+            if pool == "research":
+                # A same-grade useful source adds the only evaluable facet to E.
+                e = ids[:9] + [ids[10], ids[9], ids[11]]
+            rankings[pool] = {"w0": w0, "d_star": dstar, "e": e}
+            if pool in analysis.EXTENDED:
+                rankings[pool].update({"d": dstar[:], "repeat": e[:], "rotated": e[:]})
+            facets[pool] = ["f"]
+            for reviewer in ("A", "B"):
+                rows = {}
+                for i, cid in enumerate(ids):
+                    lead = 3 if pool in analysis.PRIMARY and i in (0, 10) else 2
+                    tags = ["f"] if pool == "research" and i == 10 else []
+                    rows[cid] = {"lead": lead, "visible": 1, "facets": tags, "uncertain": False}
+                refs[reviewer][pool] = rows
+
+        stress_ids = [f"constructed80-{i}" for i in range(80)]
+        rankings["constructed80"] = {
+            "w0": stress_ids[:],
+            "d_star": stress_ids[:],
+            "e": stress_ids[:],
+            "d": stress_ids[:],
+            "repeat": stress_ids[:],
+            "rotated": stress_ids[:],
+        }
+        facets["constructed80"] = ["f"]
+
+        result = analysis.analyze(rankings, refs, facets, ndcg_at_10, self.bootstrap)
+        self.assertTrue(result["membership"]["passed"])
+        self.assertTrue(result["primary"]["A"]["passed"])
+        self.assertTrue(result["primary"]["B"]["passed"])
+        self.assertGreaterEqual(result["primary"]["A"]["mean_gain"], 0.03)
+        self.assertTrue(result["ordinal_noninferiority_passed"])
+        self.assertTrue(result["quality_guards_passed"])
+        self.assertTrue(result["coverage_guard_passed"])
+        self.assertGreater(
+            result["diagnostics"]["coverage"]["by_reference"]["A"]["e_minus_d_star"], 0
+        )
+        self.assertTrue(result["stability_passed"])
+        self.assertTrue(result["development_screen_passed"])
+
+    def test_facet_denominator_requires_same_card_tag_and_useful_lead(self):
+        result = self.run_analysis()
+        cov_a = result["diagnostics"]["coverage"]["by_reference"]["A"]
+        self.assertIn("q1", cov_a["zero_denominator_pools"])
+        self.assertEqual(cov_a["per_pool"]["q1"]["evaluable_facets"], [])
+        self.assertEqual(cov_a["facet_opportunity_ceiling"]["q1"], 0)
+
+    def test_exact_membership_rejects_duplicates_and_reports_unknowns(self):
+        ids = list(self.rankings["q1"]["e"])
+        ids[-1] = ids[0]
+        self.rankings["q1"]["e"] = ids
+        result = self.run_analysis()
+        self.assertFalse(result["membership"]["passed"])
+        check = result["membership"]["by_pool"]["q1"]["arms"]["e"]
+        self.assertFalse(check["passed"])
+        self.assertEqual(check["duplicates"], ["q1-0"])
+        self.assertIn("q1-11", check["missing"])
+
+    def test_ten_useful_baseline_requires_nine_and_lost_ids_are_reported(self):
+        rows = self.refs["A"]["q1"]
+        for cid in rows:
+            rows[cid]["lead"] = 2 if int(cid.rsplit("-", 1)[1]) < 10 else 1
+        self.facets["q1"] = []
+        original = self.rankings["q1"]["e"]
+        self.rankings["q1"]["e"] = original[10:] + original[:8]
+        result = self.run_analysis()
+        cmp = result["diagnostics"]["per_reference_pool_metrics"]["A"]["q1"]["comparisons"]["w0"]
+        self.assertEqual(cmp["useful_count_comparator"], 10)
+        self.assertEqual(cmp["useful_count_e"], 8)
+        self.assertFalse(cmp["baseline10_requires_e_at_least9"])
+        self.assertEqual(len(cmp["lost_useful_ids"]), 2)
+
+    def test_stability_checks_repeat_and_rotated_top_ten_for_all_extended_pools(self):
+        result = self.run_analysis()
+        self.assertTrue(result["stability_passed"])
+        self.assertEqual(set(result["diagnostics"]["stability"]), set(analysis.EXTENDED))
+        for item in result["diagnostics"]["stability"].values():
+            self.assertEqual(item["comparisons"]["repeat"]["overlap"], 1.0)
+            self.assertEqual(item["comparisons"]["rotated"]["overlap"], 1.0)
+
+    def test_visible_uncertainty_disagreement_and_extended_d_are_retained(self):
+        result = self.run_analysis()
+        a_q1 = result["diagnostics"]["per_reference_pool_metrics"]["A"]["q1"]["arms"]["e"]
+        self.assertIsNotNone(a_q1["visible_mean_at_10"])
+        self.assertEqual(a_q1["uncertain_useful_count"], 1)
+        self.assertIn("q2", result["diagnostics"]["reviewer_disagreement"])
+        self.assertTrue(result["diagnostics"]["extended_diagnostic"]["research"]["available"])
+        self.assertEqual(result["diagnostics"]["q9"]["A"] is not None, True)
+        self.assertNotIn("constructed80", result["diagnostics"]["reviewer_disagreement"])
+
+
+if __name__ == "__main__":
+    unittest.main()
