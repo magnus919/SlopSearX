@@ -1,0 +1,7 @@
+# EXP-057 live development outcome
+
+The one-shot registered two-round study retained eighteen valid operations before the nineteenth, constructed80-d, exceeded the unchanged 2000 ms cumulative remote-time ceiling at 2138.008 ms. Its one prior swap was discarded and its exact full original W0 order returned. The final two stress variants were not invoked. All software and natural-topic operations were attempted successfully, but this incomplete cohort receives no aggregate quality analysis or adoption claim.
+
+One neutral plus thirty-six case HTTP attempts consumed 1,178,131 known input and 66,286 output tokens. No unknown usage, search or Brave attempt occurred. The failed stress operation's two calls took 436.152 and 686.931 ms; neither breached the individual 1000 ms ceiling, but their sum plus the original D/F exceeded the operation limit. The exact request/response and owned-process streams are published without modification in live-attempts.json; the sanitized summary binds the original full run by digest.
+
+A fixed two-round cap does not guarantee the cumulative latency envelope. Investigate prospective budget-aware admission before another refinement round; do not retune this study, raise its ceiling, replay failed calls or credit favorable subsets. Runtime integration, untouched confirmation and production acceptance under #516 remain open. Brave allowance remains 0/10 used.
