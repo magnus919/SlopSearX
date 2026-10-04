@@ -1,0 +1,60 @@
+{
+  "unit": "P02-R2",
+  "events": [
+    {
+      "original_output_text": "{\"event\":\"draft\",\"attempt\":1,\"valid\":false,\"errors\":[\"review-positive-pointer\"],\"sha256\":\"ae644785e54daecb7ebe48330767a1de8ed409af38450b0fe417ef0317bdb800\"}\r\n",
+      "event": {
+        "event": "draft",
+        "attempt": 1,
+        "valid": false,
+        "errors": [
+          "review-positive-pointer"
+        ],
+        "sha256": "ae644785e54daecb7ebe48330767a1de8ed409af38450b0fe417ef0317bdb800"
+      },
+      "tool_exit_code": null
+    },
+    {
+      "original_output_text": "{\"event\":\"draft\",\"attempt\":2,\"valid\":false,\"errors\":[\"review-positive-pointer\"],\"sha256\":\"0edde2c2882785c8544b0589b9d77fab617c4fd81fb645b6a133b047ab4e7526\"}\r\n",
+      "event": {
+        "event": "draft",
+        "attempt": 2,
+        "valid": false,
+        "errors": [
+          "review-positive-pointer"
+        ],
+        "sha256": "0edde2c2882785c8544b0589b9d77fab617c4fd81fb645b6a133b047ab4e7526"
+      },
+      "tool_exit_code": null
+    },
+    {
+      "original_output_text": "{\"event\":\"final\",\"valid\":false,\"sha256\":\"e4066cc219c3dca0bbd5a1cc0f6ada951bb2407c721d0fb3ac12e7622fbb4165\",\"error\":\"final-not-validated-draft\"}\r\n",
+      "event": {
+        "event": "final",
+        "valid": false,
+        "sha256": "e4066cc219c3dca0bbd5a1cc0f6ada951bb2407c721d0fb3ac12e7622fbb4165",
+        "error": "final-not-validated-draft"
+      },
+      "tool_exit_code": 2
+    }
+  ],
+  "tool_source_receipts": [
+    {
+      "call_id": "call_BGsE4XSabdDmIY7bq5kRM71k",
+      "original_tool_source_sha256": "e6e65a390ac231a8b6f8f8de85d2671ae838e1a5e397d8c6691ec7a7c4ece580"
+    },
+    {
+      "call_id": "call_CTMQ4T53YvnvZk8dzKrioH63",
+      "original_tool_source_sha256": "91e35de31d8912979e18787c6df0d510897ef9feabbbde87679b9f38c8eec390"
+    },
+    {
+      "call_id": "call_jSsArlmMI7gcaiUHi4M5Erzf",
+      "original_tool_source_sha256": "3dfb1e2cbfbe810aa77b0bf025ada5e1c8760ba76e962e45dd47c9340af576a3"
+    },
+    {
+      "call_id": "call_7NwYh8XlGHsPMlzFgYm9oVCL",
+      "original_tool_source_sha256": "db86520a3d1f2bd80310d31171cc77f00e4043ed1146022aa1dec144c791013e"
+    }
+  ],
+  "raw_transaction_retention": "private original tool records retained; public receipt excludes local command paths"
+}

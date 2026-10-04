@@ -9,9 +9,9 @@
     "P06"
   ],
   "maximum_reference_concurrency": 2,
-  "current_pair": "P01",
+  "current_pair": "P02",
   "running_reference_units": 0,
-  "finals_validated": 2,
+  "finals_validated": 3,
   "brave_attempts": 0,
   "units": [
     {
@@ -20,7 +20,7 @@
       "invocation_sha256": "005bb6007e2ec5ba23ded007d847194eba476a32c580f33c48dd6f8ab5df49c9",
       "model": "gpt-6-luna",
       "fork_turns": "none",
-      "state": "final_valid_execution_audit_pending",
+      "state": "final_valid_with_exit_observation_deviation",
       "first_running_snapshot_utc": "2026-10-04T17:19:37Z",
       "original_sha256": "9f657a83955b551d943255100f1791c659aec78278aa41c0a0c5ffc7116d6439"
     },
@@ -30,7 +30,7 @@
       "invocation_sha256": "1ad30dffebbce2b0b03699997a2e60e2734c50c8f16d13b48fa2e4d6911fd259",
       "model": "gpt-6-luna",
       "fork_turns": "none",
-      "state": "final_valid_execution_audit_pending",
+      "state": "final_valid_with_exit_observation_deviation",
       "first_running_snapshot_utc": "2026-10-04T17:19:37Z",
       "original_sha256": "f0ad7920b8e3f4f20b6b7e384f5c842a75e76fb733da2b92c9e0527ca64a0feb"
     },
@@ -40,8 +40,10 @@
       "invocation_sha256": "4f03c256e11f75a35147d4a9708bc9da00aa93503253a9a45db3a1d22f38288a",
       "model": "gpt-6-luna",
       "fork_turns": "none",
-      "state": "not_invoked",
-      "first_running_snapshot_utc": null
+      "state": "final_valid",
+      "first_running_snapshot_utc": "2026-10-04T17:32:09.931414+00:00",
+      "guard_exit_code": 0,
+      "original_sha256": "ca81733850e48b6afa91bc04f5a8830788c4db7d9da79081204b7409ced65713"
     },
     {
       "unit": "P02-R2",
@@ -49,8 +51,10 @@
       "invocation_sha256": "54cf8ad3b27b236e3c62c795dff3c47819c064fa127c41d64c98799c21f6b837",
       "model": "gpt-6-luna",
       "fork_turns": "none",
-      "state": "not_invoked",
-      "first_running_snapshot_utc": null
+      "state": "final_incomplete",
+      "first_running_snapshot_utc": "2026-10-04T17:32:09.931936+00:00",
+      "guard_exit_code": 2,
+      "original_sha256": "e4066cc219c3dca0bbd5a1cc0f6ada951bb2407c721d0fb3ac12e7622fbb4165"
     },
     {
       "unit": "P03-R1",
@@ -58,7 +62,7 @@
       "invocation_sha256": "00c9f1c016e22fa85eacb7f2a52eaca695564447603542a58e0be3e61a1f70f2",
       "model": "gpt-6-luna",
       "fork_turns": "none",
-      "state": "not_invoked",
+      "state": "not_invoked_stopped",
       "first_running_snapshot_utc": null
     },
     {
@@ -67,7 +71,7 @@
       "invocation_sha256": "98b9cd777e44f3173a683b2aa7c9cf8b27ce76667176ee66f66d63b72f2fa624",
       "model": "gpt-6-luna",
       "fork_turns": "none",
-      "state": "not_invoked",
+      "state": "not_invoked_stopped",
       "first_running_snapshot_utc": null
     },
     {
@@ -76,7 +80,7 @@
       "invocation_sha256": "ca317eebe137f36e04f31fd566a5bda385fcc1767c965e0c4c8b698f320d4152",
       "model": "gpt-6-luna",
       "fork_turns": "none",
-      "state": "not_invoked",
+      "state": "not_invoked_stopped",
       "first_running_snapshot_utc": null
     },
     {
@@ -85,7 +89,7 @@
       "invocation_sha256": "b0669a5f5fe548ac01aa73e63bffadaa39a43794df3d830509231991dd68c9e1",
       "model": "gpt-6-luna",
       "fork_turns": "none",
-      "state": "not_invoked",
+      "state": "not_invoked_stopped",
       "first_running_snapshot_utc": null
     },
     {
@@ -94,7 +98,7 @@
       "invocation_sha256": "a245d6203e73e164eaa1c6d28218375328f55c101ad39912d8a234199b0345fa",
       "model": "gpt-6-luna",
       "fork_turns": "none",
-      "state": "not_invoked",
+      "state": "not_invoked_stopped",
       "first_running_snapshot_utc": null
     },
     {
@@ -103,7 +107,7 @@
       "invocation_sha256": "2f33757f25cfadd3cee59fe8595cffd0ef794cb0a56dd6a41a96cf5073af8340",
       "model": "gpt-6-luna",
       "fork_turns": "none",
-      "state": "not_invoked",
+      "state": "not_invoked_stopped",
       "first_running_snapshot_utc": null
     },
     {
@@ -112,7 +116,7 @@
       "invocation_sha256": "faea505702a20e98ae81e74c49047c62eb022c7a44c14eb148e6dcddec9df7f5",
       "model": "gpt-6-luna",
       "fork_turns": "none",
-      "state": "not_invoked",
+      "state": "not_invoked_stopped",
       "first_running_snapshot_utc": null
     },
     {
@@ -121,9 +125,11 @@
       "invocation_sha256": "88ded2485fbf9c04149b916ff92fe4b81ef4296a22313961884d423e1ba0c043",
       "model": "gpt-6-luna",
       "fork_turns": "none",
-      "state": "not_invoked",
+      "state": "not_invoked_stopped",
       "first_running_snapshot_utc": null
     }
   ],
-  "execution_audit": "pending independent review of missing guard exit metadata"
+  "execution_audit": "recorded exit-status observation deviation; primary original validity independently verified; continue unchanged frozen tasks",
+  "primary_outcome": "incomplete",
+  "terminal_reason": "P02-R2 invalid evidence pointer in both bounded drafts; final incomplete"
 }
