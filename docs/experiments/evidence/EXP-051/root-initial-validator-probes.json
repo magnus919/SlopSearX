@@ -1,0 +1,25 @@
+{
+  "schema": "exp051-root-initial-validator-probes/1",
+  "validator_sha256": "074809667ab0cc6dda2b0e47bf2323b7d1501d3c03704400c7714cdcb9038d55",
+  "checks": [
+    {
+      "check": "whitespace_content_rejected",
+      "passed": true,
+      "observed": false
+    },
+    {
+      "check": "unknown_abstract_rejected",
+      "passed": true,
+      "observed": false
+    },
+    {
+      "check": "unhashable_pointer_sanitized",
+      "passed": false,
+      "error_type": "TypeError"
+    }
+  ],
+  "status": "failed",
+  "reviewer_invocations": 0,
+  "provider_calls": 0,
+  "search_calls": 0
+}
