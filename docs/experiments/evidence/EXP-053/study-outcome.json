@@ -1,0 +1,60 @@
+{
+  "schema": "exp053-study-outcome/1",
+  "primary_outcome": "incomplete",
+  "references_invoked": 4,
+  "valid_references": 3,
+  "invalid_references": 1,
+  "not_invoked": 8,
+  "brave_attempts": 0,
+  "units": [
+    {
+      "unit": "P01-R1",
+      "status": "valid"
+    },
+    {
+      "unit": "P01-R2",
+      "status": "valid"
+    },
+    {
+      "unit": "P02-R1",
+      "status": "valid"
+    },
+    {
+      "unit": "P02-R2",
+      "status": "invalid"
+    },
+    {
+      "unit": "P03-R1",
+      "status": "not_invoked"
+    },
+    {
+      "unit": "P03-R2",
+      "status": "not_invoked"
+    },
+    {
+      "unit": "P04-R1",
+      "status": "not_invoked"
+    },
+    {
+      "unit": "P04-R2",
+      "status": "not_invoked"
+    },
+    {
+      "unit": "P05-R1",
+      "status": "not_invoked"
+    },
+    {
+      "unit": "P05-R2",
+      "status": "not_invoked"
+    },
+    {
+      "unit": "P06-R1",
+      "status": "not_invoked"
+    },
+    {
+      "unit": "P06-R2",
+      "status": "not_invoked"
+    }
+  ],
+  "reason": "P02-R2 overall relation contradicts the deterministic relation derived from its own facet and reading-change annotations. Original preserved; no repair or retry."
+}
