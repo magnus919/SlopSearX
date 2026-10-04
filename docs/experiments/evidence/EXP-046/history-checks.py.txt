@@ -1,0 +1,18 @@
+import hashlib,json,pathlib,sys
+root=pathlib.Path(sys.argv[1]).resolve()
+evidence=root/'docs/experiments/evidence'
+seen=set(); checked=[]
+def check(manifest, scope):
+ if manifest in seen:return
+ seen.add(manifest)
+ data=json.loads(manifest.read_text())
+ for name,digest in {**data.get('sources',{}), **data.get('files',{})}.items():
+  path=(root/name if name.startswith(('docs/','slopsearx/','tests/')) else scope/name)
+  assert path.is_file(),str(path)
+  assert hashlib.sha256(path.read_bytes()).hexdigest()==digest,str(path)
+  checked.append(str(path.relative_to(root)))
+  if 'qualification-v1' not in path.parts and (path.name.endswith('integrity.json') or path.name=='source-pins.json'):
+   childscope=evidence if path.name=='source-pins.json' and path.parent.name=='EXP-046' else path.parent
+   check(path,childscope)
+check(evidence/'EXP-046/source-pins.json',evidence)
+print(json.dumps({'schema':'exp046-root-history-check/1','status':'passed','hashed_files':len(checked),'unique_hashed_files':len(set(checked)),'manifests':len(seen),'provider_calls':0,'search_calls':0},indent=2))

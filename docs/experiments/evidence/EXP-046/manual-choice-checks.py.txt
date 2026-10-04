@@ -1,0 +1,189 @@
+"""Independent synthetic EXP-046 helper checks; run after replay.py is frozen.
+
+Usage: python exp046-manual-checks.py.txt /absolute/path/to/EXP046/replay.py
+This does not load EXP-043/044 labels or outputs and makes no provider calls.
+It imports only the public pure helpers named by the EXP-046 runner author.
+"""
+import types
+import json
+import math
+import sys
+
+
+def load_runner(path):
+    module = types.ModuleType("exp046_public_helpers")
+    module.__file__ = path
+    source = open(path, "r", encoding="utf-8").read()
+    exec(compile(source, path, "exec"), module.__dict__)
+    for name in ("initial_state", "build_batch", "validate_choice_response", "apply_global_action", "relative_selection"):
+        assert callable(getattr(module, name, None)), f"missing public helper {name}"
+    return module
+
+
+def make_spec(rows, task="Synthetic caller request for useful evidence across facets."):
+    ids = [r["id"] for r in rows]
+    return {"kind": "D", "role": "D", "candidate_ids": ids, "task": task, "facets": [],
+            "body": json.dumps({"state": {"candidates": rows}}, separators=(",", ":"))}
+
+def fixture(R, n=80):
+    # Fully synthetic cards; stable source order equals request order. Ten cards
+    # selected initially, 70 outside candidates exactly meet the score floor.
+    ids = [f"x{i:02d}" for i in range(n)]
+    cards = [{"id": cid, "title": f"Synthetic {cid}", "url": f"https://example.invalid/{cid}",
+              "snippet": f"Synthetic visible evidence {cid}"} for cid in ids]
+    scores = {cid: (9.0 - i * 0.1 if i < 10 else 5.0) for i, cid in enumerate(ids)}
+    facets = [{"id": "fA", "description": "synthetic facet A"},
+              {"id": "fB", "description": "synthetic facet B"}]
+    spec = make_spec(cards)
+    return R.initial_state(spec, {"scores": scores}, facets)
+
+
+def questions(batch):
+    qs = batch.get("questions")
+    assert isinstance(qs, dict), "build_batch must expose insertion-ordered question mapping"
+    return list(qs.items())
+
+def options(q):
+    return list(q["criteria"].keys())
+
+
+def parsed(batch, choices, alternate_probabilities=None):
+    """Construct a syntactically valid TypeSafe-like complete batch response."""
+    answers = {}
+    for qid, q in questions(batch):
+        names = options(q)
+        chosen = choices.get(qid, "KEEP")
+        assert chosen in names
+        probs = {name: 0.0 for name in names}
+        if alternate_probabilities and qid in alternate_probabilities:
+            probs.update(alternate_probabilities[qid])
+        else:
+            probs[chosen] = 1.0
+        answers[qid] = {"type": "choice", "choice": chosen,
+                        "probabilities": probs, "confidence": 1.0}
+    return {"model": "jev-1.13.0", "answers": answers,
+            "usage": {"input_tokens": 100, "output_tokens": 10}, "_elapsed_ms": 10.0}
+
+
+def run(path):
+    R = load_runner(path)
+    # Initial top-10 stability and score-tie order are checked through the
+    # public initial_state helper; synthetic spec/receipt shapes are explicit.
+    ids = ["tie_first", "low", "tie_later", "high"]
+    cards = [{"id": x, "title": x, "url": f"https://example.invalid/{x}", "snippet": x} for x in ids]
+    spec_facets = [{"id": "fA", "description": "synthetic facet"}]
+    spec = {"kind": "D", "role": "D", "candidate_ids": ids,
+            "body": json.dumps({"state": {"candidates": cards}}, separators=(",", ":")),
+            "task": "synthetic purpose", "facets": []}
+    d = {"scores": {"tie_first": 8.8, "low": 2.0, "tie_later": 8.8, "high": 9.0}}
+    init = R.initial_state(spec, d, spec_facets)
+    assert init["selected_ids"] == ["high", "tie_first", "tie_later", "low"]
+    assert init["order"] == ["high", "tie_first", "tie_later", "low"], \
+        "D order is stable descending score with request-order ties"
+
+    s = fixture(R, 80)
+    b = R.build_batch(s)
+    qs = questions(b)
+    assert len(qs) == 11
+    qids = [qid for qid, _ in qs]
+    qvals = [q for _, q in qs]
+    assert qids == ["victim"] + [f"replacement_for_x{i:02d}" for i in range(10)]
+    assert sum(len(options(q)) for q in qvals) == 721
+    assert options(qvals[0]) == ["KEEP"] + [f"remove_x{i:02d}" for i in range(10)]
+    for q in qvals[1:]:
+        assert options(q) == ["KEEP"] + [f"replace_x{i:02d}" for i in range(10, 80)]
+
+    # Global KEEP terminates even when branch answers nominate replacements.
+    ch = {"victim": "KEEP", "replacement_for_x00": "replace_x10"}
+    choices, _ = R.validate_choice_response(parsed(b, ch), b)
+    out, trace, reason = R.apply_global_action(s, choices)
+    assert out["selected_ids"] == s["selected_ids"] and reason
+
+    # Chosen branch KEEP terminates; another branch's candidate is not rescue.
+    ch = {"victim": "remove_x00", "replacement_for_x00": "KEEP",
+          "replacement_for_x01": "replace_x10"}
+    choices, _ = R.validate_choice_response(parsed(b, ch), b)
+    out, trace, reason = R.apply_global_action(s, choices)
+    assert out["selected_ids"] == s["selected_ids"] and reason
+
+    # Only selected branch controls action. Extreme valid confidence/probability
+    # on an unused branch cannot alter the applied pair.
+    ch = {"victim": "remove_x02", "replacement_for_x02": "replace_x10",
+          "replacement_for_x01": "replace_x13"}
+    p1 = parsed(b, ch)
+    validated1, _ = R.validate_choice_response(p1, b)
+    out1, _, _ = R.apply_global_action(s, validated1)
+    p2 = parsed(b, ch, {"replacement_for_x01": {"KEEP": 0.0, "replace_x13": 1.0}})
+    validated2, _ = R.validate_choice_response(p2, b)
+    out2, _, _ = R.apply_global_action(s, validated2)
+    assert out1["selected_ids"] == out2["selected_ids"]
+    assert "x10" in out1["selected_ids"] and "x02" not in out1["selected_ids"]
+    assert "x13" not in out1["selected_ids"]
+
+    # Deterministic bounded progression through the actual sequential replay:
+    # protected inserts never become victims; evicted IDs cannot bounce back;
+    # the fourth accepted round terminates with full membership and no fifth call.
+    rows = [{"id": f"x{i:02d}", "title": f"Synthetic x{i:02d}",
+             "url": f"https://example.invalid/x{i:02d}", "snippet": f"synthetic x{i:02d}"}
+            for i in range(16)]
+    spec4 = make_spec(rows)
+    scores4 = {r["id"]: (9.0 - i * 0.1 if i < 10 else 5.0) for i, r in enumerate(rows)}
+    receipt4 = {"scores": scores4}
+    facets4 = [{"id": "fA", "description": "synthetic facet A"},
+               {"id": "fB", "description": "synthetic facet B"}]
+    s = R.initial_state(spec4, receipt4, facets4)
+    expected = [("x00", "x10"), ("x01", "x11"), ("x02", "x12"), ("x03", "x13")]
+    step_receipts = []
+    for victim, candidate in expected:
+        b = R.build_batch(s)
+        ch = {"victim": f"remove_{victim}", f"replacement_for_{victim}": f"replace_{candidate}"}
+        raw = parsed(b, ch)
+        choices, _ = R.validate_choice_response(raw, b)
+        s, trace, reason = R.apply_global_action(s, choices)
+        step_receipts.append({"parsed": raw})
+        assert candidate in s["selected_ids"] and victim not in s["selected_ids"]
+        assert candidate in s["protected_ids"] and victim in s["evicted_ids"]
+        assert len(s["selected_ids"]) == 10 and len(set(s["selected_ids"])) == 10
+        assert candidate not in s["eligible_ids"] and victim not in s["eligible_ids"]
+    full, replay_trace, fallback = R.relative_selection(
+        spec4, receipt4, step_receipts, list(reversed([r["id"] for r in rows])), facets4)
+    assert fallback is False and len(replay_trace["steps"]) == 4
+    assert replay_trace.get("terminal") == "four_round_limit"
+    assert len(full) == len(rows) and set(full) == {r["id"] for r in rows}
+    assert replay_trace["selected_ids"] == s["selected_ids"]
+
+    # Inclusive score floor and no-action bypass: 5.0 is included; <5 is not.
+    s = fixture(R, 12); s["scores"]["x10"] = 4.999
+    s["eligible_ids"] = [cid for cid in s["order"] if cid not in s["selected_ids"] and s["scores"][cid] >= 5.0]
+    assert "x10" not in s["eligible_ids"]
+    s["scores"]["x10"] = 5.0
+    s["eligible_ids"] = [cid for cid in s["order"] if cid not in s["selected_ids"] and s["scores"][cid] >= 5.0]
+    b = R.build_batch(s)
+    assert "replace_x10" in options(questions(b)[1][1])
+
+    # Entire answer batch is strict: missing/extra question, missing option
+    # probability, non-finite probability, non-normalized distribution, or a
+    # choice that is not a maximum must raise before any action is applied.
+    good = parsed(b, {})
+    bad_cases = []
+    bad = {"answers": dict(good["answers"])}; bad["answers"].pop("replacement_for_x00"); bad_cases.append(bad)
+    bad = {"answers": dict(good["answers"])}; bad["answers"]["unexpected"] = good["answers"]["victim"]; bad_cases.append(bad)
+    bad = parsed(b, {}); a = dict(bad["answers"]["victim"]); a["probabilities"] = {"KEEP": 0.5}; bad["answers"]["victim"] = a; bad_cases.append(bad)
+    bad = parsed(b, {}); a = dict(bad["answers"]["victim"]); p = dict(a["probabilities"]); p["KEEP"] = math.nan; a["probabilities"] = p; bad["answers"]["victim"] = a; bad_cases.append(bad)
+    tie = parsed(b, {}); a = dict(tie["answers"]["victim"]); a["probabilities"]["KEEP"] = 0.5; a["probabilities"]["remove_x00"] = 0.5; tie["answers"]["victim"] = a
+    tied, _ = R.validate_choice_response(tie, b)
+    assert tied["victim"] == "KEEP", "probability ties deterministically prefer KEEP"
+    bad = parsed(b, {}); a = dict(bad["answers"]["victim"]); a["choice"] = "remove_x00"; a["probabilities"]["remove_x00"] = 0.0; bad["answers"]["victim"] = a; bad_cases.append(bad)
+    for bad in bad_cases:
+        try:
+            R.validate_choice_response(bad, b)
+        except (ValueError, TypeError, AssertionError):
+            continue
+        raise AssertionError("invalid Choice batch accepted")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        raise SystemExit("usage: python exp046-manual-checks.py.txt /path/to/EXP046/replay.py")
+    run(sys.argv[1])
+    print("EXP-046 synthetic helper checks passed")

@@ -1,0 +1,14 @@
+{
+  "schema": "exp046-preimplementation-boundary-probe/1",
+  "status": "preimplementation_expected_failure",
+  "observed_at_utc": "2026-10-04T11:19:44Z",
+  "runner_artifact": "EXP-046/replay.py.txt",
+  "runner_sha256": "0dd3f8fa1915c1cd78626e74dffeaefd002224b95b295e2f24ee1e6d63047bb8",
+  "check_artifact": "exp046-probability-boundary-checks.py.txt",
+  "check_sha256": "0b696958d73beab59a00814f08c6217b003d996fe603afeee9bc503bc8bc08fe",
+  "boundary_case": "two-option sum 0.99",
+  "reason": "Current validator still applies the EXP-045 1e-6 float-sum rule; it raised ValueError: Choice probabilities invalid: alpha. This is an expected preimplementation failure, not a qualification result.",
+  "provider_calls": 0,
+  "search_calls": 0,
+  "network_calls": 0
+}
