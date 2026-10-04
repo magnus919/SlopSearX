@@ -27,6 +27,24 @@ class Tests(unittest.TestCase):
         self.assertTrue(t.receipts[0]['timed_out'])
         self.assertIsNotNone(t.receipts[0]['exit_code'])
         self.assertEqual(t.receipts[0]['status'], 'timeout')
+    def test_stdout_overflow_is_bounded_terminal_prefix(self):
+        t = m.ChildTransport([sys.executable, '-c', 'import sys;sys.stdout.buffer.write(b"x"*2100000)'])
+        with self.assertRaises(ValueError): t(b'{}', timeout_s=1)
+        r = t.receipts[0]
+        self.assertEqual(len(r['stdout']), 2000001)
+        self.assertFalse(r['stdout_complete'])
+        self.assertEqual(r['status'], 'stdout-overflow')
+        self.assertIsNotNone(r['exit_code'])
+    def test_stderr_overflow_is_bounded(self):
+        t = m.ChildTransport([sys.executable, '-c', 'import sys;sys.stderr.buffer.write(b"x"*65000)'])
+        with self.assertRaises(ValueError): t(b'{}', timeout_s=1)
+        self.assertEqual(len(t.receipts[0]['stderr']), 64001)
+        self.assertFalse(t.receipts[0]['stderr_complete'])
+    def test_full_request_does_not_deadlock_with_early_child_output(self):
+        t = m.ChildTransport([sys.executable, '-c', 'import sys;sys.stdout.buffer.write(b"x"*100000);sys.stdout.flush();sys.stdin.buffer.read()'])
+        out, _ = t(b' ' * 384000, timeout_s=1)
+        self.assertEqual(out, b'x' * 100000)
+        self.assertTrue(t.receipts[0]['stdout_complete'])
     def test_failed_child_preserves_output(self):
         t = m.ChildTransport([sys.executable, '-c', 'import sys;sys.stdout.write("bad");sys.stderr.write("reason");sys.exit(2)'])
         with self.assertRaises(ValueError): t(b'{}', timeout_s=1)

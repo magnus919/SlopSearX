@@ -1,0 +1,15 @@
+# EXP-056 bounded transport and failure-path progress
+
+Qualification remains incomplete. No new Jev, search or Brave calls were made. This milestone changes only inert experiment evidence; it does not implement or enable the optional production mode.
+
+The owned child transport now uses bounded nonblocking output capture and temporary-file stdin. It accepts at most 2,000,000 stdout bytes and 64,000 stderr bytes. An overflow kills the process group and retains an explicitly incomplete observed prefix of at most cap+1 bytes. Accepted responses remain byte-identical. Child timeout and cancellation cleanup retain lifecycle receipts. Request bytes are capped before invocation.
+
+The shared study budget reserves the maximum 64,000 input tokens before each round, charges observed usage even when a later timing check fails, blocks subsequent calls after unknown usage, and stops on exceeded output usage. Output overrun is retained as a failed attempt rather than silently discarded. The coordinator rejects an exact 60-second deadline before reserving or recording a call; the targeted reviewer identified that boundary defect and it has a regression fixture.
+
+`http-wrapper.py.txt` uses the fixed TypeSafe endpoint, exact request bytes, one-second remote deadline, bounded response reads, no redirects and no retries. It never prints credentials or exception messages. Its offline CLI mode exercises the same exchange function with a fixture opener; this proves control-flow and byte handling, not real provider acceptance, authentication or latency. The owned child's process-duration measure is deliberately conservative and includes wrapper startup.
+
+All seven retained checks exited 0: policy fixtures; 8 response-parser tests; 13 coordinator tests; 6 bounded-child tests; 6 HTTP contract tests; complete 21-operation neutral CLI pipeline; failed CLI pipeline. Both reference mappings again reached all eight primary comparisons in the successful fixture. Neutral responses correctly fail quality. The failure fixture succeeds only if q2-d fails, returns full W0, leaves precisely 19 operations uninvoked, retains the original failed child receipt and performs no partial quality analysis.
+
+`offline-progress-receipt.json` binds the current source bytes, exact output hashes and observed command exits. The original `offline-milestone-receipt.json` is historical evidence for the source version merged in PR #581; its source hashes should be checked against that commit, not assumed to describe subsequent edits.
+
+Remaining before live calls: complete no-facet/navigation and multi-round operational fixtures, independently freeze/review the complete request/question-mapping and cost inventory, record the provider contract snapshot, and qualify the complete normal runner including neutral 80-card/80-question preparation and full-study deadline ownership. This milestone alone does not permit live measurement or production adoption. After offline qualification, the registered neutral provider attempt and full frozen-corpus measurement are still required; only a genuine quality pass can permit untouched fresh confirmation and runtime implementation.
