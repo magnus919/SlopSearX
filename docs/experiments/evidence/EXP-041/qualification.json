@@ -47,5 +47,19 @@
   "formatted_delivery_fixture_sha256": "8a9781238cd166f90d57f9d6ad68074d50d46064bd4507b58a93cc91ebee67e7",
   "fixture_formatting": "Pre-commit reformatted the added test after staging; AST equality against the qualified fixture confirmed. Focused tests and hooks rerun. Runtime source unchanged.",
   "initial_baseline_original_sha256": "022d6367fe569f6d112cdbcde2ba2e9861c608a584012be6f2f4767e4c324c48",
-  "baseline_sanitization": "Personal/local runtime paths redacted; trailing whitespace normalized in published copy. Private original remains unchanged."
+  "baseline_sanitization": "Personal/local runtime paths redacted; trailing whitespace normalized in published copy. Private original remains unchanged.",
+  "ci_first_pass": {
+    "revision": "af8c16bde44698ba7341d65958a7e23104cf26ef",
+    "failed_job": "test (3.13)",
+    "run_id": 37183178356,
+    "failure": "existing queue-deadline fixture allowed earlier requests to release slots before queued request deadline; immediate mock success is valid",
+    "repair": "hold both admission slots explicitly until queued request times out; release in finally; confirm later HTTP call succeeds",
+    "runtime_source_changed_by_repair": false,
+    "focused_after_repair": {
+      "passed": 103,
+      "seconds": 1.12
+    },
+    "mypy_after_repair": "118 source files passed",
+    "droid_first_pass": "substantive positive runtime/test/security review; one ledger-row placement finding addressed"
+  }
 }

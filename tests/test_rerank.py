@@ -477,40 +477,36 @@ async def test_jev_queued_cancellation_releases_admission_slot(monkeypatch: pyte
 
 
 async def test_jev_queue_wait_counts_toward_deadline_and_releases_slot(monkeypatch: pytest.MonkeyPatch) -> None:
-    entered = asyncio.Event()
-    calls = active = 0
+    calls = 0
     monkeypatch.setattr("slopsearx.rerank.RERANK_TIMEOUT_S", 0.05)
 
     async def handler(req: httpx.Request) -> httpx.Response:
-        nonlocal calls, active
+        nonlocal calls
         calls += 1
-        active += 1
-        if active == 2:
-            entered.set()
-        try:
-            if calls <= 2:
-                await asyncio.Event().wait()
-            return httpx.Response(
-                200,
-                json={
-                    "model": MODEL,
-                    "answers": {"c0": {"type": "score", "score": 0}, "c1": {"type": "score", "score": 9}},
-                },
-            )
-        finally:
-            active -= 1
+        return httpx.Response(
+            200,
+            json={
+                "model": MODEL,
+                "answers": {"c0": {"type": "score", "score": 0}, "c1": {"type": "score", "score": 9}},
+            },
+        )
 
     mock_http(monkeypatch, handler)
     provider = JevReranker("test")
     candidates = (RerankCandidate("c0", "public", "", ""), RerankCandidate("c1", "public", "", ""))
-    first = [asyncio.create_task(provider.rerank("public", candidates)) for _ in range(2)]
-    await entered.wait()
-    queued = asyncio.create_task(provider.rerank("public", candidates))
-    assert await asyncio.wait_for(queued, 0.3) is None
-    assert await asyncio.gather(*first) == [None, None]
-    assert calls == 2
+    # Keep both slots occupied until the queued request expires. Real requests
+    # with earlier deadlines can release slots just before this one's deadline,
+    # making an immediate mock response a valid success rather than a timeout.
+    await provider._semaphore.acquire()
+    await provider._semaphore.acquire()
+    try:
+        assert await asyncio.wait_for(provider.rerank("public", candidates), 0.3) is None
+        assert calls == 0
+    finally:
+        provider._semaphore.release()
+        provider._semaphore.release()
     assert await provider.rerank("public", candidates) is not None
-    assert calls == 3
+    assert calls == 1
 
 
 async def test_interactive_deadline_bounds_advice(monkeypatch: pytest.MonkeyPatch) -> None:

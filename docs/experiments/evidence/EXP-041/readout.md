@@ -28,3 +28,7 @@ raise SystemExit(pytest.main([
 ```
 
 Candidate command: `PYTHONPATH=. .venv/bin/python -m pytest --no-cov -q tests/test_scholarly.py tests/test_scholarly_arxiv_html_identity.py`. Source hashes, exact qualification commands and fixture history are in [qualification.json](qualification.json).
+
+### CI qualification follow-up
+
+The first Python 3.13 job exposed an existing queue-fixture timing race; the fixture was made deterministic without changing the Jev runtime. The reviewer-reported experiment-ledger placement was also corrected. Combined grouping/reranking tests passed 103 cases after repair. Final CI and substantive review remain required; see qualification.json for the preserved failed-job receipt.

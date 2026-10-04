@@ -143,6 +143,7 @@ experiment PRs as described below; merge implementation PRs only under the stand
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
+| [EXP-041](EXP-041-arxiv-html-identity.md) | Do official arXiv HTML representations group with their abstract/PDF work without false merges? | supported; implementation pending | Old final fixture: 14 failures/7 passes; candidate grouping 55 passed; full suite 2,333 passed, 85.41% coverage. Zero provider/search calls. | [PR #529](https://github.com/magnus919/SlopSearX/pull/529); CI/review pending; no deployment |
 | [EXP-040](EXP-040-complete-purpose-source-selection.md) | Can explicit-purpose source selection improve complete natural pools while preserving useful coverage? | not supported | 48/48 valid calls; primary and cardiac gains, but research evidence-grounding facet lost under assessment B. All navigation/stability/operational gates passed; 0/10 Brave attempts. | Follow-up #516; no runtime change |
 | [EXP-039](EXP-039-explicit-purpose-jev-development.md) | Does explicit caller purpose and source-selection scoring improve reading-lead ranking? | not-supported for selection | 40/40 valid; mean nDCG +0.2145/+0.0753 clears statistical gates but useful-source identity retention fails. [Readout](evidence/EXP-039/readout.md). 0/10 Brave attempts. | [PR #522](https://github.com/magnus919/SlopSearX/pull/522); no runtime change |
 | [EXP-038](EXP-038-intent-aware-jev-development.md) | Does intent-aware card-local ranking improve evidence ordering without navigation regression? | not-supported for default adoption | 32/32 valid; all guards pass, but mean nDCG −0.0189 root / −0.0382 Luna misses +0.05 gate. 0/10 Brave attempts used. | None; follow-up #516 |
@@ -199,5 +200,3 @@ These are investigation leads, not accepted hypotheses or promised benefits.
 
 Promote a lead into a registered experiment only after inspecting its real
 production path and establishing a measurable baseline.
-
-| [EXP-041](EXP-041-arxiv-html-identity.md) | Do official arXiv HTML representations group with their abstract/PDF work without false merges? | supported; implementation pending | Old final fixture: 14 failures/7 passes; candidate grouping 55 passed; full suite 2,333 passed, 85.41% coverage. Zero provider/search calls. | #527; CI/review pending; no deployment |
