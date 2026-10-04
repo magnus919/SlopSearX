@@ -552,3 +552,12 @@ the metadata; HTML shows escaped messages in a collapsed Source availability
 disclosure. Explicit invalid MCP scopes may include public-source advisories
 alongside their unchanged error. Validation errors without a resolved search
 scope need not include advisories.
+
+### Malformed stored snapshots
+
+Snapshot pagination, entity views and result-detail reads reject deserialization
+failures or non-finite timestamps with the existing `invalid_cursor`
+error. They return no captured evidence and never re-run the query or modify
+the invalid record. Healthy, expired, missing, tenant-mismatched and unavailable
+store behavior remains unchanged; legacy snapshots without `expires_at` remain
+readable. Diagnostic logs include only the failure class, never stored contents.

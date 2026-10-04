@@ -5,6 +5,8 @@ from __future__ import annotations
 import time
 from typing import Any
 
+import pytest
+
 from slopsearx.adapter import SearchResult
 from slopsearx.service import ScopeDecision
 from slopsearx.snapshot import SnapshotStore
@@ -211,3 +213,33 @@ class TestSnapshotStore:
 
         assert snapshot is not None
         assert snapshot.results[0].engines == {"brave", "wikipedia"}
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("scope", [1]),
+        ("results", [1]),
+        ("total", "bad"),
+        ("created_at", "bad"),
+        ("expires_at", "bad"),
+        ("expires_at", "NaN"),
+        ("expires_at", "Infinity"),
+        ("created_at", "NaN"),
+        ("created_at", "-Infinity"),
+    ],
+)
+async def test_malformed_snapshot_rejected_without_disclosure_or_mutation(field, value, caplog) -> None:
+    store = _FakeStore()
+    snapshots = SnapshotStore(store)
+    snapshot_id = await snapshots.create("private-query-marker", "q", _results(1), ScopeDecision())
+    payload = store._data[snapshots._key(snapshot_id)]
+    payload[field] = value
+    before = repr(payload)
+    lookup = await snapshots.read(snapshot_id)
+    assert lookup.snapshot is None
+    assert not lookup.expired and not lookup.unavailable
+    assert repr(payload) == before
+    assert "private-query-marker" not in caplog.text
+    assert snapshot_id not in caplog.text
+    assert "Invalid stored snapshot" in caplog.text

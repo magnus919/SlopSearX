@@ -13,6 +13,8 @@ with a bounded TTL and are immutable once written.
 from __future__ import annotations
 
 import dataclasses
+import logging
+import math
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -80,6 +82,9 @@ class SnapshotRead:
     unavailable: bool = False
     expired: bool = False
     expires_at: float | None = None
+
+
+logger = logging.getLogger(__name__)
 
 
 class SnapshotStore:
@@ -172,7 +177,7 @@ class SnapshotStore:
         Returns a :class:`SnapshotRead` describing the lifecycle state so
         callers can surface the correct structured error:
         ``store_unavailable`` (store unreachable), ``expired_handle``
-        (present but past ``expires_at``), or ``invalid_cursor`` (unknown).
+        (present but past ``expires_at``), or ``invalid_cursor`` (unknown or malformed).
         """
         store = self._store
         if store is None or not store.is_connected:
@@ -182,7 +187,17 @@ class SnapshotStore:
         payload = await store.get(self._key(snapshot_id))
         if payload is None:
             return SnapshotRead()
-        snapshot = _snapshot_from_payload(payload)
+        try:
+            snapshot = _snapshot_from_payload(payload)
+            if not math.isfinite(snapshot.created_at) or (
+                snapshot.expires_at is not None and not math.isfinite(snapshot.expires_at)
+            ):
+                raise ValueError("non-finite snapshot timestamp")
+        except (AttributeError, TypeError, ValueError, OverflowError) as exc:
+            # Persisted records are untrusted. Reject without exposing their
+            # query, handle, contents or exception text, and do not mutate them.
+            logger.warning("Invalid stored snapshot: %s", type(exc).__name__)
+            return SnapshotRead()
         if snapshot.tenant != self._tenant:
             # Tenant mismatch — treat as missing (defense in depth; the
             # key is already tenant-scoped).
