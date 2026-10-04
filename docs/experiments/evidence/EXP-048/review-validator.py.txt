@@ -1,0 +1,67 @@
+"""Strict offline complete EXP-048 reviewer validation; no inference or network."""
+import argparse
+import copy
+import hashlib
+import json
+from pathlib import Path
+import runpy
+
+BASE = Path(__file__).parent
+BUILDER = runpy.run_path(str(BASE / "delivery-builder.py.txt"))
+LEGACY = runpy.run_path(str(BASE.parent / "EXP-047" / "review-validator.py.txt"))
+load = BUILDER["strict_load"]
+sha = BUILDER["sha"]
+REFS = BUILDER["REFS"]
+FILES = [f"pool-{ref}.json" for ref in REFS]
+MARKERS = [f"EXP048-{ref}-END" for ref in REFS]
+
+
+def validate_manifest():
+    BUILDER["build"]()
+    raw = (BASE / "delivery-manifest.json").read_bytes()
+    m = load(raw)
+    assert raw == BUILDER["canonical"](m)
+    assert set(m) == {"schema", "packet_sha256", "contract_sha256", "registration_integrity_sha256", "scripts", "deliveries"}
+    assert m["schema"] == "exp048-delivery-manifest/1"
+    assert [e["file"] for e in m["deliveries"]] == FILES
+    for e in m["deliveries"]:
+        assert set(e) == {"pool_ref", "file", "sha256", "bytes", "cases"}
+        raw_pool = (BASE / e["file"]).read_bytes()
+        assert sha(raw_pool) == e["sha256"] and len(raw_pool) == e["bytes"]
+    return m, sha(raw)
+
+
+def validate(review, reviewer_id):
+    m, manifest_sha = validate_manifest()
+    assert type(review) is dict and set(review) == {"schema", "reviewer_id", "packet_sha256", "contract_sha256", "delivery_manifest_sha256", "cases", "execution_attestation"}
+    assert review["schema"] == "exp048-review/1"
+    assert review["delivery_manifest_sha256"] == manifest_sha
+    att = review["execution_attestation"]
+    assert type(att) is dict and set(att) == {"declared_tool_calls", "external_calls", "filesystem_writes", "read_only_files", "delivery_end_markers"}
+    assert att["declared_tool_calls"] == [f"cat {name}" for name in FILES]
+    assert att["read_only_files"] == FILES and att["delivery_end_markers"] == MARKERS
+    assert type(att["external_calls"]) is int and att["external_calls"] == 0
+    assert type(att["filesystem_writes"]) is int and att["filesystem_writes"] == 0
+    adapted = copy.deepcopy(review)
+    adapted.pop("delivery_manifest_sha256")
+    adapted["schema"] = "exp047-review/1"
+    adapted["execution_attestation"] = {"declared_tool_calls": ["cat review-packet.json"],
+        "external_calls": 0, "filesystem_writes": 0, "read_only_files": ["review-packet.json"]}
+    packet = load((BASE.parent / "EXP-047" / "review-packet.json").read_bytes())
+    LEGACY["validate"](adapted, packet, reviewer_id, m["packet_sha256"], m["contract_sha256"])
+    return {"schema": "exp048-review-validation/1", "status": "passed",
+            "reviewer_id": reviewer_id, "cases": len(review["cases"]),
+            "packet_sha256": m["packet_sha256"], "contract_sha256": m["contract_sha256"],
+            "delivery_manifest_sha256": manifest_sha,
+            "execution_attestation_independently_proven": False, "quality_claim": False}
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("review", type=Path)
+    parser.add_argument("--reviewer", choices=["A", "B"], required=True)
+    args = parser.parse_args()
+    raw = args.review.read_bytes()
+    receipt = validate(load(raw), args.reviewer)
+    receipt["raw_review_sha256"] = hashlib.sha256(raw).hexdigest()
+    print(json.dumps(receipt, indent=2))

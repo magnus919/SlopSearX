@@ -1,0 +1,116 @@
+{
+  "schema": "exp048-tool-delivery-qualification/1",
+  "status": "passed",
+  "probes": [
+    {
+      "file": "pool-P01.json",
+      "exit_code": 0,
+      "original_token_count": 4969,
+      "returned_ascii_bytes": 19876,
+      "complete_json": true,
+      "end_marker_verified": true,
+      "pool_ref": "P01",
+      "cases": [
+        "T001",
+        "T002"
+      ],
+      "candidate_cards": 33,
+      "inner_output_cap": 16000,
+      "outer_output_cap": 16000,
+      "reviewer_rendering_fit_proven": false
+    },
+    {
+      "file": "pool-P02.json",
+      "exit_code": 0,
+      "original_token_count": 4662,
+      "returned_ascii_bytes": 18646,
+      "complete_json": true,
+      "end_marker_verified": true,
+      "pool_ref": "P02",
+      "cases": [
+        "T003",
+        "T004"
+      ],
+      "candidate_cards": 32,
+      "inner_output_cap": 16000,
+      "outer_output_cap": 16000,
+      "reviewer_rendering_fit_proven": false
+    },
+    {
+      "file": "pool-P03.json",
+      "exit_code": 0,
+      "original_token_count": 5571,
+      "returned_ascii_bytes": 22284,
+      "complete_json": true,
+      "end_marker_verified": true,
+      "pool_ref": "P03",
+      "cases": [
+        "T005",
+        "T006"
+      ],
+      "candidate_cards": 35,
+      "inner_output_cap": 16000,
+      "outer_output_cap": 16000,
+      "reviewer_rendering_fit_proven": false
+    },
+    {
+      "file": "pool-P04.json",
+      "exit_code": 0,
+      "original_token_count": 5300,
+      "returned_ascii_bytes": 21200,
+      "complete_json": true,
+      "end_marker_verified": true,
+      "pool_ref": "P04",
+      "cases": [
+        "T007",
+        "T008"
+      ],
+      "candidate_cards": 44,
+      "inner_output_cap": 16000,
+      "outer_output_cap": 16000,
+      "reviewer_rendering_fit_proven": false
+    },
+    {
+      "file": "pool-P05.json",
+      "exit_code": 0,
+      "original_token_count": 5478,
+      "returned_ascii_bytes": 21911,
+      "complete_json": true,
+      "end_marker_verified": true,
+      "pool_ref": "P05",
+      "cases": [
+        "T009",
+        "T010"
+      ],
+      "candidate_cards": 44,
+      "inner_output_cap": 16000,
+      "outer_output_cap": 16000,
+      "reviewer_rendering_fit_proven": false
+    },
+    {
+      "file": "pool-P06.json",
+      "exit_code": 0,
+      "original_token_count": 5286,
+      "returned_ascii_bytes": 21142,
+      "complete_json": true,
+      "end_marker_verified": true,
+      "pool_ref": "P06",
+      "cases": [
+        "T011",
+        "T012"
+      ],
+      "candidate_cards": 44,
+      "inner_output_cap": 16000,
+      "outer_output_cap": 16000,
+      "reviewer_rendering_fit_proven": false
+    }
+  ],
+  "exact_payload_equality": true,
+  "all_returned_bytes_match_manifest": true,
+  "complete_pools": 6,
+  "complete_cases": 12,
+  "provider_calls": 0,
+  "search_calls": 0,
+  "reviewer_invocations": 0,
+  "reviewer_rendering_fit_proven": false
+}
