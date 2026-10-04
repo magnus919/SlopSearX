@@ -1,0 +1,5 @@
+# Before-dispatch quality guard scope
+
+The globally registered per-query useful-source-count and named useful-facet guards apply to all natural quality cases: primary q1–q8 and cardiac/research/evaluation. The `extended_per_pool_ndcg_loss_maximum` object adds a per-pool nDCG bound; it does not replace those global coverage requirements. q9 remains a separate climate diagnostic. Constructed80 has only membership, byte/time and stability gates. This clarifies the intended intersection before new outputs exist and changes no numerical threshold or candidate. The independent review noticed potential ambiguity; the analysis must publish every component rather than only one combined boolean.
+
+The synthetic maximum-field boundary must execute a local eligibility/rejection path with no transport dispatch and preserve the complete intended incumbent ordering. This is offline qualification of the proposed boundary, not evidence that the current production service implements the new fallback. Actual shared-service fallback and request-bound tests remain mandatory in the future implementation PR.

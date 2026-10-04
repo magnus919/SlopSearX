@@ -13,3 +13,7 @@ No new search or page fetch is permitted during this study. Brave remains **0/10
 ## Before-dispatch schema clarification
 
 The copied annotation-output schema retained EXP-039 wrapper and alias names. Its original bytes remain frozen. The [effective v2 schema](evidence/EXP-040/effective-annotation-schema-v2.json) corrects only packaging and named-pool aliases to match the registered 133-card packet and reviewer assignments; [correction history](evidence/EXP-040/schema-correction.md) explains the mistake. This is fixed and pinned before any provider calls; judgment meanings and numerical gates are unchanged.
+
+## Before-dispatch quality guard scope
+
+An independent tooling review identified ambiguity about how the global useful-count/facet guards combine with the extended nDCG condition. [The scope clarification](evidence/EXP-040/guard-scope-clarification.md) makes the intended intersection explicit before new outputs: primary q1–q8 and all three natural extended pools must meet coverage guards, and extended pools additionally meet their nDCG bound. Constructed80 has no relevance gate. Thresholds and the candidate remain unchanged. The boundary fixture is an executed offline rejecting path, not a claim that production fallback is already implemented.

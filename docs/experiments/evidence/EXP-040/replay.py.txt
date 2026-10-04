@@ -1,0 +1,1163 @@
+"""Inert offline preparation, bounded replay, and analysis for EXP-040.
+
+No provider or search client is included. Live dispatch requires an explicit
+private argv file and sealed reference files. The imported EXP-039 helper is
+source-pinned and provides strict JSON, exact source projection checks,
+finite-score validation, owned POSIX-process-group bounds, and bootstrap math.
+Token preflight is a planning estimate only; the registered 2M input / 100K
+output token gates use actual returned usage and cannot prevent a provider
+from spending beyond a gate on that in-flight request.
+"""
+from __future__ import annotations
+
+import argparse
+import ast
+import datetime as dt
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import math
+import os
+import pathlib
+import random
+import re
+import subprocess
+import sys
+import time
+from typing import Any
+
+HERE = pathlib.Path(__file__).resolve().parent
+EVIDENCE = HERE.parent
+MODEL = "jev-1.13.0"
+SEED = 91940
+DRAW_COUNT = 10_000
+PRIMARY_QUERIES = tuple(f"q{i}" for i in range(1, 9))
+ALL_SOFTWARE_QUERIES = tuple(f"q{i}" for i in range(1, 10))
+EXTENDED_POOLS = ("cardiac", "research", "evaluation", "constructed80")
+QUALITY_POOLS = ("cardiac", "research", "evaluation")
+NAVIGATION_IDS = ("q2-c1", "q4-c0", "q5-c6", "q6-c6", "q9-c8")
+CALL_COUNT = 48
+MAX_CANDIDATES = 80
+MAX_QUERY_BYTES = 4096
+MAX_TITLE_BYTES = 256
+MAX_URL_BYTES = 512
+MAX_SNIPPET_BYTES = 1200
+MAX_BASELINE_REQUEST_BYTES = 128_000
+MAX_CANDIDATE_REQUEST_BYTES = 256_000
+MAX_RESPONSE_BYTES = 2_000_000
+MAX_REMOTE_HTTP_MS = 1000.0
+MAX_INPUT_TOKENS = 2_000_000
+MAX_OUTPUT_TOKENS = 100_000
+RUN_WALL_WINDOW_S = 4 * 60 * 60
+RUNNER_WALL_TIMEOUT_S = 60.0
+MAX_RATIONALE_BYTES = 1000
+HELPER_SHA256 = "73ecbce9a04e0952fb2cb10c17728d887e6975ace5c9d22166c58ba980b06669"
+EFFECTIVE_SCHEMA_SHA256 = "faaaab1da0897221d7be3faa60a112544a0d5c00448ff783162dcaa59eec55cd"
+PRODUCTION_RERANKER_SHA256 = "df518bac899fa457e713201192a65f8ee0c3599419382e5be221d5ac366b479e"
+REGISTERED_INPUTS = {
+    "annotation-cards.json", "annotation-id-map.json", "annotation-output-schema.json",
+    "annotation-protocol.md", "baseline-contract.json", "design-review.md",
+    "extended-pools.json", "navigation.json", "protocol.json", "search-budget.json",
+    "source-pins.json", "source-selection-contract.json", "task-facets.json",
+}
+REFERENCE_FILES = {"reference-a.json": "A", "reference-b.json": "B"}
+QUALIFICATION_FILES = {
+    "replay.py.txt", "fixture_tests.py.txt", "effective-annotation-schema-v2.json",
+    "reference-a.json", "reference-b.json", "label-hashes.json", "reference-qualification.json",
+}
+OLD_REFERENCE_FILES = {"reference-a.json": "A", "reference-b.json": "B"}
+POOL_SOURCE_FILES = {
+    "cardiac": "EXP-036/q10-frozen.json",
+    "research": "EXP-034/full-research-frozen.json",
+    "evaluation": "EXP-034/full-evaluation-frozen.json",
+    "constructed80": "EXP-035/constructed80-frozen.json",
+}
+
+
+def load_helper():
+    path = EVIDENCE / "EXP-039" / "replay.py.txt"
+    raw = path.read_bytes()
+    digest = hashlib.sha256(raw).hexdigest()
+    if digest != HELPER_SHA256:
+        raise ValueError(f"pinned EXP-039 helper changed: {digest}")
+    loader = importlib.machinery.SourceFileLoader("exp039_frozen_helper", str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+H = load_helper()
+sha256 = H.sha256
+canonical_bytes = H.canonical_bytes
+pretty_bytes = H.pretty_bytes
+strict_json_loads = H.strict_json_loads
+load_json = H.load_json
+write_immutable = H.write_immutable
+append_jsonl = H.append_jsonl
+
+
+def root_path(root: pathlib.Path | str | None) -> pathlib.Path:
+    return pathlib.Path(root).resolve() if root else HERE.resolve()
+
+
+def verify_registered_inputs(root: pathlib.Path) -> dict[str, str]:
+    hashes = load_json(root / "input-hashes.json")
+    if not isinstance(hashes, dict) or set(hashes) != REGISTERED_INPUTS:
+        raise ValueError("EXP-040 registered input set differs from its frozen 13-file inventory")
+    for name, digest in hashes.items():
+        path = root / name
+        if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+            raise ValueError(f"invalid registered input digest: {name}")
+        if not path.is_file() or sha256(path.read_bytes()) != digest:
+            raise ValueError(f"registered input hash mismatch: {name}")
+    return hashes
+
+
+def verify_source_pins(root: pathlib.Path) -> dict[str, str]:
+    pins = load_json(root / "source-pins.json")
+    expected_names = {
+        "EXP-036/q10-frozen.json", "EXP-034/full-research-frozen.json",
+        "EXP-034/full-evaluation-frozen.json", "EXP-035/constructed80-frozen.json",
+        "EXP-039/annotation-id-map.json", "EXP-039/task-contexts.json",
+        "EXP-039/label-hashes.json", "EXP-038/frozen-queries.json",
+        "EXP-039/reference-a.json", "EXP-039/task-facets.json",
+        "EXP-039/reference-b.json",
+    }
+    if not isinstance(pins, dict) or set(pins) != expected_names:
+        raise ValueError("source pin inventory is incomplete or unexpected")
+    for name, digest in pins.items():
+        path = EVIDENCE / name
+        if not path.is_file() or sha256(path.read_bytes()) != digest:
+            raise ValueError(f"source pin mismatch: {name}")
+    return pins
+
+
+def old_sources(root: pathlib.Path) -> tuple[dict[str, Any], dict[str, dict[str, str]], dict[str, Any], dict[str, Any]]:
+    old_root = EVIDENCE / "EXP-039"
+    H.verify_registered_inputs(old_root)
+    frozen, _, _ = H.verify_exp038_source(old_root)
+    _, old_facets, contexts = H.verify_annotation_projection(old_root, frozen)
+    baseline, old_selection = H.load_contracts(old_root)
+    current_baseline = load_json(root / "baseline-contract.json")
+    current_selection = load_json(root / "source-selection-contract.json")
+    if canonical_bytes(current_baseline) != canonical_bytes(baseline):
+        raise ValueError("EXP-040 incumbent contract differs from frozen EXP-039 W0")
+    if canonical_bytes(current_selection) != canonical_bytes(old_selection):
+        raise ValueError("EXP-040 candidate contract differs from unchanged EXP-039 D")
+    return frozen, contexts, old_facets, {"baseline": baseline, "selection": old_selection}
+
+
+def validate_extended_inputs(root: pathlib.Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    pools_doc = load_json(root / "extended-pools.json")
+    if pools_doc.get("schema") != "exp040-extended-pools/1" or set(pools_doc.get("pools", {})) != set(EXTENDED_POOLS):
+        raise ValueError("unexpected EXP-040 extended pool inventory")
+    source_docs: dict[str, Any] = {}
+    expected_counts = {"cardiac": 44, "research": 45, "evaluation": 44, "constructed80": 80}
+    for pool_id, filename in POOL_SOURCE_FILES.items():
+        source = load_json(EVIDENCE / filename)
+        copied = pools_doc["pools"][pool_id]
+        if copied.get("source") != filename or copied.get("source_sha256") != sha256((EVIDENCE / filename).read_bytes()):
+            raise ValueError(f"extended source pointer/hash mismatch: {pool_id}")
+        if copied.get("query") != source.get("query") or copied.get("candidates") != source.get("candidates"):
+            raise ValueError(f"extended frozen candidates/query changed: {pool_id}")
+        if len(copied["candidates"]) != expected_counts[pool_id]:
+            raise ValueError(f"extended candidate count changed: {pool_id}")
+        if not isinstance(copied.get("purpose"), str) or not copied["purpose"].strip():
+            raise ValueError(f"extended purpose missing: {pool_id}")
+        seen = set()
+        for card in copied["candidates"]:
+            H.validate_card(card)
+            if card["id"] in seen:
+                raise ValueError(f"duplicate extended candidate id: {pool_id}/{card['id']}")
+            seen.add(card["id"])
+        source_docs[pool_id] = source
+
+    annotation = load_json(root / "annotation-cards.json")
+    idmap = load_json(root / "annotation-id-map.json")
+    facets = load_json(root / "task-facets.json")
+    if annotation.get("schema") != "exp040-shuffled-annotation-cards/1":
+        raise ValueError("unexpected EXP-040 annotation card schema")
+    if set(annotation.get("queries", {})) != set(QUALITY_POOLS):
+        raise ValueError("extended annotation packet must contain the three natural pools")
+    if not isinstance(facets, dict) or set(facets) != set(QUALITY_POOLS):
+        raise ValueError("EXP-040 facet vocabulary must cover the natural pools")
+    aliases: dict[str, dict[str, str]] = {}
+    for pool_id in QUALITY_POOLS:
+        pool = pools_doc["pools"][pool_id]
+        annotated = annotation["queries"][pool_id]
+        if annotated.get("purpose") != pool["purpose"] or annotated.get("facet_vocabulary") != facets[pool_id]:
+            raise ValueError(f"extended annotation task/facets mismatch: {pool_id}")
+        if not isinstance(facets[pool_id], list) or not facets[pool_id] or any(not isinstance(x, str) for x in facets[pool_id]):
+            raise ValueError(f"invalid facet list: {pool_id}")
+        by_id = {card["id"]: card for card in pool["candidates"]}
+        seen = set()
+        for card in annotated.get("cards", []):
+            if not isinstance(card, dict) or set(card) != {"label", "title", "url", "snippet"}:
+                raise ValueError(f"bad shuffled extended card: {pool_id}")
+            alias = card["label"]
+            mapping = idmap.get(alias)
+            if not isinstance(alias, str) or not re.fullmatch(r"(?:cardiac|research|evaluation)-r[0-9]{2}", alias) or not isinstance(mapping, dict) or set(mapping) != {"query_id", "candidate_id"} or mapping["query_id"] != pool_id:
+                raise ValueError(f"invalid annotation alias: {alias}")
+            source_card = by_id.get(mapping["candidate_id"])
+            if source_card is None or any(card[key] != source_card[key] for key in ("title", "url", "snippet")):
+                raise ValueError(f"annotation card changed from source: {alias}")
+            if mapping["candidate_id"] in seen:
+                raise ValueError(f"duplicate annotation projection: {alias}")
+            seen.add(mapping["candidate_id"])
+            aliases[alias] = {"query_id": pool_id, "candidate_id": mapping["candidate_id"]}
+        if seen != set(by_id):
+            raise ValueError(f"annotation omissions/additions: {pool_id}")
+    if set(idmap) != set(aliases) or len(aliases) != 133:
+        raise ValueError("EXP-040 alias map must cover exactly 133 natural-pool cards")
+    return pools_doc["pools"], {"aliases": aliases, "facets": facets}, source_docs
+
+
+def validate_new_references(root: pathlib.Path, projection: dict[str, Any], required: bool) -> tuple[dict[str, dict[str, dict[str, Any]]] | None, dict[str, str] | None, str]:
+    aliases = projection["aliases"]
+    facets = projection["facets"]
+    hash_path = root / "label-hashes.json"
+    files = {name: root / name for name in REFERENCE_FILES}
+    if not hash_path.is_file() or not all(path.is_file() for path in files.values()):
+        if required:
+            raise ValueError("sealed EXP-040 references required: reference-a.json, reference-b.json, label-hashes.json")
+        return None, None, "needs_refs"
+    hashes = load_json(hash_path)
+    if not isinstance(hashes, dict) or set(hashes) != set(REFERENCE_FILES):
+        raise ValueError("label-hashes.json must pin exactly both EXP-040 reviewer files")
+    refs: dict[str, dict[str, dict[str, Any]]] = {}
+    schema_path = root / "effective-annotation-schema-v2.json"
+    if not schema_path.is_file() or sha256(schema_path.read_bytes()) != EFFECTIVE_SCHEMA_SHA256:
+        raise ValueError("effective EXP-040 plain-array annotation schema missing or changed")
+    schema = load_json(schema_path)
+    if schema.get("$id") != "exp040-annotation-array/2" or schema.get("type") != "array" or schema.get("minItems") != 133 or schema.get("maxItems") != 133:
+        raise ValueError("effective annotation schema does not match the registered 133-row correction")
+    schema_item = schema.get("items", {})
+    if (schema_item.get("additionalProperties") is not False
+            or set(schema_item.get("required", [])) != {"label", "lead", "visible", "facets", "uncertain", "rationale"}
+            or schema_item.get("properties", {}).get("label", {}).get("pattern") != r"^(cardiac|research|evaluation)-r[0-9]{2}$"):
+        raise ValueError("effective annotation row schema does not match the named-pool plain-array contract")
+    for filename, reviewer in REFERENCE_FILES.items():
+        raw = files[filename].read_bytes()
+        if hashes.get(filename) != sha256(raw):
+            raise ValueError(f"annotation file hash mismatch: {filename}")
+        data = strict_json_loads(raw)
+        if not isinstance(data, list) or len(data) != 133:
+            raise ValueError(f"EXP-040 effective annotation must be a plain 133-row array: {filename}")
+        rows: dict[str, dict[str, Any]] = {}
+        for row in data:
+            if not isinstance(row, dict) or set(row) != {"label", "lead", "visible", "facets", "uncertain", "rationale"}:
+                raise ValueError(f"annotation fields invalid: {filename}")
+            alias = row["label"]
+            if not isinstance(alias, str) or alias not in aliases or alias in rows:
+                raise ValueError(f"unexpected/duplicate annotation alias: {filename}")
+            if type(row["lead"]) is not int or not 0 <= row["lead"] <= 3 or type(row["visible"]) is not int or not 0 <= row["visible"] <= 3:
+                raise ValueError(f"annotation grades invalid: {filename}/{alias}")
+            if type(row["uncertain"]) is not bool:
+                raise ValueError(f"annotation uncertainty invalid: {filename}/{alias}")
+            allowed = set(facets[aliases[alias]["query_id"]])
+            tags = row["facets"]
+            if not isinstance(tags, list) or any(not isinstance(tag, str) or tag not in allowed for tag in tags) or len(tags) != len(set(tags)):
+                raise ValueError(f"annotation facets invalid: {filename}/{alias}")
+            rationale = row["rationale"]
+            if not isinstance(rationale, str) or not rationale.strip() or len(rationale.encode("utf-8")) > MAX_RATIONALE_BYTES:
+                raise ValueError(f"annotation rationale invalid: {filename}/{alias}")
+            rows[alias] = row
+        if set(rows) != set(aliases):
+            raise ValueError(f"annotation coverage mismatch: {filename}")
+        refs[reviewer] = rows
+    return refs, hashes, "sealed_valid"
+
+
+def verify_qualification_manifest(root: pathlib.Path, required: bool = False) -> str | None:
+    path = root / "qualification-input-hashes.json"
+    if not path.is_file():
+        if required:
+            raise ValueError("qualification-input-hashes.json must be frozen before dispatch")
+        return None
+    raw = path.read_bytes()
+    manifest = strict_json_loads(raw)
+    if not isinstance(manifest, dict) or set(manifest) != {"schema", "hashes"} or manifest["schema"] != "exp040-qualified-inputs/1":
+        raise ValueError("unexpected EXP-040 qualification input manifest")
+    hashes = manifest["hashes"]
+    if not isinstance(hashes, dict) or set(hashes) != QUALIFICATION_FILES:
+        raise ValueError("qualification manifest must pin the exact seven qualification artifacts")
+    for name, digest in hashes.items():
+        artifact = root / name
+        if not artifact.is_file() or sha256(artifact.read_bytes()) != digest:
+            raise ValueError(f"qualification artifact hash mismatch: {name}")
+    if hashes["effective-annotation-schema-v2.json"] != EFFECTIVE_SCHEMA_SHA256:
+        raise ValueError("qualification manifest pins a different effective annotation schema")
+    label_hashes = load_json(root / "label-hashes.json")
+    if any(label_hashes.get(name) != hashes[name] for name in REFERENCE_FILES):
+        raise ValueError("qualification references differ from sealed label hashes")
+    return sha256(raw)
+
+
+def validate_navigation(root: pathlib.Path, frozen: dict[str, Any]) -> list[dict[str, Any]]:
+    nav = load_json(root / "navigation.json")
+    if not isinstance(nav, list) or len(nav) != 5:
+        raise ValueError("five frozen navigation tasks required")
+    seen = set()
+    for row in nav:
+        if not isinstance(row, dict) or set(row) != {"query_id", "candidate_id", "query", "expected_target_url", "expected_service_visible_url", "title_source_sha256", "url_source_sha256"}:
+            raise ValueError("navigation task fields differ from frozen contract")
+        key = f"{row['query_id']}-{row['candidate_id']}"
+        if key not in NAVIGATION_IDS or key in seen:
+            raise ValueError(f"unexpected/duplicate navigation task: {key}")
+        candidates = frozen["queries"].get(row["query_id"], {}).get("candidates", [])
+        card = next((c for c in candidates if c["id"] == row["candidate_id"]), None)
+        if card is None or card["url"] != row["expected_target_url"] or card["url"] != row["expected_service_visible_url"]:
+            raise ValueError(f"navigation target URL does not match exact frozen candidate: {key}")
+        if sha256(card["title"].encode("utf-8")) != row["title_source_sha256"] or sha256(card["url"].encode("utf-8")) != row["url_source_sha256"]:
+            raise ValueError(f"navigation target title/URL source hash mismatch: {key}")
+        seen.add(key)
+    if seen != set(NAVIGATION_IDS):
+        raise ValueError("navigation cases must match all five pinned targets")
+    return nav
+
+
+def validate_contracts(root: pathlib.Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    baseline = load_json(root / "baseline-contract.json")
+    selection = load_json(root / "source-selection-contract.json")
+    if baseline.get("model") != MODEL or selection.get("model") != MODEL or baseline.get("schema") != "exp039-incumbent-contract/1" or selection.get("schema") != "exp039-source-selection-contract/1":
+        raise ValueError("unexpected pinned Jev contract identity")
+    if "{id}" not in baseline.get("instructions", "") or "query" not in baseline.get("instructions", "") or len(baseline.get("criteria", [])) != 10:
+        raise ValueError("incomplete baseline contract")
+    if "{id}" not in selection.get("instructions", "") or "query" not in selection.get("instructions", "") or selection.get("score_range") != [0, 9] or len(selection.get("criteria", [])) != 10:
+        raise ValueError("incomplete source-selection contract")
+    return baseline, selection
+
+
+def validate_production_source(baseline: dict[str, Any]) -> str:
+    source = EVIDENCE.parents[2] / "slopsearx" / "rerank.py"
+    raw = source.read_bytes()
+    digest = sha256(raw)
+    if digest != PRODUCTION_RERANKER_SHA256 or digest != baseline.get("source_sha256"):
+        raise ValueError("current production reranker differs from registered W0 source")
+    tree = ast.parse(raw.decode("utf-8"), filename=str(source))
+    assignments: dict[str, Any] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id in {"MODEL", "INSTRUCTIONS", "LEVELS"}:
+                    assignments[target.id] = ast.literal_eval(node.value)
+    if (assignments.get("MODEL") != MODEL
+            or assignments.get("INSTRUCTIONS") != baseline["instructions"]
+            or list(assignments.get("LEVELS", ())) != baseline["criteria"]):
+        raise ValueError("W0 baseline contract does not match current production AST constants")
+    return digest
+
+
+def make_body(contract: dict[str, Any], task: str, cards: list[dict[str, str]]) -> dict[str, Any]:
+    questions = {
+        card["id"]: {
+            "type": "score",
+            "instructions": contract["instructions"].replace("{id}", card["id"]),
+            "criteria": list(contract["criteria"]),
+        }
+        for card in cards
+    }
+    return {"model": MODEL, "state": {"query": task, "candidates": cards}, "questions": questions}
+
+
+def encode_body(body: dict[str, Any]) -> bytes:
+    """Match rerank.py's real UTF-8 wire serializer exactly."""
+    return json.dumps(body, ensure_ascii=False).encode("utf-8")
+
+
+def bounded_request_qualification(body: bytes, full_cards: list[dict[str, str]], request_cap: int,
+                                  incumbent_order_ids: list[str]) -> dict[str, Any]:
+    """Local eligibility gate; rejected candidate bodies retain the full order."""
+    ids = [card["id"] for card in full_cards]
+    if len(ids) != len(set(ids)) or len(incumbent_order_ids) != len(ids) or set(incumbent_order_ids) != set(ids):
+        raise ValueError("fallback must be one exact permutation of every incumbent ID")
+    reasons = []
+    if len(full_cards) > MAX_CANDIDATES:
+        reasons.append("candidate_count_exceeds_80")
+    if len(body) > request_cap:
+        reasons.append("serialized_request_exceeds_byte_cap")
+    return {
+        "eligible": not reasons, "reasons": reasons, "request_bytes": len(body),
+        "request_cap": request_cap,
+        "fallback_order_ids": None if not reasons else list(incumbent_order_ids),
+    }
+
+
+def dispatch_bounded(argv: list[str], body: bytes, full_cards: list[dict[str, str]], request_cap: int,
+                     incumbent_order_ids: list[str], wall_timeout_s: float) -> tuple[dict[str, Any], tuple[bytes, int, float, bool, bool] | None]:
+    """Qualify first; an oversized request never starts its private transport."""
+    decision = bounded_request_qualification(body, full_cards, request_cap, incumbent_order_ids)
+    if not decision["eligible"]:
+        return decision, None
+    return decision, H.bounded_process(argv, body, wall_timeout_s)
+
+
+def add_spec(specs: list[dict[str, Any]], identifier: str, pool_id: str, cohort: str, role: str,
+             task: str, contract_name: str, scored_cards: list[dict[str, str]], full_cards: list[dict[str, str]],
+             contract: dict[str, Any], request_cap: int, *, repeat_of: str | None = None,
+             target_id: str | None = None, task_mode: str) -> None:
+    body = encode_body(make_body(contract, task, scored_cards))
+    if not 1 <= len(scored_cards) <= MAX_CANDIDATES:
+        raise ValueError(f"score-card count outside bounds: {identifier}")
+    if len(task.encode("utf-8")) > MAX_QUERY_BYTES or len(body) > request_cap:
+        raise ValueError(f"request exceeds registered UTF-8/request byte limit: {identifier}")
+    for card in full_cards:
+        H.validate_card(card)
+    ids = [card["id"] for card in full_cards]
+    scored_ids = [card["id"] for card in scored_cards]
+    if len(ids) != len(set(ids)) or not set(scored_ids) <= set(ids):
+        raise ValueError(f"candidate membership invalid: {identifier}")
+    decision = bounded_request_qualification(body, full_cards, request_cap, ids)
+    if not decision["eligible"]:
+        raise ValueError(f"registered request is ineligible and cannot be dispatched: {identifier}: {decision['reasons']}")
+    specs.append({
+        "id": identifier, "pool_id": pool_id, "cohort": cohort, "role": role,
+        "task": task, "task_mode": task_mode, "contract": contract_name,
+        "candidate_ids": ids, "scored_candidate_ids": scored_ids,
+        "candidate_count": len(full_cards), "score_count": len(scored_cards),
+        "candidate_order_ids": scored_ids, "repeat_of": repeat_of, "target_id": target_id,
+        "request_cap": request_cap, "body": body,
+    })
+
+
+def expected_specs(root: pathlib.Path, frozen: dict[str, Any], contexts: dict[str, dict[str, str]],
+                   pools: dict[str, Any], nav: list[dict[str, Any]], contracts: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    specs = []
+    old_limit = 40
+    for qid in ALL_SOFTWARE_QUERIES:
+        record = frozen["queries"][qid]
+        cards = record["candidates"]
+        task_modes = (
+            ("w0", contexts[qid]["keyword"], "baseline"),
+            ("d", contexts[qid]["purpose"], "selection"),
+        )
+        for suffix, task, contract_name in task_modes:
+            add_spec(specs, f"{qid}-{suffix}", qid, "software", "baseline" if suffix == "w0" else "candidate",
+                     task, contract_name, cards[:old_limit], cards, contracts[contract_name],
+                     MAX_BASELINE_REQUEST_BYTES if contract_name == "baseline" else MAX_CANDIDATE_REQUEST_BYTES,
+                     task_mode="keyword" if suffix == "w0" else "purpose")
+
+    extended_doc = load_json(root / "extended-pools.json")["pools"]
+    for pool_id in EXTENDED_POOLS:
+        pool = pools[pool_id]
+        cards = pool["candidates"]
+        purpose, keyword = pool["purpose"], pool["query"]
+        # W0 reranks only its production prefix and leaves the rest in original order.
+        add_spec(specs, f"{pool_id}-w0", pool_id, "extended", "baseline", keyword, "baseline",
+                 cards[:old_limit], cards, contracts["baseline"], MAX_BASELINE_REQUEST_BYTES, task_mode="keyword")
+        add_spec(specs, f"{pool_id}-d", pool_id, "extended", "candidate", purpose, "selection",
+                 cards, cards, contracts["selection"], MAX_CANDIDATE_REQUEST_BYTES, task_mode="purpose")
+        add_spec(specs, f"{pool_id}-d40", pool_id, "extended", "candidate_first40", purpose, "selection",
+                 cards[:old_limit], cards, contracts["selection"], MAX_BASELINE_REQUEST_BYTES, task_mode="purpose")
+        add_spec(specs, f"{pool_id}-repeat", pool_id, "extended", "exact_repeat", purpose, "selection",
+                 cards, cards, contracts["selection"], MAX_CANDIDATE_REQUEST_BYTES,
+                 repeat_of=f"{pool_id}-d", task_mode="purpose")
+        rotated = cards[20:] + cards[:20]
+        add_spec(specs, f"{pool_id}-rotated20", pool_id, "extended", "rotated20", purpose, "selection",
+                 rotated, cards, contracts["selection"], MAX_CANDIDATE_REQUEST_BYTES,
+                 repeat_of=f"{pool_id}-d", task_mode="purpose")
+
+    for row in nav:
+        qid, target_id = row["query_id"], row["candidate_id"]
+        cards = frozen["queries"][qid]["candidates"]
+        for suffix, contract_name in (("w0", "baseline"), ("d", "selection")):
+            add_spec(specs, f"nav-{qid}-{target_id}-{suffix}", qid, "navigation",
+                     "baseline" if suffix == "w0" else "candidate", row["query"], contract_name,
+                     cards, cards, contracts[contract_name], MAX_BASELINE_REQUEST_BYTES if suffix == "w0" else MAX_CANDIDATE_REQUEST_BYTES,
+                     target_id=target_id, task_mode="exact_navigation")
+    if len(specs) != CALL_COUNT or len({s["id"] for s in specs}) != CALL_COUNT:
+        raise ValueError("frozen plan must contain exactly 48 unique requests")
+    return specs
+
+
+def request_record(spec: dict[str, Any]) -> dict[str, Any]:
+    record = {key: value for key, value in spec.items() if key != "body"}
+    record["all_candidate_ids"] = record["candidate_ids"]
+    record["candidate_ids"] = list(record["scored_candidate_ids"])
+    return record | {
+        "task_sha256": sha256(spec["task"].encode("utf-8")),
+        "request_bytes": len(spec["body"]),
+        "request_sha256": sha256(spec["body"]),
+    }
+
+
+def boundary_artifact(contracts: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    cards = []
+    for i in range(80):
+        stem = f"max-{i:02d}-"
+        candidate_id = stem + ("x" * (80 - len(stem)))
+        cards.append({"id": candidate_id, "title": "T" * 256,
+                      "url": "https://" + ("u" * (512 - 8)), "snippet": "S" * 1200})
+    if any(len(c[k].encode("utf-8")) != lim for c in cards for k, lim in (("id", 80), ("title", 256), ("url", 512), ("snippet", 1200))):
+        raise ValueError("synthetic maximum-field boundary card construction failed")
+    task = "q" * MAX_QUERY_BYTES
+    body = encode_body(make_body(contracts["selection"], task, cards))
+    fallback = [card["id"] for card in cards]
+    decision, transport = dispatch_bounded(
+        [sys.executable, "-c", "raise SystemExit('transport should never launch for rejected boundary fixture')"],
+        body, cards, MAX_CANDIDATE_REQUEST_BYTES, fallback, .1,
+    )
+    if decision["eligible"] or transport is not None or decision["fallback_order_ids"] != fallback:
+        raise ValueError("maximum-field body did not reject locally with unchanged fallback order")
+    return {
+        "schema": "exp040-boundary-check/1", "provider_calls": 0,
+        "synthetic_card_count": len(cards), "all_card_fields_at_utf8_maximum": True,
+        "query_bytes": len(task.encode("utf-8")), "request_bytes": len(body),
+        "candidate_request_limit": MAX_CANDIDATE_REQUEST_BYTES,
+        "rejected_locally": not decision["eligible"], "fallback_full_incumbent_ids": decision["fallback_order_ids"],
+        "fallback_preserves_all_original_ids_in_order": decision["fallback_order_ids"] == fallback,
+        "request_sha256": sha256(body),
+        "reason": "; ".join(decision["reasons"]),
+        "qualification_scope": "offline runner boundary only; does not establish current shared-service fallback behavior",
+    }
+
+
+def prepare(root: pathlib.Path) -> dict[str, Any]:
+    hashes = verify_registered_inputs(root)
+    source_pins = verify_source_pins(root)
+    frozen, contexts, old_facets, contracts = old_sources(root)
+    pools, projection, sources = validate_extended_inputs(root)
+    nav = validate_navigation(root, frozen)
+    baseline, selection = validate_contracts(root)
+    production_source_sha = validate_production_source(baseline)
+    if baseline != contracts["baseline"] or selection != contracts["selection"]:
+        raise ValueError("contract objects changed between validation steps")
+    specs = expected_specs(root, frozen, contexts, pools, nav, contracts)
+    boundary = boundary_artifact(contracts)
+    _, new_reference_hashes, _ = validate_new_references(root, projection, required=True)
+    assert new_reference_hashes is not None
+    qualification_manifest_sha = verify_qualification_manifest(root, required=False)
+    manifest = {
+        "schema": "exp040-prepared-requests/1", "model": MODEL, "request_count": CALL_COUNT,
+        "random_seed": SEED,
+        "exp039_helper_sha256": HELPER_SHA256,
+        "registered_input_hashes": dict(sorted(hashes.items())),
+        "source_pins": dict(sorted(source_pins.items())),
+        "source_snapshot_sha256": sha256((EVIDENCE / "EXP-038/frozen-queries.json").read_bytes()),
+        "baseline_contract_sha256": sha256((root / "baseline-contract.json").read_bytes()),
+        "source_selection_contract_sha256": sha256((root / "source-selection-contract.json").read_bytes()),
+        "production_reranker_sha256": production_source_sha,
+        "effective_annotation_schema_sha256": EFFECTIVE_SCHEMA_SHA256,
+        "qualification_input_hashes_sha256": qualification_manifest_sha,
+        "new_reference_hashes": dict(sorted(new_reference_hashes.items())),
+        "boundary": boundary,
+        "requests": [],
+    }
+    for spec in specs:
+        record = request_record(spec)
+        write_immutable(root / "prepared" / f"{spec['id']}.json", spec["body"])
+        manifest["requests"].append(record)
+    raw = pretty_bytes(manifest)
+    write_immutable(root / "prepared-manifest.json", raw)
+    write_immutable(root / "prepared-manifest.sha256", (sha256(raw) + "  prepared-manifest.json\n").encode("ascii"))
+    write_immutable(root / "boundary-check.json", pretty_bytes(boundary))
+    result = {
+        "prepared_requests": len(specs), "call_groups": {"software": 18, "extended": 20, "navigation": 10},
+        "extended_pool_counts": {p: len(pools[p]["candidates"]) for p in EXTENDED_POOLS},
+        "max_candidate_request_bytes": max(r["request_bytes"] for r in manifest["requests"] if r["contract"] == "selection"),
+        "manifest_sha256": sha256(raw), "boundary_request_bytes": boundary["request_bytes"],
+        "boundary_rejected": boundary["rejected_locally"], "provider_calls": 0,
+    }
+    print(json.dumps(result, indent=2))
+    return result
+
+
+def prepared_expected(root: pathlib.Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any], list[dict[str, Any]], dict[str, Any]]:
+    hashes = verify_registered_inputs(root)
+    source_pins = verify_source_pins(root)
+    frozen, contexts, old_facets, contracts = old_sources(root)
+    pools, projection, _ = validate_extended_inputs(root)
+    nav = validate_navigation(root, frozen)
+    specs = expected_specs(root, frozen, contexts, pools, nav, contracts)
+    boundary = boundary_artifact(contracts)
+    production_source_sha = validate_production_source(contracts["baseline"])
+    _, new_reference_hashes, _ = validate_new_references(root, projection, required=True)
+    assert new_reference_hashes is not None
+    qualification_manifest_sha = verify_qualification_manifest(root, required=False)
+    expected = {
+        "schema": "exp040-prepared-requests/1", "model": MODEL, "request_count": CALL_COUNT,
+        "random_seed": SEED, "exp039_helper_sha256": HELPER_SHA256,
+        "registered_input_hashes": dict(sorted(hashes.items())),
+        "source_pins": dict(sorted(source_pins.items())),
+        "source_snapshot_sha256": sha256((EVIDENCE / "EXP-038/frozen-queries.json").read_bytes()),
+        "baseline_contract_sha256": sha256((root / "baseline-contract.json").read_bytes()),
+        "source_selection_contract_sha256": sha256((root / "source-selection-contract.json").read_bytes()),
+        "production_reranker_sha256": production_source_sha,
+        "effective_annotation_schema_sha256": EFFECTIVE_SCHEMA_SHA256,
+        "qualification_input_hashes_sha256": qualification_manifest_sha,
+        "new_reference_hashes": dict(sorted(new_reference_hashes.items())),
+        "boundary": boundary,
+        "requests": [request_record(spec) for spec in specs],
+    }
+    return expected, frozen, {"facets": old_facets, "extended_projection": projection}, contracts, specs, pools
+
+
+def verify(root: pathlib.Path, require_refs: bool = False) -> dict[str, Any]:
+    root = root_path(root)
+    expected, frozen, projection, contracts, specs, pools = prepared_expected(root)
+    _, _, old_facets, _ = old_sources(root)
+    old_root = EVIDENCE / "EXP-039"
+    old_refs, old_ref_hashes, _ = H.reference_records(
+        old_root, H.expected_annotation_map(old_root, frozen), old_facets, required=True
+    )
+    new_refs, new_ref_hashes, new_status = validate_new_references(root, projection["extended_projection"], required=require_refs)
+    qualification_manifest_sha = verify_qualification_manifest(root, required=False)
+    manifest_path = root / "prepared-manifest.json"
+    if not manifest_path.is_file():
+        raise ValueError("prepared manifest missing; run --prepare first")
+    raw = manifest_path.read_bytes()
+    if (root / "prepared-manifest.sha256").read_text(encoding="ascii") != sha256(raw) + "  prepared-manifest.json\n":
+        raise ValueError("prepared manifest digest mismatch")
+    manifest = strict_json_loads(raw)
+    if canonical_bytes(manifest) != canonical_bytes(expected):
+        raise ValueError("prepared manifest differs from recomputed registered plan")
+    if load_json(root / "boundary-check.json") != expected["boundary"]:
+        raise ValueError("boundary check differs from locally recomputed maximum-field rejection")
+    bodies = 0
+    record_by_id = {record["id"]: record for record in manifest["requests"]}
+    for spec in specs:
+        record = record_by_id[spec["id"]]
+        body = (root / "prepared" / f"{spec['id']}.json").read_bytes()
+        limit = MAX_BASELINE_REQUEST_BYTES if spec["contract"] == "baseline" else MAX_CANDIDATE_REQUEST_BYTES
+        if len(body) != record["request_bytes"] or len(body) > limit or sha256(body) != record["request_sha256"] or body != spec["body"]:
+            raise ValueError(f"prepared body bytes/hash/contract mismatch: {spec['id']}")
+        parsed = strict_json_loads(body)
+        expected_cards = pool_cards(spec, frozen, pools)
+        scored_cards = [card for card in expected_cards if card["id"] in set(spec["scored_candidate_ids"])]
+        if [card["id"] for card in scored_cards] != spec["scored_candidate_ids"]:
+            by_id = {card["id"]: card for card in expected_cards}
+            scored_cards = [by_id[cid] for cid in spec["scored_candidate_ids"]]
+        if parsed.get("model") != MODEL or parsed.get("state") != {"query": spec["task"], "candidates": scored_cards}:
+            raise ValueError(f"shared state changed: {spec['id']}")
+        if list(parsed.get("questions", {})) != spec["scored_candidate_ids"]:
+            raise ValueError(f"score question order/membership mismatch: {spec['id']}")
+        bodies += 1
+    receipts, errors = H.read_receipts(root, manifest, require_all=False)
+    nonmissing = [err for err in errors if not err.startswith("missing:")]
+    attempts, started, finished = H.read_attempts(root, manifest, new_ref_hashes or {})
+    if set(started) != set(finished):
+        nonmissing.append("uncertain_attempt_history")
+    expected_ids = {s["id"] for s in specs}
+    if set(started) - expected_ids or set(finished) - expected_ids:
+        nonmissing.append("unknown_attempt_id")
+    labels_ready = (new_status == "sealed_valid" and old_refs is not None and old_ref_hashes is not None
+                    and qualification_manifest_sha is not None)
+    return {
+        "ok": not nonmissing, "request_bodies_verified": bodies,
+        "valid_receipts": len(receipts), "receipt_errors": errors,
+        "input_pins": len(expected["registered_input_hashes"]), "source_pins": len(expected["source_pins"]),
+        "old_reference_hashes": old_ref_hashes, "new_reference_status": new_status,
+        "new_reference_hashes": new_ref_hashes, "ready_to_run": labels_ready and not nonmissing,
+        "qualification_input_hashes_sha256": qualification_manifest_sha,
+    }
+
+
+def pool_cards(spec: dict[str, Any], frozen: dict[str, Any], pools: dict[str, Any]) -> list[dict[str, str]]:
+    if spec["pool_id"] in frozen["queries"]:
+        cards = frozen["queries"][spec["pool_id"]]["candidates"]
+    elif spec["pool_id"] in pools:
+        cards = pools[spec["pool_id"]]["candidates"]
+    else:
+        raise ValueError(f"unknown pool: {spec['pool_id']}")
+    by_id = {c["id"]: c for c in cards}
+    member_ids = spec.get("all_candidate_ids", spec["candidate_ids"])
+    return [by_id[cid] for cid in member_ids]
+
+
+def validate_response(data: dict[str, Any], record: dict[str, Any]) -> tuple[dict[str, float], list[str]]:
+    return H.validate_response(data, record)
+
+
+def max_existing_usage(receipts: dict[str, dict[str, Any]]) -> tuple[int, int]:
+    total_in = total_out = 0
+    for receipt in receipts.values():
+        inp, out = H.usage_counts(receipt)
+        if inp is None or out is None:
+            raise ValueError("prior receipt has unknown token usage")
+        total_in += inp
+        total_out += out
+    return total_in, total_out
+
+
+def run(root: pathlib.Path, transport_file: pathlib.Path) -> None:
+    root = root_path(root)
+    checked = verify(root, require_refs=True)
+    if not checked["ok"] or not checked["ready_to_run"]:
+        raise ValueError("frozen inputs, bodies, receipts, or sealed references invalid; refusing dispatch")
+    manifest = load_json(root / "prepared-manifest.json")
+    _, frozen, contexts, _, _, pools = prepared_expected(root)
+    refs_hashes = checked["new_reference_hashes"]
+    argv = H.read_transport_argv(transport_file)
+    attempts_path = root / "attempts.jsonl"
+    receipts_dir = root / "receipts"
+    receipts_dir.mkdir(exist_ok=True)
+    known = {r["id"] for r in manifest["requests"]}
+    _, started, finished = H.read_attempts(root, manifest, refs_hashes)
+    for path in receipts_dir.glob("*.json"):
+        if path.stem not in known or path.stem not in finished:
+            raise ValueError("orphan receipt or receipt without a completed attempt; refusing dispatch")
+    if not attempts_path.exists() or not attempts_path.stat().st_size:
+        started_at = dt.datetime.now(dt.timezone.utc).isoformat()
+        append_jsonl(attempts_path, {
+            "event": "run_started", "prepared_manifest_sha256": sha256((root / "prepared-manifest.json").read_bytes()),
+            "reference_hashes": refs_hashes, "at_utc": started_at,
+        })
+    else:
+        history = [strict_json_loads(line) for line in attempts_path.read_bytes().splitlines() if line]
+        started_at = next((e.get("at_utc") for e in history if e.get("event") == "run_started"), None)
+    H.parse_run_start_time(started_at)
+    remaining_window = H.run_window_remaining(started_at)
+    if remaining_window <= 0:
+        append_jsonl(attempts_path, {"event": "runner_stopped", "reason": "four_hour_window_expired", "at_utc": dt.datetime.now(dt.timezone.utc).isoformat()})
+        return
+    valid_prior, receipt_errors = H.read_receipts(root, manifest, require_all=False)
+    if any(rid not in valid_prior for rid in finished):
+        raise ValueError("a completed attempt lacks a valid receipt; refusing additional dispatch")
+    input_total, output_total = max_existing_usage({rid: valid_prior[rid] for rid in finished})
+    for record in manifest["requests"]:
+        rid = record["id"]
+        if rid in finished:
+            continue
+        remaining_window = H.run_window_remaining(started_at)
+        if remaining_window <= 0:
+            append_jsonl(attempts_path, {"event": "runner_stopped", "request_id": rid, "reason": "four_hour_window_expired", "at_utc": dt.datetime.now(dt.timezone.utc).isoformat()})
+            return
+        if input_total >= MAX_INPUT_TOKENS or output_total >= MAX_OUTPUT_TOKENS:
+            append_jsonl(attempts_path, {"event": "runner_stopped", "request_id": rid, "reason": "actual_token_gate_reached", "at_utc": dt.datetime.now(dt.timezone.utc).isoformat()})
+            return
+        body = (root / "prepared" / f"{rid}.json").read_bytes()
+        if sha256(body) != record["request_sha256"]:
+            raise ValueError(f"prepared request changed: {rid}")
+        cards = pool_cards(record, frozen, pools)
+        decision = bounded_request_qualification(
+            body, cards, record["request_cap"], record["all_candidate_ids"]
+        )
+        if not decision["eligible"]:
+            append_jsonl(attempts_path, {
+                "event": "runner_stopped", "request_id": rid,
+                "reason": "request_ineligible_local_fallback_preserves_incumbent_order",
+                "decision": decision, "fallback_order_ids": record["all_candidate_ids"],
+                "at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+            })
+            return
+        pending = sum(1 for item in manifest["requests"] if item["id"] not in finished)
+        input_estimate, output_estimate = H.preflight_reserve(body, pending, output_total)
+        if input_total + input_estimate > MAX_INPUT_TOKENS or output_total + output_estimate > MAX_OUTPUT_TOKENS:
+            append_jsonl(attempts_path, {
+                "event": "runner_stopped", "request_id": rid, "reason": "estimated_token_budget_exhausted",
+                "input_used": input_total, "input_estimate": input_estimate,
+                "output_used": output_total, "output_estimate": output_estimate,
+                "at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+            })
+            return
+        append_jsonl(attempts_path, {
+            "event": "attempt_started", "attempt": 1, "request_id": rid,
+            "request_sha256": record["request_sha256"], "reference_hashes": refs_hashes,
+            "preflight_input_token_estimate": input_estimate,
+            "preflight_output_token_estimate": output_estimate,
+            "preflight_is_heuristic_not_hard_cap": True,
+            "at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        })
+        raw = b""
+        exit_code = -1
+        wall_ms = None
+        overflow = timed_out = False
+        err: str | None = None
+        data: dict[str, Any] = {}
+        try:
+            dispatched, process_result = dispatch_bounded(
+                argv, body, cards, record["request_cap"], record["all_candidate_ids"],
+                min(RUNNER_WALL_TIMEOUT_S, remaining_window),
+            )
+            if process_result is None:
+                err = "request_ineligible_before_transport"
+            else:
+                raw, exit_code, wall_ms, overflow, timed_out = process_result
+            if timed_out:
+                err = "transport_wall_timeout"
+            elif overflow:
+                err = "response_limit_exceeded"
+            elif exit_code != 0:
+                err = "transport_nonzero_exit"
+            else:
+                data = H.parse_transport_result(raw)
+        except Exception as exc:
+            err = f"transport_{type(exc).__name__}"
+        remote_ms = None
+        model = None
+        answers = None
+        input_tokens = output_tokens = None
+        validation_errors: list[str] = []
+        if err is None and "error" in data:
+            err = "provider_error"
+        if err is None:
+            model = data.get("model")
+            remote_ms = data.get("_elapsed_ms")
+            if not H.is_finite_number(remote_ms) or remote_ms < 0:
+                err = "missing_remote_http_timing"
+            elif remote_ms > MAX_REMOTE_HTTP_MS:
+                err = "remote_http_deadline_exceeded"
+            scores, validation_errors = validate_response(data, record)
+            if validation_errors:
+                err = "invalid_response"
+            else:
+                answers = data["answers"]
+            input_tokens, output_tokens = H.usage_counts(data)
+            if input_tokens is None or output_tokens is None:
+                err = "unknown_or_invalid_usage"
+            elif input_total + input_tokens > MAX_INPUT_TOKENS or output_total + output_tokens > MAX_OUTPUT_TOKENS:
+                err = "actual_token_gate_exceeded"
+        status = "valid" if err is None else "invalid"
+        receipt = {
+            "schema": "exp039-response-receipt/1", "id": rid,
+            "request_sha256": record["request_sha256"], "model": model,
+            "answers": answers, "validation_errors": validation_errors,
+            "status": status, "error": err,
+            "usage": {"input_tokens": input_tokens, "output_tokens": output_tokens},
+            "remote_http_ms": remote_ms if H.is_finite_number(remote_ms) else None,
+            "transport_wall_ms": wall_ms, "transport_exit_code": exit_code,
+        }
+        write_immutable(receipts_dir / f"{rid}.json", pretty_bytes(receipt))
+        append_jsonl(attempts_path, {
+            "event": "attempt_finished", "attempt": 1, "request_id": rid,
+            "request_sha256": record["request_sha256"], "status": status, "error": err,
+            "input_tokens": input_tokens, "output_tokens": output_tokens,
+            "remote_http_ms": receipt["remote_http_ms"], "transport_wall_ms": wall_ms,
+            "at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        })
+        if err is not None:
+            append_jsonl(attempts_path, {"event": "runner_stopped", "request_id": rid, "reason": err, "at_utc": dt.datetime.now(dt.timezone.utc).isoformat()})
+            print(json.dumps({"stopped": True, "request_id": rid, "reason": err}))
+            return
+        input_total += input_tokens
+        output_total += output_tokens
+        finished.add(rid)
+        print(json.dumps({"completed": rid, "remote_http_ms": remote_ms,
+                          "transport_wall_ms": wall_ms, "actual_usage_total": [input_total, output_total]}))
+
+
+def ranking(record: dict[str, Any], receipt: dict[str, Any]) -> list[str]:
+    scores, errors = H.validate_response({"model": receipt.get("model"), "answers": receipt.get("answers")}, record)
+    if errors:
+        raise ValueError(f"invalid scores for {record['id']}: {errors}")
+    scored = H.order_ids(scores, record["candidate_ids"])
+    if record["contract"] == "baseline" or record["role"] == "candidate_first40":
+        result = scored + [cid for cid in record["all_candidate_ids"] if cid not in set(record["candidate_ids"])]
+    else:
+        result = scored
+    if len(result) != record["candidate_count"] or set(result) != set(record["all_candidate_ids"]):
+        raise ValueError(f"ranked output is not exact full membership: {record['id']}")
+    return result
+
+
+def map_reference(rows: dict[str, dict[str, Any]], aliases: dict[str, dict[str, str]], pool_id: str) -> dict[str, dict[str, Any]]:
+    return {mapping["candidate_id"]: rows[alias] for alias, mapping in aliases.items() if mapping["query_id"] == pool_id}
+
+
+def grade_map(rows: dict[str, dict[str, Any]], axis: str) -> dict[str, int]:
+    return {cid: int(row[axis]) for cid, row in rows.items()}
+
+
+def named_facets_at10(ranked: list[str], rows: dict[str, dict[str, Any]]) -> set[str]:
+    return {facet for cid in ranked[:10] if rows[cid]["lead"] >= 2 for facet in rows[cid]["facets"]}
+
+
+def useful_guard(baseline: list[str], candidate: list[str], rows: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    base_useful = {cid for cid in baseline[:10] if rows[cid]["lead"] >= 2}
+    cand_useful = {cid for cid in candidate[:10] if rows[cid]["lead"] >= 2}
+    base_facets = named_facets_at10(baseline, rows)
+    cand_facets = named_facets_at10(candidate, rows)
+    loss = len(base_useful) - len(cand_useful)
+    facet_loss = sorted(base_facets - cand_facets)
+    passes = loss <= 1 and not facet_loss and not (len(base_useful) == 10 and len(cand_useful) < 9)
+    return {
+        "baseline_useful_count": len(base_useful), "candidate_useful_count": len(cand_useful),
+        "useful_count_loss": loss,
+        "baseline_named_useful_facets": sorted(base_facets),
+        "candidate_named_useful_facets": sorted(cand_facets),
+        "lost_named_useful_facets": facet_loss,
+        "baseline_useful_displaced_ids": sorted(base_useful - cand_useful),
+        "candidate_useful_gain_ids": sorted(cand_useful - base_useful),
+        "passes": passes,
+    }
+
+
+def identity_diagnostic(baseline: list[str], candidate: list[str], rows_by_ref: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    displaced = sorted(set(baseline[:10]) - set(candidate[:10]))
+    gained = sorted(set(candidate[:10]) - set(baseline[:10]))
+    cards = {}
+    for cid in sorted(set(displaced + gained)):
+        cards[cid] = {
+            "baseline_rank": baseline.index(cid) + 1 if cid in baseline else None,
+            "candidate_rank": candidate.index(cid) + 1 if cid in candidate else None,
+            "references": {
+                reviewer: ({"lead": row[cid]["lead"], "facets": row[cid]["facets"], "rationale": row[cid]["rationale"]} if cid in row else None)
+                for reviewer, row in rows_by_ref.items()
+            },
+        }
+    return {"baseline_top10_displaced_ids": displaced, "candidate_top10_gained_ids": gained,
+            "cards_and_fixed_reference_rationales": cards,
+            "gate": "diagnostic only; identity displacement does not assert redundancy"}
+
+
+def overlap10(left: list[str], right: list[str]) -> float:
+    return len(set(left[:10]) & set(right[:10])) / 10.0
+
+
+def analyze(root: pathlib.Path) -> dict[str, Any]:
+    root = root_path(root)
+    checked = verify(root, require_refs=True)
+    if not checked["ok"] or not checked["ready_to_run"]:
+        raise ValueError("verification/reference check failed")
+    expected, frozen, projection, contracts, specs, pools = prepared_expected(root)
+    manifest = load_json(root / "prepared-manifest.json")
+    records = {record["id"]: record for record in manifest["requests"]}
+    receipts, receipt_errors = H.read_receipts(root, manifest, require_all=True)
+    if receipt_errors or len(receipts) != CALL_COUNT:
+        raise ValueError(f"all 48 valid call receipts required: {receipt_errors}")
+    attempts, started, finished = H.read_attempts(root, manifest, checked["new_reference_hashes"])
+    expected_ids = set(records)
+    if started != expected_ids or finished != expected_ids:
+        raise ValueError("attempt ledger must prove one valid attempt per prepared request")
+    rankings = {rid: ranking(records[rid], receipts[rid]) for rid in records}
+    old_root = EVIDENCE / "EXP-039"
+    old_frozen, _ = H.verify_exp038_source(old_root)[:2]
+    _, old_facets, _ = H.verify_annotation_projection(old_root, old_frozen)
+    old_aliases = H.expected_annotation_map(old_root, old_frozen)
+    old_refs, old_ref_hashes, _ = H.reference_records(old_root, old_aliases, old_facets, required=True)
+    new_refs, new_ref_hashes, _ = validate_new_references(root, projection["extended_projection"], required=True)
+    assert old_refs is not None and new_refs is not None
+    refs: dict[str, dict[str, dict[str, dict[str, Any]]]] = {
+        "A": {"software": {}, "cardiac": {}, "research": {}, "evaluation": {}},
+        "B": {"software": {}, "cardiac": {}, "research": {}, "evaluation": {}},
+    }
+    for reviewer in ("A", "B"):
+        for qid in ALL_SOFTWARE_QUERIES:
+            refs[reviewer]["software"][qid] = map_reference(old_refs[reviewer], old_aliases, qid)
+        for pool_id in QUALITY_POOLS:
+            refs[reviewer][pool_id] = map_reference(new_refs[reviewer], projection["extended_projection"]["aliases"], pool_id)
+
+    primary_deltas: dict[str, dict[str, float]] = {"A": {}, "B": {}}
+    per_query: dict[str, Any] = {}
+    all_guards: dict[str, dict[str, Any]] = {"A": {}, "B": {}}
+    identity: dict[str, Any] = {}
+    for qid in ALL_SOFTWARE_QUERIES:
+        base_id, d_id = f"{qid}-w0", f"{qid}-d"
+        base_rank, d_rank = rankings[base_id], rankings[d_id]
+        per_query[qid] = {"baseline_top10": base_rank[:10], "candidate_top10": d_rank[:10],
+                          "baseline_full_order": base_rank, "candidate_full_order": d_rank,
+                          "reference_metrics": {}, "identity_displacement": {}}
+        for reviewer in ("A", "B"):
+            row = refs[reviewer]["software"][qid]
+            lead = grade_map(row, "lead")
+            visible = grade_map(row, "visible")
+            base_ndcg = H.ndcg_at_10(base_rank, lead)
+            candidate_ndcg = H.ndcg_at_10(d_rank, lead)
+            per_query[qid]["reference_metrics"][reviewer] = {
+                "reading_lead_ndcg10_baseline": base_ndcg,
+                "reading_lead_ndcg10_candidate": candidate_ndcg,
+                "reading_lead_delta": candidate_ndcg - base_ndcg,
+                "visible_ndcg10_baseline_diagnostic": H.ndcg_at_10(base_rank, visible),
+                "visible_ndcg10_candidate_diagnostic": H.ndcg_at_10(d_rank, visible),
+                "useful_guard": useful_guard(base_rank, d_rank, row),
+            }
+            per_query[qid]["identity_displacement"][reviewer] = identity_diagnostic(base_rank, d_rank, {reviewer: row})
+            all_guards[reviewer][qid] = per_query[qid]["reference_metrics"][reviewer]["useful_guard"]
+            if qid in PRIMARY_QUERIES:
+                primary_deltas[reviewer][qid] = candidate_ndcg - base_ndcg
+
+    primary_stats = {reviewer: H.paired_bootstrap(primary_deltas[reviewer], draws=DRAW_COUNT, seed=SEED) for reviewer in ("A", "B")}
+    primary_statistical_pass = all(primary_stats[r]["mean"] >= .03 and primary_stats[r]["lower95"] > 0 for r in ("A", "B"))
+    primary_guards_pass = all(all_guards[r][qid]["passes"] for r in ("A", "B") for qid in PRIMARY_QUERIES)
+
+    extended: dict[str, Any] = {}
+    extended_quality_pass = True
+    stability_pass = True
+    for pool_id in EXTENDED_POOLS:
+        w0 = rankings[f"{pool_id}-w0"]
+        full = rankings[f"{pool_id}-d"]
+        d40 = rankings[f"{pool_id}-d40"]
+        repeated = rankings[f"{pool_id}-repeat"]
+        rotated = rankings[f"{pool_id}-rotated20"]
+        ext_row: dict[str, Any] = {
+            "pool_count": len(full), "baseline_full_order": w0, "candidate_full_order": full,
+            "candidate_first40_order": d40,
+            "diagnostic_full_D_minus_first40_D_top10_overlap": overlap10(full, d40),
+            "exact_repeat_top10_overlap": overlap10(full, repeated),
+            "rotated20_top10_overlap": overlap10(full, rotated),
+        }
+        if ext_row["exact_repeat_top10_overlap"] < .8 or ext_row["rotated20_top10_overlap"] < .8:
+            stability_pass = False
+        if pool_id in QUALITY_POOLS:
+            ext_row["reference_metrics"] = {}
+            ext_row["identity_displacement"] = {}
+            ext_row["same_rubric_first40_vs_complete_diagnostic"] = {}
+            tail_ids = set(c["id"] for c in pools[pool_id]["candidates"][40:])
+            for reviewer in ("A", "B"):
+                row = refs[reviewer][pool_id]
+                delta = H.ndcg_at_10(full, grade_map(row, "lead")) - H.ndcg_at_10(w0, grade_map(row, "lead"))
+                guard = useful_guard(w0, full, row)
+                facet_pass = not guard["lost_named_useful_facets"]
+                pool_pass = delta >= -.03 and guard["passes"] and facet_pass
+                ext_row["reference_metrics"][reviewer] = {
+                    "reading_lead_ndcg10_baseline": H.ndcg_at_10(w0, grade_map(row, "lead")),
+                    "reading_lead_ndcg10_candidate": H.ndcg_at_10(full, grade_map(row, "lead")),
+                    "reading_lead_delta": delta,
+                    "maximum_allowed_loss": -.03,
+                    "useful_guard": guard,
+                    "passes_per_pool_gate": pool_pass,
+                }
+                ext_row["identity_displacement"][reviewer] = identity_diagnostic(w0, full, {reviewer: row})
+                lead = grade_map(row, "lead")
+                d_full_top10 = {cid for cid in full[:10] if lead[cid] >= 2}
+                d40_top10 = {cid for cid in d40[:10] if lead[cid] >= 2}
+                tail_useful_all = {cid for cid in tail_ids if lead[cid] >= 2}
+                tail_facets_all = {facet for cid in tail_ids if lead[cid] >= 2 for facet in row[cid]["facets"]}
+                ext_row["same_rubric_first40_vs_complete_diagnostic"][reviewer] = {
+                    "first40_diagnostic_ndcg10": H.ndcg_at_10(d40, lead),
+                    "complete_d_ndcg10": H.ndcg_at_10(full, lead),
+                    "complete_d_minus_first40_diagnostic_ndcg10": H.ndcg_at_10(full, lead) - H.ndcg_at_10(d40, lead),
+                    "first40_diagnostic_useful10": sum(lead[cid] >= 2 for cid in d40[:10]),
+                    "complete_d_useful10": sum(lead[cid] >= 2 for cid in full[:10]),
+                    "first40_diagnostic_named_facets_at10": sorted(named_facets_at10(d40, row)),
+                    "complete_d_named_facets_at10": sorted(named_facets_at10(full, row)),
+                    "complete_d_tail_total_candidates": len(tail_ids),
+                    "complete_d_tail_useful_candidates_all_ranks": sorted(tail_useful_all),
+                    "complete_d_tail_useful_count_all_ranks": len(tail_useful_all),
+                    "complete_d_tail_named_facets_all_ranks": sorted(tail_facets_all),
+                    "complete_d_tail_top10_ids": [cid for cid in full[:10] if cid in tail_ids],
+                    "complete_d_tail_useful_top10_ids": sorted(d_full_top10 & tail_ids),
+                    "complete_d_tail_useful_count_top10": len(d_full_top10 & tail_ids),
+                }
+                extended_quality_pass = extended_quality_pass and pool_pass
+        else:
+            ext_row["quality_gate"] = "excluded; constructed stress cards are not independent relevance evidence"
+            tail_ids = set(c["id"] for c in pools[pool_id]["candidates"][40:])
+            ext_row["complete_d_tail_diagnostic"] = {
+                "tail_candidate_count": len(tail_ids),
+                "tail_ids_in_complete_d_top10": [cid for cid in full[:10] if cid in tail_ids],
+                "tail_count_in_complete_d_top10": sum(cid in tail_ids for cid in full[:10]),
+            }
+        extended[pool_id] = ext_row
+    q9 = per_query["q9"]
+
+    nav_doc = validate_navigation(root, frozen)
+    navigation = {}
+    navigation_pass = True
+    for row in nav_doc:
+        key = f"{row['query_id']}-{row['candidate_id']}"
+        baseline_id, candidate_id = f"nav-{key}-w0", f"nav-{key}-d"
+        candidate_top3 = rankings[candidate_id][:3]
+        passed = row["candidate_id"] in candidate_top3
+        navigation_pass = navigation_pass and passed
+        navigation[key] = {
+            "expected_target_url": row["expected_target_url"],
+            "baseline_top3": rankings[baseline_id][:3], "candidate_top3": candidate_top3,
+            "target_id": row["candidate_id"], "target_rank": rankings[candidate_id].index(row["candidate_id"]) + 1,
+            "passes": passed,
+        }
+
+    input_total = sum(receipt["usage"]["input_tokens"] for receipt in receipts.values())
+    output_total = sum(receipt["usage"]["output_tokens"] for receipt in receipts.values())
+    remote_values = [receipt["remote_http_ms"] for receipt in receipts.values()]
+    max_remote = max(remote_values)
+    operational_pass = len(receipts) == CALL_COUNT and input_total <= MAX_INPUT_TOKENS and output_total <= MAX_OUTPUT_TOKENS and max_remote <= MAX_REMOTE_HTTP_MS
+    passes = primary_statistical_pass and primary_guards_pass and extended_quality_pass and navigation_pass and stability_pass and operational_pass
+    decision = "supports_optional_mode_for_fresh_confirmation_only" if passes else "not_supported_for_selection"
+    if not operational_pass:
+        decision = "inconclusive_operational_gate"
+    result = {
+        "schema": "exp040-analysis/1", "status": "complete", "decision": decision,
+        "scope": "exposed development pools and constructed stress fixture; no fresh confirmation, production adoption, or cross-domain guarantee",
+        "primary": {
+            "comparison": "complete-purpose candidate minus current W0 first40",
+            "axis": "reading_lead", "query_units": list(PRIMARY_QUERIES),
+            "references_independent": primary_stats, "minimum_mean": .03,
+            "required_lower95": ">0", "bootstrap_draws": DRAW_COUNT, "bootstrap_seed": SEED,
+            "passes_statistical_gate": primary_statistical_pass,
+            "useful_and_facet_guards_by_reviewer_query": {r: {q: all_guards[r][q] for q in PRIMARY_QUERIES} for r in ("A", "B")},
+            "passes_useful_and_facet_guards": primary_guards_pass,
+        },
+        "software_queries": {q: per_query[q] for q in PRIMARY_QUERIES},
+        "q9_extension_separate": q9,
+        "extended_pools": extended,
+        "extended_quality_pass": extended_quality_pass,
+        "navigation": navigation,
+        "navigation_pass": navigation_pass,
+        "stability_pass": stability_pass,
+        "membership": {"all_48_rankings_are_exact_full_permutations": True,
+                       "scored_prefix_baselines_append_unchanged_original_tail": True},
+        "operational": {
+            "valid_calls": len(receipts), "expected_calls": CALL_COUNT,
+            "actual_input_tokens": input_total, "actual_output_tokens": output_total,
+            "within_registered_actual_usage_gates": input_total <= MAX_INPUT_TOKENS and output_total <= MAX_OUTPUT_TOKENS,
+            "max_remote_http_ms": max_remote, "within_remote_http_gate": max_remote <= MAX_REMOTE_HTTP_MS,
+            "all_calls_valid": len(receipts) == CALL_COUNT,
+        },
+        "sealed_new_reference_hashes": new_ref_hashes,
+        "frozen_old_reference_hashes": old_ref_hashes,
+        "prepared_manifest_sha256": sha256((root / "prepared-manifest.json").read_bytes()),
+        "registered_input_hashes": load_json(root / "input-hashes.json"),
+        "limitations": [
+            "EXP-039 failed guard remains unchanged; EXP-040 uses a newly registered useful-count/facet guard and exposed development labels.",
+            "All reference grades are blinded assistant judgments, not human gold or page-truth verification.",
+            "Constructed80 is stress evidence only and adds no independent relevance unit.",
+            "A supported outcome permits only a separate untouched confirmation; no default or production adoption.",
+            "Actual token ceilings are observed-usage gates; heuristic preflight does not guarantee provider-enforced spend ceilings.",
+        ],
+    }
+    if not passes:
+        result["failed_gates"] = {
+            "primary_statistical": not primary_statistical_pass,
+            "primary_useful_facet": not primary_guards_pass,
+            "extended_quality": not extended_quality_pass,
+            "navigation": not navigation_pass,
+            "stability": not stability_pass,
+            "operational": not operational_pass,
+        }
+    write_immutable(root / "analysis.json", pretty_bytes(result))
+    print(json.dumps({"status": "complete", "decision": decision, "primary": primary_stats,
+                      "primary_guards_pass": primary_guards_pass,
+                      "extended_quality_pass": extended_quality_pass, "navigation_pass": navigation_pass,
+                      "stability_pass": stability_pass, "operational_pass": operational_pass}, indent=2))
+    return result
+
+
+def selftest(root: pathlib.Path) -> None:
+    # Detailed offline assertions live in fixture_tests.py.txt. This command
+    # runs them in a fresh local Python process and never opens a transport.
+    path = root / "fixture_tests.py.txt"
+    proc = subprocess.run([sys.executable, str(path)], cwd=str(root.parents[3]),
+                          capture_output=True, text=True, timeout=30, check=False)
+    if proc.returncode:
+        raise RuntimeError(f"offline fixture tests failed: {proc.stdout[-2000:]} {proc.stderr[-2000:]}")
+    print(proc.stdout.rstrip())
+    print("EXP-040 self-test passed; provider calls=0")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--root", type=pathlib.Path, default=HERE)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--prepare", action="store_true")
+    mode.add_argument("--verify", action="store_true")
+    mode.add_argument("--run", type=pathlib.Path, metavar="PRIVATE_ARGV_JSON")
+    mode.add_argument("--analyze", action="store_true")
+    mode.add_argument("--selftest", "--self-test", action="store_true")
+    args = parser.parse_args()
+    if args.prepare:
+        prepare(args.root)
+    elif args.verify:
+        print(json.dumps(verify(args.root), indent=2))
+    elif args.run:
+        run(args.root, args.run)
+    elif args.analyze:
+        analyze(args.root)
+    else:
+        selftest(args.root)
+
+
+if __name__ == "__main__":
+    main()
