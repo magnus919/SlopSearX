@@ -1,0 +1,71 @@
+"""Strict local EXP-047 output validation; no inference or network."""
+import argparse
+import hashlib
+import json
+import pathlib
+
+
+def load(path):
+    def unique(items):
+        obj = {}
+        for key, value in items:
+            if key in obj:
+                raise ValueError("duplicate JSON key")
+            obj[key] = value
+        return obj
+    return json.loads(path.read_bytes(), object_pairs_hook=unique,
+                      parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite JSON")))
+
+
+def validate(review, packet, reviewer_id, packet_sha, contract_sha):
+    assert type(review) is dict and set(review) == {"schema", "reviewer_id", "packet_sha256", "contract_sha256", "cases", "execution_attestation"}
+    assert review["schema"] == "exp047-review/1" and review["reviewer_id"] == reviewer_id
+    assert review["packet_sha256"] == packet_sha and review["contract_sha256"] == contract_sha
+    assert type(review["cases"]) is list and len(review["cases"]) == len(packet["cases"])
+    pools = {p["pool_ref"]: p for p in packet["pools"]}
+    cases = {c["case_id"]: c for c in packet["cases"]}
+    seen = set()
+    for row in review["cases"]:
+        assert type(row) is dict and set(row) == {"case_id", "answerability", "judgment", "rationale", "referenced_ids", "gained_supported_facets", "lost_supported_facets", "unproven_assumptions"}
+        cid = row["case_id"]
+        assert type(cid) is str and cid in cases and cid not in seen
+        seen.add(cid)
+        assert row["answerability"] in {"answerable", "insufficient_visible_evidence"}
+        allowed = {"better", "equivalent", "worse"} if row["answerability"] == "answerable" else {"undecidable"}
+        assert row["judgment"] in allowed
+        assert type(row["rationale"]) is str and 1 <= len(row["rationale"].split()) <= 250
+        pool = pools[cases[cid]["pool_ref"]]
+        source_ids = {c["id"] for c in pool["candidates"]}
+        facet_ids = {f["id"] for f in pool["facets"]}
+        for key in ["referenced_ids", "gained_supported_facets", "lost_supported_facets", "unproven_assumptions"]:
+            values = row[key]
+            assert type(values) is list and all(type(v) is str for v in values) and len(set(values)) == len(values)
+        assert set(row["referenced_ids"]) <= source_ids
+        assert row["referenced_ids"]
+        assert set(row["gained_supported_facets"]) <= facet_ids
+        assert set(row["lost_supported_facets"]) <= facet_ids
+        assert len(row["unproven_assumptions"]) <= 10 and all(len(v) <= 200 for v in row["unproven_assumptions"])
+    assert seen == set(cases)
+    att = review["execution_attestation"]
+    assert type(att) is dict and set(att) == {"declared_tool_calls", "external_calls", "filesystem_writes", "read_only_files"}
+    assert type(att["external_calls"]) is int and att["external_calls"] == 0
+    assert type(att["filesystem_writes"]) is int and att["filesystem_writes"] == 0
+    assert att["read_only_files"] == ["review-packet.json"]
+    assert type(att["declared_tool_calls"]) is list and att["declared_tool_calls"] == ["cat review-packet.json"]
+    return {"schema": "exp047-review-validation/1", "status": "passed", "reviewer_id": reviewer_id,
+            "cases": len(seen), "packet_sha256": packet_sha, "contract_sha256": contract_sha,
+            "execution_attestation_independently_proven": False, "quality_claim": False}
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("review", type=pathlib.Path)
+    parser.add_argument("--reviewer", required=True, choices=["A", "B"])
+    parser.add_argument("--packet", type=pathlib.Path, default=pathlib.Path(__file__).with_name("review-packet.json"))
+    args = parser.parse_args()
+    contract = args.packet.with_name("review-contract.md")
+    receipt = validate(load(args.review), load(args.packet), args.reviewer,
+                       hashlib.sha256(args.packet.read_bytes()).hexdigest(),
+                       hashlib.sha256(contract.read_bytes()).hexdigest())
+    receipt["raw_review_sha256"] = hashlib.sha256(args.review.read_bytes()).hexdigest()
+    print(json.dumps(receipt, indent=2))

@@ -1,0 +1,117 @@
+"""Offline packet fidelity and output-rejection checks; no reviewer calls."""
+import copy
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import pathlib
+import tempfile
+from unittest import mock
+
+HERE = pathlib.Path(__file__).resolve().parent
+
+
+def module(name, filename):
+    loader = importlib.machinery.SourceFileLoader(name, str(HERE / filename))
+    spec = importlib.util.spec_from_loader(name, loader)
+    result = importlib.util.module_from_spec(spec)
+    loader.exec_module(result)
+    return result
+
+
+B = module("exp047_builder_checks", "packet-builder.py.txt")
+V = module("exp047_validator_checks", "review-validator.py.txt")
+raw, mapping_raw, preflight_raw = B.build()
+assert (raw, mapping_raw, preflight_raw) == B.build()
+packet, mapping, preflight = map(json.loads, (raw, mapping_raw, preflight_raw))
+assert preflight["complete_minimum_sample"] and preflight["cases"] == 12 and preflight["pools"] == 6
+assert not preflight["shortfalls"] and preflight["provider_calls"] == preflight["search_calls"] == preflight["reviewer_invocations"] == 0
+seed = "EXP047:91940"
+key = lambda text: hashlib.sha256(text.encode()).hexdigest()
+expected_software = sorted([f"q{i}" for i in range(1, 10)], key=lambda q: (key(f"{seed}:pool:{q}"), q))[:3]
+assert [p["pool_id"] for p in mapping["pools"].values()] == expected_software + ["cardiac", "research", "evaluation"]
+for pool in packet["pools"]:
+    source = mapping["pools"][pool["pool_ref"]]
+    state = B.load(B.PRIOR / f"requests/{source['pool_id']}-d-choice-step1.json")["state"]
+    assert pool["purpose"] == state["purpose"] and pool["facets"] == state["facets"]
+    reverse = {alias: original for original, alias in source["aliases"].items()}
+    rebuilt = [{**card, "id": reverse[card["id"]]} for card in pool["candidates"]]
+    assert rebuilt == state["candidates"]
+    assert set(map(reverse.get, pool["selected_ids"])) == set(state["selected_ids"])
+    assert set(pool) == {"pool_ref", "purpose", "facets", "candidates", "selected_ids"}
+    pairs = [(v, c) for v in state["removable_ids"] for c in state["eligible_ids"]]
+    ordered = sorted(pairs, key=lambda pair: (key(f"{seed}:pair:{source['pool_id']}:{pair[0]}:{pair[1]}"), *pair))[:2]
+    cases = [c for c in packet["cases"] if c["pool_ref"] == pool["pool_ref"]]
+    assert [(mapping["cases"][c["case_id"]]["victim_id"], mapping["cases"][c["case_id"]]["candidate_id"]) for c in cases] == ordered
+    for case in cases:
+        assert set(case["after_selected_ids"]) == (set(pool["selected_ids"]) - {case["removed_id"]}) | {case["added_id"]}
+
+good = {"schema": "exp047-review/1", "reviewer_id": "A", "packet_sha256": preflight["packet_sha256"], "contract_sha256": preflight["contract_sha256"], "cases": [],
+        "execution_attestation": {"declared_tool_calls": ["cat review-packet.json"], "external_calls": 0, "filesystem_writes": 0, "read_only_files": ["review-packet.json"]}}
+for case in packet["cases"]:
+    good["cases"].append({"case_id": case["case_id"], "answerability": "insufficient_visible_evidence", "judgment": "undecidable", "rationale": "Synthetic validation fixture only.", "referenced_ids": [case["removed_id"]], "gained_supported_facets": [], "lost_supported_facets": [], "unproven_assumptions": []})
+validate = lambda x: V.validate(x, packet, "A", preflight["packet_sha256"], preflight["contract_sha256"])
+validate(good)
+boundary = copy.deepcopy(good)
+boundary["cases"][0]["rationale"] = "word " * 250
+boundary["cases"][0]["unproven_assumptions"] = ["x" * 200]
+validate(boundary)
+mutations = {
+    "missing_case": lambda x: x["cases"].pop(),
+    "duplicate_case": lambda x: x["cases"].__setitem__(1, x["cases"][0]),
+    "inconsistent_judgment": lambda x: x["cases"][0].update(judgment="better"),
+    "unknown_source": lambda x: x["cases"][0].update(referenced_ids=["not-a-source"]),
+    "unknown_facet": lambda x: x["cases"][0].update(lost_supported_facets=["not-a-facet"]),
+    "too_long_rationale": lambda x: x["cases"][0].update(rationale="word " * 251),
+    "empty_rationale": lambda x: x["cases"][0].update(rationale=""),
+    "long_assumption": lambda x: x["cases"][0].update(unproven_assumptions=["x" * 201]),
+    "many_assumptions": lambda x: x["cases"][0].update(unproven_assumptions=[str(i) for i in range(11)]),
+    "wrong_packet": lambda x: x.update(packet_sha256="0" * 64),
+    "wrong_contract": lambda x: x.update(contract_sha256="0" * 64),
+    "wrong_reviewer": lambda x: x.update(reviewer_id="B"),
+    "extra_key": lambda x: x.update(extra=True),
+    "external_call": lambda x: x["execution_attestation"].update(external_calls=1),
+    "boolean_call_count": lambda x: x["execution_attestation"].update(external_calls=False),
+    "filesystem_write": lambda x: x["execution_attestation"].update(filesystem_writes=1),
+    "unexpected_tool": lambda x: x["execution_attestation"].update(declared_tool_calls=["curl example.invalid"]),
+}
+for name, change in mutations.items():
+    bad = copy.deepcopy(good)
+    change(bad)
+    try:
+        validate(bad)
+    except (AssertionError, TypeError, ValueError):
+        continue
+    raise AssertionError(name)
+with tempfile.TemporaryDirectory() as tmp:
+    path = pathlib.Path(tmp) / "duplicate.json"
+    path.write_text('{"schema":1,"schema":2}')
+    try:
+        V.load(path)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("duplicate JSON accepted")
+with mock.patch.object(B, "wire", return_value=b"x" * 200_001):
+    try:
+        B.build()
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("oversize packet accepted")
+with mock.patch.object(B, "wire", return_value=b"x " * 30_001):
+    try:
+        B.build()
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("excess packet words accepted")
+original_read = pathlib.Path.read_bytes
+with mock.patch.object(pathlib.Path, "read_bytes", lambda path: b"x" * 16_001 if path == HERE / "review-contract.md" else original_read(path)):
+    try:
+        B.build()
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("oversize contract accepted")
+print(json.dumps({"schema": "exp047-offline-qualification/1", "status": "passed", "deterministic_sampling": True, "full_card_fidelity": True, "correct_counterfactuals": True, "output_mutation_checks": len(mutations), "duplicate_json_rejected": True, "oversize_packet_rejected": True, "excess_packet_words_rejected": True, "oversize_contract_rejected": True, "reviewer_invocations": 0, "provider_calls": 0, "search_calls": 0}, indent=2))
