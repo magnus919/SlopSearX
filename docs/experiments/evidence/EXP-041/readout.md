@@ -1,6 +1,6 @@
 # EXP-041 correctness readout
 
-Functional outcome: **supported**, pending implementation CI and substantive review. Official arXiv HTML routes now use existing identifier, version and work-group rules. HTML `.pdf` suffixes, extra paths, invalid/oversized versions and deceptive hosts remain rejected. Distinct identifiers and Zenodo DOI records remain separate even when titles match. The grouping policy version changes from v2 to v3 so old canonical cached responses are not reused.
+Outcome: **supported and merged** in [PR #529](https://github.com/magnus919/SlopSearX/pull/529), commit `80029eb1b85a12a5d407075bf9ce091d0fa33ba0`. All applicable CI passed and review findings were addressed. No deployment occurred. Official arXiv HTML routes now use existing identifier, version and work-group rules. HTML `.pdf` suffixes, extra paths, invalid/oversized versions and deceptive hosts remain rejected. Distinct identifiers and Zenodo DOI records remain separate even when titles match. The grouping policy version changes from v2 to v3 so old canonical cached responses are not reused.
 
 The initial baseline matrix produced 13 failures and 7 passes. After correcting the illustrative HTML regression to the exact saved version-v4 card and adding mixed-version/serialization checks, the unchanged final fixture produced 14 failures and 7 passes against the pinned old scholarly module. The candidate grouping suites passed all 55 cases. All members, same-engine vote bounds, both rankers, explicit older-version requests, stable ambiguous-version selection and public/cache round-trips are covered. Initial matrix and sanitized failure output are retained; final test-file and source hashes are recorded in qualification.json.
 
@@ -32,3 +32,9 @@ Candidate command: `PYTHONPATH=. .venv/bin/python -m pytest --no-cov -q tests/te
 ### CI qualification follow-up
 
 The first Python 3.13 job exposed an existing queue-fixture timing race; the fixture was made deterministic without changing the Jev runtime. The reviewer-reported experiment-ledger placement was also corrected. Combined grouping/reranking tests passed 103 cases after repair. Final CI and substantive review remain required; see qualification.json for the preserved failed-job receipt.
+
+### Final delivery and subsequent diagnosis
+
+Final candidate `681c28b` passed both Python CI jobs, portal browser/contracts, real-Valkey, compatibility, optional Jev modes, quality, container builds, CodeQL and monitoring. The initial positive Droid pass and final supplemental review are recorded on the PR. Issue #527 is closed; local main was fast-forwarded while preserving unrelated work.
+
+A separately frozen, no-provider diagnostic applies the existing representative policy to URL/title/snippet cards in a declared synthetic feed and filters the recorded rankings. It merges only research c0/c1 (45 to 44 cards); cardiac and evaluation remain 44. The grounding facet still falls outside the candidate top ten under assessment B. This is exposed diagnosis using recorded scores, not a reconstructed live service or new Jev evaluation. EXP-040 remains failed. Plans and all per-assessment outcomes are retained in the linked diagnostic JSON files.

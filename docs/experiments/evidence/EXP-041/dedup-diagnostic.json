@@ -1,0 +1,305 @@
+{
+  "schema": "exp041-exposed-dedup-diagnostic/1",
+  "plan_sha256": "e3acaf1a63b2f5291b2dbed5f8ee468d96f6adf6fc784ba32109c0ff7bf2530b",
+  "claim": "diagnostic only; synthetic one-feed reconstruction, frozen scores reused, no new model scoring",
+  "pools": {
+    "cardiac": {
+      "original_count": 44,
+      "representative_count": 44,
+      "merged_groups": [],
+      "baseline_top10": [
+        "c6",
+        "c17",
+        "c14",
+        "c0",
+        "c10",
+        "c19",
+        "c1",
+        "c30",
+        "c3",
+        "c5"
+      ],
+      "candidate_top10": [
+        "c43",
+        "c4",
+        "c27",
+        "c17",
+        "c6",
+        "c29",
+        "c35",
+        "c37",
+        "c34",
+        "c28"
+      ],
+      "references": {
+        "A": {
+          "baseline_useful_count": 8,
+          "candidate_useful_count": 10,
+          "useful_count_loss": -2,
+          "baseline_named_useful_facets": [
+            "interventions",
+            "lifestyle",
+            "prevention",
+            "risk_factors"
+          ],
+          "candidate_named_useful_facets": [
+            "interventions",
+            "lifestyle",
+            "prevention",
+            "risk_factors"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c0",
+            "c10",
+            "c14",
+            "c19",
+            "c30",
+            "c5"
+          ],
+          "candidate_useful_gain_ids": [
+            "c27",
+            "c28",
+            "c29",
+            "c34",
+            "c35",
+            "c37",
+            "c4",
+            "c43"
+          ],
+          "passes": true
+        },
+        "B": {
+          "baseline_useful_count": 10,
+          "candidate_useful_count": 10,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "interventions",
+            "lifestyle",
+            "prevention",
+            "risk_factors"
+          ],
+          "candidate_named_useful_facets": [
+            "interventions",
+            "lifestyle",
+            "prevention",
+            "risk_factors"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c0",
+            "c1",
+            "c10",
+            "c14",
+            "c19",
+            "c3",
+            "c30",
+            "c5"
+          ],
+          "candidate_useful_gain_ids": [
+            "c27",
+            "c28",
+            "c29",
+            "c34",
+            "c35",
+            "c37",
+            "c4",
+            "c43"
+          ],
+          "passes": true
+        }
+      }
+    },
+    "research": {
+      "original_count": 45,
+      "representative_count": 44,
+      "merged_groups": [
+        {
+          "representative_id": "c0",
+          "member_ids": [
+            "c0",
+            "c1"
+          ]
+        }
+      ],
+      "baseline_top10": [
+        "c0",
+        "c2",
+        "c3",
+        "c7",
+        "c10",
+        "c6",
+        "c5",
+        "c9",
+        "c4",
+        "c11"
+      ],
+      "candidate_top10": [
+        "c0",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c19",
+        "c7",
+        "c17",
+        "c16",
+        "c15"
+      ],
+      "references": {
+        "A": {
+          "baseline_useful_count": 8,
+          "candidate_useful_count": 9,
+          "useful_count_loss": -1,
+          "baseline_named_useful_facets": [
+            "agent_orchestration",
+            "evaluation",
+            "retrieval"
+          ],
+          "candidate_named_useful_facets": [
+            "agent_orchestration",
+            "evaluation",
+            "retrieval"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c11",
+            "c9"
+          ],
+          "candidate_useful_gain_ids": [
+            "c15",
+            "c16",
+            "c17"
+          ],
+          "passes": true
+        },
+        "B": {
+          "baseline_useful_count": 9,
+          "candidate_useful_count": 10,
+          "useful_count_loss": -1,
+          "baseline_named_useful_facets": [
+            "agent_orchestration",
+            "evaluation",
+            "evidence_grounding",
+            "retrieval"
+          ],
+          "candidate_named_useful_facets": [
+            "agent_orchestration",
+            "evaluation",
+            "retrieval"
+          ],
+          "lost_named_useful_facets": [
+            "evidence_grounding"
+          ],
+          "baseline_useful_displaced_ids": [
+            "c10",
+            "c6",
+            "c9"
+          ],
+          "candidate_useful_gain_ids": [
+            "c15",
+            "c16",
+            "c17",
+            "c19"
+          ],
+          "passes": false
+        }
+      }
+    },
+    "evaluation": {
+      "original_count": 44,
+      "representative_count": 44,
+      "merged_groups": [],
+      "baseline_top10": [
+        "c0",
+        "c1",
+        "c3",
+        "c10",
+        "c7",
+        "c5",
+        "c2",
+        "c9",
+        "c13",
+        "c4"
+      ],
+      "candidate_top10": [
+        "c11",
+        "c6",
+        "c19",
+        "c28",
+        "c13",
+        "c0",
+        "c3",
+        "c21",
+        "c9",
+        "c5"
+      ],
+      "references": {
+        "A": {
+          "baseline_useful_count": 10,
+          "candidate_useful_count": 10,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "limitations",
+            "measurement",
+            "software_tasks"
+          ],
+          "candidate_named_useful_facets": [
+            "limitations",
+            "measurement",
+            "reproducibility",
+            "software_tasks"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c1",
+            "c10",
+            "c2",
+            "c4",
+            "c7"
+          ],
+          "candidate_useful_gain_ids": [
+            "c11",
+            "c19",
+            "c21",
+            "c28",
+            "c6"
+          ],
+          "passes": true
+        },
+        "B": {
+          "baseline_useful_count": 10,
+          "candidate_useful_count": 10,
+          "useful_count_loss": 0,
+          "baseline_named_useful_facets": [
+            "limitations",
+            "measurement",
+            "software_tasks"
+          ],
+          "candidate_named_useful_facets": [
+            "limitations",
+            "measurement",
+            "reproducibility",
+            "software_tasks"
+          ],
+          "lost_named_useful_facets": [],
+          "baseline_useful_displaced_ids": [
+            "c1",
+            "c10",
+            "c2",
+            "c4",
+            "c7"
+          ],
+          "candidate_useful_gain_ids": [
+            "c11",
+            "c19",
+            "c21",
+            "c28",
+            "c6"
+          ],
+          "passes": true
+        }
+      }
+    }
+  }
+}
