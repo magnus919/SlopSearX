@@ -1,0 +1,67 @@
+"""Independent read-only EXP-051 frozen-source preflight. No network or grading."""
+import hashlib
+import json
+from pathlib import Path
+
+BASE = Path(__file__).resolve().parent
+ROOT = BASE.parents[3]
+
+def strict_load(raw):
+    def pairs(values):
+        result = {}
+        for key, value in values:
+            if key in result:
+                raise ValueError("duplicate_json_key")
+            result[key] = value
+        return result
+    return json.loads(raw, object_pairs_hook=pairs,
+                      parse_constant=lambda value: (_ for _ in ()).throw(ValueError("nonfinite_json")))
+
+def preflight():
+    manifest = strict_load((BASE / "registration-integrity.json").read_bytes())
+    checked = 0
+    for name, expected in manifest["files"].items():
+        if hashlib.sha256((ROOT / name).read_bytes()).hexdigest() != expected:
+            raise ValueError("registration_source_hash_mismatch")
+        checked += 1
+    inventory = strict_load((BASE / "input-inventory.json").read_bytes())
+    for name, expected in inventory["files"].items():
+        if hashlib.sha256((ROOT / name).read_bytes()).hexdigest() != expected:
+            raise ValueError("inventory_source_hash_mismatch")
+        checked += 1
+    counts, unions, cases = [], [], []
+    for number in range(1, 7):
+        value = strict_load((BASE.parent / "EXP-048" / f"pool-P{number:02d}.json").read_bytes())
+        pool = value["pool"]
+        ids = [card["id"] for card in pool["candidates"]]
+        if len(set(ids)) != len(ids) or pool["pool_ref"] != f"P{number:02d}":
+            raise ValueError("invalid_pool_identity")
+        selected = pool["selected_ids"]
+        if len(set(selected)) != len(selected) or not set(selected) <= set(ids):
+            raise ValueError("invalid_selected_set")
+        union = set(selected)
+        if len(value["cases"]) != 2:
+            raise ValueError("wrong_case_count")
+        for case in value["cases"]:
+            removed, added, after = case["removed_id"], case["added_id"], case["after_selected_ids"]
+            if removed not in selected or added in selected or added not in ids:
+                raise ValueError("invalid_replacement")
+            if len(after) != len(set(after)) or set(after) != (set(selected) - {removed}) | {added}:
+                raise ValueError("invalid_after_set")
+            if case["pool_ref"] != pool["pool_ref"]:
+                raise ValueError("wrong_case_pool")
+            union.update(after)
+            cases.append(case["case_id"])
+        if len(union) > 12:
+            raise ValueError("annotation_union_overflow")
+        counts.append(len(ids)); unions.append(len(union))
+    if counts != [33, 32, 35, 44, 44, 44] or cases != [f"T{i:03d}" for i in range(1, 13)]:
+        raise ValueError("frozen_population_mismatch")
+    return {"schema": "exp051-source-preflight/1", "status": "passed",
+            "hash_checks": checked, "pool_count": 6, "case_count": len(cases),
+            "card_count": sum(counts), "annotation_union_counts": unions,
+            "reviewer_invocations": 0, "provider_calls": 0, "search_calls": 0,
+            "meaning": "Frozen-source integrity only; no judgment or ranking claim."}
+
+if __name__ == "__main__":
+    print(json.dumps(preflight(), indent=2))
