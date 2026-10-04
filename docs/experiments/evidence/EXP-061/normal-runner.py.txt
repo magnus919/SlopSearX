@@ -1,0 +1,88 @@
+"""Owned EXP061 CLI; offline default, committed qualification required for live."""
+from pathlib import Path
+import argparse,hashlib,json,os,re,subprocess,sys,tempfile
+import importlib.machinery,importlib.util
+HERE=Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader)
+    m=importlib.util.module_from_spec(spec);loader.exec_module(m);return m
+
+OLD=load("exp061_owned_transport",HERE.parent / "EXP-060" / "normal-runner.py.txt")
+C=load("exp061_owned_canonical",HERE / "canonical.py.txt")
+
+def committed(relative,revision):
+    if not re.fullmatch("[0-9a-f]{40}",revision):raise ValueError("revision")
+    return subprocess.run(["git","show",revision+":"+relative],cwd=REPO,check=True,capture_output=True).stdout
+
+def live_gate(acquisition,references,revision):
+    head=subprocess.run(["git","rev-parse","HEAD"],cwd=REPO,check=True,capture_output=True,text=True).stdout.strip()
+    relative="docs/experiments/evidence/EXP-061/qualification-integrity.json"
+    raw=committed(relative,head)
+    if (HERE / "qualification-integrity.json").read_bytes()!=raw:raise ValueError("uncommitted-qualification")
+    q=json.loads(raw)
+    if q.get("schema")!="exp061-qualification-integrity/1" or q.get("qualified")is not True:raise ValueError("not-qualified")
+    required={"docs/experiments/evidence/EXP-061/"+name for name in ["normal-runner.py.txt","normal-runner-tests.py.txt","paired.py.txt","paired-tests.py.txt","canonical.py.txt","canonical-tests.py.txt","analysis-adapter.py.txt","analysis-adapter-tests.py.txt","protocol.json","registration-integrity.json"]}
+    files=q.get("files",{})
+    if not isinstance(files,dict) or not required.issubset(files):raise ValueError("incomplete-qualification")
+    for name,digest in files.items():
+        path=REPO / name
+        if Path(name).is_absolute() or ".." in Path(name).parts or path.is_symlink() or not path.is_file() or not re.fullmatch("[0-9a-f]{64}",digest) or hashlib.sha256(path.read_bytes()).hexdigest()!=digest:raise ValueError("changed-qualified-source")
+    reg_relative="docs/experiments/evidence/EXP-061/registration-integrity.json"
+    if committed(reg_relative,q["registration_revision"])!=(HERE / "registration-integrity.json").read_bytes():raise ValueError("changed-registration")
+    protocol_raw=(HERE / "protocol.json").read_bytes()
+    protocol=json.loads(protocol_raw)
+    if protocol.get("schema")!="exp061-ordering-protocol/1" or protocol.get("status")!="registered":raise ValueError("unregistered-protocol")
+    for name,data in [("fresh-acquisition.json",acquisition),("fresh-references.json",references)]:
+        if hashlib.sha256(data).hexdigest()!=protocol["inputs"][name] or committed("docs/experiments/evidence/EXP-060/"+name,revision)!=data:raise ValueError("changed-input")
+    if not os.environ.get("TYPESAFE_API_KEY"):raise ValueError("missing-credential")
+    identity=hashlib.sha256(protocol_raw+acquisition+references).hexdigest()
+    lease=Path(tempfile.gettempdir()) / ("exp061-model-attempt-"+identity+".json")
+    with lease.open("x")as stream:
+        json.dump({"identity":identity,"input_revision":revision},stream);stream.flush();os.fsync(stream.fileno())
+    return {"input_revision":revision,"qualification_sha256":hashlib.sha256(raw).hexdigest(),"identity":identity}
+
+def verify_schedule(plan,protocol):
+    expected=protocol.get("ordered_case_plan")
+    actual=[{"id":item["id"],"arms":["w0","d","f","e"] if item["requests"]["f"]is not None else ["w0","d","e_identity_bypass"]} for item in plan]
+    if expected!=actual:raise ValueError("registered-schedule-mismatch")
+
+def run(acquisition,references,outdir,offline=True,integrity=None):
+    paired=load("exp061_owned_paired",HERE / "paired.py.txt")
+    plan=OLD.E.P.operations({qid:p["cards"] for qid,p in acquisition["pools"].items()})
+    protocol_path=HERE / "protocol.json"
+    if not protocol_path.exists() and offline:protocol_path=HERE / "protocol-draft.json"
+    verify_schedule(plan,json.loads(protocol_path.read_bytes()))
+    outdir.mkdir(parents=True,exist_ok=False)
+    receipts=outdir / "receipts";receipts.mkdir()
+    cases={q["id"]:q for q in json.loads((HERE.parent / "EXP-060" / "queries.json").read_bytes())}
+    allowed=set()
+    for item in plan:
+        prepared=item["requests"]
+        treatments=[prepared,C.prepare(cases[item["case"]],prepared["d"]["state"]["candidates"])["treatmentprepared"]]
+        for treatment in treatments:
+            for arm in ("w0","d","f"):
+                body=treatment.get(arm)
+                if body is not None:allowed.add(hashlib.sha256(OLD.E.P.wire(body)).hexdigest())
+    comparator=OLD.OwnedTransport(receipts,"comparator",offline,allowed)
+    candidate=OLD.OwnedTransport(receipts,"e",offline)
+    result=paired.evaluate(acquisition,references,comparator,candidate,lambda value:OLD.atomic(outdir / "run.json",value))
+    result.update(synthetic=offline,input_integrity=integrity)
+    OLD.atomic(outdir / "run.json",result)
+    return result
+
+def main():
+    p=argparse.ArgumentParser();p.add_argument("--mode",choices=["offline","live"],default="offline")
+    p.add_argument("--acquisition",type=Path,required=True);p.add_argument("--references",type=Path,required=True);p.add_argument("--outdir",type=Path,required=True);p.add_argument("--input-revision")
+    a=p.parse_args();ar=a.acquisition.read_bytes();rr=a.references.read_bytes()
+    acquisition=OLD.E.PARSER.strict(ar);references=OLD.E.PARSER.strict(rr)
+    integrity=live_gate(ar,rr,a.input_revision or "") if a.mode=="live" else None
+    result=run(acquisition,references,a.outdir,a.mode=="offline",integrity)
+    print(json.dumps({"status":result["status"],"operations":len(result["operations"]),"attempts":result["budget"]["attempts"],"synthetic":result["synthetic"]}))
+    return 0 if result["status"]=="complete" else 2
+
+if __name__=="__main__":
+    try:sys.exit(main())
+    except Exception as error:
+        print("exp061-setup-"+type(error).__name__,file=sys.stderr);sys.exit(2)
