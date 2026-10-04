@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "exp039-annotation-output-schema",
+  "title": "EXP-039 blinded single-reviewer card annotations",
+  "type": "object",
+  "required": ["schema", "reviewer", "items"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "exp039-annotation/1"},
+    "reviewer": {"enum": ["A", "B"]},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "lead", "visible", "facets", "uncertain", "rationale"],
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string",
+            "pattern": "^q[1-9]-r[0-9]{2}$"
+          },
+          "lead": {"type": "integer", "minimum": 0, "maximum": 3},
+          "visible": {"type": "integer", "minimum": 0, "maximum": 3},
+          "facets": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string"}
+          },
+          "uncertain": {"type": "boolean"},
+          "rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}
