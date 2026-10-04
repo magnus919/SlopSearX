@@ -1,0 +1,83 @@
+"""Offline EXP-048 delivery and shaped-output boundary qualification."""
+import copy
+import json
+from pathlib import Path
+import runpy
+
+BASE = Path(__file__).parent
+B = runpy.run_path(str(BASE / "delivery-builder.py.txt"))
+V = runpy.run_path(str(BASE / "review-validator.py.txt"))
+
+
+def reject(fn):
+    try:
+        fn()
+    except (AssertionError, ValueError, KeyError, TypeError):
+        return
+    raise AssertionError("invalid value accepted")
+
+
+def qualify():
+    construction = B["build"]()
+    manifest, manifest_sha = V["validate_manifest"]()
+    packet = B["strict_load"]((BASE.parent / "EXP-047" / "review-packet.json").read_bytes())
+    by_pool = {p["pool_ref"]: p for p in packet["pools"]}
+    review = {"schema": "exp048-review/1", "reviewer_id": "A",
+              "packet_sha256": manifest["packet_sha256"], "contract_sha256": manifest["contract_sha256"],
+              "delivery_manifest_sha256": manifest_sha, "cases": [],
+              "execution_attestation": {"declared_tool_calls": [f"cat {n}" for n in V["FILES"]],
+                "external_calls": 0, "filesystem_writes": 0, "read_only_files": V["FILES"],
+                "delivery_end_markers": V["MARKERS"]}}
+    for case in packet["cases"]:
+        pool = by_pool[case["pool_ref"]]
+        review["cases"].append({"case_id": case["case_id"], "answerability": "answerable",
+            "judgment": "equivalent", "rationale": "Synthetic shape-only fixture; no assessment.",
+            "referenced_ids": [pool["candidates"][0]["id"]], "gained_supported_facets": [],
+            "lost_supported_facets": [], "unproven_assumptions": []})
+    V["validate"](review, "A")
+    boundary = copy.deepcopy(review)
+    boundary["cases"][0]["rationale"] = " ".join(["word"] * 250)
+    V["validate"](boundary, "A")
+    uncertain = copy.deepcopy(review)
+    uncertain["cases"][0].update(answerability="insufficient_visible_evidence", judgment="undecidable")
+    V["validate"](uncertain, "A")
+    mutations = [
+        lambda r: r["cases"].pop(),
+        lambda r: r["cases"].append(copy.deepcopy(r["cases"][0])),
+        lambda r: r["cases"][0].update(case_id="missing"),
+        lambda r: r["cases"][0].update(answerability="insufficient_visible_evidence"),
+        lambda r: r["cases"][0].update(judgment="undecidable"),
+        lambda r: r["cases"][0].update(referenced_ids=["s999"]),
+        lambda r: r["cases"][0].update(referenced_ids=[]),
+        lambda r: r["cases"][0].update(gained_supported_facets=["missing"]),
+        lambda r: r["cases"][0].update(rationale=" ".join(["word"] * 251)),
+        lambda r: r["cases"][0].update(unproven_assumptions=["x"] * 11),
+        lambda r: r["cases"][0].update(unproven_assumptions=["x" * 201]),
+        lambda r: r.update(packet_sha256="0" * 64),
+        lambda r: r.update(contract_sha256="0" * 64),
+        lambda r: r.update(delivery_manifest_sha256="0" * 64),
+        lambda r: r.update(reviewer_id="B"),
+        lambda r: r.update(extra=True),
+        lambda r: r["execution_attestation"].update(external_calls=True),
+        lambda r: r["execution_attestation"].update(filesystem_writes=1),
+        lambda r: r["execution_attestation"].update(delivery_end_markers=["wrong"]),
+        lambda r: r["execution_attestation"].update(read_only_files=["other.json"]),
+        lambda r: r["execution_attestation"].update(declared_tool_calls=["cat other.json"]),
+    ]
+    for mutation in mutations:
+        changed = copy.deepcopy(review)
+        mutation(changed)
+        reject(lambda: V["validate"](changed, "A"))
+    reject(lambda: B["strict_load"]('{"x":1,"x":2}'))
+    reject(lambda: B["strict_load"]('{"x":NaN}'))
+    reject(lambda: B["guard"](b"x" * 30001))
+    reject(lambda: B["guard"](b"x " * 6001))
+    reject(lambda: B["guard"](b"x" * 16001, contract=True))
+    return {"schema": "exp048-offline-qualification/1", "status": "passed",
+        "construction": construction, "invalid_output_mutations_rejected": len(mutations),
+        "strict_json_and_overflow_checks": 5, "provider_calls": 0, "search_calls": 0,
+        "reviewer_invocations": 0, "semantic_quality_claim": False}
+
+
+if __name__ == "__main__":
+    print(json.dumps(qualify(), indent=2))
