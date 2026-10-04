@@ -1,6 +1,6 @@
 # EXP-050: identifier-bound source-information capture
 
-Status: registered and offline-qualified; no live metadata lookup, ranking result or runtime implementation. Original registration and prospective corrections are retained in the evidence packet. Baseline `3d5e8bac38b619aec1bd7a679f1a7667f1fc1abf`. EXP-046 remains rejected; EXP-047/048 remain incomplete. This is source-information acquisition and integrity measurement, not ranking/answerability evaluation or production adoption.
+Status: completed source-information acquisition; information screen passed. See [readout](evidence/EXP-050/readout.md). No ranking result or runtime implementation. Original registration and prospective corrections remain retained. Baseline `3d5e8bac38b619aec1bd7a679f1a7667f1fc1abf`. EXP-046 remains rejected; EXP-047/048 remain incomplete. This is source-information acquisition and integrity measurement, not ranking/answerability evaluation or production adoption.
 
 ## Why and exact scope
 
