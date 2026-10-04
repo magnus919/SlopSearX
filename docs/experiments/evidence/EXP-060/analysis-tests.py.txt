@@ -212,6 +212,27 @@ class AnalysisAdapterTests(unittest.TestCase):
         self.assertEqual(result["outcome"], "rejected")
         self.assertFalse(result["gates"]["five_navigation_targets"])
 
+    def test_single_candidate_prefix_allows_only_the_pinned_no_call_w0_path(self):
+        run = fixture()
+        qid = "q13"
+        card = run["pools"][qid]["cards"][0]
+        run["pools"][qid]["cards"] = [card]
+        for reviewer in ("A", "B"):
+            run["references"][reviewer][qid] = {card["id"]: run["references"][reviewer][qid][card["id"]]}
+        operation = next(op for op in run["operations"] if op["case"] == qid)
+        operation["cards"] = [card]
+        operation["orders"] = {arm: [card["id"]] for arm in ("w0", "d", "e")}
+        operation["attempts"] = [attempt for attempt in operation["attempts"] if attempt["arm"] != "w0"]
+        result = analysis.analyze(run)
+        self.assertTrue(result["quality_analysis_performed"])
+        self.assertTrue(result["navigation"][qid]["passed"])
+
+    def test_missing_w0_attempt_is_not_excused_for_two_candidate_prefix(self):
+        run = fixture()
+        operation = next(op for op in run["operations"] if op["case"] == "q12")
+        operation["attempts"] = [attempt for attempt in operation["attempts"] if attempt["arm"] != "w0"]
+        self.assertEqual(analysis.analyze(run)["outcome"], "inconclusive")
+
     def test_all_four_repeat_rotate_triples_are_required(self):
         run = fixture()
         op = next(op for op in run["operations"] if op["id"] == "q8-rotate20")

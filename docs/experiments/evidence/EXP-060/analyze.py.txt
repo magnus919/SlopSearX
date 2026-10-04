@@ -145,7 +145,7 @@ def _expected_ops(protocol: Mapping[str, Any]) -> list[dict[str, Any]]:
     return ops
 
 
-def _timing_valid(op: Mapping[str, Any], navigation: bool) -> None:
+def _timing_valid(op: Mapping[str, Any], navigation: bool, w0_call_expected: bool) -> None:
     attempts = op.get("attempts")
     if not isinstance(attempts, list):
         raise ValueError("missing_http_attempt_inventory")
@@ -158,11 +158,15 @@ def _timing_valid(op: Mapping[str, Any], navigation: bool) -> None:
         if arm not in {"w0", "d", "f", "e"} or not isinstance(ms, (int, float)) or isinstance(ms, bool) or not math.isfinite(ms) or ms < 0:
             raise ValueError("invalid_http_timing")
         valid_attempts.append(attempt)
-    expected_arms = {"w0", "d"} if navigation else {"w0", "d", "f"}
+    expected_arms = ({"w0"} if w0_call_expected else set()) | {"d"}
+    if not navigation:
+        expected_arms.add("f")
     arms = [a["arm"] for a in valid_attempts]
     for arm in expected_arms:
         if arms.count(arm) != 1:
             raise ValueError("missing_or_duplicate_required_arm_attempt")
+    if not w0_call_expected and "w0" in arms:
+        raise ValueError("unexpected_w0_attempt_for_single_candidate_prefix")
     if navigation:
         if "f" in arms or "e" in arms:
             raise ValueError("unexpected_navigation_candidate_call")
@@ -265,7 +269,14 @@ def _validate_run(
                 raise ValueError("incomplete_or_duplicate_arm_order")
         if qid in NAVIGATION and orders["e"] != orders["w0"]:
             raise ValueError("navigation_e_not_identity_bypass")
-        _timing_valid(op, qid in NAVIGATION)
+        # prepare.bodies() invokes W0 only when its exact first-40 eligible
+        # candidate prefix has at least two records. The prepared pool is
+        # identity-equal to the acquired pool above, so this cardinality is
+        # derivable without treating an arbitrary missing attempt as valid.
+        w0_call_expected = len(expected_input[:40]) >= 2
+        if not w0_call_expected and orders["w0"] != base_ids:
+            raise ValueError("single_candidate_w0_fallback_must_preserve_identity_order")
+        _timing_valid(op, qid in NAVIGATION, w0_call_expected)
         rankings[opid] = {arm: list(order) for arm, order in orders.items()}
     return statuses, refs, pool_ids, rankings
 
