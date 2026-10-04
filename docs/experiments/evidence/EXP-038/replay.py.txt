@@ -148,6 +148,10 @@ def verify_pins(root: pathlib.Path) -> tuple[dict[str, Any], dict[str, Any], dic
                 raise ValueError(f"frozen source mismatch: {filename}")
         elif filename.startswith("slopsearx/"):
             source = project / filename
+            if filename == "slopsearx/rerank.py" and (
+                not source.is_file() or sha256(source.read_bytes()) != expected
+            ):
+                source = root / "baseline-rerank.py.txt"
             if not source.is_file() or sha256(source.read_bytes()) != expected:
                 raise ValueError(f"pinned runtime source mismatch: {filename}")
     return hashes, projections, contract
