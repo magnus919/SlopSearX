@@ -1,0 +1,124 @@
+"""Coordinator failure tests. Synthetic mechanics, not semantic quality evidence."""
+import asyncio
+import importlib.machinery
+import importlib.util
+from pathlib import Path
+import unittest
+
+p = Path(__file__).with_name('orchestrator.py.txt')
+loader = importlib.machinery.SourceFileLoader('coordinator', str(p))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+m = importlib.util.module_from_spec(spec)
+loader.exec_module(m)
+
+class Policy:
+    def stable_order(self, scores, ids): return list(ids)
+    def build_round(self, *args):
+        return {'state': {}, 'questions': {'q': {}}}, {'question_ids': ['q']}
+    def choose_action(self, values, batch, scores, ids):
+        return {'candidate_id': 'b', 'victim_id': 'a', 'resulting_ids': ['b']}
+    def final_order(self, selected, scores, ids): return list(reversed(ids))
+
+class Tests(unittest.TestCase):
+    def run_case(self, transport, historical=0, parser=None, budget=None):
+        return m.operation(Policy(), parser or (lambda raw, ids: {'usage': {'input_tokens': 1, 'output_tokens': 1}, 'values': {'q': 1}}),
+             [{'id': 'a'}, {'id': 'b'}], 'purpose', [], {'a': 9, 'b': 8}, {}, ['a', 'b'], historical, transport, budget=budget)
+    def test_failure_discards_prior_success(self):
+        calls = []
+        def transport(body, **kwargs):
+            calls.append(body)
+            if len(calls) == 2: raise TimeoutError('timeout')
+            return b'{}', 1
+        result = self.run_case(transport)
+        self.assertEqual(result['order'], ['a', 'b'])
+        self.assertEqual(result['actions'], [])
+        self.assertEqual(result['discarded_action_count'], 1)
+        self.assertEqual(len(calls), 2)
+        self.assertIsNone(result['attempts'][1]['usage'])
+    def test_historical_time_exhausted_makes_zero_calls(self):
+        result = self.run_case(lambda body, **kwargs: self.fail('must not call'), 2001)
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(result['attempts'], [])
+    def test_remote_deadline_is_terminal(self):
+        result = self.run_case(lambda body, **kwargs: (b'{}', 1001))
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(len(result['attempts']), 1)
+        self.assertEqual(result['order'], ['a', 'b'])
+    def test_parser_failure_never_applies_swap(self):
+        def parser(raw, ids): raise ValueError('wrong-model')
+        result = self.run_case(lambda body, **kwargs: (b'{}', 1), parser=parser)
+        self.assertEqual(result['discarded_action_count'], 0)
+        self.assertEqual(result['attempts'][0]['status'], 'invalid')
+    def test_cancellation_is_auditable_full_fallback(self):
+        def transport(body, **kwargs): raise asyncio.CancelledError('cancelled')
+        result = self.run_case(transport)
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(result['order'], ['a', 'b'])
+        self.assertEqual(result['attempts'][0]['status'], 'transport-failed')
+        self.assertIn('request_utf8', result['attempts'][0])
+        self.assertIsNone(result['attempts'][0]['usage'])
+    def test_raw_bytes_preserved_and_timeout_passed(self):
+        def transport(body, timeout_s):
+            self.assertGreater(timeout_s, 0)
+            self.assertLessEqual(timeout_s, 60)
+            return b'{ }', 1
+        result = self.run_case(transport)
+        self.assertEqual(bytes.fromhex(result['attempts'][0]['response_hex']), b'{ }')
+    def test_study_usage_and_deadline(self):
+        ops = [{'id': str(i)} for i in range(21)]
+        def execute(item): return {'status': 'valid', 'attempts': [{'usage': {'input_tokens': 1, 'output_tokens': 100001}}]}
+        result = m.study(ops, execute)
+        self.assertEqual(len(result['results']), 1)
+        self.assertEqual(result['status'], 'incomplete')
+        ticks = iter([0, 14400])
+        result = m.study(ops, lambda item: self.fail('expired study must not invoke'), clock=lambda: next(ticks))
+        self.assertEqual(len(result['uninvoked_ids']), 21)
+    def test_exact_owned_deadline_makes_no_attempt(self):
+        budget = m.StudyBudget()
+        ticks = iter([0, 60])
+        result = m.operation(Policy(), lambda raw, ids: self.fail('must not parse'),
+            [{'id': 'a'}, {'id': 'b'}], 'purpose', [], {'a': 9, 'b': 8}, {}, ['a', 'b'], 0,
+            lambda body, **kwargs: self.fail('must not invoke'), clock=lambda: next(ticks), budget=budget)
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(result['attempts'], [])
+        self.assertEqual(budget.attempts, 0)
+        self.assertFalse(budget.unknown)
+    def test_budget_refuses_call_before_transport(self):
+        budget = m.StudyBudget()
+        budget.input_tokens = 3000000 - 64000 + 1
+        result = self.run_case(lambda body, **kwargs: self.fail('budget must prevent call'), budget=budget)
+        self.assertEqual(result['attempts'], [])
+        self.assertEqual(budget.attempts, 0)
+    def test_unknown_usage_stops_future_operations(self):
+        budget = m.StudyBudget()
+        def bad(body, **kwargs): raise TimeoutError('timeout')
+        result = self.run_case(bad, budget=budget)
+        self.assertTrue(budget.unknown)
+        second = self.run_case(lambda body, **kwargs: self.fail('unknown usage must stop'), budget=budget)
+        self.assertEqual(second['attempts'], [])
+        self.assertEqual(budget.attempts, 1)
+    def test_known_usage_charged_before_terminal_timing_failure(self):
+        budget = m.StudyBudget()
+        result = self.run_case(lambda body, **kwargs: (b'{}', 1001), budget=budget)
+        self.assertEqual(budget.input_tokens, 1)
+        self.assertEqual(budget.output_tokens, 1)
+        self.assertFalse(budget.unknown)
+        self.assertEqual(result['status'], 'failed')
+    def test_output_budget_overrun_retained_and_stops(self):
+        budget = m.StudyBudget()
+        result = self.run_case(lambda body, **kwargs: (b'{}', 1), budget=budget,
+            parser=lambda raw, ids: {'usage': {'input_tokens': 1, 'output_tokens': 100001}, 'values': {'q': 1}})
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(budget.output_tokens, 100001)
+        self.assertEqual(result['attempts'][0]['usage']['output_tokens'], 100001)
+        self.assertEqual(result['order'], ['a', 'b'])
+    def test_study_stops_first_failure(self):
+        called = []
+        def execute(item):
+            called.append(item['id'])
+            return {'status': 'failed'}
+        result = m.study([{'id': str(i)} for i in range(21)], execute)
+        self.assertEqual(called, ['0'])
+        self.assertEqual(len(result['uninvoked_ids']), 20)
+
+if __name__ == '__main__': unittest.main()
