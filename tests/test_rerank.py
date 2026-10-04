@@ -335,7 +335,10 @@ async def test_jev_score_and_untrusted_payload_bounds(
     assert "input_tokens=123" in caplog.text
 
 
-@pytest.mark.parametrize("change", ["model", "missing", "extra", "nan", "bool", "range", "wrong_type", "http", "json"])
+@pytest.mark.parametrize(
+    "change",
+    ["model", "missing", "extra", "nan", "bool", "range", "wrong_type", "http", "json", "nonobject", "redirect"],
+)
 async def test_jev_invalid_responses_fall_back_without_retries(monkeypatch: pytest.MonkeyPatch, change: str) -> None:
     calls = 0
 
@@ -359,8 +362,12 @@ async def test_jev_invalid_responses_fall_back_without_retries(monkeypatch: pyte
             body["answers"]["c0"]["type"] = "noul"
         elif change == "http":
             return httpx.Response(429)
+        elif change == "redirect":
+            return httpx.Response(302, headers={"location": "https://example.org/redirect-target"})
         elif change == "json":
             return httpx.Response(200, text="invalid")
+        elif change == "nonobject":
+            return httpx.Response(200, json=[body])
         return httpx.Response(200, content=json.dumps(body).encode())
 
     mock_http(monkeypatch, handler)
@@ -431,6 +438,81 @@ async def test_jev_concurrency_and_cancel_release(monkeypatch: pytest.MonkeyPatc
     assert await provider.rerank("public", candidates) is not None
 
 
+async def test_jev_queued_cancellation_releases_admission_slot(monkeypatch: pytest.MonkeyPatch) -> None:
+    entered, release = asyncio.Event(), asyncio.Event()
+    calls = active = 0
+
+    async def handler(req: httpx.Request) -> httpx.Response:
+        nonlocal calls, active
+        calls += 1
+        active += 1
+        if active == 2:
+            entered.set()
+        try:
+            await release.wait()
+            return httpx.Response(
+                200,
+                json={
+                    "model": MODEL,
+                    "answers": {"c0": {"type": "score", "score": 0}, "c1": {"type": "score", "score": 9}},
+                },
+            )
+        finally:
+            active -= 1
+
+    mock_http(monkeypatch, handler)
+    provider = JevReranker("test")
+    candidates = (RerankCandidate("c0", "public", "", ""), RerankCandidate("c1", "public", "", ""))
+    first = [asyncio.create_task(provider.rerank("public", candidates)) for _ in range(2)]
+    await entered.wait()
+    queued = asyncio.create_task(provider.rerank("public", candidates))
+    await asyncio.sleep(0)
+    queued.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await queued
+    release.set()
+    assert all(await asyncio.gather(*first))
+    assert await provider.rerank("public", candidates) is not None
+    assert calls == 3
+
+
+async def test_jev_queue_wait_counts_toward_deadline_and_releases_slot(monkeypatch: pytest.MonkeyPatch) -> None:
+    entered = asyncio.Event()
+    calls = active = 0
+    monkeypatch.setattr("slopsearx.rerank.RERANK_TIMEOUT_S", 0.05)
+
+    async def handler(req: httpx.Request) -> httpx.Response:
+        nonlocal calls, active
+        calls += 1
+        active += 1
+        if active == 2:
+            entered.set()
+        try:
+            if calls <= 2:
+                await asyncio.Event().wait()
+            return httpx.Response(
+                200,
+                json={
+                    "model": MODEL,
+                    "answers": {"c0": {"type": "score", "score": 0}, "c1": {"type": "score", "score": 9}},
+                },
+            )
+        finally:
+            active -= 1
+
+    mock_http(monkeypatch, handler)
+    provider = JevReranker("test")
+    candidates = (RerankCandidate("c0", "public", "", ""), RerankCandidate("c1", "public", "", ""))
+    first = [asyncio.create_task(provider.rerank("public", candidates)) for _ in range(2)]
+    await entered.wait()
+    queued = asyncio.create_task(provider.rerank("public", candidates))
+    assert await asyncio.wait_for(queued, 0.3) is None
+    assert await asyncio.gather(*first) == [None, None]
+    assert calls == 2
+    assert await provider.rerank("public", candidates) is not None
+    assert calls == 3
+
+
 async def test_interactive_deadline_bounds_advice(monkeypatch: pytest.MonkeyPatch) -> None:
     class Slow(Provider):
         async def rerank(self, query: str, candidates: tuple[RerankCandidate, ...]) -> RerankDecision:
@@ -468,6 +550,181 @@ async def test_query_request_size_bounds_and_stable_score_ties(monkeypatch: pyte
     monkeypatch.setattr("slopsearx.rerank.MAX_REQUEST_BYTES", 128000)
     decision = await provider.rerank("public", cs)
     assert decision is not None and decision.ordered_ids == ("c0", "c1")
+
+
+async def test_jev_direct_candidate_field_limits_reject_without_transport(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = 0
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        raise AssertionError("oversized input must not be sent")
+
+    mock_http(monkeypatch, handler)
+    provider = JevReranker("test")
+    for field, limit in (("title", 256), ("url", 512), ("snippet", 1200)):
+        good = RerankCandidate("c0", "t", "u", "s")
+        bad = RerankCandidate("c1", "t", "u", "s")
+        object.__setattr__(bad, field, "é" * (limit // 2 + 1))
+        assert await provider.rerank("public", (good, bad)) is None
+    assert (
+        await provider.rerank("é" * 2049, (RerankCandidate("c0", "t", "u", "s"), RerankCandidate("c1", "t", "u", "s")))
+        is None
+    )
+    assert calls == 0
+
+
+async def test_jev_direct_candidate_field_exact_limits_are_accepted(monkeypatch: pytest.MonkeyPatch) -> None:
+    def handler(req: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "model": MODEL,
+                "answers": {"c0": {"type": "score", "score": 0}, "c1": {"type": "score", "score": 9}},
+            },
+        )
+
+    mock_http(monkeypatch, handler)
+    provider = JevReranker("test")
+    candidates = (
+        RerankCandidate("c0", "t" * 256, "u" * 512, "s" * 1200),
+        RerankCandidate("c1", "title", "url", "snippet"),
+    )
+    decision = await provider.rerank("public", candidates)
+    assert decision is not None and decision.ordered_ids == ("c1", "c0")
+
+
+async def test_jev_json_rejects_ambiguous_and_nonfinite_documents(monkeypatch: pytest.MonkeyPatch) -> None:
+    raw_documents = [
+        b'{"model":"jev-1.13.0","model":"jev-1.13.0","answers":{"c0":{"type":"score","score":0},"c1":{"type":"score","score":9}}}',
+        b'{"model":"jev-1.13.0","answers":{"c0":{"type":"score","score":0},"c1":{"type":"score","score":9}},"ignored":NaN}',
+        b'{"model":"jev-1.13.0","answers":{"c0":{"type":"score","score":0},"c1":{"type":"score","score":9}},"ignored":Infinity}',
+        b'{"model":"jev-1.13.0","answers":{"c0":{"type":"score","score":0},"c1":{"type":"score","score":9}},"ignored":1e999}',
+        b'{"model":"jev-1.13.0","answers":{"c0":{"type":"score","score":0},"c1":{"type":"score","score":9}},"ignored":-1e999}',
+    ]
+    provider = JevReranker("test")
+    candidates = (RerankCandidate("c0", "t", "u", "s"), RerankCandidate("c1", "t", "u", "s"))
+    calls = 0
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        doc = raw_documents[calls]
+        calls += 1
+        return httpx.Response(200, content=doc, headers={"content-type": "application/json"})
+
+    mock_http(monkeypatch, handler)
+    outcomes = [await provider.rerank("public", candidates) for _ in raw_documents]
+    assert outcomes == [None] * len(raw_documents)
+    assert calls == len(raw_documents)
+
+
+async def test_jev_streamed_response_byte_limit_and_exact_boundary(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    provider = JevReranker("test")
+    candidates = (RerankCandidate("c0", "t", "u", "s"), RerankCandidate("c1", "t", "u", "s"))
+    payload = json.dumps(
+        {
+            "model": MODEL,
+            "answers": {"c0": {"type": "score", "score": 0}, "c1": {"type": "score", "score": 9}},
+            "extra": "é",
+        },
+        ensure_ascii=False,
+    ).encode()
+    monkeypatch.setattr("slopsearx.rerank.MAX_RESPONSE_BYTES", len(payload), raising=False)
+    calls = 0
+
+    class Chunks(httpx.AsyncByteStream):
+        def __init__(self, chunks: list[bytes]) -> None:
+            self.chunks = chunks
+
+        async def __aiter__(self):
+            for chunk in self.chunks:
+                yield chunk
+
+        async def aclose(self) -> None:
+            return None
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return httpx.Response(200, content=payload)
+        # No Content-Length: exercise the decoded streaming-byte guard.
+        # Splitting inside a UTF-8 character verifies that the limit is on
+        # decoded bytes accumulated across chunks, not Unicode characters.
+        split = payload.index("é".encode()) + 1
+        return httpx.Response(200, stream=Chunks([payload[:split], payload[split:] + b" "]))
+
+    mock_http(monkeypatch, handler)
+    assert (await provider.rerank("public", candidates)).ordered_ids == ("c1", "c0")
+    assert await provider.rerank("public", candidates) is None
+    monkeypatch.setattr("slopsearx.rerank.MAX_RESPONSE_BYTES", len(payload) - 1, raising=False)
+    assert await provider.rerank("public", candidates) is None
+    assert calls == 3
+    assert caplog.text.count("Jev rerank unavailable: ValueError") == 2
+
+
+async def test_jev_gzip_decoded_body_is_bounded(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    import gzip
+
+    provider = JevReranker("test")
+    candidates = (RerankCandidate("c0", "t", "u", "s"), RerankCandidate("c1", "t", "u", "s"))
+    payload = json.dumps(
+        {
+            "model": MODEL,
+            "answers": {"c0": {"type": "score", "score": 0}, "c1": {"type": "score", "score": 9}},
+            "padding": "x" * 500,
+        }
+    ).encode()
+    monkeypatch.setattr("slopsearx.rerank.MAX_RESPONSE_BYTES", len(payload), raising=False)
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        compressed = gzip.compress(payload)
+        return httpx.Response(
+            200,
+            content=compressed,
+            headers={"content-encoding": "gzip", "content-length": str(len(compressed))},
+        )
+
+    mock_http(monkeypatch, handler)
+    assert (await provider.rerank("public", candidates)).ordered_ids == ("c1", "c0")
+    monkeypatch.setattr("slopsearx.rerank.MAX_RESPONSE_BYTES", len(payload) - 1, raising=False)
+    assert await provider.rerank("public", candidates) is None
+    assert "Jev rerank unavailable: ValueError" in caplog.text
+
+
+async def test_jev_rejects_surrogate_ids_and_versions_cache_identity(monkeypatch: pytest.MonkeyPatch) -> None:
+    provider = JevReranker("test")
+    good = RerankCandidate("c0", "t", "u", "s")
+    bad = RerankCandidate("\ud800", "t", "u", "s")
+    assert await provider.rerank("public", (good, bad)) is None
+    assert provider.cache_identity().startswith("jev-score-v2:")
+    original_identity = provider.cache_identity()
+    monkeypatch.setattr("slopsearx.rerank.MAX_RESPONSE_BYTES", 2_000_001, raising=False)
+    assert provider.cache_identity() != original_identity
+
+
+async def test_jev_advertised_oversize_fails_before_read_and_without_retry(monkeypatch: pytest.MonkeyPatch) -> None:
+    provider = JevReranker("test")
+    candidates = (RerankCandidate("c0", "t", "u", "s"), RerankCandidate("c1", "t", "u", "s"))
+    monkeypatch.setattr("slopsearx.rerank.MAX_RESPONSE_BYTES", 16, raising=False)
+    calls = 0
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        body = {
+            "model": MODEL,
+            "answers": {"c0": {"type": "score", "score": 0}, "c1": {"type": "score", "score": 9}},
+        }
+        return httpx.Response(200, content=json.dumps(body).encode())
+
+    mock_http(monkeypatch, handler)
+    assert await provider.rerank("public", candidates) is None
+    assert calls == 1
 
 
 def test_http_portal_wiring_and_html_ranking_label(monkeypatch: pytest.MonkeyPatch) -> None:
