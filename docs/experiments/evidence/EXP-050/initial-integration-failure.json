@@ -1,0 +1,21 @@
+{
+  "schema": "metadata-integration-failure/1",
+  "stage": "offline synthetic integration before live acquisition",
+  "observations": [
+    {
+      "failure": "adapter assumed a successful result and dereferenced None",
+      "error_class": "TypeError"
+    },
+    {
+      "failure": "parsed callback lacked the exact raw receipt and per-record raw byte measurements required by the projector",
+      "outcome": "incomplete",
+      "stop_reason": "terminal_error_RunnerError",
+      "fixture_attempt_count": 1
+    }
+  ],
+  "resolution_pending": "Use an explicit raw-response callback so the qualified projector validates exact wire bytes; rerun full combined qualification.",
+  "network_calls": 0,
+  "credential_reads": 0,
+  "provider_calls": 0,
+  "brave_attempts": 0
+}

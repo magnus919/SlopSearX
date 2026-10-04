@@ -1,0 +1,200 @@
+"""Offline-only EXP-050 projection qualification; no credentials or network."""
+from __future__ import annotations
+import importlib.util, json, sys
+from importlib.machinery import SourceFileLoader
+from pathlib import Path
+
+HERE=Path(__file__).resolve().parent
+ROOT=HERE.parents[3]
+sys.path.insert(0,str(ROOT))
+loader=SourceFileLoader('exp049_projection',str(HERE/'projection.py.txt'))
+spec=importlib.util.spec_from_loader(loader.name,loader)
+P=importlib.util.module_from_spec(spec); sys.modules[spec.name]=P; loader.exec_module(P)
+
+checks=[]
+def check(name, fn):
+    try: fn(); checks.append({"name":name,"status":"pass"})
+    except Exception as e: checks.append({"name":name,"status":"fail","error":type(e).__name__+": "+str(e)})
+def expect_error(fn):
+    try: fn()
+    except P.ProjectionError: return
+    raise AssertionError('expected ProjectionError')
+def chunks(raw, n=97): return [raw[i:i+n] for i in range(0,len(raw),n)]
+def encoded(v): return json.dumps(v,separators=(',',':'),ensure_ascii=False).encode()
+
+def make_plan():
+    rows=[]
+    urls=[('doi','https://doi.org/10.5555/Alpha'),('arxiv','https://arxiv.org/html/2401.00001v3'),('pmid','https://pubmed.ncbi.nlm.nih.gov/00042/'),('pmcid','https://pmc.ncbi.nlm.nih.gov/articles/PMC00073/')]
+    pools=[]; queries=set()
+    for i,(kind,url) in enumerate(urls):
+        c={"id":f"c{i}","title":f"Title {i}","url":url,"snippet":f"Original snippet {i}"}
+        a=P.card_anchors(url); q=next(f"{k}:{a[k]}" for k in P.PRIORITY if k in a); queries.add(q)
+        row={"card":c,"anchors":a,"selected_query":q,"status":"mapped"}; rows.append(row)
+        pools.append({"request_file":f"q{i}.json","request_sha256":"a"*64,"pool":f"pool{i}","purpose":"fixed synthetic objective","facets":[{"id":"f","description":"synthetic facet"}],"cards":[row]})
+    # A second card in another pool shares the same DOI and tests multi-card mapping.
+    c={"id":"c0b","title":"Second original title","url":urls[0][1],"snippet":"Second snippet"}
+    a=P.card_anchors(c['url']); q='doi:10.5555/alpha'
+    row={"card":c,"anchors":a,"selected_query":q,"status":"mapped"}
+    pools.append({"request_file":"q4.json","request_sha256":"b"*64,"pool":"pool4","purpose":"fixed synthetic objective","facets":[],"cards":[row]})
+    c={"id":"none","title":"Unsupported","url":"https://example.org/item","snippet":"No ID"}
+    pools.append({"request_file":"q5.json","request_sha256":"c"*64,"pool":"pool5","purpose":"fixed synthetic objective","facets":[],"cards":[{"card":c,"anchors":{},"selected_query":None,"status":"no_identifier"}]})
+    qs=sorted(queries); wires=sorted(P._wire(q) for q in qs)
+    body=json.dumps({"ids":wires},ensure_ascii=False,separators=(",",":")).encode()
+    import hashlib
+    return {"schema":"exp049-offline-plan/1","pool_count":len(pools),"card_count":6,"mapped_card_count":5,"no_identifier_count":1,"unique_query_count":len(qs),"query_ids":qs,"wire_ids":wires,"pools":pools,"batch_body_sha256":hashlib.sha256(body).hexdigest(),"batch_body_bytes":len(body)}
+
+def rec(query, paper, title):
+    ns,val=query.split(':',1)
+    aliases={'doi':'DOI','arxiv':'ArXiv','pmid':'PubMed','pmcid':'PubMedCentral'}
+    ext={}
+    if ns!='s2': ext[aliases[ns]]=val
+    return {"paperId":paper,"externalIds":ext,"title":title,"abstract":"short abstract","publicationDate":"2026-01-02","year":2026,"journal":{"name":"Journal","volume":"4","pages":"1-2"},"publicationTypes":["JournalArticle"],"authors":[{"name":"A. Author"}]}
+
+def idx_for(p, query): return p['query_ids'].index(query)
+
+plan=make_plan(); expected_names=[p['pool'] for p in plan['pools']]
+# Queries are explicit and response sequence is deliberately reversed.
+queries=plan['query_ids']; paperids=[f"{i+1:040x}" for i in range(len(queries))]
+records=[]
+for q,pid in zip(queries,paperids): records.append(rec(q,pid,'For '+q))
+records=list(reversed(records))
+raw=encoded(records)
+
+def test_actual_frozen_plan():
+    actual=json.loads((HERE/'plan.json').read_text())
+    result=P.validate_plan(actual,expected_card_count=423)
+    assert result['card_count']==423 and result['mapped_card_count']==219 and result['no_identifier_count']==204
+    assert len(result['query_ids'])==217
+    assert actual['batch_body_sha256']=='0c328f18ef4e5cfbad7319f28db64be2bf8b6c2f28f04ebd88cca9dbfbce0513'
+
+def test_url_scopes():
+    assert P.card_anchors('https://arxiv.org/html/2401.00001v7')=={'arxiv':'2401.00001'}
+    assert P.card_anchors('https://pubmed.ncbi.nlm.nih.gov/00042/')=={'pmid':'42'}
+    assert P.card_anchors('https://pmc.ncbi.nlm.nih.gov/articles/PMC00073/')=={'pmcid':'73'}
+    assert P.card_anchors('https://www.semanticscholar.org/paper/Some-Paper/extra/path/'+('a'*40))=={'s2':'a'*40}
+    assert P.card_anchors('https://example.org/'+('a'*40))=={}
+
+def test_explicit_id_mapping_and_originals():
+    out,private=P.project(plan,chunks(raw),'2026-10-04T00:00:00Z',expected_pool_names=expected_names,expected_card_count=6)
+    assert len(out['pools'])==6 and private['response_sha256']
+    for row in out['pools']:
+        if row['card']['id']=='none': assert row['metadata']['status']=='no_identifier'
+        else:
+            assert row['metadata']['status']=='matched'
+            assert row['metadata']['fields']['title']['value']=='For '+row['metadata']['requested_identifier']['query_id']
+    assert next(x for x in out['pools'] if x['card']['id']=='c0')['metadata']==next(x for x in out['pools'] if x['card']['id']=='c0b')['metadata']
+    original=next(x['card'] for x in plan['pools'][0]['cards'])
+    assert next(x for x in out['pools'] if x['card']['id']=='c0')['card']==original
+    assert 'raw' not in json.dumps(out).lower() and 'response_sha256' not in json.dumps(out)
+
+def test_selected_query_only():
+    # Reversed response ordering is covered by explicit identity mapping above;
+    # this also asserts there is no accidental position field in the public schema.
+    out,_=P.project(plan,chunks(raw),'t',expected_pool_names=expected_names,expected_card_count=6)
+    assert all('response_index' not in x['metadata'] for x in out['pools'])
+
+def test_conflicting_paper_ids_unknown():
+    p=make_plan(); q=next(x['selected_query'] for pool in p['pools'] for x in pool['cards'] if x['card']['id']=='c0')
+    body=[rec(x,paperids[i], 'same') for i,x in enumerate(p['query_ids'])]
+    duplicate_index=next(i for i,x in enumerate(p['query_ids']) if x != q)
+    body[duplicate_index]=rec(q,('f'*40),'different')
+    out,_=P.project(p,chunks(encoded(body)),'t',expected_pool_names=expected_names,expected_card_count=6)
+    assert next(x for x in out['pools'] if x['card']['id']=='c0')['metadata']['status']=='unknown'
+    assert next(x for x in out['pools'] if x['card']['id']=='c0')['metadata']['reason']=='conflicting_paper_ids'
+
+def test_duplicate_same_id_projection_conflict():
+    p=make_plan(); q=p['query_ids']; body=[rec(x,paperids[i], 'same') for i,x in enumerate(q)]
+    target=next(x['selected_query'] for pool in p['pools'] for x in pool['cards'] if x['card']['id']=='c0')
+    duplicate_index=next(i for i,x in enumerate(q) if x != target)
+    body[duplicate_index]=dict(body[idx_for(p,target)], title='changed')
+    out,_=P.project(p,chunks(encoded(body)),'t',expected_pool_names=expected_names,expected_card_count=6)
+    assert next(x for x in out['pools'] if x['card']['id']=='c0')['metadata']['status']=='unknown'
+
+def test_bounds_and_clipping():
+    p=make_plan(); body=[rec(x,paperids[i], 'T'*600) for i,x in enumerate(p['query_ids'])]
+    target=next(x['metadata']['requested_identifier']['query_id'] for x in P.project(p,chunks(encoded(body)),'t',expected_pool_names=expected_names,expected_card_count=6)[0]['pools'] if x['card']['id']=='c0')
+    r=body[idx_for(p,target)]; r['abstract']='word '*140; r['authors']=[{'name':'A'*170} for _ in range(34)]; r['publicationTypes']=['T'*90 for _ in range(18)]
+    out,_=P.project(p,chunks(encoded(body)),'t',expected_pool_names=expected_names,expected_card_count=6)
+    m=next(x['metadata'] for x in out['pools'] if x['card']['id']=='c0'); f=m['fields']
+    assert len(f['title']['value'])==512 and f['title']['clipped']
+    assert len(f['abstract']['value'])<=768 and len(f['abstract']['value'].split())<=128 and f['abstract']['clipped'] and f['abstract']['original_sha256']
+    assert len(f['authors']['values'])==32 and f['authors']['clipped_items']>0
+    assert len(f['publication_types']['values'])==16 and f['publication_types']['clipped_items']>0
+    raw='  first  word\n second '
+    unchanged=P._abstract(raw)
+    assert unchanged['value']==raw and not unchanged['clipped']
+    limited=P._abstract('x '*129)
+    assert limited['clipped'] and len(limited['value'].split())==128
+
+def test_explicit_unknown_and_coverage_not_truth():
+    p=make_plan(); body=[None for _ in p['query_ids']]
+    out,_=P.project(p,chunks(encoded(body)),'t',expected_pool_names=expected_names,expected_card_count=6)
+    assert all(x['metadata']['status'] in ('unknown','no_identifier') for x in out['pools'])
+    screen=P.information_screen(out,minimum_cards=1,expected_cards=6,required_pool_names=expected_names)
+    assert not screen['screen_pass'] and 'no claim' in screen['interpretation']
+
+def test_strict_json_and_limits():
+    expect_error(lambda:P.strict_parse(chunks(b'[{"a":1,"a":2}]'),1))
+    expect_error(lambda:P.strict_parse(chunks(b'[NaN]'),1))
+    expect_error(lambda:P.strict_parse(chunks(b'{}'),1))
+    expect_error(lambda:P.strict_parse(chunks(b'[{}]'),2))
+    expect_error(lambda:P.strict_parse(chunks(b'["x"]'),1))
+    expect_error(lambda:P.strict_parse(chunks(b'['+b'['*17+b'0'+b']'*17+b']'),1))
+    expect_error(lambda:P.strict_parse(chunks(b'["'+b'a'*(P.MAX_RECORD_BYTES+1)+b'"]'),1))
+    expect_error(lambda:P.strict_parse([b'12345'],1,cap=4))
+    expect_error(lambda:P.strict_parse(chunks(b'['+b'0,'*10000+b'0]'),10001))
+    escaped=(b'[{"paperId":"'+b'a'*40+b'","title":"'+b'\\u0061'*43000+b'"}]')
+    assert len(json.loads(escaped)[0]['title'])==43000
+    expect_error(lambda:P.strict_parse(chunks(escaped),1))
+
+def test_provider_schema_and_nonfinite():
+    p=make_plan(); body=[rec(q,paperids[i],'t') for i,q in enumerate(p['query_ids'])]
+    body[idx_for(p,'doi:10.5555/alpha')]['externalIds']['CorpusId']=215416146
+    out,_=P.project(p,chunks(encoded(body)),'t',expected_pool_names=expected_names,expected_card_count=6)
+    assert next(x for x in out['pools'] if x['card']['id']=='c0')['metadata']['status']=='matched'
+    body[0]['year']=True
+    expect_error(lambda:P.project(p,chunks(encoded(body)),'t',expected_pool_names=expected_names,expected_card_count=6))
+    body[0]['year']=2020; body[0]['paperId']='not-an-id'
+    expect_error(lambda:P.project(p,chunks(encoded(body)),'t',expected_pool_names=expected_names,expected_card_count=6))
+    body[0]['paperId']=None
+    expect_error(lambda:P.project(p,chunks(encoded(body)),'t',expected_pool_names=expected_names,expected_card_count=6))
+
+def test_information_field_specific_denominator():
+    names=['authors_only','types_only','all_unknown','empty_journal','null_author','whitespace_only']
+    base={'title':{'status':'reported','value':'title only'},'publication_date':{'status':'unknown','value':None},'year':{'status':'unknown','value':None},'journal':{'status':'unknown','value':None},'abstract':{'status':'unknown','value':None},'authors':{'status':'unknown','values':None},'publication_types':{'status':'unknown','values':None}}
+    pools=[]
+    for name in names:
+        fields=json.loads(json.dumps(base))
+        if name=='authors_only': fields['authors']={'status':'reported','values':['A. Author']}
+        if name=='types_only': fields['publication_types']={'status':'reported','values':['JournalArticle']}
+        if name=='empty_journal': fields['journal']={'status':'reported','value':{'name':{'status':'unknown','value':None},'volume':{'value':'1'},'pages':{'value':None}}}
+        if name=='null_author': fields['authors']={'status':'reported','values':[None]}
+        if name=='whitespace_only': fields['abstract']={'status':'reported','value':'   '} ; fields['publication_date']={'status':'reported','value':'  '}; fields['authors']={'status':'reported','values':['  ']}
+        pools.append({'pool':name,'card':{'id':'x'},'metadata':{'status':'matched','fields':fields}})
+    screen=P.information_screen({'pool_names':names,'pools':pools},minimum_cards=1,expected_cards=6,required_pool_names=names)
+    assert screen['qualifying_cards']==2
+    assert screen['per_pool']['authors_only']['identity_matched_nonempty_new_information']==1
+    assert screen['per_pool']['types_only']['identity_matched_nonempty_new_information']==1
+    assert screen['per_pool']['all_unknown']['identity_matched_nonempty_new_information']==0
+    assert screen['per_pool']['empty_journal']['identity_matched_nonempty_new_information']==0
+    assert screen['per_pool']['null_author']['identity_matched_nonempty_new_information']==0
+    assert screen['per_pool']['whitespace_only']['identity_matched_nonempty_new_information']==0
+
+check('actual_frozen_plan_inventory',test_actual_frozen_plan)
+check('url_identifier_normalization_and_scope',test_url_scopes)
+check('explicit_identity_order_independence_card_preservation',test_explicit_id_mapping_and_originals)
+check('no_response_position_as_identity',test_selected_query_only)
+check('conflicting_paper_ids_become_unknown',test_conflicting_paper_ids_unknown)
+check('same_paper_inconsistent_projection_becomes_unknown',test_duplicate_same_id_projection_conflict)
+check('bounded_clipping_hashes_and_counts',test_bounds_and_clipping)
+check('missing_unknown_and_nonquality_screen',test_explicit_unknown_and_coverage_not_truth)
+check('strict_json_response_and_record_bounds',test_strict_json_and_limits)
+check('provider_schema_validation',test_provider_schema_and_nonfinite)
+check('information_screen_field_specific_counts',test_information_field_specific_denominator)
+result={"schema":"exp049-projection-qualification/1","status":"pass" if all(x['status']=='pass' for x in checks) else "fail",
+        "checks":checks,"check_count":len(checks),"passed":sum(x['status']=='pass' for x in checks),"failed":sum(x['status']!='pass' for x in checks),
+        "provider_calls":0,"network_calls":0,"brave_attempts":0,"jev_calls":0,
+        "scope":"synthetic and frozen-plan structural validation only; no metadata truth or quality inference"}
+(HERE/'projection-qualification.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+print(json.dumps(result,indent=2))
+if result['status']!='pass': raise SystemExit(1)
