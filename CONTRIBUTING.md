@@ -56,8 +56,8 @@ Release Please uses `release-please-config.json` and
 existing `v<version>` format. The manifest starts from the published `v0.5.0`
 release; subsequent release PRs update it automatically.
 
-Both release discovery and changelog collection scan up to 1,000 commits. This
-avoids the inline action configuration's 250-commit discovery limit, which can
+Release discovery scans up to 1,000 releases, and changelog collection scans up
+to 1,000 commits. Explicit manifest tracking avoids the inline action configuration's 250-commit discovery limit, which can
 miss the previous release during busy development and reset the proposed version
 to `0.1.0`. If a release falls outside the configured window, increase the search
 depths before merging the release PR. Check its version and changelog against the
