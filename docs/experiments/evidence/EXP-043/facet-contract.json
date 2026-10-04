@@ -1,0 +1,19 @@
+{
+  "schema": "exp042-requested-facets/1",
+  "source_rule": "Exact ordered IDs and descriptions specified in merged EXP-042 registration; values are constructed objectives and are not recovered user intent.",
+  "facets": {
+    "q1": [{"id":"benchmarks","description":"benchmarks and studies"},{"id":"coordination","description":"coordination"},{"id":"asynchronous_work","description":"asynchronous work"},{"id":"conflict_resolution","description":"conflict resolution"}],
+    "q2": [{"id":"human_approval","description":"human approval"},{"id":"audit_logging","description":"audit logging"},{"id":"policy_controls","description":"policy controls"}],
+    "q3": [{"id":"replay","description":"replay"},{"id":"recovery","description":"recovery"},{"id":"idempotency","description":"idempotency"},{"id":"external_side_effects","description":"external side effects"}],
+    "q4": [{"id":"leakage","description":"leakage"},{"id":"decontamination","description":"decontamination"},{"id":"live_evaluation","description":"live evaluation"},{"id":"time_splits","description":"time splits"}],
+    "q5": [{"id":"verifier_specification","description":"official verifier/specification documents"},{"id":"threat_model","description":"threat model"},{"id":"builder_identity","description":"builder identity"},{"id":"attestations","description":"attestations"}],
+    "q6": [{"id":"semantic_conventions","description":"official semantic-convention documentation"},{"id":"tool_calls","description":"AI-agent tool calls"},{"id":"spans","description":"spans"},{"id":"attributes","description":"attributes"}],
+    "q7": [{"id":"support","description":"support"},{"id":"contradiction","description":"contradiction"},{"id":"citation_alignment","description":"citation alignment"},{"id":"evaluation","description":"evaluation"}],
+    "q8": [{"id":"stopping","description":"stopping"},{"id":"coverage","description":"coverage"},{"id":"uncertainty","description":"uncertainty"},{"id":"evidence_gaps","description":"evidence gaps"}],
+    "q9": [{"id":"impacts","description":"climate-change impacts"},{"id":"adaptation","description":"adaptation"},{"id":"mitigation","description":"mitigation"}],
+    "cardiac": [{"id":"prevention","description":"prevention"},{"id":"risk_factors","description":"risk factors"},{"id":"lifestyle","description":"lifestyle"},{"id":"interventions","description":"interventions"}],
+    "research": [{"id":"retrieval","description":"retrieval"},{"id":"agent_orchestration","description":"agent orchestration"},{"id":"evaluation","description":"evaluation"},{"id":"evidence_grounding","description":"evidence grounding"}],
+    "evaluation": [{"id":"software_tasks","description":"software tasks"},{"id":"measurement","description":"measurement"},{"id":"reproducibility","description":"reproducibility"},{"id":"limitations","description":"limitations"}],
+    "constructed80": [{"id":"software_tasks","description":"software tasks"},{"id":"measurement","description":"measurement"},{"id":"reproducibility","description":"reproducibility"},{"id":"limitations","description":"limitations"}]
+  }
+}

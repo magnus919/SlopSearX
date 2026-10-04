@@ -1,0 +1,20 @@
+{
+  "schema": "exp043-private-transport-qualification/1",
+  "transport_sha256": "0fabf75306e2d4822d7686e75c443fe7bf37875ee4319a64f7b4395ed089b053",
+  "provider_calls": 0,
+  "neutral_checks": 7,
+  "checks": [
+    "success provider bytes preserved with appended timing",
+    "duplicate success JSON keys rejected",
+    "nonfinite success JSON values rejected",
+    "provider timing field collision rejected",
+    "allowlisted HTTP error code retained with body hash and size, message excluded",
+    "unknown error code omitted",
+    "duplicate error JSON keys omit error code"
+  ],
+  "limitations": [
+    "Private transport source and credentials are excluded from repository artifacts.",
+    "A provider error hash or static code does not establish a root cause beyond that code.",
+    "No provider requests were made for qualification."
+  ]
+}
