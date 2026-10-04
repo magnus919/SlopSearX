@@ -1,0 +1,217 @@
+[
+  {
+    "id": "q1",
+    "kind": "research",
+    "query": "monorepo build graph affected test selection Bazel software engineering",
+    "purpose": "Choose affected tests for a coding-agent change in a monorepo. Seek public technical documentation, implementations and research reading leads; distinguish visible evidence from unseen findings.",
+    "facets": [
+      {
+        "id": "q1_f1",
+        "description": "Dependency graph"
+      },
+      {
+        "id": "q1_f2",
+        "description": "Affected-test selection"
+      },
+      {
+        "id": "q1_f3",
+        "description": "Limitations and validation"
+      }
+    ]
+  },
+  {
+    "id": "q2",
+    "kind": "research",
+    "query": "Java 8 Java 21 migration OpenRewrite automated recipes compatibility testing",
+    "purpose": "Plan and validate an automated Java 8 to Java 21 application migration. Seek public technical documentation, implementations and research reading leads; distinguish visible evidence from unseen findings.",
+    "facets": [
+      {
+        "id": "q2_f1",
+        "description": "Transformation tooling"
+      },
+      {
+        "id": "q2_f2",
+        "description": "Compatibility checks"
+      },
+      {
+        "id": "q2_f3",
+        "description": "Migration validation"
+      }
+    ]
+  },
+  {
+    "id": "q3",
+    "kind": "research",
+    "query": "AI coding agent code license attribution provenance automated detection limitations",
+    "purpose": "Find engineering mechanisms for retaining license and attribution provenance in incorporated code. Seek public technical documentation, implementations and research reading leads; distinguish visible evidence from unseen findings.",
+    "facets": [
+      {
+        "id": "q3_f1",
+        "description": "Provenance capture"
+      },
+      {
+        "id": "q3_f2",
+        "description": "Attribution mechanisms"
+      },
+      {
+        "id": "q3_f3",
+        "description": "Automated detection limitations"
+      }
+    ]
+  },
+  {
+    "id": "q4",
+    "kind": "research",
+    "query": "coding agents property based testing test oracle shrinking generated code",
+    "purpose": "Use property-based testing to validate agent-generated code. Seek public technical documentation, implementations and research reading leads; distinguish visible evidence from unseen findings.",
+    "facets": [
+      {
+        "id": "q4_f1",
+        "description": "Property design"
+      },
+      {
+        "id": "q4_f2",
+        "description": "Shrinking and diagnosis"
+      },
+      {
+        "id": "q4_f3",
+        "description": "Oracle limitations"
+      }
+    ]
+  },
+  {
+    "id": "q5",
+    "kind": "research",
+    "query": "coding agent requirements ambiguity detection human clarification specification validation",
+    "purpose": "Design useful human clarification of ambiguous coding requirements. Seek public technical documentation, implementations and research reading leads; distinguish visible evidence from unseen findings.",
+    "facets": [
+      {
+        "id": "q5_f1",
+        "description": "Ambiguity detection"
+      },
+      {
+        "id": "q5_f2",
+        "description": "Clarification workflow"
+      },
+      {
+        "id": "q5_f3",
+        "description": "Specification validation"
+      }
+    ]
+  },
+  {
+    "id": "q6",
+    "kind": "research",
+    "query": "coding agent language server compiler diagnostics multi file refactoring validation",
+    "purpose": "Guide a multi-file agent refactor using compiler and language-server feedback. Seek public technical documentation, implementations and research reading leads; distinguish visible evidence from unseen findings.",
+    "facets": [
+      {
+        "id": "q6_f1",
+        "description": "Incremental diagnostics"
+      },
+      {
+        "id": "q6_f2",
+        "description": "Refactoring workflow"
+      },
+      {
+        "id": "q6_f3",
+        "description": "Correctness checks"
+      }
+    ]
+  },
+  {
+    "id": "q7",
+    "kind": "research",
+    "query": "coding agent database schema migration rollback transaction backward compatibility testing",
+    "purpose": "Plan and validate safe agent-proposed database schema migrations. Seek public technical documentation, implementations and research reading leads; distinguish visible evidence from unseen findings.",
+    "facets": [
+      {
+        "id": "q7_f1",
+        "description": "Migration planning"
+      },
+      {
+        "id": "q7_f2",
+        "description": "Transaction and rollback constraints"
+      },
+      {
+        "id": "q7_f3",
+        "description": "Compatibility testing"
+      }
+    ]
+  },
+  {
+    "id": "q8",
+    "kind": "research",
+    "query": "coding agent flaky test regression diagnosis reproduction automated repair validation",
+    "purpose": "Distinguish flaky tests from regressions before an agent repairs code. Seek public technical documentation, implementations and research reading leads; distinguish visible evidence from unseen findings.",
+    "facets": [
+      {
+        "id": "q8_f1",
+        "description": "Failure classification"
+      },
+      {
+        "id": "q8_f2",
+        "description": "Reproduction and diagnosis"
+      },
+      {
+        "id": "q8_f3",
+        "description": "Repair validation"
+      }
+    ]
+  },
+  {
+    "id": "q9",
+    "kind": "navigation",
+    "query": "aider",
+    "purpose": "Find the official aider source repository.",
+    "facets": [],
+    "target_url": "https://github.com/Aider-AI/aider",
+    "engines": [
+      "github"
+    ]
+  },
+  {
+    "id": "q10",
+    "kind": "navigation",
+    "query": "continue IDE assistant",
+    "purpose": "Find the official continue source repository.",
+    "facets": [],
+    "target_url": "https://github.com/continuedev/continue",
+    "engines": [
+      "github"
+    ]
+  },
+  {
+    "id": "q11",
+    "kind": "navigation",
+    "query": "OpenRewrite rewrite",
+    "purpose": "Find the official rewrite source repository.",
+    "facets": [],
+    "target_url": "https://github.com/openrewrite/rewrite",
+    "engines": [
+      "github"
+    ]
+  },
+  {
+    "id": "q12",
+    "kind": "navigation",
+    "query": "hypothesis property testing",
+    "purpose": "Find the official hypothesis source repository.",
+    "facets": [],
+    "target_url": "https://github.com/HypothesisWorks/hypothesis",
+    "engines": [
+      "github"
+    ]
+  },
+  {
+    "id": "q13",
+    "kind": "navigation",
+    "query": "ast-grep",
+    "purpose": "Find the official ast-grep source repository.",
+    "facets": [],
+    "target_url": "https://github.com/ast-grep/ast-grep",
+    "engines": [
+      "github"
+    ]
+  }
+]

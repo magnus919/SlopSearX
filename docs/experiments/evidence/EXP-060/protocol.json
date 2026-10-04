@@ -1,0 +1,284 @@
+{
+  "schema": "exp060-prospective-protocol/1",
+  "status": "prospective; acquisition requires qualified runner",
+  "baseline_revision": "8b52ae2035929b52aead5f2d1cedc2f955cadc38",
+  "candidate": "frozen EXP-059",
+  "research_ids": [
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "q5",
+    "q6",
+    "q7",
+    "q8"
+  ],
+  "navigation_ids": [
+    "q9",
+    "q10",
+    "q11",
+    "q12",
+    "q13"
+  ],
+  "research_engines": [
+    "brave",
+    "openalex",
+    "semanticscholar",
+    "arxiv"
+  ],
+  "navigation_engines": [
+    "github"
+  ],
+  "engine_max_results": 20,
+  "adapter_timeout_ms": 5000,
+  "service_timeout_ms": 10000,
+  "native_engine_query": "unchanged per case",
+  "cache": false,
+  "navigation_authentication": false,
+  "planned_brave_attempts": 8,
+  "hard_brave_attempt_cap": 10,
+  "retry": false,
+  "reacquisition": false,
+  "research_operations": [
+    "q1-base",
+    "q1-repeat",
+    "q1-rotate20",
+    "q2-base",
+    "q3-base",
+    "q4-base",
+    "q4-repeat",
+    "q4-rotate20",
+    "q5-base",
+    "q6-base",
+    "q7-base",
+    "q7-repeat",
+    "q7-rotate20",
+    "q8-base",
+    "q8-repeat",
+    "q8-rotate20"
+  ],
+  "navigation_operations": [
+    "q9-base",
+    "q10-base",
+    "q11-base",
+    "q12-base",
+    "q13-base"
+  ],
+  "reference_shuffles": {
+    "A": 91960,
+    "B": 91961
+  },
+  "maximum_jev_attempts": 122,
+  "comparator_budget": {
+    "input": 3000000,
+    "observed_output": 160000,
+    "input_reservation_per_call": 64000
+  },
+  "candidate_budget": {
+    "input": 3000000,
+    "observed_output": 100000,
+    "input_reservation_per_call": 64000,
+    "attempts": 85
+  },
+  "aggregate_budget": {
+    "input": 6000000,
+    "observed_output": 260000,
+    "wall_seconds": 14400
+  },
+  "candidate_remote_ms": 2000,
+  "per_call_timeout_ms": 1000,
+  "minimum_natural_research_pools_above40": 4,
+  "primary_bootstrap_draws": 10000,
+  "primary_bootstrap_seed": 91940,
+  "navigation_arms": [
+    "w0",
+    "d",
+    "e_identity_bypass"
+  ],
+  "ordered_case_plan": [
+    {
+      "id": "q1-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q1-repeat",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q1-rotate20",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q2-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q3-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q4-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q4-repeat",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q4-rotate20",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q5-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q6-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q7-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q7-repeat",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q7-rotate20",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q8-base",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q8-repeat",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q8-rotate20",
+      "arms": [
+        "w0",
+        "d",
+        "f",
+        "e"
+      ]
+    },
+    {
+      "id": "q9-base",
+      "arms": [
+        "w0",
+        "d",
+        "e_identity_bypass"
+      ]
+    },
+    {
+      "id": "q10-base",
+      "arms": [
+        "w0",
+        "d",
+        "e_identity_bypass"
+      ]
+    },
+    {
+      "id": "q11-base",
+      "arms": [
+        "w0",
+        "d",
+        "e_identity_bypass"
+      ]
+    },
+    {
+      "id": "q12-base",
+      "arms": [
+        "w0",
+        "d",
+        "e_identity_bypass"
+      ]
+    },
+    {
+      "id": "q13-base",
+      "arms": [
+        "w0",
+        "d",
+        "e_identity_bypass"
+      ]
+    }
+  ]
+}
