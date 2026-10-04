@@ -1,0 +1,248 @@
+"""Independent offline EXP-046 probability-admission/action checks.
+
+Usage: python exp046-probability-boundary-checks.py.txt /path/to/EXP-046/replay.py.txt
+All inputs are synthetic. The only transport seam used is a local mocked response
+for raw-byte preservation; no provider, search, git, or network calls occur.
+"""
+import base64
+import decimal
+import json
+import pathlib
+import sys
+import tempfile
+import types
+
+
+def load_runner(path):
+    path = pathlib.Path(path).resolve()
+    sys.path.insert(0, str(path.parents[4]))
+    module = types.ModuleType("exp046_probability_checks")
+    module.__file__ = str(path)
+    exec(compile(path.read_text(encoding="utf-8"), str(path), "exec"), module.__dict__)
+    for name in ("validate_choice_response", "build_batch", "apply_global_action"):
+        assert callable(getattr(module, name, None)), f"missing helper: {name}"
+    return module
+
+
+def two_question_batch(R):
+    return {"model": R.MODEL, "state": {"synthetic": True}, "questions": {
+        "alpha": {"type": "choice", "instructions": "Synthetic", "criteria": {"KEEP": "Keep", "A": "A"}},
+        "beta": {"type": "choice", "instructions": "Synthetic", "criteria": {"KEEP": "Keep", "B": "B"}},
+    }}
+
+
+def probabilities(options, chosen, *, total="1"):
+    """Return a compact vector with chosen as unique maximum and requested total."""
+    names = list(options)
+    residual = decimal.Decimal(total)
+    out = {name: 0.0 for name in names}
+    out[chosen] = float(residual)
+    return out
+
+
+def parsed(R, batch, vectors=None, choices=None, *, confidence=0.8, model=None):
+    vectors, choices = vectors or {}, choices or {}
+    answers = {}
+    for qid, q in batch["questions"].items():
+        opts = list(q["criteria"])
+        choice = choices.get(qid, "KEEP")
+        answers[qid] = {"type": "choice", "choice": choice,
+                        "probabilities": vectors.get(qid, probabilities(opts, choice)),
+                        "confidence": confidence}
+    return {"model": model or R.MODEL, "answers": answers,
+            "usage": {"input_tokens": 123, "output_tokens": 45}, "_elapsed_ms": 12.0}
+
+
+def must_accept(R, batch, response, expected):
+    choice_map, distributions = R.validate_choice_response(response, batch)
+    assert choice_map == expected
+    if callable(getattr(R, "probability_sums", None)):
+        sums = R.probability_sums(response, batch)
+        for qid, answer in response["answers"].items():
+            with decimal.localcontext() as ctx:
+                ctx.prec = 400
+                expected_sum = sum((decimal.Decimal(str(v)) for v in answer["probabilities"].values()), decimal.Decimal(0))
+            assert decimal.Decimal(sums[qid]) == expected_sum
+    return distributions
+
+
+def must_reject(R, batch, response, label):
+    try:
+        R.validate_choice_response(response, batch)
+    except (ValueError, TypeError, ArithmeticError):
+        return
+    raise AssertionError(f"invalid response admitted: {label}")
+
+
+def test_two_option_edges(R):
+    batch = two_question_batch(R)
+    for total, expected_pass in (("1", True), ("0.99", True), ("1.01", True),
+                                 ("0.989", False), ("1.011", False), ("0", False)):
+        if decimal.Decimal(total) <= 1:
+            vector = {"KEEP": float(total), "A": 0.0}
+        else:
+            vector = {"KEEP": 1.0, "A": float(decimal.Decimal(total) - 1)}
+        response = parsed(R, batch, {"alpha": vector}, {"alpha": "KEEP"})
+        # Keep the other question normalized so alpha is the only variable.
+        if expected_pass:
+            got = must_accept(R, batch, response, {"alpha": "KEEP", "beta": "KEEP"})
+            assert got["alpha"] == vector, "accepted raw probabilities must remain unnormalized"
+        else:
+            must_reject(R, batch, response, f"two-option sum {total}")
+
+
+def test_71_option_edges_and_precision(R):
+    names = ["KEEP"] + [f"o{i:02d}" for i in range(70)]
+    batch = {"model": R.MODEL, "state": {}, "questions": {
+        "wide": {"type": "choice", "instructions": "Synthetic", "criteria": {k: k for k in names}}
+    }}
+    for total, expected_pass in (("1", True), ("0.99", True), ("1.01", True),
+                                 ("0.989", False), ("1.011", False), ("0", False)):
+        vector = {name: 0.0 for name in names}
+        if decimal.Decimal(total) <= 1:
+            vector["KEEP"] = float(total)
+        else:
+            vector["KEEP"] = 1.0
+            vector["o00"] = float(decimal.Decimal(total) - 1)
+        response = parsed(R, batch, {"wide": vector})
+        if expected_pass:
+            got = must_accept(R, batch, response, {"wide": "KEEP"})
+            assert got["wide"] == vector
+        else:
+            must_reject(R, batch, response, f"71-option sum {total}")
+
+    # 71 individually small, finite values expose ambient-context accumulation.
+    # Exact Decimal total is 1.01050 and must fail even with process precision=2.
+    vector = {name: 0.00015 for name in names}
+    vector["KEEP"] = 1.0
+    response = parsed(R, batch, {"wide": vector})
+    old_prec = decimal.getcontext().prec
+    try:
+        decimal.getcontext().prec = 2
+        must_reject(R, batch, response, "precision-400 accumulation under low ambient precision")
+    finally:
+        decimal.getcontext().prec = old_prec
+
+
+def test_per_question_independence(R):
+    batch = two_question_batch(R)
+    vectors = {"alpha": {"KEEP": 0.99, "A": 0.0},
+               "beta": {"KEEP": 1.0, "B": 0.01}}
+    # 0.99 and 1.01 are checked separately; residuals may not cancel across questions.
+    must_accept(R, batch, parsed(R, batch, vectors), {"alpha": "KEEP", "beta": "KEEP"})
+    vectors["alpha"] = {"KEEP": 0.989, "A": 0.0}
+    must_reject(R, batch, parsed(R, batch, vectors), "invalid unselected alpha branch cannot be masked by beta")
+
+
+def test_malformed_members_and_envelope(R):
+    batch = two_question_batch(R)
+    base = parsed(R, batch)
+    bads = []
+    def altered(label, change):
+        obj = json.loads(json.dumps(base))
+        change(obj)
+        bads.append((label, obj))
+    altered("wrong model", lambda x: x.update(model="other"))
+    altered("boolean", lambda x: x["answers"]["alpha"]["probabilities"].update(KEEP=True))
+    altered("string", lambda x: x["answers"]["alpha"]["probabilities"].update(KEEP="1"))
+    altered("null", lambda x: x["answers"]["alpha"]["probabilities"].update(KEEP=None))
+    altered("nan", lambda x: x["answers"]["alpha"]["probabilities"].update(KEEP=float("nan")))
+    altered("infinity", lambda x: x["answers"]["alpha"]["probabilities"].update(KEEP=float("inf")))
+    altered("negative", lambda x: x["answers"]["alpha"]["probabilities"].update(KEEP=-0.001))
+    altered("greater than one", lambda x: x["answers"]["alpha"]["probabilities"].update(KEEP=1.001))
+    altered("missing key", lambda x: x["answers"]["alpha"]["probabilities"].pop("A"))
+    altered("extra key", lambda x: x["answers"]["alpha"]["probabilities"].update(extra=0.0))
+    altered("missing question", lambda x: x["answers"].pop("beta"))
+    altered("extra question", lambda x: x["answers"].update(extra=x["answers"]["alpha"]))
+    altered("bad confidence", lambda x: x["answers"]["alpha"].update(confidence=float("nan")))
+    altered("reported nonmaximum", lambda x: (x["answers"]["alpha"].update(choice="A"),
+                                                 x["answers"]["alpha"]["probabilities"].update(KEEP=0.8, A=0.2)))
+    altered("zero sum", lambda x: x["answers"]["alpha"]["probabilities"].update(KEEP=0.0, A=0.0))
+    for label, response in bads:
+        must_reject(R, batch, response, label)
+
+
+def test_raw_argmax_ties_and_action_invariance(R):
+    # Synthetic complete set: one chosen victim and one outside replacement.
+    cards = [{"id": f"c{i}", "title": f"synthetic {i}", "url": f"https://example.invalid/{i}",
+              "snippet": "synthetic card"} for i in range(12)]
+    scores = {f"c{i}": (9.0 - 0.1 * i if i < 10 else 5.0) for i in range(12)}
+    state = {"candidates": cards, "purpose": "synthetic purpose",
+             "facets": [{"id": "f", "description": "synthetic facet"}], "scores": scores,
+             "order": [f"c{i}" for i in range(12)], "selected_ids": [f"c{i}" for i in range(10)],
+             "removable_ids": [f"c{i}" for i in range(10)], "eligible_ids": ["c10", "c11"],
+             "protected_ids": [], "evicted_ids": [], "step": 1}
+    batch = R.build_batch(state)
+    assert batch is not None
+    opts = batch["questions"]
+    vectors1, choices = {}, {"victim": "remove_c0", "replacement_for_c0": "replace_c10"}
+    for qid, q in opts.items():
+        names = list(q["criteria"])
+        chosen = choices.get(qid, "KEEP")
+        vectors1[qid] = {name: (1.0 if name == chosen else 0.0) for name in names}
+    # Rounded variant loses one point of total mass on the selected conditional
+    # branch while preserving its raw maximum and chosen action.
+    vectors2 = json.loads(json.dumps(vectors1))
+    vectors1["replacement_for_c0"]["replace_c10"] = 0.99
+    vectors1["replacement_for_c0"]["KEEP"] = 0.01
+    vectors2["replacement_for_c0"]["replace_c10"] = 0.98
+    vectors2["replacement_for_c0"]["KEEP"] = 0.01
+    p1, p2 = parsed(R, batch, vectors1, choices), parsed(R, batch, vectors2, choices)
+    # Exact ties still prefer KEEP, then first registered option; no normalization.
+    tie_vectors = json.loads(json.dumps(vectors1))
+    tie = parsed(R, batch, tie_vectors, choices)
+    tie["answers"]["victim"]["choice"] = "remove_c0"
+    tie["answers"]["victim"]["probabilities"]["KEEP"] = 0.5
+    tie["answers"]["victim"]["probabilities"]["remove_c0"] = 0.5
+    tie_choices, _ = R.validate_choice_response(tie, batch)
+    assert tie_choices["victim"] == "KEEP"
+    choices1, dist1 = R.validate_choice_response(p1, batch)
+    choices2, dist2 = R.validate_choice_response(p2, batch)
+    assert choices1 == choices2
+    assert dist1["replacement_for_c0"] == vectors1["replacement_for_c0"]
+    assert dist2["replacement_for_c0"] == vectors2["replacement_for_c0"]
+    out1, _, _ = R.apply_global_action(state, choices1)
+    out2, _, _ = R.apply_global_action(state, choices2)
+    assert out1["selected_ids"] == out2["selected_ids"]
+    assert "c10" in out1["selected_ids"] and "c0" not in out1["selected_ids"]
+
+
+def test_exact_raw_byte_retention(R):
+    # Exercise the actual request/receipt seam with a local deterministic fake.
+    cards = [{"id": f"r{i}", "title": f"raw {i}", "url": f"https://example.invalid/r{i}",
+              "snippet": "raw fixture"} for i in range(12)]
+    scores = {f"r{i}": (9.0 - 0.1 * i if i < 10 else 5.0) for i in range(12)}
+    state = {"candidates": cards, "purpose": "raw fixture purpose",
+             "facets": [{"id": "f", "description": "fixture"}], "scores": scores,
+             "order": [f"r{i}" for i in range(12)], "selected_ids": [f"r{i}" for i in range(10)],
+             "removable_ids": [f"r{i}" for i in range(10)], "eligible_ids": ["r10", "r11"],
+             "protected_ids": [], "evicted_ids": [], "step": 1}
+    batch = R.build_batch(state)
+    response = parsed(R, batch, choices={})
+    raw = json.dumps(response, separators=(",", ":"), ensure_ascii=False).encode()
+    old = R.H.bounded_process
+    R.H.bounded_process = lambda *args, **kwargs: (raw, 0, 10.0, False, False)
+    try:
+        with tempfile.TemporaryDirectory(prefix="exp046-raw-response-") as td:
+            R._run_one(pathlib.Path(td), ["mock"], "synthetic-op", state, 0.0, [0, 0])
+            saved = pathlib.Path(td) / "receipts" / "synthetic-op-choice-step1.response.bin"
+            assert saved.read_bytes() == raw, "rounding validation must not rewrite raw transport bytes"
+    finally:
+        R.H.bounded_process = old
+
+
+def run(path):
+    R = load_runner(path)
+    test_two_option_edges(R)
+    test_71_option_edges_and_precision(R)
+    test_per_question_independence(R)
+    test_malformed_members_and_envelope(R)
+    test_raw_argmax_ties_and_action_invariance(R)
+    test_exact_raw_byte_retention(R)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        raise SystemExit("usage: python exp046-probability-boundary-checks.py.txt /path/to/EXP-046/replay.py.txt")
+    run(sys.argv[1])
+    print("EXP-046 probability boundary checks passed; synthetic only; provider/search calls=0")

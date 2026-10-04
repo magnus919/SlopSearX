@@ -1,0 +1,43 @@
+{
+  "prepared_operations": 21,
+  "neutral_questions": 11,
+  "neutral_option_entries": 721,
+  "body_bytes": 172160,
+  "actual_rankings_computed": false,
+  "provider_calls": 0
+}
+{
+  "neutral_status": "accepted",
+  "error": null,
+  "provider_attempts": 1,
+  "retries": 0,
+  "provider_calls": 1
+}
+{
+  "decision": "development_candidate_rejected",
+  "quality_passed": false,
+  "navigation_passed": true,
+  "provider_calls": 0
+}
+{
+  "schema": "exp046-independent-cli-sequence/1",
+  "status": "passed",
+  "stages": [
+    "prepare",
+    "cli-neutral",
+    "cli-run-21",
+    "cli-analyze"
+  ],
+  "transport": "local mocked response only",
+  "transport_attempts": 22,
+  "neutral_shape": {
+    "questions": 11,
+    "options": 721
+  },
+  "case_operations": 21,
+  "analysis_decision": "development_candidate_rejected",
+  "neutral_quality_failed": true,
+  "case_attempts": 21,
+  "search_calls": 0,
+  "provider_calls": 0
+}
