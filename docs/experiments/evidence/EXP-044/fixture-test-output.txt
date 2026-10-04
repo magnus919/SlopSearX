@@ -1,0 +1,44 @@
+{
+  "prepared_source_records": {
+    "requests": 65,
+    "result_files": 219,
+    "W0": 18,
+    "D": 26,
+    "F": 21,
+    "D_F_pairs": 21
+  },
+  "pool_sizes": {
+    "q1": 32,
+    "q2": 33,
+    "q3": 30,
+    "q4": 35,
+    "q5": 30,
+    "q6": 31,
+    "q7": 32,
+    "q8": 30,
+    "q9": 38,
+    "cardiac": 44,
+    "research": 44,
+    "evaluation": 44,
+    "constructed80": 79
+  },
+  "e44_computed": false,
+  "grades_read": false,
+  "provider_calls": 0
+}
+test_fake_65_receipts_reach_real_analysis_both_refs_and_all_primary_deltas (__main__.Exp044Fixtures.test_fake_65_receipts_reach_real_analysis_both_refs_and_all_primary_deltas) ... ok
+test_four_reservations_score_floor_and_full_80_membership (__main__.Exp044Fixtures.test_four_reservations_score_floor_and_full_80_membership) ... ok
+test_invalid_pair_uses_complete_w0_never_d_only (__main__.Exp044Fixtures.test_invalid_pair_uses_complete_w0_never_d_only) ... ok
+test_malformed_valid_status_pair_falls_back_to_full_w0 (__main__.Exp044Fixtures.test_malformed_valid_status_pair_falls_back_to_full_w0) ... ok
+test_pinned_receipt_and_raw_history_tampering_rejected (__main__.Exp044Fixtures.test_pinned_receipt_and_raw_history_tampering_rejected) ... ok
+test_qualification_hashes_and_result_receipt_fail_closed (__main__.Exp044Fixtures.test_qualification_hashes_and_result_receipt_fail_closed) ... ok
+test_registered_integrity_and_65_request_inventory (__main__.Exp044Fixtures.test_registered_integrity_and_65_request_inventory) ... ok
+test_replay_and_compute_report_gate_before_real_rankings (__main__.Exp044Fixtures.test_replay_and_compute_report_gate_before_real_rankings) ... ok
+test_score_floor_all_equal_low_and_no_facet_bypass (__main__.Exp044Fixtures.test_score_floor_all_equal_low_and_no_facet_bypass) ... ok
+test_shared_leader_ties_and_top_ten_leaders (__main__.Exp044Fixtures.test_shared_leader_ties_and_top_ten_leaders) ... ok
+test_wrong_prepared_plan_and_registered_source_hash_rejected (__main__.Exp044Fixtures.test_wrong_prepared_plan_and_registered_source_hash_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 2.018s
+
+OK

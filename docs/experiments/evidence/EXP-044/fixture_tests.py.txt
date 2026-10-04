@@ -1,0 +1,228 @@
+"""No-network EXP-044 selector and fake-analysis qualification fixtures."""
+from __future__ import annotations
+from unittest.mock import patch
+import importlib.machinery, importlib.util, json, pathlib, shutil, tempfile, unittest
+
+HERE=pathlib.Path(__file__).resolve().parent
+L=importlib.machinery.SourceFileLoader("exp044_replay",str(HERE/"replay.py.txt")); S=importlib.util.spec_from_loader(L.name,L); R=importlib.util.module_from_spec(S); L.exec_module(R)
+
+class Exp044Fixtures(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.pins=R.verify_registered_inputs(HERE)
+        cls.data=R.source_data()
+        cls.grouped=R.groups_in_memory(cls.data)
+        cls.specs=R.specs_in_memory(cls.data,cls.grouped)
+
+    def test_registered_integrity_and_65_request_inventory(self):
+        chain=R.validate_published_result()
+        self.assertEqual(len(chain["integrity"]["files"]),219)
+        self.assertEqual(len(chain["receipts"]),65)
+        self.assertEqual(len(self.specs),65)
+        counts={kind:sum(s["kind"]==kind for s in self.specs) for kind in ("W0","D","F")}
+        self.assertEqual(counts,{"W0":18,"D":26,"F":21})
+        self.assertEqual(set(self.grouped),set((*R.SOFTWARE,*R.EXTENDED)))
+        self.assertEqual(len(self.grouped["constructed80"]),79)
+        self.assertEqual(sum(1 for s in self.specs if s["kind"]=="D" and s.get("pair_id")),21)
+
+    def test_four_reservations_score_floor_and_full_80_membership(self):
+        ids=[f"c{i:02d}" for i in range(80)]
+        scores={cid:(9.0 if i<10 else 5.0 if i<14 else 4.9) for i,cid in enumerate(ids)}
+        facets=[{"id":f"facet{i}","description":f"facet {i}"} for i in range(4)]
+        nouls={cid:{j:0.1 for j in range(4)} for cid in ids}
+        for j,cid in enumerate(ids[10:14]): nouls[cid][j]=0.6+j*0.05
+        # The below-floor card is the raw probability maximum but cannot reserve.
+        nouls[ids[14]]={j:0.99 for j in range(4)}
+        order,trace=R.selector(scores,nouls,facets,ids)
+        self.assertEqual(len(order),80); self.assertEqual(set(order),set(ids)); self.assertEqual(len(set(order)),80)
+        self.assertEqual(trace["leaders"], [
+            {"facet_id":"facet0","leader_id":"c10","noul":0.6,"score":5.0,"original_position":11,"original_d_top10_noul_max":0.1,"original_d_top10_noul_max_id":"c00","leader_facets":["facet0"]},
+            {"facet_id":"facet1","leader_id":"c11","noul":0.65,"score":5.0,"original_position":12,"original_d_top10_noul_max":0.1,"original_d_top10_noul_max_id":"c00","leader_facets":["facet1"]},
+            {"facet_id":"facet2","leader_id":"c12","noul":0.7,"score":5.0,"original_position":13,"original_d_top10_noul_max":0.1,"original_d_top10_noul_max_id":"c00","leader_facets":["facet2"]},
+            {"facet_id":"facet3","leader_id":"c13","noul":0.75,"score":5.0,"original_position":14,"original_d_top10_noul_max":0.1,"original_d_top10_noul_max_id":"c00","leader_facets":["facet3"]},
+        ])
+        self.assertEqual(trace["e_top10"],ids[:6]+ids[10:14])
+        self.assertEqual(trace["inserted_ids"],ids[10:14]); self.assertEqual(trace["displaced_ids"],ids[6:10])
+        self.assertEqual(trace["outside_insertions"],4)
+
+    def test_shared_leader_ties_and_top_ten_leaders(self):
+        ids=[f"c{i}" for i in range(12)]
+        scores={cid:(float(9.0-i*0.3) if i<10 else 5.0) for i,cid in enumerate(ids)}
+        facets=[{"id":"a","description":"A"},{"id":"b","description":"B"}]
+        nouls={cid:{0:0.1,1:0.1} for cid in ids}
+        # Shared eligible leader wins two facets; it is selected once and both facets use it.
+        nouls["c10"]={0:0.4,1:0.7}; scores["c10"]=5.0
+        nouls["c11"]={0:0.4,1:0.6}; scores["c11"]=5.0
+        order,trace=R.selector(scores,nouls,facets,ids)
+        self.assertEqual([x["leader_id"] for x in trace["leaders"]],["c10","c10"])
+        self.assertEqual(trace["leaders"][0]["leader_facets"],["a","b"])
+        self.assertEqual(trace["outside_insertions"],1); self.assertIn("c10",order[:10])
+        # Equal probability is broken by Score, then source/input position; protected top-ten leaders remain.
+        ids2=[f"x{i}" for i in range(12)]
+        scores2={cid:float(9.0-i*0.5) for i,cid in enumerate(ids2)}
+        scores2["x10"]=5.0; scores2["x11"]=6.0
+        nouls2={cid:{0:0.2} for cid in ids2}; nouls2["x10"][0]=0.8; nouls2["x11"][0]=0.8
+        oo,tt=R.selector(scores2,nouls2,[{"id":"a","description":"A"}],ids2)
+        self.assertEqual(tt["leaders"][0]["leader_id"],"x11")
+        top_order,top_trace=R.selector(scores2,{cid:{0:0.9 if cid=="x0" else 0.1} for cid in ids2},[{"id":"a","description":"A"}],ids2)
+        self.assertEqual(top_order,BASE_ORDER(scores2,ids2)); self.assertEqual(top_trace["inserted_ids"],[])
+
+    def test_score_floor_all_equal_low_and_no_facet_bypass(self):
+        ids=["a","b","c"]
+        scores={"a":6.0,"b":5.0,"c":4.99}
+        low={cid:{0:0.02,1:0.02} for cid in ids}
+        facets=[{"id":"f1","description":"f1"},{"id":"f2","description":"f2"}]
+        order,trace=R.selector(scores,low,facets,ids)
+        self.assertEqual(order,ids); self.assertEqual({r["leader_id"] for r in trace["leaders"]},{"a"})
+        nofacet,nt=R.selector(scores,{},[],ids)
+        self.assertEqual(nofacet,ids); self.assertEqual(nt["fallback"],"no_facets_bypass")
+        none={cid:{0:0.9} for cid in ids}
+        noeligible,trace2=R.selector({cid:4.99 for cid in ids},none,[{"id":"f","description":"f"}],ids)
+        self.assertEqual(noeligible,ids); self.assertEqual(trace2["leaders"],[])
+
+    def test_invalid_pair_uses_complete_w0_never_d_only(self):
+        ids=[f"c{i}" for i in range(12)]; w0=list(reversed(ids))
+        specs={"pool-d":{"id":"pool-d","candidate_ids":ids,"task":"t","facets":[]},"pool-f":{"id":"pool-f","candidate_ids":ids,"task":"t","facets":[{"id":"f","description":"f"}]}}
+        out,trace=R._pair_order("pool","main",specs,{"pool-d":{"status":"valid","scores":{x:(float(9.0-i*0.3) if i<10 else 5.0) for i,x in enumerate(ids)}},"pool-f":{"status":"invalid"}},w0)
+        self.assertEqual(out,w0); self.assertEqual(trace["fallback"],"full_w0_invalid_pair")
+        # A complete valid pair gets E from both answers, not D alone.
+        fs={"id":"pool-f","candidate_ids":ids,"task":"t","facets":[{"id":"f","description":"f"}]}
+        dspec={"id":"pool-d","candidate_ids":ids,"task":"t","facets":[]}
+        recs={"pool-d":{"status":"valid","scores":{x:(float(9.0-i*0.3) if i<10 else 5.0) for i,x in enumerate(ids)}},"pool-f":{"status":"valid","nouls":{x:{0:(0.9 if x=="c11" else 0.1)} for x in ids}}}
+        out2,t2=R._pair_order("pool","main",{"pool-d":dspec,"pool-f":fs},recs,w0)
+        self.assertEqual(out2[:10][-1],"c11"); self.assertIsNone(t2["fallback"])
+
+    def test_malformed_valid_status_pair_falls_back_to_full_w0(self):
+        ids=[f"c{i}" for i in range(12)]
+        scores={cid:(9.0-i*0.3 if i<10 else 5.0) for i,cid in enumerate(ids)}
+        nouls={cid:{0:0.1} for cid in ids}; nouls["c11"][0]=0.9
+        dspec={"id":"pool-d","candidate_ids":ids,"task":"t","facets":[]}
+        fspec={"id":"pool-f","candidate_ids":ids,"task":"t","facets":[{"id":"f","description":"F"}]}
+        w0=list(reversed(ids))
+        bad_pairs=[]
+        missing=dict(scores); missing.pop("c4"); bad_pairs.append(({"scores":missing},{"nouls":nouls}))
+        nonfinite=dict(scores); nonfinite["c4"]=float("nan"); bad_pairs.append(({"scores":nonfinite},{"nouls":nouls}))
+        out_of_range=dict(scores); out_of_range["c4"]=9.1; bad_pairs.append(({"scores":out_of_range},{"nouls":nouls}))
+        missing_noul=dict(nouls); missing_noul.pop("c4"); bad_pairs.append(({"scores":scores},{"nouls":missing_noul}))
+        nonfinite_noul={cid:dict(row) for cid,row in nouls.items()}; nonfinite_noul["c4"][0]=float("nan"); bad_pairs.append(({"scores":scores},{"nouls":nonfinite_noul}))
+        range_noul={cid:dict(row) for cid,row in nouls.items()}; range_noul["c4"][0]=1.01; bad_pairs.append(({"scores":scores},{"nouls":range_noul}))
+        for ddata,fdata in bad_pairs:
+            receipts={"pool-d":{"status":"valid",**ddata},"pool-f":{"status":"valid",**fdata}}
+            order,trace=R._pair_order("pool","main",{"pool-d":dspec,"pool-f":fspec},receipts,w0)
+            self.assertEqual(order,w0); self.assertTrue(trace["fallback"].startswith("full_w0"))
+        mismatched=dict(fspec); mismatched["task"]="different"
+        order,trace=R._pair_order("pool","main",{"pool-d":dspec,"pool-f":mismatched},{"pool-d":{"status":"valid","scores":scores},"pool-f":{"status":"valid","nouls":nouls}},w0)
+        self.assertEqual(order,w0); self.assertEqual(trace["fallback"],"full_w0_pair_contract")
+
+    def test_replay_and_compute_report_gate_before_real_rankings(self):
+        with patch.object(R,"build_rankings",side_effect=AssertionError("actual ranking reached before qualification")):
+            with self.assertRaisesRegex(ValueError,"qualification"):
+                R.compute_report(HERE)
+            with self.assertRaisesRegex(ValueError,"qualification"):
+                R.replay(HERE)
+
+    def test_qualification_hashes_and_result_receipt_fail_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=pathlib.Path(td)
+            for name in ("replay.py.txt","fixture_tests.py.txt","prepared-plan.json","source-pins.json","registration-integrity.json"):
+                shutil.copyfile(HERE/name,root/name)
+            (root/"manual-selector-checks.py.txt").write_text("synthetic manual checks")
+            files={name:R._hash(root/name) for name in ("replay.py.txt","fixture_tests.py.txt","prepared-plan.json","source-pins.json","registration-integrity.json")}
+            inputs={"schema":"exp044-qualified-inputs/1","registration_revision":R.REG_REVISION,"source_pins_sha256":R._hash(root/"source-pins.json"),"local_files":files}
+            (root/"qualification-input-hashes.json").write_bytes(R.pretty(inputs))
+            outfiles={name:R._hash(root/name) for name in ("replay.py.txt","fixture_tests.py.txt","prepared-plan.json","manual-selector-checks.py.txt")}
+            result={"schema":"exp044-qualification-result/1","status":"passed","qualification_input_hashes_sha256":R._hash(root/"qualification-input-hashes.json"),"files":outfiles,"fixture_tests_passed":10,"manual_checks_passed":8,"provider_calls":0,"search_calls":0}
+            (root/"qualification-result.json").write_bytes(R.pretty(result))
+            self.assertEqual(R.qualification_hash(root,True),R._hash(root/"qualification-result.json"))
+            (root/"replay.py.txt").write_text("changed runner")
+            with self.assertRaisesRegex(ValueError,"qualification hash mismatch"):
+                R.qualification_hash(root,True)
+
+    def test_wrong_prepared_plan_and_registered_source_hash_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=pathlib.Path(td)/"exp044"
+            root.mkdir()
+            for name in ("source-pins.json","registration-integrity.json","registration-review.md"):
+                shutil.copyfile(HERE/name,root/name)
+            R.prepare(root)
+            plan=R.load_json(root/"prepared-plan.json"); plan["request_inventory"][0]["id"]="tampered"
+            (root/"prepared-plan.json").write_bytes(R.pretty(plan))
+            with self.assertRaisesRegex(ValueError,"prepared source/ID plan"):
+                R.verify(root)
+            with tempfile.TemporaryDirectory() as td2:
+                bad=pathlib.Path(td2)
+                for name in ("source-pins.json","registration-integrity.json","registration-review.md"):
+                    shutil.copyfile(HERE/name,bad/name)
+                pins=R.load_json(bad/"source-pins.json"); pins["baseline_revision"]="0"; (bad/"source-pins.json").write_bytes(R.pretty(pins))
+                with self.assertRaisesRegex(ValueError,"registered file hash mismatch"):
+                    R.verify_registered_inputs(bad)
+
+    def test_pinned_receipt_and_raw_history_tampering_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            copied=pathlib.Path(td)/"EXP-043"; shutil.copytree(R.EXP043,copied)
+            plan=R.load_json(copied/"prepared-manifest.json")
+            verified=R.validate_published_result()
+            receipt_path=copied/"receipts/q1-d.json"; blob_path=copied/"receipts/q1-d.response.bin"
+            old_receipt=receipt_path.read_bytes(); old_blob=blob_path.read_bytes()
+            rec=R.load_json(receipt_path); raw=R.strict_json(old_blob); qid=next(iter(raw["answers"]))
+            raw["answers"][qid]["score"]+=0.25
+            altered=json.dumps(raw,separators=(",",":"),ensure_ascii=False).encode()
+            rec["answers"]=raw["answers"]; rec["response_bytes"]=len(altered); rec["response_sha256"]=R.sha(altered)
+            blob_path.write_bytes(altered); receipt_path.write_bytes(R.pretty(rec))
+            receipts,errors=R.BASE.read_receipts(copied,plan,True)
+            self.assertEqual(errors,[]); self.assertEqual(len(receipts),65)
+            with self.assertRaises(ValueError): R.BASE.read_history(copied,plan,verified["check"]["reference_hashes"])
+            # Changing only the structured receipt cannot silently pass raw-response validation.
+            blob_path.write_bytes(old_blob); receipt_path.write_bytes(old_receipt)
+            rec=R.load_json(receipt_path); rec["answers"][qid]["score"]+=0.25; receipt_path.write_bytes(R.pretty(rec))
+            _,errors=R.BASE.read_receipts(copied,plan,True)
+            self.assertTrue(errors)
+            receipt_path.write_bytes(old_receipt)
+            # Raw-only tampering must also fail receipt parsing/binding.
+            altered_raw=json.loads(old_blob); altered_raw["answers"][qid]["score"]+=0.25
+            blob_path.write_bytes(json.dumps(altered_raw,separators=(",",":"),ensure_ascii=False).encode())
+            _,errors=R.BASE.read_receipts(copied,plan,True)
+            self.assertTrue(errors)
+            blob_path.write_bytes(old_blob)
+            # The immutable receipt/raw pair still fails if the append-only completion ledger changes.
+            attempts_path=copied/"attempts.jsonl"; old_attempts=attempts_path.read_bytes()
+            events=[json.loads(line) for line in old_attempts.splitlines()]
+            finished=next(i for i,event in enumerate(events) if event.get("event")=="attempt_finished" and event.get("request_id")=="q1-d")
+            events[finished]["response_sha256"]="0"*64
+            attempts_path.write_bytes(b"\n".join(json.dumps(event,separators=(",",":"),ensure_ascii=False).encode() for event in events)+b"\n")
+            with self.assertRaises(ValueError): R.BASE.read_history(copied,plan,verified["check"]["reference_hashes"])
+            attempts_path.write_bytes(old_attempts)
+            begun,done,_=R.BASE.read_history(copied,plan,verified["check"]["reference_hashes"])
+            self.assertEqual(begun,done); self.assertEqual(len(done),65)
+
+    def test_fake_65_receipts_reach_real_analysis_both_refs_and_all_primary_deltas(self):
+        receipts={}
+        for spec in self.specs:
+            if spec["kind"] in {"W0","D"}:
+                answers={qid:{"type":"score","score":4.25} for qid in spec["question_ids"]}
+            else:
+                answers={qid:{"type":"noul","noul":0.0} for qid in spec["question_ids"]}
+            response={"model":R.MODEL,"answers":answers,"usage":{"input_tokens":100,"output_tokens":len(answers)},"_elapsed_ms":1.0}
+            scores,nouls,errors=R.BASE.validate_answer(response,spec)
+            self.assertEqual(errors,[],spec["id"])
+            receipts[spec["id"]]={"id":spec["id"],"status":"valid","scores":scores,"nouls":nouls,"usage":response["usage"],"remote_http_ms":1.0}
+        self.assertEqual(len(receipts),65)
+        ranks,diagnostics,nav,facet_ids=R.build_rankings(self.data,self.grouped,self.specs,receipts)
+        ids_by_pool={p:[c["id"] for c in self.grouped[p]] for p in (*R.SOFTWARE,*R.EXTENDED)}
+        synthetic_rows={p:{cid:{"lead":0,"facets":[],"uncertain":False} for cid in ids_by_pool[p]} for p in ids_by_pool}
+        refs={ref:{pool:{cid:dict(row) for cid,row in rows.items()} for pool,rows in synthetic_rows.items()} for ref in ("A","B")}
+        report=R.analyze_rankings(ranks,refs,facet_ids)
+        self.assertEqual(set(report["primary"]),{"A","B"})
+        for ref in ("A","B"):
+            self.assertEqual(set(report["primary"][ref]["paired_deltas"]),set(R.PRIMARY))
+        self.assertEqual(set(report["membership"]["by_pool"]),set((*R.SOFTWARE,*R.EXTENDED)))
+        self.assertTrue(report["membership"]["passed"])
+        self.assertFalse(report["development_screen_passed"],"neutral synthetic references must fail selection")
+        self.assertEqual({p:len(rows) for p,rows in ids_by_pool.items()}["constructed80"],79)
+        self.assertEqual(set(diagnostics),set((*R.SOFTWARE,*R.EXTENDED)))
+        self.assertEqual(len(nav),5); self.assertTrue(all(row["facet_policy_bypassed"] for row in nav))
+
+
+def BASE_ORDER(scores,ids): return R.BASE.BASE.stable_scores(scores,ids)
+
+if __name__=="__main__": unittest.main(verbosity=2)
