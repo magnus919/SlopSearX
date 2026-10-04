@@ -1,0 +1,145 @@
+{
+  "schema": "exp062-reference-association-audit/1",
+  "method": "bounded independent GPT-6 Luna source/rationale inspection; no regrading or relabeling",
+  "reference_sha256": "c9a6121b4267035aaefc051dce4a470fc9b9190ee3ae4105545a7cd2830c9c0e",
+  "clear_A_mismatches": 4,
+  "whole_reference_A_certified": false,
+  "A_quality_evidence_valid": false,
+  "post_model_reference_changes": 0,
+  "examples": [
+    {
+      "case": "q1",
+      "source_id": "c17",
+      "actual_card": {
+        "id": "c17",
+        "snippet": "Scale your organization, codebase, and Continuous Integration systems. Bazel handles codebases of any size, whether in multiple repositories or a huge monorepo.",
+        "title": "{ Fast, Correct }: Choose two - Bazel Documentation",
+        "url": "https://bazel.build/"
+      },
+      "sealed_reference_A": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q1_f2",
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Research on pipeline-aware regression-test optimization."
+      },
+      "sealed_reference_B": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official Bazel overview gives only a broad monorepo signal."
+      },
+      "rationale_matches_different_card": {
+        "source_id": "c25",
+        "title": "Practical Pipeline-Aware Regression Test Optimization for Continuous Integration"
+      }
+    },
+    {
+      "case": "q1",
+      "source_id": "c10",
+      "actual_card": {
+        "id": "c10",
+        "snippet": "Nx and Turborepo also provide built-in support for affected file detection and project graph analysis, which streamlines PR workflows. For readers newer to monorepos, this primer on what a monorepo is and why it matters lays out the benefits and common use cases clearly. Choosing the right tool depends on your use case, not just raw performance benchmarks. Below, we\u2019ve broken down the top monorepo tools for 2025, including who they\u2019re best for and where they fit in real-world setups. Bazel is a production-grade build tool created by Google to manage one of the world\u2019s largest monorepos.",
+        "title": "Top 5 Monorepo Tools for 2026 - Aviator Blog",
+        "url": "https://www.aviator.co/blog/monorepo-tools/"
+      },
+      "sealed_reference_A": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2",
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Direct research lead on repo graphs for coding-agent test structure."
+      },
+      "sealed_reference_B": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Tool comparison explicitly mentions affected detection and project graphs."
+      },
+      "rationale_matches_different_card": {
+        "source_id": "c23",
+        "title": "Repository Intelligence Graph: Deterministic Architectural Map for LLM Code Assistants"
+      }
+    },
+    {
+      "case": "q1",
+      "source_id": "c3",
+      "actual_card": {
+        "id": "c3",
+        "snippet": "<strong>A monorepo is ready for a graph-aware build tool when duplicated work and implicit dependencies are measurable problems and when the team can own a new build model</strong>. There is no universal threshold of projects, developers, or CI minutes.",
+        "title": "When Is a Monorepo Ready for Bazel, Pants, Nx, or Turborepo?",
+        "url": "https://oneuptime.com/blog/post/2026-07-28-monorepo-bazel-pants-nx-turborepo-readiness/view"
+      },
+      "sealed_reference_A": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2",
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Targets affected package detection, including agent-generated cross-package changes."
+      },
+      "sealed_reference_B": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Tool readiness criteria are background, not test-selection methods."
+      },
+      "rationale_matches_different_card": {
+        "source_id": "c0",
+        "title": "Monorepo Testing with Affected Package Detection: Run Only What Changed | QASkills.sh"
+      }
+    },
+    {
+      "case": "q1",
+      "source_id": "c23",
+      "actual_card": {
+        "id": "c23",
+        "snippet": "Repository aware coding agents often struggle to recover build and test structure, especially in multilingual projects where cross language dependencies are encoded across heterogeneous build systems and tooling. We introduce the Repository Intelligence Graph (RIG), a deterministic, evidence backed architectural map that represents buildable components, aggregators, runners, tests, external packages, and package managers, connected by explicit dependency and coverage edges that trace back to con",
+        "title": "Repository Intelligence Graph: Deterministic Architectural Map for LLM Code Assistants",
+        "url": "https://doi.org/10.48550/arxiv.2601.10112"
+      },
+      "sealed_reference_A": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q1_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Bazel incremental build background."
+      },
+      "sealed_reference_B": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Repository graph explicitly models build/test structure for coding agents."
+      },
+      "rationale_matches_different_card": {
+        "source_id": "c17",
+        "title": "{ Fast, Correct }: Choose two - Bazel Documentation"
+      }
+    }
+  ],
+  "inspected_B_regression_cards": "q4/q7 inspected displacement rows matched their displayed evidence; bounded review does not certify the entire reference set"
+}
