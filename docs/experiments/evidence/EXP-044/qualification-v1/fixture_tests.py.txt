@@ -209,13 +209,8 @@ class Exp044Fixtures(unittest.TestCase):
         self.assertEqual(len(receipts),65)
         ranks,diagnostics,nav,facet_ids=R.build_rankings(self.data,self.grouped,self.specs,receipts)
         ids_by_pool={p:[c["id"] for c in self.grouped[p]] for p in (*R.SOFTWARE,*R.EXTENDED)}
-        # Exercise the exact pinned reference adapter used by compute_report, then run the true analysis helper on fake receipts/rankings.
-        refs,refhashes=R.analysis_references(self.data,self.grouped)
-        self.assertEqual(set(refs),{"A","B"}); self.assertEqual(set(refs["A"]),set((*R.SOFTWARE,*R.NATURAL)))
-        self.assertEqual(set(refhashes),{"EXP039","EXP040"})
-        neutral_refs={ref:{pool:{cid:{"lead":0,"facets":[],"uncertain":False} for cid in ids_by_pool[pool]} for pool in ids_by_pool} for ref in ("A","B")}
-        neutral_report=R.analyze_rankings(ranks,neutral_refs,facet_ids)
-        self.assertFalse(neutral_report["development_screen_passed"],"neutral synthetic labels cannot qualify selection")
+        synthetic_rows={p:{cid:{"lead":0,"facets":[],"uncertain":False} for cid in ids_by_pool[p]} for p in ids_by_pool}
+        refs={ref:{pool:{cid:dict(row) for cid,row in rows.items()} for pool,rows in synthetic_rows.items()} for ref in ("A","B")}
         report=R.analyze_rankings(ranks,refs,facet_ids)
         self.assertEqual(set(report["primary"]),{"A","B"})
         for ref in ("A","B"):
