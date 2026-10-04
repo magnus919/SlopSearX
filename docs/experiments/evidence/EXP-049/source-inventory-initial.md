@@ -1,0 +1,33 @@
+# Saved source-information inventory for a prospective capture design
+
+This is a read-only inventory of public source-card metadata. I inspected candidate fields and source/provenance records only; no sealed references, annotations, model probabilities, provider responses, searches, or page fetches were used for selection. No new ranking or answerability evaluation was run.
+
+## What the frozen captures actually preserve
+
+The relevant acquisition snapshots are:
+
+- `docs/experiments/evidence/EXP-036/q1-frozen.json` through `q8-frozen.json`: the eight registered software pools, 30–35 cards each (257 total). Each candidate object has exactly `id`, `title`, `url`, and `snippet`.
+- `docs/experiments/evidence/EXP-040/extended-pools.json`: cardiac (44 cards, source `EXP-036/q10-frozen.json`), research (45, source `EXP-034/full-research-frozen.json`), and evaluation (44, source `EXP-034/full-evaluation-frozen.json`). Their three `source_sha256` values match the referenced frozen files. Each candidate again has only `id`, `title`, `url`, and `snippet`.
+- The corresponding prepared states `docs/experiments/evidence/EXP-040/prepared/{cardiac,research,evaluation}-d.json` retain the same four candidate fields. EXP-046 step-one requests likewise have only those four candidate fields.
+
+Across the eight software pools and three natural pools, that is 390 candidate rows. There are no per-card `engine`/`engines`, `published_date`, structured `payload`, authors, typed DOI/PMID/arXiv fields, publication types, abstract field, or `work_group`/member provenance in these saved card rows. The EXP-036 `source_capture` object is query-level only: it records aggregate engine outcome/status counts, partial coverage and `complete_deployed_revision: unverified`, not which engine supplied each candidate. EXP-034 frozen source files have no equivalent per-card engine receipt. These are saved card snapshots, not preserved full normalized SearchResult records or raw engine-response receipts; I cannot determine whether richer records existed elsewhere.
+
+## Identifiers and clipping visible in the saved data
+
+Using only candidate URLs and the current URL recognizers, 185 of 390 rows contain at least one recognizable identifier URL. The eight software pools contain 76 DOI resolver URLs, 27 arXiv URLs, and 3 PMC article URLs (106 rows with any such anchor). The natural pools contain 30 DOI resolver URLs, 13 arXiv URLs, 32 PubMed URLs, and 4 PMC article URLs (79 rows with any anchor). Counts are card rows, not unique works or proof of identity; some cross-indexed records may refer to the same publication. The saved snapshots have no structured source-reported crosswalks between DOI, PMID/PMCID, and arXiv IDs.
+
+Visible snippets are already excerpts, but their exact earlier clipping rule is not documented. Among these 390 rows, 227 snippets exceed 300 characters and the maximum is 848 characters. The current MCP compact-card projection explicitly slices to 300 characters (`slopsearx/mcp/result_serialization.py`, `SNIPPET_LENGTH` and `_result_to_dict`), so these historical snapshots are not identical to that current compact projection. Do not infer that their longer snippets are complete abstracts: content may already have been bounded upstream, and no full articles are present.
+
+The EXP-040 research source has 45 candidates while the matching EXP-046 research request has 44. The sole missing original row is `c1`, URL `https://arxiv.org/html/2501.09136v4`; the request keeps `c0`, `https://arxiv.org/abs/2501.09136`. The available URL text identifies a shared arXiv base with a versioned HTML route. This is an observable pool-membership difference consistent with the current grouping policy's arXiv-base grouping; it does not establish publication equivalence beyond that identifier relation. Cardiac and evaluation retain all 44 rows in their corresponding EXP-046 requests.
+
+## Current runtime metadata and grouping capability
+
+Current `SearchResult` (`slopsearx/adapter.py`) carries `engine`, contributing `engines`, `published_date`, structured `payload`, and optional `work_group` in addition to title/URL/content. Science adapters vary in what they report: arXiv can retain arXiv ID, DOI, authors, journal reference, revision date and abstract in payload; Semantic Scholar reports external DOI/PMID/PMCID/arXiv identifiers and authors; PubMed reports typed IDs, publication types, journal and a full author list; OpenAlex reports DOI/OpenAlex ID and a publication date while its abstract contributes to content. These are source-adapter fields, not a uniform guarantee for every candidate. `payload.provenance` distinguishes adapter-reported, normalized and inferred fields.
+
+`slopsearx/scholarly.py` groups before ranking (`slopsearx/service.py` search path). Identity uses normalized URL, recognized DOI/PMID/PMCID/arXiv IDs, and bounded explicit version relations; it does not infer identity from title, citations, or date. It can retain group members with engine, original position, fields, identifiers and payload, subject to 64-member/64 KB group and 128 KB record caps. Current URL identity recognizes DOI resolver and selected Nature routes, PubMed/PMC routes, and arXiv abs/pdf/html routes. DOI/arXiv or DOI/PMID cross-namespace links require explicit source metadata; the URL-only historical snapshots cannot supply those relations. `slopsearx/publication_metadata.py` allowlists DOI, journal/publisher/type and related bibliographic fields, author/ISSN/ISBN/tag lists, and volume; publication date remains on the common result record. The compact MCP card limits snippets and may omit payloads above its inline threshold, while the expanded read path can carry retained payloads.
+
+## Implication for the next preregistration
+
+Freeze the actual pre-ranking, pre-projection normalized records needed for provenance and identity alongside the exact public card text: per-card contributing engines, reported identifiers, publication date, source-reported typed fields, clipping/projection status, and any preexisting group membership/representative decision. Preserve both the exact visible card and its structured provenance, and treat absent or conflicting fields as unknown. Keep source authority and usefulness as separate, unverified judgments. The historical four-field snapshots can support replay of the visible-card question, but cannot support retrospective tests of how richer metadata or current identity grouping would have changed the candidate pool.
+
+No private endpoints, credentials or deployment metadata are included. No provider, Brave, engine, page-fetch, reviewer, or search calls were made.
