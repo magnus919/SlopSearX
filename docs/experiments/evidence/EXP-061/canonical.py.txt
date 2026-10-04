@@ -39,7 +39,7 @@ def _sort_key(card: dict[str, str]) -> tuple[bytes, bytes, bytes, bytes]:
 
 def canonical_policy_cards(case: dict, provenance_cards: list[dict]) -> list[dict[str, str]]:
     """Validate a complete pool with frozen EXP-059 admission and return copied canonical cards."""
-    if type(case) is not dict or set(case) < {"purpose", "facets"}:
+    if type(case) is not dict or not {"purpose", "facets"} <= set(case):
         raise ValueError("case must provide purpose and facets")
     if type(provenance_cards) not in (list, tuple):
         raise ValueError("cards must be a list or tuple")

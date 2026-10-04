@@ -33,3 +33,39 @@ def analyze_arm(run):
     result.update(schema="exp061-arm-analysis/1",evidence_mode="exposed development",adoption_eligible=False,metric_source_sha256=SOURCE_SHA)
     if result.get("outcome")=="development_confirmation_passed":result["outcome"]="exposed_screen_passed"
     return result
+
+
+def arm_views(paired):
+    if paired.get("schema")!="exp061-paired-artifacts/1" or paired.get("reference_source")!="exp060_exposed" or paired.get("historical_labels_reused")is not True:raise ValueError("paired-provenance")
+    import json
+    original=analyzer()
+    protocol=json.loads((SOURCE.parent / "protocol.json").read_bytes())
+    plan=original._expected_ops(protocol)
+    rows={row["id"]:row for row in paired["operations"]}
+    if len(rows)!=len(paired["operations"]):raise ValueError("duplicate-pair")
+    expected={op["id"] for op in plan}
+    if not set(rows)<=expected:raise ValueError("unknown-pair")
+    views={}
+    for name in ("native","canonical"):
+        view={"schema":"exp061-arm-artifacts/1","reference_source":"exp060_exposed","historical_labels_reused":True,"pools":copy.deepcopy(paired["pools"]),"references":copy.deepcopy(paired["references"]),"operations":[],"status":paired["status"],"physical_budget_source":"paired artifact; shared W0 counted once"}
+        for op in plan:
+            qid,mode=op["id"].split("-",1)
+            pair=rows.get(op["id"])
+            if pair is None:
+                view["operations"].append({"id":op["id"],"case":qid,"mode":mode,"status":"not-invoked"});continue
+            if pair.get("case")!=qid or pair.get("mode")!=mode:raise ValueError("pair-identity")
+            if any(row.get("arm") not in {"native","canonical"} for row in pair["arms"]):raise ValueError("unknown-arm")
+            matches=[row for row in pair["arms"] if row.get("arm")==name]
+            if len(matches)>1:raise ValueError("duplicate-arm")
+            if not matches:
+                view["operations"].append({"id":op["id"],"case":qid,"mode":mode,"status":"not-invoked"});continue
+            row=copy.deepcopy(matches[0]);row.update(id=op["id"],case=qid,mode=mode,cards=copy.deepcopy(pair["nativeopcards"]))
+            if pair["status"]!="valid":row["status"]="failed"
+            shared=pair["shared_w0"]["order"]
+            if row["status"]=="valid" and row["orders"]["w0"]!=shared:raise ValueError("unshared-baseline")
+            w0=[{**copy.deepcopy(a),"shared_receipt":True,"physical_call_counted_once":True} for a in pair["w0_attempts"]]
+            row["attempts"]=w0+row.get("attempts",[])
+            view["operations"].append(row)
+            if mode=="base" and row["status"]=="valid":view["pools"][qid]["orders"]=copy.deepcopy(row["orders"])
+        views[name]=view
+    return views

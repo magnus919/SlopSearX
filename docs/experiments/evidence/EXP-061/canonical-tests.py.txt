@@ -88,6 +88,11 @@ class CanonicalPreparationTests(unittest.TestCase):
         expected = sorted(cards, key=lambda c: tuple(c[k].encode("utf-8") for k in ("url", "title", "snippet", "id")))
         self.assertEqual(result, expected)
 
+    def test_missing_case_fields_fail_closed_with_unrelated_fields(self):
+        for case in ({"facets": [], "extra": 1}, {"purpose": "p", "extra": 1}):
+            with self.assertRaises(ValueError):
+                C.canonical_policy_cards(case, fixture_cards(2))
+
     def test_frozen_policy_accepts_80_and_rejects_overflow_duplicates_and_malformed_cards(self):
         case = q4_case()
         accepted = C.canonical_policy_cards(case, fixture_cards(80))

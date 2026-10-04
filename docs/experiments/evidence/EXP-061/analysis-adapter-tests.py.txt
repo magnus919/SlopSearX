@@ -35,4 +35,31 @@ class Tests(unittest.TestCase):
         self.assertEqual(result["outcome"],"inconclusive")
         self.assertFalse(result["adoption_eligible"])
 
+    def paired_fixture(self):
+        original=FIX.fixture();pairs=[]
+        for op in original["operations"]:
+            shared=[copy.deepcopy(a) for a in op["attempts"] if a["arm"]=="w0"]
+            arms=[]
+            for name in ("native","canonical"):
+                row=copy.deepcopy(op);row["arm"]=name
+                row["attempts"]=[a for a in row["attempts"] if a["arm"]!="w0"]
+                arms.append(row)
+            pairs.append({"id":op["id"],"case":op["case"],"mode":op["mode"],"status":"valid","nativeopcards":op["cards"],"arms":arms,"w0_attempts":shared,"shared_w0":{"order":op["orders"]["w0"]}})
+        return {"schema":"exp061-paired-artifacts/1","reference_source":"exp060_exposed","historical_labels_reused":True,"status":"complete","pools":original["pools"],"references":original["references"],"operations":pairs}
+
+    def test_arm_views_preserve_metrics_and_reference_shared_w0(self):
+        paired=self.paired_fixture();views=A.arm_views(paired)
+        for name,view in views.items():
+            result=A.analyze_arm(view)
+            self.assertEqual(result["outcome"],"exposed_screen_passed")
+            self.assertFalse(result["adoption_eligible"])
+            self.assertTrue(all(a["shared_receipt"] for op in view["operations"] for a in op["attempts"] if a["arm"]=="w0"))
+            self.assertNotIn("budget",view)
+        self.assertEqual(A.analyze_arm(views["native"])["gates"],A.analyze_arm(views["canonical"])["gates"])
+
+    def test_arm_views_reject_unshared_baseline(self):
+        paired=self.paired_fixture()
+        paired["operations"][0]["arms"][0]["orders"]["w0"].reverse()
+        with self.assertRaisesRegex(ValueError,"unshared-baseline"):A.arm_views(paired)
+
 if __name__=="__main__":unittest.main()
