@@ -20,4 +20,4 @@
 
 ## Readout
 
-Pending.
+Outcome: **not-supported** for ordinary-search adoption. All 32 calls valid; all guardrails passed. Original q1–q8 mean nDCG deltas −0.018892 root / −0.038198 Luna fail the primary +0.05 threshold. Navigation passed 5/5; q9 improved separately. No deployment or ranking-default change. See [complete readout](evidence/EXP-038/readout.md), [raw analysis](evidence/EXP-038/analysis.json), and [case diagnosis](evidence/EXP-038/diagnosis.md). Registration `821b1b7`, tooling `91916de`, prepared bodies `1076d95`; 0/10 Brave attempts used. The post-run baseline-source snapshot corrects future reproduction after transport-only source changes, with identical frozen source hash and no repeated calls.

@@ -166,7 +166,9 @@ def load_w0_contract(project: pathlib.Path, projections: dict[str, Any]) -> tupl
     path = project / "slopsearx/rerank.py"
     expected = projections["source_hashes_sha256"]["slopsearx/rerank.py"]
     if sha256(path.read_bytes()) != expected:
-        raise ValueError("pinned W0 rerank.py source hash mismatch")
+        path = project / "docs/experiments/evidence/EXP-038/baseline-rerank.py.txt"
+        if not path.is_file() or sha256(path.read_bytes()) != expected:
+            raise ValueError("pinned W0 rerank.py source hash mismatch")
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     model = literal_assignment(tree, "MODEL")
     levels = literal_assignment(tree, "LEVELS")
