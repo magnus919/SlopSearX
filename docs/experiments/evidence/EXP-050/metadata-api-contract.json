@@ -31,5 +31,16 @@
   "max_record_bytes": 256000,
   "max_provider_list_entries": 10000,
   "http_timeout_scope": "absolute monotonic per attempt including response read",
-  "max_run_seconds": 120
+  "max_run_seconds": 120,
+  "matching_external_id_keys": [
+    "DOI",
+    "ArXiv",
+    "PubMed",
+    "PubMedCentral"
+  ],
+  "matching_external_id_value_types": [
+    "string",
+    "null"
+  ],
+  "unknown_external_id_namespaces": "ignored; bounded JSON only; never projected"
 }

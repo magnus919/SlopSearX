@@ -1,0 +1,72 @@
+"""Synthetic combined planner/runner/projection qualification. No live transport."""
+from __future__ import annotations
+import asyncio, hashlib, importlib.util, importlib.machinery, json, sys
+from pathlib import Path
+HERE=Path(__file__).resolve().parent
+ROOT=HERE.parents[3]
+sys.path.insert(0,str(ROOT))
+def load(name,path):
+ loader=importlib.machinery.SourceFileLoader(name,str(path))
+ spec=importlib.util.spec_from_loader(name,loader);module=importlib.util.module_from_spec(spec)
+ sys.modules[name]=module;loader.exec_module(module);return module
+runner=load('metadata_integration_runner',HERE/'runner.py.txt')
+projection=load('metadata_integration_projection',HERE/'projection.py.txt')
+plan=json.loads((HERE/'plan.json').read_text());body=(HERE/'batch-body.json').read_bytes();contract=(HERE/'metadata-api-contract.json').read_bytes()
+sha=lambda b:hashlib.sha256(b).hexdigest()
+names=[p['pool'] for p in plan['pools']]
+checks={}
+class Response:
+ status=200;headers={}
+ def __init__(self,raw):self.raw=raw;self.closed=False
+ async def iter_bytes(self):
+  for offset in range(0,len(self.raw),32768):yield self.raw[offset:offset+32768]
+ async def close(self):self.closed=True
+async def exercise(raw):
+ events=[];requests=[];response=Response(raw)
+ async def ledger(event):events.append(event.copy());await asyncio.sleep(0)
+ async def transport(request):
+  assert events and events[-1]['event']=='attempt_started'
+  assert request.body==body and request.fields==runner.FIELDS and request.url==runner.ENDPOINT
+  assert 'x-api-key' not in request.headers
+  requests.append(request);return response
+ def project(raw):
+  public,private=projection.project(plan,[raw],'2000-01-01T00:00:00Z',expected_pool_names=names,expected_card_count=423)
+  return public
+ result=await runner.run(body,sha(body),contract,sha(contract),transport,ledger,project,project_input="raw")
+ return result,events,requests,response
+records=[]
+for wire in json.loads(body)['ids']:
+ external={};paper=hashlib.sha1(wire.encode()).hexdigest()
+ if ':' in wire:
+  namespace,value=wire.split(':',1)
+  external[{'DOI':'DOI','ARXIV':'ArXiv','PMID':'PubMed','PMCID':'PubMedCentral'}[namespace]]=value
+ else:paper=wire
+ records.append({'paperId':paper,'externalIds':external,'title':'Synthetic fixture only','abstract':'Synthetic metadata for offline qualification.','authors':[{'name':'Synthetic Author'}],'publicationDate':'2000-01-01','publicationTypes':['JournalArticle'],'journal':{'name':'Synthetic journal'},'year':2000})
+encode=lambda value:json.dumps(value,separators=(',',':'),allow_nan=False).encode()
+async def main():
+ checks['exact_frozen_body_hash']=sha(body)==plan['batch_body_sha256'] and len(body)==plan['batch_body_bytes']
+ result,events,requests,response=await exercise(encode(list(reversed(records))))
+ checks['shuffled_actual_217_query_plan_completes']=result['outcome']=='complete' and len(requests)==1
+ assert result['outcome']=='complete', json.dumps({k:result.get(k) for k in ['outcome','stop_reason','attempt_count','attempts']})
+ public=result['result'];checks['all_423_original_cards_unchanged']= [r['card'] for r in public['pools']]==[r['card'] for p in plan['pools'] for r in p['cards']]
+ checks['all_219_mapped_cards_identity_matched']=sum(r['metadata']['status']=='matched' for r in public['pools'])==219
+ checks['all_204_no_identifier_retained']=sum(r['metadata']['status']=='no_identifier' for r in public['pools'])==204
+ screen=projection.information_screen(public,required_pool_names=names)
+ checks['synthetic_information_screen_uses_all_12_pools']=screen['screen_pass'] and screen['qualifying_cards']==219 and len(screen['per_pool'])==12
+ checks['durable_ledger_precedes_single_request']=events[0]['event']=='attempt_started' and events[-1]['event']=='runner_stopped' and result['attempt_count']==1
+ checks['response_closed']=response.closed
+ checks['raw_receipt_only_in_private_runner_result']= 'response_sha256' in result['attempts'][0] and 'response_sha256' not in json.dumps(public)
+ empty,_,_,_=await exercise(encode([None]*217))
+ empty_screen=projection.information_screen(empty['result'],required_pool_names=names)
+ checks['all_null_retains_cards_without_screen_gain']=empty['outcome']=='complete' and len(empty['result']['pools'])==423 and not empty_screen['screen_pass'] and empty_screen['qualifying_cards']==0
+ invalid,_,invalid_requests,_=await exercise(b'[{"paperId":"x","paperId":"y"}]')
+ checks['duplicate_key_fails_atomically_without_retry']=invalid['outcome']=='incomplete' and invalid['result'] is None and len(invalid_requests)==1
+ too_short,_,short_requests,_=await exercise(encode(records[:-1]))
+ checks['wrong_count_fails_atomically_without_retry']=too_short['outcome']=='incomplete' and too_short['result'] is None and len(short_requests)==1
+ oversized=json.loads(encode(records));oversized[0]['abstract']='x'*256001
+ bad,_,bad_requests,_=await exercise(encode(oversized))
+ checks['parsed_callback_enforces_record_cap']=bad['outcome']=='incomplete' and bad['result'] is None and len(bad_requests)==1
+ report={'schema':'metadata-integration-qualification/1','passed':all(checks.values()),'checks':checks,'checks_passed':sum(checks.values()),'network_calls':0,'credential_reads':0,'provider_calls':0,'fixture_only':True,'input_hashes':{p.name:sha(p.read_bytes()) for p in [HERE/'plan.json',HERE/'batch-body.json',HERE/'runner.py.txt',HERE/'projection.py.txt',Path(__file__)]}}
+ (HERE/'integration-qualification.json').write_text(json.dumps(report,indent=2)+'\n')
+ print(json.dumps(report,indent=2));assert report['passed']
+asyncio.run(main())
