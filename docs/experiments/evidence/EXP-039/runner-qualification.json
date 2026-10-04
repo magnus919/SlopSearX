@@ -1,0 +1,21 @@
+{
+  "status": "qualified_for_bounded_development_run",
+  "provider_calls": 0,
+  "brave_attempts_used": 0,
+  "brave_attempt_limit": 10,
+  "offline_fixtures_passed": 13,
+  "selftest": "passed",
+  "prepared_requests_verified": 40,
+  "independent_review_findings": [
+    "Token preflight estimates cannot enforce a hard provider spend ceiling. Registration clarifies actual returned usage gates without changing numeric limits.",
+    "Direct-child cleanup left descendants possible. Final runner uses an owned POSIX process group and reserves cleanup time within its wall allowance; descendant fixture passed."
+  ],
+  "reference_scope": "Two independent assistant references, structurally checked and semantically spot-checked; uncertainty and disagreement retained. Not human gold labels.",
+  "hashes": {
+    "replay.py.txt": "73ecbce9a04e0952fb2cb10c17728d887e6975ace5c9d22166c58ba980b06669",
+    "fixture_tests.py.txt": "ab2d1f8baa53c59330cf92335abde6616d887fdf4942ee95dfc8f81204430a5e",
+    "reference-a.json": "ff60cf87d657f9305de457889efb41c2e171676d54d894a053287a4470618202",
+    "reference-b.json": "07f4d5bb57adbd1066f0dcdd48a8fd4bd08a942a17ef1cb88a436ee25915cc76",
+    "prepared-manifest.json": "adda1c26c870390b77fdfd10023a53946c06ffda309ba645094c972bceeeae38"
+  }
+}

@@ -55,6 +55,12 @@ The task texts deliberately clarify a source-discovery/read-list objective, but 
 
 The four-arm design holds transport, shared context shape, candidate ordering, model, score scale, and sort fixed. It can estimate context and rubric effects on these saved pools, but it does not establish whole-set (>40) behavior, fresh search performance, provider decontamination, product utility, or generalization to all query intents. Exact navigation and ordinary query handling are not the treatment objective in this study; no default path should be changed based on it.
 
+## Before-dispatch qualification clarification
+
+Recorded before the first EXP-039 provider attempt: 2,000,000 input tokens and 100,000 output tokens are **observed-usage qualification gates**, checked against provider-reported usage after every call. Preflight reserves are conservative estimates, not provider-enforced spend guarantees. A crossing or unknown usage stops further dispatch and retains the operational failure; no successful qualification may exceed those totals. The documented [TypeSafe request schema](https://docs.typesafe.ai/api) exposes state, model and questions; no per-call output-token cap was found in that reference. Do not invent an unsupported request parameter or claim a hard spend bound. The numerical gates, 40-call limit, request/response byte bounds, one-second remote deadline and primary comparison remain unchanged. User authorization for the inexpensive public-case Jev work remains applicable; the separate ten-attempt Brave ceiling is counted before dispatch and is untouched.
+
+Independent offline qualification also identified descendant-process cleanup as a runner boundary to fix before calls. The local transport runs in its own process session; termination must clean up its owned process group and reserve cleanup time inside the configured wall allowance. This is an offline runner repair, with no candidate instruction, input, reference rubric or adoption-gate change.
+
 ## Timebox
 
 Use a four-hour execution window for this development cycle. At the limit, preserve all partial artifacts and report incomplete status; do not extend, replace failed calls, or consume confirmation-search budget.

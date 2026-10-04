@@ -1,0 +1,3175 @@
+{
+  "schema": "exp039-annotation/1",
+  "reviewer": "B",
+  "items": [
+    {
+      "label": "q1-r00",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: benchmarks, coordination, conflict_resolution. Title: CooperBench: Benchmarking Agent Teams | Why Coding Agents Cannot be Your Teammates Yet. Snippet: The benchmark includes 652 tasks from 12 popular open-source libraries across Python, TypeScript, Go, and Rust. ... Each task assigns two agents…"
+    },
+    {
+      "label": "q1-r01",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: benchmarks, coordination, conflict_resolution. Title: CooperBench: Why Coding Agents Cannot be Your Teammates Yet. Snippet: To test this hypothesis, we introduce CooperBench, a benchmark of over 600 collaborative coding tasks across 12 libraries in 4 programming langua…"
+    },
+    {
+      "label": "q1-r02",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: coordination, conflict_resolution. Title: Multi-agent Collaboration with State Management. Snippet: Recent advances in multi-agent systems have shown great potential for solving complex tasks. However, when multiple agents edit a shared codebase…"
+    },
+    {
+      "label": "q1-r03",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: coordination. Title: SPOQ: Specialist Orchestrated Queuing for Multi-Agent Software Engineering. Snippet: Multi-agent AI systems show promise for automating software engineering tasks, yet existing approaches suffer from coordination overhead, quality…"
+    },
+    {
+      "label": "q1-r04",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "MPAC discusses independent principals coordinating over shared state and names coding agents as an example; this is useful protocol material though not an empirical benchmark."
+    },
+    {
+      "label": "q1-r05",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "only broad or indirect task overlap; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: coordination. Title: Coordination in multi-agent systems. Snippet: Coordination, as an art of managing interdependencies among activities, is one of the central research issues in multi-agent systems. This thesis…"
+    },
+    {
+      "label": "q1-r06",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "benchmarks"
+      ],
+      "uncertain": true,
+      "rationale": "only broad or indirect task overlap; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: benchmarks. Title: SW-$A^2$-Bench: Benchmarking Autonomous Software Agent Generation for Agentic Web. Snippet: The Agentic Web is emerging as a paradigm in which autonomous software agents interact with online resources and with each other to accomplish us…"
+    },
+    {
+      "label": "q1-r07",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: benchmarks, coordination, conflict_resolution. Title: Multi-agent Collaboration with State Management · Pith Review. Snippet: STORM manages agent states by mediating their interactions with the shared workspace, ensuring that each agent operates on a consistent view of t…"
+    },
+    {
+      "label": "q1-r08",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "a useful partial lead for the stated purpose; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: benchmarks, coordination. Title: An Empirical Study of Coordination Mode as the First-Class Citizen in From-Scratch Multi-Agent Coding. Snippet: Multi-agent vibe coding promises to accelerate software development, yet existing benchmarks rely on synthetic environments that ignore practical…"
+    },
+    {
+      "label": "q1-r09",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "a useful partial lead for the stated purpose; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: benchmarks, coordination. Title: Multi-Agent Software Development: From Solo Agents to AI Engineering Teams. Snippet: This was the first benchmark designed specifically for multi-agent coding collaboration. The findings are straightforward and somewhat humbling:…"
+    },
+    {
+      "label": "q1-r10",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "The entity-resolution study explicitly uses coordinated specialist agents, a broad collaboration lead outside software engineering; the snippet describes its domain but not coding-agent collaboration."
+    },
+    {
+      "label": "q1-r11",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "The blockchain survey has broad multi-agent collaboration overlap, but its application is unrelated to software engineering and the snippet gives no coding-agent evidence."
+    },
+    {
+      "label": "q1-r12",
+      "lead": 2,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "a useful partial lead for the stated purpose; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: A Multi-Agent Coding Assistant for Cloud-Native Development: From Requirements to Deployable Microservices. Snippet: The rapid adoption of cloud-native architectures has created an urgent demand for automated development tools that can translate natural language…"
+    },
+    {
+      "label": "q1-r13",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: benchmarks, coordination, conflict_resolution. Title: LLM-Based Multi-Agent Systems for Software Engineering: Literature Review, Vision, and the Road Ahead | ACM Transactions on Software Engineering and Methodology. Snippet: Such benchmarks should include tasks where agents must: ... Participate in Collaborative Design: Agents should contribute ideas, propose design s…"
+    },
+    {
+      "label": "q1-r14",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "a useful partial lead for the stated purpose; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: coordination. Title: OpenCollab: A Multi-Agent Coding Framework with Programmable Collaboration and Controllable Runtime. Snippet: Multi-agent coding systems are designed to tackle complex software engineering tasks through collaboration. However, existing evaluations typical…"
+    },
+    {
+      "label": "q1-r15",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: coordination. Title: Agyn: A Multi-Agent System for Team-Based Autonomous Software Engineering. Snippet: SWE-bench is used as a post hoc evaluation to assess how a production-first, benchmark-agnostic system performs on a standardized benchmark. Our…"
+    },
+    {
+      "label": "q1-r16",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "asynchronous_work",
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: asynchronous_work, benchmarks, coordination. Title: AsynCodeBench: BenchmarkingCollaboration of Asynchronous Multi-Agent Systems in Software Engineering. Snippet: These comparisons show whether multi-agent execution performs better, but do not directly measure collaboration: final scores conflate individual…"
+    },
+    {
+      "label": "q1-r17",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": false,
+      "rationale": "SWE-EVO is a software-engineering benchmark and the snippet describes coordination among specialized coding agents; it is useful adjacent evidence, though not focused on team conflict."
+    },
+    {
+      "label": "q1-r18",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: benchmarks, coordination, conflict_resolution. Title: 2026-1-27 CooperBench: Why Coding Agents Cannot be Your Teammates Yet. Snippet: coordination, which limits flexible cooperation and places additional burden on humans. We present CooperBench, the first benchmark designed to m…"
+    },
+    {
+      "label": "q1-r19",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "This paper concerns reward design for multi-agent reinforcement learning; it is broad coordination background without a software-engineering setting."
+    },
+    {
+      "label": "q1-r20",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: benchmarks, coordination, conflict_resolution. Title: CooperBench: Why Coding Agents Cannot be Your Teammates Yet — AI Agents. Snippet: To test this, we introduce CooperBench, a benchmark of over 600 collaborative coding tasks across 12 libraries in 4 programming languages. Each t…"
+    },
+    {
+      "label": "q1-r21",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "asynchronous_work",
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: asynchronous_work, benchmarks, coordination. Title: [2609.32662] AsynCodeBench: Benchmarking Collaboration of Asynchronous Multi-Agent Systems in Software Engineering. Snippet: Dependency-trajectory analysis further reveals that successful coordination often emerges not gradually, but through concentrated bursts in which…"
+    },
+    {
+      "label": "q1-r22",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: Software Engineering for and with GUI Agent. Snippet: GUI agents have advanced rapidly, producing a growing body of frameworks, benchmarks, and applications. However, this growth has outpaced the mat…"
+    },
+    {
+      "label": "q1-r23",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": false,
+      "rationale": "only broad or indirect task overlap; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: benchmarks, coordination. Title: Benchmarks for Multi-Agent AI Systems | Splunk. Snippet: That flexibility helps when you want to compare architectures, environments, or coordination patterns without committing to one narrow task famil…"
+    },
+    {
+      "label": "q1-r24",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: coordination, conflict_resolution. Title: AgenticFlict: A Large-Scale Dataset of Merge Conflicts in AI Coding Agent Pull Requests on GitHub. Snippet: Our work provides a large-scale dataset of reproducible textual merge conflict labels and fine-grained conflict-region metadata for Agentic PRs.…"
+    },
+    {
+      "label": "q1-r25",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: benchmarks, coordination, conflict_resolution. Title: MultiAgentBench: Evaluating the Collaboration and Competition of LLM agents. Snippet: Both settings evaluate adaptability, conflict resolution, and negotiation skills under uncertainty. To emphasize multi-agent collaboration, each…"
+    },
+    {
+      "label": "q1-r26",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": true,
+      "rationale": "The Medium article gives planning and benchmark examples and says planning can reduce conflicts, useful broad background; it is not a direct empirical software-engineering study."
+    },
+    {
+      "label": "q1-r27",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "asynchronous_work",
+        "coordination"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: asynchronous_work, coordination. Title: Effective Strategies for Asynchronous Software Engineering Agents. Snippet: We evaluate CAID on two long-horizon, complex software engineering tasks that provide a natural testbed for shared-artifact collaboration. Specif…"
+    },
+    {
+      "label": "q1-r28",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card gives specific detail on a central task aspect. Visible facet signal: coordination, conflict_resolution. Title: Leveraging Symmetry in Multi-Agent Code Generation: A Cross-Verification Collaboration Protocol for Competitive Programming. Snippet: We propose the Cross-Verification Collaboration Protocol (CVCP), a symmetry-aware multi-agent coordination framework integrating Round-Trip Revie…"
+    },
+    {
+      "label": "q1-r29",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: benchmarks, coordination, conflict_resolution. Title: LLM-Based Multi-Agent Systems for Software Engineering: Literature Review, Vision and the Road Ahead. Snippet: Such benchmarks should include tasks where agents must: ... Participate in collaborative design: Agents should contribute ideas, propose design s…"
+    },
+    {
+      "label": "q1-r30",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: benchmarks, coordination. Title: Paper page - MultiAgentBench: Evaluating the Collaboration and Competition of LLM agents. Snippet: In this paper, we introduce MultiAgentBench, a comprehensive benchmark designed to evaluate LLM-based multi-agent systems across diverse, interac…"
+    },
+    {
+      "label": "q1-r31",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "The title directly concerns competitive multi-agent debate for resolving software issues, a useful conflict-resolution lead; the visible snippet is only bibliographic metadata."
+    },
+    {
+      "label": "q1-r32",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "a useful partial lead for the stated purpose; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: benchmarks, coordination. Title: Multi-Agent Software Development: AI-Native Engineering Teams in Practice | Zylos Research. Snippet: Too small and coordination overhead ... wasted effort. ... CooperBench (January 2026), the first benchmark for multi-agent coding collaboration a…"
+    },
+    {
+      "label": "q1-r33",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "coordination",
+        "asynchronous_work"
+      ],
+      "uncertain": false,
+      "rationale": "The study directly measures coordination among AI coding-agent teams through timed file and message interactions, making it a strong empirical lead."
+    },
+    {
+      "label": "q2-r00",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "human_approval",
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: human_approval, audit_logging, policy_controls. Title: AI agent governance in enterprises: Control, oversight, and best practices. Snippet: Orchestrated and governed: AI agents operate within structured processes or cases that provide context, state awareness, and access to approved d…"
+    },
+    {
+      "label": "q2-r01",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "The title and abstract identify runtime monitoring and policy enforcement, directly relevant to policy controls; no human-approval behavior is visible on this card."
+    },
+    {
+      "label": "q2-r02",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "human_approval",
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card gives specific detail on a central task aspect. Visible facet signal: human_approval, audit_logging, policy_controls. Title: AI Agent Governance Module — RBAC, Audit Logs, Policy Engine | assistents.ai. Snippet: Tamper-proof records for audit compliance. ... Intent-to-action consistency checks ensure agents stay within their defined purpose and operationa…"
+    },
+    {
+      "label": "q2-r03",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "only broad or indirect task overlap; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: policy_controls. Title: AI Agent Governance: Enterprise Controls That Work at Scale. Snippet: AI agent governance is the operating model that determines who owns an agent, what it may access, which actions it may take, what data it may pro…"
+    },
+    {
+      "label": "q2-r04",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "audit_logging"
+      ],
+      "uncertain": true,
+      "rationale": "The paper title and abstract directly raise verifiable agent execution records, a useful audit-logging lead; the card gives no specific control details."
+    },
+    {
+      "label": "q2-r05",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "only broad or indirect task overlap; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: policy_controls. Title: AI Agent Governance: Enterprise Framework, Risks & Controls. Snippet: Policy enforcement that checks an agent's proposed actions against approved rules while it's operating — as opposed to governance that only exist…"
+    },
+    {
+      "label": "q2-r06",
+      "lead": 2,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The enterprise framework abstract mentions agentic governance and secure tool use, but the visible excerpt does not identify a listed policy-control mechanism."
+    },
+    {
+      "label": "q2-r07",
+      "lead": 2,
+      "visible": 2,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The framework abstract introduces enterprise agents and a governance challenge, but this excerpt does not expose human approval, audit logging, or policy-control details."
+    },
+    {
+      "label": "q2-r08",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "human_approval",
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: human_approval, audit_logging, policy_controls. Title: Agent Governance Explained: An Enterprise Framework - Scout. Snippet: AI agent governance is the set of policies, permissions, controls, and oversight mechanisms that define what an autonomous AI agent is allowed to…"
+    },
+    {
+      "label": "q2-r09",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: policy_controls. Title: Runtime Policy Firewall: A Zero-Trust Governance Layer for Enterprise Agentic AI. Snippet: Enterprise adoption of generative AI is shifting from passive question answering to autonomous agentic execution. Modern agents can decompose goa…"
+    },
+    {
+      "label": "q2-r10",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "policy_controls",
+        "human_approval"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: policy_controls, human_approval. Title: Policy-Driven Access Control for Secure Deployment of Autonomous AI Agents in Enterprise Environments. Snippet: The growing adoption of autonomous artificial intelligence agents in enterprise environments introduces significant security challenges because s…"
+    },
+    {
+      "label": "q2-r11",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "a useful partial lead for the stated purpose; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: policy_controls. Title: A Unified Policy Architecture (UPA): The Governance Kernel for Enterprise AI Operating Systems. Snippet: Enterprise AI is evolving into an Enterprise Operating System where autonomous AI agents can plan, reason, use memory, invoke tools, execute work…"
+    },
+    {
+      "label": "q2-r12",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "audit_logging",
+        "human_approval"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: audit_logging, human_approval. Title: A Complete Guide to Agentic AI Governance - Palo Alto Networks. Snippet: This provides a single audit trail with full attribution by user, team, agent, and model, rather than fragmented logs distributed across individu…"
+    },
+    {
+      "label": "q2-r13",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "only broad or indirect task overlap; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: audit_logging, policy_controls. Title: Enterprise AI Governance: Complete Implementation Guide (2026) | Liminal. Snippet: OCC Bulletin 2011-12 | Model validation requirement → Governance Control: Pre-deployment approval workflow → Evidence: Model validation reports a…"
+    },
+    {
+      "label": "q2-r14",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "policy_controls",
+        "audit_logging"
+      ],
+      "uncertain": false,
+      "rationale": "The snippet explicitly names access restrictions, audit logging, and intervention triggers; it does not specify human approval."
+    },
+    {
+      "label": "q2-r15",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "The SAFE-AGENT card signals runtime policy enforcement, but the visible abstract excerpt does not identify a human-approval mechanism."
+    },
+    {
+      "label": "q2-r16",
+      "lead": 2,
+      "visible": 2,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The duplicate framework abstract gives only general agent-governance context in the visible excerpt, not the specific controls represented by the listed facets."
+    },
+    {
+      "label": "q2-r17",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "audit_logging"
+      ],
+      "uncertain": true,
+      "rationale": "a useful partial lead for the stated purpose; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: audit_logging. Title: AI Agent Governance: Best Practices for Enterprise | MindStudio. Snippet: Financial institutions face intense regulatory scrutiny and significant compliance requirements. AI agents in banking, insurance, and wealth mana…"
+    },
+    {
+      "label": "q2-r18",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "human_approval",
+        "audit_logging"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card gives specific detail on a central task aspect. Visible facet signal: human_approval, audit_logging. Title: Enterprise AI Agents: Governance for Real Workflows. Snippet: Approvals must be built into the workflow from the start. Human oversight enables safe automation in many enterprise workflows. If an organizatio…"
+    },
+    {
+      "label": "q2-r19",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "audit_logging",
+        "human_approval"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: audit_logging, human_approval. Title: AI Agent Governance Platform for Enterprise AI Control | VDF AI. Snippet: Audit logs and execution traces that capture prompts, retrieval events, tool calls, approvals, and outputs. See the observability article for adj…"
+    },
+    {
+      "label": "q2-r20",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "audit_logging"
+      ],
+      "uncertain": true,
+      "rationale": "only broad or indirect task overlap; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: audit_logging. Title: AI agent observability and audit logging for the enterprise. Snippet: See How Control Works → · WitnessAI is an enterprise AI security and governance platform for Global 2000 organizations. We help you observe, cont…"
+    },
+    {
+      "label": "q2-r21",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "human_approval",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "The Microsoft guidance names a human deployment approver and ongoing compliance monitoring; it does not show audit logging in this excerpt."
+    },
+    {
+      "label": "q2-r22",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "audit_logging"
+      ],
+      "uncertain": true,
+      "rationale": "The enterprise-governance guide mentions audit logging and agentic systems, making it a partial lead; the visible detail concerns sanctioned consumer AI rather than the requested agent controls."
+    },
+    {
+      "label": "q2-r23",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: audit_logging, policy_controls. Title: Anchora: An AI-Assisted Enterprise Decision Governance Platform with Immutable Audit Trails and Policy-Enforced Workflow Orchestration. Snippet: Enterprise decision-making processes are frequently fragmented across disconnected tools, informal communication channels, and manual record-keep…"
+    },
+    {
+      "label": "q2-r24",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "policy_controls",
+        "audit_logging"
+      ],
+      "uncertain": false,
+      "rationale": "The assurance-layer paper discusses auditable, policy-aligned AI decisions, useful adjacent enterprise control material though not specifically an agent-governance study."
+    },
+    {
+      "label": "q2-r25",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "policy_controls",
+        "audit_logging"
+      ],
+      "uncertain": false,
+      "rationale": "This broad enterprise-governance page describes audit evidence and gaps between data controls and agent access, but is not focused guidance on the requested controls."
+    },
+    {
+      "label": "q2-r26",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "human_approval",
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card gives specific detail on a central task aspect. Visible facet signal: human_approval, audit_logging, policy_controls. Title: Enterprise AI Support Tools With Governance & Audit Logs. Snippet: Four controls do most of the work: per-action permission scoping, human approval workflows for high-risk operations, immutable audit logs, and pr…"
+    },
+    {
+      "label": "q2-r27",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "policy_controls",
+        "audit_logging"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: policy_controls, audit_logging. Title: Enterprise AI Agent Governance: Framework & Best Practices. Snippet: Before any agent moves from prototype to staging, require three documents: a policy specification, an RBAC plan, and an audit logging specificati…"
+    },
+    {
+      "label": "q2-r28",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "human_approval",
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: human_approval, audit_logging, policy_controls. Title: AI Agent Governance in the Enterprise: Audit Trails, LLM Guardrails & Compliance for 2026 | Gheware DevOps AI. Snippet: For high-risk systems, the EU AI Act requires: conformity assessments, risk management systems, data governance practices, technical documentatio…"
+    },
+    {
+      "label": "q2-r29",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "human_approval",
+        "audit_logging"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: human_approval, audit_logging. Title: AI Agent Governance: Frameworks, Tools & Best Practices. Snippet: AI agent human oversight remains essential: organizations need defined approval thresholds, responsible owners, decision logs, and audit trails s…"
+    },
+    {
+      "label": "q2-r30",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "The UPA abstract explicitly names authorization, security, guardrails, and compliance mechanisms, but not audit logging in this excerpt."
+    },
+    {
+      "label": "q2-r31",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "human_approval",
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "The curated resource card describes a concrete human-approval gate and tamper-evident records, a useful implementation lead but not itself primary guidance."
+    },
+    {
+      "label": "q2-r32",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "The CAGE-1 abstract asks which policy applied and who authorized an action, a visible policy-control signal; the excerpt does not show audit logging."
+    },
+    {
+      "label": "q3-r00",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "recovery"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: replay, recovery. Title: State Without a Landlord: An Architecture Proposal for Peer-to-Peer Replication of Durable Workflow State. Snippet: Durable-execution frameworks commonly journal execution steps of a long-running function and reconstruct state by deterministic replay; the journ…"
+    },
+    {
+      "label": "q3-r01",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "idempotency"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: replay, idempotency. Title: Temporal Interview Questions: Workflow Replay, Activity Retries, and Safe Changes | PracHub Knowledge Hub. Snippet: These Temporal interview questions connect three separate responsibilities: replay reconstructs Workflow state, idempotency protects external eff…"
+    },
+    {
+      "label": "q3-r02",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay"
+      ],
+      "uncertain": false,
+      "rationale": "The abstract describes semantic replay of an agent authorization across retries and crashes; it does not show external side effects."
+    },
+    {
+      "label": "q3-r03",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "recovery",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: replay, recovery, idempotency, external_side_effects. Title: Agent Workflows Are Rediscovering Durable Execution | by Koshy | May, 2026 | Medium. Snippet: They do not, by themselves, define a portable end-to-end workflow execution contract: immutable workflow version pinning, replay semantics, recor…"
+    },
+    {
+      "label": "q3-r04",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "replay",
+        "recovery",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card gives specific detail on a central task aspect. Visible facet signal: replay, recovery, external_side_effects. Title: Durable Execution for Agent Runtimes: Workflow Engines, Replay, and Recoverable AI Work | Zylos Research. Snippet: For non-idempotent external side effects such as charging a card, sending a one-shot SMS, or POSTing to an API without deduplication, the runtime…"
+    },
+    {
+      "label": "q3-r05",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "idempotency"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: replay, idempotency. Title: What is Durable Execution? A Definitive Guide | Restate. Snippet: Already-completed steps are not re-executed; their recorded results are replayed instead, making actions like generating an idempotency key to ca…"
+    },
+    {
+      "label": "q3-r06",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "replay",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "This documentation explicitly explains that replay reconstructs committed workflow history and idempotency preserves an intended external effect across repeated calls."
+    },
+    {
+      "label": "q3-r07",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "idempotency"
+      ],
+      "uncertain": false,
+      "rationale": "The AWS developer-guide title directly promises idempotency guidance; the snippet is only a generic SDK description, so little substantive detail is visible."
+    },
+    {
+      "label": "q3-r08",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "The documentation directly says external actions should use idempotency, inbox/outbox handling, or compensation; replay is not described in the snippet."
+    },
+    {
+      "label": "q3-r09",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "The snippet explicitly connects replay with idempotent handling of database writes, API calls, and message publication."
+    },
+    {
+      "label": "q3-r10",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "The study discusses retries and exactly-once event processing with idempotency, but the visible text does not mention workflow replay."
+    },
+    {
+      "label": "q3-r11",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: replay, idempotency, external_side_effects. Title: Durable side-effect recovery: idempotency и recovery proofs для mutation-команд · Issue #154 · ai-development-harness/ai-development-harness-template. Snippet: Temporal формулирует полезный принцип: orchestration state должен быть replay/resume-safe, а non-deterministic I/O и side effects должны иметь от…"
+    },
+    {
+      "label": "q3-r12",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: replay, idempotency, external_side_effects. Title: [RAGE/P0] Durable deterministic workflow replay, checkpoints, and crash recovery · Issue #90 · lost-rob0t/quasar. Snippet: External side effects use explicit idempotency/effect identities; replay must consume recorded results or re-dispatch only when policy proves it…"
+    },
+    {
+      "label": "q3-r13",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "idempotency",
+        "recovery",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "The issue explicitly says external side effects need idempotency and recovery semantics."
+    },
+    {
+      "label": "q3-r14",
+      "lead": 2,
+      "visible": 2,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The durable-functions paper excerpt concerns persistent state and reliable progress, but it does not visibly specify replay, recovery, idempotency, or external effects."
+    },
+    {
+      "label": "q3-r15",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "recovery"
+      ],
+      "uncertain": false,
+      "rationale": "The paper describes deterministic replay of durable workflow histories and the risk that version changes halt in-flight runs; external effects are not visible here."
+    },
+    {
+      "label": "q3-r16",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "recovery",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "This agent-tool study directly analyzes missing, duplicated, and lingering external effects under retries, concurrency, speculative execution, and partial failure."
+    },
+    {
+      "label": "q3-r17",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "The payment paper explicitly links retries to duplicate monetary effects and names idempotency in its title."
+    },
+    {
+      "label": "q3-r18",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "recovery",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "The agent-workflow paper directly targets crashes, timeouts, duplicate actions, and partial external effects; the abstract establishes the problem but not its full solution."
+    },
+    {
+      "label": "q3-r19",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "recovery",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "The issue states that unknown external outcomes must not be replayed without a safe recovery strategy, directly addressing the task."
+    },
+    {
+      "label": "q3-r20",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "This practitioner article is a useful partial lead because it distinguishes durable progress from payment-side-effect idempotency, though it is not primary research or official documentation."
+    },
+    {
+      "label": "q3-r21",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "idempotency",
+        "recovery",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: idempotency, recovery, external_side_effects. Title: The Agent Stack - Part 4: Runtimes, Workflows, and Durable Execution. Snippet: If the system retries the whole run from the beginning, it may repeat the side effect. The fix is not a better prompt. The fix is a step boundary…"
+    },
+    {
+      "label": "q3-r22",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "recovery",
+        "idempotency"
+      ],
+      "uncertain": false,
+      "rationale": "The issue directly describes safe retry of dispatch and reuse of an idempotency key without duplicate run records; its scope is narrower than end-to-end workflow recovery."
+    },
+    {
+      "label": "q3-r23",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "recovery",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "This developer guide describes replayed recorded results, continuation after the last completed event, and avoiding duplicate effects, making it a useful but secondary lead."
+    },
+    {
+      "label": "q3-r24",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "recovery",
+        "external_side_effects",
+        "idempotency"
+      ],
+      "uncertain": false,
+      "rationale": "The runtime issue directly specifies safe resume after an external action, including durable outcome correlation and avoiding another operation after recovery."
+    },
+    {
+      "label": "q3-r25",
+      "lead": 2,
+      "visible": 2,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The title concerns authorization-bound execution, but the empty snippet does not visibly establish replay, recovery, idempotency, or external side effects."
+    },
+    {
+      "label": "q3-r26",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "recovery",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "The snippet explicitly names checkpointing, replay boundaries, idempotency, recovery, and avoiding duplicated side effects."
+    },
+    {
+      "label": "q3-r27",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "The Atomix excerpt names tool-triggered external effects and checkpoint replay under faults and concurrent execution; a recovery facet is not directly stated."
+    },
+    {
+      "label": "q3-r28",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "recovery"
+      ],
+      "uncertain": false,
+      "rationale": "The excerpt says persisted execution state is resumed after failure; replay is not described in the visible text."
+    },
+    {
+      "label": "q3-r29",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: idempotency, external_side_effects. Title: Temporal for Data Workflows: Durable Execution, Retries & Long-Running Pipelines | by Admin | Sep, 2026 | Medium. Snippet: The invariant: Temporal automatically retries a failed activity according to its RetryPolicy — exponential backoff, capped attempts, with certain…"
+    },
+    {
+      "label": "q4-r00",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: leakage, decontamination. Title: SWE-bench Verified Benchmark. Snippet: Several studies have identified persistent data quality and contamination issues in SWE-bench Verified, impacting its interpretability: Solution…"
+    },
+    {
+      "label": "q4-r01",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: Opti-Agent-Bench: Benchmarking End-to-End Optimization R&D Agents on Real-World Business Problems. Snippet: LLM-based agents are increasingly deployed to solve optimization problems, yet existing benchmarks evaluate them on pre-structured mathematical f…"
+    },
+    {
+      "label": "q4-r02",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "decontamination",
+        "live_evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: decontamination, live_evaluation. Title: NeurIPS Poster SWE-rebench: An Automated Pipeline for Task Collection and Decontaminated Evaluation of Software Engineering Agents. Snippet: Using this pipeline, we construct SWE-rebench, a public dataset comprising over 21,000 interactive Python-based SWE tasks, suitable for reinforce…"
+    },
+    {
+      "label": "q4-r03",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: TLA+-Bench: An Execution-Grounded Benchmark and Dataset for Natural-Language to TLA Specification Generation. Snippet: Large language models increasingly write TLA$^{+}$ formal specifications from natural-language descriptions, but progress is hard to measure: exi…"
+    },
+    {
+      "label": "q4-r04",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: leakage, decontamination. Title: Schrödinger's Code Repository: Have LLMs Learned SWE-bench or Memorized It?. Snippet: Repository-level coding benchmarks have become the standard for evaluating coding agents, yet they inherently suffer from data leakage because th…"
+    },
+    {
+      "label": "q4-r05",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: Evaluation Rigor from Graph Neural Networks to Graph Foundation Models: A Systematic Review and a Four-Axis Reporting Standard. Snippet: Graph machine learning reports steady progress across node, graph, and link prediction, across temporal and hypergraph frontiers, and across the…"
+    },
+    {
+      "label": "q4-r06",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "leakage",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: leakage, decontamination. Title: SWE-MERA: A Dynamic Benchmark for Agenticly Evaluating Large Language Models on Software Engineering Tasks. Snippet: The rapid advancement of Large Language Models (LLMs) in software engineering has revealed critical limitations in existing benchmarks, particula…"
+    },
+    {
+      "label": "q4-r07",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: DreamBench-SWE: A Multi-Session Memory-Hygiene Benchmark for Software Agents. Snippet: DreamBench-SWE is a multi-session benchmark for software-agent memory hygiene in which later software tasks depend on non-inferable evidence from…"
+    },
+    {
+      "label": "q4-r08",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "live_evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: live_evaluation. Title: SWE-bench Goes Live!. Snippet: This approach ensures that all ... a robust benchmark for evaluating automated bug-fixing solutions. Figure 2: Temporal distribution of issue cre…"
+    },
+    {
+      "label": "q4-r09",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "time_splits",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: time_splits, decontamination. Title: SWE-Bench++: A Framework for the Scalable Generation of Software Engineering Benchmarks from Open-Source Repositories. Snippet: Broader task coverage: Our ... Evaluation: SWE-Bench++ is constructed from dated GitHub pull requests and can be filtered by PR creation date, en…"
+    },
+    {
+      "label": "q4-r10",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "leakage",
+        "decontamination"
+      ],
+      "uncertain": true,
+      "rationale": "only broad or indirect task overlap; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: leakage, decontamination. Title: RustMizan: A Compilable, Contamination-Aware Benchmarking Framework for Rust Vulnerabilities. Snippet: LLM agents are increasingly applied to vulnerability analysis, but existing benchmarks have not kept pace. They typically rely on small non-compi…"
+    },
+    {
+      "label": "q4-r11",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "leakage",
+        "decontamination"
+      ],
+      "uncertain": true,
+      "rationale": "only broad or indirect task overlap; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: leakage, decontamination. Title: JavaVulBench: A Java Vulnerability Benchmark with Realistic Splits, a Unified Multi-Backend Harness, and a Leakage-Aware Evaluation Mode. Snippet: We release \\textsc{JavaVulBench}, a benchmark dataset and evaluation harness for Java vulnerability detection. The dataset contains $\\sim$30{,}60…"
+    },
+    {
+      "label": "q4-r12",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "decontamination",
+        "live_evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: decontamination, live_evaluation. Title: About | SWE-rebench Leaderboard. Snippet: This new benchmark provides standardized, transparent and continuously evolving evaluations of LLMs on real-world software engineering tasks. Our…"
+    },
+    {
+      "label": "q4-r13",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: leakage, decontamination. Title: Why SWE-bench Verified no longer measures frontier coding capabilities | OpenAI. Snippet: We have incorporated these findings into our recent evaluation efforts. In the last months we’ve chosen to report results from the public split o…"
+    },
+    {
+      "label": "q4-r14",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: leakage, decontamination. Title: SWE-Bench Pro V2 - Scale Labs. Snippet: SWE-Bench Pro is a benchmark designed to provide a rigorous and realistic evaluation of AI agents for software engineering. It was developed to a…"
+    },
+    {
+      "label": "q4-r15",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: NeuroState-Bench: A Human-Calibrated Benchmark for Commitment Integrity in LLM Agent Profiles. Snippet: Outcome-only evaluation under-specifies whether an evaluated agent profile preserves the commitments required to solve a multi-turn task coherent…"
+    },
+    {
+      "label": "q4-r16",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: ECP-Bench: Benchmarking and Learning Entertainment Content Promotion with Foundation Models. Snippet: Content promotion spans a broad set of skills, from understanding content to forecasting its market reception. However, LLMs' ability to support…"
+    },
+    {
+      "label": "q4-r17",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "live_evaluation",
+        "time_splits"
+      ],
+      "uncertain": false,
+      "rationale": "The World Cup study provides an example of prospective live evaluation that avoids retrospective answer exposure; it is useful temporal-evaluation background outside software engineering."
+    },
+    {
+      "label": "q4-r18",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "leakage"
+      ],
+      "uncertain": false,
+      "rationale": "The snippet explicitly describes evaluation data leaking into training corpora; it does not describe a decontamination procedure."
+    },
+    {
+      "label": "q4-r19",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "decontamination",
+        "time_splits"
+      ],
+      "uncertain": false,
+      "rationale": "The study uses post-training-cutoff GitHub issues and reports score changes, directly showing leakage risk and temporal separation."
+    },
+    {
+      "label": "q4-r20",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "leakage"
+      ],
+      "uncertain": false,
+      "rationale": "The excerpt reports SWE-bench leakage and verbatim gold-patch reproduction; it does not show a decontamination method."
+    },
+    {
+      "label": "q4-r21",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "time_splits",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: time_splits, decontamination. Title: SWE-Bench Pro Verified: A Reliable Benchmark for Software Engineering Agents. Snippet: SWE-Bench Pro has emerged as a standard benchmark for evaluating software engineering agents on challenging repository-level tasks. However, our…"
+    },
+    {
+      "label": "q4-r22",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "time_splits",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: time_splits, decontamination. Title: AI Benchmark Contamination: Why SWEBench Pro Scores Should Come with an Asterisk | MindStudio. Snippet: The benchmark uses GitHub issues that post-date the training cutoffs of the models being evaluated, making prior exposure much less likely. The a…"
+    },
+    {
+      "label": "q4-r23",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: ECG-biometrics-bench: A Unified Framework for Reproducible Benchmarking of ECG Biometrics. Snippet: Electrocardiogram (ECG) biometrics have emerged as a promising modality for continuous, liveness-aware authentication in wearable systems. Howeve…"
+    },
+    {
+      "label": "q4-r24",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "leakage"
+      ],
+      "uncertain": false,
+      "rationale": "The Reddit discussion specifically mentions verbatim SWE-bench solution leakage, but it is secondary discussion rather than benchmark documentation or a study."
+    },
+    {
+      "label": "q4-r25",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "decontamination",
+        "time_splits"
+      ],
+      "uncertain": false,
+      "rationale": "The guide describes overlap detection, planted identifiers, and date-based task splits as contamination controls."
+    },
+    {
+      "label": "q4-r26",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "decontamination",
+        "live_evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: leakage, decontamination, live_evaluation. Title: SWE-MERA: A Dynamic Benchmark for Agenticly Evaluating Large Language Models on Software Engineering Tasks. Snippet: Each task in SWE-bench represents an authentic, real-world problem structured around: 1) The initial commit (code before changes), 2) The fixing…"
+    },
+    {
+      "label": "q4-r27",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "decontamination",
+        "live_evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "The SWE-bench overview discusses fresh, dynamically updated benchmarks and identifies leakage and contamination as problems; it is relevant synthesis rather than primary documentation."
+    },
+    {
+      "label": "q4-r28",
+      "lead": 1,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "only broad or indirect task overlap; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: The Methodeutic Harness on SWE-bench Pro: public-split run, receipts, and an oracle-access correction. Snippet: A solo, fully-receipted run of a methodeutic agent harness across all 728 eligible SWE-bench Pro public-split instances (694/728 = 95.3% under th…"
+    },
+    {
+      "label": "q4-r29",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "The EVA operations benchmark is outside SWE-bench contamination and temporal evaluation; the snippet concerns crew autonomy in spaceflight, giving no task-relevant detail."
+    },
+    {
+      "label": "q4-r30",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "decontamination",
+        "time_splits"
+      ],
+      "uncertain": false,
+      "rationale": "This SWE-bench study directly concerns memorization and temporal controls; the snippet states the concern but gives little method detail."
+    },
+    {
+      "label": "q4-r31",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: leakage, decontamination. Title: SWE-Bench: Real-World Software Benchmark. Snippet: Solution Leakage: Manual review found 32.67% of model-marked \"successful\" cases featured the answer in the issue description or comments, leading…"
+    },
+    {
+      "label": "q4-r32",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: leakage, decontamination. Title: Saving SWE-Bench: A Benchmark Mutation Approach for Realistic Agent Evaluation. Snippet: It’s successor SWE-Bench Verified ... and contamination, and provided a human-verified set of 500 examples to evaluate agents against. However, p…"
+    },
+    {
+      "label": "q4-r33",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: SWE-bench Verified Issues Benchmark. Snippet: Memorization and Leakage: A disproportional fraction of issues were created well before LLM knowledge cutoffs, and direct solution leakage (copyi…"
+    },
+    {
+      "label": "q4-r34",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: CFM-Bench: A Unified Multi-Domain, Multi-Task Benchmark for Channel Foundation Models. Snippet: Channel foundation models (CFMs) are commonly evaluated in model-specific pipelines that differ in data, radio configurations, partitions, adapta…"
+    },
+    {
+      "label": "q5-r00",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "This verifier implementation explains binding builder identity to a signed attestation, a direct but noncanonical tool lead."
+    },
+    {
+      "label": "q5-r01",
+      "lead": 0,
+      "visible": 1,
+      "facets": [
+        "threat_model"
+      ],
+      "uncertain": false,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: threat_model. Title: Towards a Zero-Trust Supply-Chain Assurance Rubric for ORAN RIC Applications. Snippet: Open RAN enables third-party xApps and rApps to be onboarded and updated at operational cadence, creating a software supply chain that spans deve…"
+    },
+    {
+      "label": "q5-r02",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: attestations. Title: SLSA, it’s all about provenance attestation | by Rémi Rey | Medium. Snippet: SLSA is all about attestations, ... The Provenance attestation will only allow a limited number of threats mitigation (mainly build threats) and…"
+    },
+    {
+      "label": "q5-r03",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "threat_model",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: verifier_specification, threat_model, attestations. Title: SLSA • Build: Verifying artifacts. Snippet: The goal is to ensure that the provenance actually applies to the artifact in question and to assess the trustworthiness of the provenance. This…"
+    },
+    {
+      "label": "q5-r04",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: builder_identity, attestations. Title: SLSA Framework: Supply Chain Build Levels, Provenance. Snippet: A SLSA provenance attestation is a JSON document in the in-toto attestation format that contains: the builder identity (e.g., the GitHub Actions…"
+    },
+    {
+      "label": "q5-r05",
+      "lead": 1,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The title signals SLSA implementation, but the visible abstract is general CI/CD supply-chain background and does not show provenance attestation or verification details."
+    },
+    {
+      "label": "q5-r06",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "threat_model",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "OpenSSF’s analysis directly explains what provenance can establish about a builder and source, making it a strong threat-boundary lead."
+    },
+    {
+      "label": "q5-r07",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "threat_model",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: verifier_specification, threat_model, attestations. Title: SLSA • Verifying artifacts. Snippet: The goal is to ensure that the provenance actually applies to the artifact in question and to assess the trustworthiness of the provenance. This…"
+    },
+    {
+      "label": "q5-r08",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: verifier_specification, attestations. Title: SLSA • Provenance. Snippet: The goal is to ensure that the provenance actually applies to the artifact in question and to assess the trustworthiness of the provenance. This…"
+    },
+    {
+      "label": "q5-r09",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: Secure software development practices for generative AI and dual-use foundation models:. Snippet: Certain equipment, instruments, software, or materials, commercial or non-commercial, are identified in this paper in order to specify the experi…"
+    },
+    {
+      "label": "q5-r10",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "attestations"
+      ],
+      "uncertain": true,
+      "rationale": "The article discusses SLSA provenance and in-toto attestations, but its excerpt does not state a concrete threat model."
+    },
+    {
+      "label": "q5-r11",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: builder_identity, attestations. Title: SLSA Framework Explained: Build Provenance, Levels, and Attestation. Snippet: Fulcio is the certificate authority that issues short-lived (ten-minute) certificates bound to an OIDC identity, so the workflow signing the arte…"
+    },
+    {
+      "label": "q5-r12",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: verifier_specification, builder_identity, attestations. Title: SLSA Provenance Hands-on: Generate with GitHub Actions, Verify with slsa-verifier - DEV Community. Snippet: In other words, provenance is the layer that detects build-path tampering but cannot detect human malice. Combine it with SBOM (transparency abou…"
+    },
+    {
+      "label": "q5-r13",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: verifier_specification, builder_identity, attestations. Title: slsa-framework/slsa-verifier | DeepWiki. Snippet: This wiki documents slsa-verifier, ... slsa-verifier validates that software artifacts were built by expected, trusted builders and that the buil…"
+    },
+    {
+      "label": "q5-r14",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "only broad or indirect task overlap; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: builder_identity, attestations. Title: GitHub - slsa-framework/verifier: SLSA Verifier · GitHub. Snippet: A signed build attestation's builder.id is proven, not just checked, by binding it to the identity that signed the statement. The verifier ships…"
+    },
+    {
+      "label": "q5-r15",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "Kettle describes attested software provenance and what its records contain, a useful adjacent source; it is not an SLSA verifier or specification."
+    },
+    {
+      "label": "q5-r16",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "This third-party verifier repository presents the same direct implementation lead for attestation and builder identity, but is not the canonical SLSA project source."
+    },
+    {
+      "label": "q5-r17",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "threat_model",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "The checklist explicitly asks readers to verify builder identity in provenance and the platform threat model; it is a checklist, not a verifier specification."
+    },
+    {
+      "label": "q5-r18",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "The excerpt describes the SLSA in-toto predicate, DSSE signing, and artifact association, but does not show verifier behavior."
+    },
+    {
+      "label": "q5-r19",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "attestations"
+      ],
+      "uncertain": true,
+      "rationale": "SCAI is a related software-supply-chain attribute specification, but it is not SLSA provenance verification and the overlap is background only."
+    },
+    {
+      "label": "q5-r20",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: Human-Certified Module Repositories for the AI Age. Snippet: Human-Certified Module Repositories (HCMRs) are introduced in this work as a new architectural model for constructing trustworthy software in the…"
+    },
+    {
+      "label": "q5-r21",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: verifier_specification, builder_identity, attestations. Title: SLSA and Provenance: Your SBOM Says What's Inside, This Says Where It Came From - ostering.com. Snippet: SLSA provenance is a JSON document in the in-toto attestation format, wrapped in a DSSE (Dead Simple Signing Envelope). Strip away the ceremony a…"
+    },
+    {
+      "label": "q5-r22",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: No Accidental Software Agent First Canonical Code for Human Code Entropy Reduction and 30 to 500 times Lower Frontier Model Requirements. Snippet: Frontier coding models may spend substantial capacity learning not only program behavior, but also accidental entropy in human repositories. Such…"
+    },
+    {
+      "label": "q5-r23",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: A Confidential Computing Transparency Framework for a Comprehensive Trust Chain. Snippet: Confidential Computing enhances privacy of data in-use through hardware-based Trusted Execution Environments (TEEs) that use attestation to verif…"
+    },
+    {
+      "label": "q5-r24",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "verifier_specification",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card gives specific detail on a central task aspect. Visible facet signal: verifier_specification, builder_identity, attestations. Title: GitHub - slsa-framework/slsa-verifier: Verify provenance from SLSA compliant builders · GitHub. Snippet: Verified build using builder https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v1…"
+    },
+    {
+      "label": "q5-r25",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "threat_model",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: threat_model, builder_identity, attestations. Title: SLSA Build Provenance: Verifying Supply Chain Integrity from Source to Deployment. Snippet: A compromised CI runner can rebuild from modified source, sign the result, and produce a signature that verifies cleanly against the expected ide…"
+    },
+    {
+      "label": "q5-r26",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: From Traceability to Justifiability: Accountability Structures in Agentic Software Engineering. Snippet: A pipeline promoting an AI system publishes records claiming the thing evaluated is the thing deployed and that the evidence licensed the transit…"
+    },
+    {
+      "label": "q5-r27",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "attestations"
+      ],
+      "uncertain": true,
+      "rationale": "The agent-assurance paper mentions attestations among several lifecycle records, but no SLSA verifier or builder-identity detail is visible."
+    },
+    {
+      "label": "q5-r28",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: verifier_specification, builder_identity, attestations. Title: SLSA Provenance: Verify the Software Supply Chain | isMalicious Blog. Snippet: Signed metadata alone provides little protection. A consumer, registry, admission controller, or monitoring service must verify the signature, ar…"
+    },
+    {
+      "label": "q5-r29",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: verifier_specification, attestations. Title: Implementing SLSA Build Integrity Framework for Software Supply Chain Security - SoftwareSeni. Snippet: SLSA provenance verification uses Sigstore cosign to validate attestations. The verification checks the signature matches the expected identity a…"
+    },
+    {
+      "label": "q6-r00",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: The Evaluation Context Protocol (ECP): A Portable Contract for AI Agent Evaluation. Snippet: The evolution of artificial intelligence has necessitated a fundamental shift from evaluating isolated Large Language Models (LLMs) to assessing…"
+    },
+    {
+      "label": "q6-r01",
+      "lead": 1,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "only broad or indirect task overlap; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: NovaFabric: Tamper-Evident, Replayable Evidence for Autonomous AI Agent Runs. Snippet: When an autonomous AI agent does something consequential, what can be proven about what it did? Agent-observability platforms capture traces, but…"
+    },
+    {
+      "label": "q6-r02",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "tool_calls",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "The card defines GenAI span types and attribute names and explicitly lists tool calls among the covered events."
+    },
+    {
+      "label": "q6-r03",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: Artifact-centered Claim-aware Observability for Autonomous Scientific Agents. Snippet: Autonomous scientific agents now increasingly propose ideas, write code, run experiments, analyze results, and even draft papers. Observe and aud…"
+    },
+    {
+      "label": "q6-r04",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "semantic_conventions",
+        "spans"
+      ],
+      "uncertain": false,
+      "rationale": "The official OpenTelemetry page title names GenAI spans and the convention repository; the visible excerpt is a relocation notice."
+    },
+    {
+      "label": "q6-r05",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "tool_calls"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: semantic_conventions, spans, tool_calls. Title: OpenTelemetry for AI Systems: LLM and Agent Observability (2026) | Uptrace. Snippet: Quick Answer: OpenTelemetry instruments ... semantic conventions. For agents, each tool call, LLM invocation, and retrieval step becomes a child…"
+    },
+    {
+      "label": "q6-r06",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: CAVA: Canonical Action Verification and Attestation for Runtime Governance of Agentic AI Systems. Snippet: Agentic AI systems increasingly act through heterogeneous runtimes: local coding hooks, SDK tools, browser automation, managed-agent traces, API…"
+    },
+    {
+      "label": "q6-r07",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "tool_calls"
+      ],
+      "uncertain": false,
+      "rationale": "The tracing guide explicitly names OpenTelemetry GenAI conventions, spans, and agent tools in its visible description."
+    },
+    {
+      "label": "q6-r08",
+      "lead": 1,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The paper mentions OpenTelemetry telemetry but focuses on governance enforcement; it does not identify a listed GenAI convention facet."
+    },
+    {
+      "label": "q6-r09",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "spans"
+      ],
+      "uncertain": true,
+      "rationale": "The guide snippet mentions locating a violation in a particular span, but does not expose GenAI semantic-convention attributes or tool-call details."
+    },
+    {
+      "label": "q6-r10",
+      "lead": 2,
+      "visible": 2,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The card concerns agent behavior mining in business processes, but its title and empty snippet do not show OpenTelemetry conventions, spans, tool calls, or attributes."
+    },
+    {
+      "label": "q6-r11",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "The Traceloop page describes GenAI span attributes for prompts, completions, and token use; it does not identify tool-call spans in the visible excerpt."
+    },
+    {
+      "label": "q6-r12",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "tool_calls",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card gives specific detail on a central task aspect. Visible facet signal: semantic_conventions, spans, tool_calls, attributes. Title: OpenTelemetry GenAI Semantic Conventions: Agent Spans in Tempo. Snippet: OpenTelemetry GenAI semantic conventions for AI agents: map OpenAI Agents SDK traces to invoke_agent, chat and execute_tool spans and query them…"
+    },
+    {
+      "label": "q6-r13",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "tool_calls",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "The official article shows agent, chat, and tool spans and says their details expose GenAI convention attributes."
+    },
+    {
+      "label": "q6-r14",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "semantic_conventions",
+        "tool_calls",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "The card names GenAI span types for chat, agent invocation, and tool execution and lists attribute families, directly covering the implementation task."
+    },
+    {
+      "label": "q6-r15",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "tool_calls"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: semantic_conventions, spans, tool_calls. Title: AgentTelemetry: A Fault Detection Benchmark and Toolkit for LLM Agent Observability. Snippet: LLM-based autonomous agents fail in ways that existing observability infrastructure cannot detect. OpenTelemetry’s GenAI semantic conventions cov…"
+    },
+    {
+      "label": "q6-r16",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans"
+      ],
+      "uncertain": true,
+      "rationale": "The title and snippet identify GenAI agent span conventions and span types, but no tool-call or attribute detail is visible."
+    },
+    {
+      "label": "q6-r17",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "The official conventions repository path identifies agent spans, and the excerpt names conversation ID as span/log data; tool calls are not shown."
+    },
+    {
+      "label": "q6-r18",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "The article describes standardized GenAI span names and attribute keys, but the excerpt does not mention tool calls."
+    },
+    {
+      "label": "q6-r19",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "The guide identifies GenAI semantic conventions, chat spans, and standardized attribute names; no tool-call details appear in this excerpt."
+    },
+    {
+      "label": "q6-r20",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "The implementation guide title names GenAI conventions and the snippet defines spans as operations with key-value attributes."
+    },
+    {
+      "label": "q6-r21",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "tool_calls"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: semantic_conventions, spans, tool_calls. Title: OpenTelemetry GenAI Semantic Conventions Explained · Dash0. Snippet: To debug that, you need every step ... semantic conventions are that naming standard: span, metric, and event definitions for model calls, tool e…"
+    },
+    {
+      "label": "q6-r22",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "spans",
+        "attributes"
+      ],
+      "uncertain": true,
+      "rationale": "a useful partial lead for the stated purpose; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: spans, attributes. Title: Trace semantic conventions | OpenTelemetry. Snippet: For AI agents: a documentation index is available at /llms.txt. This page has a Markdown version at /docs/specs/semconv/general/trace/index.md. V…"
+    },
+    {
+      "label": "q6-r23",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "The MLflow documentation describes exporting traces in GenAI convention format and gives a concrete configuration path, useful implementation material."
+    },
+    {
+      "label": "q6-r24",
+      "lead": 2,
+      "visible": 2,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The agent-profiler abstract discusses tool use and resource hotspots, but not OpenTelemetry GenAI conventions, spans, or attributes."
+    },
+    {
+      "label": "q6-r25",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "The article describes standard span and attribute names for language-model calls; tool-call conventions are not visible in the excerpt."
+    },
+    {
+      "label": "q6-r26",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: Decision Evidence Maturity Model for Agentic AI: A Property-Level Method Specification. Snippet: Agentic AI systems produce decision evidence at scale through execution telemetry, but property-level reconstruction often fails when an external…"
+    },
+    {
+      "label": "q6-r27",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: Parsing the Stream: A Live Trace Model for Long-Horizon Agents and Their Observers. Snippet: A long-horizon agent's trace outgrows both of its consumers: the human observer monitoring the run, and the agent itself, whose bounded context t…"
+    },
+    {
+      "label": "q6-r28",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "tool_calls",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "Datadog’s article directly describes the GenAI convention schema for prompts, tokens, tools, and provider metadata, a useful explanatory source."
+    },
+    {
+      "label": "q6-r29",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: Reasoning Provenance for Autonomous AI Agents: Structured Behavioral Analytics Beyond State Checkpoints and Execution Traces. Snippet: As AI agents transition from human-supervised copilots to autonomous platform infrastructure, the ability to analyze their reasoning behavior acr…"
+    },
+    {
+      "label": "q6-r30",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "tool_calls",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: semantic_conventions, tool_calls, spans, attributes. Title: How OpenTelemetry Traces LLM Calls, Agent Reasoning, and MCP Tools | Greptime. Snippet: When both sides propagate W3C Trace Context, the server span nests under the client span, and trace continuity is preserved across the protocol b…"
+    },
+    {
+      "label": "q7-r00",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "contradiction",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "The biomedical RAG method explicitly targets unsupported and contradictory claims and presents a verification framework; citation alignment is not stated."
+    },
+    {
+      "label": "q7-r01",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "The citation-verification paper describes relevance-scored evidence-snippet ranking, directly useful for claim-to-passage alignment."
+    },
+    {
+      "label": "q7-r02",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": false,
+      "rationale": "The issue provides a concrete claim/source/passage audit and explains partial support, making it a useful worked example rather than a benchmark study."
+    },
+    {
+      "label": "q7-r03",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: support, citation_alignment, evaluation. Title: DeepSciVerify: Verifying Scientific Claim–Citation Alignment via LLM-Driven Evidence Escalation. Snippet: FEVER (Thorne et al., 2018) established ... benchmarks further extend this setting: SCitance (Alvarez et al., 2024) uses citation sentences as cl…"
+    },
+    {
+      "label": "q7-r04",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: Using Evidence: Writing Guides: Writing Tutorial Services: Indiana University Bloomington. Snippet: Once you have formulated your claim, ... to your thesis. Here are some ways to work evidence into your writing: Offer evidence that agrees with y…"
+    },
+    {
+      "label": "q7-r05",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "Peerify checks whether reviewer claims are supported by manuscript evidence, but the excerpt does not describe cited-passage alignment."
+    },
+    {
+      "label": "q7-r06",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "contradiction"
+      ],
+      "uncertain": false,
+      "rationale": "The paper explicitly studies conflicting evidence and contradiction-aware generation, but this excerpt does not show an evaluation benchmark."
+    },
+    {
+      "label": "q7-r07",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "contradiction"
+      ],
+      "uncertain": false,
+      "rationale": "The title names contradiction and source-level disagreement in claim verification, a visible contradiction facet."
+    },
+    {
+      "label": "q7-r08",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card gives specific detail on a central task aspect. Visible facet signal: support, citation_alignment, evaluation. Title: CiteVQA: Benchmarking Evidence Attribution for Trustworthy Document Intelligence. Snippet: This answer-only approach masks a critical failure mode: a model can land on the correct answer while grounding it in the wrong passage—a critica…"
+    },
+    {
+      "label": "q7-r09",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: When Retrieval Helps and Distracts: Evaluating Evidence-Generating LLMs for Biomedical Claim Verification. Snippet: Biomedical fact-checking systems must do more than predict whether a claim is supported, contradicted, or unaddressed: they should also produce e…"
+    },
+    {
+      "label": "q7-r10",
+      "lead": 3,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The card is only a title and empty snippet about autonomous-research verification; no listed claim-support, contradiction, citation-alignment, or evaluation facet is visible."
+    },
+    {
+      "label": "q7-r11",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "The dataset abstract names erroneous scientific citations and automated citation-verification benchmarks, but does not show passage-level support labels."
+    },
+    {
+      "label": "q7-r12",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: support, citation_alignment, evaluation. Title: RefVerifier: Semi-Automated Reference Claim Verification for Scientific Manuscripts. Snippet: RefVerifier extracts citation-bearing ... verdicts with natural language explanations. Evaluating RefVerifier on public benchmarks shows claim de…"
+    },
+    {
+      "label": "q7-r13",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": false,
+      "rationale": "only broad or indirect task overlap; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: support, citation_alignment. Title: RefVerifier: Semi-Automated Reference Claim Verification for Scientific Manuscripts. Snippet: As software engineering research submission counts surge, peer reviewers face severe time constraints, making systematic verification of citation…"
+    },
+    {
+      "label": "q7-r14",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "contradiction",
+        "citation_alignment"
+      ],
+      "uncertain": false,
+      "rationale": "This guide directly frames citations as leads and asks whether the cited passage supports the claim without unresolved contradiction; it is explanatory rather than an original system."
+    },
+    {
+      "label": "q7-r15",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "AmbiFC compares sentence-level evidence annotations for ambiguous claim labels, but the visible description does not mention citation-to-passage alignment."
+    },
+    {
+      "label": "q7-r16",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "The issue requests a benchmark of reviewed claim/citation pairs with explicit support labels and source passages."
+    },
+    {
+      "label": "q7-r17",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "The SemanticCite PDF is a direct source on evidence ranking for citation verification; the snippet shows supporting and contradicting evidence scoring."
+    },
+    {
+      "label": "q7-r18",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "contradiction",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: contradiction, evaluation. Title: ClaimVer: Explainable Claim-Level Verification and Evidence Attribution of Text Through Knowledge Graphs. Snippet: Figure 1: Demonstration of ClaimVer for claim verification and evidence attribution. (A) Text labeled as Inaccurate by HealthFeedback and ClaimVe…"
+    },
+    {
+      "label": "q7-r19",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "contradiction",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: contradiction, evaluation. Title: BioDivergence: A Benchmark and Evaluation Framework for Hidden Contextual Contradictions in Biomedical Abstracts. Snippet: Biomedical findings often seem to conflict across studies, but many of these differences are context-dependent rather than true contradictions. V…"
+    },
+    {
+      "label": "q7-r20",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "contradiction",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "The ClaimVer paper title and examples show claim verification, evidence attribution, and supported/contradictory relations."
+    },
+    {
+      "label": "q7-r21",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "The verifier detects unsupported claims, retrieves evidence, and returns traceable citations, directly indicating support and citation alignment."
+    },
+    {
+      "label": "q7-r22",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "CoVeGAT directly benchmarks whether claims match their cited evidence and proposes a verification method, a strong original-method lead."
+    },
+    {
+      "label": "q7-r23",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "only broad or indirect task overlap; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: support, citation_alignment, evaluation. Title: Citation Checker: Does the Cited Paper Support Your Claim? - Manusights. Snippet: Free citation checker: paste one sentence and its reference to see whether the cited paper supports the claim, with the exact passage shown. Catc…"
+    },
+    {
+      "label": "q7-r24",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "Peerispect verifies claims made in peer reviews against submitted work, a useful evaluation system lead; it is not visibly about cited-passage alignment."
+    },
+    {
+      "label": "q7-r25",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "This paper landing page identifies SCitance and SCIVER as scientific citation/claim verification benchmarks, directly matching the literature-review task."
+    },
+    {
+      "label": "q7-r26",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "The paper directly benchmarks citation quality and verifier capability for deep-research systems, matching both attribution and evaluation facets."
+    },
+    {
+      "label": "q7-r27",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "This original scientific-claim-verification paper explicitly uses citation text and evaluates the SCitance test set, making it a strong methods lead."
+    },
+    {
+      "label": "q7-r28",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "The biomedical claim-verification paper describes evidence-based rationales and benchmark evaluation, a direct method lead with partial detail visible."
+    },
+    {
+      "label": "q7-r29",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "The evidence-ledger snippet distinguishes supported claims and describes a benchmark with labeled sources for claim-evidence traceability."
+    },
+    {
+      "label": "q7-r30",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "HALLMARK benchmarks hallucinated bibliographic references; the snippet does not show claim-to-passage alignment."
+    },
+    {
+      "label": "q7-r31",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "support",
+        "contradiction",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "The paper title names scientific claim-citation alignment, and the snippet reports CONTRADICTS recall and evidence-level verification."
+    },
+    {
+      "label": "q7-r32",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "SURE-RAG studies evidence sufficiency and uncertainty-aware verification, a useful partial lead for support assessment though not specifically citation alignment."
+    },
+    {
+      "label": "q7-r33",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "support",
+        "contradiction",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "FactReview defines supported, partially supported, and conflicting claims against evidence, but the card does not identify citation alignment specifically."
+    },
+    {
+      "label": "q8-r00",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "The systematic-review guide snippet discusses finding knowledge gaps, but does not show a search-coverage method."
+    },
+    {
+      "label": "q8-r01",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "evidence_gaps",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: evidence_gaps, uncertainty. Title: Prioritizing-Future-Research-through-Examination-of- .... Snippet: Uncertainties may be nominated for the UK DUETS database though: patients', caregiver’s and clinicians' questions about the effects of treatment;…"
+    },
+    {
+      "label": "q8-r02",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "only broad or indirect task overlap; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: uncertainty. Title: Anticipation in multiple criteria decision-making under uncertainty. Snippet: The presence of uncertainty in future outcomes can lead to indecision in choice processes, especially when eliciting the relative importances of…"
+    },
+    {
+      "label": "q8-r03",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "evidence_gaps",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: evidence_gaps, uncertainty. Title: Can Identifying Research Gaps Be a Valuable Finding?. Snippet: The stronger question is whether the missing evidence corresponds to a meaningful theoretical, empirical, methodological, practical, or societal…"
+    },
+    {
+      "label": "q8-r04",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "The scoping review focuses on linking evidence synthesis to research priorities and unanswered gaps; it does not describe search coverage in the excerpt."
+    },
+    {
+      "label": "q8-r05",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "only broad or indirect task overlap; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: uncertainty. Title: Bridging Evidence and Uncertainty: From Explainable Weighting to Uncertainty Calibration in Fact Checking. Snippet: Automated fact-checking must do more than output a label. To be trustworthy, a system should make clear how each piece of evidence contributes to…"
+    },
+    {
+      "label": "q8-r06",
+      "lead": 1,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "This clinical forecasting study offers only broad agentic-research context; its title and snippet do not address stopping, search coverage, uncertainty, or evidence gaps."
+    },
+    {
+      "label": "q8-r07",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "coverage",
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "The 34-methods review directly surveys ways to identify and display research gaps, strongly relevant systematic-review methodology."
+    },
+    {
+      "label": "q8-r08",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "The book-chapter title directly identifies a framework for finding gaps in systematic reviews; the visible card is only a source signal."
+    },
+    {
+      "label": "q8-r09",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "stopping",
+        "coverage"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: stopping, coverage. Title: When Deep Research Agents Stagnate: Enhancing Reasoning with Retrieval-Aware Agent Control. Snippet: In this paper, we analyze the reasoning trajectories of a variety of DRAs and show that existing agents often suffer from reasoning stagnation: t…"
+    },
+    {
+      "label": "q8-r10",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "stopping",
+        "coverage"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: stopping, coverage. Title: [2608.01913v1] Diagnosing Search Behavior and Failure Modes in Long-Horizon Search Agents. Snippet: Overall, by systematically characterizing the search behavior and failure modes of long-horizon search agents, this work points to practical dire…"
+    },
+    {
+      "label": "q8-r11",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "The systematic-review results identify studies that explicitly sought research gaps; the snippet gives screening counts, not search stopping or coverage criteria."
+    },
+    {
+      "label": "q8-r12",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "evidence_gaps",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: evidence_gaps, uncertainty. Title: Is There Already Enough Evidence for Your Research Question?. Snippet: If every difference is treated as a research gap, the supply of research gaps becomes effectively infinite. A more demanding approach asks what u…"
+    },
+    {
+      "label": "q8-r13",
+      "lead": 1,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The survey is about verification gaps in autonomous research, not a visible evidence gap or stopping/coverage method for search."
+    },
+    {
+      "label": "q8-r14",
+      "lead": 0,
+      "visible": 1,
+      "facets": [
+        "coverage"
+      ],
+      "uncertain": true,
+      "rationale": "The paper title and excerpt concern iterative information gathering over large contexts; the snippet does not state a stopping criterion or uncertainty measure."
+    },
+    {
+      "label": "q8-r15",
+      "lead": 2,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The conceptual pharmacology workflow mentions searches and review checkpoints but no stopping, coverage, uncertainty, or evidence-gap method in the excerpt."
+    },
+    {
+      "label": "q8-r16",
+      "lead": 1,
+      "visible": 2,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The excerpt describes deep-research planning and verification limitations but does not visibly identify stopping criteria, coverage, uncertainty, or evidence gaps."
+    },
+    {
+      "label": "q8-r17",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "uncertainty",
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "The guidance links global evidence mapping and systematic reviews to prioritizing areas of uncertainty, a useful methodological source for evidence gaps."
+    },
+    {
+      "label": "q8-r18",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "stopping",
+        "coverage",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "This guide directly says to stop when evidence coverage is sufficient and another search is unlikely to resolve the central uncertainty."
+    },
+    {
+      "label": "q8-r19",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "stopping",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: stopping, uncertainty. Title: Predecisional information search adaptively reduces three types of uncertainty - PMC. Snippet: Past work suggests that people stop collecting additional samples when the level of evidence is high or when the level of surprise is low (11, 18…"
+    },
+    {
+      "label": "q8-r20",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "The title identifies methods for health-research gaps, but the browser-check snippet reveals no search-coverage detail."
+    },
+    {
+      "label": "q8-r21",
+      "lead": 1,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "only broad or indirect task overlap; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: M3OS: A Monte Carlo Graph Search-Orchestrated Multi-Agent LLM System for Evidence-Traced Molecular Optimization. Snippet: Small-molecule optimization integrates medicinal-chemistry reasoning and computational evidence through iterative, multi-objective decisions. Whe…"
+    },
+    {
+      "label": "q8-r22",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "evidence_gaps",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: evidence_gaps, uncertainty. Title: Weak Evidence vs. Missing Evidence: Which Gap Matters More?. Snippet: Consider the importance of the underlying question, the consequences of being wrong, how much uncertainty currently exists, who is affected, whet…"
+    },
+    {
+      "label": "q8-r23",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "coverage",
+        "uncertainty",
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "The review excerpt says its preliminary searches used one database and left uncertainty about the evidence base, explicitly signaling search coverage and gaps."
+    },
+    {
+      "label": "q8-r24",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "evidence_gaps",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: evidence_gaps, uncertainty. Title: How to Find a Research Gap Without Overclaiming. Snippet: If studies exist but their evidence is insufficient or inconsistent · Describe exactly what remains uncertain and why additional research could r…"
+    },
+    {
+      "label": "q8-r25",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "The paper evaluates uncertainty signals across agent trajectories, a useful partial source on uncertainty but not specifically search stopping."
+    },
+    {
+      "label": "q8-r26",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "stopping",
+        "coverage"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: stopping, coverage. Title: Statistical stopping criteria for automated screening in systematic reviews | Systematic Reviews | Full Text. Snippet: This is particularly problematic in systematic reviews because low recall increases the risk of bias [9]. The lack of appropriate stopping criter…"
+    },
+    {
+      "label": "q8-r27",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "coverage",
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "This scoping review directly surveys methods to identify and prioritize health research gaps and explains why gaps should guide future studies."
+    },
+    {
+      "label": "q8-r28",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "coverage"
+      ],
+      "uncertain": false,
+      "rationale": "The evidence-synthesis guidance directly addresses comprehensive, repeatable searches and reporting coverage limitations, useful systematic-review methodology."
+    },
+    {
+      "label": "q8-r29",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "evidence_gaps"
+      ],
+      "uncertain": true,
+      "rationale": "only broad or indirect task overlap; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: evidence_gaps. Title: Identifying Research Gaps | Springer Nature Link. Snippet: World Health Organization (2024) Evidence and research gaps identified during development of policy guidelines for tuberculosis."
+    },
+    {
+      "label": "q9-r00",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: adaptation, mitigation. Title: Climate change: Strategies for mitigation and adaptation. Snippet: Transitioning to renewable energy sources and enhancing carbon sinks are crucial steps in mitigating climate change. Adaptation to climate change…"
+    },
+    {
+      "label": "q9-r01",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "adaptation"
+      ],
+      "uncertain": true,
+      "rationale": "a useful partial lead for the stated purpose; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: adaptation. Title: Adaptation to climate change impacts on water demand."
+    },
+    {
+      "label": "q9-r02",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: adaptation, mitigation. Title: Mitigation and Adaptation Strategies to Reduce Climate Vulnerabilities and Maintain Ecosystem Services - PMC. Snippet: Maintaining or increasing ecosystem ... (actions that reduce anthropogenic influences on climate) (Figure 1 ). Mitigation strategies are those th…"
+    },
+    {
+      "label": "q9-r03",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: impacts, adaptation, mitigation. Title: Livestock production in a changing climate: adaptation and mitigation research in Australia. Snippet: Climate change presents a range of challenges for animal agriculture in Australia. Livestock production will be affected by changes in temperatur…"
+    },
+    {
+      "label": "q9-r04",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": true,
+      "rationale": "The repository title and snippet signal climate findings across impacts and response strategies, but provide no identifiable review or primary study to prioritize."
+    },
+    {
+      "label": "q9-r05",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: impacts, adaptation, mitigation. Title: Integrative Assessment of Mitigation, Impacts, and Adaptation to Climate Change. Snippet: This volume presents the proceedings of the second international workshop held at IIASA in October 1993 assessing the current state of integrated…"
+    },
+    {
+      "label": "q9-r06",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation"
+      ],
+      "uncertain": true,
+      "rationale": "only broad or indirect task overlap; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: impacts, adaptation. Title: Spotlight on careers with Dr. Peter Berry: Climate change and health are primary concerns of Canadian researchers: Developing policies and adaptation programs to mitigate climate change impact on health."
+    },
+    {
+      "label": "q9-r07",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "no plausible task-specific reason to read; the visible card offers a title or source signal, with little substantive detail. No listed task facet is clearly visible. Title: Air pollution interventions for health.. Snippet: Nat Med — Ji JS, Dominici F, Gouveia N"
+    },
+    {
+      "label": "q9-r08",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "The snippet says climate impacts will persist and explains mitigation and adaptation as responses, visibly covering all three topics."
+    },
+    {
+      "label": "q9-r09",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: impacts, adaptation, mitigation. Title: A review of the global climate change impacts, adaptation, and sustainable mitigation measures - PubMed. Snippet: Schematic description of potential impacts of climate change on the agriculture sector and the appropriate mitigation and adaptation measures to…"
+    },
+    {
+      "label": "q9-r10",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: adaptation, mitigation. Title: (PDF) A review of the global climate change impacts, adaptation, and sustainable mitigation measures. Snippet: However, in order to deal with climate change beyond the 2085-2100 timeframe, the paper also recommends expanding research and development of mit…"
+    },
+    {
+      "label": "q9-r11",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation"
+      ],
+      "uncertain": false,
+      "rationale": "The title identifies an original study of climate impacts and farmers’ adaptation strategies in sorghum production; the card is citation-only, so no findings are visible."
+    },
+    {
+      "label": "q9-r12",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: impacts, adaptation, mitigation. Title: A review on climate change impacts, models, and its consequences on different sectors: a systematic approach | Journal of Water and Climate Change | IWA Publishing. Snippet: As defined by the IPCC, adaptation entails modifying natural or human systems to respond to present or anticipated climatic influences, while mit…"
+    },
+    {
+      "label": "q9-r13",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts"
+      ],
+      "uncertain": true,
+      "rationale": "a useful partial lead for the stated purpose; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: impacts. Title: Climate change impacts on global food security.. Snippet: Science — Wheeler T, von Braun J"
+    },
+    {
+      "label": "q9-r14",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts"
+      ],
+      "uncertain": true,
+      "rationale": "a useful partial lead for the stated purpose; the visible card offers a title or source signal, with little substantive detail. Visible facet signal: impacts. Title: Impact of recent and future climate change on vector-borne diseases.. Snippet: Ann N Y Acad Sci — Caminade C, McIntyre KM, Jones AE"
+    },
+    {
+      "label": "q9-r15",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: adaptation, mitigation. Title: Climate Change: Mitigation Strategies and Need for Adaptation - Premier Science. Snippet: Even though both measures are designed ... perspective, and level of integration.30 Adaptation projects may have a direct impact on mitigation by…"
+    },
+    {
+      "label": "q9-r16",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "The title identifies a review spanning climate impacts, adaptation, and mitigation in Pakistan; only bibliographic information is visible."
+    },
+    {
+      "label": "q9-r17",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "The FAO report title directly covers adaptation and mitigation challenges, making it a useful broad lead; the displayed snippet contains unrelated current agriculture news."
+    },
+    {
+      "label": "q9-r18",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "The title names adaptation and mitigation; the snippet also explicitly discusses worry about climate impacts."
+    },
+    {
+      "label": "q9-r19",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "The working-paper title directly names climate impact, adaptation, and mitigation research; its citation card gives no substantive content."
+    },
+    {
+      "label": "q9-r20",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: impacts, adaptation, mitigation. Title: A review of climate change, mitigation and adaptation - ScienceDirect. Snippet: This paper reviews assessing of such climate change impacts on various components of the ecosystem such as air, water, plants, animals and human…"
+    },
+    {
+      "label": "q9-r21",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "This review describes a research shift toward impacts, vulnerability, adaptation, and mitigation, directly spanning the requested reading-list topics."
+    },
+    {
+      "label": "q9-r22",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts"
+      ],
+      "uncertain": false,
+      "rationale": "The title identifies a systematic review of climate vulnerability and women’s health, a relevant impact-focused partial lead; the card shows citation metadata only."
+    },
+    {
+      "label": "q9-r23",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "The paper title directly spans plant-health impacts, adaptation, and mitigation research; without a snippet, the card provides only a strong source signal."
+    },
+    {
+      "label": "q9-r24",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation"
+      ],
+      "uncertain": false,
+      "rationale": "The title identifies a climate-impact assessment and adaptation study about oyster aquaculture; the bibliographic card gives no substantive findings."
+    },
+    {
+      "label": "q9-r25",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "The visible card explicitly says the personal biography provides no climate research evidence, so it is not a reading lead and shows no task-relevant detail."
+    },
+    {
+      "label": "q9-r26",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts"
+      ],
+      "uncertain": false,
+      "rationale": "The title identifies a study of climate impacts on children’s respiratory health, a focused primary-study lead; the snippet supplies citation metadata only."
+    },
+    {
+      "label": "q9-r27",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "The scoping-review title concerns climate-mitigation policy and health co-impacts, a useful partial lead; the citation card shows no findings."
+    },
+    {
+      "label": "q9-r28",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts"
+      ],
+      "uncertain": false,
+      "rationale": "This systematic-review overview concerns health effects of climate change, a relevant impacts lead; the visible card contains citation metadata only."
+    },
+    {
+      "label": "q9-r29",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "NASA’s overview is a useful background source on adaptation and mitigation; its snippet gives concrete examples of local adaptation measures."
+    },
+    {
+      "label": "q9-r30",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "The scoping review directly covers health impacts of adaptation and mitigation measures, and the snippet gives an example linking interventions to morbidity and mortality."
+    },
+    {
+      "label": "q9-r31",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation"
+      ],
+      "uncertain": false,
+      "rationale": "The UNFCCC excerpt describes adaptation action and support to reduce climate-related adverse impacts, risks, and vulnerabilities."
+    },
+    {
+      "label": "q9-r32",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "The paper title directly covers plant-health impacts and research for adaptation and mitigation; the empty snippet leaves only a strong bibliographic lead."
+    },
+    {
+      "label": "q9-r33",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card gives specific detail on a central task aspect. Visible facet signal: impacts, adaptation, mitigation. Title: Climate Change and Agriculture: Impacts, Adaptation and Mitigation. Snippet: Climate change is likely to have significant impacts on the agricultural sector to which farmers will have to adapt. While agriculture is a signi…"
+    },
+    {
+      "label": "q9-r34",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "a strong direct lead for a central task facet or requested source type; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: impacts, adaptation, mitigation. Title: (PDF) A review of the global climate change impacts, adaptation strategies, and mitigation options in the socio-economic and environmental sectors. Snippet: Unpredictable weather and other impacts of climate change on society are examined in · depth. This analysis focuses on the economic, social, and…"
+    },
+    {
+      "label": "q9-r35",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "The article directly distinguishes mitigation from adaptation and their relationship to climate impacts, useful conceptual coverage though not a broad empirical review."
+    },
+    {
+      "label": "q9-r36",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: adaptation, mitigation. Title: 6 Strategies that Achieve Climate Mitigation and Adaptation Simultaneously. Snippet: The sector is second only to energy, where this overlap between mitigation and adaptation is the highest. Agriculture, forestry and land use curr…"
+    },
+    {
+      "label": "q9-r37",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "a useful partial lead for the stated purpose; the visible card supplies some task-relevant detail but leaves central aspects open. Visible facet signal: adaptation, mitigation. Title: Mitigation | U.S. Climate Resilience Toolkit. Snippet: Research demonstrates that both mitigation (efforts to reduce future climate changes) and adaptation (efforts to reduce the vulnerability of soci…"
+    }
+  ]
+}
