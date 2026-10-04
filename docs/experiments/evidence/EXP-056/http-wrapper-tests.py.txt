@@ -42,6 +42,17 @@ class Tests(unittest.TestCase):
         opener = Opener(b'{}')
         with self.assertRaises(ValueError): m.exchange(json.dumps(data).encode(), 'fixture', opener)
         self.assertEqual(opener.calls, [])
+    def test_error_body_is_preserved_without_retry(self):
+        raw=b'{"error":"unavailable"}'
+        opener=Opener(raw,503)
+        with self.assertRaises(m.HTTPFailure) as caught:m.exchange(BODY,'fixture-token',opener)
+        self.assertEqual(caught.exception.raw,raw)
+        self.assertEqual(caught.exception.status,503)
+        self.assertEqual(len(opener.calls),1)
+    def test_credential_echo_is_never_returned(self):
+        with self.assertRaises(ValueError) as caught:m.exchange(BODY,'fixture-secret',Opener(b'fixture-secret',503))
+        self.assertNotIsInstance(caught.exception,m.HTTPFailure)
+        self.assertEqual(str(caught.exception),'credential-echo-suppressed')
     def test_status_failure_never_retries(self):
         opener = Opener(b'error', 503)
         with self.assertRaises(ValueError): m.exchange(BODY, 'fixture', opener)

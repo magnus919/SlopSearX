@@ -56,30 +56,44 @@ def remote_deadline():
         if old_timer[0]:signal.setitimer(signal.ITIMER_REAL,max(.000001,old_timer[0]-(time.monotonic()-started)),old_timer[1])
 
 
+class HTTPFailure(ValueError):
+    def __init__(self, raw, status, elapsed):
+        super().__init__('http-status')
+        self.raw, self.status, self.elapsed = raw, status, elapsed
+
+
 def exchange(body, token, opener, clock=time.monotonic, timing=None):
     validate_request(body)
     req = urllib.request.Request(ENDPOINT, data=body, method='POST',
         headers={'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'})
     started = clock()
-    with remote_deadline(), opener.open(req, timeout=1) as response:
-        if response.status != 200:
-            raise ValueError('http-status')
-        buffer = bytearray()
-        while True:
-            if clock() - started >= 1:
+    with remote_deadline():
+        try:
+            response = opener.open(req, timeout=1)
+        except urllib.error.HTTPError as error:
+            response = error
+        with response:
+            buffer = bytearray()
+            while True:
+                if clock() - started >= 1:
+                    raise TimeoutError('remote-deadline')
+                chunk = response.read(min(65536, LIMIT + 1 - len(buffer)))
+                if not chunk:
+                    break
+                buffer.extend(chunk)
+                if len(buffer) > LIMIT:
+                    raise ValueError('response-bound')
+            elapsed = clock() - started
+            if elapsed >= 1:
                 raise TimeoutError('remote-deadline')
-            chunk = response.read(min(65536, LIMIT + 1 - len(buffer)))
-            if not chunk:
-                break
-            buffer.extend(chunk)
-            if len(buffer) > LIMIT:
-                raise ValueError('response-bound')
-        elapsed = clock() - started
-        if elapsed >= 1:
-            raise TimeoutError('remote-deadline')
-        if timing is not None:
-            timing['remote_http_ms'] = elapsed * 1000
-    return bytes(buffer)
+            raw = bytes(buffer)
+            if token.encode() in raw:
+                raise ValueError('credential-echo-suppressed')
+            if response.status != 200:
+                raise HTTPFailure(raw, response.status, elapsed * 1000)
+            if timing is not None:
+                timing['remote_http_ms'] = elapsed * 1000
+    return raw
 
 
 class FixtureResponse(io.BytesIO):
@@ -90,7 +104,7 @@ class FixtureOpener:
     def open(self, request, timeout):
         assert request.full_url == ENDPOINT and request.method == 'POST' and timeout == 1
         if self.kind == 'http-error':
-            raise urllib.error.HTTPError(ENDPOINT, 503, 'fixture', {}, None)
+            raise urllib.error.HTTPError(ENDPOINT, 503, 'fixture', {}, FixtureResponse(b'{"error":"offline-http-error"}'))
         data = validate_request(request.data)
         raw = json.dumps({'model': 'jev-1.13.0', 'answers': {
             qid: {'type': 'noul', 'noul': .5} for qid in data['questions']},
@@ -104,7 +118,7 @@ def main():
     args = parser.parse_args()
     body = sys.stdin.buffer.read(384001)
     if args.offline_fixture:
-        token, opener = 'offline-fixture', FixtureOpener(args.offline_fixture)
+        token, opener = 'offline-fixture-non-secret', FixtureOpener(args.offline_fixture)
     else:
         token = os.environ.get('TYPESAFE_API_KEY', '')
         if not token:
@@ -114,6 +128,10 @@ def main():
     try:
         timing = {}
         raw = exchange(body, token, opener, timing=timing)
+    except HTTPFailure as error:
+        sys.stdout.buffer.write(error.raw)
+        print(json.dumps({'http_status': error.status, 'remote_http_ms': error.elapsed, 'request_sha256': hashlib.sha256(body).hexdigest(), 'response_sha256': hashlib.sha256(error.raw).hexdigest()}), file=sys.stderr)
+        return 2
     except Exception as error:
         # Never serialize request, headers, endpoint, exception message or secrets.
         print('owned-http-' + type(error).__name__, file=sys.stderr)
