@@ -1,0 +1,46 @@
+{
+  "schema": "exp063-reference-contract/1",
+  "status": "registered",
+  "objective": "reject wrong-source reference associations before any model-quality measurement",
+  "inputs": "card IDs, titles, URLs, snippets, caller purpose and facet definitions; never model ranks/scores/actions",
+  "output_fields": [
+    "card_sha256",
+    "lead",
+    "visible",
+    "facets",
+    "uncertain",
+    "rationale",
+    "anchors",
+    "facet_anchors"
+  ],
+  "anchor_fields": [
+    "title",
+    "url",
+    "snippet"
+  ],
+  "maximum_quote_bytes": 256,
+  "minimum_anchors_per_row": 1,
+  "facet_anchor_requirement": "every tagged facet has at least one exact substring anchor in the same supplied card",
+  "grades": "unchanged integers 0..3, bool rejected",
+  "inventory": "exactly every supplied card once; valid declared facet IDs only; no unknown/missing/duplicate IDs or keys",
+  "hash": "SHA256 of UTF8 json of exact id/title/url/snippet with sorted keys and compact separators",
+  "normalization": "strip validation-only binding/anchor metadata into unchanged legacy metric fields; no inferred grades or tags",
+  "semantic_boundary": "hashes and substrings prove source association, not correctness/relevance; independently inspect every source/rationale/grade/facet before sealing",
+  "registered_fixtures": [
+    "valid source-bound row",
+    "wrong-card fingerprint",
+    "wrong-card quoted anchor",
+    "tagged facet without anchor",
+    "unknown or missing source ID",
+    "duplicate or unknown facet",
+    "bool or out-of-range grade",
+    "empty rationale",
+    "extra or missing schema field",
+    "hash stable under object key order",
+    "changed same-ID content",
+    "validation metadata removed without grade changes"
+  ],
+  "provider_calls": 0,
+  "search_calls": 0,
+  "decision": "all finite valid/rejecting fixtures pass and independent review resolves blocking findings; no ranking or adoption claim"
+}

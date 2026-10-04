@@ -1,0 +1,9 @@
+# EXP-063: qualify source-bound reference records
+
+Registered finite engineering qualification after the source-association fault documented in EXP-062. The unchanged historical assessment A is unusable for trusted quality conclusions. Do not correct its sealed post-model rows or use a revised assessment to rescue old acceptance outcomes.
+
+Introduce explicit per-card content fingerprints and exact quoted anchors in future reference records. Require complete source inventory, unchanged 0–3 lead/visible scales, known unique facet IDs, a same-card anchor for each tagged facet, uncertainty and nonempty rationale. Reject content changes, transplanted card rows, quotes from another source and incomplete/ambiguous schema. Strip only binding metadata for the existing metrics; never infer a grade, facet or certainty flag. The registered fixture inventory and decision rule are in protocol.json. No provider, search, Brave or deployment calls.
+
+An exact substring and hash are necessary association checks, not semantic validation. Each future cohort must still receive two independent ranking-blind assessments and full source/rationale/facet audit before model calls. Neither assessor receives model scores, selected IDs, rankings or action traces. Freeze the verified references prospectively; keep disagreement and uncertainty, never manufacture a gold consensus. Labels are fallible assistant visible-card judgments, not human/expert truth or proof of unseen page contents. Quotations must be minimal and grounded in the supplied card.
+
+Finite success qualifies only the record-admission workflow. It does not select a model policy, repair a past quality verdict, establish uplift, replace untouched confirmation or permit runtime delivery. The complete original production acceptance scope remains open.
