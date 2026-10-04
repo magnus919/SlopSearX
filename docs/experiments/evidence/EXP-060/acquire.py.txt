@@ -1,8 +1,8 @@
 """EXP-060 frozen-pool acquisition runner.
 
-This file is deliberately inert unless invoked with ``--live`` and a committed,
-hash-matched registration manifest. Offline tests use the native SearchService
-and native adapters with HTTPX MockTransport; they never open a network socket.
+This file is deliberately inert unless invoked with ``--live`` and the frozen
+registration plus committed combined qualification match. Offline tests use the
+native SearchService and HTTPX MockTransport; they never open a network socket.
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import pwd
 import re
 import subprocess
 import sys
@@ -616,10 +617,64 @@ def _case_ids(queries: list[dict[str, Any]]) -> list[str]:
     return [case["id"] for case in queries]
 
 
-async def run_acquisition(output_dir: Path, frozen: dict[str, Any]) -> dict[str, Any]:
+def claim_acquisition_lease(
+    frozen: dict[str, Any], *, state_root: Path | None = None
+) -> dict[str, str]:
+    """Claim the one-shot lease for this frozen protocol/cohort, independent of output paths."""
+    protocol_sha = _file_sha256(PROTOCOL_PATH)
+    cohort_sha = _file_sha256(QUERIES_PATH)
+    if frozen["pins"].get("protocol_sha256") != protocol_sha or frozen["pins"].get("cohort_sha256") != cohort_sha:
+        raise AcquisitionError("cannot lease an acquisition with stale protocol or cohort pins")
+    lease_key = _sha256(f"{protocol_sha}\n{cohort_sha}".encode())
+    if state_root is None:
+        home = Path(pwd.getpwuid(os.getuid()).pw_dir)
+        state_root = home / ".local" / "state" / "slopsearx" / "exp060"
+    state_root = state_root.expanduser().absolute()
+    if state_root.resolve(strict=False) == ROOT or ROOT in state_root.resolve(strict=False).parents:
+        raise AcquisitionError("acquisition lease state must be outside the repository")
+    state_root.mkdir(mode=0o700, parents=True, exist_ok=True)
+    os.chmod(state_root, 0o700)
+    lease_path = state_root / f"lease-{lease_key}.json"
+    if lease_path.exists() or lease_path.is_symlink():
+        raise AcquisitionError("the frozen EXP-060 acquisition lease has already been claimed")
+    value = {
+        "schema": "exp060-one-shot-lease/1",
+        "lease_key": lease_key,
+        "protocol_sha256": protocol_sha,
+        "cohort_sha256": cohort_sha,
+        "claimed_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+    data = _json_bytes(value)
+    try:
+        fd = os.open(lease_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError as exc:
+        raise AcquisitionError("the frozen EXP-060 acquisition lease has already been claimed") from exc
+    try:
+        with os.fdopen(fd, "wb", closefd=False) as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(fd)
+    finally:
+        os.close(fd)
+    directory_fd = os.open(state_root, os.O_RDONLY)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
+    return {"key": lease_key, "status": "claimed"}
+
+
+async def run_acquisition(
+    output_dir: Path,
+    frozen: dict[str, Any],
+    *,
+    lease_root: Path | None = None,
+    test_transports: dict[str, httpx.AsyncBaseTransport] | None = None,
+) -> dict[str, Any]:
     """Serially capture all fixed cases, checkpointing every returned case."""
     protocol, queries = frozen["protocol"], frozen["queries"]
     output_dir = _secure_output_dir(output_dir)
+    lease = claim_acquisition_lease(frozen, state_root=lease_root)
     brave_key = os.environ.get("ENGINE_BRAVE_API_KEY", "")
     if not brave_key:
         # Acquisition may continue on public scholarly sources; Brave records
@@ -636,6 +691,7 @@ async def run_acquisition(output_dir: Path, frozen: dict[str, Any]) -> dict[str,
         brave_key=brave_key,
         journal=ledger,
         get_case_id=lambda: current_case["id"],
+        test_transports=test_transports,
     )
     reranker = RecordingIdentityReranker()
     run: dict[str, Any] = {
@@ -644,6 +700,7 @@ async def run_acquisition(output_dir: Path, frozen: dict[str, Any]) -> dict[str,
         "protocol_sha256": _file_sha256(PROTOCOL_PATH),
         "queries_sha256": _file_sha256(QUERIES_PATH),
         "source_pins_sha256": _file_sha256(SOURCE_PINS_PATH),
+        "acquisition_lease": lease,
         "planned_case_ids": _case_ids(queries),
         "completed_case_ids": [],
         "failed_case_id": None,

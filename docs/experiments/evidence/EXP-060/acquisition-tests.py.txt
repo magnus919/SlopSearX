@@ -136,7 +136,8 @@ class AcquisitionTests(unittest.TestCase):
     def test_native_searchservice_captures_full_pool_grouping_and_bounded_projection(self) -> None:
         frozen = acquire.verify_source_pins()
         protocol = frozen["protocol"]
-        transport = _mock_transport()
+        counts: dict[str, int] = {}
+        transport = _mock_transport(counts=counts)
         shared = {name: transport for name in ("brave", "openalex", "semanticscholar", "arxiv", "github")}
         journal = _NullJournal()
         adapters, owned = acquire._make_adapters(
@@ -178,7 +179,59 @@ class AcquisitionTests(unittest.TestCase):
         self.assertEqual(result["cache"], False)
         self.assertEqual(result["suggestions"], False)
         self.assertEqual({row["status"] for row in result["engine_outcomes"]}, {"ok"})
+        self.assertEqual(
+            {name: counts.get(name, 0) for name in protocol["research_engines"]},
+            {name: 1 for name in protocol["research_engines"]},
+        )  # explicit science-engine list dispatches despite category=general
         self.assertEqual(owned, [])
+
+    def test_one_shot_lease_is_shared_across_different_output_directories(self) -> None:
+        frozen = acquire.verify_source_pins()
+        first_counts: dict[str, int] = {}
+        transport = _mock_transport(counts=first_counts)
+        shared = {name: transport for name in ("brave", "openalex", "semanticscholar", "arxiv", "github")}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            lease_root = root / "state"
+            first_output = root / "output-a"
+            second_output = root / "output-b"
+            previous_key = os.environ.get("ENGINE_BRAVE_API_KEY")
+            os.environ["ENGINE_BRAVE_API_KEY"] = "offline-brave-canary"
+            try:
+                first = asyncio.run(
+                    acquire.run_acquisition(
+                        first_output,
+                        frozen,
+                        lease_root=lease_root,
+                        test_transports=shared,
+                    )
+                )
+            finally:
+                if previous_key is None:
+                    os.environ.pop("ENGINE_BRAVE_API_KEY", None)
+                else:
+                    os.environ["ENGINE_BRAVE_API_KEY"] = previous_key
+            self.assertEqual(first["status"], "complete")
+            self.assertEqual(first["brave_attempts"], 8)
+            lease_path = lease_root / f"lease-{first['acquisition_lease']['key']}.json"
+            self.assertNotIn(str(first_output), lease_path.read_text())
+            counts = {"sent": 0}
+            second_transport = _mock_transport(counts=counts)
+            engine_names = ("brave", "openalex", "semanticscholar", "arxiv", "github")
+            second_shared = {name: second_transport for name in engine_names}
+            with self.assertRaisesRegex(acquire.AcquisitionError, "already been claimed"):
+                asyncio.run(
+                    acquire.run_acquisition(
+                        second_output,
+                        frozen,
+                        lease_root=lease_root,
+                        test_transports=second_shared,
+                    )
+                )
+            self.assertEqual(counts, {"sent": 0})
+            self.assertTrue(second_output.is_dir())
+            self.assertEqual(list(second_output.iterdir()), [])
+            self.assertEqual(sum(first_counts.values()), 37)
 
     def test_full_eighty_result_pool_is_not_truncated(self) -> None:
         frozen = acquire.verify_source_pins()
