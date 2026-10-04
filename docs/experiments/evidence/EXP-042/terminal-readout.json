@@ -1,0 +1,39 @@
+{
+  "schema": "exp042-terminal-readout/1",
+  "outcome": "not-supported",
+  "decision": "registered candidate unsupported after terminal provider rejection",
+  "planned_calls": 48,
+  "attempted_calls": 36,
+  "valid_calls": 35,
+  "failed_request": "constructed80-e",
+  "failed_request_bytes": 351588,
+  "failed_questions": 395,
+  "failed_candidates": 79,
+  "transport_response": {
+    "error": "provider_http",
+    "status": 400,
+    "_elapsed_ms": 286.73361893743277
+  },
+  "valid_usage_totals": {
+    "input_tokens": 973929,
+    "output_tokens": 85832
+  },
+  "failed_call_usage": "unavailable; not treated as zero",
+  "maximum_valid_remote_http_ms": 594.1210770979524,
+  "new_searches": 0,
+  "brave_attempts_used": 0,
+  "retries": 0,
+  "terminal_no_retry_verified": true,
+  "root_cause": "unconfirmed; HTTP 400 alone does not identify rejection reason",
+  "documented_context_limits": {
+    "url": "https://docs.typesafe.ai/models",
+    "combined_tokens": 64000,
+    "state_plus_longest_question_tokens": 32000,
+    "interpretation": "Combined question/context budget is a plausible cause; exact provider token count and error body were not captured."
+  },
+  "limitations": [
+    "All predeclared gates cannot be evaluated because stress and navigation groups are incomplete.",
+    "Partial quality diagnostics cannot override operational failure.",
+    "Byte feasibility does not prove provider token-context feasibility."
+  ]
+}

@@ -1,6 +1,6 @@
 # EXP-042 — Ordinal source lead with explicit facet coverage
 
-**Status: registered before implementation and measurement.** This is an exposed development study on the frozen EXP-040 pools and references. EXP-040 remains failed under its registered facet-preservation guard. EXP-042 does not repair or relabel EXP-040, establish production benefit, or authorize deployment. Production adoption requires a separate untouched confirmation.
+**Status: completed, not-supported.** Registered before implementation and measurement; the terminal result is appended below. This is an exposed development study on the frozen EXP-040 pools and references. EXP-040 remains failed under its registered facet-preservation guard. EXP-042 does not repair or relabel EXP-040, establish production benefit, or authorize deployment. Production adoption requires a separate untouched confirmation.
 
 ## Rationale and evidence boundary
 
@@ -124,3 +124,7 @@ Also test an 80-card, four-facet boundary body with every permitted field at its
 ## Qualified pre-call packet
 
 The [qualified execution packet](evidence/EXP-042/qualification.md) freezes the runner, analysis, neutral fixtures, grouping, sealed references and all 48 request bodies before live calls. Nine analysis tests, ten runner fixtures and independent selector/transport checks pass. The experiment remains registered and unmeasured; Brave usage is 0/10.
+
+## Result
+
+The [terminal readout](evidence/EXP-042/readout.md) records 35 valid requests and one failed HTTP 400 attempt, with no retries. The remaining stress and navigation calls were not made. Corrected partial diagnostics also show no facet-coverage improvement and fail reference B’s development uncertainty guard. The reference-map reporting defect and its unchanged-label correction are retained explicitly. Candidate E is unsupported; no fresh confirmation, runtime integration or deployment is justified by this result. Brave usage remains 0/10.
