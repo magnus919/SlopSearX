@@ -1,0 +1,89 @@
+"""One separately registered network-qualified EXP062 invocation; no retries."""
+from pathlib import Path
+import argparse,hashlib,importlib.machinery,importlib.util,json,os,re,socket,subprocess,sys,tempfile
+HERE=Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+
+OLD=load('exp062_frozen_owned_runner',HERE.parent / 'EXP-061' / 'normal-runner.py.txt')
+
+def network_preflight(resolver=socket.getaddrinfo):
+    if not resolver('api.typesafe.ai',443):raise ValueError('network-resolution-precondition')
+    return {'provider_hostname':'api.typesafe.ai','dns':'resolved'}
+
+def check_files(files):
+    if type(files)is not dict:raise ValueError('source-inventory')
+    for name,digest in files.items():
+        path=REPO / name
+        if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts or path.is_symlink() or not path.is_file() or type(digest)is not str or not re.fullmatch('[0-9a-f]{64}',digest) or hashlib.sha256(path.read_bytes()).hexdigest()!=digest:raise ValueError('changed-qualified-source')
+
+def admission(acquisition,references,revision):
+    head=subprocess.run(['git','rev-parse','HEAD'],cwd=REPO,check=True,capture_output=True,text=True).stdout.strip()
+    relative='docs/experiments/evidence/EXP-062/qualification-integrity.json'
+    raw=OLD.committed(relative,head)
+    if (HERE / 'qualification-integrity.json').read_bytes()!=raw:raise ValueError('uncommitted-qualification')
+    q=json.loads(raw)
+    if q.get('schema')!='exp062-qualification-integrity/1' or q.get('qualified')is not True:raise ValueError('not-qualified')
+    files=q.get('files',{})
+    required={'docs/experiments/evidence/EXP-062/'+name for name in ['protocol.json','registration-integrity.json','network-runner.py.txt','network-runner-tests.py.txt']}
+    parent_path='docs/experiments/evidence/EXP-061/qualification-integrity.json'
+    required.add(parent_path)
+    if not required.issubset(files):raise ValueError('incomplete-qualification')
+    check_files(files)
+    parent=json.loads((REPO / parent_path).read_bytes())
+    if not set(parent['files']).issubset(files):raise ValueError('incomplete-inherited-qualification')
+    for name,digest in parent['files'].items():
+        if files[name]!=digest:raise ValueError('changed-inherited-pin')
+    reg_path='docs/experiments/evidence/EXP-062/registration-integrity.json'
+    if OLD.committed(reg_path,q['registration_revision'])!=(HERE / 'registration-integrity.json').read_bytes():raise ValueError('changed-registration')
+    reg=json.loads((HERE / 'registration-integrity.json').read_bytes());check_files(reg['files'])
+    protocol_raw=(HERE / 'protocol.json').read_bytes();p=json.loads(protocol_raw)
+    if p.get('schema')!='exp062-network-invocation/1' or p.get('status')!='registered':raise ValueError('protocol')
+    parent_protocol=(HERE.parent / 'EXP-061' / 'protocol.json').read_bytes()
+    if hashlib.sha256(parent_protocol).hexdigest()!=p['parent_protocol_sha256']:raise ValueError('changed-parent-protocol')
+    for name,data in [('fresh-acquisition.json',acquisition),('fresh-references.json',references)]:
+        if hashlib.sha256(data).hexdigest()!=p['inputs'][name] or OLD.committed('docs/experiments/evidence/EXP-060/'+name,revision)!=data:raise ValueError('changed-input')
+    return {'input_revision':revision,'qualification_sha256':hashlib.sha256(raw).hexdigest(),'identity':hashlib.sha256(protocol_raw+acquisition+references).hexdigest()}
+
+def acquire_lease(integrity):
+    path=Path(tempfile.gettempdir()) / ('exp062-model-attempt-'+integrity['identity']+'.json')
+    with path.open('x')as stream:
+        json.dump(integrity,stream);stream.flush();os.fsync(stream.fileno())
+    directory=os.open(path.parent,os.O_RDONLY)
+    try:os.fsync(directory)
+    finally:os.close(directory)
+
+def execute(acquisition_raw,references_raw,outdir,mode,revision,env_file=None,resolver=socket.getaddrinfo):
+    acquisition=OLD.OLD.E.PARSER.strict(acquisition_raw);references=OLD.OLD.E.PARSER.strict(references_raw)
+    integrity=None
+    if mode=='live':
+        preflight=network_preflight(resolver)
+        integrity=admission(acquisition_raw,references_raw,revision)
+        if env_file is not None:
+            from dotenv import dotenv_values
+            value=dotenv_values(env_file).get('TYPESAFE_API_KEY')
+            if not value:raise ValueError('missing-credential')
+            os.environ['TYPESAFE_API_KEY']=value
+        if not os.environ.get('TYPESAFE_API_KEY'):raise ValueError('missing-credential')
+        acquire_lease(integrity)
+        integrity['network_preflight']=preflight
+    result=OLD.run(acquisition,references,outdir,mode=='offline',integrity)
+    result['execution_registration']='EXP-062'
+    result['prior_setup_attempt']='EXP-061 retained separately; one unknown-usage dispatch; no ranking response'
+    OLD.OLD.atomic(outdir / 'run.json',result)
+    return result
+
+def main():
+    p=argparse.ArgumentParser();p.add_argument('--mode',choices=['offline','live'],default='offline')
+    p.add_argument('--acquisition',type=Path,required=True);p.add_argument('--references',type=Path,required=True);p.add_argument('--outdir',type=Path,required=True);p.add_argument('--input-revision',default='');p.add_argument('--env-file',type=Path)
+    a=p.parse_args();result=execute(a.acquisition.read_bytes(),a.references.read_bytes(),a.outdir,a.mode,a.input_revision,a.env_file)
+    print(json.dumps({'status':result['status'],'operations':len(result['operations']),'attempts':result['budget']['attempts'],'synthetic':result['synthetic']}))
+    return 0 if result['status']=='complete' else 2
+
+if __name__=='__main__':
+    try:sys.exit(main())
+    except Exception as error:
+        print('exp062-setup-'+type(error).__name__,file=sys.stderr);sys.exit(2)

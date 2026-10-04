@@ -1,0 +1,36 @@
+from pathlib import Path
+import hashlib,json,socket,subprocess,sys,tempfile,unittest
+from unittest.mock import patch
+import importlib.machinery,importlib.util
+HERE=Path(__file__).resolve().parent
+
+def load(name,path):
+    l=importlib.machinery.SourceFileLoader(name,str(path));s=importlib.util.spec_from_loader(name,l);m=importlib.util.module_from_spec(s);l.exec_module(m);return m
+
+R=load('exp062_test_owned',HERE / 'network-runner.py.txt')
+FIX=load('exp062_fixture',HERE.parent / 'EXP-060' / 'evaluate-tests.py.txt')
+
+class Tests(unittest.TestCase):
+    def test_dns_failure_precedes_admission_credential_or_lease(self):
+        a,r=FIX.inputs()
+        def fail(*args):raise socket.gaierror(8,'fixture')
+        with tempfile.TemporaryDirectory()as tmp,patch.object(R,'admission')as gate,patch.object(R,'acquire_lease')as lease:
+            out=Path(tmp)/'never'
+            with self.assertRaises(socket.gaierror):R.execute(json.dumps(a).encode(),json.dumps(r).encode(),out,'live','',Path(tmp)/'absent.env',fail)
+            gate.assert_not_called();lease.assert_not_called();self.assertFalse(out.exists())
+
+    def test_source_hash_and_path_admission_rejects_tampering(self):
+        path='docs/experiments/evidence/EXP-062/network-runner.py.txt'
+        R.check_files({path:hashlib.sha256((R.REPO/path).read_bytes()).hexdigest()})
+        for files in [{path:'0'*64},{'../escape':'0'*64},{'/absolute':'0'*64}]:
+            with self.assertRaises(ValueError):R.check_files(files)
+
+    def test_offline_owned_cli_preserves_complete_paired_run(self):
+        with tempfile.TemporaryDirectory()as tmp:
+            root=Path(tmp);a,r=FIX.inputs();ap=root/'a.json';rp=root/'r.json';ap.write_text(json.dumps(a));rp.write_text(json.dumps(r));out=root/'out'
+            command=[sys.executable,str(HERE/'network-runner.py.txt'),'--acquisition',str(ap),'--references',str(rp),'--outdir',str(out)]
+            p=subprocess.run(command,capture_output=True,timeout=90);self.assertEqual(p.returncode,0,p.stderr.decode())
+            run=json.loads((out/'run.json').read_bytes());self.assertEqual(run['execution_registration'],'EXP-062');self.assertTrue(run['synthetic']);self.assertEqual(run['status'],'complete');self.assertEqual(len(run['operations']),21);self.assertEqual(run['budget']['attempts'],127);self.assertEqual(len(list((out/'receipts').glob('*.json'))),127)
+            self.assertEqual(sum(len(op['w0_attempts']) for op in run['operations']),21)
+
+if __name__=='__main__':unittest.main()
