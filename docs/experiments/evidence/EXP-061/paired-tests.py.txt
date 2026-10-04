@@ -1,0 +1,194 @@
+"""Offline structural and deterministic tests for EXP-061 paired coordination."""
+import contextlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+from types import SimpleNamespace
+import unittest
+from unittest.mock import patch
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+M = load("exp061_paired_tests", HERE / "paired.py.txt")
+
+class PairedCoordinatorTests(unittest.TestCase):
+    def test_budgets_reserve_physical_calls_and_retain_known_usage(self):
+        b = M.Budget()
+        pair_reservation = b.reserve_paired_e_operation()
+        self.assertEqual(pair_reservation["calls_reserved_per_arm"], 4)
+        self.assertEqual(pair_reservation["input_tokens_both_arms"], 512000)
+        self.assertEqual(b.attempts, 0)  # Reservation is not a physical call.
+        b.before("comparator"); b.observe("comparator", {"input_tokens": 12, "output_tokens": 4})
+        b.before("native_e"); b.observe("native_e", {"input_tokens": 13, "output_tokens": 5})
+        b.before("canonical_e"); b.observe("canonical_e", {"input_tokens": 14, "output_tokens": 6})
+        self.assertEqual(b.attempts, 3)
+        self.assertEqual((b.input_tokens, b.output_tokens), (39, 15))
+        self.assertEqual([b.parts[k]["attempts"] for k in b.parts], [1, 1, 1])
+        with self.assertRaises(ValueError):
+            b.observe("native_e", {"input_tokens": "unknown", "output_tokens": 0})
+        self.assertTrue(b.unknown)
+        with self.assertRaises(ValueError):
+            b.before("canonical_e")
+
+        cannot_reserve = M.Budget()
+        cannot_reserve.parts["native_e"]["input_tokens"] = 3000000 - 255999
+        with self.assertRaisesRegex(ValueError, "reservation"):
+            cannot_reserve.reserve_paired_e_operation()
+        self.assertEqual(cannot_reserve.attempts, 0)
+
+    def test_navigation_keeps_identity_facet_bypass_with_zero_e_budget_calls(self):
+        b = M.Budget()
+        for arm in ("native", "canonical"):
+            adapter = M.ArmBudget(b, arm)
+            self.assertEqual(adapter.arm, arm)
+        self.assertEqual(b.attempts, 0)
+
+    def test_frozen_registration_contains_exact_21_operation_plan(self):
+        protocol = json.loads((REPO / "docs/experiments/evidence/EXP-060/protocol.json").read_bytes())
+        self.assertEqual(len(protocol["ordered_case_plan"]), 21)
+        self.assertEqual(["native", "canonical"] if 0 % 2 == 0 else ["canonical", "native"],
+                         ["native", "canonical"])
+        self.assertEqual(["canonical", "native"] if 1 % 2 else ["native", "canonical"],
+                         ["canonical", "native"])
+
+    def test_paired_runner_is_inert_without_explicit_transport_and_labels_exposure(self):
+        source = (HERE / "paired.py.txt").read_text()
+        self.assertIn('"schema": "exp061-paired-artifacts/1"', source)
+        self.assertIn('"reference_source": "exp060_exposed"', source)
+        self.assertIn('"historical_labels_reused": True', source)
+        self.assertIn('ev.comparator("w0"', source)
+        self.assertIn('"physical_call_counted_once": True', source)
+        self.assertIn('"not-invoked-suffix"', source)
+        self.assertNotIn("httpx.AsyncClient", source)
+        self.assertNotIn("requests.post", source)
+
+    def test_21_paired_operations_share_exactly_21_w0_calls_and_preserve_membership(self):
+        ev, canon = M.modules()
+        protocol = json.loads((REPO / "docs/experiments/evidence/EXP-060/protocol.json").read_bytes())
+        query_rows = json.loads((REPO / "docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+        cases = {row["id"]: row for row in query_rows}
+        pools = {}
+        references = {"A": {}, "B": {}}
+        for qid, case in cases.items():
+            cards = [
+                {"id": f"{qid}-a", "url": f"https://fixture.invalid/{qid}/a", "title": "A", "snippet": "a"},
+                {"id": f"{qid}-b", "url": f"https://fixture.invalid/{qid}/b", "title": "B", "snippet": "b"},
+            ]
+            pools[qid] = {"cards": cards}
+            annotations = {card["id"]: {"lead": 1, "visible": 1, "facets": [],
+                                         "uncertain": False, "rationale": "fixture label"} for card in cards}
+            references["A"][qid] = annotations
+            references["B"][qid] = annotations
+
+        plan = []
+        for descriptor in protocol["ordered_case_plan"]:
+            qid, mode = descriptor["id"].split("-", 1)
+            native = list(pools[qid]["cards"])
+            if mode == "rotate20":
+                shift = 20 % len(native)
+                native = native[shift:] + native[:shift]
+            ids = [c["id"] for c in native]
+            prepared = {"whole_ids": ids, "tail_ids": [],
+                        "w0": {"test_arm": "w0"}, "w0_local_to_pool": {},
+                        "d": {"test_arm": "d", "state": {"candidates": native}},
+                        "f": {"test_arm": "f", "state": {"candidates": native}}}
+            plan.append({"id": descriptor["id"], "case": qid, "mode": mode, "requests": prepared})
+
+        def fake_canonical_prepare(case, native_cards):
+            policy_cards = sorted((dict(card) for card in native_cards),
+                                  key=lambda c: tuple(c[k].encode("utf-8") for k in ("url", "title", "snippet", "id")))
+            ids = [c["id"] for c in policy_cards]
+            treatment = {"whole_ids": ids, "tail_ids": [],
+                         "d": {"test_arm": "d", "state": {"candidates": policy_cards}},
+                         "f": {"test_arm": "f", "state": {"candidates": policy_cards}}}
+            return {"provenance_cards": native_cards, "policy_cards": policy_cards,
+                    "nativeprepared": None, "treatmentprepared": treatment}
+
+        calls = {"w0": 0, "d": 0, "f": 0, "e": 0}
+        failure = {"arm": None}
+        def fake_comparator(arm, request, prepared, transport, budget, attempts):
+            calls[arm] += 1
+            budget.before("comparator")
+            if arm == failure["arm"]:
+                budget.unknown = True
+                attempts.append({"arm": arm, "status": "failed", "usage": None,
+                                 "remote_http_ms": 0, "request_sha256": "failed-test"})
+                raise ValueError("injected comparator failure")
+            attempts.append({"arm": arm, "status": "valid", "usage": {"input_tokens": 1, "output_tokens": 1}, "remote_http_ms": 1, "request_sha256": "test"})
+            budget.observe("comparator", {"input_tokens": 1, "output_tokens": 1})
+            ids = list(prepared["whole_ids"])
+            if arm == "w0": return ids, None
+            if arm == "d": return ids, {cid: 1 for cid in ids}
+            return None, {"fixture": {}}
+
+        def fake_guarded(*args, **kwargs):
+            calls["e"] += 1
+            budget = kwargs["budget"]
+            budget.before_call()
+            budget.observe({"input_tokens": 1, "output_tokens": 1})
+            ids = list(args[7])
+            return {"status": "valid", "order": ids, "attempts": [], "actions": [],
+                    "remote_total_ms": 2, "termination_reason": "no_proposals"}
+
+        acquisition = {"pools": pools}
+        with (patch.object(ev.P, "verify_registration", lambda: None),
+              patch.object(ev.P, "operations", lambda _: plan),
+              patch.object(ev, "comparator", fake_comparator),
+              patch.object(ev, "operation_deadline", contextlib.nullcontext),
+              patch.object(ev.COORD, "guarded_operation", fake_guarded),
+              patch.object(canon, "prepare", fake_canonical_prepare)):
+            output = M.evaluate(acquisition, references, lambda *a, **k: (b"", 1),
+                                lambda *a, **k: (b"", 1))
+            first_counts = dict(calls)
+            failure["arm"] = "d"
+            failed = M.evaluate(acquisition, references, lambda *a, **k: (b"", 1),
+                                lambda *a, **k: (b"", 1))
+
+        self.assertEqual(output["status"], "complete", output["operations"][0])
+        self.assertEqual(len(output["operations"]), 21)
+        self.assertEqual(first_counts["w0"], 21)  # W0 is not duplicated for the second arm.
+        self.assertEqual(first_counts["d"], 42)
+        self.assertEqual(first_counts["f"], 32)
+        self.assertEqual(first_counts["e"], 32)  # 16 research operations x two arms; navigation bypasses.
+        self.assertEqual(output["budget"]["attempts"], 127)
+        for index, row in enumerate(output["operations"]):
+            self.assertEqual(row["arm_order"], ["native", "canonical"] if index % 2 == 0 else ["canonical", "native"])
+            self.assertEqual(len(row["arms"]), 2)
+            if cases[row["case"]]["facets"]:
+                self.assertEqual(row["e_operation_reservation"]["calls_reserved_per_arm"], 4)
+            full_ids = {c["id"] for c in row["nativeopcards"]}
+            self.assertEqual({c["id"] for c in row["policycards"]}, full_ids)
+            for arm in row["arms"]:
+                for order in arm["orders"].values():
+                    self.assertEqual(set(order), full_ids)
+                self.assertTrue(arm["shared_w0_receipt"]["physical_call_counted_once"])
+                self.assertEqual(arm["reference_source"], "exp060_exposed")
+                self.assertTrue(arm["historical_labels_reused"])
+        q4base = next(r for r in output["operations"] if r["id"] == "q4-base")
+        q4rot = next(r for r in output["operations"] if r["id"] == "q4-rotate20")
+        self.assertEqual([c["id"] for c in q4base["policycards"]], [c["id"] for c in q4rot["policycards"]])
+
+        # A failed first D call rolls the operation to W0, skips the other arm,
+        # and retains explicit rows for the exact uninvoked suffix.
+        first = failed["operations"][0]
+        self.assertEqual(failed["status"], "failed")
+        self.assertEqual(first["failure_arm"], "native")
+        self.assertEqual(first["uninvoked_arm_order"], ["canonical"])
+        self.assertEqual(len(first["arms"]), 1)
+        self.assertEqual(first["arms"][0]["status"], "failed")
+        self.assertEqual(first["arms"][0]["observed_orders"]["d"], ["q1-a", "q1-b"])
+        self.assertEqual(first["arms"][0]["orders"]["e"], first["shared_w0"]["order"])
+        self.assertEqual(len(failed["operations"]), 21)
+        self.assertEqual([r["status"] for r in failed["operations"][1:]], ["not-invoked"] * 20)
+
+if __name__ == "__main__":
+    unittest.main()
