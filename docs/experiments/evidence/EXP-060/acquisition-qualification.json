@@ -1,0 +1,36 @@
+{
+  "schema": "exp060-acquisition-runner-qualification/1",
+  "status": "passed",
+  "scope": "offline runner qualification only; live acquisition remains disabled until a committed final registration binds these hashes",
+  "baseline_revision": "8b52ae2035929b52aead5f2d1cedc2f955cadc38",
+  "protocol_sha256": "145de04755a5b36ab2630a76f022007ab1d14d73158b208fbcd332bdeba0bb9f",
+  "queries_sha256": "010a418d7e37e9df198d6cb313b4612d82e76ba8bef4cc2a9502f2074bf85836",
+  "source_pins_sha256": "debda16663dd225b6f670a20e3aabe4f6ab6a58c8e4d3f0ab9add47f148cec1b",
+  "runner_sha256": "48d48918039e033deabe9e3a3f906782849bbf26ca3bc5d4010a42981fb2cc90",
+  "tests_sha256": "2520a88d601da6f81275349d6006684960dcf0507f82b786e39aec529c4b2802",
+  "verification": {
+    "command": "PYTHONPATH=<worktree> <pinned-python> docs/experiments/evidence/EXP-060/acquire.py.txt --selftest",
+    "tests_passed": 8,
+    "tests_failed": 0,
+    "network_http_calls": 0,
+    "brave_http_attempts": 0,
+    "jev_calls": 0,
+    "cases_acquired_live": 0
+  },
+  "covered_invariants": [
+    "13-case frozen query and source-pin verification",
+    "native SearchService dispatch with four real adapters behind HTTPX MockTransport",
+    "full 80-card pool retained and stable local IDs assigned after grouping",
+    "canonical DOI grouping preserves native member provenance",
+    "shared bounded title, URL and snippet projection without pool truncation",
+    "partial engine failures retained with usable complete merged pool",
+    "Brave attempt ledger fsynced before forwarding; eleventh request blocked before dispatch",
+    "fixed public HTTPS host/path allowlists reject private, wrong-scheme and wrong-path requests",
+    "GitHub credentials from environment are not forwarded; optional Semantic Scholar process credentials are forwarded in memory only; configured secrets are absent from serialized output",
+    "write-once artifact and private output-directory checks fail closed"
+  ],
+  "limits": [
+    "No public endpoint was contacted; provider availability, credentials, rate limits, real pool size and real acquisition latency remain unmeasured.",
+    "This artifact qualifies only the inert acquisition runner and its offline fixtures; it is not protocol registration, candidate/model qualification, or runtime approval."
+  ]
+}
