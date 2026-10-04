@@ -1,0 +1,81 @@
+"""Owned exact-byte TypeSafe HTTP wrapper; explicit offline fixtures only."""
+import argparse
+import io
+import json
+import os
+import sys
+import time
+import urllib.error
+import urllib.request
+
+ENDPOINT = 'https://api.typesafe.ai/v1/systemone'
+LIMIT = 2000000
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def exchange(body, token, opener, clock=time.monotonic):
+    if type(body) is not bytes or len(body) > 384000:
+        raise ValueError('request-bound')
+    req = urllib.request.Request(ENDPOINT, data=body, method='POST',
+        headers={'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'})
+    started = clock()
+    with opener.open(req, timeout=1) as response:
+        if response.status != 200:
+            raise ValueError('http-status')
+        buffer = bytearray()
+        while True:
+            if clock() - started >= 1:
+                raise TimeoutError('remote-deadline')
+            chunk = response.read(min(65536, LIMIT + 1 - len(buffer)))
+            if not chunk:
+                break
+            buffer.extend(chunk)
+            if len(buffer) > LIMIT:
+                raise ValueError('response-bound')
+        if clock() - started >= 1:
+            raise TimeoutError('remote-deadline')
+    return bytes(buffer)
+
+
+class FixtureResponse(io.BytesIO):
+    status = 200
+
+class FixtureOpener:
+    def __init__(self, kind): self.kind = kind
+    def open(self, request, timeout):
+        assert request.full_url == ENDPOINT and request.method == 'POST' and timeout == 1
+        if self.kind == 'http-error':
+            raise urllib.error.HTTPError(ENDPOINT, 503, 'fixture', {}, None)
+        data = json.loads(request.data)
+        raw = json.dumps({'model': 'jev-1.13.0', 'answers': {
+            qid: {'type': 'noul', 'noul': .5} for qid in data['questions']},
+            'usage': {'input_tokens': 1, 'output_tokens': 1}}).encode()
+        return FixtureResponse(raw)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--offline-fixture', choices=['neutral', 'http-error'])
+    args = parser.parse_args()
+    body = sys.stdin.buffer.read(384001)
+    if args.offline_fixture:
+        token, opener = 'offline-fixture', FixtureOpener(args.offline_fixture)
+    else:
+        token = os.environ.get('TYPESAFE_API_KEY', '')
+        if not token:
+            print('missing-credential', file=sys.stderr)
+            return 2
+        opener = urllib.request.build_opener(NoRedirect())
+    try:
+        raw = exchange(body, token, opener)
+    except Exception as error:
+        # Never serialize request, headers, endpoint, exception message or secrets.
+        print('owned-http-' + type(error).__name__, file=sys.stderr)
+        return 2
+    sys.stdout.buffer.write(raw)
+    return 0
+
+if __name__ == '__main__': sys.exit(main())

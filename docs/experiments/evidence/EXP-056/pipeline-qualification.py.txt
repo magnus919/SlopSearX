@@ -17,7 +17,7 @@ def load(name, filename):
     loader.exec_module(module)
     return module
 
-def qualify(owned_child=False):
+def qualify(owned_child=False, fail_operation=None):
     replay = load('prepare56', 'replay.py.txt')
     policy = load('policy56', 'policy.py.txt')
     coordinator = load('coordinate56', 'orchestrator.py.txt')
@@ -26,6 +26,9 @@ def qualify(owned_child=False):
     specmap = {x['id']: x for x in specs}
     receipts = chain['receipts']
     original_requests, original_raw = [], []
+    current = [None]
+    failure_transport = None
+    budget = coordinator.StudyBudget()
     def transport(body, **kwargs):
         request = json.loads(body)
         original_requests.append(body)
@@ -35,15 +38,20 @@ def qualify(owned_child=False):
         original_raw.append(raw)
         return raw, 1
     if owned_child:
+        wrapper = str(HERE / 'http-wrapper.py.txt')
         owned = load('transport56', 'transport.py.txt').ChildTransport([
-            sys.executable, '-c',
-            'import sys,json; r=json.load(sys.stdin); json.dump({"model":"jev-1.13.0","answers":{k:{"type":"noul","noul":.5} for k in r["questions"]},"usage":{"input_tokens":1,"output_tokens":1}},sys.stdout)'])
+            sys.executable, wrapper, '--offline-fixture', 'neutral'])
+        failure_transport = load('transport56failed', 'transport.py.txt').ChildTransport([
+            sys.executable, wrapper, '--offline-fixture', 'http-error'])
         def transport(body, timeout_s):
+            if current[0] == fail_operation:
+                return failure_transport(body, timeout_s)
             raw, elapsed = owned(body, timeout_s)
             original_requests.append(body)
             original_raw.append(raw)
             return raw, elapsed
     def execute(item):
+        current[0] = item['id']
         d = specmap[item['d_request_id']]
         f = specmap[item['f_request_id']]
         source_cards = {x['id']: x for x in grouped[item['pool']]}
@@ -52,10 +60,33 @@ def qualify(owned_child=False):
         w0 = baseline.BASE.score_order(w, receipts[w['id']])
         result = coordinator.operation(policy, replay.parse_noul_response, cards, d['task'],
             f['facets'], receipts[d['id']]['scores'], receipts[f['id']]['nouls'],
-            w0, receipts[d['id']]['remote_http_ms'] + receipts[f['id']]['remote_http_ms'], transport)
+            w0, receipts[d['id']]['remote_http_ms'] + receipts[f['id']]['remote_http_ms'], transport, budget=budget)
         return result
     packet = coordinator.study(inventory['operations'], execute)
-    if packet['status'] != 'complete' or len(packet['results']) != 21:
+    if fail_operation is not None:
+        if not owned_child or packet['status'] != 'incomplete':
+            raise ValueError('failed-fixture-must-stop-study')
+        failed = packet['results'][-1]
+        if failed['operation_id'] != fail_operation or failed['result']['status'] != 'failed':
+            raise ValueError('unexpected-failed-operation')
+        item = next(x for x in inventory['operations'] if x['id'] == fail_operation)
+        w = specmap[item['pool'] + '-w0']
+        w0 = baseline.BASE.score_order(w, receipts[w['id']])
+        if failed['result']['order'] != w0 or failed['result']['actions']:
+            raise ValueError('failed-operation-must-discard-entire-ranking')
+        stopped_index = next(i for i, x in enumerate(inventory['operations']) if x['id'] == fail_operation)
+        if packet['uninvoked_ids'] != [x['id'] for x in inventory['operations'][stopped_index + 1:]] or len(packet['results']) != stopped_index + 1:
+            raise ValueError('failed-fixture-exact-stop-inventory')
+        owner = failure_transport.receipts
+        if len(owner) != 1 or owner[0]['exit_code'] != 2 or not owner[0]['stdout_complete']:
+            raise ValueError('failed-child-original-receipt')
+        safe_receipt = {key: value.hex() if type(value) is bytes else value for key, value in owner[0].items()}
+        return {'schema': 'exp056-offline-failed-pipeline/1', 'synthetic': True,
+            'candidate_quality_established': False, 'quality_analysis_performed': False,
+            'registration_sha256': reg, 'operations': packet,
+            'failed_owned_child_receipt': safe_receipt,
+            'new_jev_calls': 0, 'search_calls': 0, 'brave_attempts': 0}
+    if packet['status'] != 'complete'  or len(packet['results']) != 21:
         raise ValueError('synthetic-frozen-operation-pipeline-incomplete')
     by_id = {row['operation_id']: row['result'] for row in packet['results']}
     ranks, _, nav, facets = baseline.build_rankings(data, grouped, specs, receipts)
@@ -88,5 +119,6 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--owned-child', action='store_true')
+    parser.add_argument('--fail-operation', choices=['q2-d'])
     args = parser.parse_args()
-    print(json.dumps(qualify(args.owned_child), ensure_ascii=False, indent=2, sort_keys=True))
+    print(json.dumps(qualify(args.owned_child, args.fail_operation), ensure_ascii=False, indent=2, sort_keys=True))
