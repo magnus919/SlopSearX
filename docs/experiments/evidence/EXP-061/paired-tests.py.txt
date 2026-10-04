@@ -114,10 +114,15 @@ class PairedCoordinatorTests(unittest.TestCase):
                     "nativeprepared": None, "treatmentprepared": treatment}
 
         calls = {"w0": 0, "d": 0, "f": 0, "e": 0}
-        failure = {"arm": None}
+        failure = {"arm": None, "w0": False, "e_call": None, "action_success": False}
         def fake_comparator(arm, request, prepared, transport, budget, attempts):
             calls[arm] += 1
             budget.before("comparator")
+            if arm == "w0" and failure["w0"]:
+                budget.unknown = True
+                attempts.append({"arm": arm, "status": "failed", "usage": None,
+                                 "remote_http_ms": 0, "request_sha256": "failed-w0"})
+                raise ValueError("injected W0 failure")
             if arm == failure["arm"]:
                 budget.unknown = True
                 attempts.append({"arm": arm, "status": "failed", "usage": None,
@@ -133,11 +138,18 @@ class PairedCoordinatorTests(unittest.TestCase):
         def fake_guarded(*args, **kwargs):
             calls["e"] += 1
             budget = kwargs["budget"]
+            ids = list(args[7])
+            if failure["e_call"] == calls["e"]:
+                budget.unknown = True
+                return {"status": "failed", "order": ids, "attempts": [{"usage": None}],
+                        "actions": [], "discarded_action_count": 2, "remote_total_ms": 2,
+                        "reason": "unknown fixture usage"}
             budget.before_call()
             budget.observe({"input_tokens": 1, "output_tokens": 1})
-            ids = list(args[7])
+            actions = ([{"candidate_id": ids[-1], "victim_id": ids[0]}]
+                       if failure["action_success"] else [])
             return {"status": "valid", "order": ids, "attempts": [], "actions": [],
-                    "remote_total_ms": 2, "termination_reason": "no_proposals"}
+                    "remote_total_ms": 2, "termination_reason": "no_proposals"} | {"actions": actions}
 
         acquisition = {"pools": pools}
         with (patch.object(ev.P, "verify_registration", lambda: None),
@@ -152,6 +164,24 @@ class PairedCoordinatorTests(unittest.TestCase):
             failure["arm"] = "d"
             failed = M.evaluate(acquisition, references, lambda *a, **k: (b"", 1),
                                 lambda *a, **k: (b"", 1))
+            failure.update(arm=None, w0=True)
+            w0_failed = M.evaluate(acquisition, references, lambda *a, **k: (b"", 1),
+                                   lambda *a, **k: (b"", 1))
+            failure.update(w0=False, e_call=1)
+            calls.update(w0=0, d=0, f=0, e=0)
+            e_failed = M.evaluate(acquisition, references, lambda *a, **k: (b"", 1),
+                                  lambda *a, **k: (b"", 1))
+            failure.update(e_call=4, action_success=True)
+            calls.update(w0=0, d=0, f=0, e=0)
+            second_arm_failed = M.evaluate(acquisition, references, lambda *a, **k: (b"", 1),
+                                           lambda *a, **k: (b"", 1))
+            prebudget = M.Budget()
+            prebudget.parts["native_e"]["input_tokens"] = 3000000 - 255999
+            failure.update(action_success=False)
+            calls.update(w0=0, d=0, f=0, e=0)
+            with patch.object(M, "Budget", lambda: prebudget):
+                reservation_failed = M.evaluate(acquisition, references, lambda *a, **k: (b"", 1),
+                                                lambda *a, **k: (b"", 1))
 
         self.assertEqual(output["status"], "complete", output["operations"][0])
         self.assertEqual(len(output["operations"]), 21)
@@ -189,6 +219,34 @@ class PairedCoordinatorTests(unittest.TestCase):
         self.assertEqual(first["arms"][0]["orders"]["e"], first["shared_w0"]["order"])
         self.assertEqual(len(failed["operations"]), 21)
         self.assertEqual([r["status"] for r in failed["operations"][1:]], ["not-invoked"] * 20)
+        self.assertEqual(len(failed["operations"]), 21)
+        for suffix in failed["operations"][1:]:
+            suffix_ids = {card["id"] for card in suffix["nativeopcards"]}
+            for arm in suffix["arms"]:
+                self.assertEqual(set(arm["orders"]["w0"]), suffix_ids)
+
+        self.assertEqual(w0_failed["operations"][0]["w0_attempts"][0]["status"], "failed")
+        for suffix in w0_failed["operations"][1:]:
+            suffix_ids = {card["id"] for card in suffix["nativeopcards"]}
+            for arm in suffix["arms"]:
+                self.assertEqual(set(arm["orders"]["e"]), suffix_ids)
+        self.assertTrue(e_failed["budget"]["unknown_usage"])
+        failed_e_arm = e_failed["operations"][0]["arms"][0]
+        self.assertEqual(failed_e_arm["discarded_action_count"], 2)
+        self.assertFalse(failed_e_arm["discarded_action_records_available"])
+        self.assertIn("omits discarded action records", failed_e_arm["action_evidence_limit"])
+        self.assertEqual(second_arm_failed["operations"][1]["status"], "failed", [(r["id"], r["status"], [a["arm"] for a in r["arms"]]) for r in second_arm_failed["operations"][:3]])
+        rolled_pair = second_arm_failed["operations"][1]
+        self.assertEqual(rolled_pair["arms"][0]["arm"], "canonical")
+        self.assertEqual(rolled_pair["arms"][0]["observed_actions"], [{"candidate_id": "q1-b", "victim_id": "q1-a"}])
+        self.assertEqual(rolled_pair["arms"][0]["actions"], [])
+        self.assertEqual(rolled_pair["arms"][0]["observed_orders"]["e"], ["q1-a", "q1-b"])
+        self.assertEqual(rolled_pair["arms"][1]["status"], "failed")
+        self.assertTrue(rolled_pair["arms"][1]["discarded_action_count"])
+        self.assertFalse(rolled_pair["arms"][1]["discarded_action_records_available"])
+        self.assertEqual(reservation_failed["operations"][0]["w0_attempts"], [])
+        self.assertEqual(reservation_failed["operations"][0]["arms"][0]["status"], "not-invoked-resource-reservation")
+        self.assertEqual(prebudget.attempts, 0)
 
 if __name__ == "__main__":
     unittest.main()

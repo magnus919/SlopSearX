@@ -167,6 +167,7 @@ def _arm(item, case, cards, prepared, w0, comparator_transport, e_transport, bud
                 row.update(status=output["status"], actions=copy.deepcopy(output["actions"]),
                            discarded_action_count=output.get("discarded_action_count", 0),
                            observed_action_count=(len(output["actions"]) + output.get("discarded_action_count", 0)),
+                           discarded_action_records_available=(output.get("discarded_action_count", 0) == 0),
                            termination_reason=output.get("termination_reason", output.get("reason")),
                            remote_d_f_e_ms=output.get("remote_total_ms"),
                            remaining_remote_ms=output.get("remaining_remote_ms"))
@@ -197,6 +198,10 @@ def _arm(item, case, cards, prepared, w0, comparator_transport, e_transport, bud
         row.update(status="failed", failure_type=type(error).__name__, failure=str(error))
         row["observed_orders"] = copy.deepcopy(row["orders"])
         row["observed_actions"] = copy.deepcopy(row["actions"])
+        row["observed_action_count"] = row.get("observed_action_count", len(row["actions"]))
+        if row.get("discarded_action_count", 0):
+            row["discarded_action_records_available"] = False
+            row["action_evidence_limit"] = "frozen EXP-059 coordinator reports discarded action count but omits discarded action records"
         row["orders"] = {"w0": list(w0), "d": list(w0), "e": list(w0)}
         row["actions"] = []
     return row
@@ -296,26 +301,34 @@ def evaluate(acquisition, references, comparator_transport, e_transport, checkpo
                 row["status"] = "failed"
                 row["failure_type"] = type(error).__name__
                 row["failure"] = str(error)
-            # A failed W0 or either D/F/E arm makes both outputs the shared W0.
-            if "shared_w0" in row:
-                for arm_row in row["arms"]:
-                    arm_row["orders"] = {k: list(row["shared_w0"]["order"]) for k in ("w0", "d", "e")}
-                    arm_row["actions"] = []
             result["status"] = "failed"
             row["not_invoked_suffix"] = [x["id"] for x in plan[index + 1:]]
             result["uninvoked"] = row["not_invoked_suffix"]
+            # Preserve what each arm observed before the pair-level atomic rollback.
+            # This is particularly important when the first arm completed and the
+            # second arm failed; returned orders become W0 but observed orders stay.
+            for arm_row in row["arms"]:
+                arm_row.setdefault("observed_orders", copy.deepcopy(arm_row.get("orders", {})))
+                arm_row.setdefault("observed_actions", copy.deepcopy(arm_row.get("actions", [])))
+                if arm_row.get("discarded_action_count", 0):
+                    arm_row["discarded_action_records_available"] = False
+                    arm_row["action_evidence_limit"] = "frozen EXP-059 coordinator reports discarded action count but omits discarded action records"
+                arm_row["observed_action_count"] = arm_row.get(
+                    "observed_action_count", len(arm_row.get("actions", [])))
+                arm_row["orders"] = {k: list(row["shared_w0"]["order"]) for k in ("w0", "d", "e")}
+                arm_row["actions"] = []
             for remaining in plan[index + 1:]:
                 suffix_cards = _opcards(remaining)
                 suffix_case = cases[remaining["case"]]
                 suffix_canonical = canonical.prepare(suffix_case, suffix_cards)["policy_cards"]
+                suffix_identity = list(remaining["requests"]["whole_ids"])
                 result["operations"].append({
                     "id": remaining["id"], "case": remaining["case"], "mode": remaining["mode"],
                     "nativeopcards": suffix_cards, "policycards": suffix_canonical,
                     "canonical_policy_cards": suffix_canonical,
                     "status": "not-invoked", "arms": [
                         {"arm": arm, "status": "not-invoked-suffix",
-                         "orders": {k: list(row["shared_w0"]["order"] if "shared_w0" in row else
-                                             native_prepared["whole_ids"]) for k in ("w0", "d", "e")},
+                         "orders": {k: list(suffix_identity) for k in ("w0", "d", "e")},
                          "actions": [], "shared_w0_receipt": None,
                          "reference_source": "exp060_exposed", "historical_labels_reused": True}
                         for arm in ("native", "canonical")]})
