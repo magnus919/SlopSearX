@@ -1,0 +1,189 @@
+"""Offline synthetic qualification for the EXP-040 inert runner."""
+from __future__ import annotations
+
+import asyncio
+import importlib.machinery
+import importlib.util
+import json
+import pathlib
+import shutil
+import sys
+import tempfile
+import unittest
+
+HERE = pathlib.Path(__file__).resolve().parent
+ROOT = HERE
+LOADER = importlib.machinery.SourceFileLoader("exp040_replay", str(HERE / "replay.py.txt"))
+SPEC = importlib.util.spec_from_loader(LOADER.name, LOADER)
+runner = importlib.util.module_from_spec(SPEC)
+LOADER.exec_module(runner)
+
+
+class Exp040OfflineFixtures(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.hashes = runner.verify_registered_inputs(ROOT)
+        cls.pins = runner.verify_source_pins(ROOT)
+        cls.frozen, cls.contexts, cls.old_facets, cls.contracts = runner.old_sources(ROOT)
+        cls.pools, cls.projection, cls.sources = runner.validate_extended_inputs(ROOT)
+        cls.navigation = runner.validate_navigation(ROOT, cls.frozen)
+        cls.specs = runner.expected_specs(ROOT, cls.frozen, cls.contexts, cls.pools, cls.navigation, cls.contracts)
+
+    def make_fixture_root(self):
+        temp = tempfile.TemporaryDirectory()
+        root = pathlib.Path(temp.name) / "EXP-040"
+        root.mkdir()
+        for name in runner.REGISTERED_INPUTS | {"input-hashes.json", "effective-annotation-schema-v2.json", "replay.py.txt", "fixture_tests.py.txt"}:
+            shutil.copyfile(HERE / name, root / name)
+        aliases = self.projection["aliases"]
+        refs = {}
+        for reviewer in ("A", "B"):
+            rows = []
+            for alias, mapping in sorted(aliases.items()):
+                qid, cid = mapping["query_id"], mapping["candidate_id"]
+                numeric = int(cid[1:])
+                rows.append({
+                    "label": alias,
+                    "lead": 2 if numeric < 10 else (1 if numeric < 20 else 0),
+                    "visible": 1 if numeric < 10 else 0,
+                    "facets": self.projection["facets"][qid][:1] if numeric < 10 else [],
+                    "uncertain": numeric % 17 == 0,
+                    "rationale": f"fixture {reviewer} card {cid}",
+                })
+            refs[f"reference-{reviewer.lower()}.json"] = runner.pretty_bytes(rows)
+        for name, raw in refs.items():
+            (root / name).write_bytes(raw)
+        label_hashes = {name: runner.sha256(raw) for name, raw in refs.items()}
+        (root / "label-hashes.json").write_bytes(runner.pretty_bytes(label_hashes))
+        (root / "reference-qualification.json").write_bytes(runner.pretty_bytes({"synthetic_fixture": True}))
+        hashes = {
+            "replay.py.txt": runner.sha256((HERE / "replay.py.txt").read_bytes()),
+            "fixture_tests.py.txt": runner.sha256((HERE / "fixture_tests.py.txt").read_bytes()),
+            "effective-annotation-schema-v2.json": runner.sha256((HERE / "effective-annotation-schema-v2.json").read_bytes()),
+            **label_hashes,
+            "label-hashes.json": runner.sha256((root / "label-hashes.json").read_bytes()),
+            "reference-qualification.json": runner.sha256((root / "reference-qualification.json").read_bytes()),
+        }
+        (root / "qualification-input-hashes.json").write_bytes(runner.pretty_bytes({"schema": "exp040-qualified-inputs/1", "hashes": hashes}))
+        return temp, root
+
+    def test_registered_inputs_source_pins_and_pool_counts(self):
+        self.assertEqual(len(self.hashes), 13)
+        self.assertEqual(len(self.pins), 11)
+        self.assertEqual({k: len(v["candidates"]) for k, v in self.pools.items()},
+                         {"cardiac": 44, "research": 45, "evaluation": 44, "constructed80": 80})
+        self.assertEqual(len(self.specs), 48)
+        self.assertEqual(sum(s["cohort"] == "software" for s in self.specs), 18)
+        self.assertEqual(sum(s["cohort"] == "extended" for s in self.specs), 20)
+        self.assertEqual(sum(s["cohort"] == "navigation" for s in self.specs), 10)
+
+    def test_complete_and_first40_specs_keep_whole_candidate_membership(self):
+        by_id = {s["id"]: s for s in self.specs}
+        for pool_id in runner.EXTENDED_POOLS:
+            pool = self.pools[pool_id]["candidates"]
+            self.assertEqual(by_id[f"{pool_id}-d"]["candidate_ids"], [c["id"] for c in pool])
+            self.assertEqual(by_id[f"{pool_id}-d"]["scored_candidate_ids"], [c["id"] for c in pool])
+            self.assertEqual(by_id[f"{pool_id}-w0"]["scored_candidate_ids"], [c["id"] for c in pool[:40]])
+            self.assertEqual(by_id[f"{pool_id}-d40"]["scored_candidate_ids"], [c["id"] for c in pool[:40]])
+            self.assertEqual(by_id[f"{pool_id}-d40"]["candidate_ids"], [c["id"] for c in pool])
+            self.assertEqual(by_id[f"{pool_id}-repeat"]["body"], by_id[f"{pool_id}-d"]["body"])
+            rotated = pool[20:] + pool[:20]
+            self.assertEqual(by_id[f"{pool_id}-rotated20"]["candidate_order_ids"], [c["id"] for c in rotated])
+            self.assertLessEqual(len(by_id[f"{pool_id}-d"]["body"]), runner.MAX_CANDIDATE_REQUEST_BYTES)
+
+    def test_maximum_field_80_card_boundary_rejects_without_prefix_fallback(self):
+        boundary = runner.boundary_artifact(self.contracts)
+        self.assertEqual(boundary["synthetic_card_count"], 80)
+        self.assertGreater(boundary["request_bytes"], runner.MAX_CANDIDATE_REQUEST_BYTES)
+        self.assertTrue(boundary["rejected_locally"])
+        self.assertTrue(boundary["fallback_preserves_all_original_ids_in_order"])
+        self.assertEqual(len(set(boundary["fallback_full_incumbent_ids"])), 80)
+
+    def test_real_production_rerank_generator_body_matches_w0_wire_body(self):
+        # Run the actual current rerank.py generator with a fully local fake
+        # HTTPX client; this captures its UTF-8 request without making a call.
+        source = runner.EVIDENCE.parents[2] / "slopsearx" / "rerank.py"
+        spec = importlib.util.spec_from_file_location("exp040_production_rerank", source)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        q1 = next(row for row in self.specs if row["id"] == "q1-w0")
+        captured = []
+        production_httpx = module.httpx
+        original = production_httpx.AsyncClient
+        class FakeResponse:
+            headers = {}
+            async def __aenter__(self): return self
+            async def __aexit__(self, *args): return False
+            def raise_for_status(self): return None
+            async def aiter_bytes(self):
+                answers = {cid: {"type": "score", "score": 1} for cid in q1["scored_candidate_ids"]}
+                yield json.dumps({"model": runner.MODEL, "answers": answers}).encode()
+        class FakeClient:
+            def __init__(self, *args, **kwargs): pass
+            async def __aenter__(self): return self
+            async def __aexit__(self, *args): return False
+            def stream(self, method, url, headers, content):
+                captured.append(content)
+                return FakeResponse()
+        try:
+            production_httpx.AsyncClient = FakeClient
+            q_cards = self.frozen["queries"]["q1"]["candidates"]
+            candidates = tuple(module.RerankCandidate(**card) for card in q_cards)
+            decision = asyncio.run(module.JevReranker("fixture-key").rerank(q1["task"], candidates))
+        finally:
+            production_httpx.AsyncClient = original
+        self.assertIsNotNone(decision)
+        self.assertEqual(len(captured), 1)
+        self.assertEqual(captured[0], runner.encode_body(runner.make_body(self.contracts["baseline"], q1["task"], q_cards)))
+
+    def test_temporary_prepare_verify_48_fake_calls_and_analysis(self):
+        temp, root = self.make_fixture_root()
+        with temp:
+            summary = runner.prepare(root)
+            self.assertEqual(summary["prepared_requests"], 48)
+            self.assertTrue(summary["boundary_rejected"])
+            self.assertEqual(summary["max_candidate_request_bytes"], max(
+                r["request_bytes"] for r in runner.load_json(root / "prepared-manifest.json")["requests"] if r["contract"] == "selection"
+            ))
+            verified = runner.verify(root, require_refs=True)
+            self.assertTrue(verified["ready_to_run"])
+            self.assertEqual(verified["request_bodies_verified"], 48)
+            # Deterministic synthetic scores; each ten-card block shares a score,
+            # so rotating by 20 preserves the top-ten set with stable ties.
+            code = (
+                "import json,sys; req=json.load(sys.stdin); "
+                "answers={cid:{'type':'score','score':max(0,9-int(cid[1:])//10)} for cid in req['questions']}; "
+                "print(json.dumps({'model':'jev-1.13.0','answers':answers,"
+                "'usage':{'input_tokens':1,'output_tokens':1},'_elapsed_ms':1.0}))"
+            )
+            argv_path = root / "private-argv.json"
+            argv_path.write_bytes(runner.pretty_bytes([sys.executable, "-c", code]))
+            runner.run(root, argv_path)
+            verified_after = runner.verify(root, require_refs=True)
+            self.assertTrue(verified_after["ok"])
+            self.assertEqual(verified_after["valid_receipts"], 48)
+            analysis = runner.analyze(root)
+            self.assertEqual(analysis["operational"]["valid_calls"], 48)
+            self.assertEqual(len(analysis["extended_pools"]), 4)
+            self.assertEqual(len(analysis["navigation"]), 5)
+            self.assertEqual(analysis["decision"], "not_supported_for_selection")
+            self.assertFalse(analysis["navigation_pass"])
+
+    def test_effective_references_are_plain_133_row_arrays_and_reject_wrapper(self):
+        temp, root = self.make_fixture_root()
+        with temp:
+            rows = runner.load_json(root / "reference-a.json")
+            self.assertIsInstance(rows, list)
+            self.assertEqual(len(rows), 133)
+            projection = {"aliases": self.projection["aliases"], "facets": self.projection["facets"]}
+            _, hashes, status = runner.validate_new_references(root, projection, required=True)
+            self.assertEqual(status, "sealed_valid")
+            self.assertEqual(len(hashes), 2)
+            (root / "reference-a.json").write_bytes(runner.pretty_bytes({"items": rows}))
+            with self.assertRaises(ValueError):
+                runner.validate_new_references(root, projection, required=True)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
