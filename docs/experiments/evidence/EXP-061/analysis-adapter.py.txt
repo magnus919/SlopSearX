@@ -61,9 +61,9 @@ def arm_views(paired):
                 view["operations"].append({"id":op["id"],"case":qid,"mode":mode,"status":"not-invoked"});continue
             row=copy.deepcopy(matches[0]);row.update(id=op["id"],case=qid,mode=mode,cards=copy.deepcopy(pair["nativeopcards"]))
             if pair["status"]!="valid":row["status"]="failed"
-            shared=pair["shared_w0"]["order"]
-            if row["status"]=="valid" and row["orders"]["w0"]!=shared:raise ValueError("unshared-baseline")
-            w0=[{**copy.deepcopy(a),"shared_receipt":True,"physical_call_counted_once":True} for a in pair["w0_attempts"]]
+            shared=pair.get("shared_w0",{}).get("order")
+            if row["status"]=="valid" and (shared is None or row["orders"]["w0"]!=shared):raise ValueError("unshared-baseline")
+            w0=[{**copy.deepcopy(a),"shared_receipt":True,"physical_call_counted_once":True} for a in pair.get("w0_attempts",[])]
             row["attempts"]=w0+row.get("attempts",[])
             view["operations"].append(row)
             if mode=="base" and row["status"]=="valid":view["pools"][qid]["orders"]=copy.deepcopy(row["orders"])

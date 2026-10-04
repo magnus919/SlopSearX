@@ -1,0 +1,20 @@
+{
+  "schema": "exp061-offline-qualification/1",
+  "status": "passed",
+  "provider_calls": 0,
+  "search_calls": 0,
+  "tests": {
+    "canonical": 5,
+    "analysis_adapter": 6,
+    "paired": 5,
+    "owned_cli": 3
+  },
+  "owned_offline": {
+    "operations": 21,
+    "physical_fixture_children": 127,
+    "shared_baselines": 21,
+    "complete_receipts": 127,
+    "run_sha256": "3635e4ab1cb6a5646e583e1cecdf8c7c9a6e5103731c9c6cce83f6a0f8023ab3"
+  },
+  "scope": "finite runner and failure contracts only; no quality or live latency claim"
+}
