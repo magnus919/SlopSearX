@@ -1,0 +1,269 @@
+{
+  "schema": "exp046-step-receipt/1",
+  "id": "q8-d-choice-step1",
+  "request_sha256": "2fc1e13cef5ed4ee5d8ffb8f336bcd2a195b8ecc43121fbfcfaae9aa2b131ebb",
+  "parent_response_sha256": null,
+  "response_sha256": "c001e743e5abcb9af46a8a2bb5fd1c3004686b55e88268ffe8bdb22840ceddea",
+  "response_bytes": 2171,
+  "model": "jev-1.13.0",
+  "usage": {
+    "input_tokens": 10787,
+    "output_tokens": 763
+  },
+  "remote_http_ms": 236.35888402350247,
+  "probability_sums": {
+    "victim": "1.00",
+    "replacement_for_c1": "1.00",
+    "replacement_for_c3": "1.00",
+    "replacement_for_c27": "1.00",
+    "replacement_for_c2": "1.00",
+    "replacement_for_c0": "1.00",
+    "replacement_for_c26": "1.00",
+    "replacement_for_c16": "1.00",
+    "replacement_for_c5": "1.00",
+    "replacement_for_c29": "1.00",
+    "replacement_for_c8": "1.00"
+  },
+  "transport_wall_ms": 650.125415995717,
+  "transport_exit_code": 0,
+  "status": "valid",
+  "error": null,
+  "answers": {
+    "victim": {
+      "type": "choice",
+      "choice": "KEEP",
+      "confidence": 0.7,
+      "probabilities": {
+        "remove_c26": 0.02,
+        "remove_c0": 0.02,
+        "remove_c27": 0.01,
+        "remove_c16": 0.07,
+        "remove_c2": 0.01,
+        "remove_c29": 0.04,
+        "remove_c1": 0.01,
+        "remove_c5": 0.04,
+        "KEEP": 0.74,
+        "remove_c8": 0.04,
+        "remove_c3": 0.0
+      }
+    },
+    "replacement_for_c1": {
+      "type": "choice",
+      "choice": "KEEP",
+      "confidence": 0.93,
+      "probabilities": {
+        "replace_c15": 0.0,
+        "replace_c25": 0.04,
+        "replace_c12": 0.0,
+        "KEEP": 0.94,
+        "replace_c10": 0.02
+      }
+    },
+    "replacement_for_c3": {
+      "type": "choice",
+      "choice": "KEEP",
+      "confidence": 0.87,
+      "probabilities": {
+        "replace_c12": 0.01,
+        "replace_c25": 0.07,
+        "replace_c15": 0.01,
+        "KEEP": 0.89,
+        "replace_c10": 0.02
+      }
+    },
+    "replacement_for_c27": {
+      "type": "choice",
+      "choice": "KEEP",
+      "confidence": 0.86,
+      "probabilities": {
+        "replace_c12": 0.01,
+        "replace_c15": 0.0,
+        "replace_c25": 0.09,
+        "KEEP": 0.88,
+        "replace_c10": 0.02
+      }
+    },
+    "replacement_for_c2": {
+      "type": "choice",
+      "choice": "KEEP",
+      "confidence": 0.78,
+      "probabilities": {
+        "replace_c12": 0.02,
+        "replace_c15": 0.01,
+        "replace_c25": 0.13,
+        "KEEP": 0.83,
+        "replace_c10": 0.01
+      }
+    },
+    "replacement_for_c0": {
+      "type": "choice",
+      "choice": "KEEP",
+      "confidence": 0.77,
+      "probabilities": {
+        "replace_c12": 0.03,
+        "replace_c15": 0.01,
+        "replace_c25": 0.12,
+        "KEEP": 0.83,
+        "replace_c10": 0.01
+      }
+    },
+    "replacement_for_c26": {
+      "type": "choice",
+      "choice": "KEEP",
+      "confidence": 0.74,
+      "probabilities": {
+        "replace_c12": 0.02,
+        "replace_c15": 0.01,
+        "replace_c25": 0.15,
+        "KEEP": 0.8,
+        "replace_c10": 0.02
+      }
+    },
+    "replacement_for_c16": {
+      "type": "choice",
+      "choice": "KEEP",
+      "confidence": 0.65,
+      "probabilities": {
+        "replace_c12": 0.02,
+        "replace_c15": 0.06,
+        "replace_c25": 0.06,
+        "KEEP": 0.72,
+        "replace_c10": 0.14
+      }
+    },
+    "replacement_for_c5": {
+      "type": "choice",
+      "choice": "KEEP",
+      "confidence": 0.6,
+      "probabilities": {
+        "replace_c12": 0.11,
+        "replace_c15": 0.04,
+        "replace_c25": 0.12,
+        "KEEP": 0.67,
+        "replace_c10": 0.06
+      }
+    },
+    "replacement_for_c29": {
+      "type": "choice",
+      "choice": "KEEP",
+      "confidence": 0.56,
+      "probabilities": {
+        "replace_c12": 0.04,
+        "replace_c15": 0.05,
+        "replace_c25": 0.14,
+        "KEEP": 0.66,
+        "replace_c10": 0.11
+      }
+    },
+    "replacement_for_c8": {
+      "type": "choice",
+      "choice": "KEEP",
+      "confidence": 0.56,
+      "probabilities": {
+        "replace_c12": 0.04,
+        "replace_c15": 0.05,
+        "replace_c25": 0.13,
+        "KEEP": 0.65,
+        "replace_c10": 0.13
+      }
+    }
+  },
+  "choices": {
+    "victim": "KEEP",
+    "replacement_for_c1": "KEEP",
+    "replacement_for_c3": "KEEP",
+    "replacement_for_c27": "KEEP",
+    "replacement_for_c2": "KEEP",
+    "replacement_for_c0": "KEEP",
+    "replacement_for_c26": "KEEP",
+    "replacement_for_c16": "KEEP",
+    "replacement_for_c5": "KEEP",
+    "replacement_for_c29": "KEEP",
+    "replacement_for_c8": "KEEP"
+  },
+  "distributions": {
+    "victim": {
+      "remove_c26": 0.02,
+      "remove_c0": 0.02,
+      "remove_c27": 0.01,
+      "remove_c16": 0.07,
+      "remove_c2": 0.01,
+      "remove_c29": 0.04,
+      "remove_c1": 0.01,
+      "remove_c5": 0.04,
+      "KEEP": 0.74,
+      "remove_c8": 0.04,
+      "remove_c3": 0.0
+    },
+    "replacement_for_c1": {
+      "replace_c15": 0.0,
+      "replace_c25": 0.04,
+      "replace_c12": 0.0,
+      "KEEP": 0.94,
+      "replace_c10": 0.02
+    },
+    "replacement_for_c3": {
+      "replace_c12": 0.01,
+      "replace_c25": 0.07,
+      "replace_c15": 0.01,
+      "KEEP": 0.89,
+      "replace_c10": 0.02
+    },
+    "replacement_for_c27": {
+      "replace_c12": 0.01,
+      "replace_c15": 0.0,
+      "replace_c25": 0.09,
+      "KEEP": 0.88,
+      "replace_c10": 0.02
+    },
+    "replacement_for_c2": {
+      "replace_c12": 0.02,
+      "replace_c15": 0.01,
+      "replace_c25": 0.13,
+      "KEEP": 0.83,
+      "replace_c10": 0.01
+    },
+    "replacement_for_c0": {
+      "replace_c12": 0.03,
+      "replace_c15": 0.01,
+      "replace_c25": 0.12,
+      "KEEP": 0.83,
+      "replace_c10": 0.01
+    },
+    "replacement_for_c26": {
+      "replace_c12": 0.02,
+      "replace_c15": 0.01,
+      "replace_c25": 0.15,
+      "KEEP": 0.8,
+      "replace_c10": 0.02
+    },
+    "replacement_for_c16": {
+      "replace_c12": 0.02,
+      "replace_c15": 0.06,
+      "replace_c25": 0.06,
+      "KEEP": 0.72,
+      "replace_c10": 0.14
+    },
+    "replacement_for_c5": {
+      "replace_c12": 0.11,
+      "replace_c15": 0.04,
+      "replace_c25": 0.12,
+      "KEEP": 0.67,
+      "replace_c10": 0.06
+    },
+    "replacement_for_c29": {
+      "replace_c12": 0.04,
+      "replace_c15": 0.05,
+      "replace_c25": 0.14,
+      "KEEP": 0.66,
+      "replace_c10": 0.11
+    },
+    "replacement_for_c8": {
+      "replace_c12": 0.04,
+      "replace_c15": 0.05,
+      "replace_c25": 0.13,
+      "KEEP": 0.65,
+      "replace_c10": 0.13
+    }
+  }
+}

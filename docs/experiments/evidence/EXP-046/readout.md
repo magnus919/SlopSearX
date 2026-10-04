@@ -1,0 +1,11 @@
+# EXP-046: complete run, replacement policy not supported
+
+All 21 frozen development operations completed with valid responses, complete membership, known usage and no resource or protocol failure. There were 21 new case attempts plus one neutral attempt, zero retries and zero searches. The fixed per-question Decimal tolerance admitted small residuals without changing raw values or actions. This resolves the EXP-045 protocol obstacle prospectively; it does not reinterpret that historical run.
+
+The contextual policy made no replacement: 18 operations selected global KEEP; three selected a victim whose conditional branch selected KEEP. Every output therefore equals its original full-pool D Score order. The primary usefulness gain over W0 passed both references (A mean +0.215735, bootstrap lower95 +0.131130; B mean +0.067716, lower95 +0.004150). These gains belong to the existing full-pool Score ordering, not to the new contextual calls. Candidate-minus-D was exactly zero.
+
+The registered overall decision is `development_candidate_rejected`. The B research set still loses `evidence_grounding` coverage present in W0; neither reference gains macro facet coverage over D. Stability, navigation, membership and timing checks passed. This is a measured quality rejection, not an incomplete or protocol-inconclusive study. No reduced subset or changed guard rescues it.
+
+Total reported usage including neutral was 452,997 input and 51,153 output tokens. Per-operation historical D plus new Choice HTTP time ranged from 570.637 to 1,006.221ms, within the registered 2,000ms ceiling. This mixed-timing screen is not fresh end-to-end application latency. All requests, raw and structured responses, action traces, probability totals, attempt ledger and exact analysis are retained.
+
+Do not run fresh confirmation or adopt this candidate. Diagnose why all conditional choices kept the incumbent and distinguish eligible-pool limits from conservative compound judgment design before proposing a separate prospective study. The full production goal—generic SlopSearX API/MCP/portal/cache support and experimental GroktoCrawl X forwarding, tests, review and merge—remains unfinished. Brave budget remains 0/10.
