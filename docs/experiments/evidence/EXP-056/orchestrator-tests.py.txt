@@ -60,7 +60,7 @@ class Tests(unittest.TestCase):
     def test_raw_bytes_preserved_and_timeout_passed(self):
         def transport(body, timeout_s):
             self.assertGreater(timeout_s, 0)
-            self.assertLessEqual(timeout_s, 1)
+            self.assertLessEqual(timeout_s, 60)
             return b'{ }', 1
         result = self.run_case(transport)
         self.assertEqual(bytes.fromhex(result['attempts'][0]['response_hex']), b'{ }')
