@@ -1,0 +1,68 @@
+# Production acceptance checklist: explicit-purpose complete-pool Jev selection
+
+Implementation acceptance plan inspected against SlopSearX `3d5e8bac38b619aec1bd7a679f1a7667f1fc1abf` and experimental GroktoCrawl X `3612affba3b51e7240a0e60d079499739052c0b1`. This is a checklist of required work, not a claim of delivery. EXP-049 is bounded identifier-based source-information capture, not source-quality measurement or selector qualification. The production selector still requires a separately qualified, frozen candidate and fresh confirmation. Metadata presence or richer cards alone cannot satisfy either gate.
+
+The cross-service boundary follows accepted X ADR-0082: GroktoCrawl owns the caller's question, constraints, evidence sufficiency and completion; SlopSearX owns bounded search dispatch, merge/ranking and immutable result snapshots. Keep the SlopSearX ordinary HTTP behavior unchanged when the option is absent. The proposed ADR-0093 provenance work is not an accepted substitute for candidate quality evidence.
+
+## 0. Adoption gate before implementation
+
+- [ ] A single final selector contract is selected only after the registered development and untouched fresh-confirmation gates pass. Record the candidate's exact instructions, fields, grouping/candidate unit, full-pool bound, provider/model identity, byte/time limits, fallback, and interpretation in the implementation plan.
+- [ ] Freeze whether each candidate means a grouped publication/result or a specific engine/source record. SlopSearX calls `group_publications()` before its current rerank seam; its `SearchResult` may retain `engines` and `work_group`, but `RerankCandidate` currently contains only local ID, title, URL and snippet. Do not imply that identifier metadata, `work_group`, title matches, or engine provenance proves truth, authority, or usefulness.
+- [ ] Define the whole eligible pool as the complete post-dispatch/post-grouping merged list presented to the selector. The existing ordinary provider sees `ranked[:40]`, then its tail is appended unchanged; that prefix behavior does not implement the registered whole-pool objective.
+
+## 1. Shared SlopSearX service and Jev provider
+
+Current seams: `slopsearx/service.py::SearchRequest`, `SearchService._execute_search`, `SearchService._rerank_results`, `_scope_cache_key`; `slopsearx/rerank.py::RerankProvider`, `JevReranker`, size/timeout constants; `slopsearx/scholarly.py::group_publications`; `slopsearx/adapter.py::SearchResult`.
+
+- [ ] Add optional, explicit caller-purpose and facet fields to `SearchRequest`, with bounded lengths/counts, normalization, and validation before engine dispatch. Absence preserves today's ordinary query-only ranking. Never infer purpose from `query`, categories, engine scope, MCP intent, or a generated query.
+- [ ] Add the selected policy through a distinct purpose-capable provider interface. Keep the current `rerank(query, candidates)` contract/source compatibility for legacy providers and ordinary searches. An explicit-purpose request with no compatible capability must return the full incumbent order with a visible skipped/fallback status; do not call the legacy method and label it purpose-aware.
+- [ ] At the existing post-merge/grouping seam, send every eligible candidate through the registered whole-pool contract up to its frozen bound. Do not prefix-rerank, truncate, split into scoring chunks, or leave an unconsidered tail. On over-bound/oversized input, no key, timeout, provider failure, invalid output, duplicate/unknown/missing IDs, or incomplete membership, preserve the **entire** incumbent ranking atomically.
+- [ ] Preserve current sensitive policy: no Jev call when selected engines include a sensitive source or any candidate provenance includes one. Test mixed and grouped provenance so a sensitive member cannot become visible through a benign representative.
+- [ ] Pin all selection-affecting inputs in provider identity: model, question contract, projection, policy/version, and relevant bounds. Keep output authority limited to an exact permutation/subset action over supplied IDs according to the selected contract; never accept provider-authored URLs, text, engine choices or results.
+- [ ] Preserve ranking positions, grouped-publication membership and payload round-tripping after reorder. Make the ranking explanation/status distinguish ordinary Score, qualified purpose path, skipped and full-order fallback without leaking purpose/facets or card text into metric labels.
+
+Tests to extend: `tests/test_rerank.py`, `tests/test_service.py`, `tests/test_scholarly.py`, `tests/test_scholarly_arxiv_html_identity.py`. Add neutral fixtures for pools larger than 40 and at the frozen maximum, first/tail inclusion, grouped result identity, local-ID mapping, deterministic ties, exact membership, atomic full-list fallback for every invalid/admission/timeout path, no-key/legacy provider, and sensitive scope/result provenance. These structural tests qualify contract behavior only; they do not replace quality comparisons.
+
+## 2. Canonical cache, singleflight, MCP snapshots
+
+Current seams: `slopsearx/service.py::SearchService.search`, `_read_cache`, `_write_cache`, `_scope_cache_key`; `slopsearx/cache.py::cache_key`; `slopsearx/mcp/tools.py::_run_search`, `slopsearx_search`, `slopsearx_read_snapshot`.
+
+- [ ] Normalize facets deterministically (trim, validate, deduplicate, stable order) and include caller purpose, normalized facets, provider identity and selection-policy identity in both cache and active singleflight keys. Equivalent normalized requests should share identity; different task contexts must neither reuse a cached order nor join one in-flight dispatch. Keep ordinary no-context keys compatible.
+- [ ] Cache only a complete canonical response. An incomplete or failed purpose request must not cache a partial/prefix ordering. View-only fields such as `include`/`max_results` remain per-request and must not change the canonical pool.
+- [ ] MCP must pass explicit values to the same `SearchRequest` and capture the complete ranked list into the tenant snapshot **before** `max_results` slicing. Paging/read-result calls reuse that immutable order and never re-invoke Jev. Context variants must not cross tenant or query snapshots.
+- [ ] Keep context private by default in result cards/snapshots; expose it only if a separate bounded audit/schema need is approved.
+
+Tests to extend: `tests/test_cache.py`, `tests/test_service.py`, `tests/test_mcp_tools.py`, `tests/test_mcp_enforcement.py`, `tests/test_mcp_snapshots.py`, `tests/test_mcp_tool_registry.py`. Add key-separation/canonicalization tests, concurrent singleflight split/join tests, cached full-list view derivation, no caching of partial failures, policy-before-provider assertions, snapshot full-pool capture and stable pagination with zero additional provider calls.
+
+## 3. SlopSearX HTTP and portal opt-in
+
+Current seams: `slopsearx/server.py::_search_endpoint_impl` (GET query parsing and URL-encoded POST parsing, then `SearchRequest` construction); `slopsearx/formatter.py` portal landing/results/refine/pagination forms and `_portal_hidden_inputs`; shared service path above.
+
+- [ ] Add optional validated purpose/facet inputs to HTTP GET and URL-encoded POST. Define repeated/list encoding unambiguously, enforce size/count limits, reject malformed input before expensive engine work, and retain current JSON/HTML/CSV/RSS/YAML error/content-negotiation behavior.
+- [ ] If the portal exposes purpose-aware selection, make it visibly opt-in. Preserve exact user-entered purpose/facets through the URL, refine form, filters and pagination links; refresh/back/copy-paste must reproduce the same selection context. Omitted context remains the current portal path.
+- [ ] Never infer caller purpose from categories, engines or the search query. Purpose must not widen engine selection, specialist grants, safe-search enforcement or sensitive-source permissions.
+
+Tests to extend: `tests/test_server.py`, `tests/test_formatter.py`, `tests/test_portal_browser.py`. Verify GET/POST parity, validation-before-dispatch, every format, absent-field compatibility, URL/form state round-trip, keyboard/browser behavior, and sensitive/policy rejection before a provider call.
+
+## 4. GroktoCrawl X explicit caller context
+
+Current seams: `agent-svc/agent/models.py::SearchRequest`, `AgentRequest`, `AnswerRequest`; `agent-svc/agent/searxng_client.py::SearXNGClient.search`; `agent-svc/agent/routes/search.py`; `agent-svc/agent/routes/agent.py::fingerprint_from_agent_request`, `/v2/agent`, `/v2/answer`; `agent-svc/agent/worker.py`; `agent-svc/agent/research/search.py`, `loop.py`, `discovery.py`, `hybrid.py` and any direct `searxng.search()` helpers.
+
+- [ ] Add explicit bounded purpose/facet fields only to caller schemas whose search may use the qualified SlopSearX path. Keep them distinct from `query`/`prompt`, `sources/categories`, `search_type`, `retrieval_mode`, and `system_prompt`.
+- [ ] Extend `SearXNGClient.search()` with optional keyword arguments. Send custom purpose/facet parameters only when the feature is explicitly enabled for a configured compatible SlopSearX endpoint; when disabled or talking to ordinary SearXNG-compatible services, preserve the existing request parameters exactly.
+- [ ] Carry the original caller context through `/v1/search`, `/v2/search` direct web results, deep/rich/web research, discovery/follow-up query variants, hybrid web retrieval, `/v2/answer` sync and SSE, `/v2/agent` sync/SSE, worker execution, and any persisted/replayed research state. Generated subqueries may change `q`, but must not replace the caller's original purpose/facets.
+- [ ] Add context to `fingerprint_from_agent_request()` and any other search/research artifact compatibility key. Same prompt/query with different purpose or facets must not replay cached research; semantically equivalent normalized facets should fingerprint consistently. Persisted jobs and streaming dispatch must use the same normalized values.
+- [ ] Leave image-only/vector-only paths outside the feature unless that path explicitly invokes compatible SlopSearX web search. Do not create a second Jev client/ranker inside GroktoCrawl.
+
+Tests to extend: `tests/service/test_searxng_client.py`, `tests/service/test_research_memory.py`, `tests/service/test_research_streaming.py`, `tests/service/test_research_adapter_parity.py`, `tests/service/test_hybrid_retrieval.py`, `tests/service/test_issue622_discovery_pipeline.py`, `tests/service/test_search_source_metadata.py`, and `agent-svc/agent/tests/test_stack.py`. Prefer fake-client assertions on exact upstream parameters/calls across direct, generated-query, sync, stream and worker paths. Prove disabled/ordinary-SearX compatibility, explicit purpose surviving changed query text, and cache/fingerprint isolation; stack tests alone are not enough to pinpoint propagation.
+
+## 5. End-to-end evidence and release boundary
+
+- [ ] Run offline schema/adapter tests, SlopSearX service tests, portal/browser gate, MCP policy/snapshot tests, and X unit/contract tests on the exact reviewed commits. Test both new opt-in mode and the unchanged default path.
+- [ ] Run an isolated cross-service fake/contract test that starts from an X caller request, verifies the exact purpose/facets at the SlopSearX boundary, proves the provider sees the complete post-grouping pool, and confirms the same full resulting order is what HTTP/MCP/portal consumers and MCP snapshots receive. Exercise candidate failure and verify whole-incumbent fallback end-to-end.
+- [ ] Qualify real ranking quality separately with the already preregistered independent references and untouched fresh confirmation. Required evidence is substantive improvement under fixed thresholds, useful-count/facet/noninferiority/navigation/stability protections, full membership and resource/latency bounds. Metadata availability, successful request forwarding, nDCG gains caused by D* alone, synthetic fixtures, and field-coverage reports do not establish purpose-aware selector quality.
+- [ ] Keep the X experiment fork isolated; no Hermes, deployment, or production default change until candidate gates, compatibility/security tests, CI/review and a reversible rollout/rollback plan are complete.
+
+## Existing limits/open evidence
+
+At the inspected revisions, `SearchRequest`, HTTP, portal and MCP contain no explicit caller-purpose/facet contract; Jev is optional but query-only, max 40, Score-only. X request schemas/client and their search callers likewise have no explicit context fields. Existing tests exercise ordinary behavior, snapshots, cache, MCP policy, SearXNG compatibility, research streaming and memory fingerprints; none currently proves purpose/facet propagation or qualified complete-pool selection. EXP-049's identifier-bound public metadata plan can add bounded visible information after its own integrity gates, but cannot reconstruct original engine provenance or certify authority/usefulness. Treat it as an optional input-data change, not selector adoption evidence.
