@@ -1,0 +1,38 @@
+{
+  "schema": "exp052-integration-qualification/1",
+  "status": "passed",
+  "registration_commit": "685757636d917672222cf91e0612785562b14c13",
+  "registration_sha256": "213ddae2896ef40c9be6aca356a29135e24ed9b164ab9b424d2169f3093d1925",
+  "delivery_manifest_sha256": "6b367674480b4245e2511733144a9e477571c92499a8bedb0e143a87d67a47ea",
+  "validator_sha256": "ff273a575fe034a90a595c67e23cd4104f6b1aebb44a4b4c930513aee655f29a",
+  "component_receipts": {
+    "review-validator-qualification-10.json": "4343f4af8e1f7f4e39b30a1fec2f18153fa5fbba915997d91460e287b1b2edc9",
+    "root-validator-probes-02.json": "974ffa818c9e1d16a2b270ee79473d7ac3e8b53514498e4321944c2243065888",
+    "alias-meaning-qualification-02.json": "d65c66f0a0e71a954a89abdfdc9f667482560371560e3aeecefa146ff8adc3d1",
+    "response-envelope-02.json": "b6a5508d1152cfbb81e5b46cad1bd624ea0e3bcfdb51f0f9f24ccc6180c6af30",
+    "root-envelope-verification.json": "c443dc8bc39f76ed6eef92716f6621e871a41eaa62d9070f0d2d5ea95a62ce73",
+    "root-delivery-preflight.json": "f8b4ab14580c536e29f8c74a68285c18f34c7151cb725fccd32eeafc590049f0",
+    "tool-read-qualification.json": "d54625814879a68c31472b92a232ca43db61030e18c7a6081707fe4f59f0866c"
+  },
+  "qualified_scripts": {
+    "review-validator.py.txt": "ff273a575fe034a90a595c67e23cd4104f6b1aebb44a4b4c930513aee655f29a",
+    "review-validator-qualification.py.txt": "b6ca5a0085f0b01c5b082a446a66bfc5b320753025b292a8bbe41984ab604dfc",
+    "response-envelope.py.txt": "9e0448333160722f11cacc75fc25e05afccd76e7f9c678f9837d8a363dcbb519",
+    "root-validator-probes.py.txt": "e3867003823eb4b14b736449f1d45a43a0e347abc477b3273424f4b26975583d",
+    "alias-meaning-qualification.py.txt": "677e5d51bdfd7391843d4d04eb35c2a5257b7df758cc88f75e15effc8ec44160"
+  },
+  "validator_synthetic_checks": 40,
+  "root_synthetic_checks": 26,
+  "maximum_compact_response_bytes": 7811,
+  "response_limit_bytes": 10000,
+  "actual_source_cards": 232,
+  "actual_private_chunks": 23,
+  "normal_live_cli_check": "pending committed trust artifact; required before references",
+  "independent_pre_reference_review": "pending final disposition; required before references",
+  "reference_invocations": 0,
+  "provider_calls": 0,
+  "search_calls": 0,
+  "meaning": "Qualified offline synthetic plumbing and response bounds only; no source judgments or adoption evidence.",
+  "alias_meaning_checks": 85,
+  "earlier_receipt_retained": "integration-qualification-01.json"
+}

@@ -1,0 +1,180 @@
+"""Inert deterministic upper-bound qualification for EXP-052 compact responses.
+
+Run with Python 3 from any working directory. This reads the frozen EXP-052 registration artifacts, EXP-051 trusted delivery
+manifest, EXP-048 trusted delivery manifest, and the expressly permitted structural
+fields from the six EXP-048 pool deliveries. It does not inspect or use card text
+for judgments, and never reads metadata, private abstracts, labels, or outcomes.
+"""
+import hashlib
+import json
+import pathlib
+import subprocess
+import sys
+
+REGISTRATION_COMMIT = "685757636d917672222cf91e0612785562b14c13"
+DELIVERY_COMMIT = "c751d301120c6573a7bfd9256c644255b7c58651"
+MERGE_COMMIT = "1e95d916a6030a805af147d147f54744f47b4a6e"
+MANIFEST_SHA256 = "6b367674480b4245e2511733144a9e477571c92499a8bedb0e143a87d67a47ea"
+CAP_BYTES = 10000
+BASE = pathlib.Path(__file__).resolve().parents[4]
+EXP52 = BASE / "docs/experiments/evidence/EXP-052"
+EXP48 = BASE / "docs/experiments/evidence/EXP-048"
+
+
+def sha(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def git_bytes(rev, path):
+    return subprocess.check_output(["git", "-C", str(BASE), "show", f"{rev}:{path}"])
+
+
+def load_json(path):
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def compact_size(obj):
+    # ensure_ascii preserves the protocol's conservative Unicode escaping.
+    return len(json.dumps(obj, ensure_ascii=True, separators=(",", ":"),
+                          allow_nan=False).encode("utf-8"))
+
+
+def main():
+    reg_path = "docs/experiments/evidence/EXP-052/registration-integrity.json"
+    registered = json.loads(git_bytes(REGISTRATION_COMMIT, reg_path))
+    reg_digest = sha(git_bytes(REGISTRATION_COMMIT, reg_path))
+    # Verify the compact aliases used by the generated shape against the frozen contract.
+    contract = git_bytes(REGISTRATION_COMMIT, "docs/experiments/evidence/EXP-052/review-contract.md").decode("utf-8")
+    alias_rows = [
+        "| `d`: `uncertain` | `uncertain` |",
+        "| `v`: `uncertain` | `uncertain` |",
+        "| `f` entries: `direct`, `partial`, `lead`, `none`, `uncertain` | Respectively `direct_visible_support`, `partial_or_contextual_visible_support`, `reading_lead_only`, `no_visible_support`, `uncertain` |",
+        "| `rp`: `added`, `lost`, `both`, `same`, `uncertain` | Respectively `distinct_lead_added`, `distinct_lead_lost`, `distinct_lead_added_and_lost`, `no_distinct_lead_change`, `uncertain` |",
+        "| `o`: `gain_no_loss`, `gain_with_loss`, `lead_only`, `same`, `loss_only`, `indeterminate` | Respectively `support_gain_without_identified_loss`, `support_gain_with_support_or_lead_loss`, `lead_gain_only`, `no_material_change`, `loss_without_support_gain`, `indeterminate` |",
+        "| `n:snippet` | `card.snippet` |",
+    ]
+    if any(row not in contract for row in alias_rows):
+        raise SystemExit("generated response aliases differ from frozen contract")
+    # Check every frozen registration file at the registered commit and in this tree.
+    integrity = []
+    for rel, expected in registered["files"].items():
+        committed = git_bytes(REGISTRATION_COMMIT, rel)
+        working = (BASE / rel).read_bytes()
+        integrity.append(sha(committed) == expected and sha(working) == expected)
+    if not all(integrity):
+        raise SystemExit("registered EXP-052 source hash mismatch")
+
+    manifest_rel = "docs/experiments/evidence/EXP-051/delivery-manifest.json"
+    manifest_raw = git_bytes(DELIVERY_COMMIT, manifest_rel)
+    if sha(manifest_raw) != MANIFEST_SHA256:
+        raise SystemExit("trusted delivery manifest hash mismatch")
+    manifest = json.loads(manifest_raw)
+    manifest_working = (BASE / manifest_rel).read_bytes()
+    if manifest_working != manifest_raw:
+        raise SystemExit("working trusted manifest differs from frozen manifest")
+    source_manifest_rel = "docs/experiments/evidence/EXP-048/delivery-manifest.json"
+    source_manifest_raw = git_bytes(DELIVERY_COMMIT, source_manifest_rel)
+    source_manifest = json.loads(source_manifest_raw)
+    source_working = (BASE / source_manifest_rel).read_bytes()
+    if source_working != source_manifest_raw:
+        raise SystemExit("working source manifest differs from frozen manifest")
+
+    # Exact unchanged synthetic capacity observation; no claim about provider limits.
+    synthetic_in = (EXP52 / "synthetic-capacity-input.json").read_bytes()
+    synthetic_out = (EXP52 / "synthetic-capacity-output-original.json").read_bytes()
+    capacity_observation = load_json(EXP52 / "capacity-observation.json")
+    capacity = {
+        "input_bytes": len(synthetic_in), "output_bytes": len(synthetic_out),
+        "input_sha256": sha(synthetic_in), "output_sha256": sha(synthetic_out),
+        "byte_identical": synthetic_in == synthetic_out,
+        "observation_matches": (capacity_observation["input_bytes"] == len(synthetic_in)
+                                and capacity_observation["output_bytes"] == len(synthetic_out)
+                                and capacity_observation["input_sha256"] == sha(synthetic_in)
+                                and capacity_observation["output_sha256"] == sha(synthetic_out)),
+        "provider_completion_limit_known": False,
+    }
+
+    results = []
+    for delivery in source_manifest["deliveries"]:
+        pool_ref = delivery["pool_ref"]
+        rel = f"docs/experiments/evidence/EXP-048/pool-{pool_ref}.json"
+        raw = git_bytes(DELIVERY_COMMIT, rel)
+        if sha(raw) != delivery["sha256"] or (BASE / rel).read_bytes() != raw:
+            raise SystemExit(f"trusted pool delivery hash mismatch: {pool_ref}")
+        packet = json.loads(raw)
+        pool = packet["pool"]
+        candidates = pool["candidates"]
+        candidate_ids = [item["id"] for item in candidates]
+        selected_union = set(pool["selected_ids"])
+        for case in packet["cases"]:
+            selected_union.update(case["after_selected_ids"])
+        card_ids = [card_id for card_id in candidate_ids if card_id in selected_union]
+        if len(card_ids) != len(selected_union):
+            raise SystemExit(f"selected union contains unknown ID: {pool_ref}")
+        facets = [facet["id"] for facet in pool["facets"]]
+
+        # Build a syntactically valid shape whose labels are deliberately only
+        # maximum-length uncertainty placeholders. No fictional value is a judgment.
+        # Case context may point to any visible candidate; compare the actual
+        # ensure_ascii JSON string serialization lengths, including escapes.
+        longest_card_id = max(candidate_ids, key=lambda value: (
+            len(json.dumps(value, ensure_ascii=True, separators=(",", ":"))),
+            json.dumps(value, ensure_ascii=True, separators=(",", ":"))))
+        cards = []
+        for card_id in card_ids:
+            cards.append({
+                "id": card_id, "d": "uncertain", "dp": ["n:snippet", "n:snippet"],
+                "v": "uncertain", "vp": ["n:snippet", "n:snippet"],
+                "f": ["uncertain"] * len(facets),
+                "fp": [["n:snippet", "n:snippet"] for _ in facets],
+            })
+        cases = []
+        for case in packet["cases"]:
+            cases.append({
+                "id": case["case_id"], "rp": "uncertain", "o": "gain_with_loss",
+                "cp": [[longest_card_id, "n:snippet"], [longest_card_id, "n:snippet"]],
+                "why": "😀" * 160,
+            })
+        envelope = {
+            "s": "exp052-review/1", "r": f"{pool_ref}-R1",
+            "reg": reg_digest, "man": MANIFEST_SHA256, "p": pool_ref,
+            "read": True,
+            "marks": [chunk["end_marker"] for chunk in manifest["chunks"] if chunk["pool_ref"] == pool_ref],
+            "facets": facets, "cards": cards, "cases": cases,
+            "a": [0, 0, 0, 0],
+        }
+        size = compact_size(envelope)
+        results.append({
+            "pool": pool_ref, "serialized_bytes": size, "cap_bytes": CAP_BYTES,
+            "headroom_bytes": CAP_BYTES - size,
+            "status": "pass" if size <= CAP_BYTES else "fail",
+            "card_count": len(card_ids), "facet_count": len(facets),
+            "facet_rows": len(card_ids) * len(facets), "case_count": len(cases),
+            "case_rationale_chars": 160,
+            "unicode_bound": "160 supplementary Unicode code points per rationale serialized with ensure_ascii=True (12 bytes each)",
+            "upper_bound_only": True,
+        })
+
+    receipt = {
+        "schema": "exp052-response-envelope/1",
+        "registration_commit": REGISTRATION_COMMIT,
+        "merge_commit": MERGE_COMMIT,
+        "registration_integrity_sha256": reg_digest,
+        "response_aliases_verified": len(alias_rows),
+        "qualification_code_sha256": sha(pathlib.Path(__file__).read_bytes()),
+        "trusted_delivery_manifest_sha256": MANIFEST_SHA256,
+        "registration_hashes_verified": len(integrity),
+        "trusted_pool_hashes_verified": len(results),
+        "synthetic_capacity_copy": capacity,
+        "pools": results,
+        "all_six_pass": len(results) == 6 and all(row["status"] == "pass" for row in results),
+        "scope": "deterministic serialized-size upper bound only; no source judgments, semantic-validity claim, or provider hard-limit claim",
+        "external_calls": 0, "provider_calls": 0, "search_calls": 0,
+        "filesystem_writes_by_qualifier": 0,
+    }
+    print(json.dumps(receipt, ensure_ascii=True, sort_keys=True, indent=2))
+    return 0 if receipt["all_six_pass"] and capacity["byte_identical"] and capacity["observation_matches"] else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

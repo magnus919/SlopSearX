@@ -1,0 +1,130 @@
+{
+  "schema": "exp052-root-validator-probes/1",
+  "status": "passed",
+  "validator_sha256": "ff273a575fe034a90a595c67e23cd4104f6b1aebb44a4b4c930513aee655f29a",
+  "checks": [
+    {
+      "check": "neutral-P01",
+      "passed": true
+    },
+    {
+      "check": "neutral-P02",
+      "passed": true
+    },
+    {
+      "check": "neutral-P03",
+      "passed": true
+    },
+    {
+      "check": "neutral-P04",
+      "passed": true
+    },
+    {
+      "check": "neutral-P05",
+      "passed": true
+    },
+    {
+      "check": "neutral-P06",
+      "passed": true
+    },
+    {
+      "check": "removed-uncertainty-valid",
+      "passed": true,
+      "observed": "valid"
+    },
+    {
+      "check": "affected-uncertainty-cannot-be-same",
+      "passed": true,
+      "observed": "review-reading-uncertainty"
+    },
+    {
+      "check": "independent-reading-uncertainty-valid",
+      "passed": true,
+      "observed": "valid"
+    },
+    {
+      "check": "reversed-assessment-order",
+      "passed": true,
+      "observed": "review-card-membership-or-order"
+    },
+    {
+      "check": "reversed-facet-order",
+      "passed": true,
+      "observed": "review-markers-or-facets"
+    },
+    {
+      "check": "duplicate-case",
+      "passed": true,
+      "observed": "review-case-membership"
+    },
+    {
+      "check": "malformed-enum-type",
+      "passed": true,
+      "observed": "review-card-shape-or-enum"
+    },
+    {
+      "check": "facet-map-is-not-array",
+      "passed": true,
+      "observed": "review-card-shape-or-enum"
+    },
+    {
+      "check": "boolean-zero-attestation",
+      "passed": true,
+      "observed": "review-attestation"
+    },
+    {
+      "check": "invalid-pointer-type",
+      "passed": true,
+      "observed": "malformed-structure"
+    },
+    {
+      "check": "bibliography-is-not-design",
+      "passed": true,
+      "observed": "review-positive-pointer"
+    },
+    {
+      "check": "synthetic-null-abstract-cannot-support",
+      "passed": true,
+      "observed": "review-facet-pointer"
+    },
+    {
+      "check": "synthetic-blank-abstract-cannot-support",
+      "passed": true,
+      "observed": "review-facet-pointer"
+    },
+    {
+      "check": "synthetic-unknown-abstract-cannot-support",
+      "passed": true,
+      "observed": "review-facet-pointer"
+    },
+    {
+      "check": "alias-bijection-0",
+      "passed": true
+    },
+    {
+      "check": "alias-bijection-1",
+      "passed": true
+    },
+    {
+      "check": "alias-bijection-2",
+      "passed": true
+    },
+    {
+      "check": "alias-bijection-3",
+      "passed": true
+    },
+    {
+      "check": "alias-bijection-4",
+      "passed": true
+    },
+    {
+      "check": "alias-bijection-5",
+      "passed": true
+    }
+  ],
+  "checks_passed": 26,
+  "reference_invocations": 0,
+  "provider_calls": 0,
+  "search_calls": 0,
+  "meaning": "Neutral synthetic validation and bijection checks only; no source judgments."
+}

@@ -1,0 +1,96 @@
+"""Independent neutral EXP-052 integrity probes; never source judgments."""
+import argparse
+import copy
+import hashlib
+import json
+import runpy
+import tempfile
+from pathlib import Path
+
+BASE = Path(__file__).resolve().parent
+ROOT = BASE.parents[3]
+
+
+def run(delivery_dir, neutral_dir):
+    module = runpy.run_path(str(BASE / "review-validator.py.txt"))
+    delivery = module["load_delivery"](delivery_dir, ROOT)
+    results = []
+    for pool in module["POOL_ORDER"]:
+        report = module["validate_review_fixture"](
+            delivery_dir, neutral_dir / f"{pool}.json", f"{pool}-R1", pool,
+            module["DELIVERY_SHA"], ROOT)
+        results.append({"check": f"neutral-{pool}", "passed": report["valid"]})
+    base = json.loads((neutral_dir / "P01.json").read_bytes())
+    frozen = delivery["pools"]["P01"]["source"]["cases"][0]
+    with tempfile.TemporaryDirectory(prefix="exp052-root-probes-") as folder:
+        path = Path(folder) / "neutral.json"
+
+        def check(name, mutate, valid=False, altered_delivery=None):
+            record = copy.deepcopy(base)
+            mutate(record)
+            path.write_text(json.dumps(record), encoding="utf8")
+            try:
+                report = module["_validate"](path, "P01-R1", "P01",
+                    altered_delivery or delivery, module["DELIVERY_SHA"])
+            except module["Invalid"] as error:
+                report = {"valid": False, "errors": [error.code]}
+            except Exception:
+                report = {"valid": False, "errors": ["malformed-structure"]}
+            results.append({"check": name, "passed": report["valid"] is valid,
+                "observed": "valid" if report["valid"] else report["errors"][0]})
+
+        def uncertain(record):
+            next(card for card in record["cards"]
+                 if card["id"] == frozen["removed_id"])["d"] = "uncertain"
+
+        def valid_removed_uncertainty(record):
+            uncertain(record)
+            record["cases"][0].update(rp="uncertain", o="indeterminate")
+
+        check("removed-uncertainty-valid", valid_removed_uncertainty, True)
+        check("affected-uncertainty-cannot-be-same", uncertain)
+        check("independent-reading-uncertainty-valid",
+            lambda r: r["cases"][0].update(rp="uncertain", o="indeterminate"), True)
+        check("reversed-assessment-order", lambda r: r["cards"].reverse())
+        check("reversed-facet-order", lambda r: r["facets"].reverse())
+        check("duplicate-case", lambda r: r["cases"].__setitem__(1, copy.deepcopy(r["cases"][0])))
+        check("malformed-enum-type", lambda r: r["cards"][0].update(d=[]))
+        check("facet-map-is-not-array", lambda r: r["cards"][0].update(f={"none": 0}))
+        check("boolean-zero-attestation", lambda r: r["a"].__setitem__(0, False))
+        check("invalid-pointer-type", lambda r: r["cards"][0].update(dp=[{}]))
+        check("bibliography-is-not-design", lambda r: r["cards"][0].update(v="explicit", vp=["t"]))
+
+        def abstract_claim(record):
+            record["cards"][0]["f"][0] = "direct"
+            record["cards"][0]["fp"][0] = ["abstract"]
+
+        # Synthetic in-memory metadata variants, not modified real packet files.
+        card_id = base["cards"][0]["id"]
+        for value, status, label in [(None, "reported", "null"),
+                                    ("   ", "reported", "blank"),
+                                    ("Synthetic nonempty value", "unknown", "unknown")]:
+            changed = copy.deepcopy(delivery)
+            changed["pools"]["P01"]["rows"][card_id]["metadata"].setdefault("fields", {})["abstract"] = {
+                "status": status, "value": value}
+            check(f"synthetic-{label}-abstract-cannot-support", abstract_claim,
+                  altered_delivery=changed)
+
+    maps = [module[name] for name in ("D_LONG", "V_LONG", "F_LONG", "RP_LONG", "O_LONG", "ALIASES")]
+    for index, mapping in enumerate(maps):
+        inverse = {value: key for key, value in mapping.items()}
+        results.append({"check": f"alias-bijection-{index}", "passed":
+            len(inverse) == len(mapping) and all(inverse[value] == key for key, value in mapping.items())})
+    return {"schema": "exp052-root-validator-probes/1",
+        "status": "passed" if all(row["passed"] for row in results) else "failed",
+        "validator_sha256": hashlib.sha256((BASE / "review-validator.py.txt").read_bytes()).hexdigest(),
+        "checks": results, "checks_passed": sum(row["passed"] for row in results),
+        "reference_invocations": 0, "provider_calls": 0, "search_calls": 0,
+        "meaning": "Neutral synthetic validation and bijection checks only; no source judgments."}
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--delivery", type=Path, required=True)
+    parser.add_argument("--neutral-dir", type=Path, required=True)
+    args = parser.parse_args()
+    print(json.dumps(run(args.delivery, args.neutral_dir), indent=2))

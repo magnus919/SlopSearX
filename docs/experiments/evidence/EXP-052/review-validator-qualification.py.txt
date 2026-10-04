@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+"""Offline synthetic qualification for the EXP-052 single-pool validator."""
+import copy, hashlib, importlib.util, json, tempfile
+from pathlib import Path
+
+HERE=Path(__file__).resolve().parent
+VALIDATOR=HERE/'review-validator.py.txt'
+RECEIPT=HERE/'review-validator-qualification.json'
+from importlib.machinery import SourceFileLoader
+spec=importlib.util.spec_from_loader('exp052_validator',SourceFileLoader('exp052_validator',str(VALIDATOR)))
+v=importlib.util.module_from_spec(spec); spec.loader.exec_module(v)
+
+def canonical(x): return json.dumps(x,ensure_ascii=False,separators=(',',':')).encode()
+def qualify(repo_root,delivery_dir,receipt_path=RECEIPT):
+ if receipt_path.exists(): raise FileExistsError('qualification receipt exists; append a numbered receipt')
+ d=v.load_delivery(Path(delivery_dir),Path(repo_root)); p=d['pools']['P01']; src=p['source']; sp=src['pool']; cases=src['cases']; union=set(sp['selected_ids'])
+ for c in cases: union.update(c['after_selected_ids'])
+ ordered=[row['card']['id'] for ch in sorted(p['chunks'],key=lambda x:x['chunk_index']) for row in ch['cards'] if row['card']['id'] in union]
+ reg=__import__('hashlib').sha256(v._git(Path(repo_root),v.REG_COMMIT,v.REG_PATH)).hexdigest()
+ cards=[{'id':cid,'d':'none','dp':[],'v':'none','vp':[],'f':['none']*len(sp['facets']),'fp':[[] for _ in sp['facets']]} for cid in ordered]
+ base={'s':'exp052-review/1','r':'P01-R1','reg':reg,'man':v.DELIVERY_SHA,'p':'P01','read':True,'marks':d['markers']['P01'],'facets':[f['id'] for f in sp['facets']],'cards':cards,'cases':[{'id':c['case_id'],'rp':'same','o':'same','cp':[],'why':'Neutral synthetic fixture.'} for c in cases],'a':[0,0,0,0]}
+ checks=[]
+ with tempfile.TemporaryDirectory(prefix='exp052-qualified-') as td:
+  rp=Path(td)/'review.json'
+  def check(name,obj,valid,expected=None):
+   rp.write_bytes(canonical(obj)); out=v.validate_review_fixture(delivery_dir,rp,'P01-R1','P01',v.DELIVERY_SHA,repo_root)
+   observed='valid' if out['valid'] else out['errors'][0]
+   if out['valid']!=valid or (expected and expected not in out['errors']): raise AssertionError(f'{name}:{observed}')
+   checks.append({'id':name,'result':observed}); return out
+  valid_out=check('neutral-valid',base,True)
+  expanded=valid_out['expanded']
+  if expanded['card_assessments'][0]['discovery_value']!='no_visible_discovery_value' or expanded['card_assessments'][0]['facet_support'][0]['support']!='no_visible_support' or expanded['case_assessments'][0]['reading_change']!='no_distinct_lead_change': raise AssertionError('alias-roundtrip-failed')
+  checks.append({'id':'alias-roundtrip','result':'valid'})
+  # Exercise all overall relation branches using the actual frozen add/remove IDs and neutral labels.
+  for name,expected in [('gain_no_loss','gain_no_loss'),('gain_with_loss','gain_with_loss'),('lead_only','lead_only'),('same','same'),('loss_only','loss_only'),('indeterminate','indeterminate')]:
+   x=copy.deepcopy(base); c=cases[0]; outcase=x['cases'][0]; add,rem=c['added_id'],c['removed_id']; fcount=len(sp['facets'])
+   if name in ('gain_no_loss','gain_with_loss'):
+    a=next(q for q in x['cards'] if q['id']==add); a['f'][0]='direct'; a['fp'][0]=['n:snippet']
+   if name=='gain_with_loss' and fcount>1:
+    a=next(q for q in x['cards'] if q['id']==rem); a['f'][1]='direct'; a['fp'][1]=['n:snippet']
+    # after set lacks rem, before set includes it
+   if name=='lead_only':
+    next(q for q in x['cards'] if q['id']==add).update(d='lead',dp=['t']); outcase.update(rp='added',cp=[[add,'t']])
+   if name=='loss_only':
+    next(q for q in x['cards'] if q['id']==rem).update(f=['direct']+['none']*(fcount-1),fp=[['n:snippet']]+[[] for _ in range(fcount-1)])
+   if name=='indeterminate':
+    next(q for q in x['cards'] if q['id']==add).update(d='uncertain',f=['uncertain']+['none']*(fcount-1)); outcase['rp']='uncertain'
+   outcase['o']=expected
+   check('overall-'+name,x,True)
+  for rel in ('added','lost','both','same','uncertain'):
+   x=copy.deepcopy(base); case=x['cases'][0]; frozen=cases[0]; ids=[]
+   if rel in ('added','both'):
+    cid=frozen['added_id']; ids.append(cid); next(q for q in x['cards'] if q['id']==cid).update(d='lead',dp=['t'])
+   if rel in ('lost','both'):
+    cid=frozen['removed_id']; ids.append(cid); next(q for q in x['cards'] if q['id']==cid).update(d='lead',dp=['t'])
+   case.update(rp=rel,cp=[[cid,'t'] for cid in ids],o=('indeterminate' if rel=='uncertain' else 'loss_only' if rel in ('lost','both') else 'lead_only' if rel=='added' else 'same'))
+   if rel=='uncertain': next(q for q in x['cards'] if q['id']==frozen['added_id']).update(d='uncertain',dp=[])
+   check('reading-'+rel,x,True)
+  # Regression: uncertain reading can arise from either affected card or another retained card.
+  # An uncertainty judgment does not require a discovery-uncertain annotation.
+  x=copy.deepcopy(base); x['cases'][0].update(rp='uncertain',o='indeterminate'); check('uncertainty-independent',x,True)
+  for witness in ('added','removed','retained'):
+   x=copy.deepcopy(base); frozen=cases[0]; case=x['cases'][0]; case.update(rp='uncertain',o='indeterminate')
+   affected={c[k] for c in cases for k in ('added_id','removed_id')}
+   cid=frozen['added_id'] if witness=='added' else frozen['removed_id'] if witness=='removed' else next(q['id'] for q in x['cards'] if q['id'] not in affected)
+   next(q for q in x['cards'] if q['id']==cid).update(d='uncertain',dp=[])
+   for ci,fc in zip(x['cases'],cases):
+    if fc['added_id']==cid or fc['removed_id']==cid: ci.update(rp='uncertain',o='indeterminate')
+   check('uncertainty-witness-'+witness,x,True)
+  for cidkind in ('added','removed'):
+   x=copy.deepcopy(base); frozen=cases[0]; cid=frozen['added_id'] if cidkind=='added' else frozen['removed_id']
+   next(q for q in x['cards'] if q['id']==cid).update(d='uncertain',dp=[])
+   check('uncertainty-requires-rp-'+cidkind,x,False)
+  # Bounded malformed-type, marker, attestation, and private delivery-integrity probes.
+  x=copy.deepcopy(base); x['read']=False; check('false-read-attestation',x,False)
+  x=copy.deepcopy(base); x['marks'][0]='wrong-marker'; check('marker-mismatch',x,False)
+  x=copy.deepcopy(base); x['cards'][0]['f']=None; check('wrong-field-type',x,False)
+  x=copy.deepcopy(base); x['cases'][0]['cp']=[['invisible','n:snippet']]; check('invisible-pointer',x,False)
+  x=copy.deepcopy(base); x['cards'][0]['d']='lead'; x['cards'][0]['dp']=[]; check('positive-discovery-needs-pointer',x,False)
+  x=copy.deepcopy(base); x['cards'][0]['v']='explicit'; x['cards'][0]['vp']=[]; check('positive-design-needs-pointer',x,False)
+  # Mutated copies prove truncation/hash/symlink checks; original immutable delivery is read-only.
+  import shutil, os
+  for probe in ('truncated-chunk','chunk-hash','chunk-symlink','manifest-self-hash'):
+   with tempfile.TemporaryDirectory(prefix='exp052-delivery-probe-') as td2:
+    clone=Path(td2)/'delivery'; shutil.copytree(delivery_dir,clone,symlinks=True)
+    manifest_path=clone/'delivery-manifest.json'; manifest=json.loads(manifest_path.read_text()); ent=manifest['chunks'][0]; chunk=clone/ent['filename']
+    if probe=='truncated-chunk': chunk.write_bytes(chunk.read_bytes()[:-1])
+    elif probe=='chunk-hash': chunk.write_bytes(chunk.read_bytes()+b' ')
+    elif probe=='chunk-symlink':
+     target=Path(td2)/'target'; target.write_bytes(chunk.read_bytes()); chunk.unlink(); chunk.symlink_to(target)
+    else: manifest_path.write_bytes(canonical(manifest)+b' ')
+    try: v.load_delivery(clone,Path(repo_root)); raise AssertionError(probe+':accepted')
+    except v.Invalid as err: checks.append({'id':probe,'result':err.code})
+  # Deterministic rejection coverage; no fixture data is retained in receipts.
+  x=copy.deepcopy(base); x['a'][0]=True; check('bool-attestation',x,False)
+  x=copy.deepcopy(base); x['p']='P02'; check('wrong-pool',x,False)
+  x=copy.deepcopy(base); x['cards'].pop(); check('membership',x,False)
+  x=copy.deepcopy(base); x['cards'][0]['f'][0]='direct'; check('missing-facet-pointer',x,False)
+  x=copy.deepcopy(base); x['cards'][0]['f'][0]='direct'; x['cards'][0]['fp'][0]=['t']; check('bibliography-not-support',x,False)
+  x=copy.deepcopy(base); x['cases'][0]['o']='loss_only'; check('derived-relation',x,False)
+  metadata_card=next(cid for cid,row in p['rows'].items() if v._positive(row,'pt'))
+  x=copy.deepcopy(base); frozen=cases[0]; x['cases'][0].update(rp='added',o='lead_only',cp=[[metadata_card,'pt']]); next(q for q in x['cards'] if q['id']==frozen['added_id']).update(d='lead',dp=['t']); check('metadata-only-reading-pointer',x,False,'review-reading-pointer')
+  for name,raw in [('duplicate-json',b'{"x":1,"x":2}'),('nonfinite-json',b'{"x":NaN}'),('deep-json',b'['*100+b'0'+b']'*100),('oversize',b' '*10001)]:
+   rp.write_bytes(raw); out=v.validate_review_fixture(delivery_dir,rp,'P01-R1','P01',v.DELIVERY_SHA,repo_root)
+   if out['valid']: raise AssertionError(name+':accepted')
+   checks.append({'id':name,'result':out['errors'][0]})
+ receipt={'schema':'exp052-integration-qualification/1','status':'passed','scope':'neutral synthetic fixtures; no reference judgments or network calls','validator_sha256':hashlib.sha256(VALIDATOR.read_bytes()).hexdigest(),'delivery_manifest_sha256':d['manifest_sha256'],'checks_passed':len(checks),'checks':checks,'reference_invocations':0,'provider_calls':0,'search_calls':0,'filesystem_writes':1}
+ receipt_path.write_bytes(canonical(receipt)); return receipt
+
+def main():
+ import argparse
+ ap=argparse.ArgumentParser(); ap.add_argument('--repo-root',type=Path,default=Path(__file__).resolve().parents[4]); ap.add_argument('--delivery',type=Path,required=True); ap.add_argument('--receipt',type=Path,default=RECEIPT); a=ap.parse_args()
+ r=qualify(a.repo_root.resolve(),a.delivery.resolve(),a.receipt.resolve()); print(json.dumps({'status':r['status'],'checks_passed':r['checks_passed'],'validator_sha256':r['validator_sha256'],'delivery_manifest_sha256':r['delivery_manifest_sha256']}))
+if __name__=='__main__': main()
