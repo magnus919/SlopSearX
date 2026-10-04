@@ -49,6 +49,20 @@ pip install -e ".[dev]"
 - Verify conventional commit format on all commits
 - If this is an agent-authored PR, mention `@droid` in a PR comment to request automated review
 
+## Release automation
+
+Release Please uses `release-please-config.json` and
+`.release-please-manifest.json` to track the root Python package. Tags retain the
+existing `v<version>` format. The manifest starts from the published `v0.5.0`
+release; subsequent release PRs update it automatically.
+
+Both release discovery and changelog collection scan up to 1,000 commits. This
+avoids the inline action configuration's 250-commit discovery limit, which can
+miss the previous release during busy development and reset the proposed version
+to `0.1.0`. If a release falls outside the configured window, increase the search
+depths before merging the release PR. Check its version and changelog against the
+latest published release; do not fix a discovery failure by pinning `release-as`.
+
 ## Portal impact review
 
 The browser portal is a first-class service. Before changing a backend or
