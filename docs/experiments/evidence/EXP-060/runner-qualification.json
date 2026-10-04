@@ -1,0 +1,47 @@
+{
+  "schema": "exp060-offline-runner-qualification/1",
+  "synthetic": true,
+  "network_calls": 0,
+  "provider_calls": 0,
+  "results": [
+    {
+      "test": "prepare-tests.py.txt",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.528s\n\nOK\n",
+      "source_sha256": "bbdbc443a59aaf463e0681227bc1ddf0c50fa4b8874bba38cc612f84251ab5dd"
+    },
+    {
+      "test": "comparator-http-tests.py.txt",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.723s\n\nOK\n",
+      "source_sha256": "35692ca8f48ae70b57713258acb35fdc69d9786a4926ae0dc7c2ee3e590fd7f0"
+    },
+    {
+      "test": "evaluate-tests.py.txt",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "......\n----------------------------------------------------------------------\nRan 6 tests in 3.213s\n\nOK\n",
+      "source_sha256": "40256a3375938b08cef3d6b65f13b1667d91979bf3637ec886c1457675b282d2"
+    },
+    {
+      "test": "normal-runner-tests.py.txt",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ".....\n----------------------------------------------------------------------\nRan 5 tests in 12.289s\n\nOK\n",
+      "source_sha256": "5a4f5a2deac2bf1411bb446acd521418950d70a3eb7d3b30cceddcc80c83a07d"
+    },
+    {
+      "test": "analysis-tests.py.txt",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "test_all_four_repeat_rotate_triples_are_required (__main__.AnalysisAdapterTests.test_all_four_repeat_rotate_triples_are_required) ... <frozen importlib._bootstrap>:530: DeprecationWarning: the load_module() method is deprecated and slated for removal in Python 3.15; use exec_module() instead\nok\ntest_boolean_grade_is_not_an_integer_grade (__main__.AnalysisAdapterTests.test_boolean_grade_is_not_an_integer_grade) ... ok\ntest_budget_stop_at_exact_full_deadline_is_invalid (__main__.AnalysisAdapterTests.test_budget_stop_at_exact_full_deadline_is_invalid) ... ok\ntest_candidate_cumulative_deadline_is_enforced (__main__.AnalysisAdapterTests.test_candidate_cumulative_deadline_is_enforced) ... ok\ntest_controlled_complete_fixture_passes_unchanged_gates (__main__.AnalysisAdapterTests.test_controlled_complete_fixture_passes_unchanged_gates) ... ok\ntest_duplicate_or_missing_order_identity_is_inconclusive (__main__.AnalysisAdapterTests.test_duplicate_or_missing_order_identity_is_inconclusive) ... ok\ntest_four_natural_large_pools_are_a_separate_conjunctive_gate (__main__.AnalysisAdapterTests.test_four_natural_large_pools_are_a_separate_conjunctive_gate) ... ok\ntest_full_thirteen_query_reference_inventory_includes_navigation_metadata (__main__.AnalysisAdapterTests.test_full_thirteen_query_reference_inventory_includes_navigation_metadata) ... ok\ntest_missing_operation_is_inconclusive_not_a_reduced_sample (__main__.AnalysisAdapterTests.test_missing_operation_is_inconclusive_not_a_reduced_sample) ... ok\ntest_navigation_must_preserve_exact_w0_and_rank_fresh_d_top3 (__main__.AnalysisAdapterTests.test_navigation_must_preserve_exact_w0_and_rank_fresh_d_top3) ... ok\ntest_no_primary_uplift_rejects_instead_of_inconclusive (__main__.AnalysisAdapterTests.test_no_primary_uplift_rejects_instead_of_inconclusive) ... ok\ntest_per_call_deadline_is_enforced (__main__.AnalysisAdapterTests.test_per_call_deadline_is_enforced) ... ok\ntest_pool_cannot_exceed_frozen_eighty_card_cap (__main__.AnalysisAdapterTests.test_pool_cannot_exceed_frozen_eighty_card_cap) ... ok\ntest_reference_inventory_must_cover_every_projected_card (__main__.AnalysisAdapterTests.test_reference_inventory_must_cover_every_projected_card) ... ok\ntest_reused_historical_reference_metadata_is_inconclusive (__main__.AnalysisAdapterTests.test_reused_historical_reference_metadata_is_inconclusive) ... ok\ntest_rotation_must_preserve_ids_and_apply_fixed_left_twenty_order (__main__.AnalysisAdapterTests.test_rotation_must_preserve_ids_and_apply_fixed_left_twenty_order) ... ok\ntest_timing_aggregate_must_bind_to_owned_attempts (__main__.AnalysisAdapterTests.test_timing_aggregate_must_bind_to_owned_attempts) ... ok\ntest_two_useful_identities_can_be_replaced_when_net_count_and_facets_hold (__main__.AnalysisAdapterTests.test_two_useful_identities_can_be_replaced_when_net_count_and_facets_hold) ... ok\ntest_unknown_facet_is_rejected_as_invalid_measurement (__main__.AnalysisAdapterTests.test_unknown_facet_is_rejected_as_invalid_measurement) ... ok\ntest_valid_successful_budget_stop_is_analyzed (__main__.AnalysisAdapterTests.test_valid_successful_budget_stop_is_analyzed) ... ok\n\n----------------------------------------------------------------------\nRan 20 tests in 0.250s\n\nOK\n",
+      "source_sha256": "4e4e38c8d56b19a8f6dfba61a04e62638a8ac2a9083aa74fcacd825475b80d45"
+    }
+  ],
+  "passed": true,
+  "limitations": [
+    "Offline fixtures verify recording, bounds, parsing and analysis integration; they do not establish quality or production latency."
+  ]
+}

@@ -1,0 +1,54 @@
+"""Offline comparator adapter checks, including actual owned child receipts."""
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import sys
+import unittest
+from unittest.mock import Mock
+
+HERE = Path(__file__).resolve().parent
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path));spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+
+C = load("exp060_comparator_tests", HERE / "comparator-http.py.txt")
+T = load("exp060_owned_transport_tests", HERE.parent / "EXP-059/transport.py.txt")
+
+class ComparatorHTTPTests(unittest.TestCase):
+    def requests(self):
+        case = json.loads((HERE / "queries.json").read_bytes())[0]
+        cards = [{"id":"c"+str(i),"title":"Fixture","url":"https://fixture.invalid/"+str(i),"snippet":"Public visible text"} for i in range(44)]
+        return C.P.bodies(case,cards)
+
+    def test_actual_child_score_and_noul_exact_receipts(self):
+        prepared = self.requests()
+        transport = T.ChildTransport([sys.executable,str(HERE / "comparator-http.py.txt"),"--offline-fixture","neutral"],http_timing=True)
+        for arm in ("w0","d","f"):
+            body = C.P.wire(prepared[arm]);raw,elapsed = transport(body,timeout_s=5)
+            answers = json.loads(raw)["answers"]
+            self.assertEqual(set(answers),set(prepared[arm]["questions"]))
+            self.assertTrue(all(answer["type"] == ("noul" if arm=="f" else "score") for answer in answers.values()))
+            self.assertLessEqual(elapsed,1000)
+            self.assertEqual(transport.receipts[-1]["request"],body)
+            self.assertEqual(transport.receipts[-1]["stdout"],raw)
+
+    def test_semantic_mutation_and_duplicate_key_reject_before_opener(self):
+        for mutation in ("instruction","model","facet"):
+            request = self.requests()["f"]
+            if mutation=="instruction":next(iter(request["questions"].values()))["instructions"]="Wrong judgment"
+            if mutation=="model":request["model"]="wrong-model"
+            if mutation=="facet":request["state"]["requested_facets"][0]["id"]="duplicate!"
+            opener = Mock()
+            with self.assertRaises(ValueError):C.W.exchange(C.P.wire(request),"offline-secret",opener)
+            opener.open.assert_not_called()
+        with self.assertRaises(ValueError):C.validate_request(b'{"model":"jev-1.13.0","model":"other"}')
+
+    def test_credential_echo_is_suppressed(self):
+        class Echo:
+            def open(self,*args,**kwargs):return C.W.FixtureResponse(b'offline-secret')
+        body = C.P.wire(self.requests()["d"])
+        with self.assertRaisesRegex(ValueError,"credential-echo"):C.W.exchange(body,"offline-secret",Echo())
+
+if __name__ == "__main__":unittest.main()

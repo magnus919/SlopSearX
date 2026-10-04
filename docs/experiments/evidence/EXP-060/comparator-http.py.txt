@@ -1,0 +1,54 @@
+"""Owned comparator HTTP adapter over frozen EXP-059 bounded transport."""
+from pathlib import Path
+import importlib.machinery
+import importlib.util
+import json
+import sys
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+P = load("exp060_http_prepare", HERE / "prepare.py.txt")
+W = load("exp060_frozen_http", REPO / "docs/experiments/evidence/EXP-059/http-wrapper.py.txt")
+R = load("exp060_frozen_parser", REPO / "docs/experiments/evidence/EXP-059/replay.py.txt")
+
+
+def validate_request(raw):
+    P.verify_registration()
+    if type(raw) is not bytes or len(raw) > 384000:
+        raise ValueError("comparator-request-bound")
+    body = R.strict(raw)
+    if type(body) is not dict or set(body) != {"model","state","questions"} or body["model"] != "jev-1.13.0":
+        raise ValueError("comparator-envelope")
+    state = body["state"]
+    if type(state) is not dict or set(state) not in ({"query","candidates"}, {"query","candidates","requested_facets"}):
+        raise ValueError("comparator-state")
+    cards = state["candidates"]
+    facets = state.get("requested_facets", [])
+    expected = P.bodies({"query":state["query"],"purpose":state["query"],"facets":facets}, cards)
+    possibilities = [expected["f"]] if facets else [expected["w0"], expected["d"]]
+    if not any(candidate is not None and P.wire(candidate) == raw for candidate in possibilities):
+        raise ValueError("comparator-frozen-question-binding")
+    return body
+
+class FixtureOpener:
+    def __init__(self, kind): self.kind = kind
+    def open(self, request, timeout):
+        if self.kind != "neutral":
+            return ORIGINAL_FIXTURE(self.kind).open(request, timeout)
+        body = validate_request(request.data)
+        answers = {qid: ({"type":"score","score":6} if question["type"]=="score" else {"type":"noul","noul":.5}) for qid,question in body["questions"].items()}
+        return W.FixtureResponse(json.dumps({"model":"jev-1.13.0","answers":answers,"usage":{"input_tokens":1,"output_tokens":1}}).encode())
+
+ORIGINAL_FIXTURE = W.FixtureOpener
+W.validate_request = validate_request
+W.FixtureOpener = FixtureOpener
+
+if __name__ == "__main__": sys.exit(W.main())
