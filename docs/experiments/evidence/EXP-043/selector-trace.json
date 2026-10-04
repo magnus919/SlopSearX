@@ -1,0 +1,5581 @@
+{
+  "schema": "exp043-selector-trace/1",
+  "scope": "descriptive trace of frozen selector; no new calls or changed thresholds",
+  "pools": {
+    "q1": {
+      "insertions": [],
+      "top10_equal_d": true,
+      "d_top10": [
+        "c0",
+        "c1",
+        "c8",
+        "c23",
+        "c21",
+        "c11",
+        "c30",
+        "c3",
+        "c19",
+        "c5"
+      ],
+      "e_top10": [
+        "c0",
+        "c1",
+        "c8",
+        "c23",
+        "c21",
+        "c11",
+        "c30",
+        "c3",
+        "c19",
+        "c5"
+      ],
+      "facet_qualified_d_top10": {
+        "benchmarks": [
+          "c0",
+          "c1",
+          "c8",
+          "c11"
+        ],
+        "coordination": [
+          "c0",
+          "c1",
+          "c21",
+          "c3"
+        ],
+        "asynchronous_work": [
+          "c0"
+        ],
+        "conflict_resolution": [
+          "c23",
+          "c19",
+          "c5"
+        ]
+      },
+      "all_rows": [
+        {
+          "id": "c0",
+          "score": 8.3,
+          "facet_probabilities": {
+            "benchmarks": 0.85,
+            "coordination": 0.85,
+            "asynchronous_work": 0.82,
+            "conflict_resolution": 0.3
+          }
+        },
+        {
+          "id": "c1",
+          "score": 8.16,
+          "facet_probabilities": {
+            "benchmarks": 0.8,
+            "coordination": 0.84,
+            "asynchronous_work": 0.31,
+            "conflict_resolution": 0.75
+          }
+        },
+        {
+          "id": "c8",
+          "score": 8.1,
+          "facet_probabilities": {
+            "benchmarks": 0.84,
+            "coordination": 0.76,
+            "asynchronous_work": 0.41,
+            "conflict_resolution": 0.69
+          }
+        },
+        {
+          "id": "c23",
+          "score": 8.09,
+          "facet_probabilities": {
+            "benchmarks": 0.51,
+            "coordination": 0.71,
+            "asynchronous_work": 0.43,
+            "conflict_resolution": 0.87
+          }
+        },
+        {
+          "id": "c21",
+          "score": 7.98,
+          "facet_probabilities": {
+            "benchmarks": 0.42,
+            "coordination": 0.9,
+            "asynchronous_work": 0.37,
+            "conflict_resolution": 0.23
+          }
+        },
+        {
+          "id": "c11",
+          "score": 7.71,
+          "facet_probabilities": {
+            "benchmarks": 0.8,
+            "coordination": 0.7,
+            "asynchronous_work": 0.31,
+            "conflict_resolution": 0.67
+          }
+        },
+        {
+          "id": "c30",
+          "score": 7.69,
+          "facet_probabilities": {
+            "benchmarks": 0.74,
+            "coordination": 0.77,
+            "asynchronous_work": 0.34,
+            "conflict_resolution": 0.21
+          }
+        },
+        {
+          "id": "c3",
+          "score": 7.63,
+          "facet_probabilities": {
+            "benchmarks": 0.73,
+            "coordination": 0.81,
+            "asynchronous_work": 0.66,
+            "conflict_resolution": 0.39
+          }
+        },
+        {
+          "id": "c19",
+          "score": 7.35,
+          "facet_probabilities": {
+            "benchmarks": 0.62,
+            "coordination": 0.48,
+            "asynchronous_work": 0.31,
+            "conflict_resolution": 0.85
+          }
+        },
+        {
+          "id": "c5",
+          "score": 7.33,
+          "facet_probabilities": {
+            "benchmarks": 0.76,
+            "coordination": 0.74,
+            "asynchronous_work": 0.45,
+            "conflict_resolution": 0.85
+          }
+        },
+        {
+          "id": "c16",
+          "score": 7.01,
+          "facet_probabilities": {
+            "benchmarks": 0.51,
+            "coordination": 0.67,
+            "asynchronous_work": 0.24,
+            "conflict_resolution": 0.57
+          }
+        },
+        {
+          "id": "c25",
+          "score": 6.99,
+          "facet_probabilities": {
+            "benchmarks": 0.36,
+            "coordination": 0.79,
+            "asynchronous_work": 0.43,
+            "conflict_resolution": 0.25
+          }
+        },
+        {
+          "id": "c18",
+          "score": 6.98,
+          "facet_probabilities": {
+            "benchmarks": 0.78,
+            "coordination": 0.67,
+            "asynchronous_work": 0.21,
+            "conflict_resolution": 0.47
+          }
+        },
+        {
+          "id": "c14",
+          "score": 6.94,
+          "facet_probabilities": {
+            "benchmarks": 0.6,
+            "coordination": 0.84,
+            "asynchronous_work": 0.67,
+            "conflict_resolution": 0.8
+          }
+        },
+        {
+          "id": "c4",
+          "score": 6.74,
+          "facet_probabilities": {
+            "benchmarks": 0.73,
+            "coordination": 0.71,
+            "asynchronous_work": 0.23,
+            "conflict_resolution": 0.7
+          }
+        },
+        {
+          "id": "c7",
+          "score": 6.63,
+          "facet_probabilities": {
+            "benchmarks": 0.41,
+            "coordination": 0.64,
+            "asynchronous_work": 0.25,
+            "conflict_resolution": 0.52
+          }
+        },
+        {
+          "id": "c13",
+          "score": 6.6,
+          "facet_probabilities": {
+            "benchmarks": 0.38,
+            "coordination": 0.77,
+            "asynchronous_work": 0.24,
+            "conflict_resolution": 0.34
+          }
+        },
+        {
+          "id": "c33",
+          "score": 6.55,
+          "facet_probabilities": {
+            "benchmarks": 0.42,
+            "coordination": 0.63,
+            "asynchronous_work": 0.25,
+            "conflict_resolution": 0.22
+          }
+        },
+        {
+          "id": "c32",
+          "score": 5.88,
+          "facet_probabilities": {
+            "benchmarks": 0.38,
+            "coordination": 0.34,
+            "asynchronous_work": 0.16,
+            "conflict_resolution": 0.44
+          }
+        },
+        {
+          "id": "c9",
+          "score": 5.8,
+          "facet_probabilities": {
+            "benchmarks": 0.69,
+            "coordination": 0.66,
+            "asynchronous_work": 0.29,
+            "conflict_resolution": 0.35
+          }
+        },
+        {
+          "id": "c20",
+          "score": 5.62,
+          "facet_probabilities": {
+            "benchmarks": 0.18,
+            "coordination": 0.7,
+            "asynchronous_work": 0.31,
+            "conflict_resolution": 0.42
+          }
+        },
+        {
+          "id": "c15",
+          "score": 5.56,
+          "facet_probabilities": {
+            "benchmarks": 0.63,
+            "coordination": 0.53,
+            "asynchronous_work": 0.2,
+            "conflict_resolution": 0.15
+          }
+        },
+        {
+          "id": "c10",
+          "score": 5.01,
+          "facet_probabilities": {
+            "benchmarks": 0.55,
+            "coordination": 0.56,
+            "asynchronous_work": 0.22,
+            "conflict_resolution": 0.25
+          }
+        },
+        {
+          "id": "c17",
+          "score": 4.56,
+          "facet_probabilities": {
+            "benchmarks": 0.56,
+            "coordination": 0.55,
+            "asynchronous_work": 0.27,
+            "conflict_resolution": 0.18
+          }
+        },
+        {
+          "id": "c12",
+          "score": 3.99,
+          "facet_probabilities": {
+            "benchmarks": 0.36,
+            "coordination": 0.53,
+            "asynchronous_work": 0.23,
+            "conflict_resolution": 0.36
+          }
+        },
+        {
+          "id": "c22",
+          "score": 3.68,
+          "facet_probabilities": {
+            "benchmarks": 0.16,
+            "coordination": 0.54,
+            "asynchronous_work": 0.19,
+            "conflict_resolution": 0.22
+          }
+        },
+        {
+          "id": "c29",
+          "score": 3.05,
+          "facet_probabilities": {
+            "benchmarks": 0.11,
+            "coordination": 0.36,
+            "asynchronous_work": 0.13,
+            "conflict_resolution": 0.14
+          }
+        },
+        {
+          "id": "c27",
+          "score": 2.71,
+          "facet_probabilities": {
+            "benchmarks": 0.28,
+            "coordination": 0.2,
+            "asynchronous_work": 0.12,
+            "conflict_resolution": 0.09
+          }
+        },
+        {
+          "id": "c31",
+          "score": 2.56,
+          "facet_probabilities": {
+            "benchmarks": 0.12,
+            "coordination": 0.17,
+            "asynchronous_work": 0.08,
+            "conflict_resolution": 0.08
+          }
+        },
+        {
+          "id": "c24",
+          "score": 2.31,
+          "facet_probabilities": {
+            "benchmarks": 0.13,
+            "coordination": 0.26,
+            "asynchronous_work": 0.11,
+            "conflict_resolution": 0.13
+          }
+        },
+        {
+          "id": "c26",
+          "score": 2.09,
+          "facet_probabilities": {
+            "benchmarks": 0.16,
+            "coordination": 0.3,
+            "asynchronous_work": 0.12,
+            "conflict_resolution": 0.12
+          }
+        },
+        {
+          "id": "c28",
+          "score": 1.99,
+          "facet_probabilities": {
+            "benchmarks": 0.19,
+            "coordination": 0.13,
+            "asynchronous_work": 0.09,
+            "conflict_resolution": 0.08
+          }
+        }
+      ]
+    },
+    "q2": {
+      "insertions": [],
+      "top10_equal_d": true,
+      "d_top10": [
+        "c20",
+        "c24",
+        "c25",
+        "c32",
+        "c26",
+        "c4",
+        "c18",
+        "c27",
+        "c29",
+        "c2"
+      ],
+      "e_top10": [
+        "c20",
+        "c24",
+        "c25",
+        "c32",
+        "c26",
+        "c4",
+        "c18",
+        "c27",
+        "c29",
+        "c2"
+      ],
+      "facet_qualified_d_top10": {
+        "human_approval": [
+          "c20",
+          "c4",
+          "c18",
+          "c2"
+        ],
+        "audit_logging": [
+          "c32",
+          "c4",
+          "c18",
+          "c2"
+        ],
+        "policy_controls": [
+          "c20",
+          "c25",
+          "c32",
+          "c26",
+          "c18"
+        ]
+      },
+      "all_rows": [
+        {
+          "id": "c20",
+          "score": 7.91,
+          "facet_probabilities": {
+            "human_approval": 0.86,
+            "audit_logging": 0.44,
+            "policy_controls": 0.88
+          }
+        },
+        {
+          "id": "c24",
+          "score": 7.89,
+          "facet_probabilities": {
+            "human_approval": 0.74,
+            "audit_logging": 0.75,
+            "policy_controls": 0.74
+          }
+        },
+        {
+          "id": "c25",
+          "score": 7.68,
+          "facet_probabilities": {
+            "human_approval": 0.34,
+            "audit_logging": 0.45,
+            "policy_controls": 0.83
+          }
+        },
+        {
+          "id": "c32",
+          "score": 7.67,
+          "facet_probabilities": {
+            "human_approval": 0.69,
+            "audit_logging": 0.89,
+            "policy_controls": 0.8
+          }
+        },
+        {
+          "id": "c26",
+          "score": 7.66,
+          "facet_probabilities": {
+            "human_approval": 0.29,
+            "audit_logging": 0.59,
+            "policy_controls": 0.81
+          }
+        },
+        {
+          "id": "c4",
+          "score": 7.63,
+          "facet_probabilities": {
+            "human_approval": 0.88,
+            "audit_logging": 0.84,
+            "policy_controls": 0.77
+          }
+        },
+        {
+          "id": "c18",
+          "score": 7.59,
+          "facet_probabilities": {
+            "human_approval": 0.86,
+            "audit_logging": 0.84,
+            "policy_controls": 0.8
+          }
+        },
+        {
+          "id": "c27",
+          "score": 7.51,
+          "facet_probabilities": {
+            "human_approval": 0.27,
+            "audit_logging": 0.58,
+            "policy_controls": 0.77
+          }
+        },
+        {
+          "id": "c29",
+          "score": 7.44,
+          "facet_probabilities": {
+            "human_approval": 0.32,
+            "audit_logging": 0.41,
+            "policy_controls": 0.79
+          }
+        },
+        {
+          "id": "c2",
+          "score": 7.37,
+          "facet_probabilities": {
+            "human_approval": 0.9,
+            "audit_logging": 0.9,
+            "policy_controls": 0.56
+          }
+        },
+        {
+          "id": "c14",
+          "score": 7.36,
+          "facet_probabilities": {
+            "human_approval": 0.91,
+            "audit_logging": 0.88,
+            "policy_controls": 0.72
+          }
+        },
+        {
+          "id": "c15",
+          "score": 7.36,
+          "facet_probabilities": {
+            "human_approval": 0.83,
+            "audit_logging": 0.8,
+            "policy_controls": 0.75
+          }
+        },
+        {
+          "id": "c7",
+          "score": 7.34,
+          "facet_probabilities": {
+            "human_approval": 0.83,
+            "audit_logging": 0.89,
+            "policy_controls": 0.75
+          }
+        },
+        {
+          "id": "c10",
+          "score": 7.31,
+          "facet_probabilities": {
+            "human_approval": 0.9,
+            "audit_logging": 0.9,
+            "policy_controls": 0.78
+          }
+        },
+        {
+          "id": "c9",
+          "score": 7.2,
+          "facet_probabilities": {
+            "human_approval": 0.72,
+            "audit_logging": 0.86,
+            "policy_controls": 0.8
+          }
+        },
+        {
+          "id": "c16",
+          "score": 7.2,
+          "facet_probabilities": {
+            "human_approval": 0.72,
+            "audit_logging": 0.8,
+            "policy_controls": 0.76
+          }
+        },
+        {
+          "id": "c30",
+          "score": 7.2,
+          "facet_probabilities": {
+            "human_approval": 0.31,
+            "audit_logging": 0.41,
+            "policy_controls": 0.75
+          }
+        },
+        {
+          "id": "c31",
+          "score": 7.16,
+          "facet_probabilities": {
+            "human_approval": 0.15,
+            "audit_logging": 0.88,
+            "policy_controls": 0.23
+          }
+        },
+        {
+          "id": "c17",
+          "score": 7.09,
+          "facet_probabilities": {
+            "human_approval": 0.65,
+            "audit_logging": 0.88,
+            "policy_controls": 0.51
+          }
+        },
+        {
+          "id": "c22",
+          "score": 7.05,
+          "facet_probabilities": {
+            "human_approval": 0.25,
+            "audit_logging": 0.34,
+            "policy_controls": 0.5
+          }
+        },
+        {
+          "id": "c8",
+          "score": 7.03,
+          "facet_probabilities": {
+            "human_approval": 0.84,
+            "audit_logging": 0.7,
+            "policy_controls": 0.69
+          }
+        },
+        {
+          "id": "c1",
+          "score": 6.97,
+          "facet_probabilities": {
+            "human_approval": 0.84,
+            "audit_logging": 0.21,
+            "policy_controls": 0.38
+          }
+        },
+        {
+          "id": "c19",
+          "score": 6.85,
+          "facet_probabilities": {
+            "human_approval": 0.46,
+            "audit_logging": 0.52,
+            "policy_controls": 0.69
+          }
+        },
+        {
+          "id": "c12",
+          "score": 6.65,
+          "facet_probabilities": {
+            "human_approval": 0.41,
+            "audit_logging": 0.29,
+            "policy_controls": 0.85
+          }
+        },
+        {
+          "id": "c23",
+          "score": 6.58,
+          "facet_probabilities": {
+            "human_approval": 0.24,
+            "audit_logging": 0.27,
+            "policy_controls": 0.42
+          }
+        },
+        {
+          "id": "c3",
+          "score": 6.37,
+          "facet_probabilities": {
+            "human_approval": 0.85,
+            "audit_logging": 0.91,
+            "policy_controls": 0.63
+          }
+        },
+        {
+          "id": "c21",
+          "score": 6.36,
+          "facet_probabilities": {
+            "human_approval": 0.56,
+            "audit_logging": 0.73,
+            "policy_controls": 0.67
+          }
+        },
+        {
+          "id": "c28",
+          "score": 6.12,
+          "facet_probabilities": {
+            "human_approval": 0.27,
+            "audit_logging": 0.28,
+            "policy_controls": 0.48
+          }
+        },
+        {
+          "id": "c13",
+          "score": 5.98,
+          "facet_probabilities": {
+            "human_approval": 0.22,
+            "audit_logging": 0.76,
+            "policy_controls": 0.27
+          }
+        },
+        {
+          "id": "c0",
+          "score": 5.94,
+          "facet_probabilities": {
+            "human_approval": 0.88,
+            "audit_logging": 0.87,
+            "policy_controls": 0.8
+          }
+        },
+        {
+          "id": "c5",
+          "score": 5.67,
+          "facet_probabilities": {
+            "human_approval": 0.18,
+            "audit_logging": 0.77,
+            "policy_controls": 0.3
+          }
+        },
+        {
+          "id": "c11",
+          "score": 5.53,
+          "facet_probabilities": {
+            "human_approval": 0.23,
+            "audit_logging": 0.7,
+            "policy_controls": 0.46
+          }
+        },
+        {
+          "id": "c6",
+          "score": 5.35,
+          "facet_probabilities": {
+            "human_approval": 0.49,
+            "audit_logging": 0.75,
+            "policy_controls": 0.49
+          }
+        }
+      ]
+    },
+    "q3": {
+      "insertions": [],
+      "top10_equal_d": true,
+      "d_top10": [
+        "c0",
+        "c3",
+        "c25",
+        "c29",
+        "c16",
+        "c28",
+        "c4",
+        "c2",
+        "c8",
+        "c18"
+      ],
+      "e_top10": [
+        "c0",
+        "c3",
+        "c25",
+        "c29",
+        "c16",
+        "c28",
+        "c4",
+        "c2",
+        "c8",
+        "c18"
+      ],
+      "facet_qualified_d_top10": {
+        "replay": [
+          "c0",
+          "c29",
+          "c16",
+          "c2"
+        ],
+        "recovery": [
+          "c0",
+          "c16",
+          "c4",
+          "c2"
+        ],
+        "idempotency": [
+          "c0",
+          "c3",
+          "c16",
+          "c4",
+          "c2",
+          "c8"
+        ],
+        "external_side_effects": [
+          "c0",
+          "c3",
+          "c25",
+          "c29",
+          "c28",
+          "c4",
+          "c2"
+        ]
+      },
+      "all_rows": [
+        {
+          "id": "c0",
+          "score": 8.41,
+          "facet_probabilities": {
+            "replay": 0.92,
+            "recovery": 0.87,
+            "idempotency": 0.87,
+            "external_side_effects": 0.81
+          }
+        },
+        {
+          "id": "c3",
+          "score": 8.01,
+          "facet_probabilities": {
+            "replay": 0.76,
+            "recovery": 0.78,
+            "idempotency": 0.9,
+            "external_side_effects": 0.89
+          }
+        },
+        {
+          "id": "c25",
+          "score": 7.8,
+          "facet_probabilities": {
+            "replay": 0.53,
+            "recovery": 0.58,
+            "idempotency": 0.64,
+            "external_side_effects": 0.86
+          }
+        },
+        {
+          "id": "c29",
+          "score": 7.78,
+          "facet_probabilities": {
+            "replay": 0.87,
+            "recovery": 0.78,
+            "idempotency": 0.52,
+            "external_side_effects": 0.83
+          }
+        },
+        {
+          "id": "c16",
+          "score": 7.76,
+          "facet_probabilities": {
+            "replay": 0.9,
+            "recovery": 0.88,
+            "idempotency": 0.8,
+            "external_side_effects": 0.75
+          }
+        },
+        {
+          "id": "c28",
+          "score": 7.62,
+          "facet_probabilities": {
+            "replay": 0.62,
+            "recovery": 0.58,
+            "idempotency": 0.66,
+            "external_side_effects": 0.85
+          }
+        },
+        {
+          "id": "c4",
+          "score": 7.22,
+          "facet_probabilities": {
+            "replay": 0.66,
+            "recovery": 0.88,
+            "idempotency": 0.8,
+            "external_side_effects": 0.87
+          }
+        },
+        {
+          "id": "c2",
+          "score": 7.16,
+          "facet_probabilities": {
+            "replay": 0.89,
+            "recovery": 0.86,
+            "idempotency": 0.87,
+            "external_side_effects": 0.88
+          }
+        },
+        {
+          "id": "c8",
+          "score": 7.16,
+          "facet_probabilities": {
+            "replay": 0.76,
+            "recovery": 0.52,
+            "idempotency": 0.88,
+            "external_side_effects": 0.67
+          }
+        },
+        {
+          "id": "c18",
+          "score": 7.16,
+          "facet_probabilities": {
+            "replay": 0.28,
+            "recovery": 0.28,
+            "idempotency": 0.75,
+            "external_side_effects": 0.57
+          }
+        },
+        {
+          "id": "c17",
+          "score": 7.13,
+          "facet_probabilities": {
+            "replay": 0.86,
+            "recovery": 0.85,
+            "idempotency": 0.57,
+            "external_side_effects": 0.65
+          }
+        },
+        {
+          "id": "c6",
+          "score": 7.11,
+          "facet_probabilities": {
+            "replay": 0.82,
+            "recovery": 0.64,
+            "idempotency": 0.87,
+            "external_side_effects": 0.88
+          }
+        },
+        {
+          "id": "c7",
+          "score": 7.03,
+          "facet_probabilities": {
+            "replay": 0.53,
+            "recovery": 0.83,
+            "idempotency": 0.83,
+            "external_side_effects": 0.87
+          }
+        },
+        {
+          "id": "c12",
+          "score": 6.77,
+          "facet_probabilities": {
+            "replay": 0.77,
+            "recovery": 0.53,
+            "idempotency": 0.91,
+            "external_side_effects": 0.87
+          }
+        },
+        {
+          "id": "c5",
+          "score": 6.75,
+          "facet_probabilities": {
+            "replay": 0.34,
+            "recovery": 0.44,
+            "idempotency": 0.85,
+            "external_side_effects": 0.84
+          }
+        },
+        {
+          "id": "c11",
+          "score": 6.66,
+          "facet_probabilities": {
+            "replay": 0.74,
+            "recovery": 0.81,
+            "idempotency": 0.87,
+            "external_side_effects": 0.82
+          }
+        },
+        {
+          "id": "c13",
+          "score": 6.64,
+          "facet_probabilities": {
+            "replay": 0.6,
+            "recovery": 0.8,
+            "idempotency": 0.86,
+            "external_side_effects": 0.74
+          }
+        },
+        {
+          "id": "c20",
+          "score": 6.6,
+          "facet_probabilities": {
+            "replay": 0.65,
+            "recovery": 0.48,
+            "idempotency": 0.54,
+            "external_side_effects": 0.68
+          }
+        },
+        {
+          "id": "c1",
+          "score": 6.46,
+          "facet_probabilities": {
+            "replay": 0.75,
+            "recovery": 0.59,
+            "idempotency": 0.72,
+            "external_side_effects": 0.72
+          }
+        },
+        {
+          "id": "c10",
+          "score": 6.45,
+          "facet_probabilities": {
+            "replay": 0.65,
+            "recovery": 0.54,
+            "idempotency": 0.86,
+            "external_side_effects": 0.83
+          }
+        },
+        {
+          "id": "c14",
+          "score": 6.43,
+          "facet_probabilities": {
+            "replay": 0.46,
+            "recovery": 0.34,
+            "idempotency": 0.86,
+            "external_side_effects": 0.8
+          }
+        },
+        {
+          "id": "c24",
+          "score": 6.1,
+          "facet_probabilities": {
+            "replay": 0.23,
+            "recovery": 0.3,
+            "idempotency": 0.79,
+            "external_side_effects": 0.66
+          }
+        },
+        {
+          "id": "c23",
+          "score": 5.78,
+          "facet_probabilities": {
+            "replay": 0.51,
+            "recovery": 0.57,
+            "idempotency": 0.23,
+            "external_side_effects": 0.22
+          }
+        },
+        {
+          "id": "c21",
+          "score": 5.69,
+          "facet_probabilities": {
+            "replay": 0.27,
+            "recovery": 0.27,
+            "idempotency": 0.75,
+            "external_side_effects": 0.56
+          }
+        },
+        {
+          "id": "c15",
+          "score": 5.58,
+          "facet_probabilities": {
+            "replay": 0.25,
+            "recovery": 0.43,
+            "idempotency": 0.71,
+            "external_side_effects": 0.67
+          }
+        },
+        {
+          "id": "c9",
+          "score": 5.43,
+          "facet_probabilities": {
+            "replay": 0.78,
+            "recovery": 0.41,
+            "idempotency": 0.74,
+            "external_side_effects": 0.67
+          }
+        },
+        {
+          "id": "c22",
+          "score": 5.32,
+          "facet_probabilities": {
+            "replay": 0.77,
+            "recovery": 0.45,
+            "idempotency": 0.18,
+            "external_side_effects": 0.15
+          }
+        },
+        {
+          "id": "c19",
+          "score": 5.11,
+          "facet_probabilities": {
+            "replay": 0.66,
+            "recovery": 0.31,
+            "idempotency": 0.14,
+            "external_side_effects": 0.12
+          }
+        },
+        {
+          "id": "c27",
+          "score": 5.0,
+          "facet_probabilities": {
+            "replay": 0.56,
+            "recovery": 0.68,
+            "idempotency": 0.18,
+            "external_side_effects": 0.22
+          }
+        },
+        {
+          "id": "c26",
+          "score": 4.13,
+          "facet_probabilities": {
+            "replay": 0.13,
+            "recovery": 0.14,
+            "idempotency": 0.16,
+            "external_side_effects": 0.2
+          }
+        }
+      ]
+    },
+    "q4": {
+      "insertions": [],
+      "top10_equal_d": true,
+      "d_top10": [
+        "c2",
+        "c15",
+        "c1",
+        "c11",
+        "c6",
+        "c19",
+        "c30",
+        "c8",
+        "c5",
+        "c18"
+      ],
+      "e_top10": [
+        "c2",
+        "c15",
+        "c1",
+        "c11",
+        "c6",
+        "c19",
+        "c30",
+        "c8",
+        "c5",
+        "c18"
+      ],
+      "facet_qualified_d_top10": {
+        "leakage": [
+          "c15",
+          "c1",
+          "c11",
+          "c19",
+          "c30",
+          "c5",
+          "c18"
+        ],
+        "decontamination": [
+          "c15"
+        ],
+        "live_evaluation": [
+          "c2"
+        ],
+        "time_splits": [
+          "c2",
+          "c6"
+        ]
+      },
+      "all_rows": [
+        {
+          "id": "c2",
+          "score": 7.9,
+          "facet_probabilities": {
+            "leakage": 0.29,
+            "decontamination": 0.25,
+            "live_evaluation": 0.92,
+            "time_splits": 0.86
+          }
+        },
+        {
+          "id": "c15",
+          "score": 7.71,
+          "facet_probabilities": {
+            "leakage": 0.82,
+            "decontamination": 0.9,
+            "live_evaluation": 0.56,
+            "time_splits": 0.27
+          }
+        },
+        {
+          "id": "c1",
+          "score": 7.61,
+          "facet_probabilities": {
+            "leakage": 0.91,
+            "decontamination": 0.35,
+            "live_evaluation": 0.23,
+            "time_splits": 0.74
+          }
+        },
+        {
+          "id": "c11",
+          "score": 7.5,
+          "facet_probabilities": {
+            "leakage": 0.93,
+            "decontamination": 0.32,
+            "live_evaluation": 0.16,
+            "time_splits": 0.74
+          }
+        },
+        {
+          "id": "c6",
+          "score": 7.4,
+          "facet_probabilities": {
+            "leakage": 0.74,
+            "decontamination": 0.71,
+            "live_evaluation": 0.22,
+            "time_splits": 0.89
+          }
+        },
+        {
+          "id": "c19",
+          "score": 7.28,
+          "facet_probabilities": {
+            "leakage": 0.94,
+            "decontamination": 0.25,
+            "live_evaluation": 0.08,
+            "time_splits": 0.63
+          }
+        },
+        {
+          "id": "c30",
+          "score": 7.23,
+          "facet_probabilities": {
+            "leakage": 0.87,
+            "decontamination": 0.38,
+            "live_evaluation": 0.53,
+            "time_splits": 0.16
+          }
+        },
+        {
+          "id": "c8",
+          "score": 7.21,
+          "facet_probabilities": {
+            "leakage": 0.75,
+            "decontamination": 0.78,
+            "live_evaluation": 0.77,
+            "time_splits": 0.69
+          }
+        },
+        {
+          "id": "c5",
+          "score": 7.01,
+          "facet_probabilities": {
+            "leakage": 0.88,
+            "decontamination": 0.62,
+            "live_evaluation": 0.18,
+            "time_splits": 0.78
+          }
+        },
+        {
+          "id": "c18",
+          "score": 6.82,
+          "facet_probabilities": {
+            "leakage": 0.81,
+            "decontamination": 0.52,
+            "live_evaluation": 0.17,
+            "time_splits": 0.78
+          }
+        },
+        {
+          "id": "c0",
+          "score": 6.81,
+          "facet_probabilities": {
+            "leakage": 0.75,
+            "decontamination": 0.33,
+            "live_evaluation": 0.27,
+            "time_splits": 0.21
+          }
+        },
+        {
+          "id": "c4",
+          "score": 6.79,
+          "facet_probabilities": {
+            "leakage": 0.82,
+            "decontamination": 0.29,
+            "live_evaluation": 0.3,
+            "time_splits": 0.32
+          }
+        },
+        {
+          "id": "c14",
+          "score": 6.78,
+          "facet_probabilities": {
+            "leakage": 0.92,
+            "decontamination": 0.24,
+            "live_evaluation": 0.06,
+            "time_splits": 0.17
+          }
+        },
+        {
+          "id": "c9",
+          "score": 6.73,
+          "facet_probabilities": {
+            "leakage": 0.85,
+            "decontamination": 0.36,
+            "live_evaluation": 0.1,
+            "time_splits": 0.1
+          }
+        },
+        {
+          "id": "c10",
+          "score": 6.72,
+          "facet_probabilities": {
+            "leakage": 0.85,
+            "decontamination": 0.21,
+            "live_evaluation": 0.18,
+            "time_splits": 0.59
+          }
+        },
+        {
+          "id": "c12",
+          "score": 6.72,
+          "facet_probabilities": {
+            "leakage": 0.83,
+            "decontamination": 0.68,
+            "live_evaluation": 0.14,
+            "time_splits": 0.17
+          }
+        },
+        {
+          "id": "c17",
+          "score": 6.57,
+          "facet_probabilities": {
+            "leakage": 0.31,
+            "decontamination": 0.38,
+            "live_evaluation": 0.39,
+            "time_splits": 0.17
+          }
+        },
+        {
+          "id": "c20",
+          "score": 6.52,
+          "facet_probabilities": {
+            "leakage": 0.81,
+            "decontamination": 0.24,
+            "live_evaluation": 0.21,
+            "time_splits": 0.17
+          }
+        },
+        {
+          "id": "c7",
+          "score": 6.45,
+          "facet_probabilities": {
+            "leakage": 0.91,
+            "decontamination": 0.26,
+            "live_evaluation": 0.11,
+            "time_splits": 0.19
+          }
+        },
+        {
+          "id": "c3",
+          "score": 6.32,
+          "facet_probabilities": {
+            "leakage": 0.87,
+            "decontamination": 0.65,
+            "live_evaluation": 0.1,
+            "time_splits": 0.16
+          }
+        },
+        {
+          "id": "c13",
+          "score": 6.31,
+          "facet_probabilities": {
+            "leakage": 0.68,
+            "decontamination": 0.59,
+            "live_evaluation": 0.12,
+            "time_splits": 0.14
+          }
+        },
+        {
+          "id": "c21",
+          "score": 6.28,
+          "facet_probabilities": {
+            "leakage": 0.59,
+            "decontamination": 0.24,
+            "live_evaluation": 0.17,
+            "time_splits": 0.15
+          }
+        },
+        {
+          "id": "c26",
+          "score": 4.57,
+          "facet_probabilities": {
+            "leakage": 0.48,
+            "decontamination": 0.55,
+            "live_evaluation": 0.08,
+            "time_splits": 0.25
+          }
+        },
+        {
+          "id": "c31",
+          "score": 4.49,
+          "facet_probabilities": {
+            "leakage": 0.5,
+            "decontamination": 0.41,
+            "live_evaluation": 0.12,
+            "time_splits": 0.5
+          }
+        },
+        {
+          "id": "c16",
+          "score": 4.44,
+          "facet_probabilities": {
+            "leakage": 0.78,
+            "decontamination": 0.15,
+            "live_evaluation": 0.09,
+            "time_splits": 0.1
+          }
+        },
+        {
+          "id": "c28",
+          "score": 3.87,
+          "facet_probabilities": {
+            "leakage": 0.37,
+            "decontamination": 0.22,
+            "live_evaluation": 0.49,
+            "time_splits": 0.26
+          }
+        },
+        {
+          "id": "c22",
+          "score": 3.07,
+          "facet_probabilities": {
+            "leakage": 0.13,
+            "decontamination": 0.1,
+            "live_evaluation": 0.15,
+            "time_splits": 0.09
+          }
+        },
+        {
+          "id": "c32",
+          "score": 2.26,
+          "facet_probabilities": {
+            "leakage": 0.34,
+            "decontamination": 0.18,
+            "live_evaluation": 0.15,
+            "time_splits": 0.25
+          }
+        },
+        {
+          "id": "c34",
+          "score": 2.23,
+          "facet_probabilities": {
+            "leakage": 0.17,
+            "decontamination": 0.08,
+            "live_evaluation": 0.07,
+            "time_splits": 0.19
+          }
+        },
+        {
+          "id": "c25",
+          "score": 1.5,
+          "facet_probabilities": {
+            "leakage": 0.07,
+            "decontamination": 0.05,
+            "live_evaluation": 0.05,
+            "time_splits": 0.05
+          }
+        },
+        {
+          "id": "c27",
+          "score": 1.43,
+          "facet_probabilities": {
+            "leakage": 0.07,
+            "decontamination": 0.07,
+            "live_evaluation": 0.04,
+            "time_splits": 0.06
+          }
+        },
+        {
+          "id": "c29",
+          "score": 1.05,
+          "facet_probabilities": {
+            "leakage": 0.06,
+            "decontamination": 0.05,
+            "live_evaluation": 0.04,
+            "time_splits": 0.04
+          }
+        },
+        {
+          "id": "c33",
+          "score": 1.02,
+          "facet_probabilities": {
+            "leakage": 0.06,
+            "decontamination": 0.05,
+            "live_evaluation": 0.04,
+            "time_splits": 0.11
+          }
+        },
+        {
+          "id": "c24",
+          "score": 0.5,
+          "facet_probabilities": {
+            "leakage": 0.05,
+            "decontamination": 0.03,
+            "live_evaluation": 0.06,
+            "time_splits": 0.07
+          }
+        },
+        {
+          "id": "c23",
+          "score": 0.44,
+          "facet_probabilities": {
+            "leakage": 0.04,
+            "decontamination": 0.02,
+            "live_evaluation": 0.03,
+            "time_splits": 0.03
+          }
+        }
+      ]
+    },
+    "q5": {
+      "insertions": [],
+      "top10_equal_d": true,
+      "d_top10": [
+        "c6",
+        "c0",
+        "c9",
+        "c1",
+        "c13",
+        "c3",
+        "c17",
+        "c16",
+        "c5",
+        "c15"
+      ],
+      "e_top10": [
+        "c6",
+        "c0",
+        "c9",
+        "c1",
+        "c13",
+        "c3",
+        "c17",
+        "c16",
+        "c5",
+        "c15"
+      ],
+      "facet_qualified_d_top10": {
+        "verifier_specification": [],
+        "threat_model": [],
+        "builder_identity": [
+          "c9"
+        ],
+        "attestations": []
+      },
+      "all_rows": [
+        {
+          "id": "c6",
+          "score": 8.01,
+          "facet_probabilities": {
+            "verifier_specification": 0.54,
+            "threat_model": 0.57,
+            "builder_identity": 0.22,
+            "attestations": 0.3
+          }
+        },
+        {
+          "id": "c0",
+          "score": 7.92,
+          "facet_probabilities": {
+            "verifier_specification": 0.47,
+            "threat_model": 0.54,
+            "builder_identity": 0.24,
+            "attestations": 0.37
+          }
+        },
+        {
+          "id": "c9",
+          "score": 7.92,
+          "facet_probabilities": {
+            "verifier_specification": 0.71,
+            "threat_model": 0.18,
+            "builder_identity": 0.85,
+            "attestations": 0.62
+          }
+        },
+        {
+          "id": "c1",
+          "score": 7.38,
+          "facet_probabilities": {
+            "verifier_specification": 0.27,
+            "threat_model": 0.51,
+            "builder_identity": 0.26,
+            "attestations": 0.58
+          }
+        },
+        {
+          "id": "c13",
+          "score": 7.08,
+          "facet_probabilities": {
+            "verifier_specification": 0.59,
+            "threat_model": 0.14,
+            "builder_identity": 0.78,
+            "attestations": 0.52
+          }
+        },
+        {
+          "id": "c3",
+          "score": 6.85,
+          "facet_probabilities": {
+            "verifier_specification": 0.52,
+            "threat_model": 0.11,
+            "builder_identity": 0.37,
+            "attestations": 0.28
+          }
+        },
+        {
+          "id": "c17",
+          "score": 6.84,
+          "facet_probabilities": {
+            "verifier_specification": 0.56,
+            "threat_model": 0.15,
+            "builder_identity": 0.77,
+            "attestations": 0.5
+          }
+        },
+        {
+          "id": "c16",
+          "score": 6.68,
+          "facet_probabilities": {
+            "verifier_specification": 0.64,
+            "threat_model": 0.15,
+            "builder_identity": 0.69,
+            "attestations": 0.39
+          }
+        },
+        {
+          "id": "c5",
+          "score": 5.88,
+          "facet_probabilities": {
+            "verifier_specification": 0.09,
+            "threat_model": 0.52,
+            "builder_identity": 0.71,
+            "attestations": 0.3
+          }
+        },
+        {
+          "id": "c15",
+          "score": 5.72,
+          "facet_probabilities": {
+            "verifier_specification": 0.15,
+            "threat_model": 0.64,
+            "builder_identity": 0.66,
+            "attestations": 0.51
+          }
+        },
+        {
+          "id": "c10",
+          "score": 5.54,
+          "facet_probabilities": {
+            "verifier_specification": 0.15,
+            "threat_model": 0.47,
+            "builder_identity": 0.62,
+            "attestations": 0.47
+          }
+        },
+        {
+          "id": "c18",
+          "score": 5.5,
+          "facet_probabilities": {
+            "verifier_specification": 0.15,
+            "threat_model": 0.39,
+            "builder_identity": 0.66,
+            "attestations": 0.55
+          }
+        },
+        {
+          "id": "c2",
+          "score": 5.49,
+          "facet_probabilities": {
+            "verifier_specification": 0.14,
+            "threat_model": 0.13,
+            "builder_identity": 0.42,
+            "attestations": 0.7
+          }
+        },
+        {
+          "id": "c14",
+          "score": 5.49,
+          "facet_probabilities": {
+            "verifier_specification": 0.12,
+            "threat_model": 0.16,
+            "builder_identity": 0.78,
+            "attestations": 0.71
+          }
+        },
+        {
+          "id": "c11",
+          "score": 5.34,
+          "facet_probabilities": {
+            "verifier_specification": 0.13,
+            "threat_model": 0.39,
+            "builder_identity": 0.63,
+            "attestations": 0.31
+          }
+        },
+        {
+          "id": "c8",
+          "score": 5.3,
+          "facet_probabilities": {
+            "verifier_specification": 0.1,
+            "threat_model": 0.16,
+            "builder_identity": 0.76,
+            "attestations": 0.71
+          }
+        },
+        {
+          "id": "c19",
+          "score": 5.2,
+          "facet_probabilities": {
+            "verifier_specification": 0.15,
+            "threat_model": 0.25,
+            "builder_identity": 0.29,
+            "attestations": 0.67
+          }
+        },
+        {
+          "id": "c4",
+          "score": 4.98,
+          "facet_probabilities": {
+            "verifier_specification": 0.23,
+            "threat_model": 0.37,
+            "builder_identity": 0.4,
+            "attestations": 0.43
+          }
+        },
+        {
+          "id": "c7",
+          "score": 4.93,
+          "facet_probabilities": {
+            "verifier_specification": 0.17,
+            "threat_model": 0.14,
+            "builder_identity": 0.51,
+            "attestations": 0.47
+          }
+        },
+        {
+          "id": "c12",
+          "score": 4.83,
+          "facet_probabilities": {
+            "verifier_specification": 0.1,
+            "threat_model": 0.33,
+            "builder_identity": 0.24,
+            "attestations": 0.66
+          }
+        },
+        {
+          "id": "c21",
+          "score": 3.67,
+          "facet_probabilities": {
+            "verifier_specification": 0.11,
+            "threat_model": 0.17,
+            "builder_identity": 0.32,
+            "attestations": 0.48
+          }
+        },
+        {
+          "id": "c28",
+          "score": 3.52,
+          "facet_probabilities": {
+            "verifier_specification": 0.07,
+            "threat_model": 0.1,
+            "builder_identity": 0.15,
+            "attestations": 0.24
+          }
+        },
+        {
+          "id": "c20",
+          "score": 3.18,
+          "facet_probabilities": {
+            "verifier_specification": 0.09,
+            "threat_model": 0.14,
+            "builder_identity": 0.13,
+            "attestations": 0.19
+          }
+        },
+        {
+          "id": "c27",
+          "score": 2.78,
+          "facet_probabilities": {
+            "verifier_specification": 0.07,
+            "threat_model": 0.13,
+            "builder_identity": 0.1,
+            "attestations": 0.14
+          }
+        },
+        {
+          "id": "c24",
+          "score": 2.59,
+          "facet_probabilities": {
+            "verifier_specification": 0.05,
+            "threat_model": 0.12,
+            "builder_identity": 0.11,
+            "attestations": 0.16
+          }
+        },
+        {
+          "id": "c23",
+          "score": 2.49,
+          "facet_probabilities": {
+            "verifier_specification": 0.06,
+            "threat_model": 0.23,
+            "builder_identity": 0.12,
+            "attestations": 0.16
+          }
+        },
+        {
+          "id": "c22",
+          "score": 2.33,
+          "facet_probabilities": {
+            "verifier_specification": 0.06,
+            "threat_model": 0.13,
+            "builder_identity": 0.11,
+            "attestations": 0.17
+          }
+        },
+        {
+          "id": "c29",
+          "score": 2.2,
+          "facet_probabilities": {
+            "verifier_specification": 0.04,
+            "threat_model": 0.08,
+            "builder_identity": 0.06,
+            "attestations": 0.07
+          }
+        },
+        {
+          "id": "c25",
+          "score": 1.61,
+          "facet_probabilities": {
+            "verifier_specification": 0.03,
+            "threat_model": 0.07,
+            "builder_identity": 0.07,
+            "attestations": 0.08
+          }
+        },
+        {
+          "id": "c26",
+          "score": 1.05,
+          "facet_probabilities": {
+            "verifier_specification": 0.03,
+            "threat_model": 0.05,
+            "builder_identity": 0.05,
+            "attestations": 0.05
+          }
+        }
+      ]
+    },
+    "q6": {
+      "insertions": [],
+      "top10_equal_d": true,
+      "d_top10": [
+        "c7",
+        "c6",
+        "c5",
+        "c17",
+        "c9",
+        "c12",
+        "c8",
+        "c3",
+        "c0",
+        "c13"
+      ],
+      "e_top10": [
+        "c7",
+        "c6",
+        "c5",
+        "c17",
+        "c9",
+        "c12",
+        "c8",
+        "c3",
+        "c0",
+        "c13"
+      ],
+      "facet_qualified_d_top10": {
+        "semantic_conventions": [],
+        "tool_calls": [],
+        "spans": [],
+        "attributes": []
+      },
+      "all_rows": [
+        {
+          "id": "c7",
+          "score": 8.5,
+          "facet_probabilities": {
+            "semantic_conventions": 0.65,
+            "tool_calls": 0.49,
+            "spans": 0.54,
+            "attributes": 0.5
+          }
+        },
+        {
+          "id": "c6",
+          "score": 7.83,
+          "facet_probabilities": {
+            "semantic_conventions": 0.45,
+            "tool_calls": 0.25,
+            "spans": 0.22,
+            "attributes": 0.16
+          }
+        },
+        {
+          "id": "c5",
+          "score": 6.86,
+          "facet_probabilities": {
+            "semantic_conventions": 0.44,
+            "tool_calls": 0.55,
+            "spans": 0.5,
+            "attributes": 0.47
+          }
+        },
+        {
+          "id": "c17",
+          "score": 6.85,
+          "facet_probabilities": {
+            "semantic_conventions": 0.44,
+            "tool_calls": 0.35,
+            "spans": 0.67,
+            "attributes": 0.52
+          }
+        },
+        {
+          "id": "c9",
+          "score": 6.77,
+          "facet_probabilities": {
+            "semantic_conventions": 0.44,
+            "tool_calls": 0.75,
+            "spans": 0.63,
+            "attributes": 0.56
+          }
+        },
+        {
+          "id": "c12",
+          "score": 6.74,
+          "facet_probabilities": {
+            "semantic_conventions": 0.47,
+            "tool_calls": 0.73,
+            "spans": 0.65,
+            "attributes": 0.39
+          }
+        },
+        {
+          "id": "c8",
+          "score": 6.69,
+          "facet_probabilities": {
+            "semantic_conventions": 0.46,
+            "tool_calls": 0.5,
+            "spans": 0.37,
+            "attributes": 0.42
+          }
+        },
+        {
+          "id": "c3",
+          "score": 6.64,
+          "facet_probabilities": {
+            "semantic_conventions": 0.51,
+            "tool_calls": 0.59,
+            "spans": 0.42,
+            "attributes": 0.48
+          }
+        },
+        {
+          "id": "c0",
+          "score": 6.59,
+          "facet_probabilities": {
+            "semantic_conventions": 0.27,
+            "tool_calls": 0.66,
+            "spans": 0.55,
+            "attributes": 0.32
+          }
+        },
+        {
+          "id": "c13",
+          "score": 6.56,
+          "facet_probabilities": {
+            "semantic_conventions": 0.39,
+            "tool_calls": 0.5,
+            "spans": 0.44,
+            "attributes": 0.43
+          }
+        },
+        {
+          "id": "c2",
+          "score": 6.46,
+          "facet_probabilities": {
+            "semantic_conventions": 0.39,
+            "tool_calls": 0.67,
+            "spans": 0.48,
+            "attributes": 0.42
+          }
+        },
+        {
+          "id": "c10",
+          "score": 6.43,
+          "facet_probabilities": {
+            "semantic_conventions": 0.4,
+            "tool_calls": 0.62,
+            "spans": 0.54,
+            "attributes": 0.25
+          }
+        },
+        {
+          "id": "c15",
+          "score": 6.28,
+          "facet_probabilities": {
+            "semantic_conventions": 0.42,
+            "tool_calls": 0.66,
+            "spans": 0.53,
+            "attributes": 0.24
+          }
+        },
+        {
+          "id": "c1",
+          "score": 6.24,
+          "facet_probabilities": {
+            "semantic_conventions": 0.45,
+            "tool_calls": 0.6,
+            "spans": 0.35,
+            "attributes": 0.43
+          }
+        },
+        {
+          "id": "c11",
+          "score": 6.01,
+          "facet_probabilities": {
+            "semantic_conventions": 0.38,
+            "tool_calls": 0.51,
+            "spans": 0.46,
+            "attributes": 0.44
+          }
+        },
+        {
+          "id": "c14",
+          "score": 5.76,
+          "facet_probabilities": {
+            "semantic_conventions": 0.37,
+            "tool_calls": 0.37,
+            "spans": 0.32,
+            "attributes": 0.43
+          }
+        },
+        {
+          "id": "c4",
+          "score": 5.74,
+          "facet_probabilities": {
+            "semantic_conventions": 0.26,
+            "tool_calls": 0.56,
+            "spans": 0.5,
+            "attributes": 0.22
+          }
+        },
+        {
+          "id": "c19",
+          "score": 5.68,
+          "facet_probabilities": {
+            "semantic_conventions": 0.28,
+            "tool_calls": 0.14,
+            "spans": 0.45,
+            "attributes": 0.3
+          }
+        },
+        {
+          "id": "c16",
+          "score": 5.35,
+          "facet_probabilities": {
+            "semantic_conventions": 0.29,
+            "tool_calls": 0.28,
+            "spans": 0.26,
+            "attributes": 0.29
+          }
+        },
+        {
+          "id": "c30",
+          "score": 4.66,
+          "facet_probabilities": {
+            "semantic_conventions": 0.26,
+            "tool_calls": 0.46,
+            "spans": 0.26,
+            "attributes": 0.21
+          }
+        },
+        {
+          "id": "c18",
+          "score": 3.53,
+          "facet_probabilities": {
+            "semantic_conventions": 0.13,
+            "tool_calls": 0.24,
+            "spans": 0.22,
+            "attributes": 0.11
+          }
+        },
+        {
+          "id": "c27",
+          "score": 3.02,
+          "facet_probabilities": {
+            "semantic_conventions": 0.09,
+            "tool_calls": 0.2,
+            "spans": 0.22,
+            "attributes": 0.11
+          }
+        },
+        {
+          "id": "c23",
+          "score": 2.53,
+          "facet_probabilities": {
+            "semantic_conventions": 0.09,
+            "tool_calls": 0.17,
+            "spans": 0.15,
+            "attributes": 0.11
+          }
+        },
+        {
+          "id": "c26",
+          "score": 2.33,
+          "facet_probabilities": {
+            "semantic_conventions": 0.07,
+            "tool_calls": 0.14,
+            "spans": 0.11,
+            "attributes": 0.09
+          }
+        },
+        {
+          "id": "c21",
+          "score": 2.31,
+          "facet_probabilities": {
+            "semantic_conventions": 0.07,
+            "tool_calls": 0.18,
+            "spans": 0.13,
+            "attributes": 0.09
+          }
+        },
+        {
+          "id": "c29",
+          "score": 2.31,
+          "facet_probabilities": {
+            "semantic_conventions": 0.08,
+            "tool_calls": 0.2,
+            "spans": 0.14,
+            "attributes": 0.12
+          }
+        },
+        {
+          "id": "c22",
+          "score": 2.2,
+          "facet_probabilities": {
+            "semantic_conventions": 0.07,
+            "tool_calls": 0.15,
+            "spans": 0.13,
+            "attributes": 0.09
+          }
+        },
+        {
+          "id": "c28",
+          "score": 2.18,
+          "facet_probabilities": {
+            "semantic_conventions": 0.07,
+            "tool_calls": 0.15,
+            "spans": 0.12,
+            "attributes": 0.11
+          }
+        },
+        {
+          "id": "c25",
+          "score": 2.02,
+          "facet_probabilities": {
+            "semantic_conventions": 0.06,
+            "tool_calls": 0.15,
+            "spans": 0.1,
+            "attributes": 0.08
+          }
+        },
+        {
+          "id": "c20",
+          "score": 2.0,
+          "facet_probabilities": {
+            "semantic_conventions": 0.06,
+            "tool_calls": 0.15,
+            "spans": 0.11,
+            "attributes": 0.07
+          }
+        },
+        {
+          "id": "c24",
+          "score": 1.66,
+          "facet_probabilities": {
+            "semantic_conventions": 0.05,
+            "tool_calls": 0.1,
+            "spans": 0.06,
+            "attributes": 0.06
+          }
+        }
+      ]
+    },
+    "q7": {
+      "insertions": [],
+      "top10_equal_d": true,
+      "d_top10": [
+        "c19",
+        "c6",
+        "c23",
+        "c0",
+        "c20",
+        "c31",
+        "c14",
+        "c17",
+        "c28",
+        "c27"
+      ],
+      "e_top10": [
+        "c19",
+        "c6",
+        "c23",
+        "c0",
+        "c20",
+        "c31",
+        "c14",
+        "c17",
+        "c28",
+        "c27"
+      ],
+      "facet_qualified_d_top10": {
+        "support": [
+          "c19",
+          "c20",
+          "c17"
+        ],
+        "contradiction": [
+          "c17"
+        ],
+        "citation_alignment": [
+          "c19",
+          "c6",
+          "c23",
+          "c0",
+          "c31"
+        ],
+        "evaluation": [
+          "c14",
+          "c27"
+        ]
+      },
+      "all_rows": [
+        {
+          "id": "c19",
+          "score": 8.11,
+          "facet_probabilities": {
+            "support": 0.8,
+            "contradiction": 0.5,
+            "citation_alignment": 0.8,
+            "evaluation": 0.78
+          }
+        },
+        {
+          "id": "c6",
+          "score": 7.93,
+          "facet_probabilities": {
+            "support": 0.78,
+            "contradiction": 0.44,
+            "citation_alignment": 0.85,
+            "evaluation": 0.72
+          }
+        },
+        {
+          "id": "c23",
+          "score": 7.85,
+          "facet_probabilities": {
+            "support": 0.74,
+            "contradiction": 0.43,
+            "citation_alignment": 0.83,
+            "evaluation": 0.58
+          }
+        },
+        {
+          "id": "c0",
+          "score": 7.84,
+          "facet_probabilities": {
+            "support": 0.76,
+            "contradiction": 0.77,
+            "citation_alignment": 0.85,
+            "evaluation": 0.59
+          }
+        },
+        {
+          "id": "c20",
+          "score": 7.61,
+          "facet_probabilities": {
+            "support": 0.8,
+            "contradiction": 0.52,
+            "citation_alignment": 0.79,
+            "evaluation": 0.65
+          }
+        },
+        {
+          "id": "c31",
+          "score": 7.59,
+          "facet_probabilities": {
+            "support": 0.55,
+            "contradiction": 0.27,
+            "citation_alignment": 0.83,
+            "evaluation": 0.52
+          }
+        },
+        {
+          "id": "c14",
+          "score": 7.47,
+          "facet_probabilities": {
+            "support": 0.65,
+            "contradiction": 0.64,
+            "citation_alignment": 0.79,
+            "evaluation": 0.81
+          }
+        },
+        {
+          "id": "c17",
+          "score": 7.45,
+          "facet_probabilities": {
+            "support": 0.86,
+            "contradiction": 0.86,
+            "citation_alignment": 0.65,
+            "evaluation": 0.44
+          }
+        },
+        {
+          "id": "c28",
+          "score": 7.35,
+          "facet_probabilities": {
+            "support": 0.26,
+            "contradiction": 0.24,
+            "citation_alignment": 0.33,
+            "evaluation": 0.42
+          }
+        },
+        {
+          "id": "c27",
+          "score": 7.26,
+          "facet_probabilities": {
+            "support": 0.33,
+            "contradiction": 0.27,
+            "citation_alignment": 0.57,
+            "evaluation": 0.8
+          }
+        },
+        {
+          "id": "c18",
+          "score": 7.22,
+          "facet_probabilities": {
+            "support": 0.8,
+            "contradiction": 0.75,
+            "citation_alignment": 0.8,
+            "evaluation": 0.43
+          }
+        },
+        {
+          "id": "c26",
+          "score": 7.17,
+          "facet_probabilities": {
+            "support": 0.86,
+            "contradiction": 0.82,
+            "citation_alignment": 0.5,
+            "evaluation": 0.86
+          }
+        },
+        {
+          "id": "c15",
+          "score": 7.15,
+          "facet_probabilities": {
+            "support": 0.52,
+            "contradiction": 0.26,
+            "citation_alignment": 0.85,
+            "evaluation": 0.85
+          }
+        },
+        {
+          "id": "c29",
+          "score": 6.94,
+          "facet_probabilities": {
+            "support": 0.68,
+            "contradiction": 0.5,
+            "citation_alignment": 0.76,
+            "evaluation": 0.46
+          }
+        },
+        {
+          "id": "c5",
+          "score": 6.93,
+          "facet_probabilities": {
+            "support": 0.72,
+            "contradiction": 0.69,
+            "citation_alignment": 0.66,
+            "evaluation": 0.34
+          }
+        },
+        {
+          "id": "c2",
+          "score": 6.85,
+          "facet_probabilities": {
+            "support": 0.55,
+            "contradiction": 0.34,
+            "citation_alignment": 0.67,
+            "evaluation": 0.6
+          }
+        },
+        {
+          "id": "c21",
+          "score": 6.79,
+          "facet_probabilities": {
+            "support": 0.78,
+            "contradiction": 0.62,
+            "citation_alignment": 0.78,
+            "evaluation": 0.59
+          }
+        },
+        {
+          "id": "c33",
+          "score": 6.7,
+          "facet_probabilities": {
+            "support": 0.79,
+            "contradiction": 0.77,
+            "citation_alignment": 0.63,
+            "evaluation": 0.64
+          }
+        },
+        {
+          "id": "c7",
+          "score": 6.63,
+          "facet_probabilities": {
+            "support": 0.67,
+            "contradiction": 0.53,
+            "citation_alignment": 0.72,
+            "evaluation": 0.21
+          }
+        },
+        {
+          "id": "c22",
+          "score": 6.63,
+          "facet_probabilities": {
+            "support": 0.54,
+            "contradiction": 0.26,
+            "citation_alignment": 0.71,
+            "evaluation": 0.78
+          }
+        },
+        {
+          "id": "c9",
+          "score": 6.5,
+          "facet_probabilities": {
+            "support": 0.74,
+            "contradiction": 0.64,
+            "citation_alignment": 0.43,
+            "evaluation": 0.73
+          }
+        },
+        {
+          "id": "c24",
+          "score": 6.5,
+          "facet_probabilities": {
+            "support": 0.38,
+            "contradiction": 0.75,
+            "citation_alignment": 0.29,
+            "evaluation": 0.75
+          }
+        },
+        {
+          "id": "c3",
+          "score": 6.25,
+          "facet_probabilities": {
+            "support": 0.5,
+            "contradiction": 0.37,
+            "citation_alignment": 0.59,
+            "evaluation": 0.66
+          }
+        },
+        {
+          "id": "c25",
+          "score": 5.87,
+          "facet_probabilities": {
+            "support": 0.44,
+            "contradiction": 0.72,
+            "citation_alignment": 0.43,
+            "evaluation": 0.32
+          }
+        },
+        {
+          "id": "c30",
+          "score": 5.87,
+          "facet_probabilities": {
+            "support": 0.65,
+            "contradiction": 0.24,
+            "citation_alignment": 0.37,
+            "evaluation": 0.48
+          }
+        },
+        {
+          "id": "c12",
+          "score": 5.76,
+          "facet_probabilities": {
+            "support": 0.49,
+            "contradiction": 0.71,
+            "citation_alignment": 0.33,
+            "evaluation": 0.44
+          }
+        },
+        {
+          "id": "c32",
+          "score": 5.37,
+          "facet_probabilities": {
+            "support": 0.62,
+            "contradiction": 0.72,
+            "citation_alignment": 0.37,
+            "evaluation": 0.47
+          }
+        },
+        {
+          "id": "c16",
+          "score": 4.84,
+          "facet_probabilities": {
+            "support": 0.71,
+            "contradiction": 0.55,
+            "citation_alignment": 0.8,
+            "evaluation": 0.2
+          }
+        },
+        {
+          "id": "c4",
+          "score": 4.42,
+          "facet_probabilities": {
+            "support": 0.49,
+            "contradiction": 0.51,
+            "citation_alignment": 0.62,
+            "evaluation": 0.22
+          }
+        },
+        {
+          "id": "c10",
+          "score": 3.83,
+          "facet_probabilities": {
+            "support": 0.6,
+            "contradiction": 0.48,
+            "citation_alignment": 0.64,
+            "evaluation": 0.14
+          }
+        },
+        {
+          "id": "c8",
+          "score": 3.28,
+          "facet_probabilities": {
+            "support": 0.32,
+            "contradiction": 0.33,
+            "citation_alignment": 0.35,
+            "evaluation": 0.12
+          }
+        },
+        {
+          "id": "c11",
+          "score": 1.22,
+          "facet_probabilities": {
+            "support": 0.07,
+            "contradiction": 0.08,
+            "citation_alignment": 0.05,
+            "evaluation": 0.04
+          }
+        }
+      ]
+    },
+    "q8": {
+      "insertions": [],
+      "top10_equal_d": true,
+      "d_top10": [
+        "c1",
+        "c3",
+        "c27",
+        "c2",
+        "c0",
+        "c26",
+        "c16",
+        "c5",
+        "c29",
+        "c8"
+      ],
+      "e_top10": [
+        "c1",
+        "c3",
+        "c27",
+        "c2",
+        "c0",
+        "c26",
+        "c16",
+        "c5",
+        "c29",
+        "c8"
+      ],
+      "facet_qualified_d_top10": {
+        "stopping": [
+          "c1",
+          "c3",
+          "c27"
+        ],
+        "coverage": [],
+        "uncertainty": [
+          "c2"
+        ],
+        "evidence_gaps": [
+          "c16",
+          "c8"
+        ]
+      },
+      "all_rows": [
+        {
+          "id": "c1",
+          "score": 8.0,
+          "facet_probabilities": {
+            "stopping": 0.89,
+            "coverage": 0.51,
+            "uncertainty": 0.38,
+            "evidence_gaps": 0.25
+          }
+        },
+        {
+          "id": "c3",
+          "score": 7.35,
+          "facet_probabilities": {
+            "stopping": 0.86,
+            "coverage": 0.33,
+            "uncertainty": 0.29,
+            "evidence_gaps": 0.32
+          }
+        },
+        {
+          "id": "c27",
+          "score": 7.2,
+          "facet_probabilities": {
+            "stopping": 0.86,
+            "coverage": 0.24,
+            "uncertainty": 0.3,
+            "evidence_gaps": 0.18
+          }
+        },
+        {
+          "id": "c2",
+          "score": 6.4,
+          "facet_probabilities": {
+            "stopping": 0.75,
+            "coverage": 0.19,
+            "uncertainty": 0.85,
+            "evidence_gaps": 0.18
+          }
+        },
+        {
+          "id": "c0",
+          "score": 6.19,
+          "facet_probabilities": {
+            "stopping": 0.79,
+            "coverage": 0.49,
+            "uncertainty": 0.59,
+            "evidence_gaps": 0.55
+          }
+        },
+        {
+          "id": "c26",
+          "score": 6.17,
+          "facet_probabilities": {
+            "stopping": 0.58,
+            "coverage": 0.33,
+            "uncertainty": 0.29,
+            "evidence_gaps": 0.15
+          }
+        },
+        {
+          "id": "c16",
+          "score": 6.06,
+          "facet_probabilities": {
+            "stopping": 0.12,
+            "coverage": 0.24,
+            "uncertainty": 0.41,
+            "evidence_gaps": 0.84
+          }
+        },
+        {
+          "id": "c5",
+          "score": 5.91,
+          "facet_probabilities": {
+            "stopping": 0.45,
+            "coverage": 0.24,
+            "uncertainty": 0.66,
+            "evidence_gaps": 0.7
+          }
+        },
+        {
+          "id": "c29",
+          "score": 5.85,
+          "facet_probabilities": {
+            "stopping": 0.47,
+            "coverage": 0.27,
+            "uncertainty": 0.22,
+            "evidence_gaps": 0.24
+          }
+        },
+        {
+          "id": "c8",
+          "score": 5.83,
+          "facet_probabilities": {
+            "stopping": 0.15,
+            "coverage": 0.52,
+            "uncertainty": 0.66,
+            "evidence_gaps": 0.84
+          }
+        },
+        {
+          "id": "c10",
+          "score": 5.75,
+          "facet_probabilities": {
+            "stopping": 0.13,
+            "coverage": 0.22,
+            "uncertainty": 0.36,
+            "evidence_gaps": 0.79
+          }
+        },
+        {
+          "id": "c12",
+          "score": 5.35,
+          "facet_probabilities": {
+            "stopping": 0.13,
+            "coverage": 0.16,
+            "uncertainty": 0.66,
+            "evidence_gaps": 0.81
+          }
+        },
+        {
+          "id": "c15",
+          "score": 5.31,
+          "facet_probabilities": {
+            "stopping": 0.1,
+            "coverage": 0.2,
+            "uncertainty": 0.54,
+            "evidence_gaps": 0.81
+          }
+        },
+        {
+          "id": "c25",
+          "score": 5.27,
+          "facet_probabilities": {
+            "stopping": 0.3,
+            "coverage": 0.23,
+            "uncertainty": 0.66,
+            "evidence_gaps": 0.44
+          }
+        },
+        {
+          "id": "c7",
+          "score": 4.92,
+          "facet_probabilities": {
+            "stopping": 0.13,
+            "coverage": 0.18,
+            "uncertainty": 0.55,
+            "evidence_gaps": 0.8
+          }
+        },
+        {
+          "id": "c11",
+          "score": 4.89,
+          "facet_probabilities": {
+            "stopping": 0.15,
+            "coverage": 0.68,
+            "uncertainty": 0.15,
+            "evidence_gaps": 0.17
+          }
+        },
+        {
+          "id": "c9",
+          "score": 4.85,
+          "facet_probabilities": {
+            "stopping": 0.13,
+            "coverage": 0.19,
+            "uncertainty": 0.53,
+            "evidence_gaps": 0.74
+          }
+        },
+        {
+          "id": "c19",
+          "score": 4.7,
+          "facet_probabilities": {
+            "stopping": 0.14,
+            "coverage": 0.43,
+            "uncertainty": 0.5,
+            "evidence_gaps": 0.66
+          }
+        },
+        {
+          "id": "c4",
+          "score": 4.66,
+          "facet_probabilities": {
+            "stopping": 0.12,
+            "coverage": 0.15,
+            "uncertainty": 0.39,
+            "evidence_gaps": 0.71
+          }
+        },
+        {
+          "id": "c24",
+          "score": 4.65,
+          "facet_probabilities": {
+            "stopping": 0.23,
+            "coverage": 0.27,
+            "uncertainty": 0.28,
+            "evidence_gaps": 0.32
+          }
+        },
+        {
+          "id": "c23",
+          "score": 4.57,
+          "facet_probabilities": {
+            "stopping": 0.18,
+            "coverage": 0.15,
+            "uncertainty": 0.54,
+            "evidence_gaps": 0.12
+          }
+        },
+        {
+          "id": "c6",
+          "score": 4.56,
+          "facet_probabilities": {
+            "stopping": 0.12,
+            "coverage": 0.3,
+            "uncertainty": 0.21,
+            "evidence_gaps": 0.59
+          }
+        },
+        {
+          "id": "c14",
+          "score": 4.15,
+          "facet_probabilities": {
+            "stopping": 0.11,
+            "coverage": 0.17,
+            "uncertainty": 0.26,
+            "evidence_gaps": 0.58
+          }
+        },
+        {
+          "id": "c18",
+          "score": 3.88,
+          "facet_probabilities": {
+            "stopping": 0.1,
+            "coverage": 0.17,
+            "uncertainty": 0.2,
+            "evidence_gaps": 0.5
+          }
+        },
+        {
+          "id": "c20",
+          "score": 3.83,
+          "facet_probabilities": {
+            "stopping": 0.15,
+            "coverage": 0.16,
+            "uncertainty": 0.27,
+            "evidence_gaps": 0.37
+          }
+        },
+        {
+          "id": "c13",
+          "score": 3.7,
+          "facet_probabilities": {
+            "stopping": 0.11,
+            "coverage": 0.2,
+            "uncertainty": 0.18,
+            "evidence_gaps": 0.43
+          }
+        },
+        {
+          "id": "c28",
+          "score": 3.38,
+          "facet_probabilities": {
+            "stopping": 0.25,
+            "coverage": 0.19,
+            "uncertainty": 0.23,
+            "evidence_gaps": 0.15
+          }
+        },
+        {
+          "id": "c17",
+          "score": 3.34,
+          "facet_probabilities": {
+            "stopping": 0.11,
+            "coverage": 0.17,
+            "uncertainty": 0.25,
+            "evidence_gaps": 0.4
+          }
+        },
+        {
+          "id": "c22",
+          "score": 2.68,
+          "facet_probabilities": {
+            "stopping": 0.16,
+            "coverage": 0.11,
+            "uncertainty": 0.32,
+            "evidence_gaps": 0.1
+          }
+        },
+        {
+          "id": "c21",
+          "score": 2.27,
+          "facet_probabilities": {
+            "stopping": 0.1,
+            "coverage": 0.11,
+            "uncertainty": 0.11,
+            "evidence_gaps": 0.09
+          }
+        }
+      ]
+    },
+    "q9": {
+      "insertions": [],
+      "top10_equal_d": true,
+      "d_top10": [
+        "c12",
+        "c15",
+        "c0",
+        "c16",
+        "c14",
+        "c33",
+        "c24",
+        "c1",
+        "c7",
+        "c11"
+      ],
+      "e_top10": [
+        "c12",
+        "c15",
+        "c0",
+        "c16",
+        "c14",
+        "c33",
+        "c24",
+        "c1",
+        "c7",
+        "c11"
+      ],
+      "facet_qualified_d_top10": {
+        "impacts": [
+          "c12",
+          "c15",
+          "c0",
+          "c16",
+          "c14",
+          "c33",
+          "c24"
+        ],
+        "adaptation": [
+          "c12",
+          "c15",
+          "c16",
+          "c14",
+          "c24",
+          "c1",
+          "c11"
+        ],
+        "mitigation": [
+          "c12",
+          "c15",
+          "c16",
+          "c24",
+          "c1",
+          "c11"
+        ]
+      },
+      "all_rows": [
+        {
+          "id": "c12",
+          "score": 8.31,
+          "facet_probabilities": {
+            "impacts": 0.87,
+            "adaptation": 0.86,
+            "mitigation": 0.86
+          }
+        },
+        {
+          "id": "c15",
+          "score": 8.28,
+          "facet_probabilities": {
+            "impacts": 0.89,
+            "adaptation": 0.86,
+            "mitigation": 0.9
+          }
+        },
+        {
+          "id": "c0",
+          "score": 8.11,
+          "facet_probabilities": {
+            "impacts": 0.81,
+            "adaptation": 0.78,
+            "mitigation": 0.78
+          }
+        },
+        {
+          "id": "c16",
+          "score": 7.84,
+          "facet_probabilities": {
+            "impacts": 0.83,
+            "adaptation": 0.8,
+            "mitigation": 0.82
+          }
+        },
+        {
+          "id": "c14",
+          "score": 7.81,
+          "facet_probabilities": {
+            "impacts": 0.85,
+            "adaptation": 0.8,
+            "mitigation": 0.79
+          }
+        },
+        {
+          "id": "c33",
+          "score": 7.36,
+          "facet_probabilities": {
+            "impacts": 0.84,
+            "adaptation": 0.74,
+            "mitigation": 0.76
+          }
+        },
+        {
+          "id": "c24",
+          "score": 6.86,
+          "facet_probabilities": {
+            "impacts": 0.86,
+            "adaptation": 0.84,
+            "mitigation": 0.85
+          }
+        },
+        {
+          "id": "c1",
+          "score": 6.79,
+          "facet_probabilities": {
+            "impacts": 0.21,
+            "adaptation": 0.84,
+            "mitigation": 0.84
+          }
+        },
+        {
+          "id": "c7",
+          "score": 6.76,
+          "facet_probabilities": {
+            "impacts": 0.51,
+            "adaptation": 0.72,
+            "mitigation": 0.67
+          }
+        },
+        {
+          "id": "c11",
+          "score": 6.61,
+          "facet_probabilities": {
+            "impacts": 0.23,
+            "adaptation": 0.81,
+            "mitigation": 0.81
+          }
+        },
+        {
+          "id": "c22",
+          "score": 6.6,
+          "facet_probabilities": {
+            "impacts": 0.76,
+            "adaptation": 0.75,
+            "mitigation": 0.78
+          }
+        },
+        {
+          "id": "c34",
+          "score": 6.44,
+          "facet_probabilities": {
+            "impacts": 0.77,
+            "adaptation": 0.83,
+            "mitigation": 0.3
+          }
+        },
+        {
+          "id": "c10",
+          "score": 6.39,
+          "facet_probabilities": {
+            "impacts": 0.41,
+            "adaptation": 0.74,
+            "mitigation": 0.7
+          }
+        },
+        {
+          "id": "c23",
+          "score": 6.37,
+          "facet_probabilities": {
+            "impacts": 0.81,
+            "adaptation": 0.85,
+            "mitigation": 0.76
+          }
+        },
+        {
+          "id": "c35",
+          "score": 6.36,
+          "facet_probabilities": {
+            "impacts": 0.21,
+            "adaptation": 0.48,
+            "mitigation": 0.8
+          }
+        },
+        {
+          "id": "c27",
+          "score": 6.21,
+          "facet_probabilities": {
+            "impacts": 0.84,
+            "adaptation": 0.12,
+            "mitigation": 0.11
+          }
+        },
+        {
+          "id": "c18",
+          "score": 6.15,
+          "facet_probabilities": {
+            "impacts": 0.54,
+            "adaptation": 0.51,
+            "mitigation": 0.57
+          }
+        },
+        {
+          "id": "c30",
+          "score": 6.1,
+          "facet_probabilities": {
+            "impacts": 0.6,
+            "adaptation": 0.21,
+            "mitigation": 0.24
+          }
+        },
+        {
+          "id": "c28",
+          "score": 6.07,
+          "facet_probabilities": {
+            "impacts": 0.78,
+            "adaptation": 0.15,
+            "mitigation": 0.11
+          }
+        },
+        {
+          "id": "c20",
+          "score": 6.05,
+          "facet_probabilities": {
+            "impacts": 0.46,
+            "adaptation": 0.58,
+            "mitigation": 0.57
+          }
+        },
+        {
+          "id": "c5",
+          "score": 6.02,
+          "facet_probabilities": {
+            "impacts": 0.44,
+            "adaptation": 0.75,
+            "mitigation": 0.75
+          }
+        },
+        {
+          "id": "c25",
+          "score": 5.97,
+          "facet_probabilities": {
+            "impacts": 0.53,
+            "adaptation": 0.71,
+            "mitigation": 0.44
+          }
+        },
+        {
+          "id": "c26",
+          "score": 5.96,
+          "facet_probabilities": {
+            "impacts": 0.33,
+            "adaptation": 0.74,
+            "mitigation": 0.12
+          }
+        },
+        {
+          "id": "c19",
+          "score": 5.76,
+          "facet_probabilities": {
+            "impacts": 0.56,
+            "adaptation": 0.57,
+            "mitigation": 0.58
+          }
+        },
+        {
+          "id": "c32",
+          "score": 5.76,
+          "facet_probabilities": {
+            "impacts": 0.74,
+            "adaptation": 0.13,
+            "mitigation": 0.11
+          }
+        },
+        {
+          "id": "c2",
+          "score": 5.75,
+          "facet_probabilities": {
+            "impacts": 0.22,
+            "adaptation": 0.75,
+            "mitigation": 0.75
+          }
+        },
+        {
+          "id": "c31",
+          "score": 5.64,
+          "facet_probabilities": {
+            "impacts": 0.46,
+            "adaptation": 0.28,
+            "mitigation": 0.17
+          }
+        },
+        {
+          "id": "c9",
+          "score": 5.63,
+          "facet_probabilities": {
+            "impacts": 0.27,
+            "adaptation": 0.7,
+            "mitigation": 0.75
+          }
+        },
+        {
+          "id": "c6",
+          "score": 5.22,
+          "facet_probabilities": {
+            "impacts": 0.17,
+            "adaptation": 0.57,
+            "mitigation": 0.58
+          }
+        },
+        {
+          "id": "c3",
+          "score": 4.86,
+          "facet_probabilities": {
+            "impacts": 0.25,
+            "adaptation": 0.79,
+            "mitigation": 0.79
+          }
+        },
+        {
+          "id": "c13",
+          "score": 4.8,
+          "facet_probabilities": {
+            "impacts": 0.33,
+            "adaptation": 0.58,
+            "mitigation": 0.54
+          }
+        },
+        {
+          "id": "c8",
+          "score": 3.57,
+          "facet_probabilities": {
+            "impacts": 0.3,
+            "adaptation": 0.67,
+            "mitigation": 0.57
+          }
+        },
+        {
+          "id": "c29",
+          "score": 3.54,
+          "facet_probabilities": {
+            "impacts": 0.09,
+            "adaptation": 0.09,
+            "mitigation": 0.2
+          }
+        },
+        {
+          "id": "c4",
+          "score": 3.42,
+          "facet_probabilities": {
+            "impacts": 0.26,
+            "adaptation": 0.67,
+            "mitigation": 0.62
+          }
+        },
+        {
+          "id": "c36",
+          "score": 3.42,
+          "facet_probabilities": {
+            "impacts": 0.51,
+            "adaptation": 0.51,
+            "mitigation": 0.54
+          }
+        },
+        {
+          "id": "c17",
+          "score": 3.01,
+          "facet_probabilities": {
+            "impacts": 0.22,
+            "adaptation": 0.56,
+            "mitigation": 0.28
+          }
+        },
+        {
+          "id": "c21",
+          "score": 2.16,
+          "facet_probabilities": {
+            "impacts": 0.26,
+            "adaptation": 0.44,
+            "mitigation": 0.33
+          }
+        },
+        {
+          "id": "c37",
+          "score": 0.14,
+          "facet_probabilities": {
+            "impacts": 0.03,
+            "adaptation": 0.03,
+            "mitigation": 0.03
+          }
+        }
+      ]
+    },
+    "cardiac": {
+      "insertions": [],
+      "top10_equal_d": true,
+      "d_top10": [
+        "c43",
+        "c4",
+        "c27",
+        "c17",
+        "c6",
+        "c29",
+        "c35",
+        "c37",
+        "c34",
+        "c7"
+      ],
+      "e_top10": [
+        "c43",
+        "c4",
+        "c27",
+        "c17",
+        "c6",
+        "c29",
+        "c35",
+        "c37",
+        "c34",
+        "c7"
+      ],
+      "facet_qualified_d_top10": {
+        "prevention": [
+          "c43",
+          "c4",
+          "c17",
+          "c6",
+          "c29",
+          "c35",
+          "c34",
+          "c7"
+        ],
+        "risk_factors": [
+          "c17"
+        ],
+        "lifestyle": [
+          "c35",
+          "c37"
+        ],
+        "interventions": [
+          "c6"
+        ]
+      },
+      "all_rows": [
+        {
+          "id": "c43",
+          "score": 7.92,
+          "facet_probabilities": {
+            "prevention": 0.91,
+            "risk_factors": 0.43,
+            "lifestyle": 0.35,
+            "interventions": 0.59
+          }
+        },
+        {
+          "id": "c4",
+          "score": 7.68,
+          "facet_probabilities": {
+            "prevention": 0.86,
+            "risk_factors": 0.72,
+            "lifestyle": 0.3,
+            "interventions": 0.25
+          }
+        },
+        {
+          "id": "c27",
+          "score": 7.58,
+          "facet_probabilities": {
+            "prevention": 0.74,
+            "risk_factors": 0.28,
+            "lifestyle": 0.27,
+            "interventions": 0.53
+          }
+        },
+        {
+          "id": "c17",
+          "score": 7.53,
+          "facet_probabilities": {
+            "prevention": 0.89,
+            "risk_factors": 0.83,
+            "lifestyle": 0.3,
+            "interventions": 0.79
+          }
+        },
+        {
+          "id": "c6",
+          "score": 7.45,
+          "facet_probabilities": {
+            "prevention": 0.88,
+            "risk_factors": 0.33,
+            "lifestyle": 0.37,
+            "interventions": 0.8
+          }
+        },
+        {
+          "id": "c29",
+          "score": 7.29,
+          "facet_probabilities": {
+            "prevention": 0.83,
+            "risk_factors": 0.24,
+            "lifestyle": 0.66,
+            "interventions": 0.6
+          }
+        },
+        {
+          "id": "c35",
+          "score": 7.23,
+          "facet_probabilities": {
+            "prevention": 0.83,
+            "risk_factors": 0.36,
+            "lifestyle": 0.83,
+            "interventions": 0.31
+          }
+        },
+        {
+          "id": "c37",
+          "score": 7.21,
+          "facet_probabilities": {
+            "prevention": 0.54,
+            "risk_factors": 0.34,
+            "lifestyle": 0.82,
+            "interventions": 0.38
+          }
+        },
+        {
+          "id": "c34",
+          "score": 7.03,
+          "facet_probabilities": {
+            "prevention": 0.8,
+            "risk_factors": 0.76,
+            "lifestyle": 0.29,
+            "interventions": 0.45
+          }
+        },
+        {
+          "id": "c7",
+          "score": 6.93,
+          "facet_probabilities": {
+            "prevention": 0.88,
+            "risk_factors": 0.47,
+            "lifestyle": 0.63,
+            "interventions": 0.57
+          }
+        },
+        {
+          "id": "c28",
+          "score": 6.88,
+          "facet_probabilities": {
+            "prevention": 0.89,
+            "risk_factors": 0.37,
+            "lifestyle": 0.84,
+            "interventions": 0.62
+          }
+        },
+        {
+          "id": "c8",
+          "score": 6.68,
+          "facet_probabilities": {
+            "prevention": 0.71,
+            "risk_factors": 0.68,
+            "lifestyle": 0.73,
+            "interventions": 0.48
+          }
+        },
+        {
+          "id": "c40",
+          "score": 6.68,
+          "facet_probabilities": {
+            "prevention": 0.44,
+            "risk_factors": 0.62,
+            "lifestyle": 0.2,
+            "interventions": 0.28
+          }
+        },
+        {
+          "id": "c36",
+          "score": 6.66,
+          "facet_probabilities": {
+            "prevention": 0.3,
+            "risk_factors": 0.74,
+            "lifestyle": 0.16,
+            "interventions": 0.24
+          }
+        },
+        {
+          "id": "c5",
+          "score": 6.65,
+          "facet_probabilities": {
+            "prevention": 0.82,
+            "risk_factors": 0.28,
+            "lifestyle": 0.68,
+            "interventions": 0.77
+          }
+        },
+        {
+          "id": "c42",
+          "score": 6.62,
+          "facet_probabilities": {
+            "prevention": 0.26,
+            "risk_factors": 0.28,
+            "lifestyle": 0.68,
+            "interventions": 0.5
+          }
+        },
+        {
+          "id": "c15",
+          "score": 6.48,
+          "facet_probabilities": {
+            "prevention": 0.71,
+            "risk_factors": 0.44,
+            "lifestyle": 0.68,
+            "interventions": 0.55
+          }
+        },
+        {
+          "id": "c25",
+          "score": 6.46,
+          "facet_probabilities": {
+            "prevention": 0.71,
+            "risk_factors": 0.32,
+            "lifestyle": 0.19,
+            "interventions": 0.39
+          }
+        },
+        {
+          "id": "c41",
+          "score": 6.45,
+          "facet_probabilities": {
+            "prevention": 0.3,
+            "risk_factors": 0.54,
+            "lifestyle": 0.37,
+            "interventions": 0.19
+          }
+        },
+        {
+          "id": "c19",
+          "score": 6.44,
+          "facet_probabilities": {
+            "prevention": 0.8,
+            "risk_factors": 0.68,
+            "lifestyle": 0.38,
+            "interventions": 0.5
+          }
+        },
+        {
+          "id": "c24",
+          "score": 6.38,
+          "facet_probabilities": {
+            "prevention": 0.54,
+            "risk_factors": 0.21,
+            "lifestyle": 0.44,
+            "interventions": 0.64
+          }
+        },
+        {
+          "id": "c23",
+          "score": 6.32,
+          "facet_probabilities": {
+            "prevention": 0.85,
+            "risk_factors": 0.29,
+            "lifestyle": 0.61,
+            "interventions": 0.51
+          }
+        },
+        {
+          "id": "c10",
+          "score": 6.15,
+          "facet_probabilities": {
+            "prevention": 0.7,
+            "risk_factors": 0.7,
+            "lifestyle": 0.32,
+            "interventions": 0.41
+          }
+        },
+        {
+          "id": "c21",
+          "score": 6.11,
+          "facet_probabilities": {
+            "prevention": 0.69,
+            "risk_factors": 0.17,
+            "lifestyle": 0.26,
+            "interventions": 0.49
+          }
+        },
+        {
+          "id": "c31",
+          "score": 5.98,
+          "facet_probabilities": {
+            "prevention": 0.56,
+            "risk_factors": 0.68,
+            "lifestyle": 0.42,
+            "interventions": 0.21
+          }
+        },
+        {
+          "id": "c11",
+          "score": 5.97,
+          "facet_probabilities": {
+            "prevention": 0.48,
+            "risk_factors": 0.2,
+            "lifestyle": 0.17,
+            "interventions": 0.27
+          }
+        },
+        {
+          "id": "c30",
+          "score": 5.93,
+          "facet_probabilities": {
+            "prevention": 0.58,
+            "risk_factors": 0.29,
+            "lifestyle": 0.63,
+            "interventions": 0.77
+          }
+        },
+        {
+          "id": "c14",
+          "score": 5.67,
+          "facet_probabilities": {
+            "prevention": 0.68,
+            "risk_factors": 0.48,
+            "lifestyle": 0.34,
+            "interventions": 0.47
+          }
+        },
+        {
+          "id": "c39",
+          "score": 5.67,
+          "facet_probabilities": {
+            "prevention": 0.31,
+            "risk_factors": 0.63,
+            "lifestyle": 0.2,
+            "interventions": 0.21
+          }
+        },
+        {
+          "id": "c26",
+          "score": 5.63,
+          "facet_probabilities": {
+            "prevention": 0.39,
+            "risk_factors": 0.22,
+            "lifestyle": 0.23,
+            "interventions": 0.36
+          }
+        },
+        {
+          "id": "c33",
+          "score": 5.55,
+          "facet_probabilities": {
+            "prevention": 0.74,
+            "risk_factors": 0.65,
+            "lifestyle": 0.32,
+            "interventions": 0.42
+          }
+        },
+        {
+          "id": "c20",
+          "score": 5.29,
+          "facet_probabilities": {
+            "prevention": 0.49,
+            "risk_factors": 0.22,
+            "lifestyle": 0.34,
+            "interventions": 0.56
+          }
+        },
+        {
+          "id": "c18",
+          "score": 5.17,
+          "facet_probabilities": {
+            "prevention": 0.81,
+            "risk_factors": 0.29,
+            "lifestyle": 0.34,
+            "interventions": 0.62
+          }
+        },
+        {
+          "id": "c22",
+          "score": 5.07,
+          "facet_probabilities": {
+            "prevention": 0.47,
+            "risk_factors": 0.23,
+            "lifestyle": 0.34,
+            "interventions": 0.32
+          }
+        },
+        {
+          "id": "c1",
+          "score": 5.03,
+          "facet_probabilities": {
+            "prevention": 0.72,
+            "risk_factors": 0.36,
+            "lifestyle": 0.28,
+            "interventions": 0.45
+          }
+        },
+        {
+          "id": "c2",
+          "score": 4.87,
+          "facet_probabilities": {
+            "prevention": 0.69,
+            "risk_factors": 0.35,
+            "lifestyle": 0.33,
+            "interventions": 0.59
+          }
+        },
+        {
+          "id": "c32",
+          "score": 4.65,
+          "facet_probabilities": {
+            "prevention": 0.43,
+            "risk_factors": 0.52,
+            "lifestyle": 0.31,
+            "interventions": 0.22
+          }
+        },
+        {
+          "id": "c3",
+          "score": 4.58,
+          "facet_probabilities": {
+            "prevention": 0.59,
+            "risk_factors": 0.35,
+            "lifestyle": 0.19,
+            "interventions": 0.31
+          }
+        },
+        {
+          "id": "c0",
+          "score": 4.51,
+          "facet_probabilities": {
+            "prevention": 0.58,
+            "risk_factors": 0.68,
+            "lifestyle": 0.66,
+            "interventions": 0.44
+          }
+        },
+        {
+          "id": "c9",
+          "score": 4.47,
+          "facet_probabilities": {
+            "prevention": 0.55,
+            "risk_factors": 0.67,
+            "lifestyle": 0.27,
+            "interventions": 0.26
+          }
+        },
+        {
+          "id": "c12",
+          "score": 4.41,
+          "facet_probabilities": {
+            "prevention": 0.46,
+            "risk_factors": 0.83,
+            "lifestyle": 0.53,
+            "interventions": 0.17
+          }
+        },
+        {
+          "id": "c16",
+          "score": 4.19,
+          "facet_probabilities": {
+            "prevention": 0.73,
+            "risk_factors": 0.45,
+            "lifestyle": 0.73,
+            "interventions": 0.48
+          }
+        },
+        {
+          "id": "c38",
+          "score": 4.13,
+          "facet_probabilities": {
+            "prevention": 0.18,
+            "risk_factors": 0.2,
+            "lifestyle": 0.29,
+            "interventions": 0.17
+          }
+        },
+        {
+          "id": "c13",
+          "score": 3.66,
+          "facet_probabilities": {
+            "prevention": 0.16,
+            "risk_factors": 0.08,
+            "lifestyle": 0.08,
+            "interventions": 0.09
+          }
+        }
+      ]
+    },
+    "research": {
+      "insertions": [],
+      "top10_equal_d": true,
+      "d_top10": [
+        "c2",
+        "c0",
+        "c3",
+        "c4",
+        "c5",
+        "c17",
+        "c19",
+        "c7",
+        "c16",
+        "c15"
+      ],
+      "e_top10": [
+        "c2",
+        "c0",
+        "c3",
+        "c4",
+        "c5",
+        "c17",
+        "c19",
+        "c7",
+        "c16",
+        "c15"
+      ],
+      "facet_qualified_d_top10": {
+        "retrieval": [],
+        "agent_orchestration": [],
+        "evaluation": [
+          "c2",
+          "c0"
+        ],
+        "evidence_grounding": []
+      },
+      "all_rows": [
+        {
+          "id": "c2",
+          "score": 8.71,
+          "facet_probabilities": {
+            "retrieval": 0.71,
+            "agent_orchestration": 0.78,
+            "evaluation": 0.83,
+            "evidence_grounding": 0.54
+          }
+        },
+        {
+          "id": "c0",
+          "score": 8.7,
+          "facet_probabilities": {
+            "retrieval": 0.67,
+            "agent_orchestration": 0.79,
+            "evaluation": 0.81,
+            "evidence_grounding": 0.52
+          }
+        },
+        {
+          "id": "c3",
+          "score": 7.74,
+          "facet_probabilities": {
+            "retrieval": 0.59,
+            "agent_orchestration": 0.52,
+            "evaluation": 0.41,
+            "evidence_grounding": 0.61
+          }
+        },
+        {
+          "id": "c4",
+          "score": 6.91,
+          "facet_probabilities": {
+            "retrieval": 0.57,
+            "agent_orchestration": 0.45,
+            "evaluation": 0.31,
+            "evidence_grounding": 0.22
+          }
+        },
+        {
+          "id": "c5",
+          "score": 6.84,
+          "facet_probabilities": {
+            "retrieval": 0.74,
+            "agent_orchestration": 0.57,
+            "evaluation": 0.22,
+            "evidence_grounding": 0.28
+          }
+        },
+        {
+          "id": "c17",
+          "score": 6.66,
+          "facet_probabilities": {
+            "retrieval": 0.51,
+            "agent_orchestration": 0.41,
+            "evaluation": 0.12,
+            "evidence_grounding": 0.22
+          }
+        },
+        {
+          "id": "c19",
+          "score": 6.53,
+          "facet_probabilities": {
+            "retrieval": 0.4,
+            "agent_orchestration": 0.32,
+            "evaluation": 0.16,
+            "evidence_grounding": 0.21
+          }
+        },
+        {
+          "id": "c7",
+          "score": 6.52,
+          "facet_probabilities": {
+            "retrieval": 0.53,
+            "agent_orchestration": 0.77,
+            "evaluation": 0.18,
+            "evidence_grounding": 0.23
+          }
+        },
+        {
+          "id": "c16",
+          "score": 6.42,
+          "facet_probabilities": {
+            "retrieval": 0.49,
+            "agent_orchestration": 0.48,
+            "evaluation": 0.31,
+            "evidence_grounding": 0.21
+          }
+        },
+        {
+          "id": "c15",
+          "score": 6.32,
+          "facet_probabilities": {
+            "retrieval": 0.77,
+            "agent_orchestration": 0.63,
+            "evaluation": 0.58,
+            "evidence_grounding": 0.36
+          }
+        },
+        {
+          "id": "c9",
+          "score": 6.29,
+          "facet_probabilities": {
+            "retrieval": 0.68,
+            "agent_orchestration": 0.47,
+            "evaluation": 0.12,
+            "evidence_grounding": 0.2
+          }
+        },
+        {
+          "id": "c6",
+          "score": 6.02,
+          "facet_probabilities": {
+            "retrieval": 0.51,
+            "agent_orchestration": 0.37,
+            "evaluation": 0.17,
+            "evidence_grounding": 0.72
+          }
+        },
+        {
+          "id": "c10",
+          "score": 5.98,
+          "facet_probabilities": {
+            "retrieval": 0.48,
+            "agent_orchestration": 0.32,
+            "evaluation": 0.17,
+            "evidence_grounding": 0.67
+          }
+        },
+        {
+          "id": "c18",
+          "score": 5.8,
+          "facet_probabilities": {
+            "retrieval": 0.36,
+            "agent_orchestration": 0.18,
+            "evaluation": 0.63,
+            "evidence_grounding": 0.49
+          }
+        },
+        {
+          "id": "c27",
+          "score": 5.7,
+          "facet_probabilities": {
+            "retrieval": 0.35,
+            "agent_orchestration": 0.64,
+            "evaluation": 0.13,
+            "evidence_grounding": 0.16
+          }
+        },
+        {
+          "id": "c11",
+          "score": 5.62,
+          "facet_probabilities": {
+            "retrieval": 0.49,
+            "agent_orchestration": 0.42,
+            "evaluation": 0.35,
+            "evidence_grounding": 0.36
+          }
+        },
+        {
+          "id": "c21",
+          "score": 5.43,
+          "facet_probabilities": {
+            "retrieval": 0.38,
+            "agent_orchestration": 0.32,
+            "evaluation": 0.16,
+            "evidence_grounding": 0.16
+          }
+        },
+        {
+          "id": "c30",
+          "score": 5.33,
+          "facet_probabilities": {
+            "retrieval": 0.56,
+            "agent_orchestration": 0.11,
+            "evaluation": 0.1,
+            "evidence_grounding": 0.31
+          }
+        },
+        {
+          "id": "c8",
+          "score": 5.19,
+          "facet_probabilities": {
+            "retrieval": 0.47,
+            "agent_orchestration": 0.64,
+            "evaluation": 0.21,
+            "evidence_grounding": 0.39
+          }
+        },
+        {
+          "id": "c29",
+          "score": 5.17,
+          "facet_probabilities": {
+            "retrieval": 0.24,
+            "agent_orchestration": 0.32,
+            "evaluation": 0.15,
+            "evidence_grounding": 0.21
+          }
+        },
+        {
+          "id": "c31",
+          "score": 5.04,
+          "facet_probabilities": {
+            "retrieval": 0.37,
+            "agent_orchestration": 0.15,
+            "evaluation": 0.43,
+            "evidence_grounding": 0.44
+          }
+        },
+        {
+          "id": "c40",
+          "score": 4.96,
+          "facet_probabilities": {
+            "retrieval": 0.45,
+            "agent_orchestration": 0.72,
+            "evaluation": 0.12,
+            "evidence_grounding": 0.24
+          }
+        },
+        {
+          "id": "c36",
+          "score": 4.89,
+          "facet_probabilities": {
+            "retrieval": 0.21,
+            "agent_orchestration": 0.32,
+            "evaluation": 0.13,
+            "evidence_grounding": 0.18
+          }
+        },
+        {
+          "id": "c22",
+          "score": 4.62,
+          "facet_probabilities": {
+            "retrieval": 0.31,
+            "agent_orchestration": 0.31,
+            "evaluation": 0.1,
+            "evidence_grounding": 0.2
+          }
+        },
+        {
+          "id": "c23",
+          "score": 4.56,
+          "facet_probabilities": {
+            "retrieval": 0.43,
+            "agent_orchestration": 0.49,
+            "evaluation": 0.11,
+            "evidence_grounding": 0.23
+          }
+        },
+        {
+          "id": "c12",
+          "score": 4.5,
+          "facet_probabilities": {
+            "retrieval": 0.35,
+            "agent_orchestration": 0.33,
+            "evaluation": 0.1,
+            "evidence_grounding": 0.18
+          }
+        },
+        {
+          "id": "c41",
+          "score": 4.47,
+          "facet_probabilities": {
+            "retrieval": 0.43,
+            "agent_orchestration": 0.65,
+            "evaluation": 0.1,
+            "evidence_grounding": 0.22
+          }
+        },
+        {
+          "id": "c26",
+          "score": 4.46,
+          "facet_probabilities": {
+            "retrieval": 0.48,
+            "agent_orchestration": 0.42,
+            "evaluation": 0.13,
+            "evidence_grounding": 0.23
+          }
+        },
+        {
+          "id": "c28",
+          "score": 4.41,
+          "facet_probabilities": {
+            "retrieval": 0.25,
+            "agent_orchestration": 0.24,
+            "evaluation": 0.14,
+            "evidence_grounding": 0.33
+          }
+        },
+        {
+          "id": "c44",
+          "score": 4.39,
+          "facet_probabilities": {
+            "retrieval": 0.45,
+            "agent_orchestration": 0.36,
+            "evaluation": 0.1,
+            "evidence_grounding": 0.31
+          }
+        },
+        {
+          "id": "c42",
+          "score": 4.37,
+          "facet_probabilities": {
+            "retrieval": 0.37,
+            "agent_orchestration": 0.44,
+            "evaluation": 0.13,
+            "evidence_grounding": 0.33
+          }
+        },
+        {
+          "id": "c14",
+          "score": 4.1,
+          "facet_probabilities": {
+            "retrieval": 0.27,
+            "agent_orchestration": 0.34,
+            "evaluation": 0.11,
+            "evidence_grounding": 0.26
+          }
+        },
+        {
+          "id": "c13",
+          "score": 3.94,
+          "facet_probabilities": {
+            "retrieval": 0.28,
+            "agent_orchestration": 0.23,
+            "evaluation": 0.08,
+            "evidence_grounding": 0.17
+          }
+        },
+        {
+          "id": "c20",
+          "score": 3.72,
+          "facet_probabilities": {
+            "retrieval": 0.29,
+            "agent_orchestration": 0.25,
+            "evaluation": 0.1,
+            "evidence_grounding": 0.29
+          }
+        },
+        {
+          "id": "c43",
+          "score": 3.6,
+          "facet_probabilities": {
+            "retrieval": 0.51,
+            "agent_orchestration": 0.58,
+            "evaluation": 0.1,
+            "evidence_grounding": 0.26
+          }
+        },
+        {
+          "id": "c32",
+          "score": 3.59,
+          "facet_probabilities": {
+            "retrieval": 0.33,
+            "agent_orchestration": 0.16,
+            "evaluation": 0.1,
+            "evidence_grounding": 0.33
+          }
+        },
+        {
+          "id": "c34",
+          "score": 3.44,
+          "facet_probabilities": {
+            "retrieval": 0.28,
+            "agent_orchestration": 0.11,
+            "evaluation": 0.08,
+            "evidence_grounding": 0.22
+          }
+        },
+        {
+          "id": "c24",
+          "score": 3.42,
+          "facet_probabilities": {
+            "retrieval": 0.27,
+            "agent_orchestration": 0.17,
+            "evaluation": 0.1,
+            "evidence_grounding": 0.32
+          }
+        },
+        {
+          "id": "c25",
+          "score": 3.07,
+          "facet_probabilities": {
+            "retrieval": 0.3,
+            "agent_orchestration": 0.21,
+            "evaluation": 0.1,
+            "evidence_grounding": 0.19
+          }
+        },
+        {
+          "id": "c33",
+          "score": 3.04,
+          "facet_probabilities": {
+            "retrieval": 0.18,
+            "agent_orchestration": 0.26,
+            "evaluation": 0.11,
+            "evidence_grounding": 0.16
+          }
+        },
+        {
+          "id": "c35",
+          "score": 2.36,
+          "facet_probabilities": {
+            "retrieval": 0.14,
+            "agent_orchestration": 0.14,
+            "evaluation": 0.2,
+            "evidence_grounding": 0.13
+          }
+        },
+        {
+          "id": "c37",
+          "score": 2.18,
+          "facet_probabilities": {
+            "retrieval": 0.09,
+            "agent_orchestration": 0.09,
+            "evaluation": 0.27,
+            "evidence_grounding": 0.13
+          }
+        },
+        {
+          "id": "c38",
+          "score": 0.28,
+          "facet_probabilities": {
+            "retrieval": 0.02,
+            "agent_orchestration": 0.02,
+            "evaluation": 0.04,
+            "evidence_grounding": 0.04
+          }
+        },
+        {
+          "id": "c39",
+          "score": 0.2,
+          "facet_probabilities": {
+            "retrieval": 0.02,
+            "agent_orchestration": 0.02,
+            "evaluation": 0.03,
+            "evidence_grounding": 0.02
+          }
+        }
+      ]
+    },
+    "evaluation": {
+      "insertions": [],
+      "top10_equal_d": true,
+      "d_top10": [
+        "c11",
+        "c6",
+        "c19",
+        "c0",
+        "c28",
+        "c13",
+        "c3",
+        "c9",
+        "c5",
+        "c21"
+      ],
+      "e_top10": [
+        "c11",
+        "c6",
+        "c19",
+        "c0",
+        "c28",
+        "c13",
+        "c3",
+        "c9",
+        "c5",
+        "c21"
+      ],
+      "facet_qualified_d_top10": {
+        "software_tasks": [
+          "c0",
+          "c9",
+          "c5"
+        ],
+        "measurement": [],
+        "reproducibility": [
+          "c19"
+        ],
+        "limitations": [
+          "c11",
+          "c6",
+          "c13"
+        ]
+      },
+      "all_rows": [
+        {
+          "id": "c11",
+          "score": 8.03,
+          "facet_probabilities": {
+            "software_tasks": 0.51,
+            "measurement": 0.71,
+            "reproducibility": 0.66,
+            "limitations": 0.91
+          }
+        },
+        {
+          "id": "c6",
+          "score": 7.96,
+          "facet_probabilities": {
+            "software_tasks": 0.66,
+            "measurement": 0.63,
+            "reproducibility": 0.61,
+            "limitations": 0.89
+          }
+        },
+        {
+          "id": "c19",
+          "score": 7.91,
+          "facet_probabilities": {
+            "software_tasks": 0.58,
+            "measurement": 0.62,
+            "reproducibility": 0.87,
+            "limitations": 0.75
+          }
+        },
+        {
+          "id": "c0",
+          "score": 7.89,
+          "facet_probabilities": {
+            "software_tasks": 0.82,
+            "measurement": 0.47,
+            "reproducibility": 0.16,
+            "limitations": 0.12
+          }
+        },
+        {
+          "id": "c28",
+          "score": 7.88,
+          "facet_probabilities": {
+            "software_tasks": 0.68,
+            "measurement": 0.67,
+            "reproducibility": 0.34,
+            "limitations": 0.35
+          }
+        },
+        {
+          "id": "c13",
+          "score": 7.84,
+          "facet_probabilities": {
+            "software_tasks": 0.53,
+            "measurement": 0.64,
+            "reproducibility": 0.6,
+            "limitations": 0.86
+          }
+        },
+        {
+          "id": "c3",
+          "score": 7.79,
+          "facet_probabilities": {
+            "software_tasks": 0.78,
+            "measurement": 0.55,
+            "reproducibility": 0.28,
+            "limitations": 0.28
+          }
+        },
+        {
+          "id": "c9",
+          "score": 7.77,
+          "facet_probabilities": {
+            "software_tasks": 0.85,
+            "measurement": 0.79,
+            "reproducibility": 0.3,
+            "limitations": 0.25
+          }
+        },
+        {
+          "id": "c5",
+          "score": 7.72,
+          "facet_probabilities": {
+            "software_tasks": 0.81,
+            "measurement": 0.72,
+            "reproducibility": 0.26,
+            "limitations": 0.41
+          }
+        },
+        {
+          "id": "c21",
+          "score": 7.71,
+          "facet_probabilities": {
+            "software_tasks": 0.63,
+            "measurement": 0.35,
+            "reproducibility": 0.19,
+            "limitations": 0.18
+          }
+        },
+        {
+          "id": "c4",
+          "score": 7.62,
+          "facet_probabilities": {
+            "software_tasks": 0.82,
+            "measurement": 0.6,
+            "reproducibility": 0.23,
+            "limitations": 0.48
+          }
+        },
+        {
+          "id": "c23",
+          "score": 7.54,
+          "facet_probabilities": {
+            "software_tasks": 0.66,
+            "measurement": 0.59,
+            "reproducibility": 0.27,
+            "limitations": 0.47
+          }
+        },
+        {
+          "id": "c7",
+          "score": 7.52,
+          "facet_probabilities": {
+            "software_tasks": 0.75,
+            "measurement": 0.5,
+            "reproducibility": 0.19,
+            "limitations": 0.19
+          }
+        },
+        {
+          "id": "c15",
+          "score": 7.48,
+          "facet_probabilities": {
+            "software_tasks": 0.65,
+            "measurement": 0.72,
+            "reproducibility": 0.47,
+            "limitations": 0.36
+          }
+        },
+        {
+          "id": "c14",
+          "score": 7.43,
+          "facet_probabilities": {
+            "software_tasks": 0.82,
+            "measurement": 0.45,
+            "reproducibility": 0.15,
+            "limitations": 0.47
+          }
+        },
+        {
+          "id": "c16",
+          "score": 7.42,
+          "facet_probabilities": {
+            "software_tasks": 0.79,
+            "measurement": 0.41,
+            "reproducibility": 0.15,
+            "limitations": 0.37
+          }
+        },
+        {
+          "id": "c17",
+          "score": 7.37,
+          "facet_probabilities": {
+            "software_tasks": 0.83,
+            "measurement": 0.54,
+            "reproducibility": 0.24,
+            "limitations": 0.29
+          }
+        },
+        {
+          "id": "c2",
+          "score": 7.16,
+          "facet_probabilities": {
+            "software_tasks": 0.73,
+            "measurement": 0.68,
+            "reproducibility": 0.37,
+            "limitations": 0.15
+          }
+        },
+        {
+          "id": "c20",
+          "score": 6.81,
+          "facet_probabilities": {
+            "software_tasks": 0.69,
+            "measurement": 0.52,
+            "reproducibility": 0.29,
+            "limitations": 0.43
+          }
+        },
+        {
+          "id": "c1",
+          "score": 6.69,
+          "facet_probabilities": {
+            "software_tasks": 0.77,
+            "measurement": 0.55,
+            "reproducibility": 0.24,
+            "limitations": 0.13
+          }
+        },
+        {
+          "id": "c10",
+          "score": 6.69,
+          "facet_probabilities": {
+            "software_tasks": 0.68,
+            "measurement": 0.49,
+            "reproducibility": 0.21,
+            "limitations": 0.13
+          }
+        },
+        {
+          "id": "c42",
+          "score": 6.57,
+          "facet_probabilities": {
+            "software_tasks": 0.82,
+            "measurement": 0.78,
+            "reproducibility": 0.35,
+            "limitations": 0.18
+          }
+        },
+        {
+          "id": "c22",
+          "score": 6.56,
+          "facet_probabilities": {
+            "software_tasks": 0.77,
+            "measurement": 0.58,
+            "reproducibility": 0.2,
+            "limitations": 0.21
+          }
+        },
+        {
+          "id": "c43",
+          "score": 6.49,
+          "facet_probabilities": {
+            "software_tasks": 0.76,
+            "measurement": 0.57,
+            "reproducibility": 0.51,
+            "limitations": 0.13
+          }
+        },
+        {
+          "id": "c40",
+          "score": 6.44,
+          "facet_probabilities": {
+            "software_tasks": 0.77,
+            "measurement": 0.39,
+            "reproducibility": 0.12,
+            "limitations": 0.13
+          }
+        },
+        {
+          "id": "c29",
+          "score": 6.33,
+          "facet_probabilities": {
+            "software_tasks": 0.34,
+            "measurement": 0.7,
+            "reproducibility": 0.52,
+            "limitations": 0.44
+          }
+        },
+        {
+          "id": "c41",
+          "score": 6.25,
+          "facet_probabilities": {
+            "software_tasks": 0.76,
+            "measurement": 0.44,
+            "reproducibility": 0.15,
+            "limitations": 0.17
+          }
+        },
+        {
+          "id": "c24",
+          "score": 6.12,
+          "facet_probabilities": {
+            "software_tasks": 0.58,
+            "measurement": 0.45,
+            "reproducibility": 0.49,
+            "limitations": 0.31
+          }
+        },
+        {
+          "id": "c8",
+          "score": 5.72,
+          "facet_probabilities": {
+            "software_tasks": 0.44,
+            "measurement": 0.3,
+            "reproducibility": 0.14,
+            "limitations": 0.12
+          }
+        },
+        {
+          "id": "c26",
+          "score": 5.71,
+          "facet_probabilities": {
+            "software_tasks": 0.52,
+            "measurement": 0.32,
+            "reproducibility": 0.15,
+            "limitations": 0.19
+          }
+        },
+        {
+          "id": "c12",
+          "score": 5.62,
+          "facet_probabilities": {
+            "software_tasks": 0.47,
+            "measurement": 0.45,
+            "reproducibility": 0.14,
+            "limitations": 0.14
+          }
+        },
+        {
+          "id": "c18",
+          "score": 5.59,
+          "facet_probabilities": {
+            "software_tasks": 0.6,
+            "measurement": 0.43,
+            "reproducibility": 0.17,
+            "limitations": 0.14
+          }
+        },
+        {
+          "id": "c25",
+          "score": 5.2,
+          "facet_probabilities": {
+            "software_tasks": 0.58,
+            "measurement": 0.43,
+            "reproducibility": 0.15,
+            "limitations": 0.21
+          }
+        },
+        {
+          "id": "c27",
+          "score": 3.99,
+          "facet_probabilities": {
+            "software_tasks": 0.35,
+            "measurement": 0.36,
+            "reproducibility": 0.14,
+            "limitations": 0.16
+          }
+        },
+        {
+          "id": "c35",
+          "score": 1.11,
+          "facet_probabilities": {
+            "software_tasks": 0.1,
+            "measurement": 0.08,
+            "reproducibility": 0.06,
+            "limitations": 0.06
+          }
+        },
+        {
+          "id": "c30",
+          "score": 0.73,
+          "facet_probabilities": {
+            "software_tasks": 0.05,
+            "measurement": 0.05,
+            "reproducibility": 0.04,
+            "limitations": 0.04
+          }
+        },
+        {
+          "id": "c31",
+          "score": 0.68,
+          "facet_probabilities": {
+            "software_tasks": 0.05,
+            "measurement": 0.03,
+            "reproducibility": 0.03,
+            "limitations": 0.03
+          }
+        },
+        {
+          "id": "c32",
+          "score": 0.63,
+          "facet_probabilities": {
+            "software_tasks": 0.04,
+            "measurement": 0.12,
+            "reproducibility": 0.05,
+            "limitations": 0.05
+          }
+        },
+        {
+          "id": "c34",
+          "score": 0.6,
+          "facet_probabilities": {
+            "software_tasks": 0.04,
+            "measurement": 0.08,
+            "reproducibility": 0.04,
+            "limitations": 0.04
+          }
+        },
+        {
+          "id": "c33",
+          "score": 0.41,
+          "facet_probabilities": {
+            "software_tasks": 0.04,
+            "measurement": 0.09,
+            "reproducibility": 0.03,
+            "limitations": 0.04
+          }
+        },
+        {
+          "id": "c36",
+          "score": 0.4,
+          "facet_probabilities": {
+            "software_tasks": 0.03,
+            "measurement": 0.11,
+            "reproducibility": 0.04,
+            "limitations": 0.04
+          }
+        },
+        {
+          "id": "c37",
+          "score": 0.35,
+          "facet_probabilities": {
+            "software_tasks": 0.04,
+            "measurement": 0.1,
+            "reproducibility": 0.03,
+            "limitations": 0.04
+          }
+        },
+        {
+          "id": "c38",
+          "score": 0.3,
+          "facet_probabilities": {
+            "software_tasks": 0.04,
+            "measurement": 0.04,
+            "reproducibility": 0.03,
+            "limitations": 0.03
+          }
+        },
+        {
+          "id": "c39",
+          "score": 0.2,
+          "facet_probabilities": {
+            "software_tasks": 0.02,
+            "measurement": 0.03,
+            "reproducibility": 0.02,
+            "limitations": 0.02
+          }
+        }
+      ]
+    },
+    "constructed80": {
+      "insertions": [],
+      "top10_equal_d": true,
+      "d_top10": [
+        "c11",
+        "c6",
+        "c0",
+        "c19",
+        "c13",
+        "c9",
+        "c3",
+        "c5",
+        "c28",
+        "c21"
+      ],
+      "e_top10": [
+        "c11",
+        "c6",
+        "c0",
+        "c19",
+        "c13",
+        "c9",
+        "c3",
+        "c5",
+        "c28",
+        "c21"
+      ],
+      "facet_qualified_d_top10": {
+        "software_tasks": [
+          "c0",
+          "c9",
+          "c5"
+        ],
+        "measurement": [],
+        "reproducibility": [
+          "c19"
+        ],
+        "limitations": [
+          "c11",
+          "c6",
+          "c13"
+        ]
+      },
+      "all_rows": [
+        {
+          "id": "c11",
+          "score": 8.09,
+          "facet_probabilities": {
+            "software_tasks": 0.54,
+            "measurement": 0.71,
+            "reproducibility": 0.64,
+            "limitations": 0.9
+          }
+        },
+        {
+          "id": "c6",
+          "score": 7.96,
+          "facet_probabilities": {
+            "software_tasks": 0.69,
+            "measurement": 0.66,
+            "reproducibility": 0.59,
+            "limitations": 0.88
+          }
+        },
+        {
+          "id": "c0",
+          "score": 7.95,
+          "facet_probabilities": {
+            "software_tasks": 0.82,
+            "measurement": 0.5,
+            "reproducibility": 0.17,
+            "limitations": 0.14
+          }
+        },
+        {
+          "id": "c19",
+          "score": 7.94,
+          "facet_probabilities": {
+            "software_tasks": 0.63,
+            "measurement": 0.65,
+            "reproducibility": 0.88,
+            "limitations": 0.71
+          }
+        },
+        {
+          "id": "c13",
+          "score": 7.91,
+          "facet_probabilities": {
+            "software_tasks": 0.6,
+            "measurement": 0.67,
+            "reproducibility": 0.57,
+            "limitations": 0.86
+          }
+        },
+        {
+          "id": "c9",
+          "score": 7.8,
+          "facet_probabilities": {
+            "software_tasks": 0.84,
+            "measurement": 0.75,
+            "reproducibility": 0.28,
+            "limitations": 0.24
+          }
+        },
+        {
+          "id": "c3",
+          "score": 7.78,
+          "facet_probabilities": {
+            "software_tasks": 0.77,
+            "measurement": 0.51,
+            "reproducibility": 0.24,
+            "limitations": 0.29
+          }
+        },
+        {
+          "id": "c5",
+          "score": 7.76,
+          "facet_probabilities": {
+            "software_tasks": 0.82,
+            "measurement": 0.72,
+            "reproducibility": 0.25,
+            "limitations": 0.38
+          }
+        },
+        {
+          "id": "c28",
+          "score": 7.73,
+          "facet_probabilities": {
+            "software_tasks": 0.68,
+            "measurement": 0.69,
+            "reproducibility": 0.36,
+            "limitations": 0.38
+          }
+        },
+        {
+          "id": "c21",
+          "score": 7.65,
+          "facet_probabilities": {
+            "software_tasks": 0.63,
+            "measurement": 0.42,
+            "reproducibility": 0.18,
+            "limitations": 0.19
+          }
+        },
+        {
+          "id": "c4",
+          "score": 7.6,
+          "facet_probabilities": {
+            "software_tasks": 0.81,
+            "measurement": 0.62,
+            "reproducibility": 0.22,
+            "limitations": 0.41
+          }
+        },
+        {
+          "id": "c7",
+          "score": 7.58,
+          "facet_probabilities": {
+            "software_tasks": 0.77,
+            "measurement": 0.53,
+            "reproducibility": 0.16,
+            "limitations": 0.18
+          }
+        },
+        {
+          "id": "c14",
+          "score": 7.52,
+          "facet_probabilities": {
+            "software_tasks": 0.81,
+            "measurement": 0.49,
+            "reproducibility": 0.15,
+            "limitations": 0.41
+          }
+        },
+        {
+          "id": "c16",
+          "score": 7.52,
+          "facet_probabilities": {
+            "software_tasks": 0.8,
+            "measurement": 0.44,
+            "reproducibility": 0.15,
+            "limitations": 0.38
+          }
+        },
+        {
+          "id": "c23",
+          "score": 7.52,
+          "facet_probabilities": {
+            "software_tasks": 0.66,
+            "measurement": 0.62,
+            "reproducibility": 0.26,
+            "limitations": 0.47
+          }
+        },
+        {
+          "id": "c15",
+          "score": 7.49,
+          "facet_probabilities": {
+            "software_tasks": 0.66,
+            "measurement": 0.73,
+            "reproducibility": 0.39,
+            "limitations": 0.3
+          }
+        },
+        {
+          "id": "c17",
+          "score": 7.38,
+          "facet_probabilities": {
+            "software_tasks": 0.82,
+            "measurement": 0.53,
+            "reproducibility": 0.22,
+            "limitations": 0.31
+          }
+        },
+        {
+          "id": "c2",
+          "score": 7.12,
+          "facet_probabilities": {
+            "software_tasks": 0.73,
+            "measurement": 0.69,
+            "reproducibility": 0.3,
+            "limitations": 0.17
+          }
+        },
+        {
+          "id": "c10",
+          "score": 6.89,
+          "facet_probabilities": {
+            "software_tasks": 0.68,
+            "measurement": 0.46,
+            "reproducibility": 0.2,
+            "limitations": 0.15
+          }
+        },
+        {
+          "id": "c1",
+          "score": 6.77,
+          "facet_probabilities": {
+            "software_tasks": 0.73,
+            "measurement": 0.55,
+            "reproducibility": 0.21,
+            "limitations": 0.12
+          }
+        },
+        {
+          "id": "c20",
+          "score": 6.71,
+          "facet_probabilities": {
+            "software_tasks": 0.72,
+            "measurement": 0.52,
+            "reproducibility": 0.29,
+            "limitations": 0.42
+          }
+        },
+        {
+          "id": "c22",
+          "score": 6.69,
+          "facet_probabilities": {
+            "software_tasks": 0.76,
+            "measurement": 0.57,
+            "reproducibility": 0.18,
+            "limitations": 0.2
+          }
+        },
+        {
+          "id": "c42",
+          "score": 6.67,
+          "facet_probabilities": {
+            "software_tasks": 0.78,
+            "measurement": 0.72,
+            "reproducibility": 0.3,
+            "limitations": 0.15
+          }
+        },
+        {
+          "id": "c40",
+          "score": 6.61,
+          "facet_probabilities": {
+            "software_tasks": 0.74,
+            "measurement": 0.44,
+            "reproducibility": 0.12,
+            "limitations": 0.12
+          }
+        },
+        {
+          "id": "c43",
+          "score": 6.55,
+          "facet_probabilities": {
+            "software_tasks": 0.72,
+            "measurement": 0.52,
+            "reproducibility": 0.34,
+            "limitations": 0.13
+          }
+        },
+        {
+          "id": "c41",
+          "score": 6.48,
+          "facet_probabilities": {
+            "software_tasks": 0.74,
+            "measurement": 0.47,
+            "reproducibility": 0.12,
+            "limitations": 0.16
+          }
+        },
+        {
+          "id": "c29",
+          "score": 6.36,
+          "facet_probabilities": {
+            "software_tasks": 0.36,
+            "measurement": 0.72,
+            "reproducibility": 0.44,
+            "limitations": 0.42
+          }
+        },
+        {
+          "id": "c24",
+          "score": 5.97,
+          "facet_probabilities": {
+            "software_tasks": 0.62,
+            "measurement": 0.54,
+            "reproducibility": 0.44,
+            "limitations": 0.28
+          }
+        },
+        {
+          "id": "c8",
+          "score": 5.9,
+          "facet_probabilities": {
+            "software_tasks": 0.5,
+            "measurement": 0.34,
+            "reproducibility": 0.14,
+            "limitations": 0.13
+          }
+        },
+        {
+          "id": "c26",
+          "score": 5.88,
+          "facet_probabilities": {
+            "software_tasks": 0.55,
+            "measurement": 0.33,
+            "reproducibility": 0.15,
+            "limitations": 0.19
+          }
+        },
+        {
+          "id": "c12",
+          "score": 5.67,
+          "facet_probabilities": {
+            "software_tasks": 0.52,
+            "measurement": 0.47,
+            "reproducibility": 0.14,
+            "limitations": 0.13
+          }
+        },
+        {
+          "id": "c18",
+          "score": 5.54,
+          "facet_probabilities": {
+            "software_tasks": 0.61,
+            "measurement": 0.45,
+            "reproducibility": 0.15,
+            "limitations": 0.13
+          }
+        },
+        {
+          "id": "c25",
+          "score": 5.27,
+          "facet_probabilities": {
+            "software_tasks": 0.57,
+            "measurement": 0.41,
+            "reproducibility": 0.14,
+            "limitations": 0.19
+          }
+        },
+        {
+          "id": "c27",
+          "score": 3.96,
+          "facet_probabilities": {
+            "software_tasks": 0.43,
+            "measurement": 0.34,
+            "reproducibility": 0.12,
+            "limitations": 0.15
+          }
+        },
+        {
+          "id": "c46",
+          "score": 3.59,
+          "facet_probabilities": {
+            "software_tasks": 0.12,
+            "measurement": 0.35,
+            "reproducibility": 0.32,
+            "limitations": 0.42
+          }
+        },
+        {
+          "id": "c47",
+          "score": 3.07,
+          "facet_probabilities": {
+            "software_tasks": 0.09,
+            "measurement": 0.17,
+            "reproducibility": 0.11,
+            "limitations": 0.11
+          }
+        },
+        {
+          "id": "c55",
+          "score": 3.03,
+          "facet_probabilities": {
+            "software_tasks": 0.25,
+            "measurement": 0.18,
+            "reproducibility": 0.13,
+            "limitations": 0.14
+          }
+        },
+        {
+          "id": "c44",
+          "score": 2.92,
+          "facet_probabilities": {
+            "software_tasks": 0.12,
+            "measurement": 0.29,
+            "reproducibility": 0.29,
+            "limitations": 0.32
+          }
+        },
+        {
+          "id": "c49",
+          "score": 2.82,
+          "facet_probabilities": {
+            "software_tasks": 0.12,
+            "measurement": 0.19,
+            "reproducibility": 0.13,
+            "limitations": 0.16
+          }
+        },
+        {
+          "id": "c67",
+          "score": 2.61,
+          "facet_probabilities": {
+            "software_tasks": 0.24,
+            "measurement": 0.14,
+            "reproducibility": 0.09,
+            "limitations": 0.17
+          }
+        },
+        {
+          "id": "c48",
+          "score": 2.43,
+          "facet_probabilities": {
+            "software_tasks": 0.11,
+            "measurement": 0.2,
+            "reproducibility": 0.17,
+            "limitations": 0.31
+          }
+        },
+        {
+          "id": "c66",
+          "score": 2.39,
+          "facet_probabilities": {
+            "software_tasks": 0.11,
+            "measurement": 0.1,
+            "reproducibility": 0.11,
+            "limitations": 0.12
+          }
+        },
+        {
+          "id": "c57",
+          "score": 2.31,
+          "facet_probabilities": {
+            "software_tasks": 0.09,
+            "measurement": 0.08,
+            "reproducibility": 0.07,
+            "limitations": 0.09
+          }
+        },
+        {
+          "id": "c60",
+          "score": 2.28,
+          "facet_probabilities": {
+            "software_tasks": 0.1,
+            "measurement": 0.16,
+            "reproducibility": 0.11,
+            "limitations": 0.13
+          }
+        },
+        {
+          "id": "c63",
+          "score": 2.17,
+          "facet_probabilities": {
+            "software_tasks": 0.1,
+            "measurement": 0.1,
+            "reproducibility": 0.09,
+            "limitations": 0.1
+          }
+        },
+        {
+          "id": "c51",
+          "score": 2.11,
+          "facet_probabilities": {
+            "software_tasks": 0.12,
+            "measurement": 0.12,
+            "reproducibility": 0.1,
+            "limitations": 0.14
+          }
+        },
+        {
+          "id": "c56",
+          "score": 2.11,
+          "facet_probabilities": {
+            "software_tasks": 0.1,
+            "measurement": 0.11,
+            "reproducibility": 0.08,
+            "limitations": 0.1
+          }
+        },
+        {
+          "id": "c64",
+          "score": 2.03,
+          "facet_probabilities": {
+            "software_tasks": 0.11,
+            "measurement": 0.09,
+            "reproducibility": 0.07,
+            "limitations": 0.1
+          }
+        },
+        {
+          "id": "c68",
+          "score": 2.03,
+          "facet_probabilities": {
+            "software_tasks": 0.08,
+            "measurement": 0.09,
+            "reproducibility": 0.06,
+            "limitations": 0.08
+          }
+        },
+        {
+          "id": "c74",
+          "score": 2.02,
+          "facet_probabilities": {
+            "software_tasks": 0.07,
+            "measurement": 0.11,
+            "reproducibility": 0.08,
+            "limitations": 0.1
+          }
+        },
+        {
+          "id": "c59",
+          "score": 1.95,
+          "facet_probabilities": {
+            "software_tasks": 0.1,
+            "measurement": 0.31,
+            "reproducibility": 0.12,
+            "limitations": 0.12
+          }
+        },
+        {
+          "id": "c58",
+          "score": 1.89,
+          "facet_probabilities": {
+            "software_tasks": 0.09,
+            "measurement": 0.09,
+            "reproducibility": 0.07,
+            "limitations": 0.11
+          }
+        },
+        {
+          "id": "c62",
+          "score": 1.88,
+          "facet_probabilities": {
+            "software_tasks": 0.06,
+            "measurement": 0.17,
+            "reproducibility": 0.09,
+            "limitations": 0.12
+          }
+        },
+        {
+          "id": "c53",
+          "score": 1.84,
+          "facet_probabilities": {
+            "software_tasks": 0.11,
+            "measurement": 0.16,
+            "reproducibility": 0.11,
+            "limitations": 0.22
+          }
+        },
+        {
+          "id": "c52",
+          "score": 1.81,
+          "facet_probabilities": {
+            "software_tasks": 0.1,
+            "measurement": 0.12,
+            "reproducibility": 0.12,
+            "limitations": 0.12
+          }
+        },
+        {
+          "id": "c76",
+          "score": 1.79,
+          "facet_probabilities": {
+            "software_tasks": 0.07,
+            "measurement": 0.08,
+            "reproducibility": 0.06,
+            "limitations": 0.07
+          }
+        },
+        {
+          "id": "c65",
+          "score": 1.78,
+          "facet_probabilities": {
+            "software_tasks": 0.18,
+            "measurement": 0.15,
+            "reproducibility": 0.09,
+            "limitations": 0.1
+          }
+        },
+        {
+          "id": "c71",
+          "score": 1.78,
+          "facet_probabilities": {
+            "software_tasks": 0.12,
+            "measurement": 0.09,
+            "reproducibility": 0.07,
+            "limitations": 0.07
+          }
+        },
+        {
+          "id": "c69",
+          "score": 1.75,
+          "facet_probabilities": {
+            "software_tasks": 0.09,
+            "measurement": 0.08,
+            "reproducibility": 0.07,
+            "limitations": 0.07
+          }
+        },
+        {
+          "id": "c73",
+          "score": 1.69,
+          "facet_probabilities": {
+            "software_tasks": 0.08,
+            "measurement": 0.07,
+            "reproducibility": 0.06,
+            "limitations": 0.08
+          }
+        },
+        {
+          "id": "c78",
+          "score": 1.66,
+          "facet_probabilities": {
+            "software_tasks": 0.07,
+            "measurement": 0.08,
+            "reproducibility": 0.06,
+            "limitations": 0.08
+          }
+        },
+        {
+          "id": "c61",
+          "score": 1.6,
+          "facet_probabilities": {
+            "software_tasks": 0.11,
+            "measurement": 0.13,
+            "reproducibility": 0.1,
+            "limitations": 0.1
+          }
+        },
+        {
+          "id": "c70",
+          "score": 1.43,
+          "facet_probabilities": {
+            "software_tasks": 0.11,
+            "measurement": 0.09,
+            "reproducibility": 0.06,
+            "limitations": 0.08
+          }
+        },
+        {
+          "id": "c54",
+          "score": 1.42,
+          "facet_probabilities": {
+            "software_tasks": 0.07,
+            "measurement": 0.07,
+            "reproducibility": 0.07,
+            "limitations": 0.06
+          }
+        },
+        {
+          "id": "c75",
+          "score": 1.39,
+          "facet_probabilities": {
+            "software_tasks": 0.06,
+            "measurement": 0.1,
+            "reproducibility": 0.09,
+            "limitations": 0.11
+          }
+        },
+        {
+          "id": "c50",
+          "score": 1.35,
+          "facet_probabilities": {
+            "software_tasks": 0.09,
+            "measurement": 0.08,
+            "reproducibility": 0.08,
+            "limitations": 0.07
+          }
+        },
+        {
+          "id": "c79",
+          "score": 1.33,
+          "facet_probabilities": {
+            "software_tasks": 0.07,
+            "measurement": 0.07,
+            "reproducibility": 0.06,
+            "limitations": 0.07
+          }
+        },
+        {
+          "id": "c77",
+          "score": 1.27,
+          "facet_probabilities": {
+            "software_tasks": 0.13,
+            "measurement": 0.06,
+            "reproducibility": 0.05,
+            "limitations": 0.06
+          }
+        },
+        {
+          "id": "c72",
+          "score": 1.07,
+          "facet_probabilities": {
+            "software_tasks": 0.06,
+            "measurement": 0.06,
+            "reproducibility": 0.05,
+            "limitations": 0.07
+          }
+        },
+        {
+          "id": "c35",
+          "score": 0.95,
+          "facet_probabilities": {
+            "software_tasks": 0.06,
+            "measurement": 0.07,
+            "reproducibility": 0.06,
+            "limitations": 0.06
+          }
+        },
+        {
+          "id": "c30",
+          "score": 0.61,
+          "facet_probabilities": {
+            "software_tasks": 0.04,
+            "measurement": 0.04,
+            "reproducibility": 0.03,
+            "limitations": 0.04
+          }
+        },
+        {
+          "id": "c31",
+          "score": 0.53,
+          "facet_probabilities": {
+            "software_tasks": 0.04,
+            "measurement": 0.03,
+            "reproducibility": 0.03,
+            "limitations": 0.03
+          }
+        },
+        {
+          "id": "c34",
+          "score": 0.51,
+          "facet_probabilities": {
+            "software_tasks": 0.05,
+            "measurement": 0.08,
+            "reproducibility": 0.06,
+            "limitations": 0.06
+          }
+        },
+        {
+          "id": "c32",
+          "score": 0.47,
+          "facet_probabilities": {
+            "software_tasks": 0.04,
+            "measurement": 0.09,
+            "reproducibility": 0.05,
+            "limitations": 0.05
+          }
+        },
+        {
+          "id": "c33",
+          "score": 0.32,
+          "facet_probabilities": {
+            "software_tasks": 0.04,
+            "measurement": 0.06,
+            "reproducibility": 0.04,
+            "limitations": 0.05
+          }
+        },
+        {
+          "id": "c36",
+          "score": 0.31,
+          "facet_probabilities": {
+            "software_tasks": 0.04,
+            "measurement": 0.07,
+            "reproducibility": 0.04,
+            "limitations": 0.05
+          }
+        },
+        {
+          "id": "c37",
+          "score": 0.31,
+          "facet_probabilities": {
+            "software_tasks": 0.04,
+            "measurement": 0.08,
+            "reproducibility": 0.04,
+            "limitations": 0.04
+          }
+        },
+        {
+          "id": "c38",
+          "score": 0.27,
+          "facet_probabilities": {
+            "software_tasks": 0.05,
+            "measurement": 0.05,
+            "reproducibility": 0.04,
+            "limitations": 0.04
+          }
+        },
+        {
+          "id": "c39",
+          "score": 0.18,
+          "facet_probabilities": {
+            "software_tasks": 0.02,
+            "measurement": 0.03,
+            "reproducibility": 0.02,
+            "limitations": 0.03
+          }
+        }
+      ]
+    }
+  }
+}
