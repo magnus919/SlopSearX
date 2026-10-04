@@ -1,6 +1,6 @@
 # EXP-061: isolate complete-pool request ordering
 
-Status: design under review; no model or search calls authorized by this document alone. This uses exposed EXP-060 cards and frozen independent references. It is a mechanism study, not fresh confirmation or production acceptance.
+Status: registered; provider execution remains closed until committed qualification verifies. No model or search calls are authorized by this document alone. This uses exposed EXP-060 cards and frozen independent references. It is a mechanism study, not fresh confirmation or production acceptance.
 
 ## Decision and fixed scope
 
@@ -29,3 +29,7 @@ A read-only GPT-6 Luna review and parent source check revisited the committed ex
 [EXP-040](EXP-040-complete-purpose-source-selection.md) later improved purpose-aware reading-lead rankings, including cardiac, but lost a required research facet. Its failed safeguard remains binding. [The release reconciliation](slopsearx-v0.6-release-reconciliation.md) identifies the shipped transport, grouping, snapshots and service seams to reuse. Full snapshots do not mean the shipped first-40 ranker scores the full pool.
 
 EXP-061 isolates only input-order sensitivity on the exposed EXP-060 cards. It cannot repair missing navigation targets, establish additional naturally large pools, overturn prior rejected gates, or support adoption by itself. It preserves fixed IDs and distinct duplicate cards; it does not test invariance to ID reassignment. No new searches or provider calls were used for this review. Product qualification still requires untouched cases, both reference assessments, coverage and navigation retention, stability, sufficient naturally large pools, and runtime failure/compatibility checks.
+
+## Failure diagnostic boundary
+
+The frozen EXP-059 coordinator exposes only a discarded-action count for actions lost within a failed E operation. EXP-061 explicitly marks those internal records unavailable; it preserves every owned receipt and any returned arm action/order before pair rollback. This diagnostic limitation does not authorize partial product output or a quality claim from a failed operation. E pre-operation admission reserves four 64000-token calls independently for each arm (512000 aggregate); the historical per-arm attempt ceiling of 85 remains subordinate to the complete paired ceiling of 223.
