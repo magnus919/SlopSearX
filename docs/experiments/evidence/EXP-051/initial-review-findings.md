@@ -1,0 +1,5 @@
+# Initial prospective review findings and disposition
+
+Before registration or implementation, the independent reviewer inspected an earlier root draft and reported three blockers: the discovery-only lane depended on untyped prose; uncertainty in affected-card lead values could fall through to no change; and lead changes lacked auditable field pointers. The planning review also requested one shared card assessment per pool and complete deterministic relation precedence.
+
+The author draft and subsequent root corrections replace those draft fields with a typed reading_change enum, exact field references, positive discovery/design evidence, selected-set comparison, and six precedence rules. Affected-card uncertainty requires uncertain reading_change; retained-set uncertainty affecting distinctness remains explicit. The current independent review reports no remaining blockers. These are prospective draft corrections, not repaired reviewer labels or measured outcomes; no packets, grading or provider requests occurred.
