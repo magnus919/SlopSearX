@@ -1,0 +1,63 @@
+{
+  "schema": "exp045-offline-review-findings/1",
+  "status": "corrected_and_qualified",
+  "provider_calls": 0,
+  "search_calls": 0,
+  "findings": [
+    {
+      "id": "round_cap",
+      "finding": "Batch builder allowed an additional request after four accepted replacements.",
+      "disposition": "corrected; root independently verified 13 fixtures."
+    },
+    {
+      "id": "neutral_publication_gate",
+      "finding": "Initial neutral executor required a neutral receipt before one could exist.",
+      "disposition": "corrected; root independently verified offline-only and real-case publication gates with mocked git."
+    },
+    {
+      "id": "selftest_import_path",
+      "finding": "Fixture subprocess lacked repository import path.",
+      "disposition": "corrected; root verified selftest."
+    },
+    {
+      "id": "ledger_jsonl",
+      "finding": "Pretty-printed event writer produced multiline records incompatible with line-based readers.",
+      "disposition": "corrected; root independently verified synthetic publication-gate checks."
+    },
+    {
+      "id": "receipt_reconstruction",
+      "finding": "Analysis did not fully reconstruct timing, usage, stopping, and invalid final request from raw evidence.",
+      "disposition": "corrected; both full-run adapters and integrity-mutation suites passed; final bounded review found no blocker."
+    },
+    {
+      "id": "w0_tail",
+      "finding": "Strict full-pool score validation incorrectly rejected W0 first-40 scores with its unchanged unscored tail.",
+      "disposition": "corrected; root independently verified 16 fixtures including greater-than-40-card W0 tail."
+    },
+    {
+      "id": "fractional_deadline",
+      "finding": "Fractional remaining budget could be passed to integer-only transport envelope after a durable start event, creating an unmatched attempt.",
+      "disposition": "corrected; root simulated 1250.25 ms prior operation time and verified integer 749 ms next deadline with one mocked dispatch."
+    },
+    {
+      "id": "resource_reason_preservation",
+      "finding": "Resource failure reasons were replaced by a generic exception class before classification, incorrectly changing a resource rejection to protocol inconclusive.",
+      "disposition": "corrected; root full-run and stopped unknown-usage checks pass; final source freeze pending timing correction."
+    },
+    {
+      "id": "unknown_usage",
+      "finding": "Incomplete known usage totals needed an explicit unknown-total representation after responses without usable usage.",
+      "disposition": "corrected; root full-run and stopped unknown-usage checks pass; final source freeze pending timing correction."
+    },
+    {
+      "id": "failed_operation_fallback_binding",
+      "finding": "Stopped-run audit compared the failed operation to a stale fallback order from another operation.",
+      "disposition": "corrected; root full-run and stopped unknown-usage checks pass; final source freeze pending timing correction."
+    },
+    {
+      "id": "stopped_response_timing",
+      "finding": "Failed parseable response timing could be omitted from an operation total.",
+      "disposition": "corrected; root full-run fixture verifies historical D plus failed-response elapsed and resource classification."
+    }
+  ]
+}

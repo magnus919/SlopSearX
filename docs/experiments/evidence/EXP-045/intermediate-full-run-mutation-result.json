@@ -1,0 +1,21 @@
+{
+  "schema": "exp045-intermediate-full-run-mutation-result/1",
+  "status": "requires_classification_correction",
+  "passed_cases": [
+    "complete_21_operation_receipt_analysis",
+    "raw_bytes",
+    "request_bytes",
+    "parent_hash",
+    "usage_total",
+    "known_usage",
+    "usage_completeness",
+    "receipt_timing",
+    "chronology"
+  ],
+  "stopped_run_receipt_audit": "passed",
+  "remaining_gap": "unknown usage incorrectly classified as observed resource rejection",
+  "runner_sha256": "e2bb18652f242432098847f0dadd4cd1910730a7ba55a77eadae70fb2f88e0a2",
+  "fixture_sha256": "d508170d6db90811228ff9f07bbae45c7c443e372580bba32072cb45be1e40f9",
+  "provider_calls": 0,
+  "search_calls": 0
+}
