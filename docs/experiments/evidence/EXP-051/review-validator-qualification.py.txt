@@ -1,0 +1,422 @@
+#!/usr/bin/env python3
+"""Offline synthetic qualification for the EXP-051 review validator.
+
+The generated labels are neutral synthetic fixtures and are not reviewer
+judgments or evidence about source quality. No provider, model, search, or
+grading call is made.
+"""
+
+from __future__ import annotations
+
+import argparse
+import copy
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import math
+import tempfile
+from pathlib import Path
+from typing import Any, Callable
+
+
+HERE = Path(__file__).resolve().parent
+VALIDATOR_PATH = HERE / "review-validator.py.txt"
+RECEIPT_PATH = HERE / "review-validator-qualification.json"
+EXPECTED_STATUSES = {
+    "P01": {"matched": 8, "unknown": 5, "no_identifier": 20},
+    "P02": {"matched": 17, "unknown": 4, "no_identifier": 11},
+    "P03": {"matched": 17, "unknown": 4, "no_identifier": 14},
+    "P04": {"matched": 30, "unknown": 0, "no_identifier": 14},
+    "P05": {"matched": 22, "unknown": 3, "no_identifier": 19},
+    "P06": {"matched": 23, "unknown": 4, "no_identifier": 17},
+}
+
+
+def _load_validator():
+    loader = importlib.machinery.SourceFileLoader("exp051_review_validator", str(VALIDATOR_PATH))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("validator-load-failed")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+validator = _load_validator()
+
+
+def canonical_bytes(value: Any) -> bytes:
+    return json.dumps(value, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")).encode("utf-8") + b"\n"
+
+
+def _fake_metadata(status: str) -> dict[str, Any]:
+    # Synthetic only; no private projection values are read or reproduced.
+    metadata: dict[str, Any] = {
+        "status": status,
+        "reason": "synthetic fixture",
+        "reported_by": "synthetic",
+        "captured_at": "synthetic",
+        "later_lookup_provenance": "synthetic fixture",
+        "original_engine_provenance": {"status": "unknown", "value": None},
+        "requested_identifier": {"status": "unknown", "value": None},
+    }
+    if status == "matched":
+        metadata.update({
+            "paper_id": {"status": "reported", "value": "synthetic"},
+            "reported_identifiers": [],
+            "fields": {},
+        })
+    return metadata
+
+
+def create_fixture(root: Path, delivery_dir: Path, review_path: Path, reviewer: str = "R1") -> dict[str, Any]:
+    """Create a neutral, source-shaped packet and valid neutral review.
+
+    The explicit returned manifest SHA is only for the in-process fixture
+    validator. The production CLI has no flag to bypass committed trust.
+    """
+    root = root.resolve()
+    if delivery_dir.exists() or review_path.exists():
+        raise FileExistsError("fixture output already exists")
+    delivery_dir.mkdir(parents=True, mode=0o700)
+    _, inventory = validator._registration_preflight(root)
+    pools, cases = validator._load_source_pools(root, inventory)
+    manifest_entries: list[dict[str, Any]] = []
+    markers_by_pool: dict[str, list[str]] = {}
+    valid_rows: dict[str, dict[str, Any]] = {}
+
+    for pool_ref in validator.POOL_ORDER:
+        source = pools[pool_ref]
+        source_pool = source["pool"]
+        status_queue = (
+            ["matched"] * EXPECTED_STATUSES[pool_ref]["matched"]
+            + ["unknown"] * EXPECTED_STATUSES[pool_ref]["unknown"]
+            + ["no_identifier"] * EXPECTED_STATUSES[pool_ref]["no_identifier"]
+        )
+        rows = [
+            {"card": card, "metadata": _fake_metadata(status_queue[index])}
+            for index, card in enumerate(source_pool["candidates"])
+        ]
+        # Greedy fixture chunking at whole-card boundaries; fake metadata has no captured values.
+        pending: list[list[dict[str, Any]]] = []
+        current: list[dict[str, Any]] = []
+        provisional = "EXP051-placeholder-CHUNK-01-OF-99-END"
+        for row in rows:
+            candidate = current + [row]
+            chunk = {
+                "schema": "exp051-enriched-review-chunk/1", "pool_ref": pool_ref,
+                "chunk_index": 1, "chunk_total": 99, "purpose": source_pool["purpose"],
+                "facets": source_pool["facets"], "selected_ids": source_pool["selected_ids"],
+                "cards": candidate, "cases": source["cases"], "end_marker": provisional,
+            }
+            if len(canonical_bytes(chunk)) <= 24_000:
+                current = candidate
+            else:
+                if not current:
+                    raise RuntimeError("synthetic-card-exceeds-bound")
+                pending.append(current)
+                current = [row]
+        if current:
+            pending.append(current)
+        total = len(pending)
+        markers_by_pool[pool_ref] = []
+        for index, chunk_rows in enumerate(pending, start=1):
+            marker = f"EXP051-{pool_ref}-CHUNK-{index:02d}-OF-{total:02d}-END"
+            chunk = {
+                "schema": "exp051-enriched-review-chunk/1", "pool_ref": pool_ref,
+                "chunk_index": index, "chunk_total": total, "purpose": source_pool["purpose"],
+                "facets": source_pool["facets"], "selected_ids": source_pool["selected_ids"],
+                "cards": chunk_rows, "cases": source["cases"], "end_marker": marker,
+            }
+            raw = canonical_bytes(chunk)
+            if len(raw) > 24_000:
+                raise RuntimeError("synthetic-chunk-exceeds-bound")
+            filename = f"{pool_ref}-{index:02d}-of-{total:02d}.json"
+            (delivery_dir / filename).write_bytes(raw)
+            manifest_entries.append({
+                "filename": filename, "pool_ref": pool_ref, "chunk_index": index,
+                "chunk_total": total, "sha256": hashlib.sha256(raw).hexdigest(),
+                "bytes": len(raw), "candidate_count": len(chunk_rows), "case_count": 2,
+                "end_marker": marker,
+            })
+            markers_by_pool[pool_ref].append(marker)
+            for row in chunk_rows:
+                valid_rows[row["card"]["id"]] = row
+
+    manifest = {
+        "schema": "exp051-enriched-delivery-manifest/1", "pool_count": 6,
+        "candidate_count": 232, "case_count": 12, "chunks": manifest_entries,
+    }
+    manifest_raw = canonical_bytes(manifest)
+    (delivery_dir / "delivery-manifest.json").write_bytes(manifest_raw)
+
+    reviewer_sha = hashlib.sha256(validator._git_bytes(root, validator.REGISTRATION_COMMIT, validator.REGISTRATION_INTEGRITY)).hexdigest()
+    review_pools = []
+    for pool_ref in validator.POOL_ORDER:
+        source = pools[pool_ref]
+        source_pool = source["pool"]
+        selected_union = set(source_pool["selected_ids"])
+        for case in source["cases"]:
+            selected_union.update(case["after_selected_ids"])
+        card_assessments = []
+        for card in source_pool["candidates"]:
+            card_id = card["id"]
+            if card_id not in selected_union:
+                continue
+            card_assessments.append({
+                "card_id": card_id, "discovery_value": "no_visible_discovery_value",
+                "discovery_evidence": [], "design_evidence": [],
+                "design_visibility": "no_design_detail_visible",
+                "facet_support": [
+                    {"facet_id": facet["id"], "support": "no_visible_support", "evidence_pointers": []}
+                    for facet in source_pool["facets"]
+                ],
+            })
+        review_pools.append({
+            "pool_ref": pool_ref, "complete_pool_read": True,
+            "chunk_markers": markers_by_pool[pool_ref], "card_assessments": card_assessments,
+        })
+    review_cases = [{
+        "case_id": case["case_id"], "pool_ref": case["pool_ref"],
+        "added_card_id": case["added_id"], "removed_card_id": case["removed_id"],
+        "reading_change": "no_distinct_lead_change", "overall_relation": "no_material_change",
+        "evidence_pointers": [], "rationale": "Neutral synthetic no-change fixture.",
+    } for case in cases]
+    review = {
+        "schema": "exp051-review/1", "reviewer_id": reviewer,
+        "registration_sha256": reviewer_sha,
+        "delivery_manifest_sha256": hashlib.sha256(manifest_raw).hexdigest(),
+        "pools": review_pools, "cases": review_cases,
+        "execution_attestation": {
+            "all_six_pools_read_completely": True,
+            "pool_refs_in_order": validator.POOL_ORDER,
+            "external_calls": 0, "provider_calls": 0, "search_calls": 0,
+            "filesystem_writes": 0,
+        },
+    }
+    review_path.parent.mkdir(parents=True, exist_ok=True)
+    review_path.write_bytes(canonical_bytes(review))
+    return {
+        "review": review, "manifest": manifest, "manifest_sha256": hashlib.sha256(manifest_raw).hexdigest(),
+        "pools": pools, "cases": cases, "source_pools": list(pools.values()),
+        "source_cases": cases, "rows": valid_rows, "markers": markers_by_pool,
+    }
+
+
+def _write_review(path: Path, obj: dict[str, Any]) -> None:
+    path.write_bytes(canonical_bytes(obj))
+
+
+def _target_case(review: dict[str, Any], case_id: str) -> dict[str, Any]:
+    return next(case for case in review["cases"] if case["case_id"] == case_id)
+
+
+def _target_card(review: dict[str, Any], pool_ref: str, card_id: str) -> dict[str, Any]:
+    pool = next(p for p in review["pools"] if p["pool_ref"] == pool_ref)
+    return next(c for c in pool["card_assessments"] if c["card_id"] == card_id)
+
+
+def _case_ptr(card_id: str, field: str = "card.title") -> dict[str, str]:
+    return {"card_id": card_id, "field": field}
+
+
+def _set_card_facet(review: dict[str, Any], pool_ref: str, card_id: str, facet_id: str, support: str) -> None:
+    assessment = _target_card(review, pool_ref, card_id)
+    facet = next(item for item in assessment["facet_support"] if item["facet_id"] == facet_id)
+    facet["support"] = support
+    facet["evidence_pointers"] = [{"field": "card.snippet"}] if support in {"direct_visible_support", "partial_or_contextual_visible_support"} else []
+
+
+def _relation_fixture(base: dict[str, Any], source_cases: list[dict[str, Any]], source_pools: list[dict[str, Any]], pool_ref: str, case_id: str, relation: str) -> dict[str, Any]:
+    review = copy.deepcopy(base)
+    frozen = next(c for c in source_cases if c["case_id"] == case_id)
+    case = _target_case(review, case_id)
+    pool = next(p for p in source_pools if p["pool"]["pool_ref"] == pool_ref)["pool"]
+    facet_id = pool["facets"][0]["id"]
+    add_id, remove_id = frozen["added_id"], frozen["removed_id"]
+    if relation in {"support_gain_without_identified_loss", "support_gain_with_support_or_lead_loss"}:
+        _set_card_facet(review, pool_ref, add_id, facet_id, "direct_visible_support")
+    if relation == "support_gain_with_support_or_lead_loss":
+        added = _target_card(review, pool_ref, add_id)
+        added["discovery_value"] = "useful_research_lead"
+        added["discovery_evidence"] = [{"field": "card.title"}]
+        removed = _target_card(review, pool_ref, remove_id)
+        removed["discovery_value"] = "useful_research_lead"
+        removed["discovery_evidence"] = [{"field": "card.title"}]
+        case["reading_change"] = "distinct_lead_lost"
+        case["evidence_pointers"] = [_case_ptr(remove_id)]
+    elif relation == "lead_gain_only":
+        added = _target_card(review, pool_ref, add_id)
+        added["discovery_value"] = "useful_research_lead"
+        added["discovery_evidence"] = [{"field": "card.title"}]
+        case["reading_change"] = "distinct_lead_added"
+        case["evidence_pointers"] = [_case_ptr(add_id)]
+    elif relation == "loss_without_support_gain":
+        _set_card_facet(review, pool_ref, remove_id, facet_id, "direct_visible_support")
+    elif relation == "indeterminate":
+        added = _target_card(review, pool_ref, add_id)
+        added["discovery_value"] = "uncertain"
+        case["reading_change"] = "uncertain"
+        case["overall_relation"] = "indeterminate"
+    case["overall_relation"] = relation
+    return review
+
+
+def _reading_change_fixture(base: dict[str, Any], source_cases: list[dict[str, Any]], pool_ref: str, case_id: str, reading_change: str) -> dict[str, Any]:
+    review = copy.deepcopy(base)
+    frozen = next(c for c in source_cases if c["case_id"] == case_id)
+    case = _target_case(review, case_id)
+    added, removed = frozen["added_id"], frozen["removed_id"]
+    case["reading_change"] = reading_change
+    case["evidence_pointers"] = []
+    if reading_change in {"distinct_lead_added", "distinct_lead_added_and_lost"}:
+        card = _target_card(review, pool_ref, added)
+        card["discovery_value"] = "useful_research_lead"
+        card["discovery_evidence"] = [{"field": "card.title"}]
+        case["evidence_pointers"].append(_case_ptr(added))
+    if reading_change in {"distinct_lead_lost", "distinct_lead_added_and_lost"}:
+        card = _target_card(review, pool_ref, removed)
+        card["discovery_value"] = "useful_research_lead"
+        card["discovery_evidence"] = [{"field": "card.title"}]
+        case["evidence_pointers"].append(_case_ptr(removed))
+    case["overall_relation"] = "loss_without_support_gain" if reading_change in {"distinct_lead_lost", "distinct_lead_added_and_lost"} else "lead_gain_only" if reading_change == "distinct_lead_added" else "no_material_change"
+    return review
+
+
+def run_qualification(repo_root: Path, receipt_path: Path = RECEIPT_PATH) -> dict[str, Any]:
+    if receipt_path.exists():
+        raise FileExistsError("qualification receipt exists; preserve first receipt")
+    results: list[dict[str, Any]] = []
+    with tempfile.TemporaryDirectory(prefix="exp051-validator-qualification-") as tmp:
+        tmp_root = Path(tmp)
+        delivery = tmp_root / "delivery"
+        review_path = tmp_root / "review.json"
+        fixture = create_fixture(repo_root, delivery, review_path)
+        base = fixture["review"]
+        valid_report = validator.validate_review_fixture(delivery, review_path, "R1", fixture["manifest_sha256"], repo_root)
+        if not valid_report["valid"]:
+            raise AssertionError("neutral-valid-fixture-rejected")
+        results.append({"id": "valid-neutral-review", "expected": "valid", "observed": "valid"})
+
+        def reject(case_id: str, mutate: Callable[[dict[str, Any]], None], expected_error: str) -> None:
+            candidate = copy.deepcopy(base)
+            mutate(candidate)
+            _write_review(review_path, candidate)
+            report = validator.validate_review_fixture(delivery, review_path, "R1", fixture["manifest_sha256"], repo_root)
+            observed = report["errors"][0] if report["errors"] else "valid"
+            if report["valid"] or expected_error not in {observed, "*invalid*"}:
+                raise AssertionError(f"fixture-rejection-failed:{case_id}:{observed}")
+            # This receipt records stable codes and never captures input text.
+            results.append({"id": case_id, "expected": expected_error, "observed": observed})
+
+        reject("missing-selected-card", lambda r: r["pools"][0]["card_assessments"].pop(), "review-selected-union")
+        reject("duplicate-selected-card", lambda r: r["pools"][0]["card_assessments"].append(copy.deepcopy(r["pools"][0]["card_assessments"][0])), "review-selected-union")
+        reject("invalid-discovery-enum", lambda r: r["pools"][0]["card_assessments"][0].update(discovery_value="invented"), "review-card-enum")
+        reject("positive-discovery-no-pointer", lambda r: r["pools"][0]["card_assessments"][0].update(discovery_value="useful_research_lead"), "review-discovery-evidence-required")
+        def malformed_pointer(r: dict[str, Any]) -> None:
+            card = r["pools"][0]["card_assessments"][0]
+            card["discovery_value"] = "useful_research_lead"
+            card["discovery_evidence"] = [{"field": []}]
+        reject("malformed-pointer-field-type", malformed_pointer, "review-discovery-pointers")
+        def positive_facet_no_evidence(r: dict[str, Any]) -> None:
+            r["pools"][0]["card_assessments"][0]["facet_support"][0]["support"] = "direct_visible_support"
+        reject("positive-facet-no-evidence", positive_facet_no_evidence, "review-facet-positive-evidence")
+        def title_as_facet_support(r: dict[str, Any]) -> None:
+            facet = r["pools"][0]["card_assessments"][0]["facet_support"][0]
+            facet["support"] = "direct_visible_support"
+            facet["evidence_pointers"] = [{"field": "card.title"}]
+        reject("title-is-not-facet-support", title_as_facet_support, "review-facet-positive-evidence")
+        reject("invalid-case-relation", lambda r: r["cases"][0].update(overall_relation="winner"), "review-case-enum")
+        reject("case-relation-inconsistent", lambda r: r["cases"][0].update(overall_relation="loss_without_support_gain"), "review-overall-relation")
+        def affected_lead_uncertain(r: dict[str, Any]) -> None:
+            frozen = fixture["source_cases"][0]
+            _target_card(r, "P01", frozen["added_id"])["discovery_value"] = "uncertain"
+        reject("affected-lead-uncertainty", affected_lead_uncertain, "review-reading-uncertainty")
+        reject("bool-as-call-count", lambda r: r["execution_attestation"].update(provider_calls=True), "review-attestation-calls")
+        reject("external-call-count", lambda r: r["execution_attestation"].update(search_calls=1), "review-attestation-calls")
+
+        # Exercise every registered overall-relation branch through full validation.
+        first_case = fixture["source_cases"][0]["case_id"]
+        relation_results: list[dict[str, str]] = []
+        for relation in (
+            "support_gain_without_identified_loss", "support_gain_with_support_or_lead_loss",
+            "lead_gain_only", "no_material_change", "loss_without_support_gain", "indeterminate",
+        ):
+            candidate = _relation_fixture(base, fixture["cases"], list(fixture["pools"].values()), "P01", first_case, relation)
+            _write_review(review_path, candidate)
+            report = validator.validate_review_fixture(delivery, review_path, "R1", fixture["manifest_sha256"], repo_root)
+            observed = "valid" if report["valid"] else report["errors"][0]
+            if not report["valid"]:
+                raise AssertionError(f"relation-branch-rejected:{relation}:{observed}")
+            relation_results.append({"branch": relation, "observed": observed})
+        results.append({"id": "all-six-overall-relation-branches", "expected": "valid", "observed": "valid", "branches": relation_results})
+        for reading_change in ("distinct_lead_added", "distinct_lead_lost", "distinct_lead_added_and_lost", "no_distinct_lead_change"):
+            candidate = _reading_change_fixture(base, fixture["cases"], "P01", first_case, reading_change)
+            _write_review(review_path, candidate)
+            report = validator.validate_review_fixture(delivery, review_path, "R1", fixture["manifest_sha256"], repo_root)
+            observed = "valid" if report["valid"] else report["errors"][0]
+            if not report["valid"]:
+                raise AssertionError(f"reading-change-branch-rejected:{reading_change}:{observed}")
+            results.append({"id": f"reading-change-{reading_change}", "expected": "valid", "observed": observed})
+
+        # Strict parser and size bounds are tested without retaining fixture payloads.
+        for case_id, raw, expected_error in (
+            ("duplicate-json-key", b'{"schema":"x","schema":"y"}', "strict-json-invalid"),
+            ("nonfinite-json", b'{"value":NaN}', "strict-json-invalid"),
+        ):
+            review_path.write_bytes(raw)
+            report = validator.validate_review_fixture(delivery, review_path, "R1", fixture["manifest_sha256"], repo_root)
+            observed = report["errors"][0] if report["errors"] else "valid"
+            if observed != expected_error:
+                raise AssertionError(f"strict-json-fixture-failed:{case_id}:{observed}")
+            results.append({"id": case_id, "expected": expected_error, "observed": observed})
+        review_path.write_bytes(b"[" * 2_000 + b"0" + b"]" * 2_000)
+        report = validator.validate_review_fixture(delivery, review_path, "R1", fixture["manifest_sha256"], repo_root)
+        observed = report["errors"][0] if report["errors"] else "valid"
+        if observed not in {"malformed-structure", "review-top-level-fields"}:
+            raise AssertionError(f"deep-json-fixture-failed:{observed}")
+        results.append({"id": "deep-json-is-sanitized", "expected": "sanitized-invalid", "observed": observed})
+        review_path.write_bytes(b" " * 100_001)
+        report = validator.validate_review_fixture(delivery, review_path, "R1", fixture["manifest_sha256"], repo_root)
+        observed = report["errors"][0] if report["errors"] else "valid"
+        if observed != "review-size-limit":
+            raise AssertionError(f"size-bound-fixture-failed:{observed}")
+        results.append({"id": "review-size-bound", "expected": "review-size-limit", "observed": observed})
+
+        # Delivery manifest self-hashes are insufficient: caller-supplied digest mismatch fails.
+        _write_review(review_path, base)
+        report = validator.validate_review_fixture(delivery, review_path, "R1", "0" * 64, repo_root)
+        observed = report["errors"][0] if report["errors"] else "valid"
+        if observed != "delivery-manifest-untrusted":
+            raise AssertionError(f"untrusted-manifest-fixture-failed:{observed}")
+        results.append({"id": "private-self-hash-is-not-trust", "expected": "delivery-manifest-untrusted", "observed": observed})
+
+    receipt = {
+        "schema": "exp051-review-validator-qualification/1",
+        "status": "passed",
+        "scope": "neutral synthetic validator fixtures only; no reviewer outputs or external calls",
+        "validator_sha256": hashlib.sha256(VALIDATOR_PATH.read_bytes()).hexdigest(),
+        "checks_passed": len(results),
+        "checks": results,
+        "reviewer_invocations": 0,
+        "provider_calls": 0,
+        "search_calls": 0,
+        "filesystem_writes": 1,
+    }
+    receipt_path.write_bytes(canonical_bytes(receipt))
+    return receipt
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--repo-root", type=Path, default=HERE.parents[3])
+    parser.add_argument("--receipt", type=Path, default=RECEIPT_PATH)
+    args = parser.parse_args(argv)
+    receipt = run_qualification(args.repo_root.resolve(), args.receipt.resolve())
+    print(json.dumps({"schema": receipt["schema"], "status": receipt["status"], "checks_passed": receipt["checks_passed"], "receipt": args.receipt.name}, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

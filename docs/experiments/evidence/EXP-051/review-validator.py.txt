@@ -1,0 +1,749 @@
+#!/usr/bin/env python3
+"""Strict, offline validator for a single EXP-051 reviewer record.
+
+The script deliberately emits only a bounded sanitized validation report. It
+never prints or copies reviewer prose, evidence values, card contents, or
+metadata values.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import math
+import re
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+
+REGISTRATION_COMMIT = "3df01caaa08e7ed8fd3837a58dde495c9ed24a69"
+REGISTRATION_INTEGRITY = "docs/experiments/evidence/EXP-051/registration-integrity.json"
+INPUT_INVENTORY = "docs/experiments/evidence/EXP-051/input-inventory.json"
+DELIVERY_INTEGRITY = "docs/experiments/evidence/EXP-051/delivery-integrity.json"
+PUBLIC_DELIVERY_MANIFEST = "docs/experiments/evidence/EXP-051/delivery-manifest.json"
+INTEGRATION_QUALIFICATION = "docs/experiments/evidence/EXP-051/integration-qualification.json"
+MAX_REVIEW_BYTES = 100_000
+MAX_MANIFEST_BYTES = 1_000_000
+MAX_POINTERS = 2
+MAX_RATIONALE_CHARS = 320
+POOL_ORDER = ["P01", "P02", "P03", "P04", "P05", "P06"]
+CARD_FIELDS = {"card.title", "card.url", "card.snippet"}
+CONTENT_FIELDS = {"card.snippet", "metadata.fields.abstract.value"}
+DISCOVERY_FIELDS = CARD_FIELDS | {
+    "metadata.fields.title.value",
+    "metadata.fields.abstract.value",
+}
+CASE_FIELDS = {
+    "card.title", "card.url", "card.snippet",
+    "metadata.fields.title.value", "metadata.fields.publication_date.value",
+    "metadata.fields.year.value", "metadata.fields.journal.value",
+    "metadata.fields.publication_types.values", "metadata.fields.authors.values",
+    "metadata.fields.abstract.value",
+}
+DISCOVERY_ENUMS = {
+    "useful_research_lead", "useful_locator_only",
+    "useful_but_redundant_lead", "no_visible_discovery_value", "uncertain",
+}
+FACET_ENUMS = {
+    "direct_visible_support", "partial_or_contextual_visible_support",
+    "reading_lead_only", "no_visible_support", "uncertain",
+}
+DESIGN_ENUMS = {
+    "explicit_design_or_method_detail", "some_method_detail",
+    "no_design_detail_visible", "uncertain",
+}
+READING_ENUMS = {
+    "distinct_lead_added", "distinct_lead_lost",
+    "distinct_lead_added_and_lost", "no_distinct_lead_change", "uncertain",
+}
+RELATION_ENUMS = {
+    "support_gain_without_identified_loss",
+    "support_gain_with_support_or_lead_loss", "lead_gain_only",
+    "no_material_change", "loss_without_support_gain", "indeterminate",
+}
+
+
+class ValidationFailure(Exception):
+    def __init__(self, code: str):
+        super().__init__(code)
+        self.code = code
+
+
+class DuplicateKeyError(ValueError):
+    pass
+
+
+def _pairs_no_duplicates(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in out:
+            raise DuplicateKeyError("duplicate-key")
+        out[key] = value
+    return out
+
+
+def _reject_constant(_: str) -> None:
+    raise ValueError("non-finite")
+
+
+def _finite_float(value: str) -> float:
+    parsed = float(value)
+    if not math.isfinite(parsed):
+        raise ValueError("non-finite")
+    return parsed
+
+
+def strict_json_bytes(data: bytes) -> Any:
+    try:
+        return json.loads(
+            data.decode("utf-8", errors="strict"),
+            object_pairs_hook=_pairs_no_duplicates,
+            parse_constant=_reject_constant,
+            parse_float=_finite_float,
+        )
+    except (UnicodeDecodeError, json.JSONDecodeError, DuplicateKeyError, ValueError) as exc:
+        raise ValidationFailure("strict-json-invalid") from exc
+
+
+def _exact_keys(obj: Any, keys: set[str]) -> bool:
+    return isinstance(obj, dict) and set(obj) == keys
+
+
+def _sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _git_bytes(repo_root: Path, commit: str, relpath: str) -> bytes:
+    try:
+        proc = subprocess.run(
+            ["git", "show", f"{commit}:{relpath}"], cwd=repo_root,
+            check=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise ValidationFailure("registration-object-unavailable") from exc
+    return proc.stdout
+
+
+def _registration_preflight(repo_root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    raw_integrity = _git_bytes(repo_root, REGISTRATION_COMMIT, REGISTRATION_INTEGRITY)
+    integrity = strict_json_bytes(raw_integrity)
+    if not _exact_keys(integrity, {"schema", "baseline", "files", "implementation_started", "reviewer_invocations", "external_calls"}):
+        raise ValidationFailure("registration-integrity-schema")
+    if integrity.get("schema") != "exp051-registration-integrity/1":
+        raise ValidationFailure("registration-integrity-schema")
+    if integrity.get("implementation_started") is not False or integrity.get("reviewer_invocations") != 0 or integrity.get("external_calls") != 0:
+        raise ValidationFailure("registration-integrity-boundary")
+    files = integrity.get("files")
+    if not isinstance(files, dict) or not files:
+        raise ValidationFailure("registration-integrity-files")
+    for relpath, expected in files.items():
+        if not isinstance(relpath, str) or not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
+            raise ValidationFailure("registration-integrity-files")
+        pinned = _git_bytes(repo_root, REGISTRATION_COMMIT, relpath)
+        if _sha256(pinned) != expected:
+            raise ValidationFailure("registration-integrity-hash")
+        worktree = repo_root / relpath
+        try:
+            current = worktree.read_bytes()
+        except OSError as exc:
+            raise ValidationFailure("registered-input-missing") from exc
+        if _sha256(current) != expected:
+            raise ValidationFailure("registered-input-changed")
+    inventory_raw = _git_bytes(repo_root, REGISTRATION_COMMIT, INPUT_INVENTORY)
+    inventory = strict_json_bytes(inventory_raw)
+    if not isinstance(inventory, dict) or inventory.get("schema") != "exp051-input-inventory/1":
+        raise ValidationFailure("input-inventory-schema")
+    return integrity, inventory
+
+
+def _load_source_pools(repo_root: Path, inventory: dict[str, Any]) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+    file_hashes = inventory.get("files")
+    if not isinstance(file_hashes, dict):
+        raise ValidationFailure("input-inventory-files")
+    pools: dict[str, dict[str, Any]] = {}
+    case_order: list[dict[str, Any]] = []
+    for pool_ref in POOL_ORDER:
+        rel = f"docs/experiments/evidence/EXP-048/pool-{pool_ref}.json"
+        expected = file_hashes.get(rel)
+        path = repo_root / rel
+        try:
+            raw = path.read_bytes()
+        except OSError as exc:
+            raise ValidationFailure("source-pool-missing") from exc
+        if not isinstance(expected, str) or _sha256(raw) != expected:
+            raise ValidationFailure("source-pool-hash")
+        packet = strict_json_bytes(raw)
+        if not isinstance(packet, dict) or packet.get("pool", {}).get("pool_ref") != pool_ref:
+            raise ValidationFailure("source-pool-schema")
+        pool = packet["pool"]
+        cases = packet.get("cases")
+        candidates = pool.get("candidates")
+        facets = pool.get("facets")
+        selected = pool.get("selected_ids")
+        if not isinstance(candidates, list) or not isinstance(facets, list) or not isinstance(selected, list) or not isinstance(cases, list) or len(cases) != 2:
+            raise ValidationFailure("source-pool-shape")
+        ids = [c.get("id") for c in candidates if isinstance(c, dict)]
+        if len(ids) != len(candidates) or len(set(ids)) != len(ids) or any(not isinstance(x, str) for x in ids):
+            raise ValidationFailure("source-card-ids")
+        idset = set(ids)
+        if len(selected) != len(set(selected)) or not set(selected) <= idset:
+            raise ValidationFailure("source-selected-ids")
+        for case in cases:
+            if not isinstance(case, dict) or case.get("pool_ref") != pool_ref:
+                raise ValidationFailure("source-case-shape")
+            add, remove, after = case.get("added_id"), case.get("removed_id"), case.get("after_selected_ids")
+            if add not in idset or remove not in idset or remove not in selected or add in selected or not isinstance(after, list):
+                raise ValidationFailure("source-case-membership")
+            if len(after) != len(set(after)) or set(after) != (set(selected) - {remove} | {add}):
+                raise ValidationFailure("source-case-replacement")
+            case_order.append(case)
+        if cases[0].get("case_id") == cases[1].get("case_id") or len(set(c.get("case_id") for c in cases)) != 2:
+            raise ValidationFailure("source-case-ids")
+        facet_ids = [f.get("id") for f in facets if isinstance(f, dict)]
+        if len(facet_ids) != len(facets) or len(set(facet_ids)) != len(facet_ids) or any(not isinstance(fid, str) for fid in facet_ids):
+            raise ValidationFailure("source-facets")
+        # Both frozen cases compare against the same current selected set and facets.
+        selected_union = set(selected)
+        for case in cases:
+            selected_union.update(case["after_selected_ids"])
+        if len(selected_union) > 12:
+            raise ValidationFailure("source-selected-union-bound")
+        pools[pool_ref] = packet
+    if len(case_order) != 12 or len({c["case_id"] for c in case_order}) != 12:
+        raise ValidationFailure("source-case-count")
+    return pools, case_order
+
+
+def _path_value(chunk_card: dict[str, Any], field: str) -> tuple[bool, Any, bool]:
+    """Return (exists, value, is_unknown), resolving only allowlisted paths."""
+    card = chunk_card.get("card", {})
+    metadata = chunk_card.get("metadata", {})
+    if field.startswith("card."):
+        key = field.removeprefix("card.")
+        return key in card, card.get(key), False
+    match = re.fullmatch(r"metadata\.fields\.([a-z_]+)\.(value|values)", field)
+    if not match:
+        return False, None, False
+    key, value_key = match.groups()
+    fields = metadata.get("fields", {})
+    item = fields.get(key)
+    if not isinstance(item, dict):
+        return False, None, False
+    value = item.get(value_key)
+    # Null, empty lists/strings, and explicit unknown field status cannot justify a positive pointer.
+    status = item.get("status")
+    unknown = status == "unknown" or value is None or value == "" or value == []
+    return value_key in item, value, unknown
+
+
+def _decode_manifest(delivery_dir: Path) -> tuple[dict[str, Any], bytes, str]:
+    if delivery_dir.is_symlink() or not delivery_dir.is_dir():
+        raise ValidationFailure("delivery-directory-missing")
+    path = delivery_dir / "delivery-manifest.json"
+    if path.is_symlink():
+        raise ValidationFailure("delivery-manifest-symlink")
+    try:
+        if path.stat().st_size > MAX_MANIFEST_BYTES:
+            raise ValidationFailure("delivery-manifest-size")
+    except OSError as exc:
+        raise ValidationFailure("delivery-manifest-missing") from exc
+    if path.is_symlink():
+        raise ValidationFailure("delivery-manifest-symlink")
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise ValidationFailure("delivery-manifest-missing") from exc
+    manifest = strict_json_bytes(raw)
+    if not isinstance(manifest, dict) or manifest.get("schema") != "exp051-enriched-delivery-manifest/1":
+        raise ValidationFailure("delivery-manifest-schema")
+    if not isinstance(manifest.get("chunks"), list):
+        raise ValidationFailure("delivery-manifest-chunks")
+    expected_top = {"schema", "pool_count", "candidate_count", "case_count", "chunks"}
+    if set(manifest) != expected_top:
+        raise ValidationFailure("delivery-manifest-fields")
+    return manifest, raw, _sha256(raw)
+
+
+def _validate_delivery(delivery_dir: Path, repo_root: Path, inventory: dict[str, Any], source_pools: dict[str, dict[str, Any]], trusted_manifest_sha: str) -> tuple[dict[str, dict[str, Any]], str, dict[str, str]]:
+    manifest, manifest_raw, manifest_sha = _decode_manifest(delivery_dir)
+    if manifest_sha != trusted_manifest_sha:
+        raise ValidationFailure("delivery-manifest-untrusted")
+    entries = manifest["chunks"]
+    if not entries or any(not isinstance(e, dict) for e in entries):
+        raise ValidationFailure("delivery-manifest-chunks")
+    required = {"filename", "pool_ref", "chunk_index", "chunk_total", "sha256", "bytes", "candidate_count", "case_count", "end_marker"}
+    if any(set(e) != required for e in entries):
+        raise ValidationFailure("delivery-entry-fields")
+    expected_names: set[str] = {"delivery-manifest.json"}
+    chunks_by_pool: dict[str, list[dict[str, Any]]] = {pool: [] for pool in POOL_ORDER}
+    observed_cards: set[tuple[str, str]] = set()
+    markers_by_pool: dict[str, str] = {}
+    for entry in entries:
+        pool_ref = entry["pool_ref"]
+        if pool_ref not in chunks_by_pool:
+            raise ValidationFailure("delivery-pool-membership")
+        filename = entry["filename"]
+        if not isinstance(filename, str) or not filename or "/" in filename or "\\" in filename or filename in {".", ".."} or filename in expected_names:
+            raise ValidationFailure("delivery-filename")
+        expected_names.add(filename)
+        chunk_path = delivery_dir / filename
+        if chunk_path.is_symlink() or not chunk_path.is_file():
+            raise ValidationFailure("delivery-chunk-file")
+        if not isinstance(entry["chunk_index"], int) or isinstance(entry["chunk_index"], bool) or not isinstance(entry["chunk_total"], int) or isinstance(entry["chunk_total"], bool):
+            raise ValidationFailure("delivery-chunk-index")
+        if not isinstance(entry["bytes"], int) or isinstance(entry["bytes"], bool) or not isinstance(entry["candidate_count"], int) or isinstance(entry["candidate_count"], bool) or not isinstance(entry["case_count"], int) or isinstance(entry["case_count"], bool):
+            raise ValidationFailure("delivery-count-types")
+        if entry["case_count"] != 2 or not isinstance(entry["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", entry["sha256"]):
+            raise ValidationFailure("delivery-entry-values")
+        if entry["bytes"] > 24_000:
+            raise ValidationFailure("delivery-chunk-size")
+        try:
+            if chunk_path.stat().st_size > 24_000:
+                raise ValidationFailure("delivery-chunk-size")
+        except OSError as exc:
+            raise ValidationFailure("delivery-chunk-missing") from exc
+        try:
+            raw = chunk_path.read_bytes()
+        except OSError as exc:
+            raise ValidationFailure("delivery-chunk-missing") from exc
+        if len(raw) != entry["bytes"] or _sha256(raw) != entry["sha256"]:
+            raise ValidationFailure("delivery-chunk-hash")
+        chunk = strict_json_bytes(raw)
+        if not isinstance(chunk, dict) or set(chunk) != {"schema", "pool_ref", "chunk_index", "chunk_total", "purpose", "facets", "selected_ids", "cards", "cases", "end_marker"}:
+            raise ValidationFailure("delivery-chunk-fields")
+        if chunk.get("schema") != "exp051-enriched-review-chunk/1" or chunk.get("pool_ref") != pool_ref:
+            raise ValidationFailure("delivery-chunk-schema")
+        if type(chunk.get("chunk_index")) is not int or type(chunk.get("chunk_total")) is not int:
+            raise ValidationFailure("delivery-chunk-index")
+        if chunk.get("chunk_index") != entry["chunk_index"] or chunk.get("chunk_total") != entry["chunk_total"]:
+            raise ValidationFailure("delivery-chunk-index")
+        marker = f"EXP051-{pool_ref}-CHUNK-{entry['chunk_index']:02d}-OF-{entry['chunk_total']:02d}-END"
+        if chunk.get("end_marker") != marker or entry.get("end_marker") != marker:
+            raise ValidationFailure("delivery-end-marker")
+        cards = chunk.get("cards")
+        if not isinstance(cards, list) or len(cards) != entry["candidate_count"]:
+            raise ValidationFailure("delivery-candidate-count")
+        source = source_pools[pool_ref]
+        pool = source["pool"]
+        if chunk.get("purpose") != pool["purpose"] or chunk.get("facets") != pool["facets"] or chunk.get("selected_ids") != pool["selected_ids"] or chunk.get("cases") != source["cases"]:
+            raise ValidationFailure("delivery-context-mismatch")
+        for row in cards:
+            if not isinstance(row, dict) or set(row) != {"card", "metadata"} or not isinstance(row["card"], dict) or not isinstance(row["metadata"], dict):
+                raise ValidationFailure("delivery-card-row")
+            card_id = row["card"].get("id")
+            if not isinstance(card_id, str):
+                raise ValidationFailure("delivery-card-duplicate")
+            identity = (pool_ref, card_id)
+            if identity in observed_cards:
+                raise ValidationFailure("delivery-card-duplicate")
+            observed_cards.add(identity)
+        chunks_by_pool[pool_ref].append(chunk)
+        markers_by_pool.setdefault(pool_ref, "")
+        markers_by_pool[pool_ref] += marker + "\n"
+    # Refuse unmanifested files and symlink/path surprises.
+    try:
+        children = list(delivery_dir.iterdir())
+        if any(p.is_symlink() or not p.is_file() for p in children):
+            raise ValidationFailure("delivery-extra-files")
+        actual_files = {p.name for p in children}
+    except OSError as exc:
+        raise ValidationFailure("delivery-directory-read") from exc
+    if actual_files != expected_names:
+        raise ValidationFailure("delivery-extra-files")
+    by_pool_rows: dict[str, dict[str, dict[str, Any]]] = {pool: {} for pool in POOL_ORDER}
+    status_expectations = {
+        "P01": {"matched": 8, "unknown": 5, "no_identifier": 20},
+        "P02": {"matched": 17, "unknown": 4, "no_identifier": 11},
+        "P03": {"matched": 17, "unknown": 4, "no_identifier": 14},
+        "P04": {"matched": 30, "unknown": 0, "no_identifier": 14},
+        "P05": {"matched": 22, "unknown": 3, "no_identifier": 19},
+        "P06": {"matched": 23, "unknown": 4, "no_identifier": 17},
+    }
+    all_card_count = 0
+    for pool_ref in POOL_ORDER:
+        group = sorted(chunks_by_pool[pool_ref], key=lambda c: c["chunk_index"])
+        if not group:
+            raise ValidationFailure("delivery-pool-missing")
+        total = len(group)
+        if [c["chunk_index"] for c in group] != list(range(1, total + 1)) or any(c["chunk_total"] != total for c in group):
+            raise ValidationFailure("delivery-chunk-sequence")
+        source_candidates = source_pools[pool_ref]["pool"]["candidates"]
+        reconstructed: list[dict[str, Any]] = []
+        for chunk in group:
+            reconstructed.extend(chunk["cards"])
+        if len(reconstructed) != len(source_candidates):
+            raise ValidationFailure("delivery-pool-card-count")
+        status_counts = {"matched": 0, "unknown": 0, "no_identifier": 0}
+        for source_card, row in zip(source_candidates, reconstructed, strict=True):
+            if row["card"] != source_card:
+                raise ValidationFailure("delivery-card-source-mismatch")
+            if not isinstance(row["metadata"].get("status"), str) or row["metadata"].get("status") not in {"matched", "unknown", "no_identifier"}:
+                raise ValidationFailure("delivery-metadata-status")
+            status_counts[row["metadata"]["status"]] += 1
+            if row["card"]["id"] in by_pool_rows[pool_ref]:
+                raise ValidationFailure("delivery-card-duplicate")
+            by_pool_rows[pool_ref][row["card"]["id"]] = row
+        if status_counts != status_expectations[pool_ref]:
+            raise ValidationFailure("delivery-metadata-status-count")
+        all_card_count += len(reconstructed)
+    actual_sequence = [(entry["pool_ref"], entry["chunk_index"]) for entry in entries]
+    expected_sequence = [(pool_ref, index) for pool_ref in POOL_ORDER for index in range(1, len(chunks_by_pool[pool_ref]) + 1)]
+    if actual_sequence != expected_sequence:
+        raise ValidationFailure("delivery-manifest-order")
+    if all_card_count != inventory.get("cards"):
+        raise ValidationFailure("delivery-total-card-count")
+    if type(manifest["pool_count"]) is not int or manifest["pool_count"] != 6:
+        raise ValidationFailure("delivery-manifest-total")
+    if type(manifest["candidate_count"]) is not int or manifest["candidate_count"] != all_card_count:
+        raise ValidationFailure("delivery-manifest-total")
+    if type(manifest["case_count"]) is not int or manifest["case_count"] != 12:
+        raise ValidationFailure("delivery-manifest-total")
+    return by_pool_rows, manifest_sha, markers_by_pool
+
+
+def _positive_value(row: dict[str, Any], field: str) -> bool:
+    exists, value, unknown = _path_value(row, field)
+    if not exists or unknown or value is None or value == "" or value == []:
+        return False
+    if isinstance(value, str) and not value.strip():
+        return False
+    if isinstance(value, list):
+        return any(x is not None and (not isinstance(x, str) or bool(x.strip())) for x in value)
+    return True
+
+
+def _validate_pointer_list(value: Any, allowed: set[str], row_by_id: dict[str, dict[str, Any]], expected_card_id: str | None = None, case_mode: bool = False) -> tuple[bool, set[tuple[str, str]]]:
+    if not isinstance(value, list) or len(value) > MAX_POINTERS:
+        return False, set()
+    found: set[tuple[str, str]] = set()
+    for pointer in value:
+        keys = {"card_id", "field"} if case_mode else {"field"}
+        if not _exact_keys(pointer, keys):
+            return False, set()
+        card_id = pointer.get("card_id", expected_card_id)
+        field = pointer.get("field")
+        if not isinstance(card_id, str) or not isinstance(field, str):
+            return False, set()
+        if card_id not in row_by_id or (card_id != expected_card_id and not case_mode) or field not in allowed:
+            return False, set()
+        exists, _, _ = _path_value(row_by_id[card_id], field)
+        if not exists:
+            return False, set()
+        key = (card_id, field)
+        if key in found:
+            return False, set()
+        found.add(key)
+    return True, found
+
+
+def _set_transition(selected: set[str], facet_id: str, assessments: dict[str, dict[str, Any]]) -> tuple[str, set[str]]:
+    supporting: set[str] = set()
+    uncertain = False
+    for card_id in selected:
+        row = assessments[card_id]
+        labels = {f["facet_id"]: f["support"] for f in row["facet_support"]}
+        label = labels[facet_id]
+        if label in {"direct_visible_support", "partial_or_contextual_visible_support"}:
+            supporting.add(card_id)
+        elif label == "uncertain":
+            uncertain = True
+    if supporting:
+        return "supported", supporting
+    if uncertain:
+        return "uncertain", supporting
+    return "not_supported", supporting
+
+
+def _expected_relation(transitions: list[str], reading_change: str) -> str:
+    gains = transitions.count("gain")
+    losses = transitions.count("loss")
+    if "uncertain" in transitions or reading_change == "uncertain":
+        return "indeterminate"
+    lead_loss = reading_change in {"distinct_lead_lost", "distinct_lead_added_and_lost"}
+    if gains and (losses or lead_loss):
+        return "support_gain_with_support_or_lead_loss"
+    if gains:
+        return "support_gain_without_identified_loss"
+    if losses or lead_loss:
+        return "loss_without_support_gain"
+    if reading_change == "distinct_lead_added":
+        return "lead_gain_only"
+    return "no_material_change"
+
+
+def _validate_record(data: Any, reviewer: str, registration_sha: str, source_pools: dict[str, dict[str, Any]], case_order: list[dict[str, Any]], delivery_rows: dict[str, dict[str, dict[str, Any]]], manifest_sha: str, markers_by_pool: dict[str, str], review_sha: str) -> dict[str, Any]:
+    errors: list[str] = []
+    top_keys = {"schema", "reviewer_id", "registration_sha256", "delivery_manifest_sha256", "pools", "cases", "execution_attestation"}
+    if not _exact_keys(data, top_keys):
+        raise ValidationFailure("review-top-level-fields")
+    if data["schema"] != "exp051-review/1" or data["reviewer_id"] != reviewer:
+        raise ValidationFailure("review-identity")
+    if data["registration_sha256"] != registration_sha:
+        raise ValidationFailure("review-registration-fingerprint")
+    if data["delivery_manifest_sha256"] != manifest_sha:
+        raise ValidationFailure("review-manifest-fingerprint")
+    pools = data["pools"]
+    cases = data["cases"]
+    if not isinstance(pools, list) or len(pools) != 6 or not isinstance(cases, list) or len(cases) != 12:
+        raise ValidationFailure("review-pool-case-count")
+    if [p.get("pool_ref") if isinstance(p, dict) else None for p in pools] != POOL_ORDER:
+        raise ValidationFailure("review-pool-order")
+    by_card_by_pool: dict[str, dict[str, dict[str, Any]]] = {}
+    for pool_review in pools:
+        if not _exact_keys(pool_review, {"pool_ref", "complete_pool_read", "chunk_markers", "card_assessments"}):
+            raise ValidationFailure("review-pool-fields")
+        pool_ref = pool_review["pool_ref"]
+        if pool_review["complete_pool_read"] is not True:
+            raise ValidationFailure("review-pool-incomplete")
+        markers = [line for line in markers_by_pool[pool_ref].splitlines() if line]
+        if pool_review["chunk_markers"] != markers:
+            raise ValidationFailure("review-chunk-markers")
+        source_pool = source_pools[pool_ref]["pool"]
+        row_by_id = delivery_rows[pool_ref]
+        union = set(source_pool["selected_ids"])
+        for case in source_pools[pool_ref]["cases"]:
+            union.update(case["after_selected_ids"])
+        expected_cards = {card["id"] for card in source_pool["candidates"] if card["id"] in union}
+        assessments = pool_review["card_assessments"]
+        if not isinstance(assessments, list):
+            raise ValidationFailure("review-selected-union")
+        assessment_ids = [a.get("card_id") if isinstance(a, dict) else None for a in assessments]
+        if len(assessment_ids) != len(expected_cards) or any(not isinstance(cid, str) for cid in assessment_ids) or set(assessment_ids) != expected_cards or len(set(assessment_ids)) != len(assessment_ids):
+            raise ValidationFailure("review-selected-union")
+        per_card: dict[str, dict[str, Any]] = {}
+        facet_ids = [f["id"] for f in source_pool["facets"]]
+        for assessment in assessments:
+            required = {"card_id", "discovery_value", "discovery_evidence", "design_evidence", "design_visibility", "facet_support"}
+            if not _exact_keys(assessment, required):
+                raise ValidationFailure("review-card-fields")
+            cid = assessment["card_id"]
+            if cid not in row_by_id or cid in per_card:
+                raise ValidationFailure("review-card-id")
+            if assessment["discovery_value"] not in DISCOVERY_ENUMS or assessment["design_visibility"] not in DESIGN_ENUMS:
+                raise ValidationFailure("review-card-enum")
+            ok, discovery_ptrs = _validate_pointer_list(assessment["discovery_evidence"], DISCOVERY_FIELDS, row_by_id, cid)
+            if not ok:
+                raise ValidationFailure("review-discovery-pointers")
+            if assessment["discovery_value"] in {"useful_research_lead", "useful_locator_only", "useful_but_redundant_lead"} and not discovery_ptrs:
+                raise ValidationFailure("review-discovery-evidence-required")
+            for _, field in discovery_ptrs:
+                if not _positive_value(row_by_id[cid], field):
+                    raise ValidationFailure("review-positive-empty-pointer")
+            ok, design_ptrs = _validate_pointer_list(assessment["design_evidence"], CONTENT_FIELDS, row_by_id, cid)
+            if not ok:
+                raise ValidationFailure("review-design-pointers")
+            if assessment["design_visibility"] in {"explicit_design_or_method_detail", "some_method_detail"} and not design_ptrs:
+                raise ValidationFailure("review-design-evidence-required")
+            for _, field in design_ptrs:
+                if not _positive_value(row_by_id[cid], field):
+                    raise ValidationFailure("review-positive-empty-pointer")
+            facets = assessment["facet_support"]
+            if not isinstance(facets, list) or [f.get("facet_id") if isinstance(f, dict) else None for f in facets] != facet_ids:
+                raise ValidationFailure("review-facet-membership")
+            for facet in facets:
+                if not _exact_keys(facet, {"facet_id", "support", "evidence_pointers"}) or facet["support"] not in FACET_ENUMS:
+                    raise ValidationFailure("review-facet-fields")
+                pointers = facet["evidence_pointers"]
+                if facet["support"] in {"direct_visible_support", "partial_or_contextual_visible_support"}:
+                    ok, found = _validate_pointer_list(pointers, CONTENT_FIELDS, row_by_id, cid)
+                    if not ok or not found or any(not _positive_value(row_by_id[cid], f) for _, f in found):
+                        raise ValidationFailure("review-facet-positive-evidence")
+                else:
+                    ok, _ = _validate_pointer_list(pointers, DISCOVERY_FIELDS, row_by_id, cid)
+                    if not ok:
+                        raise ValidationFailure("review-facet-pointers")
+            per_card[cid] = assessment
+        by_card_by_pool[pool_ref] = per_card
+    if [c.get("case_id") if isinstance(c, dict) else None for c in cases] != [c["case_id"] for c in case_order]:
+        raise ValidationFailure("review-case-order")
+    for case_review, frozen_case in zip(cases, case_order, strict=True):
+        case_fields = {"case_id", "pool_ref", "added_card_id", "removed_card_id", "reading_change", "overall_relation", "evidence_pointers", "rationale"}
+        if not _exact_keys(case_review, case_fields):
+            raise ValidationFailure("review-case-fields")
+        if case_review["pool_ref"] != frozen_case["pool_ref"] or case_review["added_card_id"] != frozen_case["added_id"] or case_review["removed_card_id"] != frozen_case["removed_id"]:
+            raise ValidationFailure("review-case-membership")
+        reading = case_review["reading_change"]
+        if reading not in READING_ENUMS or case_review["overall_relation"] not in RELATION_ENUMS:
+            raise ValidationFailure("review-case-enum")
+        rationale = case_review["rationale"]
+        if not isinstance(rationale, str) or not rationale.strip() or len(rationale) > MAX_RATIONALE_CHARS:
+            raise ValidationFailure("review-rationale-bound")
+        pointers = case_review["evidence_pointers"]
+        row_by_id = delivery_rows[frozen_case["pool_ref"]]
+        ok, case_ptrs = _validate_pointer_list(pointers, CASE_FIELDS, row_by_id, case_mode=True)
+        if not ok or any(not _positive_value(row_by_id[cid], field) for cid, field in case_ptrs):
+            raise ValidationFailure("review-case-pointers")
+        affected = by_card_by_pool[frozen_case["pool_ref"]]
+        added, removed = frozen_case["added_id"], frozen_case["removed_id"]
+        if affected[added]["discovery_value"] == "uncertain" or affected[removed]["discovery_value"] == "uncertain":
+            if reading != "uncertain":
+                raise ValidationFailure("review-reading-uncertainty")
+        baseline_set = set(frozen_case["after_selected_ids"]) - {added} | {removed}
+        if reading in {"distinct_lead_added", "distinct_lead_added_and_lost"}:
+            if affected[added]["discovery_value"] not in {"useful_research_lead", "useful_locator_only"}:
+                raise ValidationFailure("review-reading-added-label")
+            if not any(cid == added for cid, _ in case_ptrs):
+                raise ValidationFailure("review-reading-added-pointer")
+            if not any(cid == added and field in (CARD_FIELDS | {"metadata.fields.abstract.value"}) for cid, field in case_ptrs):
+                raise ValidationFailure("review-reading-added-content-pointer")
+        if reading in {"distinct_lead_lost", "distinct_lead_added_and_lost"}:
+            if affected[removed]["discovery_value"] not in {"useful_research_lead", "useful_locator_only"}:
+                raise ValidationFailure("review-reading-removed-label")
+            if not any(cid == removed for cid, _ in case_ptrs):
+                raise ValidationFailure("review-reading-removed-pointer")
+            if not any(cid == removed and field in (CARD_FIELDS | {"metadata.fields.abstract.value"}) for cid, field in case_ptrs):
+                raise ValidationFailure("review-reading-removed-content-pointer")
+        current = baseline_set
+        after = set(frozen_case["after_selected_ids"])
+        transitions: list[str] = []
+        for facet in source_pools[frozen_case["pool_ref"]]["pool"]["facets"]:
+            before_status, _ = _set_transition(current, facet["id"], affected)
+            after_status, _ = _set_transition(after, facet["id"], affected)
+            if before_status == "uncertain" or after_status == "uncertain":
+                transitions.append("uncertain")
+            elif before_status == after_status:
+                transitions.append("same")
+            elif before_status == "not_supported" and after_status == "supported":
+                transitions.append("gain")
+            elif before_status == "supported" and after_status == "not_supported":
+                transitions.append("loss")
+            else:
+                raise ValidationFailure("review-coverage-transition")
+        expected_relation = _expected_relation(transitions, reading)
+        if case_review["overall_relation"] != expected_relation:
+            raise ValidationFailure("review-overall-relation")
+    attestation = data["execution_attestation"]
+    if not _exact_keys(attestation, {"all_six_pools_read_completely", "pool_refs_in_order", "external_calls", "provider_calls", "search_calls", "filesystem_writes"}):
+        raise ValidationFailure("review-attestation-fields")
+    if attestation["all_six_pools_read_completely"] is not True or attestation["pool_refs_in_order"] != POOL_ORDER:
+        raise ValidationFailure("review-attestation-completeness")
+    for key in ("external_calls", "provider_calls", "search_calls", "filesystem_writes"):
+        if type(attestation[key]) is not int or attestation[key] != 0:
+            raise ValidationFailure("review-attestation-calls")
+    return {
+        "schema": "exp051-review-validation/1", "valid": True, "reviewer": reviewer,
+        "review_sha256": review_sha, "delivery_manifest_sha256": manifest_sha,
+        "pools_checked": 6, "cases_checked": 12, "errors": [],
+    }
+
+
+def _validate_review_core(delivery_dir: Path, review_path: Path, reviewer: str, trusted_manifest_sha: str, repo_root: Path | None = None) -> dict[str, Any]:
+    repo_root = (repo_root or Path(__file__).resolve().parents[4]).resolve()
+    try:
+        integrity, inventory = _registration_preflight(repo_root)
+        if not isinstance(trusted_manifest_sha, str) or not re.fullmatch(r"[0-9a-f]{64}", trusted_manifest_sha):
+            raise ValidationFailure("delivery-manifest-trust-invalid")
+        source_pools, case_order = _load_source_pools(repo_root, inventory)
+        delivery_rows, manifest_sha, markers_by_pool = _validate_delivery(delivery_dir, repo_root, inventory, source_pools, trusted_manifest_sha)
+        with review_path.open("rb") as stream:
+            raw = stream.read(MAX_REVIEW_BYTES + 1)
+        review_sha = _sha256(raw)
+        if len(raw) > MAX_REVIEW_BYTES:
+            raise ValidationFailure("review-size-limit")
+        data = strict_json_bytes(raw)
+        registration_sha = _sha256(_git_bytes(repo_root, REGISTRATION_COMMIT, REGISTRATION_INTEGRITY))
+        report = _validate_record(data, reviewer, registration_sha, source_pools, case_order, delivery_rows, manifest_sha, markers_by_pool, review_sha)
+        report["registration_sha256"] = registration_sha
+        return report
+    except ValidationFailure as exc:
+        return {
+            "schema": "exp051-review-validation/1", "valid": False, "reviewer": reviewer,
+            "review_sha256": _safe_hash(review_path), "delivery_manifest_sha256": _safe_manifest_hash(delivery_dir),
+            "pools_checked": 0, "cases_checked": 0, "errors": [exc.code],
+        }
+    except OSError:
+        return {
+            "schema": "exp051-review-validation/1", "valid": False, "reviewer": reviewer,
+            "review_sha256": _safe_hash(review_path), "delivery_manifest_sha256": _safe_manifest_hash(delivery_dir),
+            "pools_checked": 0, "cases_checked": 0, "errors": ["input-unreadable"],
+        }
+    except (TypeError, ValueError, KeyError, IndexError, AttributeError, RecursionError):
+        return {
+            "schema": "exp051-review-validation/1", "valid": False, "reviewer": reviewer,
+            "review_sha256": _safe_hash(review_path), "delivery_manifest_sha256": _safe_manifest_hash(delivery_dir),
+            "pools_checked": 0, "cases_checked": 0, "errors": ["malformed-structure"],
+        }
+
+
+def _trusted_delivery_manifest_sha(repo_root: Path) -> str:
+    """Resolve live delivery only through committed root-published integrity data."""
+    artifact = strict_json_bytes(_git_bytes(repo_root, "HEAD", DELIVERY_INTEGRITY))
+    if not _exact_keys(artifact, {"schema", "delivery_manifest_sha256", "registration_sha256", "source_files", "qualification_receipt_sha256"}):
+        raise ValidationFailure("delivery-integrity-schema")
+    if artifact["schema"] != "exp051-delivery-integrity/1":
+        raise ValidationFailure("delivery-integrity-schema")
+    inventory = strict_json_bytes(_git_bytes(repo_root, REGISTRATION_COMMIT, INPUT_INVENTORY))
+    if artifact["source_files"] != inventory.get("files"):
+        raise ValidationFailure("delivery-integrity-source-hashes")
+    registration_sha = _sha256(_git_bytes(repo_root, REGISTRATION_COMMIT, REGISTRATION_INTEGRITY))
+    if artifact["registration_sha256"] != registration_sha:
+        raise ValidationFailure("delivery-integrity-registration")
+    for key in ("delivery_manifest_sha256", "qualification_receipt_sha256"):
+        if not isinstance(artifact[key], str) or not re.fullmatch(r"[0-9a-f]{64}", artifact[key]):
+            raise ValidationFailure("delivery-integrity-digest")
+    qualification_raw = _git_bytes(repo_root, "HEAD", INTEGRATION_QUALIFICATION)
+    if _sha256(qualification_raw) != artifact["qualification_receipt_sha256"]:
+        raise ValidationFailure("delivery-integrity-qualification-hash")
+    qualification = strict_json_bytes(qualification_raw)
+    if not isinstance(qualification, dict) or qualification.get("status") != "passed":
+        raise ValidationFailure("delivery-integrity-qualification-status")
+    public_raw = _git_bytes(repo_root, "HEAD", PUBLIC_DELIVERY_MANIFEST)
+    if _sha256(public_raw) != artifact["delivery_manifest_sha256"]:
+        raise ValidationFailure("delivery-integrity-manifest-hash")
+    public = strict_json_bytes(public_raw)
+    if public.get("schema") != "exp051-enriched-delivery-manifest/1":
+        raise ValidationFailure("delivery-integrity-manifest-schema")
+    return artifact["delivery_manifest_sha256"]
+
+
+def validate_review(delivery_dir: Path, review_path: Path, reviewer: str, repo_root: Path | None = None) -> dict[str, Any]:
+    """Live CLI/library validation; requires committed delivery trust artifacts."""
+    repo_root = (repo_root or Path(__file__).resolve().parents[4]).resolve()
+    try:
+        trusted_sha = _trusted_delivery_manifest_sha(repo_root)
+    except ValidationFailure as exc:
+        return {
+            "schema": "exp051-review-validation/1", "valid": False, "reviewer": reviewer,
+            "review_sha256": _safe_hash(review_path), "delivery_manifest_sha256": _safe_manifest_hash(delivery_dir),
+            "pools_checked": 0, "cases_checked": 0, "errors": [exc.code],
+        }
+    return _validate_review_core(delivery_dir, review_path, reviewer, trusted_sha, repo_root)
+
+
+def validate_review_fixture(delivery_dir: Path, review_path: Path, reviewer: str, trusted_manifest_sha256: str, repo_root: Path | None = None) -> dict[str, Any]:
+    """Test-only seam for neutral fixtures; no corresponding CLI option exists."""
+    return _validate_review_core(delivery_dir, review_path, reviewer, trusted_manifest_sha256, repo_root)
+
+
+def _safe_hash(path: Path) -> str | None:
+    try:
+        if path.is_symlink() or not path.is_file():
+            return None
+        with path.open("rb") as stream:
+            data = stream.read(MAX_REVIEW_BYTES + 1)
+        return _sha256(data) if len(data) <= MAX_REVIEW_BYTES else None
+    except OSError:
+        return None
+
+
+def _safe_manifest_hash(path: Path) -> str | None:
+    return _safe_hash(path / "delivery-manifest.json")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--delivery", required=True, type=Path)
+    parser.add_argument("--review", required=True, type=Path)
+    parser.add_argument("--reviewer", required=True, choices=["R1", "R2"])
+    parser.add_argument("--repo-root", type=Path, default=None)
+    args = parser.parse_args(argv)
+    report = validate_review(args.delivery, args.review, args.reviewer, args.repo_root)
+    sys.stdout.write(json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n")
+    return 0 if report["valid"] else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

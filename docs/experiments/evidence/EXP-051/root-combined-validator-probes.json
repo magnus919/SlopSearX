@@ -1,0 +1,72 @@
+{
+  "schema": "exp051-root-combined-validator-probes/1",
+  "status": "passed",
+  "validator_sha256": "2a5b05834101b2d997650ece085a52e508fd9bf4dcff6f07a0fa14b8b4cb415b",
+  "checks": [
+    {
+      "check": "neutral_complete_record",
+      "passed": true,
+      "observed": "valid"
+    },
+    {
+      "check": "card_order_permutation_accepted",
+      "passed": true,
+      "observed": "valid"
+    },
+    {
+      "check": "duplicate_case_rejected",
+      "passed": true,
+      "observed": "review-case-order"
+    },
+    {
+      "check": "false_complete_read_rejected",
+      "passed": true,
+      "observed": "review-pool-incomplete"
+    },
+    {
+      "check": "missing_facet_rejected",
+      "passed": true,
+      "observed": "review-facet-membership"
+    },
+    {
+      "check": "bibliography_is_not_design",
+      "passed": true,
+      "observed": "review-design-pointers"
+    },
+    {
+      "check": "truncated_chunk_rejected",
+      "passed": true,
+      "observed": "delivery-chunk-hash"
+    },
+    {
+      "check": "missing_chunk_rejected",
+      "passed": true,
+      "observed": "delivery-chunk-file"
+    },
+    {
+      "check": "symlink_chunk_rejected",
+      "passed": true,
+      "observed": "delivery-chunk-file"
+    },
+    {
+      "check": "extra_directory_rejected",
+      "passed": true,
+      "observed": "delivery-extra-files"
+    },
+    {
+      "check": "wrong_read_marker_rejected",
+      "passed": true,
+      "observed": "review-chunk-markers"
+    },
+    {
+      "check": "deep_json_sanitized",
+      "passed": true,
+      "observed": "review-top-level-fields"
+    }
+  ],
+  "checks_passed": 12,
+  "reviewer_invocations": 0,
+  "provider_calls": 0,
+  "search_calls": 0,
+  "meaning": "Neutral synthetic integrity probes only; no source judgments."
+}
