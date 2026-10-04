@@ -1,0 +1,50 @@
+import asyncio, copy, json, os, time
+from pathlib import Path
+from slopsearx.cache import SearchCache
+from slopsearx.snapshot import SnapshotStore
+from slopsearx.service import ScopeDecision
+from slopsearx.adapter import SearchResult
+from slopsearx.mcp.state import current_tenant, set_state
+from slopsearx.mcp import tools
+from tests.test_mcp_tools import _build_state
+
+FAULTS={'scope':('scope',[1]),'result':('results',[1]),'total':('total','bad'),'created':('created_at','bad'),'expires':('expires_at','bad'),'expires_nan':('expires_at','NaN'),'expires_inf':('expires_at','Infinity'),'created_nan':('created_at','NaN')}
+CONTROLS=['healthy','expired','missing','cross_tenant','legacy','disconnected']
+async def main():
+ store=SearchCache(os.environ['EXP049_URL']);await store.connect();assert store.is_connected
+ rows=[];keys=[]
+ state=_build_state(['wikipedia']);state.snapshots=SnapshotStore(store,tenant=current_tenant());set_state(state)
+ try:
+  for scenario in list(FAULTS)+CONTROLS:
+   for surface in ['results','entities','detail']:
+    snap=await state.snapshots.create('offline integrity fixture','fixture-id',[SearchResult(url='https://example.org/evidence',title='Evidence',content='Captured evidence',engine='wikipedia',engines={'wikipedia'})],ScopeDecision(selected_engines=['wikipedia']))
+    key=state.snapshots._key(snap);keys.append(key);payload=await store.get(key)
+    if scenario in FAULTS:
+     field,value=FAULTS[scenario];payload[field]=copy.deepcopy(value)
+    if scenario=='expired':payload['expires_at']=time.time()-60
+    if scenario=='cross_tenant':payload['tenant']='different-tenant'
+    if scenario=='legacy':payload.pop('expires_at')
+    await store.set(key,payload,120)
+    if scenario=='missing':await store._client.delete(key)
+    before=await store._client.get(key)
+    if scenario=='disconnected':state.snapshots=SnapshotStore(None)
+    try:
+     if surface=='results':body=await tools.slopsearx_read_results(snap)
+     elif surface=='entities':body=await tools.slopsearx_read_entities(snap)
+     else:body=await tools.slopsearx_read_result(snap+':0')
+     code=body.get('error',{}).get('code','success');exception=None
+    except Exception as exc:body=None;code='exception';exception=type(exc).__name__
+    finally:state.snapshots=SnapshotStore(store,tenant=current_tenant())
+    expected='invalid_cursor' if scenario in FAULTS or scenario in ['missing','cross_tenant'] else ('expired_handle' if scenario=='expired' else ('store_unavailable' if scenario=='disconnected' else 'success'))
+    unchanged=before==await store._client.get(key)
+    rows.append({'scenario':scenario,'surface':surface,'expected':expected,'observed':code,'correct':expected==code,'exception':exception,'body':body,'record_unchanged':unchanged,'engine_calls':state.ctx.active_engines['wikipedia'].calls})
+ finally:
+  set_state(None)
+  if keys:await store._client.delete(*keys)
+  await store.close()
+ out=Path(os.environ['EXP049_OUTPUT']);out.mkdir(parents=True,exist_ok=True)
+ (out/'rows.json').write_text(json.dumps(rows,indent=2)+'\n')
+ faults=[r for r in rows if r['scenario'] in FAULTS];controls=[r for r in rows if r['scenario'] not in FAULTS]
+ summary={'fault_reads':len(faults),'correct_fault_rejections':sum(r['correct'] for r in faults),'control_reads':len(controls),'correct_controls':sum(r['correct'] for r in controls),'no_engine_calls':all(r['engine_calls']==0 for r in rows),'records_unchanged':all(r['record_unchanged'] for r in rows)}
+ (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary))
+asyncio.run(main())
