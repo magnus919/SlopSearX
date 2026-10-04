@@ -1,0 +1,47 @@
+"""Deadline-enforced owned child transport; no endpoint/provider defaults."""
+import subprocess
+import time
+
+class ChildTransport:
+    """Child reads exact request bytes on stdin and writes exact response on stdout.
+
+    The command is trusted local configuration, never source or model text.
+    The child must handle HTTP error statuses as nonzero exits. Shell is disabled.
+    A hard child deadline is stricter than a provider-only timing measurement.
+    """
+    def __init__(self, command):
+        if not command or any(type(x) is not str for x in command):
+            raise ValueError('owned-command-contract')
+        self.command = list(command)
+        self.receipts = []
+
+    def __call__(self, body, timeout_s):
+        if type(body) is not bytes or not 0 < timeout_s <= 1:
+            raise ValueError('transport-input-contract')
+        started = time.monotonic()
+        process = subprocess.Popen(self.command, stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        receipt = {'status': 'invoked', 'request': body, 'stdout': None, 'stderr': None,
+                   'exit_code': None, 'timed_out': False}
+        self.receipts.append(receipt)
+        try:
+            stdout, stderr = process.communicate(body, timeout=timeout_s)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            stdout, stderr = process.communicate()
+            receipt.update(stdout=stdout, stderr=stderr, exit_code=process.returncode,
+                           timed_out=True, status='timeout', elapsed_ms=(time.monotonic()-started)*1000)
+            raise TimeoutError('owned-transport-deadline')
+        except BaseException:
+            process.kill()
+            stdout, stderr = process.communicate()
+            receipt.update(stdout=stdout, stderr=stderr, exit_code=process.returncode,
+                           status='cancelled', elapsed_ms=(time.monotonic()-started)*1000)
+            raise
+        receipt.update(stdout=stdout, stderr=stderr, exit_code=process.returncode,
+                       elapsed_ms=(time.monotonic()-started)*1000)
+        if process.returncode != 0:
+            receipt['status'] = 'failed'
+            raise ValueError('owned-transport-nonzero-exit')
+        receipt['status'] = 'returned'
+        return stdout, receipt['elapsed_ms']

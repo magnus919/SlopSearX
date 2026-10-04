@@ -1,0 +1,110 @@
+"""Offline coordinator. Injected transport only; this file has no network capability."""
+import asyncio
+import hashlib
+import json
+import math
+import time
+
+
+def wire(request):
+    return json.dumps(request, ensure_ascii=False).encode('utf-8')
+
+
+def operation(policy, parser, cards, purpose, facets, scores, nouls, w0,
+              historical_remote_ms, transport, clock=time.monotonic):
+    """Run a complete operation, discarding every intermediate swap on failure.
+
+    transport(body_bytes, timeout_s=...) returns (exact_raw_bytes, measured_remote_ms).
+    The normal transport must enforce its supplied timeout; injected test doubles
+    cannot establish wall-clock enforcement.
+    Cancellation propagates after receipt capture; caller must stop the study.
+    No retries, no response repair, and no automatic provider selection.
+    """
+    ids = [c['id'] for c in cards]
+    if len(w0) != len(ids) or len(set(w0)) != len(ids) or set(w0) != set(ids):
+        raise ValueError('trusted-w0-membership')
+    attempts, actions = [], []
+    remote_total = historical_remote_ms
+    started = clock()
+    try:
+        if type(remote_total) not in (int, float) or not math.isfinite(remote_total) or remote_total < 0:
+            raise ValueError('historical-timing')
+        if remote_total > 2000:
+            raise ValueError('operation-timing-cap')
+        selected = policy.stable_order(scores, ids)[:min(10, len(ids))]
+        protected, evicted = [], []
+        for round_number in range(1, 5):
+            request, batch = policy.build_round(cards, purpose, facets, scores, nouls,
+                selected, protected, evicted, round_number)
+            if request is None:
+                break
+            body = wire(request)
+            if len(body) > 384000 or len(wire(request['state'])) > 128000:
+                raise ValueError('serialized-request-bound')
+            if clock() - started > 60:
+                raise ValueError('owned-process-deadline')
+            attempt = {'round': round_number, 'request_sha256': hashlib.sha256(body).hexdigest(),
+                       'request_bytes': len(body), 'question_ids': list(batch['question_ids']),
+                       'status': 'invoked', 'usage': None, 'request_utf8': body.decode('utf-8')}
+            attempts.append(attempt)
+            try:
+                raw, elapsed = transport(body, timeout_s=min(1.0, 60 - (clock() - started)))
+            except BaseException:
+                attempt['status'] = 'transport-failed'
+                raise
+            if type(raw) is not bytes or len(raw) > 2000000:
+                raise ValueError('raw-response-bound')
+            attempt['response_sha256'] = hashlib.sha256(raw).hexdigest()
+            attempt['response_hex'] = raw.hex()
+            if type(elapsed) not in (int, float) or not math.isfinite(elapsed) or elapsed < 0:
+                raise ValueError('remote-timing')
+            attempt['remote_ms'] = elapsed
+            remote_total += elapsed
+            parsed = parser(raw, batch['question_ids'])
+            usage = parsed['usage']
+            if type(usage) is not dict or set(usage) != {'input_tokens', 'output_tokens'} or any(type(v) is not int or v < 0 for v in usage.values()) or usage['input_tokens'] > 64000:
+                raise ValueError('known-usage-contract')
+            attempt['usage'] = usage
+            if elapsed > 1000 or remote_total > 2000 or clock() - started > 60:
+                raise ValueError('operation-timing-cap')
+            attempt['status'] = 'valid'
+            action = policy.choose_action(parsed['values'], batch, scores, ids)
+            if action is None:
+                break
+            selected = action['resulting_ids']
+            protected.append(action['candidate_id'])
+            evicted.append(action['victim_id'])
+            actions.append(action)
+        return {'status': 'valid', 'order': policy.final_order(selected, scores, ids),
+                'attempts': attempts, 'actions': actions, 'remote_total_ms': remote_total}
+    except (Exception, asyncio.CancelledError, KeyboardInterrupt) as error:
+        if attempts and attempts[-1]['status'] == 'invoked':
+            attempts[-1]['status'] = 'invalid'
+        return {'status': 'failed', 'order': list(w0), 'attempts': attempts,
+                'actions': [], 'discarded_action_count': len(actions),
+                'reason': str(error), 'remote_total_ms': remote_total}
+
+
+def study(operations, execute, clock=time.monotonic):
+    """Stop first failure, unknown usage, resource exhaustion or four-hour deadline."""
+    results = []
+    totals = {'input_tokens': 0, 'output_tokens': 0}
+    started = clock()
+    for index, item in enumerate(operations):
+        if clock() - started >= 14400 or totals['input_tokens'] + 4 * 64000 > 3000000 or totals['output_tokens'] >= 100000:
+            return {'status': 'incomplete', 'results': results, 'usage': totals,
+                    'reason': 'study-resource-bound', 'uninvoked_ids': [x['id'] for x in operations[index:]]}
+        result = execute(item)
+        results.append({'operation_id': item['id'], 'result': result})
+        unknown = False
+        for attempt in result.get('attempts', []):
+            usage = attempt.get('usage')
+            if usage is None:
+                unknown = True
+            else:
+                for key in totals:
+                    totals[key] += usage[key]
+        if result['status'] != 'valid' or unknown or totals['input_tokens'] > 3000000 or totals['output_tokens'] > 100000 or clock() - started > 14400:
+            return {'status': 'incomplete', 'results': results, 'usage': totals,
+                    'unknown_usage': unknown, 'uninvoked_ids': [x['id'] for x in operations[index + 1:]]}
+    return {'status': 'complete', 'results': results, 'usage': totals, 'uninvoked_ids': []}
