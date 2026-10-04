@@ -1,0 +1,40 @@
+"""Synthetic qualification; no reference labels or network calls."""
+import argparse, hashlib, io, json, os, sys, types
+from pathlib import Path
+ap=argparse.ArgumentParser();ap.add_argument('--delivery',required=True,type=Path);ap.add_argument('--neutral',required=True,type=Path);a=ap.parse_args();root=Path(__file__).resolve().parents[4];path=Path(__file__).with_name('output-guard.py.txt')
+g=types.ModuleType('guard_test');g.__file__=str(path);exec(compile(path.read_bytes(),str(path),'exec'),g.__dict__);base=g.load_base(root);checks=[];audit={'enabled':False}
+def audit_hook(event,args):
+ if not audit['enabled']:return
+ if event=='open':
+  mode=args[1];flags=args[2]
+  if args[0]!=os.devnull and ((isinstance(mode,str) and any(c in mode for c in 'wax+')) or flags & (os.O_WRONLY|os.O_RDWR|os.O_APPEND|os.O_CREAT|os.O_TRUNC)):raise AssertionError('disk-write-attempt')
+ if event.startswith('socket.'):raise AssertionError('network-attempt')
+sys.addaudithook(audit_hook)
+for i in range(1,7):
+ pool=f'P{i:02d}';p=a.neutral/(pool+'.json');raw=p.read_bytes();audit['enabled']=True
+ try:
+  before=base.jsonfile;r=g.validate_bytes(base,raw,a.delivery,pool+'-R1',pool,root);assert base.jsonfile is before
+  normal=base.live_validate(a.delivery,p,pool+'-R1',pool,root)
+ finally:audit['enabled']=False
+ assert r==normal and r['valid'] and r['review_sha256']==hashlib.sha256(raw).hexdigest();checks.append(pool+'-normal-trust-byte-path-equivalence-no-writes')
+ x=json.loads(raw);x['cards'][0]['f'][0]='some';bad=json.dumps(x).encode();r=g.validate_bytes(base,bad,a.delivery,pool+'-R1',pool,root);assert r['errors']==['review-card-shape-or-enum'];checks.append(pool+'-support-some-rejected')
+ x=json.loads(raw);row=x['cards'][0];row['v']='some';row['vp']=['n:snippet'];r=g.validate_bytes(base,json.dumps(x).encode(),a.delivery,pool+'-R1',pool,root);assert r['valid'];checks.append(pool+'-design-some-accepted')
+for name,raw,expected in [('duplicate-key',b'{"s":1,"s":2}','strict-json-invalid'),('nonfinite',b'{"s":NaN}','strict-json-invalid'),('oversize',b' '*10001,'input-size-limit')]:
+ r=g.validate_bytes(base,raw,a.delivery,'P01-R1','P01',root);assert r['errors']==[expected];checks.append(name)
+valid=b'{"example":"unchanged"}';invalid=b'{"bad":1}'
+def frame(kind,raw):return json.dumps({'kind':kind,'raw':raw.decode()},ensure_ascii=False).encode()+b'\n'
+def run(frames):
+ inp=io.BytesIO(b''.join(frames));out=io.StringIO();audit['enabled']=True
+ try:events=g.run_session(inp,out,lambda raw:dict(valid=raw==valid,errors=[] if raw==valid else ['shape'],derived=['never_expose_this']),base.strict)
+ finally:audit['enabled']=False
+ assert 'never_expose_this' not in out.getvalue();return events
+r=run([frame('draft',invalid),frame('draft',valid),frame('final',valid)]);assert r[-1]['valid'] and r[1]['sha256']==hashlib.sha256(invalid).hexdigest() and r[2]['sha256']==r[-1]['sha256'];checks.append('two-drafts-retained-final-exact-no-grading-feedback')
+r=run([frame('draft',valid),frame('draft',valid),frame('draft',valid),frame('final',valid)]);assert r[-1]['error']=='draft-limit';checks.append('third-draft-rejected')
+r=run([frame('draft',valid),frame('final',valid+b' ')]);assert r[-1]['error']=='final-not-validated-draft';checks.append('no-normalization-or-final-repair')
+r=run([frame('final',valid)]);assert not r[-1]['valid'];checks.append('unvalidated-final-rejected')
+r=run([frame('draft',valid),frame('final',valid),frame('final',invalid)]);assert len(r)==3 and r[-1]['valid'];checks.append('no-post-final-event')
+r=run([frame('draft',valid)]);assert r[-1]['error']=='no-final';checks.append('eof-not-final')
+r=run([b'{"kind":"draft","kind":"final","raw":"x"}\n']);assert r[-1]['error']=='frame-invalid';checks.append('duplicate-envelope-rejected')
+r=run([b'x'*24001]);assert r[-1]['error']=='frame-invalid';checks.append('frame-size-bound')
+r=run([frame('final',valid)]);assert not r[-1]['valid'];checks.append('session-isolation')
+print(json.dumps(dict(schema='exp055-guard-qualification/1',status='passed',checks=checks,count=len(checks),guard_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),baseline_validator_sha256=g.BASE_SHA,synthetic_only=True,reference_invocations=0),indent=2))

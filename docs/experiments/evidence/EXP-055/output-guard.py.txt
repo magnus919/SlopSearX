@@ -1,0 +1,85 @@
+"""Offline, two-draft structural guard. No network or filesystem writes."""
+import argparse, hashlib, json, re, subprocess, sys, types
+from pathlib import Path
+BASE_REL='docs/experiments/evidence/EXP-054/review-validator.py.txt'
+BASE_SHA='a913ba320675a02488f69e657cb75e84d0fbb57917cfbcf1e358cfc6728379c6'
+METHOD_REL='docs/experiments/evidence/EXP-055/registration-integrity.json'
+QUAL_REL='docs/experiments/evidence/EXP-055/execution-qualification.json'
+SENTINEL=Path('/__exp055_in_memory_response__')
+MAX_FRAME=24000
+
+def load_base(root):
+ path=root/BASE_REL;raw=path.read_bytes()
+ if path.is_symlink() or hashlib.sha256(raw).hexdigest()!=BASE_SHA:raise ValueError('base-validator-untrusted')
+ module=types.ModuleType('exp054_guard_base');module.__file__=str(path)
+ exec(compile(raw,str(path),'exec'),module.__dict__)
+ return module
+
+def verify_method(root,base,registered_commit,registered_sha,qualification_sha):
+ if not re.fullmatch('[0-9a-f]{40}',registered_commit) or not re.fullmatch('[0-9a-f]{64}',registered_sha) or not re.fullmatch('[0-9a-f]{64}',qualification_sha):raise ValueError('method-pin-shape')
+ commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,stderr=subprocess.DEVNULL).decode().strip()
+ raw=base._git(root,registered_commit,METHOD_REL)
+ if base.sha(raw)!=registered_sha or raw!=base._git(root,commit,METHOD_REL):raise ValueError('method-pin-mismatch')
+ obj=base.strict(raw)
+ if not base.exact(obj,{'schema','files','baseline_validator_sha256','reference_invocations','meaning'}) or obj['schema']!='exp055-registration-integrity/1' or obj['baseline_validator_sha256']!=BASE_SHA or obj['reference_invocations']!=0 or not isinstance(obj['files'],dict) or not obj['files']:raise ValueError('method-registration-invalid')
+ own=Path(__file__).resolve().relative_to(root.resolve()).as_posix()
+ if own not in obj['files']:raise ValueError('guard-not-registered')
+ for rel,sha in obj['files'].items():
+  if not isinstance(rel,str) or not rel.startswith('docs/experiments/') or '..' in Path(rel).parts:raise ValueError('method-path-invalid')
+  p=root/rel
+  if p.is_symlink() or not p.is_file() or base.sha(base._git(root,commit,rel))!=sha or base.sha(p.read_bytes())!=sha:raise ValueError('method-input-changed')
+ qualification=base._git(root,commit,QUAL_REL);q=base.strict(qualification)
+ if base.sha(qualification)!=qualification_sha or (root/QUAL_REL).is_symlink() or (root/QUAL_REL).read_bytes()!=qualification or not isinstance(q,dict) or q.get('schema')!='exp055-execution-qualification/1' or q.get('status')!='passed' or q.get('guard_sha256')!=obj['files'][own] or q.get('method_registration_sha256')!=registered_sha or q.get('baseline_validator_sha256')!=BASE_SHA or q.get('reference_invocations')!=0:raise ValueError('execution-qualification-untrusted')
+ return base.sha(raw)
+
+def validate_bytes(base,raw,delivery,reviewer,pool,root):
+ # Adapt only the single response-byte read. All real input/trust reads are unchanged.
+ if not isinstance(raw,bytes) or len(raw)>base.MAX_REVIEW:return {'valid':False,'errors':['input-size-limit']}
+ original=base.jsonfile
+ def read(path,limit):
+  if path==SENTINEL:
+   if limit!=base.MAX_REVIEW:raise base.Invalid('memory-read-contract')
+   return raw
+  return original(path,limit)
+ base.jsonfile=read
+ try:return base.live_validate(delivery,SENTINEL,reviewer,pool,root)
+ except base.Invalid as e:return {'valid':False,'errors':[e.code]}
+ except Exception:return {'valid':False,'errors':['malformed-structure']}
+ finally:base.jsonfile=original
+
+def run_session(inp,out,validate,strict):
+ drafts=0;accepted=[];events=[]
+ def emit(obj):
+  events.append(obj);out.write(json.dumps(obj,separators=(',',':'))+'\n');out.flush()
+ emit({'event':'ready','max_drafts':2})
+ while True:
+  frame=inp.readline(MAX_FRAME+1)
+  if not frame:emit({'event':'closed','valid':False,'error':'no-final'});return events
+  try:
+   if len(frame)>MAX_FRAME:raise ValueError('frame-size')
+   x=strict(frame)
+   if not isinstance(x,dict) or set(x)!={'kind','raw'} or x['kind'] not in ('draft','final') or not isinstance(x['raw'],str):raise ValueError('frame-schema')
+   raw=x['raw'].encode('utf8');digest=hashlib.sha256(raw).hexdigest()
+  except Exception:emit({'event':'closed','valid':False,'error':'frame-invalid'});return events
+  if x['kind']=='draft':
+   drafts+=1
+   if drafts>2:emit({'event':'closed','valid':False,'error':'draft-limit'});return events
+   r=validate(raw)
+   if r['valid']:accepted.append(raw)
+   emit({'event':'draft','attempt':drafts,'valid':r['valid'],'errors':r.get('errors',[]),'sha256':digest})
+  else:
+   # Exact bytes, not normalized JSON or a controller-repaired record.
+   valid=any(raw==prior for prior in accepted)
+   emit({'event':'final','valid':valid,'sha256':digest,'error':None if valid else 'final-not-validated-draft'})
+   return events
+
+def main():
+ ap=argparse.ArgumentParser();ap.add_argument('--delivery',required=True,type=Path);ap.add_argument('--reviewer',required=True);ap.add_argument('--pool',required=True);ap.add_argument('--registration-commit',required=True);ap.add_argument('--method-sha256',required=True);ap.add_argument('--qualification-sha256',required=True);a=ap.parse_args();root=Path(__file__).resolve().parents[4]
+ try:
+  base=load_base(root);verify_method(root,base,a.registration_commit,a.method_sha256,a.qualification_sha256)
+  if a.pool not in base.POOL_ORDER or a.reviewer not in (a.pool+'-R1',a.pool+'-R2'):raise ValueError('assigned-unit-invalid')
+ except Exception:
+  print('{"event":"closed","valid":false,"error":"guard-trust-invalid"}',flush=True);return 2
+ events=run_session(sys.stdin.buffer,sys.stdout,lambda raw:validate_bytes(base,raw,a.delivery,a.reviewer,a.pool,root),base.strict)
+ return 0 if events[-1]['event']=='final' and events[-1]['valid'] else 2
+if __name__=='__main__':raise SystemExit(main())

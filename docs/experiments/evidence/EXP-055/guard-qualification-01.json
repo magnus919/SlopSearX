@@ -1,0 +1,8 @@
+{
+  "schema": "exp055-guard-qualification/1",
+  "status": "failed",
+  "reason": "Audit fixture classified the subprocess /dev/null redirection as a disk write. Fixture must distinguish the null device and use platform-native open flags.",
+  "guard_sha256": "22302c8e6842fc73e6dae28855b4b0e5b8d7c44f0864767cb6b33470c7da9e2d",
+  "test_sha256": "ac211ba4f79d2bcf909f476438f5347ac8db2e09829f95d6278c925d7eb8ef79",
+  "reference_invocations": 0
+}
