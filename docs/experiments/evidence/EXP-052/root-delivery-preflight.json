@@ -1,0 +1,58 @@
+{
+  "schema": "exp052-root-delivery-preflight/1",
+  "status": "passed",
+  "registration_sha256": "213ddae2896ef40c9be6aca356a29135e24ed9b164ab9b424d2169f3093d1925",
+  "delivery_manifest_sha256": "6b367674480b4245e2511733144a9e477571c92499a8bedb0e143a87d67a47ea",
+  "actual_chunk_count": 23,
+  "all_chunk_bytes_hashes_permissions_verified": true,
+  "original_cards_order_exactly_reconstructed": true,
+  "source_card_count": 232,
+  "pool_units": [
+    {
+      "pool_ref": "P01",
+      "source_cards_reconstructed": 33,
+      "assessment_union": 12,
+      "neutral_response_bytes": 1767,
+      "chunk_markers_checked": 3
+    },
+    {
+      "pool_ref": "P02",
+      "source_cards_reconstructed": 32,
+      "assessment_union": 11,
+      "neutral_response_bytes": 1791,
+      "chunk_markers_checked": 3
+    },
+    {
+      "pool_ref": "P03",
+      "source_cards_reconstructed": 35,
+      "assessment_union": 12,
+      "neutral_response_bytes": 1928,
+      "chunk_markers_checked": 4
+    },
+    {
+      "pool_ref": "P04",
+      "source_cards_reconstructed": 44,
+      "assessment_union": 12,
+      "neutral_response_bytes": 1956,
+      "chunk_markers_checked": 5
+    },
+    {
+      "pool_ref": "P05",
+      "source_cards_reconstructed": 44,
+      "assessment_union": 12,
+      "neutral_response_bytes": 1936,
+      "chunk_markers_checked": 4
+    },
+    {
+      "pool_ref": "P06",
+      "source_cards_reconstructed": 44,
+      "assessment_union": 11,
+      "neutral_response_bytes": 1826,
+      "chunk_markers_checked": 4
+    }
+  ],
+  "synthetic_neutral_records_only": true,
+  "reference_invocations": 0,
+  "provider_calls": 0,
+  "search_calls": 0
+}
