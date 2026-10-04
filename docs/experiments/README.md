@@ -7,6 +7,10 @@ Every experiment also produces evidence and a decision; weak candidates are
 rejected. Follow [the loop design](DESIGN.md) for opportunity selection, evidence
 standards and delivery accounting. Production operation belongs to operators.
 
+Before implementing the complete-pool selector, follow the [v0.6.0 release
+reconciliation](slopsearx-v0.6-release-reconciliation.md): reuse shipped Jev,
+grouping, service and snapshot behavior; confirm only the remaining extension.
+
 ## Run one cycle
 
 1. Read this ledger, relevant project contracts, current issues and open PRs.
