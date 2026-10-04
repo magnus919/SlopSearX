@@ -1,0 +1,812 @@
+"""EXP-060 frozen-pool acquisition runner.
+
+This file is deliberately inert unless invoked with ``--live`` and the frozen
+registration plus committed combined qualification match. Offline tests use the
+native SearchService and HTTPX MockTransport; they never open a network socket.
+"""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import dataclasses
+import hashlib
+import importlib.util
+import json
+import os
+import pwd
+import re
+import subprocess
+import sys
+import time
+import uuid
+from pathlib import Path
+from typing import Any, Callable
+
+import httpx
+
+ROOT = Path(__file__).resolve().parents[4]
+EVIDENCE = ROOT / "docs/experiments/evidence/EXP-060"
+PROTOCOL_PATH = EVIDENCE / "protocol.json"
+QUERIES_PATH = EVIDENCE / "queries.json"
+SOURCE_PINS_PATH = EVIDENCE / "source-pins.json"
+QUALIFICATION_PATH = EVIDENCE / "acquisition-qualification.json"
+REGISTRATION_INTEGRITY_PATH = EVIDENCE / "registration-integrity.json"
+QUALIFICATION_INTEGRITY_PATH = EVIDENCE / "qualification-integrity.json"
+REGISTRATION_BASELINE = "8e7634bf4d2140c74262719fd0e8c0945810cb27"
+MAX_BRAVE_ATTEMPTS = 10
+PUBLIC_ENDPOINTS = {
+    "brave": ("api.search.brave.com", "/res/v1/web/search"),
+    "openalex": ("api.openalex.org", "/works"),
+    "semanticscholar": ("api.semanticscholar.org", "/graph/v1/paper/search"),
+    "arxiv": ("export.arxiv.org", "/api/query"),
+    "github": ("api.github.com", "/search/repositories"),
+}
+SECRET_KEY = re.compile(r"(?:api[_-]?key|token|secret|password|authorization|credential)", re.I)
+BEARER = re.compile(r"(?i)\bBearer\s+[^\s,;]+")
+
+
+class AcquisitionError(RuntimeError):
+    """A fail-closed acquisition setup or persistence error."""
+
+
+class BraveBudgetExceeded(httpx.TransportError):
+    """Raised before forwarding a Brave request after the attempt ceiling."""
+
+
+def _json_bytes(value: Any) -> bytes:
+    serialized = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    return (serialized + "\n").encode("utf-8")
+
+
+def _sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _file_sha256(path: Path) -> str:
+    return _sha256(path.read_bytes())
+
+
+def _git_blob(revision: str, path: Path) -> bytes:
+    relative = path.relative_to(ROOT).as_posix()
+    return subprocess.run(
+        ["git", "show", f"{revision}:{relative}"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+    ).stdout
+
+
+def verify_source_pins() -> dict[str, Any]:
+    """Verify every frozen source, cohort, and protocol digest before any run."""
+    protocol = json.loads(PROTOCOL_PATH.read_text(encoding="utf-8"))
+    queries = json.loads(QUERIES_PATH.read_text(encoding="utf-8"))
+    pins = json.loads(SOURCE_PINS_PATH.read_text(encoding="utf-8"))
+    expected_protocol = pins.get("protocol_sha256")
+    expected_cohort = pins.get("cohort_sha256")
+    if expected_protocol != _file_sha256(PROTOCOL_PATH):
+        raise AcquisitionError("protocol digest does not match source pins")
+    if expected_cohort != _file_sha256(QUERIES_PATH):
+        raise AcquisitionError("cohort digest does not match source pins")
+    if protocol.get("baseline_revision") != pins.get("baseline_revision"):
+        raise AcquisitionError("baseline revision does not match source pins")
+    if pins.get("status") != "prospective source snapshot; candidate frozen; no calls":
+        raise AcquisitionError("source pins are not the frozen pre-acquisition snapshot")
+    if pins.get("new_brave_attempts") != 0 or pins.get("new_jev_attempts") != 0:
+        raise AcquisitionError("source pins report prior study acquisitions")
+    if protocol.get("status") not in {
+        "prospective; acquisition requires qualified runner",
+        "registered; acquisition authorized after qualification",
+    }:
+        raise AcquisitionError("unexpected acquisition protocol status")
+    if len(queries) != 13 or [case.get("id") for case in queries] != protocol.get("research_ids", []) + protocol.get(
+        "navigation_ids", []
+    ):
+        raise AcquisitionError("query cohort does not match the frozen 13-case protocol")
+    for relative, expected in pins.get("sources", {}).items():
+        path = ROOT / relative
+        if not path.is_file() or _file_sha256(path) != expected:
+            raise AcquisitionError(f"pinned source mismatch: {relative}")
+    return {"protocol": protocol, "queries": queries, "pins": pins}
+
+
+def verify_live_registration(registration_path: Path) -> dict[str, Any]:
+    """Require the frozen source registration and committed combined qualification."""
+    if registration_path.resolve() != REGISTRATION_INTEGRITY_PATH.resolve():
+        raise AcquisitionError("live mode accepts only the frozen EXP-060 registration-integrity artifact")
+    frozen = verify_source_pins()
+    if registration_path.read_bytes() != _git_blob(REGISTRATION_BASELINE, registration_path):
+        raise AcquisitionError("frozen registration-integrity bytes differ from their pinned baseline blob")
+    registration = json.loads(registration_path.read_text(encoding="utf-8"))
+    if (
+        registration.get("schema") != "exp060-registration-integrity/1"
+        or registration.get("baseline_revision") != frozen["pins"].get("baseline_revision")
+        or registration.get("new_brave_attempts") != 0
+        or registration.get("new_jev_attempts") != 0
+        or registration.get("runner_qualified") is not False
+    ):
+        raise AcquisitionError("frozen registration-integrity metadata is inconsistent")
+    for relative, expected in registration.get("files", {}).items():
+        path = ROOT / relative
+        if not path.is_file() or _file_sha256(path) != expected:
+            raise AcquisitionError(f"registered source snapshot mismatch: {relative}")
+    if not QUALIFICATION_INTEGRITY_PATH.is_file():
+        raise AcquisitionError("combined EXP-060 qualification integrity is missing")
+    if QUALIFICATION_INTEGRITY_PATH.read_bytes() != _git_blob("HEAD", QUALIFICATION_INTEGRITY_PATH):
+        raise AcquisitionError("combined qualification integrity is not committed at HEAD")
+    combined = json.loads(QUALIFICATION_INTEGRITY_PATH.read_text(encoding="utf-8"))
+    if (
+        combined.get("schema") != "exp060-qualification-integrity/1"
+        or combined.get("qualified") is not True
+        or combined.get("registration_revision") != REGISTRATION_BASELINE
+    ):
+        raise AcquisitionError("combined qualification integrity is not qualified against the frozen registration")
+    combined_files = combined.get("files", {})
+    for relative, expected in combined_files.items():
+        path = ROOT / relative
+        if not path.is_file() or _file_sha256(path) != expected:
+            raise AcquisitionError(f"combined qualification artifact mismatch: {relative}")
+    required_qualified_files = {
+        "docs/experiments/evidence/EXP-060/acquire.py.txt",
+        "docs/experiments/evidence/EXP-060/acquisition-tests.py.txt",
+        "docs/experiments/evidence/EXP-060/acquisition-qualification.json",
+    }
+    if not required_qualified_files.issubset(combined_files):
+        raise AcquisitionError("combined qualification does not bind the acquisition runner and tests")
+    if not QUALIFICATION_PATH.is_file():
+        raise AcquisitionError("offline acquisition qualification is missing")
+    qualification = json.loads(QUALIFICATION_PATH.read_text(encoding="utf-8"))
+    if (
+        qualification.get("status") != "passed"
+        or qualification.get("protocol_sha256") != _file_sha256(PROTOCOL_PATH)
+        or qualification.get("queries_sha256") != _file_sha256(QUERIES_PATH)
+        or qualification.get("source_pins_sha256") != _file_sha256(SOURCE_PINS_PATH)
+    ):
+        raise AcquisitionError("offline acquisition qualification does not match this protocol")
+    if qualification.get("runner_sha256") != _file_sha256(EVIDENCE / "acquire.py.txt"):
+        raise AcquisitionError("qualified acquisition runner has changed")
+    if qualification.get("tests_sha256") != _file_sha256(EVIDENCE / "acquisition-tests.py.txt"):
+        raise AcquisitionError("qualified acquisition tests have changed")
+    dirty = subprocess.run(
+        ["git", "status", "--porcelain", "--", "docs/experiments/evidence/EXP-060", "slopsearx", "engines"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    if dirty.strip():
+        raise AcquisitionError("registration inputs or runtime source are modified after registration")
+    return {**frozen, "qualification": qualification, "registration": registration}
+
+
+def _secret_values() -> tuple[str, ...]:
+    values = {
+        value
+        for key, value in os.environ.items()
+        if SECRET_KEY.search(key) and value and len(value) >= 4
+    }
+    return tuple(sorted(values, key=len, reverse=True))
+
+
+def _redact_text(value: str, secrets: tuple[str, ...]) -> str:
+    value = BEARER.sub("Bearer [REDACTED]", value)
+    for secret in secrets:
+        value = value.replace(secret, "[REDACTED]")
+    return value
+
+
+def _sanitize(value: Any, secrets: tuple[str, ...]) -> Any:
+    if isinstance(value, str):
+        return _redact_text(value, secrets)
+    if isinstance(value, dict):
+        safe: dict[str, Any] = {}
+        for key, item in value.items():
+            name = str(key)
+            if SECRET_KEY.search(name):
+                safe[name] = "[REDACTED]"
+            elif name.casefold() in {"url", "source_url", "thumbnail_url", "img_src"} and isinstance(item, str):
+                safe[name] = _safe_url(item, secrets)
+            else:
+                safe[name] = _sanitize(item, secrets)
+        return safe
+    if isinstance(value, (list, tuple)):
+        return [_sanitize(item, secrets) for item in value]
+    if isinstance(value, set):
+        return sorted(_sanitize(item, secrets) for item in value)
+    if dataclasses.is_dataclass(value):
+        return _sanitize(dataclasses.asdict(value), secrets)
+    if value is None or type(value) in (bool, int, float):
+        if type(value) is float and not __import__("math").isfinite(value):
+            return None
+        return value
+    return _redact_text(str(value), secrets)
+
+
+def _safe_url(value: str, secrets: tuple[str, ...]) -> str:
+    from slopsearx.adapter import sanitize_url
+
+    return _redact_text(sanitize_url(value), secrets)
+
+
+def _serialize_result(result: Any, secrets: tuple[str, ...]) -> dict[str, Any]:
+    value = dataclasses.asdict(result)
+    value["url"] = _safe_url(result.url, secrets)
+    if result.thumbnail:
+        value["thumbnail"] = _safe_url(result.thumbnail, secrets)
+    if result.img_src:
+        value["img_src"] = _safe_url(result.img_src, secrets)
+    value["engines"] = sorted(result.engines)
+    return _sanitize(value, secrets)
+
+
+def _serialize_outcome(outcome: Any, secrets: tuple[str, ...]) -> dict[str, Any]:
+    # Error prose and raw upstream headers are deliberately excluded; status,
+    # count, measured latency and a digest retain auditable failure evidence.
+    message = getattr(outcome, "message", None)
+    return {
+        "engine": outcome.engine,
+        "status": outcome.status,
+        "result_count": outcome.result_count,
+        "latency_ms": outcome.latency_ms,
+        "message_sha256": _sha256(_redact_text(message, secrets).encode()) if message else None,
+    }
+
+
+def _query_engines(case: dict[str, Any], protocol: dict[str, Any]) -> list[str]:
+    if case.get("kind") == "navigation":
+        return list(protocol["navigation_engines"])
+    return list(protocol["research_engines"])
+
+
+def _validate_endpoints(engine: str, url: httpx.URL) -> None:
+    expected = PUBLIC_ENDPOINTS.get(engine)
+    if expected is None or url.scheme != "https" or url.host != expected[0]:
+        raise AcquisitionError(f"refusing non-public or unpinned endpoint for {engine}")
+    path = url.path
+    if engine == "arxiv":
+        valid_path = path == "/api/query"
+    elif engine == "github":
+        valid_path = path == "/search/repositories"
+    else:
+        valid_path = path == expected[1]
+    if not valid_path:
+        raise AcquisitionError(f"refusing unpinned endpoint path for {engine}")
+
+
+class AttemptJournal:
+    """Durable append-only journal for actual Brave HTTP dispatch attempts."""
+
+    def __init__(self, path: Path, cap: int = MAX_BRAVE_ATTEMPTS) -> None:
+        self.path = path
+        self.cap = cap
+        self.count = 0
+        self.blocked = 0
+        if path.exists():
+            raise AcquisitionError("Brave attempt ledger already exists")
+        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        os.close(fd)
+
+    def before_dispatch(self, request: httpx.Request, case_id: str) -> None:
+        if self.count >= self.cap:
+            self.blocked += 1
+            raise BraveBudgetExceeded("Brave HTTP attempt cap reached before dispatch")
+        _validate_endpoints("brave", request.url)
+        # Do not persist URL query text, headers, authorization, or payload.
+        digest = _sha256(f"{request.method}\n{request.url}".encode())
+        event = {
+            "attempt": self.count + 1,
+            "case_id": case_id,
+            "engine": "brave",
+            "method": request.method,
+            "host": request.url.host,
+            "path": request.url.path,
+            "request_target_sha256": digest,
+            "event": "durably_recorded_before_http_dispatch",
+        }
+        line = _json_bytes(event)
+        fd = os.open(self.path, os.O_APPEND | os.O_WRONLY)
+        try:
+            with os.fdopen(fd, "ab", closefd=False) as stream:
+                stream.write(line)
+                stream.flush()
+                os.fsync(fd)
+        finally:
+            os.close(fd)
+        self.count += 1
+
+
+class GuardedTransport(httpx.AsyncBaseTransport):
+    """Enforce fixed HTTPS endpoint allowlists before forwarding requests."""
+
+    def __init__(
+        self,
+        engine: str,
+        inner: httpx.AsyncBaseTransport,
+        *,
+        journal: AttemptJournal | None = None,
+        current_case: Callable[[], str] | None = None,
+    ) -> None:
+        self.engine = engine
+        self.inner = inner
+        self.journal = journal
+        self.current_case = current_case or (lambda: "offline-test")
+
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        _validate_endpoints(self.engine, request.url)
+        if self.engine == "brave":
+            if self.journal is None:
+                raise AcquisitionError("Brave dispatch has no durable attempt journal")
+            self.journal.before_dispatch(request, self.current_case())
+        return await self.inner.handle_async_request(request)
+
+    async def aclose(self) -> None:
+        # Adapter clients borrow transports; the runner owns/ closes the inner
+        # transport after SearchService has drained.
+        return None
+
+
+class RecordingIdentityReranker:
+    """No-network seam recorder that returns the exact stable input order."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def cache_identity(self) -> str:
+        return "exp060-no-network-identity-v1"
+
+    async def rerank(self, query: str, candidates: tuple[Any, ...]) -> Any:
+        del query
+        from slopsearx.rerank import RerankDecision
+
+        self.calls += 1
+        return RerankDecision(tuple(candidate.id for candidate in candidates))
+
+
+def _make_adapters(
+    *,
+    protocol: dict[str, Any],
+    brave_key: str,
+    journal: AttemptJournal | None,
+    get_case_id: Callable[[], str],
+    test_transports: dict[str, httpx.AsyncBaseTransport] | None = None,
+) -> tuple[dict[str, Any], list[httpx.AsyncBaseTransport]]:
+    import engines  # noqa: F401 - populate the native engine registry
+    from slopsearx.adapter import list_engines
+
+    engine_types = list_engines()
+    names = sorted(set(protocol["research_engines"]) | set(protocol["navigation_engines"]))
+    adapters: dict[str, Any] = {}
+    owned_transports: list[httpx.AsyncBaseTransport] = []
+    for name in names:
+        if name not in engine_types or name not in PUBLIC_ENDPOINTS:
+            raise AcquisitionError(f"required native engine is unavailable: {name}")
+        config: dict[str, Any] = {
+            "enabled": True,
+            "max_results": int(protocol["engine_max_results"]),
+            "timeout_ms": int(protocol["adapter_timeout_ms"]),
+        }
+        if name == "brave":
+            config.update(
+                {
+                    "api_key": brave_key,
+                    "base_url": "https://api.search.brave.com/res/v1/web/search",
+                    "_feature_brave_category_routing": False,
+                }
+            )
+        elif name == "github":
+            # Explicit empty credential prevents any accidental auth use.
+            config.update({"api_key": "", "base_url": "https://api.github.com"})
+        elif name == "openalex":
+            config["base_url"] = "https://api.openalex.org"
+        elif name == "semanticscholar":
+            config.update(
+                {
+                    "api_key": os.environ.get("ENGINE_SEMANTICSCHOLAR_API_KEY", ""),
+                    "base_url": "https://api.semanticscholar.org/graph/v1/paper/search",
+                }
+            )
+        elif name == "arxiv":
+            config["base_url"] = "https://export.arxiv.org/api/query"
+        adapter = engine_types[name](config)
+        if test_transports is not None:
+            inner = test_transports[name]
+        else:
+            inner = httpx.AsyncHTTPTransport(retries=0, trust_env=False)
+            owned_transports.append(inner)
+        adapter.set_http_transport(
+            GuardedTransport(
+                name,
+                inner,
+                journal=journal if name == "brave" else None,
+                current_case=get_case_id,
+            )
+        )
+        adapters[name] = adapter
+    return adapters, owned_transports
+
+
+def _public_adapter_response(engine: str, response: Any, secrets: tuple[str, ...]) -> dict[str, Any]:
+    status = response.status.value if hasattr(response.status, "value") else str(response.status)
+    return {
+        "engine": engine,
+        "status": status,
+        "results": [_serialize_result(result, secrets) for result in response.results],
+        "answers": _sanitize(response.answers, secrets),
+        "corrections": _sanitize(response.corrections, secrets),
+        "infoboxes": _sanitize(response.infoboxes, secrets),
+        "latency_ms": response.latency_ms,
+        "synthetic": bool(response.synthetic),
+    }
+
+
+async def acquire_case(
+    case: dict[str, Any],
+    protocol: dict[str, Any],
+    *,
+    adapters: dict[str, Any],
+    reranker: RecordingIdentityReranker,
+    set_case_id: Callable[[str], None],
+    service_timeout_ms: int | None = None,
+) -> dict[str, Any]:
+    """Execute exactly one frozen query through SearchService, with no cache."""
+    from slopsearx.service import AppContext, SearchRequest, SearchService, _rerank_text, _rerank_url
+
+    case_id = case["id"]
+    set_case_id(case_id)
+    native_responses: dict[str, Any] = {}
+    for name, adapter in adapters.items():
+        search = getattr(adapter, "_exp060_original_search", adapter.search)
+        adapter._exp060_original_search = search
+
+        async def capture(
+            query: str,
+            params: dict[str, Any] | None = None,
+            *,
+            _name: str = name,
+            _search: Any = search,
+        ) -> Any:
+            response = await _search(query, params)
+            native_responses[_name] = response
+            return response
+
+        adapter.search = capture
+
+    context = AppContext(
+        active_engines=adapters,
+        cache=None,
+        router=None,
+        suggestion_service=None,
+        tier1_engines=set(protocol["research_engines"]),
+        sensitive_engines=set(),
+        rerank_provider=reranker,
+        jev_router=None,
+    )
+    started = time.monotonic()
+    service = SearchService(context)
+    request = SearchRequest(
+        query=case["query"],
+        engines=_query_engines(case, protocol),
+        categories=["general"],
+        max_results=None,
+        freshness="prefer_fresh",
+        generate_suggestions=False,
+        include={"results", "engine_status"},
+    )
+    timeout_ms = int(service_timeout_ms or protocol["service_timeout_ms"])
+    error: dict[str, Any] | None = None
+    response: Any = None
+    try:
+        response = await asyncio.wait_for(service.search(request), timeout=timeout_ms / 1000)
+    except Exception as exc:  # preserve this case and the suffix without exception prose
+        error = {"type": type(exc).__name__}
+    elapsed_ms = (time.monotonic() - started) * 1000
+    secrets = _secret_values()
+    engine_outcomes = []
+    if response is not None:
+        engine_outcomes = [_serialize_outcome(item, secrets) for item in response.engine_outcomes]
+    grouped_results = list(response.results) if response is not None else []
+    cards: list[dict[str, Any]] = []
+    grouped_native: list[dict[str, Any]] = []
+    for index, result in enumerate(grouped_results):
+        candidate_id = f"c{index}"
+        cards.append(
+            {
+                "id": candidate_id,
+                "title": _redact_text(_rerank_text(result.title, 256), secrets),
+                "url": _safe_url(_rerank_url(result.url), secrets),
+                "snippet": _redact_text(_rerank_text(result.content, 1200), secrets),
+            }
+        )
+        grouped_native.append({"id": candidate_id, **_serialize_result(result, secrets)})
+    native = {
+        name: _public_adapter_response(name, result, secrets)
+        for name, result in sorted(native_responses.items())
+    }
+    return {
+        "id": case_id,
+        "kind": case["kind"],
+        "query": case["query"],
+        "purpose": case.get("purpose"),
+        "requested_facets": case.get("facets", []),
+        "target_url": case.get("target_url"),
+        "status": (
+            "failed"
+            if error
+            else "unresponsive"
+            if response.all_unresponsive
+            else "empty"
+            if not grouped_results
+            else "partial"
+            if response.partial
+            else "complete"
+        ),
+        "failure": error,
+        "cards": cards,
+        "grouped_native_results": grouped_native,
+        "native_results": native,
+        "engine_outcomes": engine_outcomes,
+        "service": {
+            "partial": bool(response.partial) if response else True,
+            "deadline_exceeded": bool(response.deadline_exceeded) if response else False,
+            "all_unresponsive": bool(response.all_unresponsive) if response else True,
+            "dispatched_engine_count": int(response.dispatched_engine_count) if response else len(native),
+            "ranking_explanation": response.ranking_explanation if response else None,
+        },
+        "acquisition_wall_ms": round(elapsed_ms, 3),
+        "capture_boundary": "native SearchService post-grouping result order with no-network identity reranker",
+        "rerank_recording_calls": reranker.calls,
+        "cache": False,
+        "suggestions": False,
+    }
+
+
+def _atomic_replace(path: Path, data: bytes, secrets: tuple[str, ...]) -> None:
+    if any(secret.encode() in data for secret in secrets):
+        raise AcquisitionError("refusing to persist output containing a configured secret")
+    temp = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    fd = os.open(temp, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    try:
+        with os.fdopen(fd, "wb", closefd=False) as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(fd)
+    finally:
+        os.close(fd)
+    if path.exists():
+        temp.unlink(missing_ok=True)
+        raise AcquisitionError(f"write-once artifact already exists: {path.name}")
+    os.link(temp, path)
+    temp.unlink()
+    directory_fd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
+
+
+def _checkpoint(path: Path, value: Any) -> None:
+    """Atomically replace only the runner-owned mutable checkpoint."""
+    data = _json_bytes(value)
+    if any(secret.encode() in data for secret in _secret_values()):
+        raise AcquisitionError("refusing to persist checkpoint containing a configured secret")
+    temp = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    fd = os.open(temp, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    try:
+        with os.fdopen(fd, "wb", closefd=False) as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(fd)
+    finally:
+        os.close(fd)
+    os.replace(temp, path)
+
+
+def _secure_output_dir(path: Path) -> Path:
+    absolute = path.expanduser().absolute()
+    resolved = absolute.resolve(strict=False)
+    if resolved == ROOT or ROOT in resolved.parents:
+        raise AcquisitionError("acquisition output must be outside the repository")
+    if absolute.exists() or absolute.is_symlink():
+        raise AcquisitionError("output directory must be new and must not be a symlink")
+    absolute.mkdir(mode=0o700, parents=True, exist_ok=False)
+    os.chmod(absolute, 0o700)
+    return absolute.resolve(strict=True)
+
+
+def _case_ids(queries: list[dict[str, Any]]) -> list[str]:
+    return [case["id"] for case in queries]
+
+
+def claim_acquisition_lease(
+    frozen: dict[str, Any], *, state_root: Path | None = None
+) -> dict[str, str]:
+    """Claim the one-shot lease for this frozen protocol/cohort, independent of output paths."""
+    protocol_sha = _file_sha256(PROTOCOL_PATH)
+    cohort_sha = _file_sha256(QUERIES_PATH)
+    if frozen["pins"].get("protocol_sha256") != protocol_sha or frozen["pins"].get("cohort_sha256") != cohort_sha:
+        raise AcquisitionError("cannot lease an acquisition with stale protocol or cohort pins")
+    lease_key = _sha256(f"{protocol_sha}\n{cohort_sha}".encode())
+    if state_root is None:
+        home = Path(pwd.getpwuid(os.getuid()).pw_dir)
+        state_root = home / ".local" / "state" / "slopsearx" / "exp060"
+    state_root = state_root.expanduser().absolute()
+    if state_root.resolve(strict=False) == ROOT or ROOT in state_root.resolve(strict=False).parents:
+        raise AcquisitionError("acquisition lease state must be outside the repository")
+    state_root.mkdir(mode=0o700, parents=True, exist_ok=True)
+    os.chmod(state_root, 0o700)
+    lease_path = state_root / f"lease-{lease_key}.json"
+    if lease_path.exists() or lease_path.is_symlink():
+        raise AcquisitionError("the frozen EXP-060 acquisition lease has already been claimed")
+    value = {
+        "schema": "exp060-one-shot-lease/1",
+        "lease_key": lease_key,
+        "protocol_sha256": protocol_sha,
+        "cohort_sha256": cohort_sha,
+        "claimed_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+    data = _json_bytes(value)
+    try:
+        fd = os.open(lease_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError as exc:
+        raise AcquisitionError("the frozen EXP-060 acquisition lease has already been claimed") from exc
+    try:
+        with os.fdopen(fd, "wb", closefd=False) as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(fd)
+    finally:
+        os.close(fd)
+    directory_fd = os.open(state_root, os.O_RDONLY)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
+    return {"key": lease_key, "status": "claimed"}
+
+
+async def run_acquisition(
+    output_dir: Path,
+    frozen: dict[str, Any],
+    *,
+    lease_root: Path | None = None,
+    test_transports: dict[str, httpx.AsyncBaseTransport] | None = None,
+) -> dict[str, Any]:
+    """Serially capture all fixed cases, checkpointing every returned case."""
+    protocol, queries = frozen["protocol"], frozen["queries"]
+    output_dir = _secure_output_dir(output_dir)
+    lease = claim_acquisition_lease(frozen, state_root=lease_root)
+    brave_key = os.environ.get("ENGINE_BRAVE_API_KEY", "")
+    if not brave_key:
+        # Acquisition may continue on public scholarly sources; Brave records
+        # an explicit native auth outcome without making an HTTP attempt.
+        brave_key = ""
+    ledger = AttemptJournal(output_dir / "brave-attempts.jsonl", protocol["hard_brave_attempt_cap"])
+    current_case = {"id": "not-started"}
+
+    def set_case_id(value: str) -> None:
+        current_case["id"] = value
+
+    adapters, transports = _make_adapters(
+        protocol=protocol,
+        brave_key=brave_key,
+        journal=ledger,
+        get_case_id=lambda: current_case["id"],
+        test_transports=test_transports,
+    )
+    reranker = RecordingIdentityReranker()
+    run: dict[str, Any] = {
+        "schema": "exp060-acquisition/1",
+        "status": "running",
+        "protocol_sha256": _file_sha256(PROTOCOL_PATH),
+        "queries_sha256": _file_sha256(QUERIES_PATH),
+        "source_pins_sha256": _file_sha256(SOURCE_PINS_PATH),
+        "acquisition_lease": lease,
+        "planned_case_ids": _case_ids(queries),
+        "completed_case_ids": [],
+        "failed_case_id": None,
+        "uninvoked_case_ids": _case_ids(queries),
+        "pools": {},
+        "brave_attempts": 0,
+        "brave_blocked_before_dispatch": 0,
+        "brave_attempt_cap": int(protocol["hard_brave_attempt_cap"]),
+        "jev_network_calls": 0,
+        "rerank_capture": "no-network identity recorder; not a quality score",
+    }
+    run_path = output_dir / "acquisition.json"
+    _checkpoint(run_path, run)
+    try:
+        for index, case in enumerate(queries):
+            set_case_id(case["id"])
+            run["current_case_id"] = case["id"]
+            run["uninvoked_case_ids"] = _case_ids(queries[index:])
+            _checkpoint(run_path, run)
+            result = await acquire_case(
+                case,
+                protocol,
+                adapters=adapters,
+                reranker=reranker,
+                set_case_id=set_case_id,
+            )
+            run["pools"][case["id"]] = result
+            run["completed_case_ids"].append(case["id"])
+            run["uninvoked_case_ids"] = _case_ids(queries[index + 1 :])
+            run["brave_attempts"] = ledger.count
+            run["brave_blocked_before_dispatch"] = ledger.blocked
+            if result["status"] in {"failed", "unresponsive", "empty"} or ledger.blocked:
+                run["status"] = "incomplete"
+                run["failed_case_id"] = case["id"]
+                _checkpoint(run_path, run)
+                break
+            _checkpoint(run_path, run)
+        else:
+            run["status"] = "complete"
+            run["uninvoked_case_ids"] = []
+            run["brave_attempts"] = ledger.count
+            run["brave_blocked_before_dispatch"] = ledger.blocked
+            _checkpoint(run_path, run)
+    except Exception as exc:
+        run["status"] = "incomplete"
+        run["failed_case_id"] = current_case["id"]
+        run["failure_type"] = type(exc).__name__
+        run["brave_attempts"] = ledger.count
+        run["brave_blocked_before_dispatch"] = ledger.blocked
+        completed = set(run["completed_case_ids"])
+        run["uninvoked_case_ids"] = [case_id for case_id in run["planned_case_ids"] if case_id not in completed]
+        _checkpoint(run_path, run)
+    finally:
+        await asyncio.gather(*(adapter.shutdown() for adapter in adapters.values()), return_exceptions=True)
+        await asyncio.gather(*(transport.aclose() for transport in transports), return_exceptions=True)
+    return run
+
+
+def _run_selftest() -> int:
+    test_path = EVIDENCE / "acquisition-tests.py.txt"
+    if not test_path.is_file():
+        raise AcquisitionError("offline acquisition tests are missing")
+    spec = importlib.util.spec_from_file_location("exp060_acquisition_tests", test_path)
+    if spec is None or spec.loader is None:
+        # .py.txt is not a recognized import suffix; compile in a private namespace.
+        namespace: dict[str, Any] = {"__file__": str(test_path), "__name__": "exp060_acquisition_tests"}
+        import types
+
+        runner_module = types.ModuleType("acquire")
+        runner_module.__dict__.update(globals())
+        sys.modules["acquire"] = runner_module
+        exec(compile(test_path.read_text(encoding="utf-8"), str(test_path), "exec"), namespace)
+        suite = namespace["build_suite"]()
+        import unittest
+
+        return 0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    suite = module.build_suite()
+    import unittest
+
+    return 0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--selftest", action="store_true", help="run only offline native-service fixtures")
+    parser.add_argument("--live", action="store_true", help="perform registered public acquisitions")
+    parser.add_argument("--output-dir", type=Path)
+    parser.add_argument("--registration", type=Path)
+    args = parser.parse_args(argv)
+    if args.selftest:
+        return _run_selftest()
+    if not args.live or args.output_dir is None or args.registration is None:
+        parser.error("live mode requires --live, --output-dir and --registration; there is no default live action")
+    try:
+        frozen = verify_live_registration(args.registration)
+        import logging
+
+        logging.disable(logging.CRITICAL)
+        asyncio.run(run_acquisition(args.output_dir, frozen))
+    except Exception as exc:
+        print(f"EXP-060 acquisition stopped safely ({type(exc).__name__})", file=sys.stderr)
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

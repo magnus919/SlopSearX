@@ -1,0 +1,120 @@
+"""Owned EXP060 CLI: committed inputs, pending receipts, no search capability."""
+from pathlib import Path
+import argparse
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+
+HERE=Path(__file__).resolve().parent
+
+def load(name,path):
+    import importlib.machinery,importlib.util
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+
+E=load("exp060_cli_eval",HERE / "evaluate.py.txt")
+T=E.P.load("exp060_cli_transport","docs/experiments/evidence/EXP-059/transport.py.txt")
+
+
+def json_value(value):
+    if type(value)is bytes:return value.hex()
+    if type(value)is dict:return {k:json_value(v) for k,v in value.items()}
+    if type(value)is list:return [json_value(v) for v in value]
+    return value
+
+def atomic(path,value):
+    raw=json.dumps(json_value(value),ensure_ascii=False,indent=2).encode()
+    handle,name=tempfile.mkstemp(prefix=".checkpoint-",dir=path.parent)
+    try:
+        with os.fdopen(handle,"wb") as stream:stream.write(raw);stream.flush();os.fsync(stream.fileno())
+        os.replace(name,path)
+    finally:
+        if os.path.exists(name):os.unlink(name)
+
+class PendingReceipts(list):
+    def __init__(self,directory,arm):super().__init__();self.directory=directory;self.arm=arm
+    def append(self,receipt):
+        super().append(receipt)
+        path=self.directory / (self.arm+"-"+str(len(self)-1)+".json")
+        with path.open("x") as stream:json.dump(json_value(receipt),stream);stream.flush();os.fsync(stream.fileno())
+    def update_last(self):atomic(self.directory / (self.arm+"-"+str(len(self)-1)+".json"),self[-1])
+
+class OwnedTransport:
+    def __init__(self,directory,kind,offline,allowed=None):
+        wrapper=HERE / "comparator-http.py.txt" if kind=="comparator" else HERE.parent / "EXP-059/http-wrapper.py.txt"
+        command=[sys.executable,str(wrapper)] + (["--offline-fixture","neutral"] if offline else [])
+        self.child=T.ChildTransport(command,http_timing=True)
+        self.child.receipts=PendingReceipts(directory,kind)
+        self.allowed=allowed
+    def __call__(self,body,timeout_s):
+        if self.allowed is not None and hashlib.sha256(body).hexdigest() not in self.allowed:raise ValueError("unregistered-case-request")
+        previous=len(self.child.receipts)
+        try:return self.child(body,timeout_s)
+        finally:
+            if len(self.child.receipts)>previous:self.child.receipts.update_last()
+
+
+def committed(relative,revision):
+    if not re.fullmatch("[0-9a-f]{40}",revision):raise ValueError("input-revision")
+    return subprocess.run(["git","show",revision+":"+relative],cwd=E.P.REPO,check=True,capture_output=True).stdout
+
+def live_gate(acquisition_raw,references_raw,revision):
+    E.P.verify_registration()
+    for name,raw in (("fresh-acquisition.json",acquisition_raw),("fresh-references.json",references_raw)):
+        if committed("docs/experiments/evidence/EXP-060/"+name,revision)!=raw:raise ValueError("unsealed-live-input")
+    qualification_relative="docs/experiments/evidence/EXP-060/qualification-integrity.json"
+    head=subprocess.run(["git","rev-parse","HEAD"],cwd=E.P.REPO,check=True,capture_output=True,text=True).stdout.strip()
+    raw=committed(qualification_relative,head)
+    if (HERE / "qualification-integrity.json").read_bytes()!=raw:raise ValueError("uncommitted-qualification")
+    qualification=json.loads(raw)
+    if qualification.get("schema")!="exp060-qualification-integrity/1" or qualification.get("qualified")is not True or qualification.get("registration_revision")!="8e7634bf4d2140c74262719fd0e8c0945810cb27":raise ValueError("runner-not-qualified")
+    files=qualification.get("files",{})
+    required={"docs/experiments/evidence/EXP-060/"+name for name in ("prepare.py.txt","prepare-tests.py.txt","comparator-http.py.txt","comparator-http-tests.py.txt","evaluate.py.txt","evaluate-tests.py.txt","normal-runner.py.txt","normal-runner-tests.py.txt","analyze.py.txt","analysis-tests.py.txt","acquire.py.txt","acquisition-tests.py.txt")}
+    if not isinstance(files,dict) or not required.issubset(files):raise ValueError("incomplete-qualification")
+    for relative,digest in files.items():
+        path=E.P.REPO / relative
+        if Path(relative).is_absolute() or ".." in Path(relative).parts or not isinstance(digest,str) or not re.fullmatch("[0-9a-f]{64}",digest):raise ValueError("invalid-qualification-path")
+        if path.is_symlink() or not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest()!=digest:raise ValueError("qualified-source-changed")
+    if not os.environ.get("TYPESAFE_API_KEY"):raise ValueError("missing-credential")
+    # One-shot lease persists independently of the chosen output directory.
+    identity=hashlib.sha256(acquisition_raw+references_raw).hexdigest()
+    lease=Path(tempfile.gettempdir()) / ("exp060-model-attempt-"+identity+".json")
+    with lease.open("x") as stream:json.dump({"input_revision":revision,"identity":identity},stream);stream.flush();os.fsync(stream.fileno())
+    return {"input_revision":revision,"acquisition_sha256":hashlib.sha256(acquisition_raw).hexdigest(),"references_sha256":hashlib.sha256(references_raw).hexdigest(),"qualification_sha256":hashlib.sha256(raw).hexdigest()}
+
+
+def run(acquisition,references,outdir,offline=True,input_integrity=None):
+    # Refuse replay through another invocation on the same output directory.
+    outdir.mkdir(parents=True,exist_ok=False)
+    receipts=outdir / "receipts";receipts.mkdir()
+    prepared=E.P.operations({qid:row["cards"] for qid,row in acquisition["pools"].items()})
+    allowed={hashlib.sha256(E.P.wire(row["requests"][arm])).hexdigest() for row in prepared for arm in ("w0","d","f") if row["requests"][arm]is not None}
+    comparator=OwnedTransport(receipts,"comparator",offline,allowed)
+    candidate=OwnedTransport(receipts,"e",offline)
+    result=E.evaluate(acquisition,references,comparator,candidate,lambda value:atomic(outdir / "run.json",value))
+    result.update(synthetic=offline,reference_integrity=input_integrity or {"acquisition_sha256":hashlib.sha256(E.P.wire(acquisition)).hexdigest(),"references_sha256":hashlib.sha256(E.P.wire(references)).hexdigest()})
+    atomic(outdir / "run.json",result)
+    return result
+
+
+def main():
+    parser=argparse.ArgumentParser();parser.add_argument("--mode",choices=["offline","live"],default="offline")
+    parser.add_argument("--acquisition",type=Path,required=True);parser.add_argument("--references",type=Path,required=True)
+    parser.add_argument("--outdir",type=Path,required=True);parser.add_argument("--input-revision")
+    args=parser.parse_args()
+    acquisition_raw=args.acquisition.read_bytes();references_raw=args.references.read_bytes()
+    acquisition=E.PARSER.strict(acquisition_raw);references=E.PARSER.strict(references_raw)
+    integrity=live_gate(acquisition_raw,references_raw,args.input_revision or "") if args.mode=="live" else None
+    result=run(acquisition,references,args.outdir,args.mode=="offline",integrity)
+    print(json.dumps({"status":result["status"],"operations":len(result["operations"]),"attempts":result["budget"]["attempts"],"synthetic":result["synthetic"]}))
+    return 0 if result["status"]=="complete" else 2
+
+if __name__=="__main__":
+    try:sys.exit(main())
+    except Exception as error:
+        print("exp060-setup-"+type(error).__name__,file=sys.stderr)
+        sys.exit(2)

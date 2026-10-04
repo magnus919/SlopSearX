@@ -1,0 +1,87 @@
+"""Inert prospective request generation. No network or credential handling."""
+from pathlib import Path
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import subprocess
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+REGISTRATION_REVISION = "8e7634bf4d2140c74262719fd0e8c0945810cb27"
+
+def wire(value):
+    return json.dumps(value, ensure_ascii=False).encode("utf-8")
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+def verify_registration():
+    relative_manifest = "docs/experiments/evidence/EXP-060/registration-integrity.json"
+    committed = subprocess.run(["git", "show", REGISTRATION_REVISION + ":" + relative_manifest], cwd=REPO, check=True, capture_output=True).stdout
+    if (HERE / "registration-integrity.json").read_bytes() != committed:
+        raise ValueError("registration manifest differs from committed registration")
+    manifest = json.loads(committed)
+    for relative, expected in manifest["files"].items():
+        if (REPO / relative).is_symlink() or not (REPO / relative).is_file() or digest((REPO / relative).read_bytes()) != expected:
+            raise ValueError("registration changed: " + relative)
+    pins = json.loads((HERE / "source-pins.json").read_bytes())
+    for relative, expected in pins["sources"].items():
+        if (REPO / relative).is_symlink() or not (REPO / relative).is_file() or digest((REPO / relative).read_bytes()) != expected:
+            raise ValueError("source changed: " + relative)
+    return manifest, pins
+
+def load(name, relative):
+    path = REPO / relative
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+def bodies(case, cards):
+    """Generate the exact pinned comparator requests on one complete input pool."""
+    verify_registration()
+    from slopsearx.rerank import MODEL, INSTRUCTIONS, LEVELS
+    legacy = load("exp060_frozen_df", "docs/experiments/evidence/EXP-043/replay.py.txt")
+    policy = load("exp060_frozen_e", "docs/experiments/evidence/EXP-059/policy.py.txt")
+    ids = [card["id"] for card in cards]
+    # Reuse qualified complete-card field admission, without choosing any subset.
+    projected, _, _, _, _ = policy._project(cards, case["purpose"], case["facets"], {cid: 6 for cid in ids})
+    contract = json.loads((REPO / "docs/experiments/evidence/EXP-040/source-selection-contract.json").read_bytes())
+    prefix = projected[:40]
+    mapping = {"c" + str(i): card["id"] for i, card in enumerate(prefix)}
+    w0_cards = [{**card, "id": "c" + str(i)} for i, card in enumerate(prefix)]
+    w0 = None if len(prefix) < 2 else {
+        "model": MODEL,
+        "state": {"query": case["query"], "candidates": w0_cards},
+        "questions": {card["id"]: {"type": "score", "instructions": INSTRUCTIONS.format(id=card["id"]), "criteria": LEVELS} for card in w0_cards},
+    }
+    d = legacy.candidate_body("D", case["purpose"], projected, [], contract)
+    f = legacy.candidate_body("F", case["purpose"], projected, case["facets"], {}) if case["facets"] else None
+    result = {"w0": w0, "d": d, "f": f, "w0_local_to_pool": mapping, "whole_ids": ids, "tail_ids": ids[40:]}
+    for name, cap in (("w0", 128000), ("d", 384000), ("f", 384000)):
+        body = result[name]
+        if body is not None and (len(wire(body)) > cap or (name != "w0" and len(wire(body["state"])) > 128000)):
+            raise ValueError("request admission: " + name)
+    return result
+
+def operations(pool_cards):
+    """Do not reacquire; identity-preserving rotations consume the same pool."""
+    verify_registration()
+    cases = {case["id"]: case for case in json.loads((HERE / "queries.json").read_bytes())}
+    protocol = json.loads((HERE / "protocol.json").read_bytes())
+    if set(pool_cards) != set(cases):
+        raise ValueError("complete acquisition inventory required")
+    output = []
+    for operation in protocol["ordered_case_plan"]:
+        case_id, mode = operation["id"].split("-", 1)
+        cards = list(pool_cards[case_id])
+        if mode == "rotate20":
+            offset = 20 % len(cards) if cards else 0
+            cards = cards[offset:] + cards[:offset]
+        elif mode not in {"base", "repeat"}:
+            raise ValueError("unregistered operation")
+        prepared = bodies(cases[case_id], cards)
+        output.append({"id": operation["id"], "case": case_id, "mode": mode, "requests": prepared})
+    return output

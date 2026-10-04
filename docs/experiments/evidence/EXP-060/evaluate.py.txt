@@ -1,0 +1,187 @@
+"""Inert serial fresh evaluation coordinator. Transport injected; no search calls."""
+from pathlib import Path
+import asyncio
+import copy
+import json
+import math
+import time
+import signal
+from contextlib import contextmanager
+from unittest.mock import patch
+import httpx
+
+HERE = Path(__file__).resolve().parent
+
+def load(name, file):
+    import importlib.machinery, importlib.util
+    loader=importlib.machinery.SourceFileLoader(name,str(file));spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+
+P=load("exp060_eval_prepare",HERE / "prepare.py.txt")
+POLICY=P.load("exp060_eval_policy","docs/experiments/evidence/EXP-059/policy.py.txt")
+COORD=P.load("exp060_eval_coordinator","docs/experiments/evidence/EXP-059/orchestrator.py.txt")
+PARSER=P.load("exp060_eval_parser","docs/experiments/evidence/EXP-059/replay.py.txt")
+DF=P.load("exp060_eval_df","docs/experiments/evidence/EXP-043/replay.py.txt")
+
+@contextmanager
+def operation_deadline():
+    """Own all W0/D/F/E calls and validation in one60-second operation."""
+    previous_handler=signal.getsignal(signal.SIGALRM)
+    previous_timer=signal.getitimer(signal.ITIMER_REAL)
+    started=time.monotonic()
+    def expired(signum,frame):raise TimeoutError("owned-operation-deadline")
+    signal.signal(signal.SIGALRM,expired)
+    signal.setitimer(signal.ITIMER_REAL,min(60,previous_timer[0]) if previous_timer[0] else 60)
+    try:yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL,0)
+        signal.signal(signal.SIGALRM,previous_handler)
+        if previous_timer[0]:signal.setitimer(signal.ITIMER_REAL,max(.000001,previous_timer[0]-(time.monotonic()-started)),previous_timer[1])
+
+class Limits:
+    def __init__(self, clock=time.monotonic):
+        self.clock=clock;self.started=clock();self.unknown=False;self.attempts=0
+        self.parts={"comparator":{"input_tokens":0,"output_tokens":0,"attempts":0},"e":{"input_tokens":0,"output_tokens":0,"attempts":0}}
+    def before(self,part):
+        values=self.parts[part];output_limit=100000 if part=="e" else 160000
+        if self.unknown or self.clock()-self.started>=14400 or self.attempts>=122 or values["input_tokens"]+64000>3000000 or values["output_tokens"]>=output_limit:
+            raise ValueError("study-budget")
+        if part=="e" and values["attempts"]>=85:raise ValueError("candidate-attempt-budget")
+        if sum(v["input_tokens"] for v in self.parts.values())+64000>6000000 or sum(v["output_tokens"] for v in self.parts.values())>=260000:raise ValueError("aggregate-budget")
+        self.attempts+=1;values["attempts"]+=1
+    def observe(self,part,usage):
+        if type(usage)is not dict or set(usage)!={"input_tokens","output_tokens"} or any(type(x)is not int or x<0 for x in usage.values()):
+            self.unknown=True;raise ValueError("usage-contract")
+        values=self.parts[part]
+        for key in usage:values[key]+=usage[key]
+        if usage["input_tokens"]>64000 or values["input_tokens"]>3000000 or values["output_tokens"]>(100000 if part=="e" else 160000) or sum(v["input_tokens"] for v in self.parts.values())>6000000 or sum(v["output_tokens"] for v in self.parts.values())>260000 or self.clock()-self.started>14400:raise ValueError("observed-study-budget")
+
+class EBudget:
+    def __init__(self,limits):self.limits=limits
+    @property
+    def unknown(self):return self.limits.unknown
+    @unknown.setter
+    def unknown(self,value):self.limits.unknown=value
+    def before_call(self):self.limits.before("e")
+    def observe(self,usage):self.limits.observe("e",usage)
+
+def usage(raw):
+    data=PARSER.strict(raw)
+    value=data.get("usage") if type(data)is dict else None
+    if type(value)is not dict or set(value)!={"input_tokens","output_tokens"} or any(type(x)is not int or x<0 for x in value.values()):raise ValueError("unknown-usage")
+    return value
+
+def w0_order(request,raw,mapping,tail):
+    """Validate recorded response through actual ordinary provider, offline."""
+    from slopsearx.rerank import JevReranker,RerankCandidate
+    original=httpx.AsyncClient
+    def handler(http_request):
+        if http_request.content!=P.wire(request):raise ValueError("ordinary-body-parity")
+        return httpx.Response(200,content=raw)
+    def factory(**kwargs):return original(**kwargs,transport=httpx.MockTransport(handler))
+    async def check():
+        candidates=tuple(RerankCandidate(**row) for row in request["state"]["candidates"])
+        with patch("slopsearx.rerank.httpx.AsyncClient",side_effect=factory):
+            return await JevReranker("offline-validation").rerank(request["state"]["query"],candidates)
+    decision=asyncio.run(check())
+    if decision is None:return list(mapping.values())+tail,"fallback"
+    return [mapping[cid] for cid in decision.ordered_ids]+tail,"applied"
+
+def comparator(arm,request,prepared,transport,limits,attempts):
+    limits.before("comparator")
+    owned_started=time.monotonic()
+    attempt={"arm":arm,"status":"invoked","usage":None,"request_sha256":P.digest(P.wire(request))};attempts.append(attempt)
+    try:
+        raw,elapsed=transport(P.wire(request),timeout_s=60)
+        attempt.update(response_hex=raw.hex(),remote_http_ms=elapsed)
+        known=usage(raw);attempt["usage"]=known;limits.observe("comparator",known)
+        if type(elapsed)not in (int,float) or not math.isfinite(elapsed) or not 0<=elapsed<=1000:raise ValueError("comparator-deadline")
+        if arm=="w0":
+            order,status=w0_order(request,raw,prepared["w0_local_to_pool"],prepared["tail_ids"])
+            attempt.update(status="valid",ranking_status=status);return order,None
+        data=PARSER.strict(raw)
+        if type(data)is not dict or set(data)-{"model","answers","usage","_elapsed_ms"}:raise ValueError("comparator-response-envelope")
+        data["_elapsed_ms"]=elapsed
+        ids=prepared["whole_ids"]
+        spec={"kind":arm.upper(),"candidate_ids":ids,"score_ids":ids if arm=="d" else [],"question_ids":list(request["questions"]),"facets":request["state"].get("requested_facets",[])}
+        scores,nouls,errors=DF.validate_answer(data,spec)
+        if errors:raise ValueError("invalid-comparator-answer")
+        attempt["status"]="valid"
+        return (POLICY.stable_order(scores,ids),scores) if arm=="d" else (None,nouls)
+    except BaseException:
+        attempt["status"]="failed"
+        if attempt["usage"]is None:limits.unknown=True
+        raise
+    finally:
+        attempt["owned_call_wall_ms"]=(time.monotonic()-owned_started)*1000
+
+def evaluate(acquisition,references,comparator_transport,e_transport,checkpoint=lambda value:None):
+    """Both transports must retain pending receipts before their HTTP dispatch."""
+    P.verify_registration()
+    cards={qid:pool["cards"] for qid,pool in acquisition["pools"].items()}
+    # Complete labels are required before the first comparator/candidate request.
+    if set(references)!={"A","B"}:raise ValueError("reference-inventory")
+    for ref in references.values():
+        if set(ref)!=set(cards):raise ValueError("reference-pool-inventory")
+        for qid,rows in ref.items():
+            if set(rows)!={c["id"] for c in cards[qid]}:raise ValueError("reference-card-inventory")
+            allowed={f["id"] for f in next(q for q in json.loads((HERE / "queries.json").read_bytes()) if q["id"]==qid)["facets"]}
+            for annotation in rows.values():
+                if type(annotation)is not dict or set(annotation)!={"lead","visible","facets","uncertain","rationale"}:raise ValueError("reference-shape")
+                if any(type(annotation[key])is not int or not 0<=annotation[key]<=3 for key in ("lead","visible")):raise ValueError("reference-grades")
+                if type(annotation["facets"])is not list or any(type(f)is not str or f not in allowed for f in annotation["facets"]) or len(set(annotation["facets"]))!=len(annotation["facets"]):raise ValueError("reference-facets")
+                if type(annotation["uncertain"])is not bool or type(annotation["rationale"])is not str or not annotation["rationale"].strip():raise ValueError("reference-rationale")
+    prepared_ops=P.operations(cards)
+    cases={q["id"]:q for q in json.loads((HERE / "queries.json").read_bytes())}
+    result={"schema":"exp060-run-artifacts/1","reference_source":"fresh_exp060","historical_labels_reused":False,"pools":copy.deepcopy(acquisition["pools"]),"references":copy.deepcopy(references),"operations":[],"status":"running"}
+    limits=Limits();budget=EBudget(limits)
+    for index,item in enumerate(prepared_ops):
+        prepared=item["requests"];case=cases[item["case"]];ids=prepared["whole_ids"]
+        row={"id":item["id"],"case":item["case"],"mode":item["mode"],"cards":prepared["d"]["state"]["candidates"],"orders":{"w0":list(ids),"d":list(ids),"e":list(ids)},"attempts":[],"status":"invoked"}
+        result["operations"].append(row);checkpoint(result)
+        operation_started=time.monotonic();candidate_started=None
+        try:
+            with operation_deadline():
+                if case["facets"] and limits.parts["e"]["input_tokens"]+4*64000>3000000:raise ValueError("four-call-operation-reservation")
+                if prepared["w0"]is not None:row["orders"]["w0"],_=comparator("w0",prepared["w0"],prepared,comparator_transport,limits,row["attempts"])
+                candidate_started=time.monotonic()
+                row["orders"]["d"],scores=comparator("d",prepared["d"],prepared,comparator_transport,limits,row["attempts"])
+                if case["facets"]:
+                    _,nouls=comparator("f",prepared["f"],prepared,comparator_transport,limits,row["attempts"])
+                    fresh_df=sum(a["remote_http_ms"] for a in row["attempts"] if a["arm"]in {"d","f"})
+                    output=COORD.guarded_operation(POLICY,PARSER.parse_noul_response,row["cards"],case["purpose"],case["facets"],scores,nouls,row["orders"]["w0"],fresh_df,e_transport,budget=budget)
+                    row.update(status=output["status"],remote_d_f_e_ms=output["remote_total_ms"],terminal_reason=output.get("termination_reason"),remaining_remote_ms=output.get("remaining_remote_ms"),actions=output["actions"])
+                    row["orders"]["e"]=output["order"]
+                    for a in output["attempts"]:row["attempts"].append({**a,"arm":"e","remote_http_ms":a.get("remote_ms")})
+                    if output["status"]!="valid":
+                        # Preserve known failed-call usage even when frozen answer validation fails first.
+                        failed=output["attempts"][-1] if output["attempts"] else None
+                        if failed and failed.get("usage")is None and failed.get("response_hex"):
+                            try:
+                                known=usage(bytes.fromhex(failed["response_hex"]))
+                            except ValueError:pass
+                            else:
+                                limits.unknown=False
+                                limits.observe("e",known)
+                                row["attempts"][-1]["known_failed_usage"]=known
+                        raise ValueError("candidate-failure")
+                else:
+                    row.update(status="valid",terminal_reason="navigation_bypass",remote_d_f_e_ms=sum(a["remote_http_ms"] for a in row["attempts"] if a["arm"]=="d"))
+                    row["orders"]["e"]=list(row["orders"]["w0"])
+                if item["mode"]=="base":result["pools"][item["case"]]["orders"]=copy.deepcopy(row["orders"])
+        except BaseException as error:
+            row.update(status="failed",failure_type=type(error).__name__);row["orders"]["e"]=list(row["orders"]["w0"])
+            result["status"]="failed"
+            for remaining in prepared_ops[index+1:]:result["operations"].append({"id":remaining["id"],"case":remaining["case"],"mode":remaining["mode"],"status":"not-invoked"})
+            break
+        finally:
+            row["operation_wall_ms"]=(time.monotonic()-operation_started)*1000
+            row["candidate_phase_wall_ms"]=(time.monotonic()-candidate_started)*1000 if candidate_started is not None else 0
+            row["w0_phase_wall_ms"]=sum(a.get("owned_call_wall_ms",0) for a in row["attempts"] if a["arm"]=="w0")
+            acquisition_ms=result["pools"][item["case"]].get("acquisition_wall_ms")
+            if type(acquisition_ms)in (int,float) and math.isfinite(acquisition_ms) and acquisition_ms>=0:
+                row["assembled_path_estimates_ms"]={"ordinary":acquisition_ms+row["w0_phase_wall_ms"],"candidate":acquisition_ms+row["w0_phase_wall_ms"]+row["candidate_phase_wall_ms"]}
+            result["budget"]={"parts":copy.deepcopy(limits.parts),"attempts":limits.attempts,"unknown_usage":limits.unknown}
+            checkpoint(result)
+    if result["status"]=="running":result["status"]="complete"
+    checkpoint(result);return result

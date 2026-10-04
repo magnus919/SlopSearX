@@ -1,0 +1,413 @@
+"""Offline tests for the inert EXP-060 acquisition runner (no network)."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import os
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+import httpx
+
+acquire = sys.modules["acquire"]  # registered by the runner's --selftest path
+
+
+def _arxiv_xml(count: int = 20) -> str:
+    entries = []
+    for i in range(count):
+        entries.append(
+            "<entry><id>https://arxiv.org/abs/2501.%05d</id>"
+            "<title>Arxiv result %d</title><summary>Complete arXiv abstract %d.</summary>"
+            "<published>2025-01-01T00:00:00Z</published></entry>" % (i, i, i)
+        )
+    return (
+        "<?xml version='1.0'?><feed xmlns='http://www.w3.org/2005/Atom'>"
+        + "".join(entries)
+        + "</feed>"
+    )
+
+
+def _mock_transport(
+    *,
+    fail_engine: str | None = None,
+    github_secret: str | None = None,
+    semanticscholar_key: str | None = None,
+    shared_doi: bool = True,
+    counts: dict[str, int] | None = None,
+) -> httpx.MockTransport:
+    counts = counts if counts is not None else {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        host = request.url.host
+        if host == "api.github.com":
+            counts["github"] = counts.get("github", 0) + 1
+            if "authorization" in request.headers:
+                raise AssertionError("GitHub auth header must never be forwarded")
+            return httpx.Response(
+                200,
+                json={
+                    "items": [
+                        {
+                            "full_name": "Aider-AI/aider",
+                            "html_url": "https://github.com/Aider-AI/aider",
+                            "description": "public repository",
+                            "stargazers_count": 7,
+                            "language": "Python",
+                        }
+                    ]
+                },
+            )
+        engine = {
+            "api.search.brave.com": "brave",
+            "api.openalex.org": "openalex",
+            "api.semanticscholar.org": "semanticscholar",
+            "export.arxiv.org": "arxiv",
+        }.get(host)
+        if engine is None:
+            raise AssertionError(f"unexpected offline request host: {host}")
+        counts[engine] = counts.get(engine, 0) + 1
+        if engine == "brave":
+            if not request.headers.get("X-Subscription-Token"):
+                raise AssertionError("Brave test request should use the in-memory test credential")
+        if engine == "semanticscholar" and semanticscholar_key:
+            if request.headers.get("x-api-key") != semanticscholar_key:
+                raise AssertionError("optional Semantic Scholar process credential was not forwarded")
+        if engine == fail_engine:
+            return httpx.Response(503, text="synthetic offline upstream failure")
+        if engine == "brave":
+            rows = []
+            for i in range(20):
+                url = f"https://brave.example/item/{i}"
+                if shared_doi and i == 0:
+                    url = "https://doi.org/10.1000/shared"
+                rows.append(
+                    {
+                        "url": url,
+                        "title": ("T" * 300) if i == 1 else f"Brave result {i}",
+                        "description": ("s" * 1300) if i == 1 else f"Brave snippet {i}",
+                    }
+                )
+            return httpx.Response(200, json={"web": {"results": rows}})
+        if engine == "openalex":
+            works = []
+            for i in range(20):
+                doi = "10.1000/shared" if shared_doi and i == 0 else f"10.2000/oa{i}"
+                works.append(
+                    {
+                        "id": f"https://openalex.org/W{i}",
+                        "doi": f"https://doi.org/{doi}",
+                        "title": f"OpenAlex result {i}",
+                        "publication_date": "2025-01-01",
+                        "relevance_score": 1.0,
+                        "abstract_inverted_index": {"abstract": [0], "source": [1], str(i): [2]},
+                    }
+                )
+            return httpx.Response(200, json={"results": works})
+        if engine == "semanticscholar":
+            papers = [
+                {
+                    "paperId": f"s2-{i}",
+                    "title": f"Semantic Scholar result {i}",
+                    "url": f"https://semanticscholar.org/paper/s2-{i}",
+                    "abstract": f"Semantic Scholar abstract {i}",
+                    "citationCount": i,
+                    "externalIds": {},
+                }
+                for i in range(20)
+            ]
+            return httpx.Response(200, json={"data": papers})
+        if engine == "arxiv":
+            return httpx.Response(200, text=_arxiv_xml())
+        raise AssertionError(engine)
+
+    return httpx.MockTransport(handler)
+
+
+class AcquisitionTests(unittest.TestCase):
+    def test_pins_and_frozen_thirteen_case_plan(self) -> None:
+        frozen = acquire.verify_source_pins()
+        self.assertEqual(len(frozen["queries"]), 13)
+        self.assertEqual(frozen["protocol"]["planned_brave_attempts"], 8)
+        self.assertEqual(frozen["protocol"]["hard_brave_attempt_cap"], 10)
+
+    def test_native_searchservice_captures_full_pool_grouping_and_bounded_projection(self) -> None:
+        frozen = acquire.verify_source_pins()
+        protocol = frozen["protocol"]
+        counts: dict[str, int] = {}
+        transport = _mock_transport(counts=counts)
+        shared = {name: transport for name in ("brave", "openalex", "semanticscholar", "arxiv", "github")}
+        journal = _NullJournal()
+        adapters, owned = acquire._make_adapters(
+            protocol=protocol,
+            brave_key="test-brave-secret",
+            journal=journal,
+            get_case_id=lambda: "q1",
+            test_transports=shared,
+        )
+        calls = acquire.RecordingIdentityReranker()
+        case = frozen["queries"][0]
+        try:
+            result = asyncio.run(
+                acquire.acquire_case(
+                    case,
+                    protocol,
+                    adapters=adapters,
+                    reranker=calls,
+                    set_case_id=lambda value: None,
+                )
+            )
+        finally:
+            async def shutdown_all() -> None:
+                await asyncio.gather(*(adapter.shutdown() for adapter in adapters.values()))
+
+            asyncio.run(shutdown_all())
+        self.assertEqual(result["status"], "complete")
+        self.assertEqual(len(result["native_results"]["brave"]["results"]), 20)
+        self.assertEqual(len(result["native_results"]["openalex"]["results"]), 20)
+        self.assertEqual(len(result["cards"]), 79)  # shared DOI is canonically grouped
+        self.assertEqual(len(result["grouped_native_results"]), 79)
+        self.assertTrue(any(item.get("work_group") for item in result["grouped_native_results"]))
+        self.assertEqual(result["cards"][0]["id"], "c0")
+        self.assertLessEqual(len(result["cards"][1]["title"].encode()), 256)
+        self.assertLessEqual(len(result["cards"][1]["snippet"].encode()), 1200)
+        self.assertEqual(len(result["cards"][1]["title"]), 256)
+        self.assertEqual(len(result["cards"][1]["snippet"]), 1200)
+        self.assertEqual(calls.calls, 1)
+        self.assertEqual(result["cache"], False)
+        self.assertEqual(result["suggestions"], False)
+        self.assertEqual({row["status"] for row in result["engine_outcomes"]}, {"ok"})
+        self.assertEqual(
+            {name: counts.get(name, 0) for name in protocol["research_engines"]},
+            {name: 1 for name in protocol["research_engines"]},
+        )  # explicit science-engine list dispatches despite category=general
+        self.assertEqual(owned, [])
+
+    def test_one_shot_lease_is_shared_across_different_output_directories(self) -> None:
+        frozen = acquire.verify_source_pins()
+        first_counts: dict[str, int] = {}
+        transport = _mock_transport(counts=first_counts)
+        shared = {name: transport for name in ("brave", "openalex", "semanticscholar", "arxiv", "github")}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            lease_root = root / "state"
+            first_output = root / "output-a"
+            second_output = root / "output-b"
+            previous_key = os.environ.get("ENGINE_BRAVE_API_KEY")
+            os.environ["ENGINE_BRAVE_API_KEY"] = "offline-brave-canary"
+            try:
+                first = asyncio.run(
+                    acquire.run_acquisition(
+                        first_output,
+                        frozen,
+                        lease_root=lease_root,
+                        test_transports=shared,
+                    )
+                )
+            finally:
+                if previous_key is None:
+                    os.environ.pop("ENGINE_BRAVE_API_KEY", None)
+                else:
+                    os.environ["ENGINE_BRAVE_API_KEY"] = previous_key
+            self.assertEqual(first["status"], "complete")
+            self.assertEqual(first["brave_attempts"], 8)
+            lease_path = lease_root / f"lease-{first['acquisition_lease']['key']}.json"
+            self.assertNotIn(str(first_output), lease_path.read_text())
+            counts = {"sent": 0}
+            second_transport = _mock_transport(counts=counts)
+            engine_names = ("brave", "openalex", "semanticscholar", "arxiv", "github")
+            second_shared = {name: second_transport for name in engine_names}
+            with self.assertRaisesRegex(acquire.AcquisitionError, "already been claimed"):
+                asyncio.run(
+                    acquire.run_acquisition(
+                        second_output,
+                        frozen,
+                        lease_root=lease_root,
+                        test_transports=second_shared,
+                    )
+                )
+            self.assertEqual(counts, {"sent": 0})
+            self.assertTrue(second_output.is_dir())
+            self.assertEqual(list(second_output.iterdir()), [])
+            self.assertEqual(sum(first_counts.values()), 37)
+
+    def test_full_eighty_result_pool_is_not_truncated(self) -> None:
+        frozen = acquire.verify_source_pins()
+        transport = _mock_transport(shared_doi=False)
+        shared = {name: transport for name in ("brave", "openalex", "semanticscholar", "arxiv", "github")}
+        adapters, owned = acquire._make_adapters(
+            protocol=frozen["protocol"],
+            brave_key="test-brave-secret",
+            journal=_NullJournal(),
+            get_case_id=lambda: "q1",
+            test_transports=shared,
+        )
+        try:
+            result = asyncio.run(
+                acquire.acquire_case(
+                    frozen["queries"][0],
+                    frozen["protocol"],
+                    adapters=adapters,
+                    reranker=acquire.RecordingIdentityReranker(),
+                    set_case_id=lambda value: None,
+                )
+            )
+        finally:
+            for adapter in adapters.values():
+                asyncio.run(adapter.shutdown())
+        self.assertEqual(result["status"], "complete")
+        self.assertEqual(len(result["cards"]), 80)
+        self.assertEqual(result["cards"][-1]["id"], "c79")
+        self.assertEqual(owned, [])
+
+    def test_partial_engine_failure_is_retained_with_successful_pool(self) -> None:
+        frozen = acquire.verify_source_pins()
+        transport = _mock_transport(fail_engine="openalex")
+        shared = {name: transport for name in ("brave", "openalex", "semanticscholar", "arxiv", "github")}
+        adapters, _ = acquire._make_adapters(
+            protocol=frozen["protocol"],
+            brave_key="test-brave-secret",
+            journal=_NullJournal(),
+            get_case_id=lambda: "q1",
+            test_transports=shared,
+        )
+        try:
+            result = asyncio.run(
+                acquire.acquire_case(
+                    frozen["queries"][0],
+                    frozen["protocol"],
+                    adapters=adapters,
+                    reranker=acquire.RecordingIdentityReranker(),
+                    set_case_id=lambda value: None,
+                )
+            )
+        finally:
+            for adapter in adapters.values():
+                asyncio.run(adapter.shutdown())
+        self.assertEqual(result["status"], "partial")
+        self.assertGreater(len(result["cards"]), 40)
+        statuses = {row["engine"]: row["status"] for row in result["engine_outcomes"]}
+        self.assertEqual(statuses["openalex"], "error")
+        self.assertEqual(statuses["brave"], "ok")
+
+    def test_brave_attempt_cap_is_durable_and_blocks_eleventh_before_dispatch(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "attempts.jsonl"
+            journal = acquire.AttemptJournal(path, cap=10)
+            sent: list[int] = []
+
+            async def forward(request: httpx.Request) -> httpx.Response:
+                recorded = [json.loads(line) for line in path.read_text().splitlines()]
+                self.assertEqual(len(recorded), len(sent) + 1)
+                sent.append(len(sent) + 1)
+                return httpx.Response(200, json={})
+
+            inner = httpx.MockTransport(forward)
+            transport = acquire.GuardedTransport("brave", inner, journal=journal, current_case=lambda: "q1")
+
+            async def attempts() -> None:
+                client = httpx.AsyncClient(transport=transport)
+                for _ in range(10):
+                    await client.get("https://api.search.brave.com/res/v1/web/search?q=public")
+                with self.assertRaises(acquire.BraveBudgetExceeded):
+                    await client.get("https://api.search.brave.com/res/v1/web/search?q=eleventh")
+                await client.aclose()
+
+            asyncio.run(attempts())
+            rows = [json.loads(line) for line in path.read_text().splitlines()]
+            self.assertEqual(len(rows), 10)
+            self.assertEqual(sent, list(range(1, 11)))
+            self.assertEqual(journal.count, 10)
+            self.assertEqual(journal.blocked, 1)
+            self.assertTrue(all("q=" not in row["path"] for row in rows))
+
+    def test_endpoint_allowlist_rejects_redirected_or_private_hosts(self) -> None:
+        with self.assertRaises(acquire.AcquisitionError):
+            acquire._validate_endpoints("brave", httpx.URL("http://api.search.brave.com/res/v1/web/search"))
+        with self.assertRaises(acquire.AcquisitionError):
+            acquire._validate_endpoints("brave", httpx.URL("https://127.0.0.1/res/v1/web/search"))
+        with self.assertRaises(acquire.AcquisitionError):
+            acquire._validate_endpoints("github", httpx.URL("https://api.github.com/search/code"))
+
+    def test_github_environment_secret_is_not_forwarded_and_outputs_are_redacted(self) -> None:
+        frozen = acquire.verify_source_pins()
+        old = os.environ.get("ENGINE_GITHUB_API_KEY")
+        old_brave = os.environ.get("ENGINE_BRAVE_API_KEY")
+        old_s2 = os.environ.get("ENGINE_SEMANTICSCHOLAR_API_KEY")
+        os.environ["ENGINE_GITHUB_API_KEY"] = "github-environment-canary"
+        os.environ["ENGINE_BRAVE_API_KEY"] = "brave-environment-canary"
+        os.environ["ENGINE_SEMANTICSCHOLAR_API_KEY"] = "s2-environment-canary"
+        transport = _mock_transport(semanticscholar_key=os.environ["ENGINE_SEMANTICSCHOLAR_API_KEY"])
+        shared = {name: transport for name in ("brave", "openalex", "semanticscholar", "arxiv", "github")}
+        adapters, _ = acquire._make_adapters(
+            protocol=frozen["protocol"],
+            brave_key=os.environ["ENGINE_BRAVE_API_KEY"],
+            journal=_NullJournal(),
+            get_case_id=lambda: "q9",
+            test_transports=shared,
+        )
+        try:
+            result = asyncio.run(
+                acquire.acquire_case(
+                    frozen["queries"][8],
+                    frozen["protocol"],
+                    adapters=adapters,
+                    reranker=acquire.RecordingIdentityReranker(),
+                    set_case_id=lambda value: None,
+                )
+            )
+        finally:
+            for adapter in adapters.values():
+                asyncio.run(adapter.shutdown())
+            if old is None:
+                os.environ.pop("ENGINE_GITHUB_API_KEY", None)
+            else:
+                os.environ["ENGINE_GITHUB_API_KEY"] = old
+            if old_brave is None:
+                os.environ.pop("ENGINE_BRAVE_API_KEY", None)
+            else:
+                os.environ["ENGINE_BRAVE_API_KEY"] = old_brave
+            if old_s2 is None:
+                os.environ.pop("ENGINE_SEMANTICSCHOLAR_API_KEY", None)
+            else:
+                os.environ["ENGINE_SEMANTICSCHOLAR_API_KEY"] = old_s2
+        serialized = acquire._json_bytes(result)
+        self.assertNotIn(b"github-environment-canary", serialized)
+        self.assertNotIn(b"brave-environment-canary", serialized)
+        self.assertNotIn(b"s2-environment-canary", serialized)
+        self.assertEqual(result["status"], "complete")
+
+    def test_write_once_and_output_location_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "result.json"
+            path.write_bytes(b"original")
+            with self.assertRaises(acquire.AcquisitionError):
+                acquire._atomic_replace(path, b"replacement", ())
+            self.assertEqual(path.read_bytes(), b"original")
+            with self.assertRaises(acquire.AcquisitionError):
+                acquire._secure_output_dir(acquire.ROOT / "should-not-be-created")
+            existing = Path(temp) / "existing"
+            existing.mkdir()
+            with self.assertRaises(acquire.AcquisitionError):
+                acquire._secure_output_dir(existing)
+            with self.assertRaises(acquire.AcquisitionError):
+                acquire._atomic_replace(Path(temp) / "secret.json", b"canary", ("canary",))
+
+
+class _NullJournal:
+    count = 0
+    blocked = 0
+
+    def before_dispatch(self, request: httpx.Request, case_id: str) -> None:
+        del request, case_id
+        self.count += 1
+
+
+def build_suite() -> unittest.TestSuite:
+    return unittest.defaultTestLoader.loadTestsFromTestCase(AcquisitionTests)
+
+
+if __name__ == "__main__":
+    unittest.TextTestRunner(verbosity=2).run(build_suite())
