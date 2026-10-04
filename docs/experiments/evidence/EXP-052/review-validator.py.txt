@@ -196,7 +196,7 @@ def live_validate(delivery_dir,review_path,reviewer,pool_ref,repo_root):
  reg=_git(root,REG_COMMIT,REG_PATH); live_reg=_git(root,commit,REG_PATH)
  if reg!=live_reg: raise Invalid('registration-not-committed')
  regobj=strict(reg)
- if not exact(regobj,{'schema','files','delivery_manifest_sha256','references_invoked','validator_implemented','new_search_calls'}) or regobj.get('schema')!='exp052-registration-integrity/1': raise Invalid('registration-trust-schema')
+ if not exact(regobj,{'schema','files','delivery_manifest_sha256','references_invoked','validator_implemented','new_search_calls','meaning'}) or regobj.get('schema')!='exp052-registration-integrity/1': raise Invalid('registration-trust-schema')
  for rel,expected in regobj['files'].items():
   if not isinstance(rel,str) or not isinstance(expected,str) or not re.fullmatch('[0-9a-f]{64}',expected): raise Invalid('registration-file-hash')
   committed=_git(root,commit,rel)
