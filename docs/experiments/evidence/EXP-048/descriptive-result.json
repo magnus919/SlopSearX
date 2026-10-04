@@ -1,0 +1,106 @@
+{
+  "schema": "exp048-descriptive-result/1",
+  "decision": "incomplete",
+  "complete_raw_outputs": 2,
+  "valid_reviews": 1,
+  "invalid_reviews": 1,
+  "direction_screen_satisfied": false,
+  "validated_A": {
+    "cases": 12,
+    "answerable": 12,
+    "judgments": {
+      "worse": 6,
+      "better": 5,
+      "equivalent": 1
+    }
+  },
+  "unvalidated_B_raw_counts_only": {
+    "better": 6,
+    "worse": 4,
+    "undecidable": 1,
+    "equivalent": 1
+  },
+  "raw_comparisons_not_qualified_findings": [
+    {
+      "case_id": "T001",
+      "A": "worse",
+      "B_unvalidated": "better",
+      "same_raw_judgment": false
+    },
+    {
+      "case_id": "T002",
+      "A": "better",
+      "B_unvalidated": "better",
+      "same_raw_judgment": true
+    },
+    {
+      "case_id": "T003",
+      "A": "better",
+      "B_unvalidated": "better",
+      "same_raw_judgment": true
+    },
+    {
+      "case_id": "T004",
+      "A": "better",
+      "B_unvalidated": "worse",
+      "same_raw_judgment": false
+    },
+    {
+      "case_id": "T005",
+      "A": "better",
+      "B_unvalidated": "better",
+      "same_raw_judgment": true
+    },
+    {
+      "case_id": "T006",
+      "A": "equivalent",
+      "B_unvalidated": "worse",
+      "same_raw_judgment": false
+    },
+    {
+      "case_id": "T007",
+      "A": "worse",
+      "B_unvalidated": "better",
+      "same_raw_judgment": false
+    },
+    {
+      "case_id": "T008",
+      "A": "worse",
+      "B_unvalidated": "undecidable",
+      "same_raw_judgment": false
+    },
+    {
+      "case_id": "T009",
+      "A": "worse",
+      "B_unvalidated": "worse",
+      "same_raw_judgment": true
+    },
+    {
+      "case_id": "T010",
+      "A": "worse",
+      "B_unvalidated": "worse",
+      "same_raw_judgment": true
+    },
+    {
+      "case_id": "T011",
+      "A": "worse",
+      "B_unvalidated": "better",
+      "same_raw_judgment": false
+    },
+    {
+      "case_id": "T012",
+      "A": "better",
+      "B_unvalidated": "equivalent",
+      "same_raw_judgment": false
+    }
+  ],
+  "root_provider_calls": 0,
+  "root_search_calls": 0,
+  "brave_attempts": 0,
+  "reviewer_reported_external_calls": [
+    0,
+    0
+  ],
+  "execution_audit_complete": false,
+  "production_quality_claim": false
+}
