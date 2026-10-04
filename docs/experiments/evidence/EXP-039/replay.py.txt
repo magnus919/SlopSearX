@@ -1,0 +1,1574 @@
+"""Offline preparation, bounded transport, and analysis for EXP-039.
+
+No network/provider implementation is included. Live dispatch requires an
+explicit private argv file and is intended to be run only by the root operator
+after frozen annotation references and request hashes are reviewed.
+"""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import hashlib
+import json
+import math
+import os
+import pathlib
+import random
+import re
+import signal
+import subprocess
+import sys
+import threading
+import time
+from typing import Any
+
+MODEL = "jev-1.13.0"
+ARMS = ("A", "B", "C", "D")
+PRIMARY_QUERIES = tuple(f"q{i}" for i in range(1, 9))
+ALL_QUERIES = tuple(f"q{i}" for i in range(1, 10))
+REPEAT_ORIGINALS = (("q1-a", "q1-a-repeat"), ("q1-d", "q1-d-repeat"),
+                    ("q7-a", "q7-a-repeat"), ("q7-d", "q7-d-repeat"))
+MAX_CANDIDATES = 40
+MAX_QUERY_BYTES = 4096
+MAX_TITLE_BYTES = 256
+MAX_URL_BYTES = 512
+MAX_SNIPPET_BYTES = 1200
+MAX_REQUEST_BYTES = 128_000
+MAX_RESPONSE_BYTES = 2_000_000
+MAX_REMOTE_HTTP_MS = 1000.0
+MAX_INPUT_TOKENS = 2_000_000
+MAX_OUTPUT_TOKENS = 100_000
+RUNNER_WALL_TIMEOUT_S = 60.0
+RUN_WALL_WINDOW_S = 4 * 60 * 60
+BOOTSTRAP_DRAWS = 10_000
+BOOTSTRAP_SEED = 91939
+MAX_RATIONALE_BYTES = 1000
+CLEANUP_RESERVE_S = 1.0
+INPUT_HASH_NAMES = frozenset({
+    "annotation-cards.json", "annotation-id-map.json", "annotation-output-schema.json",
+    "annotation-protocol.md", "baseline-contract.json", "candidate-contracts.md",
+    "delivery-plan.md", "search-budget.json", "source-selection-contract.json",
+    "task-contexts.json", "task-facets.json",
+})
+REVIEW_FILES = {"reference-a.json": "A", "reference-b.json": "B"}
+
+def sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+def canonical_bytes(value: Any) -> bytes:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+def pretty_bytes(value: Any) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode("utf-8")
+
+def strict_json_loads(raw: bytes | str) -> Any:
+    def object_from_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate JSON object key")
+            result[key] = value
+        return result
+    def reject_constant(value: str) -> None:
+        raise ValueError(f"nonfinite JSON constant: {value}")
+    def finite_float(value: str) -> float:
+        result = float(value)
+        if not math.isfinite(result):
+            raise ValueError("nonfinite JSON number")
+        return result
+    return json.loads(raw, object_pairs_hook=object_from_pairs, parse_constant=reject_constant, parse_float=finite_float)
+
+def load_json(path: pathlib.Path) -> Any:
+    return strict_json_loads(path.read_bytes())
+
+def write_immutable(path: pathlib.Path, payload: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        if path.read_bytes() != payload:
+            raise ValueError(f"refusing to replace frozen artifact: {path.name}")
+        return
+    with path.open("xb") as stream:
+        stream.write(payload)
+        stream.flush()
+        os.fsync(stream.fileno())
+
+def is_finite_number(value: Any) -> bool:
+    if type(value) not in (int, float):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except (OverflowError, ValueError):
+        return False
+
+def evidence_root(root: pathlib.Path) -> pathlib.Path:
+    return root.resolve()
+
+def project_root(root: pathlib.Path) -> pathlib.Path:
+    # root is .../docs/experiments/evidence/EXP-039
+    return evidence_root(root).parents[3]
+
+def sibling_evidence(root: pathlib.Path, exp: str) -> pathlib.Path:
+    return evidence_root(root).parent / exp
+
+def verify_registered_inputs(root: pathlib.Path) -> dict[str, str]:
+    hashes = load_json(root / "input-hashes.json")
+    if not isinstance(hashes, dict) or set(hashes) != INPUT_HASH_NAMES:
+        raise ValueError("EXP-039 registered input pin set differs from the 11 frozen files")
+    for name, expected in hashes.items():
+        if not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
+            raise ValueError(f"invalid registered input digest: {name}")
+        path = root / name
+        if not path.is_file() or sha256(path.read_bytes()) != expected:
+            raise ValueError(f"registered input hash mismatch: {name}")
+    return hashes
+
+def verify_exp038_source(root: pathlib.Path) -> tuple[dict[str, Any], str, str]:
+    old_root = sibling_evidence(root, "EXP-038")
+    frozen_path = old_root / "frozen-queries.json"
+    manifest_path = old_root / "prepared-manifest.json"
+    manifest_digest_path = old_root / "prepared-manifest.sha256"
+    if not frozen_path.is_file() or not manifest_path.is_file() or not manifest_digest_path.is_file():
+        raise ValueError("EXP-038 frozen source snapshot or its integrity files are missing")
+    manifest_raw = manifest_path.read_bytes()
+    expected_manifest_digest = manifest_digest_path.read_text(encoding="ascii")
+    if expected_manifest_digest != sha256(manifest_raw) + "  prepared-manifest.json\n":
+        raise ValueError("EXP-038 prepared manifest digest mismatch")
+    old_manifest = strict_json_loads(manifest_raw)
+    frozen_raw = frozen_path.read_bytes()
+    frozen_sha = sha256(frozen_raw)
+    if old_manifest.get("frozen_query_snapshot_sha256") != frozen_sha:
+        raise ValueError("EXP-038 frozen query source digest mismatch")
+    frozen = strict_json_loads(frozen_raw)
+    if frozen.get("schema") != "exp038-frozen-query-inputs/1":
+        raise ValueError("unexpected EXP-038 frozen source schema")
+    # Verify original q1-q9 cards and query strings against their frozen EXP-036 files.
+    source_dir = sibling_evidence(root, "EXP-036")
+    old_input_hashes = load_json(old_root / "input-hashes.json")
+    projections_path = old_root / "development-projections.json"
+    if old_input_hashes.get("development-projections.json") != sha256(projections_path.read_bytes()):
+        raise ValueError("EXP-038 development projection digest mismatch")
+    source_pin = strict_json_loads(projections_path.read_bytes()).get("source_hashes_sha256", {})
+    for qid in ALL_QUERIES:
+        name = f"{qid}-frozen.json"
+        src_path = source_dir / name
+        if not src_path.is_file() or source_pin.get(name) != sha256(src_path.read_bytes()):
+            raise ValueError(f"EXP-036 frozen source hash mismatch: {name}")
+        src = strict_json_loads(src_path.read_bytes())
+        record = frozen.get("queries", {}).get(qid)
+        if not isinstance(record, dict) or record.get("query") != src.get("query"):
+            raise ValueError(f"query mismatch between frozen snapshots: {qid}")
+        source_cards = src.get("candidates")
+        cards = record.get("candidates")
+        if not isinstance(source_cards, list) or not isinstance(cards, list) or len(source_cards) != len(cards):
+            raise ValueError(f"candidate count mismatch for {qid}")
+        for original, projected in zip(source_cards, cards):
+            if any(original.get(k) != projected.get(k) for k in ("id", "title", "url", "snippet")):
+                raise ValueError(f"original card order/projection mismatch: {qid}/{original.get('id')}")
+            validate_card(projected)
+    if set(frozen.get("queries", {})) != set(ALL_QUERIES):
+        raise ValueError("EXP-038 source snapshot must contain exactly q1-q9")
+    if sum(len(frozen["queries"][q]["candidates"]) for q in ALL_QUERIES) != 295:
+        raise ValueError("frozen q1-q9 corpus membership changed from 295 cards")
+    return frozen, frozen_sha, sha256(manifest_raw)
+
+def validate_card(card: Any) -> None:
+    if not isinstance(card, dict) or set(card) != {"id", "title", "url", "snippet"}:
+        raise ValueError("candidate must contain exactly id/title/url/snippet")
+    limits = {"id": 80, "title": MAX_TITLE_BYTES, "url": MAX_URL_BYTES, "snippet": MAX_SNIPPET_BYTES}
+    for key, max_bytes in limits.items():
+        value = card[key]
+        if not isinstance(value, str) or len(value.encode("utf-8")) > max_bytes:
+            raise ValueError(f"invalid candidate {key} type or UTF-8 byte length")
+
+def verify_annotation_projection(root: pathlib.Path, frozen: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any], dict[str, str]]:
+    cards_data = load_json(root / "annotation-cards.json")
+    idmap = load_json(root / "annotation-id-map.json")
+    source_frozen_path = sibling_evidence(root, "EXP-038") / "frozen-queries.json"
+    if cards_data.get("source_sha256") != sha256(source_frozen_path.read_bytes()):
+        raise ValueError("annotation cards do not pin the EXP-038 source snapshot")
+    if cards_data.get("schema") != "exp039-shuffled-annotation-cards/1":
+        raise ValueError("unexpected annotation-cards schema")
+    if set(cards_data.get("queries", {})) != set(ALL_QUERIES):
+        raise ValueError("annotation cards must cover q1-q9 exactly")
+    aliases = {}
+    projected_aliases = set()
+    for qid in ALL_QUERIES:
+        query_record = frozen["queries"][qid]
+        annotation_query = cards_data["queries"][qid]
+        if annotation_query.get("query") != query_record["query"]:
+            raise ValueError(f"annotation query mismatch: {qid}")
+        by_id = {card["id"]: card for card in query_record["candidates"]}
+        seen_ids = set()
+        for card in annotation_query.get("cards", []):
+            if not isinstance(card, dict) or set(card) != {"label", "title", "url", "snippet"}:
+                raise ValueError(f"bad annotation card shape: {qid}")
+            alias = card["label"]
+            match = re.fullmatch(r"q[1-9]-r[0-9]{2}", alias) if isinstance(alias, str) else None
+            if not match or alias in projected_aliases:
+                raise ValueError(f"invalid or duplicate annotation alias: {alias}")
+            mapping = idmap.get(alias)
+            if not isinstance(mapping, dict) or set(mapping) != {"query_id", "candidate_id"} or mapping.get("query_id") != qid:
+                raise ValueError(f"annotation alias map mismatch: {alias}")
+            if not isinstance(mapping, dict) or mapping.get("query_id") != qid:
+                raise ValueError(f"annotation alias belongs to wrong query: {alias}")
+            cid = mapping.get("candidate_id")
+            source_card = by_id.get(cid)
+            if not isinstance(source_card, dict) or any(card[k] != source_card[k] for k in ("title", "url", "snippet")):
+                raise ValueError(f"annotation card changed from frozen source: {alias}")
+            if cid in seen_ids:
+                raise ValueError(f"candidate duplicated in annotation query: {qid}/{cid}")
+            seen_ids.add(cid)
+            aliases[alias] = {"query_id": qid, "candidate_id": cid}
+            projected_aliases.add(alias)
+        if seen_ids != set(by_id):
+            raise ValueError(f"annotation cards omit or add candidates: {qid}")
+    if set(idmap) != projected_aliases or len(projected_aliases) != 295:
+        raise ValueError("annotation ID map membership does not match 295 visible cards")
+    contexts = load_json(root / "task-contexts.json")
+    context_records = contexts.get("contexts")
+    if not isinstance(context_records, list) or len(context_records) != 9:
+        raise ValueError("task context must contain q1-q9")
+    context_map = {}
+    for record in context_records:
+        qid = record.get("query_id")
+        if qid not in ALL_QUERIES or qid in context_map:
+            raise ValueError("invalid or duplicate task context")
+        if record.get("keyword_query") != frozen["queries"][qid]["query"]:
+            raise ValueError(f"keyword context differs from frozen query: {qid}")
+        purpose = record.get("caller_purpose")
+        if not isinstance(purpose, str) or not purpose.strip() or len(purpose.encode("utf-8")) > MAX_QUERY_BYTES:
+            raise ValueError(f"invalid caller-purpose context: {qid}")
+        context_map[qid] = {"keyword": record["keyword_query"], "purpose": purpose}
+    if set(context_map) != set(ALL_QUERIES):
+        raise ValueError("task context coverage differs from frozen query set")
+    facets = load_json(root / "task-facets.json").get("facets")
+    if not isinstance(facets, dict) or set(facets) != set(ALL_QUERIES):
+        raise ValueError("task facet vocabulary must cover q1-q9")
+    for qid, names in facets.items():
+        if not isinstance(names, list) or not names or any(not isinstance(name, str) or not name for name in names) or len(names) != len(set(names)):
+            raise ValueError(f"invalid facet vocabulary: {qid}")
+    return cards_data, facets, context_map
+
+def load_contracts(root: pathlib.Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    baseline = load_json(root / "baseline-contract.json")
+    selection = load_json(root / "source-selection-contract.json")
+    if baseline.get("schema") != "exp039-incumbent-contract/1" or baseline.get("model") != MODEL:
+        raise ValueError("unexpected pinned incumbent contract")
+    if baseline.get("source_revision") != "63735511226e9f06a1fc7a27d24f7d1d05df15e9" or not re.fullmatch(r"[0-9a-f]{64}", baseline.get("source_sha256", "")):
+        raise ValueError("incumbent source identity mismatch")
+    if "{id}" not in baseline.get("instructions", "") or "query" not in baseline.get("instructions", "") or len(baseline.get("criteria", [])) != 10:
+        raise ValueError("incomplete incumbent instruction/criteria")
+    if selection.get("schema") != "exp039-source-selection-contract/1" or selection.get("model") != MODEL:
+        raise ValueError("unexpected source-selection contract")
+    if "{id}" not in selection.get("instructions", "") or "query" not in selection.get("instructions", "") or len(selection.get("criteria", [])) != 10 or selection.get("score_range") != [0, 9]:
+        raise ValueError("incomplete source-selection instruction/criteria")
+    return baseline, selection
+
+def make_body(arm: str, task: str, candidates: list[dict[str, str]], baseline: dict[str, Any], selection: dict[str, Any]) -> dict[str, Any]:
+    contract = baseline if arm in ("A", "B") else selection if arm in ("C", "D") else None
+    if contract is None:
+        raise ValueError(f"unknown arm: {arm}")
+    instructions = contract["instructions"]
+    criteria = contract["criteria"]
+    questions = {
+        card["id"]: {
+            "type": "score",
+            "instructions": instructions.replace("{id}", card["id"]),
+            "criteria": list(criteria),
+        }
+        for card in candidates
+    }
+    return {
+        "model": MODEL,
+        "state": {"query": task, "candidates": candidates},
+        "questions": questions,
+    }
+
+def expected_specs(frozen: dict[str, Any], contexts: dict[str, dict[str, str]]) -> list[dict[str, Any]]:
+    rng = random.Random(BOOTSTRAP_SEED)
+    grouped = []
+    for qid in ALL_QUERIES:
+        arms = list(ARMS)
+        rng.shuffle(arms)
+        group = []
+        for arm in arms:
+            rich = arm in ("B", "D")
+            task = contexts[qid]["purpose" if rich else "keyword"]
+            group.append({
+                "id": f"{qid}-{arm.lower()}",
+                "query_id": qid,
+                "arm": arm,
+                "task": task,
+                "task_kind": "caller_purpose" if rich else "keyword",
+                "repeat_of": None,
+                "candidates": frozen["queries"][qid]["candidates"],
+            })
+        grouped.append(group)
+    rng.shuffle(grouped)
+    specs = [item for group in grouped for item in group]
+    repeats = []
+    by_id = {item["id"]: item for item in specs}
+    for original_id, repeat_id in REPEAT_ORIGINALS:
+        clone = dict(by_id[original_id])
+        clone.update(id=repeat_id, repeat_of=original_id)
+        repeats.append(clone)
+    rng.shuffle(repeats)
+    specs.extend(repeats)
+    if len(specs) != 40 or len({item["id"] for item in specs}) != 40:
+        raise ValueError("EXP-039 must prepare exactly 40 unique request IDs")
+    return specs
+
+def request_record(spec: dict[str, Any], body: bytes) -> dict[str, Any]:
+    cards = spec["candidates"]
+    task = spec["task"]
+    record = {k: v for k, v in spec.items() if k != "candidates"}
+    record.update({
+        "candidate_ids": [card["id"] for card in cards],
+        "candidate_count": len(cards),
+        "task_sha256": sha256(task.encode("utf-8")),
+        "per_card_sha256": {card["id"]: sha256(canonical_bytes({"query": task, "candidate": card})) for card in cards},
+        "request_bytes": len(body),
+        "request_sha256": sha256(body),
+        "score_range": [0, 9],
+    })
+    return record
+
+def prepare(root: pathlib.Path) -> dict[str, Any]:
+    root = evidence_root(root)
+    input_hashes = verify_registered_inputs(root)
+    frozen, source_sha, source_manifest_sha = verify_exp038_source(root)
+    _, _, contexts = verify_annotation_projection(root, frozen)
+    baseline, selection = load_contracts(root)
+    specs = expected_specs(frozen, contexts)
+    manifest = {
+        "schema": "exp039-prepared-requests/1",
+        "model": MODEL,
+        "request_count": len(specs),
+        "random_seed": BOOTSTRAP_SEED,
+        "source_snapshot_sha256": source_sha,
+        "source_manifest_sha256": source_manifest_sha,
+        "registered_input_hashes": dict(sorted(input_hashes.items())),
+        "baseline_source_revision": baseline["source_revision"],
+        "baseline_source_sha256": baseline["source_sha256"],
+        "baseline_contract_sha256": sha256((root / "baseline-contract.json").read_bytes()),
+        "source_selection_contract_sha256": sha256((root / "source-selection-contract.json").read_bytes()),
+        "task_contexts_sha256": sha256((root / "task-contexts.json").read_bytes()),
+        "requests": [],
+    }
+    for spec in specs:
+        body = canonical_bytes(make_body(spec["arm"], spec["task"], spec["candidates"], baseline, selection))
+        if not 1 <= len(spec["candidates"]) <= MAX_CANDIDATES:
+            raise ValueError(f"candidate count outside bounds: {spec['id']}")
+        if len(spec["task"].encode("utf-8")) > MAX_QUERY_BYTES or len(body) > MAX_REQUEST_BYTES:
+            raise ValueError(f"UTF-8 task or serialized request exceeds limit: {spec['id']}")
+        for card in spec["candidates"]:
+            validate_card(card)
+        record = request_record(spec, body)
+        write_immutable(root / "prepared" / f"{spec['id']}.json", body)
+        manifest["requests"].append(record)
+    raw = pretty_bytes(manifest)
+    write_immutable(root / "prepared-manifest.json", raw)
+    write_immutable(root / "prepared-manifest.sha256", (sha256(raw) + "  prepared-manifest.json\n").encode("ascii"))
+    result = {
+        "prepared_requests": len(specs),
+        "per_arm": {arm: sum(1 for spec in specs if spec["arm"] == arm) for arm in ARMS},
+        "corpus_cards": sum(len(frozen["queries"][qid]["candidates"]) for qid in ALL_QUERIES),
+        "largest_card_count": max(len(frozen["queries"][qid]["candidates"]) for qid in ALL_QUERIES),
+        "max_request_bytes": max(item["request_bytes"] for item in manifest["requests"]),
+        "manifest_sha256": sha256(raw),
+        "live_calls": 0,
+    }
+    print(json.dumps(result, indent=2))
+    return result
+
+def bounded_process(argv: list[str], body: bytes, wall_timeout_s: float = RUNNER_WALL_TIMEOUT_S) -> tuple[bytes, int, float, bool, bool]:
+    """Bound owned Unix process-group output and wall time, including cleanup.
+
+    Token preflight values are estimates only. Registered input/output token
+    ceilings are checked against actual usage after each response; a response
+    that crosses a ceiling is retained as a failed attempt and stops dispatch.
+    """
+    if os.name != "posix":
+        raise RuntimeError("bounded transport requires POSIX process groups")
+    started = time.monotonic()
+    budget = max(0.01, wall_timeout_s)
+    deadline = started + budget
+    reserve = min(CLEANUP_RESERVE_S, budget * 0.2)
+    work_deadline = max(started + 0.005, deadline - reserve)
+    proc = subprocess.Popen(
+        argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        shell=False, start_new_session=True,
+    )
+    output = bytearray()
+    overflow = threading.Event()
+    read_error: list[BaseException] = []
+    write_error: list[BaseException] = []
+    timed_out = False
+
+    def kill_group() -> None:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        except OSError:
+            # The owned leader may already have been reaped. Try its direct
+            # process handle as a safe fallback, never a caller-owned group.
+            try:
+                proc.kill()
+            except OSError:
+                pass
+
+    def drain() -> None:
+        try:
+            assert proc.stdout is not None
+            while True:
+                chunk = proc.stdout.read(65536)
+                if not chunk:
+                    break
+                if len(output) + len(chunk) > MAX_RESPONSE_BYTES:
+                    remaining = max(0, MAX_RESPONSE_BYTES + 1 - len(output))
+                    if remaining:
+                        output.extend(chunk[:remaining])
+                    overflow.set()
+                    kill_group()
+                    break
+                output.extend(chunk)
+        except BaseException as exc:
+            read_error.append(exc)
+            kill_group()
+
+    def send() -> None:
+        try:
+            assert proc.stdin is not None
+            proc.stdin.write(body)
+            proc.stdin.close()
+        except BaseException as exc:
+            write_error.append(exc)
+            try:
+                if proc.stdin is not None:
+                    proc.stdin.close()
+            except OSError:
+                pass
+            kill_group()
+
+    reader = threading.Thread(target=drain, daemon=True)
+    writer = threading.Thread(target=send, daemon=True)
+    try:
+        reader.start()
+        writer.start()
+    except BaseException:
+        kill_group()
+        try:
+            proc.wait(timeout=max(0.001, deadline - time.monotonic()))
+        except subprocess.TimeoutExpired:
+            kill_group()
+        for thread in (writer, reader):
+            if thread.ident is not None:
+                thread.join(timeout=max(0.0, deadline - time.monotonic()))
+        for stream in (proc.stdin, proc.stdout):
+            if stream is not None:
+                try:
+                    stream.close()
+                except OSError:
+                    pass
+        raise
+    main_error: BaseException | None = None
+    try:
+        proc.wait(timeout=max(0.001, work_deadline - time.monotonic()))
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        kill_group()
+    except BaseException as exc:
+        main_error = exc
+        kill_group()
+    # A successful leader may leave a descendant holding stdout open. Bound
+    # both joins by the work deadline; then kill the owned group and spend only
+    # the reserved cleanup portion waiting for pipe threads and the leader.
+    for thread in (writer, reader):
+        thread.join(timeout=max(0.0, work_deadline - time.monotonic()))
+    if writer.is_alive() or reader.is_alive():
+        timed_out = True
+        kill_group()
+    # Even when pipes reached EOF, do not leave transport descendants in the
+    # private group alive after the operation.
+    kill_group()
+    try:
+        proc.wait(timeout=max(0.001, deadline - time.monotonic()))
+    except subprocess.TimeoutExpired:
+        kill_group()
+        timed_out = True
+    for thread in (writer, reader):
+        thread.join(timeout=max(0.0, deadline - time.monotonic()))
+    if writer.is_alive() or reader.is_alive():
+        timed_out = True
+        # Closing the local pipe after group termination releases any reader
+        # still blocked in a platform pipe implementation. Never exceed the
+        # wall deadline with unbounded joins.
+        for stream in (proc.stdin, proc.stdout):
+            if stream is not None:
+                try:
+                    stream.close()
+                except OSError:
+                    pass
+        for thread in (writer, reader):
+            thread.join(timeout=max(0.0, deadline - time.monotonic()))
+    for stream in (proc.stdin, proc.stdout):
+        if stream is not None:
+            try:
+                stream.close()
+            except OSError:
+                pass
+    if write_error and not isinstance(write_error[0], BrokenPipeError):
+        raise RuntimeError(f"transport stdin write failed: {type(write_error[0]).__name__}")
+    if read_error:
+        raise RuntimeError(f"transport stdout read failed: {type(read_error[0]).__name__}")
+    if main_error is not None:
+        raise RuntimeError(f"transport process wait failed: {type(main_error).__name__}") from main_error
+    return bytes(output), int(proc.returncode or 0), (time.monotonic() - started) * 1000.0, overflow.is_set(), timed_out
+
+def read_transport_argv(path: pathlib.Path) -> list[str]:
+    config = load_json(path)
+    argv = config if isinstance(config, list) else config.get("argv") if isinstance(config, dict) else None
+    if not isinstance(argv, list) or not argv or any(not isinstance(arg, str) or not arg for arg in argv):
+        raise ValueError("private transport config must be a JSON argv array or {'argv':[...]}")
+    return argv
+
+def append_jsonl(path: pathlib.Path, record: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("ab") as stream:
+        stream.write(canonical_bytes(record) + b"\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+
+def parse_transport_result(raw: bytes) -> dict[str, Any]:
+    data = strict_json_loads(raw.decode("utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("transport response is not an object")
+    if "error" in data:
+        if set(data) - {"error", "status", "_elapsed_ms"}:
+            raise ValueError("provider error envelope has unexpected fields")
+        return data
+    if set(data) != {"model", "answers", "usage", "_elapsed_ms"}:
+        raise ValueError("provider envelope has unexpected or missing fields")
+    return data
+
+def validate_response(data: dict[str, Any], req: dict[str, Any]) -> tuple[dict[str, float], list[str]]:
+    errors: list[str] = []
+    if data.get("model") != MODEL:
+        errors.append("model_identity")
+    answers = data.get("answers")
+    expected = set(req["candidate_ids"])
+    if not isinstance(answers, dict) or set(answers) != expected:
+        return {}, errors + ["answer_membership"]
+    scores: dict[str, float] = {}
+    for candidate_id, answer in answers.items():
+        allowed = {"type", "score", "confidence", "legend", "probabilities"}
+        if not isinstance(answer, dict) or set(answer) - allowed or not {"type", "score"} <= set(answer) or answer.get("type") != "score":
+            errors.append(f"type:{candidate_id}")
+            continue
+        value = answer.get("score")
+        if not is_finite_number(value) or not 0 <= value <= 9:
+            errors.append(f"score:{candidate_id}")
+            continue
+        confidence = answer.get("confidence")
+        if confidence is not None and (not is_finite_number(confidence) or not 0 <= confidence <= 1):
+            errors.append(f"confidence:{candidate_id}")
+            continue
+        legend = answer.get("legend")
+        expected_classes = {str(i) for i in range(10)}
+        if legend is not None and (not isinstance(legend, dict) or set(legend) != expected_classes or any(not isinstance(v, str) for v in legend.values())):
+            errors.append(f"legend:{candidate_id}")
+            continue
+        probabilities = answer.get("probabilities")
+        if probabilities is not None:
+            if not isinstance(probabilities, dict) or set(probabilities) != expected_classes or any(not is_finite_number(v) or not 0 <= v <= 1 for v in probabilities.values()):
+                errors.append(f"probabilities:{candidate_id}")
+                continue
+            # Provider documentation does not guarantee displayed probability sums or score means.
+        scores[candidate_id] = float(value)
+    return scores, errors
+
+def usage_counts(data: dict[str, Any]) -> tuple[int | None, int | None]:
+    usage = data.get("usage")
+    if not isinstance(usage, dict) or set(usage) != {"input_tokens", "output_tokens"}:
+        return None, None
+    values = usage.get("input_tokens"), usage.get("output_tokens")
+    if any(type(value) is not int or value < 0 for value in values):
+        return None, None
+    return values
+
+def reference_records(root: pathlib.Path, aliases: dict[str, dict[str, str]], facets: dict[str, list[str]], required: bool) -> tuple[dict[str, dict[str, Any]] | None, dict[str, str] | None, str]:
+    hash_path = root / "label-hashes.json"
+    paths = {name: root / name for name in REVIEW_FILES}
+    if not hash_path.exists() or not all(path.is_file() for path in paths.values()):
+        if required:
+            raise ValueError("sealed references not ready: require reference-a.json, reference-b.json, and label-hashes.json")
+        return None, None, "needs_refs"
+    hashes = load_json(hash_path)
+    if not isinstance(hashes, dict) or set(hashes) != set(REVIEW_FILES):
+        raise ValueError("label-hashes.json must pin exactly reference-a.json and reference-b.json")
+    refs: dict[str, dict[str, Any]] = {}
+    expected_aliases = set(aliases)
+    for filename, reviewer in REVIEW_FILES.items():
+        raw = paths[filename].read_bytes()
+        if hashes.get(filename) != sha256(raw):
+            raise ValueError(f"sealed reference hash mismatch: {filename}")
+        data = strict_json_loads(raw)
+        if not isinstance(data, dict) or set(data) != {"schema", "reviewer", "items"}:
+            raise ValueError(f"unexpected annotation envelope: {filename}")
+        if data["schema"] != "exp039-annotation/1" or data["reviewer"] != reviewer or not isinstance(data["items"], list):
+            raise ValueError(f"annotation identity/schema mismatch: {filename}")
+        rows = {}
+        for row in data["items"]:
+            if not isinstance(row, dict) or set(row) != {"label", "lead", "visible", "facets", "uncertain", "rationale"}:
+                raise ValueError(f"annotation row fields invalid: {filename}")
+            alias = row["label"]
+            if not isinstance(alias, str) or alias in rows or alias not in aliases:
+                raise ValueError(f"duplicate/unexpected annotation alias: {filename}")
+            if type(row["lead"]) is not int or not 0 <= row["lead"] <= 3 or type(row["visible"]) is not int or not 0 <= row["visible"] <= 3:
+                raise ValueError(f"annotation grades must be integer 0-3: {filename}/{alias}")
+            if type(row["uncertain"]) is not bool:
+                raise ValueError(f"annotation uncertainty must be boolean: {filename}/{alias}")
+            task_facets = set(facets[aliases[alias]["query_id"]])
+            tags = row["facets"]
+            if not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags) or len(tags) != len(set(tags)) or any(tag not in task_facets for tag in tags):
+                raise ValueError(f"annotation facets invalid: {filename}/{alias}")
+            rationale = row["rationale"]
+            if not isinstance(rationale, str) or not rationale.strip() or len(rationale.encode("utf-8")) > MAX_RATIONALE_BYTES:
+                raise ValueError(f"annotation rationale missing/too long: {filename}/{alias}")
+            rows[alias] = row
+        if set(rows) != expected_aliases:
+            missing = sorted(expected_aliases - set(rows))[:3]
+            extra = sorted(set(rows) - expected_aliases)[:3]
+            raise ValueError(f"annotation coverage mismatch {filename}: missing={missing}, extra={extra}")
+        refs[reviewer] = rows
+    return refs, hashes, "sealed_valid"
+
+def prepared_expected(root: pathlib.Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any], dict[str, str], list[dict[str, Any]]]:
+    input_hashes = verify_registered_inputs(root)
+    frozen, source_sha, source_manifest_sha = verify_exp038_source(root)
+    _, facets, contexts = verify_annotation_projection(root, frozen)
+    baseline, selection = load_contracts(root)
+    specs = expected_specs(frozen, contexts)
+    expected = {
+        "schema": "exp039-prepared-requests/1",
+        "model": MODEL,
+        "request_count": 40,
+        "random_seed": BOOTSTRAP_SEED,
+        "source_snapshot_sha256": source_sha,
+        "source_manifest_sha256": source_manifest_sha,
+        "registered_input_hashes": dict(sorted(input_hashes.items())),
+        "baseline_source_revision": baseline["source_revision"],
+        "baseline_source_sha256": baseline["source_sha256"],
+        "baseline_contract_sha256": sha256((root / "baseline-contract.json").read_bytes()),
+        "source_selection_contract_sha256": sha256((root / "source-selection-contract.json").read_bytes()),
+        "task_contexts_sha256": sha256((root / "task-contexts.json").read_bytes()),
+        "requests": [],
+    }
+    for spec in specs:
+        body = canonical_bytes(make_body(spec["arm"], spec["task"], spec["candidates"], baseline, selection))
+        expected["requests"].append(request_record(spec, body))
+    return expected, frozen, facets, baseline, input_hashes, specs
+
+def verify(root: pathlib.Path, require_refs: bool = False) -> dict[str, Any]:
+    root = evidence_root(root)
+    expected, frozen, facets, baseline, input_hashes, specs = prepared_expected(root)
+    refs, ref_hashes, ref_status = reference_records(root, expected_annotation_map(root, frozen), facets, required=require_refs)
+    manifest_path = root / "prepared-manifest.json"
+    if not manifest_path.is_file():
+        raise ValueError("prepared manifest missing; run --prepare first")
+    raw = manifest_path.read_bytes()
+    expected_digest = (root / "prepared-manifest.sha256").read_text(encoding="ascii")
+    if expected_digest != sha256(raw) + "  prepared-manifest.json\n":
+        raise ValueError("prepared manifest digest mismatch")
+    manifest = strict_json_loads(raw)
+    if canonical_bytes(manifest) != canonical_bytes(expected):
+        raise ValueError("prepared manifest differs from recomputed pinned requests")
+    prepared_dir = root / "prepared"
+    body_checks = 0
+    for spec in specs:
+        req = next(item for item in manifest["requests"] if item["id"] == spec["id"])
+        path = prepared_dir / f"{spec['id']}.json"
+        if not path.is_file():
+            raise ValueError(f"prepared body missing: {spec['id']}")
+        body = path.read_bytes()
+        if len(body) != req["request_bytes"] or len(body) > MAX_REQUEST_BYTES or sha256(body) != req["request_sha256"]:
+            raise ValueError(f"request byte/hash mismatch: {spec['id']}")
+        expected_body = canonical_bytes(make_body(spec["arm"], spec["task"], spec["candidates"], baseline, load_contracts(root)[1]))
+        if body != expected_body:
+            raise ValueError(f"request shape/state/contract mismatch: {spec['id']}")
+        obj = strict_json_loads(body)
+        if obj.get("model") != MODEL or obj.get("state") != {"query": spec["task"], "candidates": spec["candidates"]}:
+            raise ValueError(f"model/shared state mismatch: {spec['id']}")
+        if list(obj.get("questions", {})) != [card["id"] for card in spec["candidates"]]:
+            raise ValueError(f"score question membership/order mismatch: {spec['id']}")
+        body_checks += 1
+    for original, repeat in ((a, b) for a, b in REPEAT_ORIGINALS):
+        if (prepared_dir / f"{original}.json").read_bytes() != (prepared_dir / f"{repeat}.json").read_bytes():
+            raise ValueError(f"repeat body not byte-identical: {repeat}")
+    receipts, receipt_errors = read_receipts(root, manifest, require_all=False)
+    nonmissing = [err for err in receipt_errors if not err.startswith("missing:")]
+    return {
+        "ok": not nonmissing,
+        "request_bodies_verified": body_checks,
+        "valid_receipts": len(receipts),
+        "receipt_errors": receipt_errors,
+        "registered_input_pins": len(input_hashes),
+        "reference_status": ref_status,
+        "reference_hashes": ref_hashes,
+        "ready_to_run": ref_status == "sealed_valid" and not nonmissing,
+    }
+
+def expected_annotation_map(root: pathlib.Path, frozen: dict[str, Any]) -> dict[str, dict[str, str]]:
+    verify_annotation_projection(root, frozen)
+    return load_json(root / "annotation-id-map.json")
+
+def parse_run_start_time(value: Any) -> dt.datetime:
+    if not isinstance(value, str):
+        raise ValueError("run_started timestamp missing; refusing to reset the four-hour window")
+    try:
+        parsed = dt.datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise ValueError("run_started timestamp malformed") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError("run_started timestamp must include a timezone")
+    current = dt.datetime.now(dt.timezone.utc)
+    normalized = parsed.astimezone(dt.timezone.utc)
+    if normalized > current + dt.timedelta(seconds=5):
+        raise ValueError("run_started timestamp is in the future")
+    return normalized
+
+def run_window_remaining(value: Any, now: dt.datetime | None = None) -> float:
+    start = parse_run_start_time(value)
+    current = now or dt.datetime.now(dt.timezone.utc)
+    if current.tzinfo is None or current.utcoffset() is None:
+        raise ValueError("current time must be timezone-aware")
+    return RUN_WALL_WINDOW_S - (current.astimezone(dt.timezone.utc) - start).total_seconds()
+
+def preflight_reserve(body: bytes, pending_calls: int, output_used: int) -> tuple[int, int]:
+    if pending_calls < 1:
+        raise ValueError("pending call count must be positive")
+    # Conservative planning estimates only; provider tokenization is unknown.
+    # Payload reserve is one token per three UTF-8 bytes plus fixed structured
+    # prompt overhead. Output reserve is capped at 5k/request and divided so
+    # the total reserve does not exceed the remaining hard output-token ceiling.
+    input_estimate = math.ceil(len(body) / 3) + 10_000
+    output_estimate = min(5_000, max(1, (MAX_OUTPUT_TOKENS - output_used) // pending_calls))
+    return input_estimate, output_estimate
+
+def history_state(root: pathlib.Path, manifest: dict[str, Any], label_hashes: dict[str, str] | None) -> tuple[set[str], set[str]]:
+    path = root / "attempts.jsonl"
+    if not path.exists():
+        return set(), set()
+    records = [strict_json_loads(line) for line in path.read_bytes().splitlines() if line]
+    expected = {req["id"]: req["request_sha256"] for req in manifest["requests"]}
+    started: dict[str, int] = {}
+    finished: dict[str, int] = {}
+    terminal = False
+    run_hashes = None
+    run_manifest_hash = None
+    run_start_count = 0
+    current_manifest_hash = sha256((root / "prepared-manifest.json").read_bytes()) if (root / "prepared-manifest.json").is_file() else None
+    for record in records:
+        if record.get("event") == "run_started":
+            run_start_count += 1
+            if run_start_count > 1:
+                raise ValueError("duplicate durable run start; refusing to reset the four-hour window")
+            parse_run_start_time(record.get("at_utc"))
+            hashes = record.get("reference_hashes")
+            if run_hashes is not None and hashes != run_hashes:
+                raise ValueError("reference hashes changed during replay")
+            manifest_hash = record.get("prepared_manifest_sha256")
+            if run_manifest_hash is not None and manifest_hash != run_manifest_hash:
+                raise ValueError("prepared manifest changed during replay")
+            if manifest_hash != current_manifest_hash:
+                raise ValueError("attempt history belongs to another prepared manifest")
+            run_hashes = hashes
+            run_manifest_hash = manifest_hash
+        elif record.get("event") == "attempt_started":
+            if run_start_count != 1:
+                raise ValueError("attempt started without one durable run_started event")
+            rid = record.get("request_id")
+            if rid not in expected or record.get("request_sha256") != expected[rid]:
+                raise ValueError("attempt record identity/hash mismatch")
+            if run_hashes is None or record.get("reference_hashes") != run_hashes:
+                raise ValueError("attempt missing/mismatches sealed reference hashes")
+            started[rid] = started.get(rid, 0) + 1
+            if started[rid] > 1:
+                raise ValueError("duplicate attempt; refusing retry")
+        elif record.get("event") == "attempt_finished":
+            rid = record.get("request_id")
+            if rid not in expected or record.get("request_sha256") != expected[rid] or rid not in started or rid in finished:
+                raise ValueError("attempt finish does not pair with exactly one start")
+            finished[rid] = 1
+            if record.get("status") != "valid" or record.get("error") is not None:
+                terminal = True
+        elif record.get("event") == "runner_stopped":
+            terminal = True
+        else:
+            raise ValueError("unexpected attempt event")
+    if set(started) != set(finished):
+        raise ValueError("uncertain attempt exists; refusing retry or additional dispatch")
+    if run_hashes is not None and label_hashes is not None and run_hashes != label_hashes:
+        raise ValueError("sealed reference hashes changed since dispatch started")
+    if terminal:
+        raise ValueError("prior operational failure is terminal; refusing further dispatch")
+    return set(started), set(finished)
+
+def read_receipts(root: pathlib.Path, manifest: dict[str, Any], require_all: bool) -> tuple[dict[str, dict[str, Any]], list[str]]:
+    receipts = {}
+    errors = []
+    for req in manifest["requests"]:
+        path = root / "receipts" / f"{req['id']}.json"
+        if not path.exists():
+            errors.append(f"missing:{req['id']}")
+            continue
+        try:
+            receipt = load_json(path)
+        except Exception:
+            errors.append(f"malformed_receipt:{req['id']}")
+            continue
+        allowed = {"schema", "id", "request_sha256", "model", "answers", "validation_errors", "status", "error", "usage", "remote_http_ms", "transport_wall_ms", "transport_exit_code"}
+        if not isinstance(receipt, dict) or set(receipt) != allowed or receipt.get("schema") != "exp039-response-receipt/1":
+            errors.append(f"receipt_fields:{req['id']}")
+            continue
+        if receipt.get("id") != req["id"] or receipt.get("request_sha256") != req["request_sha256"]:
+            errors.append(f"receipt_identity:{req['id']}")
+            continue
+        if receipt.get("status") != "valid" or receipt.get("error") is not None or receipt.get("validation_errors") != []:
+            errors.append(f"invalid:{req['id']}:{receipt.get('error')}")
+            continue
+        remote = receipt.get("remote_http_ms")
+        wall = receipt.get("transport_wall_ms")
+        if not is_finite_number(remote) or remote < 0 or remote > MAX_REMOTE_HTTP_MS:
+            errors.append(f"remote_deadline:{req['id']}")
+            continue
+        if not is_finite_number(wall) or wall < 0 or receipt.get("transport_exit_code") != 0:
+            errors.append(f"transport_metadata:{req['id']}")
+            continue
+        inp, out = usage_counts(receipt)
+        if inp is None or out is None:
+            errors.append(f"usage_invalid:{req['id']}")
+            continue
+        scoremap, validation = validate_response({"model": receipt.get("model"), "answers": receipt.get("answers")}, req)
+        if validation:
+            errors.extend(f"{req['id']}:{item}" for item in validation)
+            continue
+        receipt["scores"] = scoremap
+        receipts[req["id"]] = receipt
+    if require_all and errors:
+        return receipts, errors
+    return receipts, errors
+
+def run(root: pathlib.Path, transport_file: pathlib.Path) -> None:
+    root = evidence_root(root)
+    check = verify(root, require_refs=True)
+    if not check["ok"] or not check["ready_to_run"]:
+        raise ValueError("integrity/reference verification failed; refusing dispatch")
+    manifest = load_json(root / "prepared-manifest.json")
+    label_hashes = check["reference_hashes"]
+    argv = read_transport_argv(transport_file)
+    started, finished = history_state(root, manifest, label_hashes)
+    attempts_path = root / "attempts.jsonl"
+    receipts_dir = root / "receipts"
+    receipts_dir.mkdir(exist_ok=True)
+    known_ids = {request["id"] for request in manifest["requests"]}
+    for receipt_path in receipts_dir.glob("*.json"):
+        if receipt_path.stem not in known_ids or receipt_path.stem not in finished:
+            raise ValueError("orphan receipt without a matching completed attempt; refusing dispatch")
+    if not attempts_path.exists() or attempts_path.stat().st_size == 0:
+        run_started_at = dt.datetime.now(dt.timezone.utc).isoformat()
+        append_jsonl(attempts_path, {
+            "event": "run_started", "prepared_manifest_sha256": sha256((root / "prepared-manifest.json").read_bytes()),
+            "reference_hashes": label_hashes, "at_utc": run_started_at,
+        })
+    else:
+        prior = [strict_json_loads(line) for line in attempts_path.read_bytes().splitlines() if line]
+        prior_hashes = next((event.get("reference_hashes") for event in prior if event.get("event") == "run_started"), None)
+        if prior_hashes != label_hashes:
+            raise ValueError("attempt history lacks/mismatches frozen label hashes")
+        run_started_at = next((event.get("at_utc") for event in prior if event.get("event") == "run_started"), None)
+    parse_run_start_time(run_started_at)
+    remaining_cycle = run_window_remaining(run_started_at)
+    if remaining_cycle <= 0:
+        append_jsonl(attempts_path, {"event": "runner_stopped", "reason": "four_hour_window_expired", "at_utc": dt.datetime.now(dt.timezone.utc).isoformat()})
+        return
+    input_total = 0
+    output_total = 0
+    if finished:
+        valid_prior, prior_errors = read_receipts(root, manifest, require_all=False)
+        if any(rid not in valid_prior for rid in finished):
+            raise ValueError("a completed attempt lacks a valid receipt; refusing further dispatch")
+        for rid in finished:
+            receipt = load_json(receipts_dir / f"{rid}.json")
+            inp, out = usage_counts(receipt)
+            if inp is None or out is None:
+                append_jsonl(attempts_path, {"event": "runner_stopped", "request_id": rid, "reason": "unknown_usage", "at_utc": dt.datetime.now(dt.timezone.utc).isoformat()})
+                raise ValueError("unknown prior token usage; terminal stop")
+            input_total += inp
+            output_total += out
+    for req in manifest["requests"]:
+        rid = req["id"]
+        if rid in finished:
+            continue
+        if input_total >= MAX_INPUT_TOKENS or output_total >= MAX_OUTPUT_TOKENS:
+            append_jsonl(attempts_path, {"event": "runner_stopped", "request_id": rid, "reason": "token_ceiling_reached", "at_utc": dt.datetime.now(dt.timezone.utc).isoformat()})
+            break
+        body = (root / "prepared" / f"{rid}.json").read_bytes()
+        if sha256(body) != req["request_sha256"]:
+            raise ValueError(f"prepared body hash mismatch: {rid}")
+        remaining_cycle = run_window_remaining(run_started_at)
+        if remaining_cycle <= 0:
+            append_jsonl(attempts_path, {"event": "runner_stopped", "request_id": rid, "reason": "four_hour_window_expired", "at_utc": dt.datetime.now(dt.timezone.utc).isoformat()})
+            break
+        pending_calls = sum(1 for item in manifest["requests"] if item["id"] not in finished)
+        input_reserve, output_reserve = preflight_reserve(body, pending_calls, output_total)
+        if input_total + input_reserve > MAX_INPUT_TOKENS or output_total + output_reserve > MAX_OUTPUT_TOKENS:
+            append_jsonl(attempts_path, {
+                "event": "runner_stopped", "request_id": rid, "reason": "estimated_token_reserve_exhausted",
+                "input_used": input_total, "input_reserve": input_reserve,
+                "output_used": output_total, "output_reserve": output_reserve,
+                "at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+            })
+            break
+        append_jsonl(attempts_path, {
+            "event": "attempt_started", "attempt": 1, "request_id": rid,
+            "request_sha256": req["request_sha256"], "reference_hashes": label_hashes,
+            "preflight_input_token_estimate": input_reserve,
+            "preflight_output_token_reserve": output_reserve,
+            "preflight_estimate_method": "ceil(request_utf8_bytes/3)+10000 input; min(5000, remaining_output_tokens/pending_calls) output; heuristic only",
+            "at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        })
+        raw = b""
+        exit_code = -1
+        wall_ms = None
+        overflow = timed_out = False
+        error = None
+        data: dict[str, Any] = {}
+        try:
+            raw, exit_code, wall_ms, overflow, timed_out = bounded_process(argv, body, min(RUNNER_WALL_TIMEOUT_S, remaining_cycle))
+            if timed_out:
+                error = "transport_wall_timeout"
+            elif overflow:
+                error = "response_limit_exceeded"
+            elif exit_code != 0:
+                error = "transport_nonzero_exit"
+            else:
+                data = parse_transport_result(raw)
+        except Exception as exc:
+            error = f"transport_{type(exc).__name__}"
+        remote_ms = None
+        input_tokens = output_tokens = None
+        validation_errors: list[str] = []
+        model = None
+        answers = None
+        if error is None and "error" in data:
+            error = "provider_error"
+        if error is None:
+            remote_ms = data.get("_elapsed_ms")
+            if not is_finite_number(remote_ms) or remote_ms < 0:
+                error = "missing_remote_http_timing"
+            elif remote_ms > MAX_REMOTE_HTTP_MS:
+                error = "remote_http_deadline_exceeded"
+            model = data.get("model")
+            scores, validation_errors = validate_response(data, req)
+            if validation_errors:
+                error = "invalid_response"
+            else:
+                answers = data["answers"]
+            input_tokens, output_tokens = usage_counts(data)
+            if input_tokens is None or output_tokens is None:
+                error = "unknown_or_invalid_usage"
+            elif input_total + input_tokens > MAX_INPUT_TOKENS or output_total + output_tokens > MAX_OUTPUT_TOKENS:
+                error = "token_ceiling_exceeded"
+        status = "valid" if error is None else "invalid"
+        receipt = {
+            "schema": "exp039-response-receipt/1", "id": rid,
+            "request_sha256": req["request_sha256"], "model": model,
+            "answers": answers, "validation_errors": validation_errors,
+            "status": status, "error": error,
+            "usage": {"input_tokens": input_tokens, "output_tokens": output_tokens},
+            "remote_http_ms": remote_ms if is_finite_number(remote_ms) else None,
+            "transport_wall_ms": wall_ms, "transport_exit_code": exit_code,
+        }
+        write_immutable(receipts_dir / f"{rid}.json", pretty_bytes(receipt))
+        append_jsonl(attempts_path, {
+            "event": "attempt_finished", "attempt": 1, "request_id": rid,
+            "request_sha256": req["request_sha256"], "status": status, "error": error,
+            "input_tokens": input_tokens, "output_tokens": output_tokens,
+            "remote_http_ms": receipt["remote_http_ms"], "transport_wall_ms": wall_ms,
+            "at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        })
+        if error is not None:
+            print(json.dumps({"stopped": True, "request_id": rid, "reason": error}))
+            return
+        input_total += input_tokens
+        output_total += output_tokens
+        finished.add(rid)
+        print(json.dumps({"completed": rid, "remote_http_ms": remote_ms, "transport_wall_ms": wall_ms,
+                          "input_tokens_total": input_total, "output_tokens_total": output_total}))
+
+def order_ids(scores: dict[str, float], candidate_ids: list[str]) -> list[str]:
+    return sorted(candidate_ids, key=lambda cid: -scores[cid])
+
+def ndcg_at_10(ranked_ids: list[str], grades: dict[str, int]) -> float:
+    gains = {cid: 2 ** grade - 1 for cid, grade in grades.items()}
+    dcg = sum(gains.get(cid, 0) / math.log2(pos + 2) for pos, cid in enumerate(ranked_ids[:10]))
+    ideal = sorted(gains.values(), reverse=True)[:10]
+    idcg = sum(gain / math.log2(pos + 2) for pos, gain in enumerate(ideal))
+    return dcg / idcg if idcg else 0.0
+
+def percentile(values: list[float], fraction: float) -> float:
+    if not values:
+        raise ValueError("cannot calculate percentile of empty data")
+    ordered = sorted(values)
+    position = (len(ordered) - 1) * fraction
+    low, high = math.floor(position), math.ceil(position)
+    if low == high:
+        return ordered[low]
+    return ordered[low] + (ordered[high] - ordered[low]) * (position - low)
+
+def paired_bootstrap(deltas: dict[str, float], draws: int = BOOTSTRAP_DRAWS, seed: int = BOOTSTRAP_SEED) -> dict[str, float]:
+    ids = sorted(deltas)
+    if not ids:
+        raise ValueError("paired bootstrap requires query deltas")
+    rng = random.Random(seed)
+    means = [sum(deltas[rng.choice(ids)] for _ in ids) / len(ids) for _ in range(draws)]
+    return {
+        "mean": sum(deltas.values()) / len(ids),
+        "lower95": percentile(means, .025),
+        "upper95": percentile(means, .975),
+        "draws": draws,
+        "seed": seed,
+        "query_units": len(ids),
+    }
+
+def annotation_diagnostics(
+    refs: dict[str, dict[str, dict[str, Any]]],
+    aliases: dict[str, dict[str, str]],
+    ranks: dict[str, dict[str, list[str]]],
+) -> dict[str, Any]:
+    """Expose the two independent annotation sets and descriptive paired changes.
+
+    Lead and visible scores are intentionally reported as separate axes. A/D
+    rank shifts are positions in each arm's own order, not differences in the
+    model's score scale.
+    """
+    disagreements = []
+    uncertainty_by_reviewer_query = {reviewer: {} for reviewer in ("A", "B")}
+    uncertainty_by_reviewer = {reviewer: 0 for reviewer in ("A", "B")}
+    published = {reviewer: {} for reviewer in ("A", "B")}
+    paired_rank_changes = {qid: [] for qid in ALL_QUERIES}
+    for alias, mapping in aliases.items():
+        qid, cid = mapping["query_id"], mapping["candidate_id"]
+        a = refs["A"][alias]
+        b = refs["B"][alias]
+        for reviewer, row in (("A", a), ("B", b)):
+            uncertainty_by_reviewer[reviewer] += int(row["uncertain"])
+            uncertainty_by_reviewer_query[reviewer][qid] = (
+                uncertainty_by_reviewer_query[reviewer].get(qid, 0) + int(row["uncertain"])
+            )
+            # Keep all frozen reference fields, including rationale, available
+            # in the analysis artifact; aliases preserve reviewer blinding.
+            published[reviewer][alias] = {
+                key: row[key] for key in ("lead", "visible", "facets", "uncertain", "rationale")
+            }
+        if a["lead"] != b["lead"] or a["visible"] != b["visible"] or set(a["facets"]) != set(b["facets"]):
+            disagreements.append({
+                "alias": alias,
+                "query_id": qid,
+                "candidate_id": cid,
+                "A": {"lead": a["lead"], "visible": a["visible"], "facets": a["facets"]},
+                "B": {"lead": b["lead"], "visible": b["visible"], "facets": b["facets"]},
+                "different_axes": [
+                    axis for axis, left, right in (
+                        ("lead", a["lead"], b["lead"]),
+                        ("visible", a["visible"], b["visible"]),
+                        ("facets", set(a["facets"]), set(b["facets"])),
+                    ) if left != right
+                ],
+            })
+        order_a = ranks[qid]["A"]
+        order_d = ranks[qid]["D"]
+        rank_a = order_a.index(cid) + 1
+        rank_d = order_d.index(cid) + 1
+        paired_rank_changes[qid].append({
+            "alias": alias,
+            "candidate_id": cid,
+            "rank_A": rank_a,
+            "rank_D": rank_d,
+            "rank_shift_D_minus_A": rank_d - rank_a,
+            "fixed_reference_labels": {
+                reviewer: {
+                    "lead": refs[reviewer][alias]["lead"],
+                    "visible": refs[reviewer][alias]["visible"],
+                }
+                for reviewer in ("A", "B")
+            },
+        })
+    for reviewer in ("A", "B"):
+        for qid in ALL_QUERIES:
+            uncertainty_by_reviewer_query[reviewer].setdefault(qid, 0)
+    return {
+        "definition": "Descriptive only. Reference scores are kept on distinct lead and visible axes. Rank shift is rank_D minus rank_A; lower rank numbers are better. No Jev score units are compared to reference grades.",
+        "published_references_by_alias": published,
+        "reviewer_uncertainty_counts": {
+            reviewer: {
+                "total": uncertainty_by_reviewer[reviewer],
+                "by_query": uncertainty_by_reviewer_query[reviewer],
+            }
+            for reviewer in ("A", "B")
+        },
+        "reviewer_disagreements": {
+            "count": len(disagreements),
+            "by_query": {
+                qid: sum(item["query_id"] == qid for item in disagreements)
+                for qid in ALL_QUERIES
+            },
+            "cards": disagreements,
+        },
+        "paired_A_D_rank_changes_by_query": paired_rank_changes,
+    }
+
+def analyze(root: pathlib.Path) -> dict[str, Any]:
+    root = evidence_root(root)
+    checked = verify(root, require_refs=True)
+    if not checked["ok"] or not checked["ready_to_run"]:
+        raise ValueError("integrity or annotation-reference check failed")
+    manifest = load_json(root / "prepared-manifest.json")
+    frozen, _, _ = verify_exp038_source(root)
+    _, facets, contexts = verify_annotation_projection(root, frozen)
+    aliases = expected_annotation_map(root, frozen)
+    refs, label_hashes, _ = reference_records(root, aliases, facets, required=True)
+    receipts, errors = read_receipts(root, manifest, require_all=True)
+    if errors:
+        result = {"schema": "exp039-analysis/1", "status": "incomplete", "missing_or_invalid": errors}
+        print(json.dumps(result, indent=2))
+        return result
+    by_id = {req["id"]: req for req in manifest["requests"]}
+    ranks: dict[str, dict[str, list[str]]] = {qid: {} for qid in ALL_QUERIES}
+    for qid in ALL_QUERIES:
+        ids = next(req["candidate_ids"] for req in manifest["requests"] if req["id"] == f"{qid}-a")
+        for arm in ARMS:
+            ranks[qid][arm] = order_ids(receipts[f"{qid}-{arm.lower()}"]["scores"], ids)
+    # Convert independently blinded alias labels to source candidate IDs for analysis.
+    grades: dict[str, dict[str, dict[str, dict[str, Any]]]] = {}
+    for reviewer in ("A", "B"):
+        grades[reviewer] = {qid: {} for qid in ALL_QUERIES}
+        assert refs is not None
+        for alias, row in refs[reviewer].items():
+            mapping = aliases[alias]
+            qid, cid = mapping["query_id"], mapping["candidate_id"]
+            grades[reviewer][qid][cid] = row
+    for reviewer in ("A", "B"):
+        for qid in ALL_QUERIES:
+            expected_ids = set(ranks[qid]["A"])
+            if set(grades[reviewer][qid]) != expected_ids:
+                raise ValueError(f"reference candidate membership mismatch: reviewer {reviewer} {qid}")
+
+    per_query: dict[str, Any] = {}
+    contrasts = {"B_minus_A": ("B", "A"), "C_minus_A": ("C", "A"),
+                 "D_minus_B": ("D", "B"), "D_minus_C": ("D", "C"),
+                 "D_minus_A": ("D", "A")}
+    contrast_deltas: dict[str, dict[str, dict[str, float]]] = {ref: {name: {} for name in contrasts} for ref in ("A", "B")}
+    visible_deltas: dict[str, dict[str, float]] = {"A": {}, "B": {}}
+    for reviewer in ("A", "B"):
+        for qid in ALL_QUERIES:
+            query_labels = grades[reviewer][qid]
+            lead = {cid: int(row["lead"]) for cid, row in query_labels.items()}
+            visible = {cid: int(row["visible"]) for cid, row in query_labels.items()}
+            metric_by_arm = {}
+            useful_by_arm = {}
+            facets_by_arm = {}
+            for arm in ARMS:
+                ranked = ranks[qid][arm]
+                metric_by_arm[arm] = ndcg_at_10(ranked, lead)
+                useful_by_arm[arm] = sum(lead[cid] >= 2 for cid in ranked[:10])
+                facets_by_arm[arm] = sorted({
+                    facet for cid in ranked[:10] if lead[cid] >= 2
+                    for facet in query_labels[cid]["facets"]
+                })
+            per_query.setdefault(qid, {})[reviewer] = {
+                "lead_ndcg10": metric_by_arm,
+                "lead_useful10": useful_by_arm,
+                "lead_facets_at10": facets_by_arm,
+                "ranked_top10": {arm: ranks[qid][arm][:10] for arm in ARMS},
+                "visible_ndcg10": {arm: ndcg_at_10(ranks[qid][arm], visible) for arm in ARMS},
+            }
+            for contrast, (candidate_arm, baseline_arm) in contrasts.items():
+                if qid in PRIMARY_QUERIES:
+                    contrast_deltas[reviewer][contrast][qid] = metric_by_arm[candidate_arm] - metric_by_arm[baseline_arm]
+            if qid in PRIMARY_QUERIES:
+                visible_deltas[reviewer][qid] = ndcg_at_10(ranks[qid]["D"], visible) - ndcg_at_10(ranks[qid]["A"], visible)
+
+    factorial = {}
+    for reviewer in ("A", "B"):
+        factorial[reviewer] = {
+            name: paired_bootstrap(values)
+            for name, values in contrast_deltas[reviewer].items()
+        }
+        factorial[reviewer]["interaction_DminusC_minus_BminusA"] = paired_bootstrap({
+            qid: contrast_deltas[reviewer]["D_minus_C"][qid] - contrast_deltas[reviewer]["B_minus_A"][qid]
+            for qid in PRIMARY_QUERIES
+        })
+        factorial[reviewer]["visible_D_minus_A"] = paired_bootstrap(visible_deltas[reviewer])
+    primary = {reviewer: factorial[reviewer]["D_minus_A"] for reviewer in ("A", "B")}
+
+    repeat_results = []
+    for original_id, repeat_id in REPEAT_ORIGINALS:
+        original_req = by_id[original_id]
+        first = order_ids(receipts[original_id]["scores"], original_req["candidate_ids"])[:10]
+        repeated = order_ids(receipts[repeat_id]["scores"], original_req["candidate_ids"])[:10]
+        overlap = len(set(first) & set(repeated)) / 10
+        repeat_results.append({"original": original_id, "repeat": repeat_id, "top10_overlap": overlap, "passes": overlap >= .8})
+
+    primary_guards = {}
+    for reviewer in ("A", "B"):
+        lost_useful_ids = {}
+        useful_count_loss = {}
+        lost_facets = {}
+        low_useful = {}
+        for qid in PRIMARY_QUERIES:
+            rows = grades[reviewer][qid]
+            top_a = ranks[qid]["A"][:10]
+            top_d = ranks[qid]["D"][:10]
+            baseline_useful = {cid for cid in top_a if rows[cid]["lead"] >= 2}
+            candidate_useful = {cid for cid in top_d if rows[cid]["lead"] >= 2}
+            lost_useful_ids[qid] = sorted(baseline_useful - candidate_useful)
+            useful_a = len(baseline_useful)
+            useful_d = len(candidate_useful)
+            useful_count_loss[qid] = useful_a - useful_d
+            facet_a = set(per_query[qid][reviewer]["lead_facets_at10"]["A"])
+            facet_d = set(per_query[qid][reviewer]["lead_facets_at10"]["D"])
+            lost_facets[qid] = sorted(facet_a - facet_d)
+            low_useful[qid] = useful_a == 10 and useful_d < 9
+        primary_guards[reviewer] = {
+            "lost_baseline_grade2plus_cards_by_query": lost_useful_ids,
+            "max_baseline_grade2plus_card_loss": max(len(cards) for cards in lost_useful_ids.values()),
+            "useful_count_delta_by_query_AminusD": useful_count_loss,
+            "lost_useful_facets_by_query": lost_facets,
+            "queries_with_A10_D_under9_useful": [qid for qid, loss in low_useful.items() if loss],
+            "passes": all(len(cards) <= 1 for cards in lost_useful_ids.values()) and not any(lost_facets.values()) and not any(low_useful.values()),
+        }
+
+    attempts, started_ids, finished_ids = read_attempts(root, manifest, label_hashes or {})
+    expected_ids = {request["id"] for request in manifest["requests"]}
+    if started_ids != expected_ids or finished_ids != expected_ids:
+        raise ValueError("attempt ledger does not prove one completed attempt for each prepared request")
+    total_in = sum(receipt["usage"]["input_tokens"] for receipt in receipts.values())
+    total_out = sum(receipt["usage"]["output_tokens"] for receipt in receipts.values())
+    remote_ms = [receipt["remote_http_ms"] for receipt in receipts.values()]
+    operational = {
+        "valid_calls": len(receipts),
+        "expected_calls": 40,
+        "all_calls_valid": len(receipts) == 40 and started_ids == expected_ids and finished_ids == expected_ids,
+        "input_tokens": total_in,
+        "output_tokens": total_out,
+        "within_token_ceilings": total_in <= MAX_INPUT_TOKENS and total_out <= MAX_OUTPUT_TOKENS,
+        "max_remote_http_ms": max(remote_ms),
+        "remote_http_deadline_pass": max(remote_ms) <= MAX_REMOTE_HTTP_MS,
+        "attempt_event_count": len(attempts),
+        "unique_started_requests": len({e["request_id"] for e in attempts if e["event"] == "attempt_started"}),
+    }
+    statistical_pass = all(primary[reviewer]["mean"] >= .03 and primary[reviewer]["lower95"] > 0 for reviewer in ("A", "B"))
+    guards_pass = all(primary_guards[r]["passes"] for r in ("A", "B")) and all(item["passes"] for item in repeat_results)
+    operational_pass = operational["all_calls_valid"] and operational["within_token_ceilings"] and operational["remote_http_deadline_pass"]
+    decision = "supports_optional_mode_for_fresh_confirmation_only" if statistical_pass and guards_pass and operational_pass else "not_supported_for_selection"
+    if not operational_pass:
+        decision = "inconclusive_operational_gate"
+    result = {
+        "schema": "exp039-analysis/1",
+        "status": "complete",
+        "decision": decision,
+        "scope": "exposed saved-card development comparison; not fresh holdout, human-established gold, whole-set qualification, or default authorization",
+        "primary": {
+            "contrast": "D_minus_A",
+            "query_ids": list(PRIMARY_QUERIES),
+            "axis": "reading_lead",
+            "reviewer_reference_sets": primary,
+            "minimum_mean": .03,
+            "required_lower95": ">0",
+            "bootstrap_draws": BOOTSTRAP_DRAWS,
+            "bootstrap_seed": BOOTSTRAP_SEED,
+            "passes_statistical_gate": statistical_pass,
+            "guards_by_reviewer": primary_guards,
+            "passes_guards": guards_pass,
+        },
+        "factorial_secondary": factorial,
+        "per_query": per_query,
+        "annotation_diagnostics": annotation_diagnostics(refs, aliases, ranks),
+        "q9_extension_separate": {
+            reviewer: {
+                "lead_ndcg10": per_query["q9"][reviewer]["lead_ndcg10"],
+                "D_minus_A": per_query["q9"][reviewer]["lead_ndcg10"]["D"] - per_query["q9"][reviewer]["lead_ndcg10"]["A"],
+                "lead_useful10": per_query["q9"][reviewer]["lead_useful10"],
+                "lead_facets_at10": per_query["q9"][reviewer]["lead_facets_at10"],
+                "visible_ndcg10": per_query["q9"][reviewer]["visible_ndcg10"],
+            }
+            for reviewer in ("A", "B")
+        },
+        "repeat_checks": repeat_results,
+        "operational": operational,
+        "sealed_reference_hashes": label_hashes,
+        "input_hashes": load_json(root / "input-hashes.json"),
+        "limitations": [
+            "Constructed caller purposes and saved q1-q9 pools are exposed development material, not fresh user intent.",
+            "Reading-lead labels are blinded reviewer judgments based only on visible cards; they do not assert truth or unseen page content.",
+            "A positive outcome selects only a candidate for separate fresh confirmation and whole-set qualification; it does not authorize a default or implementation."
+        ],
+    }
+    write_immutable(root / "analysis.json", pretty_bytes(result))
+    print(json.dumps({"status": result["status"], "decision": decision, "primary": primary, "passes_guards": guards_pass}, indent=2))
+    return result
+
+def read_attempts(root: pathlib.Path, manifest: dict[str, Any], label_hashes: dict[str, str]) -> tuple[list[dict[str, Any]], set[str], set[str]]:
+    path = root / "attempts.jsonl"
+    if not path.exists():
+        return [], set(), set()
+    records = [strict_json_loads(line) for line in path.read_bytes().splitlines() if line]
+    started, finished = history_state(root, manifest, label_hashes)
+    return records, started, finished
+
+def verify_cli(root: pathlib.Path) -> None:
+    print(json.dumps(verify(root, require_refs=False), indent=2))
+
+def offline_unknown_usage_run(real_root: pathlib.Path) -> None:
+    """Exercise the serial run/terminal-stop path with a local fake transport only."""
+    import shutil
+    with TemporaryRoot() as tmp:
+        root = tmp / "docs" / "experiments" / "evidence" / "EXP-039"
+        root.mkdir(parents=True)
+        evidence_dir = root.parent
+        original_evidence = evidence_root(real_root).parent
+        for exp_name in ("EXP-036", "EXP-038"):
+            (evidence_dir / exp_name).symlink_to(original_evidence / exp_name, target_is_directory=True)
+        for name in INPUT_HASH_NAMES | {"input-hashes.json"}:
+            shutil.copyfile(evidence_root(real_root) / name, root / name)
+        prepare(root)
+        frozen, _, _ = verify_exp038_source(root)
+        _, facets, _ = verify_annotation_projection(root, frozen)
+        aliases = expected_annotation_map(root, frozen)
+        for reviewer, filename in (("A", "reference-a.json"), ("B", "reference-b.json")):
+            rows = []
+            for alias in sorted(aliases):
+                qid = aliases[alias]["query_id"]
+                rows.append({
+                    "label": alias, "lead": 2, "visible": 1, "facets": facets[qid][:1],
+                    "uncertain": False, "rationale": "synthetic offline transport fixture",
+                })
+            doc = {"schema": "exp039-annotation/1", "reviewer": reviewer, "items": rows}
+            (root / filename).write_bytes(pretty_bytes(doc))
+        hashes = {name: sha256((root / name).read_bytes()) for name in REVIEW_FILES}
+        (root / "label-hashes.json").write_bytes(pretty_bytes(hashes))
+        code = (
+            "import json,sys; req=json.load(sys.stdin); "
+            "answers={cid:{'type':'score','score':2.5} for cid in req['questions']}; "
+            "print(json.dumps({'model':'jev-1.13.0','answers':answers,"
+            "'usage':{'input_tokens':1},'_elapsed_ms':1.0}))"
+        )
+        command_file = root / "fixture-private-argv.json"
+        command_file.write_bytes(pretty_bytes([sys.executable, "-c", code]))
+        try:
+            run(root, command_file)
+        except Exception as exc:
+            raise AssertionError(f"local fake transport fixture raised unexpectedly: {type(exc).__name__}") from exc
+        events = [strict_json_loads(line) for line in (root / "attempts.jsonl").read_bytes().splitlines() if line]
+        starts = [event for event in events if event.get("event") == "attempt_started"]
+        finishes = [event for event in events if event.get("event") == "attempt_finished"]
+        if len(starts) != 1 or len(finishes) != 1 or finishes[0].get("error") != "unknown_or_invalid_usage":
+            raise AssertionError("unknown usage did not create one terminal failed attempt")
+        try:
+            run(root, command_file)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("terminal usage failure allowed another local dispatch")
+        events_after = [strict_json_loads(line) for line in (root / "attempts.jsonl").read_bytes().splitlines() if line]
+        if sum(event.get("event") == "attempt_started" for event in events_after) != 1:
+            raise AssertionError("terminal failure retried or continued")
+
+
+def descendant_cleanup_fixture() -> None:
+    """Check wall-bounded cleanup when a descendant inherits transport stdout."""
+    with TemporaryRoot() as tmp:
+        pid_file = tmp / "descendant.pid"
+        finished_file = tmp / "descendant.finished"
+        child_code = (
+            "import time,pathlib; time.sleep(1.2); "
+            f"pathlib.Path({str(finished_file)!r}).write_text('alive')"
+        )
+        parent_code = (
+            "import subprocess,sys,pathlib; "
+            f"p=subprocess.Popen([sys.executable,'-c',{child_code!r}]); "
+            f"pathlib.Path({str(pid_file)!r}).write_text(str(p.pid))"
+        )
+        started = time.monotonic()
+        _, _, elapsed, _, timed_out = bounded_process(
+            [sys.executable, "-c", parent_code], b"fixture", wall_timeout_s=.35
+        )
+        wall = time.monotonic() - started
+        if not timed_out or wall >= .7 or elapsed >= 700:
+            raise AssertionError("descendant-held stdout did not honor wall cap")
+        child_pid = int(pid_file.read_text())
+
+        def child_is_running() -> bool:
+            try:
+                os.kill(child_pid, 0)
+            except ProcessLookupError:
+                return False
+            status = subprocess.run(
+                ["ps", "-o", "stat=", "-p", str(child_pid)],
+                capture_output=True, text=True, timeout=.2, check=False,
+            ).stdout.strip()
+            return bool(status) and not status.startswith("Z")
+
+        until = time.monotonic() + .5
+        while child_is_running() and time.monotonic() < until:
+            time.sleep(.02)
+        if child_is_running() or finished_file.exists():
+            raise AssertionError("transport descendant survived process-group cleanup")
+
+def self_test(root: pathlib.Path) -> None:
+    frozen, _, _ = verify_exp038_source(root)
+    _, _, contexts = verify_annotation_projection(root, frozen)
+    baseline, selection = load_contracts(root)
+    q1 = frozen["queries"]["q1"]
+    expected_old = strict_json_loads((sibling_evidence(root, "EXP-038") / "prepared" / "q1-w0.json").read_bytes())
+    body_a = make_body("A", q1["query"], q1["candidates"], baseline, selection)
+    if canonical_bytes(body_a) != canonical_bytes(expected_old):
+        raise AssertionError("Arm A differs from frozen EXP-038 W0 request bytes/semantics")
+    for arm in ARMS:
+        rich = arm in ("B", "D")
+        task = contexts["q1"]["purpose" if rich else "keyword"]
+        body = make_body(arm, task, q1["candidates"], baseline, selection)
+        if body["state"] != {"query": task, "candidates": q1["candidates"]}:
+            raise AssertionError(f"shared state mismatch: {arm}")
+        if list(body["questions"]) != [card["id"] for card in q1["candidates"]]:
+            raise AssertionError(f"question membership/order mismatch: {arm}")
+        if arm in ("C", "D"):
+            for cid, question in body["questions"].items():
+                if cid not in question["instructions"]:
+                    raise AssertionError(f"candidate identity not explicit in source rubric: {arm}/{cid}")
+    specs1 = expected_specs(frozen, contexts)
+    specs2 = expected_specs(frozen, contexts)
+    if [s["id"] for s in specs1] != [s["id"] for s in specs2] or len(specs1) != 40:
+        raise AssertionError("request ordering is not deterministic or count is not 40")
+    counts = {arm: sum(spec["arm"] == arm for spec in specs1) for arm in ARMS}
+    if counts != {"A": 11, "B": 9, "C": 9, "D": 11}:
+        raise AssertionError(f"unexpected per-arm count including repeats: {counts}")
+    repeated = {s["id"]: s for s in specs1}
+    for original, duplicate in REPEAT_ORIGINALS:
+        if make_body(repeated[original]["arm"], repeated[original]["task"], repeated[original]["candidates"], baseline, selection) != make_body(repeated[duplicate]["arm"], repeated[duplicate]["task"], repeated[duplicate]["candidates"], baseline, selection):
+            raise AssertionError(f"repeat contract not exact: {duplicate}")
+    req = {"candidate_ids": ["c0"], "task_sha256": "x"}
+    answer = {"model": MODEL, "answers": {"c0": {"type": "score", "score": 2.695, "confidence": .6, "legend": {str(i): str(i) for i in range(10)}, "probabilities": {str(i): 0.01 for i in range(10)}}}}
+    scores, errors = validate_response(answer, req)
+    if scores != {"c0": 2.695} or errors:
+        raise AssertionError("valid finite fractional score or metadata rejected")
+    bad_values = (True, float("nan"), float("inf"), -0.1, 9.01)
+    for value in bad_values:
+        _, errors = validate_response({"model": MODEL, "answers": {"c0": {"type": "score", "score": value}}}, req)
+        if errors != ["score:c0"]:
+            raise AssertionError(f"bad score accepted: {value}")
+    _, errors = validate_response({"model": MODEL, "answers": {"c0": {"type": "score", "score": 2}, "extra": {"type": "score", "score": 1}}}, req)
+    if errors != ["answer_membership"]:
+        raise AssertionError("unexpected answer ID accepted")
+    if usage_counts({"usage": {"input_tokens": 1, "output_tokens": 2}}) != (1, 2):
+        raise AssertionError("valid usage rejected")
+    for unknown_usage in ({"usage": {}}, {"usage": {"input_tokens": 1, "output_tokens": 2, "cached": 3}}, {"usage": {"input_tokens": True, "output_tokens": 1}}):
+        if usage_counts(unknown_usage) != (None, None):
+            raise AssertionError("unknown/malformed usage accepted")
+    for raw in (b'{"x":1,"x":2}', b'{"x":NaN}', b'{"x":1e999}'):
+        try:
+            strict_json_loads(raw)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("strict JSON accepted duplicate/nonfinite value")
+    try:
+        parse_transport_result(canonical_bytes({"model": MODEL, "answers": {}, "usage": {}, "_elapsed_ms": 1, "extra": True}))
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("unknown provider envelope field accepted")
+    # Terminal/uncertain attempts must be non-retryable.
+    with TemporaryRoot() as tmp:
+        manifest = {"requests": [{"id": "q1-a", "request_sha256": "hash"}]}
+        (tmp / "attempts.jsonl").write_bytes(canonical_bytes({"event": "runner_stopped", "request_id": "q1-a"}) + b"\n")
+        try:
+            history_state(tmp, manifest, None)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("terminal failure did not stop future dispatch")
+    original_limit = MAX_RESPONSE_BYTES
+    globals()["MAX_RESPONSE_BYTES"] = 64
+    try:
+        raw, code, _, overflow, timed_out = bounded_process(
+            [sys.executable, "-c", "import sys; sys.stdin.buffer.read(); sys.stdout.buffer.write(b'x'*100000)"], b"fixture"
+        )
+    finally:
+        globals()["MAX_RESPONSE_BYTES"] = original_limit
+    if not overflow or len(raw) > 65 or not code:
+        raise AssertionError("stdout response cap fixture failed")
+    original_timeout = RUNNER_WALL_TIMEOUT_S
+    globals()["RUNNER_WALL_TIMEOUT_S"] = .12
+    try:
+        started = time.monotonic()
+        _, code, elapsed, overflow, timed_out = bounded_process(
+            [sys.executable, "-c", "import time; time.sleep(5)"], b"x" * 128_000,
+            wall_timeout_s=RUNNER_WALL_TIMEOUT_S,
+        )
+        wall = time.monotonic() - started
+    finally:
+        globals()["RUNNER_WALL_TIMEOUT_S"] = original_timeout
+    if not timed_out or wall >= 2.0 or elapsed >= 2000 or code == 0:
+        raise AssertionError("blocked stdin/wall timeout fixture failed")
+    descendant_cleanup_fixture()
+    offline_unknown_usage_run(root)
+    # Deterministic query-bootstrap with a fixed seed.
+    sample1 = paired_bootstrap({"q1": .1, "q2": -.02, "q3": .03}, draws=200)
+    sample2 = paired_bootstrap({"q1": .1, "q2": -.02, "q3": .03}, draws=200)
+    if sample1 != sample2:
+        raise AssertionError("bootstrap is not reproducible")
+    print("EXP-039 offline fixtures passed; no provider calls made")
+
+class TemporaryRoot:
+    """Small context manager for history-state-only synthetic fixtures."""
+    def __init__(self) -> None:
+        import tempfile
+        self._tempfile = tempfile
+        self.path = None
+    def __enter__(self) -> pathlib.Path:
+        self._ctx = self._tempfile.TemporaryDirectory()
+        self.path = pathlib.Path(self._ctx.__enter__())
+        return self.path
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        self._ctx.__exit__(exc_type, exc, tb)
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    modes = parser.add_mutually_exclusive_group(required=True)
+    modes.add_argument("--prepare", action="store_true")
+    modes.add_argument("--verify", action="store_true")
+    modes.add_argument("--selftest", "--self-test", dest="selftest", action="store_true")
+    modes.add_argument("--run", action="store_true")
+    modes.add_argument("--analyze", action="store_true")
+    parser.add_argument("--root", type=pathlib.Path, required=True)
+    parser.add_argument("--transport-command-file", type=pathlib.Path)
+    args = parser.parse_args()
+    if args.selftest:
+        self_test(evidence_root(args.root))
+    elif args.prepare:
+        prepare(args.root)
+    elif args.verify:
+        verify_cli(args.root)
+    elif args.run:
+        if args.transport_command_file is None:
+            parser.error("--transport-command-file required for --run")
+        run(args.root, args.transport_command_file)
+    elif args.analyze:
+        analyze(args.root)
+
+if __name__ == "__main__":
+    main()
