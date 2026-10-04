@@ -1,0 +1,35 @@
+"""Independent no-network behavior checks for the registered relative selector."""
+import argparse, importlib.machinery, importlib.util, json, pathlib, random
+p=argparse.ArgumentParser();p.add_argument('--runner',type=pathlib.Path,default=pathlib.Path(__file__).with_name('replay.py.txt'));a=p.parse_args()
+l=importlib.machinery.SourceFileLoader('exp044_manual_runner',str(a.runner));s=importlib.util.spec_from_loader(l.name,l);m=importlib.util.module_from_spec(s);l.exec_module(m)
+def setup(n=12,f=2):
+ ids=[f'r{i}' for i in range(n)];scores={cid:9-i*.01 for i,cid in enumerate(ids)};fs=[{'id':f'f{i}','description':f'facet {i}'} for i in range(f)];prob={cid:{j:.1 for j in range(f)} for cid in ids};return ids,scores,fs,prob
+checks=[]
+ids,scores,fs,prob=setup();prob['r10'][0]=.9;prob['r11'][1]=.9
+order,_=m.selector(scores,prob,fs,ids);assert order==ids[:8]+['r10','r11','r8','r9'];checks.append('two outside leaders; D-stable fill and complete tail')
+ids,scores,fs,prob=setup();prob['r8'][1]=.9;prob['r11'][0]=.9
+order,_=m.selector(scores,prob,fs,ids);assert order==ids[:9]+['r11','r9','r10'];checks.append('all leaders protected before fill including existing low-ranked leader')
+ids,scores,fs,prob=setup();prob['r11']={0:.9,1:.9};prob['r10']={0:.8,1:.8}
+order,_=m.selector(scores,prob,fs,ids);assert order==ids[:9]+['r11','r9','r10'];checks.append('one shared leader uses one reservation, no second-best substitution')
+ids,scores,fs,prob=setup(f=1);scores['r11']=4.99;scores['r10']=5;prob['r11'][0]=.99;prob['r10'][0]=.9
+order,_=m.selector(scores,prob,fs,ids);assert 'r10' in order[:10] and 'r11' not in order[:10];checks.append('Score floor excludes 4.99 and includes exactly 5')
+ids,scores,fs,prob=setup();order,_=m.selector(scores,prob,fs,ids);assert order==ids
+for cid in ids: scores[cid]=4
+order,_=m.selector(scores,prob,fs,ids);assert order==ids;checks.append('equal low probabilities and no eligible sources leave D unchanged')
+ids,scores,fs,prob=setup(f=1)
+for row in prob.values(): row[0]=.01
+prob['r11'][0]=.02
+order,_=m.selector(scores,prob,fs,ids);assert 'r11' in order[:10];checks.append('unequal low probability remains a relative reservation, not certainty')
+ids,scores,fs,prob=setup(f=1);scores['r10']=scores['r11']=7;prob['r10'][0]=prob['r11'][0]=.8
+order,_=m.selector(scores,prob,fs,ids);assert 'r10' in order[:10] and 'r11' not in order[:10];checks.append('probability/Score ties use original input order')
+rng=random.Random(91944)
+for n in [1,4,9,10,11,44,79,80]:
+ ids,scores,fs,prob=setup(n,4);scores={cid:float(rng.randrange(10)) for cid in ids};prob={cid:{j:rng.random() for j in range(4)} for cid in ids}
+ order,_=m.selector(scores,prob,fs,ids);d=sorted(ids,key=lambda cid:(-scores[cid],ids.index(cid)));k=min(n,10)
+ assert len(order)==n and len(set(order))==n and set(order)==set(ids)
+ assert len(set(order[:k])-set(d[:k]))<=4
+ assert [cid for cid in d if cid in set(order[:k])]==order[:k]
+ assert [cid for cid in d if cid not in set(order[:k])]==order[k:]
+ revfs=list(reversed(fs));revprob={cid:{j:prob[cid][3-j] for j in range(4)} for cid in ids};revorder,_=m.selector(scores,revprob,revfs,ids);assert revorder==order
+checks.append('eight cardinalities through80 preserve exact IDs, D order, maxfour insertions and facet-order invariance')
+print(json.dumps({'neutral_behavior_checks':len(checks),'checks':checks,'new_provider_calls':0,'new_search_calls':0},indent=2))
