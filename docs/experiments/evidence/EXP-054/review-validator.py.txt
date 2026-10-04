@@ -1,0 +1,236 @@
+#!/usr/bin/env python3
+"""Inert, offline EXP-054 validator; reviewers supply evidence, code derives relations."""
+from __future__ import annotations
+import argparse, hashlib, json, math, re, subprocess, sys
+from pathlib import Path
+from typing import Any
+
+DELIVERY_SHA='6b367674480b4245e2511733144a9e477571c92499a8bedb0e143a87d67a47ea'
+REG_COMMIT='685757636d917672222cf91e0612785562b14c13'
+REG_PATH='docs/experiments/evidence/EXP-052/registration-integrity.json'
+TRUST_PATH='docs/experiments/evidence/EXP-052/qualification-integrity.json'
+INV_PATH='docs/experiments/evidence/EXP-052/input-inventory.json'
+MANIFEST_REL='docs/experiments/evidence/EXP-051/delivery-manifest.json'
+INTEGRATION_RECEIPT='docs/experiments/evidence/EXP-052/integration-qualification.json'
+BASELINE_FILES={'docs/experiments/evidence/EXP-052/registration-integrity.json': '213ddae2896ef40c9be6aca356a29135e24ed9b164ab9b424d2169f3093d1925', 'docs/experiments/evidence/EXP-052/input-inventory.json': '76ae72c5fba0950242a2e22e031029db0683117347a32b8429e32b6ac234e276', 'docs/experiments/evidence/EXP-052/review-validator.py.txt': 'ff273a575fe034a90a595c67e23cd4104f6b1aebb44a4b4c930513aee655f29a', 'docs/experiments/evidence/EXP-052/qualification-integrity.json': '988db7e20e56043bec6ad1e09bf77eed3443c76568d3525f08768fa7f435921f', 'docs/experiments/evidence/EXP-052/integration-qualification.json': 'b7d5b043ce3d624211f0963efcafe8f08eb0d3086189b8579b5328147f1e67b3'}
+POOL_ORDER=[f'P{i:02}' for i in range(1,7)]
+MAX_REVIEW=10000
+ALIASES={'t':'card.title','u':'card.url','n:snippet':'card.snippet','pt':'metadata.fields.title.value','date':'metadata.fields.publication_date.value','year':'metadata.fields.year.value','journal':'metadata.fields.journal.value','types':'metadata.fields.publication_types.values','authors':'metadata.fields.authors.values','abstract':'metadata.fields.abstract.value'}
+DP={'t','u','n:snippet','pt','abstract'}; VP={'n:snippet','abstract'}; CONTENT={'n:snippet','abstract'}; CASE=set(ALIASES)
+D={'lead','locator','redundant','none','uncertain'}; V={'explicit','some','none','uncertain'}; F={'direct','partial','lead','none','uncertain'}; RP={'added','lost','both','same','uncertain'}; O={'gain_no_loss','gain_with_loss','lead_only','same','loss_only','indeterminate'}
+D_LONG={'lead':'useful_research_lead','locator':'useful_locator_only','redundant':'useful_but_redundant_lead','none':'no_visible_discovery_value','uncertain':'uncertain'}
+V_LONG={'explicit':'explicit_design_or_method_detail','some':'some_method_detail','none':'no_design_detail_visible','uncertain':'uncertain'}
+F_LONG={'direct':'direct_visible_support','partial':'partial_or_contextual_visible_support','lead':'reading_lead_only','none':'no_visible_support','uncertain':'uncertain'}
+RP_LONG={'added':'distinct_lead_added','lost':'distinct_lead_lost','both':'distinct_lead_added_and_lost','same':'no_distinct_lead_change','uncertain':'uncertain'}
+O_LONG={'gain_no_loss':'support_gain_without_identified_loss','gain_with_loss':'support_gain_with_support_or_lead_loss','lead_only':'lead_gain_only','same':'no_material_change','loss_only':'loss_without_support_gain','indeterminate':'indeterminate'}
+class Invalid(Exception):
+ def __init__(self,code): self.code=code
+
+def sha(b): return hashlib.sha256(b).hexdigest()
+def pairs(p):
+ d={}
+ for k,v in p:
+  if k in d: raise ValueError('duplicate')
+  d[k]=v
+ return d
+def badconst(_): raise ValueError('constant')
+def strict(raw):
+ try:
+  x=json.loads(raw.decode('utf8'),object_pairs_hook=pairs,parse_constant=badconst,parse_float=lambda s: _float(s))
+  _depth(x)
+  return x
+ except Exception as e: raise Invalid('strict-json-invalid') from e
+def _float(s):
+ x=float(s)
+ if not math.isfinite(x): raise ValueError('nonfinite')
+ return x
+def _depth(x,n=0):
+ if n>40: raise ValueError('deep')
+ if isinstance(x,dict):
+  for k,v in x.items(): _depth(v,n+1)
+ elif isinstance(x,list):
+  for v in x: _depth(v,n+1)
+def exact(x,keys): return isinstance(x,dict) and set(x)==set(keys)
+def jsonfile(path,limit):
+ if path.is_symlink() or not path.is_file(): raise Invalid('input-file-invalid')
+ if path.stat().st_size>limit: raise Invalid('input-size-limit')
+ return path.read_bytes()
+def _git(root,rev,path):
+ try: return subprocess.run(['git','show',f'{rev}:{path}'],cwd=root,check=True,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL).stdout
+ except Exception as e: raise Invalid('trusted-record-unavailable') from e
+
+def load_delivery(delivery_dir:Path,repo_root:Path):
+ """Load and verify immutable EXP051 chunks, reconstructing original cards."""
+ if delivery_dir.is_symlink() or not delivery_dir.is_dir(): raise Invalid('delivery-directory-invalid')
+ raw=jsonfile(delivery_dir/'delivery-manifest.json',1_000_000)
+ if sha(raw)!=DELIVERY_SHA: raise Invalid('delivery-manifest-hash')
+ m=strict(raw)
+ if not exact(m,{'schema','pool_count','candidate_count','case_count','chunks'}) or m['schema']!='exp051-enriched-delivery-manifest/1' or m['pool_count']!=6 or m['candidate_count']!=232 or m['case_count']!=12: raise Invalid('delivery-manifest-schema')
+ entries=m['chunks']; need={'filename','pool_ref','chunk_index','chunk_total','sha256','bytes','candidate_count','case_count','end_marker'}
+ pools={p:{'chunks':[],'rows':{},'source':None} for p in POOL_ORDER}; markers={p:[] for p in POOL_ORDER}; names={'delivery-manifest.json'}
+ for e in entries:
+  if not exact(e,need) or e['pool_ref'] not in pools: raise Invalid('delivery-entry-invalid')
+  name=e['filename']
+  if not isinstance(name,str) or '/' in name or '\\' in name or name in names: raise Invalid('delivery-filename-invalid')
+  names.add(name); path=delivery_dir/name; b=jsonfile(path,24000)
+  if len(b)!=e['bytes'] or sha(b)!=e['sha256']: raise Invalid('delivery-chunk-hash')
+  c=strict(b); p=e['pool_ref']; idx=e['chunk_index']; total=e['chunk_total']; marker=f'EXP051-{p}-CHUNK-{idx:02d}-OF-{total:02d}-END'
+  if not exact(c,{'schema','pool_ref','chunk_index','chunk_total','purpose','facets','selected_ids','cards','cases','end_marker'}) or c['schema']!='exp051-enriched-review-chunk/1' or c['pool_ref']!=p or type(idx)!=int or type(total)!=int or c['chunk_index']!=idx or c['chunk_total']!=total or c['end_marker']!=marker or e['end_marker']!=marker or len(c['cards'])!=e['candidate_count']: raise Invalid('delivery-chunk-schema')
+  pools[p]['chunks'].append(c); markers[p].append(marker)
+  for r in c['cards']:
+   if not exact(r,{'card','metadata'}) or not isinstance(r['card'],dict) or not isinstance(r['metadata'],dict): raise Invalid('delivery-card-schema')
+   cid=r['card'].get('id')
+   if not isinstance(cid,str) or cid in pools[p]['rows']: raise Invalid('delivery-card-duplicate')
+   pools[p]['rows'][cid]=r
+ if {x.name for x in delivery_dir.iterdir()}!=names: raise Invalid('delivery-extra-files')
+ # Original input packets and inventory are frozen at the delivery qualification commit.
+ invraw=_git(repo_root,REG_COMMIT,INV_PATH)
+ inv=strict(invraw)
+ for p in POOL_ORDER:
+  cs=sorted(pools[p]['chunks'],key=lambda x:x['chunk_index'])
+  if not cs or [c['chunk_index'] for c in cs]!=list(range(1,len(cs)+1)) or any(c['chunk_total']!=len(cs) for c in cs): raise Invalid('delivery-chunk-order')
+  srcpath=f'docs/experiments/evidence/EXP-048/pool-{p}.json'; expected=inv['source_files'][srcpath]
+  srcbytes=_git(repo_root,REG_COMMIT,srcpath)
+  if sha(srcbytes)!=expected: raise Invalid('source-pool-hash')
+  source=strict(srcbytes); rows=[r for c in cs for r in c['cards']]; candidates=source['pool']['candidates']
+  if len(rows)!=len(candidates) or [r['card'] for r in rows]!=candidates: raise Invalid('delivery-source-mismatch')
+  first=cs[0]
+  for c in cs:
+   if c['facets']!=source['pool']['facets'] or c['selected_ids']!=source['pool']['selected_ids'] or c['cases']!=source['cases'] or c['purpose']!=source['pool']['purpose']: raise Invalid('delivery-context-mismatch')
+  pools[p]['source']=source
+  markers[p]=[c['end_marker'] for c in cs]
+ return {'manifest_sha256':sha(raw),'pools':pools,'markers':markers}
+
+def _value(row,alias):
+ path=ALIASES[alias]; card=row['card']; meta=row['metadata']
+ if path.startswith('card.'): return path[5:] in card,card.get(path[5:]),False
+ m=re.fullmatch(r'metadata\.fields\.([a-z_]+)\.(value|values)',path); item=meta.get('fields',{}).get(m.group(1),{}) if isinstance(meta.get('fields',{}),dict) else {}
+ if not isinstance(item,dict): return False,None,False
+ v=item.get(m.group(2)); unknown=item.get('status')=='unknown' or v is None or v=='' or v==[]
+ return m.group(2) in item,v,unknown
+def _positive(row,a):
+ has,v,u=_value(row,a)
+ if not has or u or v is None or v=='' or v==[]: return False
+ return not isinstance(v,str) or bool(v.strip())
+def expand_alias_record(x):
+ # Expand compact enums and field aliases without dropping any submitted information.
+ return {
+  'schema':x['s'],'reviewer_id':x['r'],'registration_sha256':x['reg'],'delivery_manifest_sha256':x['man'],'pool_ref':x['p'],'complete_pool_read':x['read'],'chunk_markers':list(x['marks']),'facets':list(x['facets']),
+  'card_assessments':[{'card_id':c['id'],'discovery_value':D_LONG[c['d']],'discovery_evidence':[ALIASES[a] for a in c['dp']],'design_visibility':V_LONG[c['v']],'design_evidence':[ALIASES[a] for a in c['vp']],'facet_support':[{'facet_id':fid,'support':F_LONG[val],'evidence_fields':[ALIASES[a] for a in ptrs]} for fid,val,ptrs in zip(x['facets'],c['f'],c['fp'])]} for c in x['cards']],
+  'case_assessments':[{'case_id':c['id'],'reading_change':RP_LONG[c['rp']],'evidence_pointers':[{'card_id':q[0],'field':ALIASES[q[1]]} for q in c['cp']],'rationale':c['why']} for c in x['cases']],
+  'execution_attestation':{'all_pool_chunks_read':x['read'],'external_calls':x['a'][0],'provider_calls':x['a'][1],'search_calls':x['a'][2],'filesystem_writes':x['a'][3]}}
+
+def _selected_status(ids,facet_index,assess):
+ sup=[]; unc=False
+ for cid in ids:
+  val=assess[cid]['f'][facet_index]
+  if val in ('direct','partial'): sup.append(cid)
+  elif val=='uncertain': unc=True
+ return ('supported' if sup else 'uncertain' if unc else 'not_supported'),sup
+def _transition(a,b): return 'uncertain' if 'uncertain' in (a,b) else 'gain' if a!='supported' and b=='supported' else 'loss' if a=='supported' and b!='supported' else 'unchanged'
+def _relation(trans,rp):
+ gain='gain' in trans; loss='loss' in trans or rp in ('lost','both')
+ if 'uncertain' in trans or rp=='uncertain': return 'indeterminate'
+ if gain and loss:return 'gain_with_loss'
+ if gain:return 'gain_no_loss'
+ if loss:return 'loss_only'
+ if rp=='added':return 'lead_only'
+ return 'same'
+
+def validate_review_fixture(delivery_dir,review_path,reviewer,pool_ref,explicit_trusted_manifest_sha,repo_root):
+ """Synthetic qualification seam. Never exposed as a CLI option."""
+ try:
+  delivery=load_delivery(Path(delivery_dir),Path(repo_root)); return _validate(Path(review_path),reviewer,pool_ref,delivery,explicit_trusted_manifest_sha)
+ except Invalid as e:return {'valid':False,'errors':[e.code],'derived':[]}
+ except Exception:return {'valid':False,'errors':['malformed-structure'],'derived':[]}
+
+def _validate(path,reviewer,pool_ref,delivery,trusted_sha):
+ if pool_ref not in POOL_ORDER or reviewer not in (pool_ref+'-R1',pool_ref+'-R2'): raise Invalid('assigned-unit-invalid')
+ if delivery['manifest_sha256']!=trusted_sha: raise Invalid('delivery-manifest-untrusted')
+ raw=jsonfile(path,MAX_REVIEW)
+ x=strict(raw)
+ if not exact(x,{'s','r','reg','man','p','read','marks','facets','cards','cases','a'}) or x['s']!='exp054-review/1' or x['r']!=reviewer or x['p']!=pool_ref or x['man']!=DELIVERY_SHA or not re.fullmatch('[0-9a-f]{64}',x['reg']): raise Invalid('review-identity-or-schema')
+ if x['read'] is not True or x['a']!=[0,0,0,0] or any(type(v)!=int for v in x['a']): raise Invalid('review-attestation')
+ p=delivery['pools'][pool_ref]; src=p['source']; sourcepool=src['pool']; cases=src['cases']; chunks=p['chunks']; facets=[f['id'] for f in sourcepool['facets']]
+ if x['marks']!=delivery['markers'][pool_ref] or x['facets']!=facets: raise Invalid('review-markers-or-facets')
+ union=set(sourcepool['selected_ids'])
+ for c in cases: union.update(c['after_selected_ids'])
+ order=[r['card']['id'] for ch in sorted(chunks,key=lambda c:c['chunk_index']) for r in ch['cards'] if r['card']['id'] in union]
+ if not isinstance(x['cards'],list) or [c.get('id') if isinstance(c,dict) else None for c in x['cards']]!=order: raise Invalid('review-card-membership-or-order')
+ assess={}
+ for c in x['cards']:
+  if not exact(c,{'id','d','dp','v','vp','f','fp'}) or not isinstance(c['d'],str) or c['d'] not in D or not isinstance(c['v'],str) or c['v'] not in V or not isinstance(c['f'],list) or not isinstance(c['fp'],list) or len(c['f'])!=len(facets) or len(c['fp'])!=len(facets) or any(not isinstance(y,str) or y not in F for y in c['f']): raise Invalid('review-card-shape-or-enum')
+  row=p['rows'][c['id']]
+  for field,allowed,required in (('dp',DP,c['d']!='none' and c['d']!='uncertain'),('vp',VP,c['v'] in ('explicit','some'))):
+   arr=c[field]
+   if not isinstance(arr,list) or len(arr)>2 or any(a not in allowed or not _positive(row,a) for a in arr) or (required and not arr): raise Invalid('review-positive-pointer')
+  if not isinstance(c['fp'],list): raise Invalid('review-facet-pointer-shape')
+  for val,ptrs in zip(c['f'],c['fp']):
+   allowed=CONTENT if val in ('direct','partial') else set(ALIASES)
+   if not isinstance(ptrs,list) or len(ptrs)>2 or any(a not in allowed or not _positive(row,a) for a in ptrs) or (val in ('direct','partial') and not ptrs): raise Invalid('review-facet-pointer')
+  assess[c['id']]=c
+ if not isinstance(x['cases'],list) or len(x['cases'])!=2 or [c.get('id') if isinstance(c,dict) else None for c in x['cases']] != [c['case_id'] for c in cases]: raise Invalid('review-case-membership')
+ derived=[]
+ for got,frozen in zip(x['cases'],cases):
+  if not exact(got,{'id','rp','cp','why'}) or not isinstance(got['rp'],str) or got['rp'] not in RP or not isinstance(got['why'],str) or not got['why'].strip() or len(got['why'])>160: raise Invalid('review-case-shape')
+  add,remove=frozen['added_id'],frozen['removed_id']; cp=got['cp']
+  if not isinstance(cp,list) or len(cp)>2: raise Invalid('review-case-pointers')
+  for q in cp:
+   if not isinstance(q,list) or len(q)!=2 or q[0] not in p['rows'] or q[1] not in CASE or not _positive(p['rows'][q[0]],q[1]): raise Invalid('review-case-pointers')
+  rp=got['rp']; affected=([add] if rp in ('added','both') else [])+([remove] if rp in ('lost','both') else [])
+  if rp!='uncertain' and rp!='same':
+   if not affected or any(assess[cid]['d'] not in ('lead','locator') for cid in affected): raise Invalid('review-reading-lead')
+   if any(not any(q[0]==cid and q[1] in {'t','u','n:snippet','abstract'} for q in cp) for cid in affected): raise Invalid('review-reading-pointer')
+  if any(assess[cid]['d']=='uncertain' for cid in (add,remove)) and rp!='uncertain': raise Invalid('review-reading-uncertainty')
+  retained=set(sourcepool['selected_ids']) & set(frozen['after_selected_ids'])
+  if any(assess[cid]['d']=='uncertain' for cid in retained) and rp!='uncertain': raise Invalid('review-retained-reading-uncertainty')
+  transitions=[]; evidence=[]
+  for i,fid in enumerate(facets):
+   b,bs=_selected_status(sourcepool['selected_ids'],i,assess); a,ass=_selected_status(frozen['after_selected_ids'],i,assess); t=_transition(b,a); transitions.append(t)
+   evidence.append({'facet':fid,'before':b,'after':a,'transition':t,'before_supporting_ids':sorted(bs),'after_supporting_ids':sorted(ass)})
+  expected=_relation(transitions,rp)
+  derived.append({'case_id':got['id'],'relation':expected,'reading_change':rp,'facets':evidence})
+ return {'valid':True,'errors':[],'manifest_sha256':delivery['manifest_sha256'],'review_sha256':sha(raw),'derived':derived,'expanded':expand_alias_record(x)}
+
+def live_validate(delivery_dir,review_path,reviewer,pool_ref,repo_root):
+ # DATA source reconstruction remains pinned to REG_COMMIT above. METHOD is separate.
+ root=Path(repo_root)
+ commit=subprocess.run(['git','rev-parse','HEAD'],cwd=root,check=True,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL).stdout.decode().strip()
+ method_path='docs/experiments/evidence/EXP-054/registration-integrity.json'
+ trust_path='docs/experiments/evidence/EXP-054/qualification-integrity.json'
+ receipt_path='docs/experiments/evidence/EXP-054/integration-qualification.json'
+ trust=strict(_git(root,commit,trust_path))
+ if not exact(trust,{'schema','registration_commit','registration_sha256','delivery_manifest_sha256','validator_sha256','qualification_receipt_sha256'}) or trust['schema']!='exp054-qualification-integrity/1': raise Invalid('qualification-trust-schema')
+ reg=_git(root,trust['registration_commit'],method_path)
+ if reg!=_git(root,commit,method_path) or sha(reg)!=trust['registration_sha256']: raise Invalid('registration-not-committed')
+ regobj=strict(reg)
+ if not exact(regobj,{'schema','files','baseline_files','delivery_manifest_sha256','references_invoked','meaning'}) or regobj['schema']!='exp054-registration-integrity/1' or regobj['references_invoked']!=0 or regobj['delivery_manifest_sha256']!=DELIVERY_SHA: raise Invalid('registration-trust-schema')
+ if not isinstance(regobj['files'],dict) or regobj['baseline_files']!=BASELINE_FILES or set(regobj['files']) & set(BASELINE_FILES): raise Invalid('baseline-trust-anchors')
+ old_reg=_git(root,REG_COMMIT,REG_PATH)
+ if sha(old_reg)!=BASELINE_FILES[REG_PATH]: raise Invalid('baseline-registration-anchor')
+ old_trust=strict(_git(root,commit,TRUST_PATH)); old_receipt=_git(root,commit,INTEGRATION_RECEIPT)
+ if not exact(old_trust,{'schema','registration_sha256','delivery_manifest_sha256','validator_sha256','qualification_receipt_sha256'}) or old_trust['schema']!='exp052-qualification-integrity/1': raise Invalid('baseline-qualification-schema')
+ old_obj=strict(old_receipt)
+ if old_trust['registration_sha256']!=sha(old_reg) or old_trust['delivery_manifest_sha256']!=DELIVERY_SHA or old_trust['validator_sha256']!=BASELINE_FILES['docs/experiments/evidence/EXP-052/review-validator.py.txt'] or old_trust['qualification_receipt_sha256']!=sha(old_receipt) or not isinstance(old_obj,dict) or old_obj.get('schema')!='exp052-integration-qualification/1' or old_obj.get('status')!='passed' or old_obj.get('validator_sha256')!=old_trust['validator_sha256'] or old_obj.get('delivery_manifest_sha256')!=DELIVERY_SHA: raise Invalid('baseline-qualification-chain')
+ for rel,expected in {**regobj['files'],**regobj['baseline_files']}.items():
+  if not isinstance(rel,str) or not isinstance(expected,str) or not re.fullmatch('[0-9a-f]{64}',expected): raise Invalid('registration-file-hash')
+  if sha(_git(root,commit,rel))!=expected: raise Invalid('registration-file-hash')
+  path=root/rel
+  if path.is_symlink() or not path.is_file() or sha(path.read_bytes())!=expected: raise Invalid('registered-input-changed')
+ receipt=_git(root,commit,receipt_path); obj=strict(receipt)
+ if not isinstance(obj,dict) or obj.get('schema')!='exp054-integration-qualification/1' or obj.get('status')!='passed': raise Invalid('qualification-receipt-invalid')
+ code_sha=sha(Path(__file__).read_bytes())
+ if trust['validator_sha256']!=code_sha or trust['delivery_manifest_sha256']!=DELIVERY_SHA or trust['qualification_receipt_sha256']!=sha(receipt) or obj.get('validator_sha256')!=code_sha or obj.get('delivery_manifest_sha256')!=DELIVERY_SHA: raise Invalid('qualification-trust-hash')
+ raw=jsonfile(Path(review_path),MAX_REVIEW); x=strict(raw)
+ if not isinstance(x,dict) or x.get('reg')!=sha(reg): raise Invalid('review-registration-fingerprint')
+ delivery=load_delivery(Path(delivery_dir),root)
+ return _validate(Path(review_path),reviewer,pool_ref,delivery,DELIVERY_SHA)
+
+def main(argv=None):
+ ap=argparse.ArgumentParser(description=__doc__); ap.add_argument('--delivery',required=True,type=Path); ap.add_argument('--review',required=True,type=Path); ap.add_argument('--reviewer',required=True); ap.add_argument('--pool',required=True); ap.add_argument('--repo-root',type=Path,default=Path(__file__).resolve().parents[4]); a=ap.parse_args(argv)
+ try:r=live_validate(a.delivery,a.review,a.reviewer,a.pool,a.repo_root.resolve())
+ except Invalid as e:r={'valid':False,'errors':[e.code]}
+ except Exception:r={'valid':False,'errors':['malformed-structure']}
+ print(json.dumps({'valid':r['valid'],'errors':r['errors'],'manifest_sha256':r.get('manifest_sha256'),'review_sha256':r.get('review_sha256'),'derived':r.get('derived',[])},sort_keys=True,separators=(',',':')))
+ return 0 if r['valid'] else 2
+if __name__=='__main__': raise SystemExit(main())
