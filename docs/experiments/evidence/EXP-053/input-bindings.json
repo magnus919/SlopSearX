@@ -1,0 +1,35 @@
+{
+  "schema": "exp053-input-bindings/1",
+  "dataset_registration_sha256": "213ddae2896ef40c9be6aca356a29135e24ed9b164ab9b424d2169f3093d1925",
+  "delivery_manifest_sha256": "6b367674480b4245e2511733144a9e477571c92499a8bedb0e143a87d67a47ea",
+  "qualified_files": {
+    "docs/experiments/evidence/EXP-052/registration-integrity.json": "213ddae2896ef40c9be6aca356a29135e24ed9b164ab9b424d2169f3093d1925",
+    "docs/experiments/evidence/EXP-052/review-contract.md": "0372463a1749a1108568beb38e000ab0dc1b3f20c0dca8af77963c924b746920",
+    "docs/experiments/evidence/EXP-052/input-inventory.json": "76ae72c5fba0950242a2e22e031029db0683117347a32b8429e32b6ac234e276",
+    "docs/experiments/evidence/EXP-052/resource-plan.json": "aa22c079b7f283fd68e8fc196183951c388c128a8408d464056d336af143ebd2",
+    "docs/experiments/evidence/EXP-052/review-validator.py.txt": "ff273a575fe034a90a595c67e23cd4104f6b1aebb44a4b4c930513aee655f29a",
+    "docs/experiments/evidence/EXP-052/qualification-integrity.json": "988db7e20e56043bec6ad1e09bf77eed3443c76568d3525f08768fa7f435921f",
+    "docs/experiments/evidence/EXP-052/integration-qualification.json": "b7d5b043ce3d624211f0963efcafe8f08eb0d3086189b8579b5328147f1e67b3",
+    "docs/experiments/evidence/EXP-052/normal-cli-qualification.json": "8be4d445e2807cd6a3826016aa35e0db6b403b4949327c7d895b955cbafadfd9",
+    "docs/experiments/evidence/EXP-052/response-envelope-02.json": "b6a5508d1152cfbb81e5b46cad1bd624ea0e3bcfdb51f0f9f24ccc6180c6af30",
+    "docs/experiments/evidence/EXP-052/alias-meaning-qualification-02.json": "d65c66f0a0e71a954a89abdfdc9f667482560371560e3aeecefa146ff8adc3d1"
+  },
+  "pools": 6,
+  "source_cards": 232,
+  "cases": 12,
+  "reference_units": [
+    "P01-R1",
+    "P01-R2",
+    "P02-R1",
+    "P02-R2",
+    "P03-R1",
+    "P03-R2",
+    "P04-R1",
+    "P04-R2",
+    "P05-R1",
+    "P05-R2",
+    "P06-R1",
+    "P06-R2"
+  ],
+  "meaning": "Reuse qualified data/schema/validator unchanged; method identity is separately bound by EXP053 parent controller."
+}
