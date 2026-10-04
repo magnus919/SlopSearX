@@ -1,0 +1,60 @@
+{
+  "schema": "exp045-root-full-run-qualification/1",
+  "status": "passed",
+  "cases": [
+    {
+      "case": "complete_21_operation_receipt_analysis",
+      "passed": true
+    },
+    {
+      "case": "raw_bytes",
+      "passed": true
+    },
+    {
+      "case": "request_bytes",
+      "passed": true
+    },
+    {
+      "case": "parent_hash",
+      "passed": true
+    },
+    {
+      "case": "usage_total",
+      "passed": true
+    },
+    {
+      "case": "known_usage",
+      "passed": true
+    },
+    {
+      "case": "usage_completeness",
+      "passed": true
+    },
+    {
+      "case": "receipt_timing",
+      "passed": true
+    },
+    {
+      "case": "chronology",
+      "passed": true
+    },
+    {
+      "case": "unknown_usage_global_stop_and_analysis",
+      "passed": true
+    },
+    {
+      "case": "known_failed_response_timing_resource_stop",
+      "passed": true
+    }
+  ],
+  "provider_calls": 0,
+  "search_calls": 0,
+  "transport": "mocked",
+  "operations": 21,
+  "primary_deltas": {
+    "A": 8,
+    "B": 8
+  },
+  "neutral_quality_failed": true,
+  "fixture_sha256": "f4c45fc6b985c989301a5f73ca38da2ae2a4701e1568b99beb56423f71032eef"
+}

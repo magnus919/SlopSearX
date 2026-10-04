@@ -1,0 +1,229 @@
+"""Independent EXP-045 end-to-end fake-run qualification.
+
+Usage: python exp045-full-run-checks.py.txt /absolute/path/to/EXP-045/replay.py.txt
+Uses the actual frozen EXP-043/044 cards, receipts, references, grouping and
+analysis. Only git publication reads and the private transport boundary are
+mocked. All Choice outputs are synthetic KEEP decisions; this is provenance,
+runner and analysis-path validation, not model evidence. No provider/search/
+network calls are made.
+"""
+import base64
+import hashlib
+import json
+import pathlib
+import shutil
+import sys
+import tempfile
+import types
+
+
+OFFLINE_REV = "a" * 40
+NEUTRAL_REV = "b" * 40
+
+
+def load_runner(path):
+    path = pathlib.Path(path).resolve()
+    sys.path.insert(0, str(path.parents[4]))
+    module = types.ModuleType("exp045_full_fake_runner")
+    module.__file__ = str(path)
+    exec(compile(path.read_text(encoding="utf-8"), str(path), "exec"), module.__dict__)
+    return module
+
+
+def mock_git(R, root_ref):
+    real = R.subprocess.run
+    calls = []
+    def fake(args, *pargs, **kwargs):
+        calls.append(list(args))
+        if args[:3] == ["git", "merge-base", "--is-ancestor"]:
+            return types.SimpleNamespace(stdout=b"", returncode=0)
+        if len(args) >= 3 and args[:2] == ["git", "show"]:
+            target = args[2].split(":", 1)[1].rsplit("/", 1)[-1]
+            return types.SimpleNamespace(stdout=(root_ref[0] / target).read_bytes(), returncode=0)
+        raise AssertionError(f"unexpected non-mocked process: {args}")
+    R.subprocess.run = fake
+    return real, calls
+
+
+def response_for_batch(R, envelope, *, unknown_usage=False):
+    outer = json.loads(envelope)
+    body = base64.b64decode(outer["body_base64"])
+    batch = R.strict_json(body)
+    answers = {}
+    for qid, question in batch["questions"].items():
+        options = list(question["criteria"])
+        probabilities = {option: (1.0 if option == "KEEP" else 0.0) for option in options}
+        answers[qid] = {"type": "choice", "choice": "KEEP", "probabilities": probabilities, "confidence": 0.8}
+    usage = {"input_tokens": 200, "output_tokens": 40}
+    if unknown_usage:
+        usage.pop("output_tokens")
+    payload = {"model": R.MODEL, "answers": answers, "usage": usage, "_elapsed_ms": 20.0}
+    return json.dumps(payload, separators=(",", ":")).encode()
+
+
+def make_publication_files(R, root, source_dir):
+    # Reuse the registered frozen input files; build deterministic prepared plan.
+    for name in ("source-pins.json", "registration-integrity.json", "design-review.md", "registration-review.md"):
+        shutil.copyfile(source_dir / name, root / name)
+    R.prepare(root)
+    for name in ("replay.py.txt", "fixture_tests.py.txt"):
+        shutil.copyfile(source_dir / name, root / name)
+    # Bind independent synthetic helper/gate checks plus transport qualification.
+    shutil.copyfile(source_dir / "manual-choice-checks.py.txt", root / "manual-choice-checks.py.txt")
+    shutil.copyfile(source_dir / "publication-gates-checks.py.txt", root / "publication-gates-checks.py.txt")
+    shutil.copyfile(source_dir / "transport-fixtures.py.txt", root / "transport-fixtures.py.txt")
+    shutil.copyfile(source_dir / "transport-qualification.json", root / "transport-qualification.json")
+    expected = {"replay.py.txt", "fixture_tests.py.txt", "manual-choice-checks.py.txt",
+                "publication-gates-checks.py.txt", "transport-fixtures.py.txt",
+                "transport-qualification.json", "prepared-plan.json", "neutral-body.json",
+                "neutral-inventory.json", "source-pins.json", "registration-integrity.json"}
+    qual = {"schema": "exp045-offline-qualification/1", "status": "passed",
+            "files": {name: R._hash(root / name) for name in sorted(expected)},
+            "fixture_tests_passed": 10, "manual_checks_passed": 1,
+            "synthetic_operations": 21, "primary_deltas": {"A": 8, "B": 8},
+            "pool_inventory": 13, "neutral_quality_failed": True,
+            "provider_calls": 0, "search_calls": 0}
+    (root / "offline-qualification.json").write_bytes(R.pretty(qual))
+
+
+def install_transport(R, *, unknown_usage=False):
+    real_argv, real_bounded = R.H.read_transport_argv, R.H.bounded_process
+    dispatches = []
+    R.H.read_transport_argv = lambda _path: ["synthetic-private-transport"]
+    def bounded(argv, envelope, wall_seconds):
+        dispatches.append((argv, envelope))
+        return response_for_batch(R, envelope, unknown_usage=unknown_usage), 0, 30.0, False, False
+    R.H.bounded_process = bounded
+    return (real_argv, real_bounded), dispatches
+
+
+def restore_transport(R, originals):
+    R.H.read_transport_argv, R.H.bounded_process = originals
+
+
+def expected_rejection(R, root, verified, results, path, mutate):
+    original = path.read_bytes()
+    try:
+        mutate(path)
+        try:
+            R._validate_case_journal(root, verified, results)
+        except (ValueError, TypeError, KeyError):
+            return
+        raise AssertionError(f"case journal accepted mutation: {path.name}")
+    finally:
+        path.write_bytes(original)
+
+
+def rewrite_ledger(path, transform):
+    events = [json.loads(line) for line in path.read_bytes().splitlines() if line]
+    path.write_bytes(b"".join(json.dumps(transform(e), separators=(",", ":")).encode() + b"\n" for e in events))
+
+
+def test_mutation_rejection(R, root, results):
+    verified = R.validate_baseline()
+    events_path = root / "attempts.jsonl"
+    events = [json.loads(line) for line in events_path.read_bytes().splitlines() if line]
+    rid = next(e["request_id"] for e in events if e["event"] == "attempt_started")
+    raw_path = root / "receipts" / f"{rid}.response.bin"
+    req_path = root / "requests" / f"{rid}.json"
+    rec_path = root / "receipts" / f"{rid}.json"
+    # Each mutation is restored before the next probe; clean journal must pass.
+    expected_rejection(R, root, verified, results, raw_path,
+                       lambda p: p.write_bytes(bytes([p.read_bytes()[0] ^ 1]) + p.read_bytes()[1:]))
+    expected_rejection(R, root, verified, results, req_path,
+                       lambda p: p.write_bytes(p.read_bytes() + b" "))
+    def parent_mutation(path):
+        def change(e):
+            if e.get("event") == "attempt_started": e["parent_response_sha256"] = "c" * 64
+            if e.get("event") == "attempt_finished": e["parent_response_sha256"] = "c" * 64
+            return e
+        rewrite_ledger(path, change)
+    expected_rejection(R, root, verified, results, events_path, parent_mutation)
+    def usage_mutation(path):
+        def change(e):
+            if e.get("event") == "attempt_finished": e["input_tokens"] += 1
+            return e
+        rewrite_ledger(path, change)
+    expected_rejection(R, root, verified, results, events_path, usage_mutation)
+    def timing_mutation(path):
+        def change(e):
+            if e.get("event") == "attempt_finished": e["remote_http_ms"] = 1001.0
+            return e
+        rewrite_ledger(path, change)
+    expected_rejection(R, root, verified, results, events_path, timing_mutation)
+    def chronology_mutation(path):
+        def change(e):
+            if e.get("event") == "attempt_finished": e["at_utc"] = "2000-01-01T00:00:00+00:00"
+            return e
+        rewrite_ledger(path, change)
+    expected_rejection(R, root, verified, results, events_path, chronology_mutation)
+    R._validate_case_journal(root, verified, results)
+
+
+def run(path):
+    R = load_runner(path)
+    source_dir = pathlib.Path(path).resolve().parent
+    real_git, git_calls = None, None
+    root_ref = [None]
+    real_git, git_calls = mock_git(R, root_ref)
+    try:
+        with tempfile.TemporaryDirectory(prefix="exp045-full-run-") as td:
+            root = pathlib.Path(td) / "accepted"
+            root.mkdir()
+            root_ref[0] = root
+            make_publication_files(R, root, source_dir)
+            originals, dispatches = install_transport(R)
+            try:
+                neutral = R.run_neutral(root, "mock-argv-file", OFFLINE_REV)
+                assert neutral["status"] == "accepted" and len(dispatches) == 1
+                # Keep a pristine accepted-publication fixture for the failure path.
+                unknown_root = pathlib.Path(td) / "unknown-usage"
+                shutil.copytree(root, unknown_root)
+                root_ref[0] = root
+                R.run(root, "mock-argv-file", OFFLINE_REV, NEUTRAL_REV)
+                assert len(dispatches) == 22, "one neutral + 21 KEEP case requests"
+                results = R.load_json(root / "operation-results.json")
+                assert len(results["operations"]) == 21
+                assert results["provider_calls"] == 21 and results["total_attempts"] == 22
+                assert results["status"] == "complete"
+                report = R.compute_report(root)  # exercises actual _validate_case_journal + pinned analyzer
+                assert report["case_journal"]["attempts"] == 21
+                assert len(report["development_analysis"]["primary"]["A"]["paired_deltas"]) == 8
+                assert len(report["development_analysis"]["primary"]["B"]["paired_deltas"]) == 8
+                assert report["development_analysis"]["development_screen_passed"] is False
+                verified = R.validate_baseline()
+                ranks, facets, nav = R.build_rankings_from_results(verified, results)
+                assert len(ranks) == 13 and len(nav) == 5
+                test_mutation_rejection(R, root, results)
+            finally:
+                restore_transport(R, originals)
+
+            # A second, isolated run returns one syntactically valid Choice batch
+            # with unknown output usage. It must stop at its first attempt and
+            # be classified inconclusive-usage (not zero usage, not a quality pass).
+            root_ref[0] = unknown_root
+            originals2, dispatches2 = install_transport(R, unknown_usage=True)
+            try:
+                R.run(unknown_root, "mock-argv-file", OFFLINE_REV, NEUTRAL_REV)
+                assert len(dispatches2) == 1, "unknown usage must stop all later operations"
+                stopped = R.load_json(unknown_root / "operation-results.json")
+                assert stopped["status"] == "stopped" and stopped["provider_calls"] == 1
+                assert stopped.get("usage_complete") is False
+                assert stopped.get("usage") is None
+                assert stopped.get("known_usage") is not None
+                try:
+                    unknown_report = R.compute_report(unknown_root)
+                except Exception as exc:
+                    raise AssertionError(f"stopped unknown-usage run did not reach report classification: {exc}") from exc
+                assert unknown_report["decision"] == "inconclusive_protocol_or_incomplete"
+            finally:
+                restore_transport(R, originals2)
+    finally:
+        R.subprocess.run = real_git
+    print("EXP-045 full fake-run checks passed: 21 operations, 13 pools, A/B 8 deltas, 6 mutation rejections, unknown-usage stop; mocked git/transport only")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        raise SystemExit("usage: python exp045-full-run-checks.py.txt /path/to/EXP-045/replay.py.txt")
+    run(sys.argv[1])

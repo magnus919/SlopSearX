@@ -1,0 +1,91 @@
+"""Independent offline execution and receipt mutation checks."""
+import base64
+import contextlib
+import io
+import json
+import pathlib
+import runpy
+import shutil
+import sys
+import tempfile
+from unittest import mock
+
+ns = runpy.run_path(sys.argv[1])
+R = ns['R']
+records = []
+
+def execute(root, missing_usage=False, over_input=False):
+    for name, data in [('prepared-plan.json', {}), ('offline-qualification.json', {}),
+                       ('neutral-receipt.json', {'usage': {'input_tokens': 100, 'output_tokens': 40}})]:
+        (root / name).write_bytes(R.pretty(data))
+    def fake(argv, envelope, seconds):
+        batch = R.strict_json(base64.b64decode(json.loads(envelope)['body_base64']))
+        response = ns['response_for'](batch)
+        if missing_usage: response.pop('usage')
+        if over_input: response['usage']['input_tokens'] = 64001
+        return R.wire(response), 0, 1.0, False, False
+    gate = {'publication_gates': {'offline': True, 'neutral': True,
+            'offline_receipt_sha256': R._hash(root / 'offline-qualification.json'),
+            'neutral_receipt_sha256': R._hash(root / 'neutral-receipt.json')}}
+    with mock.patch.object(R, 'verify', return_value=gate), \
+         mock.patch.object(R.H, 'read_transport_argv', return_value=['synthetic-only']), \
+         mock.patch.object(R.H, 'bounded_process', side_effect=fake) as transport:
+        R.run(root, 'synthetic-only', 'a' * 40, 'b' * 40)
+    return transport.call_count
+
+with tempfile.TemporaryDirectory() as tmp:
+    base = pathlib.Path(tmp) / 'base'
+    base.mkdir()
+    assert execute(base) == 21
+    report = R.compute_report(base)
+    assert report['decision'] == 'development_candidate_rejected'
+    assert all(len(report['development_analysis']['primary'][ref]['paired_deltas']) == 8 for ref in ('A', 'B'))
+    assert len(R.load_json(base / 'operation-results.json')['operations']) == 21
+    records.append({'case': 'complete_21_operation_receipt_analysis', 'passed': True})
+    def change(path, mutate):
+        value = R.load_json(path)
+        mutate(value)
+        path.write_bytes(R.pretty(value))
+    first_request = sorted((base / 'requests').glob('*.json'))[0].name
+    first_receipt = sorted((base / 'receipts').glob('*.json'))[0].name
+    mutations = {
+        'raw_bytes': lambda root: (root / 'receipts' / first_receipt.replace('.json', '.response.bin')).write_bytes(b'{}'),
+        'request_bytes': lambda root: (root / 'requests' / first_request).write_bytes(b'{}'),
+        'parent_hash': lambda root: change(root / 'receipts' / first_receipt, lambda x: x.update(parent_response_sha256='c' * 64)),
+        'usage_total': lambda root: change(root / 'operation-results.json', lambda x: x['usage'].update(input_tokens=0)),
+        'known_usage': lambda root: change(root / 'operation-results.json', lambda x: x['known_usage'].update(input_tokens=0)),
+        'usage_completeness': lambda root: change(root / 'operation-results.json', lambda x: x.update(usage_complete=False)),
+        'receipt_timing': lambda root: change(root / 'receipts' / first_receipt, lambda x: x.update(remote_http_ms=999)),
+        'chronology': lambda root: (root / 'attempts.jsonl').write_bytes(b'\n'.join(reversed((root / 'attempts.jsonl').read_bytes().splitlines())) + b'\n'),
+    }
+    for name, mutate in mutations.items():
+        root = pathlib.Path(tmp) / name
+        shutil.copytree(base, root)
+        mutate(root)
+        try: R.compute_report(root)
+        except (ValueError, KeyError, TypeError): pass
+        else: raise AssertionError('altered evidence accepted: ' + name)
+        records.append({'case': name, 'passed': True})
+    unknown = pathlib.Path(tmp) / 'unknown'
+    unknown.mkdir()
+    assert execute(unknown, True) == 1
+    results = R.load_json(unknown / 'operation-results.json')
+    assert results['usage'] is None and results['usage_complete'] is False
+    assert sum(x['status'] == 'not_attempted_terminal_stop' for x in results['operations']) == 20
+    report = R.compute_report(unknown)
+    assert report['decision'] == 'inconclusive_protocol_or_incomplete'
+    records.append({'case': 'unknown_usage_global_stop_and_analysis', 'passed': True})
+    exceeded = pathlib.Path(tmp) / 'exceeded'
+    exceeded.mkdir()
+    assert execute(exceeded, over_input=True) == 1
+    result = R.load_json(exceeded / 'operation-results.json')
+    verified = R.validate_baseline()
+    first = R.operation_inventory(verified)[0]
+    old_elapsed = verified['baseline']['receipts'][first['d_request_id']]['remote_http_ms']
+    assert result['operations'][0]['remote_http_ms'] == old_elapsed + 10.0
+    report = R.compute_report(exceeded)
+    assert report['decision'] == 'not_supported_for_resource_envelope'
+    records.append({'case': 'known_failed_response_timing_resource_stop', 'passed': True})
+print(json.dumps({'schema': 'exp045-root-full-run-qualification/1', 'status': 'passed', 'cases': records,
+                  'provider_calls': 0, 'search_calls': 0, 'transport': 'mocked', 'operations': 21,
+                  'primary_deltas': {'A': 8, 'B': 8}, 'neutral_quality_failed': True}, indent=2))

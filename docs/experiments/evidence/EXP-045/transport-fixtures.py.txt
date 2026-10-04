@@ -1,0 +1,77 @@
+"""Offline transport qualification. Private proxy source is an external argument."""
+import ast
+import base64
+import hashlib
+import io
+import json
+import pathlib
+import sys
+import types
+import urllib.error
+from unittest import mock
+
+source = pathlib.Path(sys.argv[1])
+remote = next(ast.literal_eval(n.value) for n in ast.parse(source.read_text()).body
+              if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'REMOTE' for t in n.targets))
+body = b'{"model":"neutral-only","questions":{}}'
+envelope = {'body_base64': base64.b64encode(body).decode(), 'http_deadline_ms': 375}
+records = []
+inspect_fixture = json.dumps([{'Config': {'Env': ['TYPESAFE_API_KEY=neutral-fixture-only']}}])
+responses = [('valid', b'{"model":"neutral-only"}', None),
+             ('duplicate', b'{"x":1,"x":2}', None),
+             ('nonfinite', b'{"x":NaN}', None),
+             ('timing_collision', b'{"_elapsed_ms":4}', None),
+             ('overflow', b'x' * 2000001, None),
+             ('timeout', None, TimeoutError('forbidden-private-diagnostic')),
+             ('http_redaction', None, urllib.error.HTTPError('https://example.invalid', 400, 'secret', {},
+                io.BytesIO(b'{"error":{"code":"invalid_request","message":"forbidden-private-diagnostic"}}')))]
+for name, blob, error in responses:
+    output, timers, calls = io.BytesIO(), [], []
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return None
+        def read(self, limit): return blob[:limit]
+    def urlopen(request, timeout):
+        calls.append((request.data, timeout))
+        if error: raise error
+        return Response()
+    with mock.patch('subprocess.check_output', return_value=inspect_fixture), \
+         mock.patch('urllib.request.urlopen', side_effect=urlopen), \
+         mock.patch('signal.signal'), \
+         mock.patch('signal.setitimer', side_effect=lambda *args: timers.append(args[1])), \
+         mock.patch('sys.stdin', types.SimpleNamespace(buffer=io.BytesIO(json.dumps(envelope).encode()))), \
+         mock.patch('sys.stdout', types.SimpleNamespace(buffer=output, write=lambda s: output.write(s.encode()))):
+        exec(compile(remote, 'synthetic-transport-fixture', 'exec'), {})
+    raw = output.getvalue()
+    parsed = json.loads(raw)
+    assert calls == [(body, .375)] and timers == [.375, 0]
+    assert b'forbidden-private-diagnostic' not in raw and b'neutral-fixture-only' not in raw
+    assert ('error' not in parsed) == (name == 'valid')
+    records.append({'case': name, 'passed': True})
+valid = {'body_base64': base64.b64encode(b'{}').decode(), 'http_deadline_ms': 375}
+rejections = {
+    'zero_deadline': json.dumps(dict(valid, http_deadline_ms=0)).encode(),
+    'boolean_deadline': json.dumps(dict(valid, http_deadline_ms=True)).encode(),
+    'large_deadline': json.dumps(dict(valid, http_deadline_ms=1001)).encode(),
+    'invalid_base64': json.dumps(dict(valid, body_base64='!!!')).encode(),
+    'duplicate_envelope': b'{"body_base64":"e30=","body_base64":"e30=","http_deadline_ms":375}',
+    'oversized_decoded': json.dumps(dict(valid, body_base64=base64.b64encode(b' ' * 384001).decode())).encode(),
+    'non_object_body': json.dumps(dict(valid, body_base64=base64.b64encode(b'[]').decode())).encode(),
+}
+for name, encoded in rejections.items():
+    with mock.patch('subprocess.check_output', return_value=inspect_fixture), \
+         mock.patch('urllib.request.urlopen') as network, \
+         mock.patch('signal.signal'), mock.patch('signal.setitimer'), \
+         mock.patch('sys.stdin', types.SimpleNamespace(buffer=io.BytesIO(encoded))):
+        try:
+            exec(compile(remote, 'synthetic-transport-fixture', 'exec'), {})
+        except (ValueError, TypeError):
+            pass
+        else:
+            raise AssertionError('invalid envelope accepted')
+        assert network.call_count == 0
+    records.append({'case': name, 'passed': True})
+print(json.dumps({'schema': 'exp045-private-transport-qualification/1', 'status': 'passed',
+                  'source_sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
+                  'cases': records, 'network_calls': 0, 'credential_files_read': 0,
+                  'exact_request_bytes': True, 'deadline_ms': 375, 'timer_cancelled': True}, indent=2))
