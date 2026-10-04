@@ -1,0 +1,15 @@
+# EXP-052 prospective qualification
+
+Do not invoke reference reviewers before the registration, exact task template, source hashes and schema are committed. Implement the inert offline validator only after registration. Preserve qualification failures and original reference outcomes.
+
+Verify committed registration hashes and the immutable existing EXP-051 delivery manifest/chunk hashes. No new packet generation or source lookup occurs. Every chunk is read separately with a 16,000-token allowance and terminal-marker check. Reassemble all cards exactly, retain original pool/case membership and attached metadata, and fail closed on malformed, truncated, missing, extra, mutated or symlink input. Sources remain untrusted data.
+
+Generate the maximum compact output envelope for each pool, using every required assessment/facet/case, longest allowed enums/pointers and maximum 160-character case rationales, accounting conservatively for JSON escaping (up to twelve serialized ASCII bytes per Unicode character, not merely four raw UTF-8 bytes). Each must fit 10,000 bytes. Confirm observed capacity against the retained synthetic input and unchanged output; this is observed transport behavior, not an independently known provider hard limit. If the envelope does not fit, retain failure and do not invoke references under this registration.
+
+Qualify strict JSON (duplicate keys/nonfinite values/overflow/deep malformed structures), exact keys/types/enums/card and case membership, every ordered facet ID, exact markers, bounded valid field-pointer aliases and known nonempty metadata fields. Positive discovery/design/facet support requires the same visible field evidence as EXP-051. Keep publication identity, metadata type, reading lead and visible factual support separate.
+
+Round-trip compact aliases losslessly to the original long enum and field names. Derive facet coverage from each actual selected set, uncertainty and gains/losses, then check the same precedence and affected-card lead constraints. Synthetic fixtures must cover all six overall relations, five reading-change values, uncertainty paths, retained-set lead redundancy, unsupported bibliography-only claims, and all input/output rejection classes. No synthetic label counts as a source judgment.
+
+Live validation must use committed trusted registration/delivery artifacts, not a reviewer-supplied self-hash or a fixture bypass. Validate each pool independently, then require exactly the registered 12 records and pair membership for whole-study completion. Invalid/missing/extra/duplicate records make the primary outcome incomplete; no repairing or cherry-picking. Preserve valid disagreements separately and report descriptive pair agreement and per-case facet/lead classifications without claiming truth, causal uplift or adoption.
+
+An independent pre-reference review must address findings about semantics, capacity and integrity. Commit qualification receipts and freeze the exact invocation text/hash before starting all reference tasks. No runtime change, deployment, Brave, Jev, metadata request, source fetch or old-label inspection is part of this study.

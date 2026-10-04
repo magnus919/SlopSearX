@@ -1,0 +1,33 @@
+{
+  "schema": "exp052-resource-plan/1",
+  "model": "gpt-6-luna",
+  "fork_turns": "none",
+  "units": [
+    "P01-R1",
+    "P01-R2",
+    "P02-R1",
+    "P02-R2",
+    "P03-R1",
+    "P03-R2",
+    "P04-R1",
+    "P04-R2",
+    "P05-R1",
+    "P05-R2",
+    "P06-R1",
+    "P06-R2"
+  ],
+  "reference_invocations": 12,
+  "invocations_per_unit": 1,
+  "max_parallel_references": 2,
+  "chunk_read_max_output_tokens": 16000,
+  "one_chunk_per_tool_call": true,
+  "final_utf8_bytes_max": 10000,
+  "rationale_unicode_characters_max": 160,
+  "search_calls": 0,
+  "jev_calls": 0,
+  "metadata_calls": 0,
+  "page_fetches": 0,
+  "retry_calls": 0,
+  "substitutions": 0,
+  "capacity_evidence": "One synthetic 13,447-byte complete response reproduced byte-identically by Luna; model hard completion/context limits remain unverified. Bound and actual-read qualification required before references."
+}
