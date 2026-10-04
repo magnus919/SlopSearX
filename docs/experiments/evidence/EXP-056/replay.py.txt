@@ -1,0 +1,190 @@
+"""Offline EXP-056 orchestration preparation; no provider/search transport."""
+from __future__ import annotations
+import argparse
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import math
+from pathlib import Path
+import subprocess
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+REG_COMMIT = "ab3044072ff36e7258e3926fb2f1aaa002137b12"
+REG_PATH = "docs/experiments/evidence/EXP-056/registration-integrity.json"
+REG_SCHEMA = "exp056-registration-integrity/1"
+REG_FILES = {
+    "docs/experiments/EXP-056-binary-counterfactual-selection.md",
+    "docs/experiments/evidence/EXP-056/source-pins.json",
+    "docs/experiments/evidence/EXP-056/registration-review.md",
+}
+SOURCE_FILES = {
+    "docs/experiments/evidence/EXP-043/result-integrity.json",
+    "docs/experiments/evidence/EXP-043/replay.py.txt",
+    "docs/experiments/evidence/EXP-043/source-pins.json",
+    "docs/experiments/evidence/EXP-043/prepared-manifest.json",
+    "docs/experiments/evidence/EXP-044/replay.py.txt",
+    "docs/experiments/evidence/EXP-044/result-integrity.json",
+    "docs/experiments/evidence/EXP-044/source-pins.json",
+    "docs/experiments/evidence/EXP-044/qualification-input-hashes.json",
+    "docs/experiments/evidence/EXP-044/qualification-result.json",
+    "docs/experiments/evidence/EXP-042/analysis.py.txt",
+    "docs/experiments/evidence/EXP-046/replay.py.txt",
+    "docs/experiments/evidence/EXP-046/result-integrity.json",
+}
+MODEL = "jev-1.13.0"
+MAX_RAW = 2_000_000
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+def reject_duplicates(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate-json-key")
+        result[key] = value
+    return result
+
+def strict(raw):
+    if type(raw) is not bytes or len(raw) > MAX_RAW:
+        raise ValueError("response-byte-bound")
+    def nonfinite(_):
+        raise ValueError("nonfinite-json")
+    value = json.loads(raw.decode("utf-8"), object_pairs_hook=reject_duplicates, parse_constant=nonfinite)
+    def depth(obj, level=0):
+        if level > 40:
+            raise ValueError("json-depth-bound")
+        if type(obj) is float and not math.isfinite(obj):
+            raise ValueError("nonfinite-json")
+        if isinstance(obj, dict):
+            for item in obj.values():
+                depth(item, level + 1)
+        elif isinstance(obj, list):
+            for item in obj:
+                depth(item, level + 1)
+    depth(value)
+    return value
+
+def parse_noul_response(raw, expected_ids):
+    expected = list(expected_ids)
+    if not expected or len(expected) > 80 or any(type(q) is not str for q in expected) or len(set(expected)) != len(expected):
+        raise ValueError("expected-question-inventory")
+    result = strict(raw)
+    required = {"model", "answers", "usage"}
+    if type(result) is not dict or not required <= set(result) or set(result) - required - {"_elapsed_ms"}:
+        raise ValueError("response-shape")
+    if result["model"] != MODEL:
+        raise ValueError("response-model")
+    answers = result["answers"]
+    if type(answers) is not dict or set(answers) != set(expected):
+        raise ValueError("response-answer-membership")
+    values = {}
+    for qid in expected:
+        answer = answers[qid]
+        if type(answer) is not dict or set(answer) != {"type", "noul"} or answer["type"] != "noul":
+            raise ValueError("response-answer-shape")
+        value = answer["noul"]
+        if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 1:
+            raise ValueError("response-noul-value")
+        values[qid] = value
+    usage = result["usage"]
+    if type(usage) is not dict or set(usage) != {"input_tokens", "output_tokens"} or any(type(v) is not int or v < 0 for v in usage.values()):
+        raise ValueError("response-usage")
+    if usage["input_tokens"] > 64_000:
+        raise ValueError("observed-input-token-cap")
+    elapsed = result.get("_elapsed_ms")
+    if "_elapsed_ms" in result and (type(elapsed) not in (int, float) or not math.isfinite(elapsed) or elapsed < 0):
+        raise ValueError("owned-timing-envelope")
+    return {"values": values, "model": result["model"], "usage": usage, "raw_sha256": digest(raw), "owned_wrapper_elapsed_ms": elapsed}
+
+def regular_bytes(relative):
+    path = REPO / relative
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("missing-or-linked-trusted-input")
+    return path.read_bytes()
+
+def verify_registration():
+    raw = subprocess.run(["git", "show", f"{REG_COMMIT}:{REG_PATH}"], cwd=REPO, check=True, capture_output=True).stdout
+    if regular_bytes(REG_PATH) != raw:
+        raise ValueError("registration-bytes-changed")
+    reg = strict(raw)
+    if reg.get("schema") != REG_SCHEMA or set(reg.get("files", {})) != REG_FILES:
+        raise ValueError("registration-inventory")
+    for relative, expected in reg["files"].items():
+        committed = subprocess.run(["git", "show", f"{REG_COMMIT}:{relative}"], cwd=REPO, check=True, capture_output=True).stdout
+        if regular_bytes(relative) != committed or digest(committed) != expected:
+            raise ValueError("registration-member-changed")
+    pins = strict(regular_bytes("docs/experiments/evidence/EXP-056/source-pins.json"))
+    if pins.get("schema") != "exp056-source-pins/1" or set(pins.get("files", {})) != SOURCE_FILES:
+        raise ValueError("source-inventory")
+    for relative, expected in pins["files"].items():
+        if digest(regular_bytes(relative)) != expected:
+            raise ValueError("source-pin-changed")
+    return digest(raw)
+
+def load_verified_baseline():
+    registration_sha = verify_registration()
+    # Load only the original hash-verified helper; it validates all raw receipts/history.
+    path = REPO / "docs/experiments/evidence/EXP-044/replay.py.txt"
+    loader = importlib.machinery.SourceFileLoader("exp056_frozen_baseline", str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    chain = module.validate_published_result()
+    data = module.source_data()
+    grouped = module.groups_in_memory(data)
+    specs = module.specs_in_memory(data, grouped)
+    return module, chain, data, grouped, specs, registration_sha
+
+def prepare_inventory():
+    baseline, chain, data, grouped, specs, registration_sha = load_verified_baseline()
+    by_id = {spec["id"]: spec for spec in specs}
+    operations = []
+    for spec in specs:
+        if spec["kind"] != "D" or not spec.get("pair_id"):
+            continue
+        pool = spec["pool_id"]
+        matches = [other for other in specs if other["kind"] == "F" and other.get("pair_id") == spec["pair_id"]]
+        if len(matches) != 1:
+            raise ValueError("missing-or-duplicate-original-f-pair")
+        counterpart = matches[0]
+        fid = counterpart["id"]
+        variant = spec["pair_id"][len(pool) + 1:]
+        if variant not in {"main", "repeat", "rotated20"}:
+            raise ValueError("original-pair-variant")
+        if spec["candidate_ids"] != counterpart["candidate_ids"] or spec["task"] != counterpart["task"]:
+            raise ValueError("original-pair-context-mismatch")
+        operations.append({
+            "id": spec["id"], "pool": pool, "role": variant, "pair_id": spec["pair_id"],
+            "d_request_id": spec["id"], "f_request_id": fid,
+            "candidate_ids": spec["candidate_ids"],
+            "facet_ids": [f["id"] for f in counterpart["facets"]],
+            "purpose_sha256": digest(spec["task"].encode("utf-8")),
+            "original_d_body_sha256": digest(spec["body"]),
+            "original_f_body_sha256": digest(counterpart["body"]),
+            "maximum_new_rounds": 4,
+        })
+    if len(operations) != 21 or len(by_id) != 65:
+        raise ValueError("frozen-operation-count")
+    return {
+        "schema": "exp056-operation-inventory/1",
+        "registration_sha256": registration_sha,
+        "old_validated_responses": len(chain["receipts"]),
+        "operations": operations,
+        "maximum_case_attempts": 84, "maximum_neutral_attempts": 1,
+        "new_jev_calls": 0, "search_calls": 0, "brave_attempts": 0,
+        "meaning": "Preparation only; no new candidate ranking or quality result.",
+    }
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--prepare", action="store_true", required=True)
+    args = parser.parse_args()
+    result = prepare_inventory()
+    # No filesystem output: controller preserves and hashes the exact returned inventory.
+    print(json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2))
+
+if __name__ == "__main__":
+    main()

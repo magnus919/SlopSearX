@@ -1,0 +1,92 @@
+"""Full frozen-operation offline replay with synthetic neutral responses.
+
+This is controller/analysis qualification only. It cannot prove candidate quality.
+"""
+import importlib.machinery
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+
+def load(name, filename):
+    loader = importlib.machinery.SourceFileLoader(name, str(HERE / filename))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+def qualify(owned_child=False):
+    replay = load('prepare56', 'replay.py.txt')
+    policy = load('policy56', 'policy.py.txt')
+    coordinator = load('coordinate56', 'orchestrator.py.txt')
+    baseline, chain, data, grouped, specs, reg = replay.load_verified_baseline()
+    inventory = replay.prepare_inventory()
+    specmap = {x['id']: x for x in specs}
+    receipts = chain['receipts']
+    original_requests, original_raw = [], []
+    def transport(body, **kwargs):
+        request = json.loads(body)
+        original_requests.append(body)
+        raw = json.dumps({'model': 'jev-1.13.0', 'answers': {
+            qid: {'type': 'noul', 'noul': .5} for qid in request['questions']},
+            'usage': {'input_tokens': 1, 'output_tokens': 1}}).encode()
+        original_raw.append(raw)
+        return raw, 1
+    if owned_child:
+        owned = load('transport56', 'transport.py.txt').ChildTransport([
+            sys.executable, '-c',
+            'import sys,json; r=json.load(sys.stdin); json.dump({"model":"jev-1.13.0","answers":{k:{"type":"noul","noul":.5} for k in r["questions"]},"usage":{"input_tokens":1,"output_tokens":1}},sys.stdout)'])
+        def transport(body, timeout_s):
+            raw, elapsed = owned(body, timeout_s)
+            original_requests.append(body)
+            original_raw.append(raw)
+            return raw, elapsed
+    def execute(item):
+        d = specmap[item['d_request_id']]
+        f = specmap[item['f_request_id']]
+        source_cards = {x['id']: x for x in grouped[item['pool']]}
+        cards = [source_cards[cid] for cid in d['candidate_ids']]
+        w = specmap[item['pool'] + '-w0']
+        w0 = baseline.BASE.score_order(w, receipts[w['id']])
+        result = coordinator.operation(policy, replay.parse_noul_response, cards, d['task'],
+            f['facets'], receipts[d['id']]['scores'], receipts[f['id']]['nouls'],
+            w0, receipts[d['id']]['remote_http_ms'] + receipts[f['id']]['remote_http_ms'], transport)
+        return result
+    packet = coordinator.study(inventory['operations'], execute)
+    if packet['status'] != 'complete' or len(packet['results']) != 21:
+        raise ValueError('synthetic-frozen-operation-pipeline-incomplete')
+    by_id = {row['operation_id']: row['result'] for row in packet['results']}
+    ranks, _, nav, facets = baseline.build_rankings(data, grouped, specs, receipts)
+    for pool in (*baseline.SOFTWARE, *baseline.EXTENDED):
+        ranks[pool]['e'] = by_id[pool + '-d']['order']
+        if pool in baseline.EXTENDED:
+            ranks[pool]['repeat'] = by_id[pool + '-d-repeat']['order']
+            ranks[pool]['rotated'] = by_id[pool + '-d-rotated20']['order']
+    refs, ref_hashes = baseline.analysis_references(data, grouped)
+    analysis = baseline.analyze_rankings(ranks, refs, facets)
+    for ref in ('A', 'B'):
+        if set(analysis['primary'][ref]['paired_deltas']) != {f'q{i}' for i in range(1, 9)}:
+            raise ValueError('missing-primary-reference-deltas')
+        if set(analysis['diagnostics']['per_reference_pool_metrics'][ref]) != set(baseline.SOFTWARE) | set(baseline.NATURAL):
+            raise ValueError('missing-reference-pool-metrics')
+    if len(original_requests) != 21 or len(original_raw) != 21:
+        raise ValueError('empty-or-incomplete-synthetic-receipt-inventory')
+    # Neutral .5 responses abstain, so this path must not credit facet improvement.
+    if analysis['development_screen_passed']:
+        raise ValueError('neutral-controller-fixture-must-not-qualify-quality')
+    return {'schema': 'exp056-offline-pipeline/1', 'synthetic': True, 'owned_child_transport': owned_child,
+        'candidate_quality_established': False, 'registration_sha256': reg,
+        'operations': packet, 'navigation': nav, 'analysis': analysis,
+        'reference_hashes': ref_hashes,
+        'request_sha256': [replay.digest(x) for x in original_requests],
+        'response_sha256': [replay.digest(x) for x in original_raw],
+        'new_jev_calls': 0, 'search_calls': 0, 'brave_attempts': 0}
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--owned-child', action='store_true')
+    args = parser.parse_args()
+    print(json.dumps(qualify(args.owned_child), ensure_ascii=False, indent=2, sort_keys=True))
