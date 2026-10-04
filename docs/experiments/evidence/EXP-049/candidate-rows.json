@@ -1,0 +1,978 @@
+[
+  {
+    "scenario": "scope",
+    "surface": "results",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "scope",
+    "surface": "entities",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "scope",
+    "surface": "detail",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown or expired snapshot",
+        "field": "result_id"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "result",
+    "surface": "results",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "result",
+    "surface": "entities",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "result",
+    "surface": "detail",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown or expired snapshot",
+        "field": "result_id"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "total",
+    "surface": "results",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "total",
+    "surface": "entities",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "total",
+    "surface": "detail",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown or expired snapshot",
+        "field": "result_id"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "created",
+    "surface": "results",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "created",
+    "surface": "entities",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "created",
+    "surface": "detail",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown or expired snapshot",
+        "field": "result_id"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "expires",
+    "surface": "results",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "expires",
+    "surface": "entities",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "expires",
+    "surface": "detail",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown or expired snapshot",
+        "field": "result_id"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "expires_nan",
+    "surface": "results",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "expires_nan",
+    "surface": "entities",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "expires_nan",
+    "surface": "detail",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown or expired snapshot",
+        "field": "result_id"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "expires_inf",
+    "surface": "results",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "expires_inf",
+    "surface": "entities",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "expires_inf",
+    "surface": "detail",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown or expired snapshot",
+        "field": "result_id"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "created_nan",
+    "surface": "results",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "created_nan",
+    "surface": "entities",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "created_nan",
+    "surface": "detail",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown or expired snapshot",
+        "field": "result_id"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "healthy",
+    "surface": "results",
+    "expected": "success",
+    "observed": "success",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "query": "offline integrity fixture",
+      "cursor": "snap-13d606567ea6",
+      "artifact": {
+        "contract": "slopsearx.artifact_ref",
+        "version": 1,
+        "kind": "snapshot",
+        "id": "snap-13d606567ea6"
+      },
+      "page": 1,
+      "results": [
+        {
+          "title": "Evidence",
+          "url": "https://example.org/evidence",
+          "snippet": "Captured evidence",
+          "source_engines": [
+            "wikipedia"
+          ],
+          "source_count": 1,
+          "primary_engine": "wikipedia",
+          "category": "general",
+          "published_at": null,
+          "score": 0.0,
+          "position": 0,
+          "tier": 1,
+          "citation": {
+            "label": "Evidence",
+            "url": "https://example.org/evidence"
+          },
+          "retrieval": {
+            "contract": "slopsearx.retrieval_handoff",
+            "version": 1,
+            "eligible": true,
+            "url_status": "ok",
+            "url_reason": null,
+            "scheme": "https"
+          },
+          "result_id": "snap-13d606567ea6:0",
+          "artifact": {
+            "contract": "slopsearx.artifact_ref",
+            "version": 1,
+            "kind": "result",
+            "id": "snap-13d606567ea6:0"
+          }
+        }
+      ],
+      "meta": {
+        "total": 1,
+        "ranking": "tier_then_cross_engine_presence",
+        "has_more": false,
+        "query_id": "fixture-id"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "healthy",
+    "surface": "entities",
+    "expected": "success",
+    "observed": "success",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "contract": "slopsearx.entity_groups",
+      "version": 1,
+      "cursor": "snap-7698a8a937be",
+      "query": "offline integrity fixture",
+      "page": 1,
+      "entities": [
+        {
+          "entity_id": null,
+          "namespace": null,
+          "identifier": null,
+          "reason": "missing_or_unsupported_payload",
+          "result_ids": [
+            "snap-7698a8a937be:0"
+          ],
+          "conflicting_fields": [],
+          "artifact": null
+        }
+      ],
+      "meta": {
+        "total_entities": 1,
+        "total_results": 1,
+        "unresolved_entities": 1,
+        "has_more": false,
+        "query_id": "fixture-id",
+        "note": "Entity identity is source-reported, not independent corroboration or verification."
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "healthy",
+    "surface": "detail",
+    "expected": "success",
+    "observed": "success",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "result_id": "snap-8554a97ab15f:0",
+      "artifact": {
+        "contract": "slopsearx.artifact_ref",
+        "version": 1,
+        "kind": "result",
+        "id": "snap-8554a97ab15f:0"
+      },
+      "title": "Evidence",
+      "url": "https://example.org/evidence",
+      "content": "Captured evidence",
+      "content_available": false,
+      "thumbnail": null,
+      "img_src": null,
+      "media": null,
+      "payload": null,
+      "source_engines": [
+        "wikipedia"
+      ],
+      "source_count": 1,
+      "primary_engine": "wikipedia",
+      "category": "general",
+      "published_at": null,
+      "tier": 1,
+      "position": 0,
+      "score": 0.0,
+      "citation": {
+        "label": "Evidence",
+        "url": "https://example.org/evidence"
+      },
+      "provenance": {
+        "query": "offline integrity fixture",
+        "query_id": "fixture-id",
+        "rank_explanation": "tier_then_cross_engine_presence",
+        "source_engines": [
+          "wikipedia"
+        ]
+      },
+      "snapshot": {
+        "cursor": "snap-8554a97ab15f",
+        "query": "offline integrity fixture",
+        "query_id": "fixture-id",
+        "total": 1
+      },
+      "note": "SlopSearX did not fetch or verify the linked page",
+      "retrieval": {
+        "contract": "slopsearx.retrieval_handoff",
+        "version": 1,
+        "result_id": "snap-8554a97ab15f:0",
+        "url": "https://example.org/evidence",
+        "url_status": "ok",
+        "url_reason": null,
+        "scheme": "https",
+        "eligible": true,
+        "snippet_only": true,
+        "verified": false,
+        "verification_note": "SlopSearX did not fetch or verify the linked page",
+        "provenance": {
+          "snapshot_cursor": "snap-8554a97ab15f",
+          "query_id": "fixture-id",
+          "query": "offline integrity fixture",
+          "source_engines": [
+            "wikipedia"
+          ]
+        }
+      },
+      "content_unavailable_note": "full content unavailable (adapter returned snippet only)"
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "expired",
+    "surface": "results",
+    "expected": "expired_handle",
+    "observed": "expired_handle",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "expired_handle",
+        "message": "snapshot has expired",
+        "field": "cursor",
+        "handle": "snap-5cc58e5bdf9c",
+        "expires_at": "2026-10-04T13:07:11.982798+00:00"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "expired",
+    "surface": "entities",
+    "expected": "expired_handle",
+    "observed": "expired_handle",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "expired_handle",
+        "message": "snapshot has expired",
+        "field": "cursor",
+        "handle": "snap-dca1e1c4093c",
+        "expires_at": "2026-10-04T13:07:11.983811+00:00"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "expired",
+    "surface": "detail",
+    "expected": "expired_handle",
+    "observed": "expired_handle",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "expired_handle",
+        "message": "snapshot has expired",
+        "field": "result_id",
+        "handle": "snap-3db17b85f9cc:0",
+        "expires_at": "2026-10-04T13:07:11.984551+00:00"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "missing",
+    "surface": "results",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "missing",
+    "surface": "entities",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "missing",
+    "surface": "detail",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown or expired snapshot",
+        "field": "result_id"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "cross_tenant",
+    "surface": "results",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "cross_tenant",
+    "surface": "entities",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown cursor",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "cross_tenant",
+    "surface": "detail",
+    "expected": "invalid_cursor",
+    "observed": "invalid_cursor",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "invalid_cursor",
+        "message": "unknown or expired snapshot",
+        "field": "result_id"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "legacy",
+    "surface": "results",
+    "expected": "success",
+    "observed": "success",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "query": "offline integrity fixture",
+      "cursor": "snap-d24acb7c9968",
+      "artifact": {
+        "contract": "slopsearx.artifact_ref",
+        "version": 1,
+        "kind": "snapshot",
+        "id": "snap-d24acb7c9968"
+      },
+      "page": 1,
+      "results": [
+        {
+          "title": "Evidence",
+          "url": "https://example.org/evidence",
+          "snippet": "Captured evidence",
+          "source_engines": [
+            "wikipedia"
+          ],
+          "source_count": 1,
+          "primary_engine": "wikipedia",
+          "category": "general",
+          "published_at": null,
+          "score": 0.0,
+          "position": 0,
+          "tier": 1,
+          "citation": {
+            "label": "Evidence",
+            "url": "https://example.org/evidence"
+          },
+          "retrieval": {
+            "contract": "slopsearx.retrieval_handoff",
+            "version": 1,
+            "eligible": true,
+            "url_status": "ok",
+            "url_reason": null,
+            "scheme": "https"
+          },
+          "result_id": "snap-d24acb7c9968:0",
+          "artifact": {
+            "contract": "slopsearx.artifact_ref",
+            "version": 1,
+            "kind": "result",
+            "id": "snap-d24acb7c9968:0"
+          }
+        }
+      ],
+      "meta": {
+        "total": 1,
+        "ranking": "tier_then_cross_engine_presence",
+        "has_more": false,
+        "query_id": "fixture-id"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "legacy",
+    "surface": "entities",
+    "expected": "success",
+    "observed": "success",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "contract": "slopsearx.entity_groups",
+      "version": 1,
+      "cursor": "snap-5617db5f5315",
+      "query": "offline integrity fixture",
+      "page": 1,
+      "entities": [
+        {
+          "entity_id": null,
+          "namespace": null,
+          "identifier": null,
+          "reason": "missing_or_unsupported_payload",
+          "result_ids": [
+            "snap-5617db5f5315:0"
+          ],
+          "conflicting_fields": [],
+          "artifact": null
+        }
+      ],
+      "meta": {
+        "total_entities": 1,
+        "total_results": 1,
+        "unresolved_entities": 1,
+        "has_more": false,
+        "query_id": "fixture-id",
+        "note": "Entity identity is source-reported, not independent corroboration or verification."
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "legacy",
+    "surface": "detail",
+    "expected": "success",
+    "observed": "success",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "result_id": "snap-2f69c69789e3:0",
+      "artifact": {
+        "contract": "slopsearx.artifact_ref",
+        "version": 1,
+        "kind": "result",
+        "id": "snap-2f69c69789e3:0"
+      },
+      "title": "Evidence",
+      "url": "https://example.org/evidence",
+      "content": "Captured evidence",
+      "content_available": false,
+      "thumbnail": null,
+      "img_src": null,
+      "media": null,
+      "payload": null,
+      "source_engines": [
+        "wikipedia"
+      ],
+      "source_count": 1,
+      "primary_engine": "wikipedia",
+      "category": "general",
+      "published_at": null,
+      "tier": 1,
+      "position": 0,
+      "score": 0.0,
+      "citation": {
+        "label": "Evidence",
+        "url": "https://example.org/evidence"
+      },
+      "provenance": {
+        "query": "offline integrity fixture",
+        "query_id": "fixture-id",
+        "rank_explanation": "tier_then_cross_engine_presence",
+        "source_engines": [
+          "wikipedia"
+        ]
+      },
+      "snapshot": {
+        "cursor": "snap-2f69c69789e3",
+        "query": "offline integrity fixture",
+        "query_id": "fixture-id",
+        "total": 1
+      },
+      "note": "SlopSearX did not fetch or verify the linked page",
+      "retrieval": {
+        "contract": "slopsearx.retrieval_handoff",
+        "version": 1,
+        "result_id": "snap-2f69c69789e3:0",
+        "url": "https://example.org/evidence",
+        "url_status": "ok",
+        "url_reason": null,
+        "scheme": "https",
+        "eligible": true,
+        "snippet_only": true,
+        "verified": false,
+        "verification_note": "SlopSearX did not fetch or verify the linked page",
+        "provenance": {
+          "snapshot_cursor": "snap-2f69c69789e3",
+          "query_id": "fixture-id",
+          "query": "offline integrity fixture",
+          "source_engines": [
+            "wikipedia"
+          ]
+        }
+      },
+      "content_unavailable_note": "full content unavailable (adapter returned snippet only)"
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "disconnected",
+    "surface": "results",
+    "expected": "store_unavailable",
+    "observed": "store_unavailable",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "store_unavailable",
+        "message": "snapshot store is unavailable",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "disconnected",
+    "surface": "entities",
+    "expected": "store_unavailable",
+    "observed": "store_unavailable",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "store_unavailable",
+        "message": "snapshot store is unavailable",
+        "field": "cursor"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  },
+  {
+    "scenario": "disconnected",
+    "surface": "detail",
+    "expected": "store_unavailable",
+    "observed": "store_unavailable",
+    "correct": true,
+    "exception": null,
+    "body": {
+      "error": {
+        "code": "store_unavailable",
+        "message": "snapshot store is unavailable",
+        "field": "result_id"
+      }
+    },
+    "record_unchanged": true,
+    "engine_calls": 0
+  }
+]
