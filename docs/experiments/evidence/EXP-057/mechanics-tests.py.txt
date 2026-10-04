@@ -1,0 +1,120 @@
+"""Real policy/parser/coordinator mechanics; no providers or quality inference."""
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import time
+import unittest
+
+HERE = Path(__file__).resolve().parent
+
+def load(name, file):
+    l = importlib.machinery.SourceFileLoader(name, str(HERE/file))
+    s = importlib.util.spec_from_loader(name, l)
+    m = importlib.util.module_from_spec(s)
+    l.exec_module(m)
+    return m
+
+policy = load('realpolicy', 'policy.py.txt')
+parser = load('realparser', 'replay.py.txt').parse_noul_response
+coordinator = load('realcoordinator', 'orchestrator.py.txt')
+
+def pool():
+    ids = [f'c{i}' for i in range(20)]
+    cards = [{'id': x, 'title': x, 'url': 'https://fixture.invalid/'+x, 'snippet': 'Synthetic reading lead.'} for x in ids]
+    scores = {x: 9-i/10 if i<10 else 6-(i-10)/100 for i,x in enumerate(ids)}
+    facets = [{'id': f'f{i}', 'description': f'Synthetic facet {i}'} for i in range(4)]
+    nouls = {x: {j: .9 if x==f'c{10+j}' else .1 for j in range(4)} for x in ids}
+    return ids,cards,scores,facets,nouls
+
+class Tests(unittest.TestCase):
+    def test_two_real_swaps_protected_no_bounce_and_no_third_call(self):
+        ids,cards,scores,facets,nouls=pool()
+        seen=[]
+        def transport(body,timeout_s):
+            self.assertLess(len(seen),2, 'third call must not occur')
+            request=json.loads(body);seen.append(request)
+            values={qid:{'type':'noul','noul': .8 if qid.startswith('a-') else .2} for qid in request['questions']}
+            return json.dumps({'model':'jev-1.13.0','answers':values,'usage':{'input_tokens':1,'output_tokens':1}}).encode(),1
+        result=coordinator.guarded_operation(policy,parser,cards,'Find leads',facets,scores,nouls,list(reversed(ids)),0,transport)
+        self.assertEqual(result['status'],'valid')
+        self.assertEqual(len(result['actions']),2)
+        self.assertEqual([a['candidate_id'] for a in result['actions']],['c10','c11'])
+        self.assertEqual([a['victim_id'] for a in result['actions']],['c9','c8'])
+        self.assertEqual(set(result['order']),set(ids))
+        for i,request in enumerate(seen):
+            self.assertEqual(len(request['state']['protected_ids']),i)
+            self.assertFalse(set(request['state']['protected_ids']) & set(request['state']['removable_ids']))
+            self.assertFalse(set(request['state']['evicted_ids']) & {x['candidate_id'] for x in request['state']['nominated']})
+    def test_no_action_first_or_second_round_stops(self):
+        for stop in (1,2):
+            ids,cards,scores,facets,nouls=pool()
+            calls=[]
+            def transport(body,timeout_s):
+                request=json.loads(body);calls.append(request)
+                allow=len(calls)<stop
+                values={qid:{'type':'noul','noul': (.8 if qid.startswith('a-') else .2) if allow else .5} for qid in request['questions']}
+                return json.dumps({'model':'jev-1.13.0','answers':values,'usage':{'input_tokens':1,'output_tokens':1}}).encode(),1
+            result=coordinator.guarded_operation(policy,parser,cards,'Find leads',facets,scores,nouls,list(reversed(ids)),0,transport)
+            self.assertEqual(result['status'],'valid')
+            self.assertEqual(len(calls),stop)
+            self.assertEqual(len(result['actions']),stop-1)
+    def test_third_round_is_rejected_by_policy(self):
+        ids,cards,scores,facets,nouls=pool()
+        with self.assertRaises(ValueError):
+            policy.build_round(cards,'Find leads',facets,scores,nouls,ids[:10],[],[],3)
+    def test_second_round_failure_discards_real_first_swap(self):
+        ids,cards,scores,facets,nouls=pool()
+        calls=[]
+        def transport(body,timeout_s):
+            request=json.loads(body);calls.append(request)
+            if len(calls)==2:raise TimeoutError('synthetic second-round failure')
+            values={qid:{'type':'noul','noul':.8 if qid.startswith('a-') else .2} for qid in request['questions']}
+            return json.dumps({'model':'jev-1.13.0','answers':values,'usage':{'input_tokens':1,'output_tokens':1}}).encode(),1
+        result=coordinator.guarded_operation(policy,parser,cards,'Find leads',facets,scores,nouls,list(reversed(ids)),0,transport)
+        self.assertEqual(result['status'],'failed')
+        self.assertEqual(result['discarded_action_count'],1)
+        self.assertEqual(result['actions'],[])
+        self.assertEqual(result['order'],list(reversed(ids)))
+    def test_no_facets_bypass_refinement(self):
+        ids,cards,scores,_,_=pool()
+        result=coordinator.guarded_operation(policy,parser,cards,'Find leads',[],scores,{},list(reversed(ids)),0,
+            lambda *a,**k:self.fail('no-facet must not call'))
+        self.assertEqual(result['status'],'valid')
+        self.assertEqual(result['attempts'],[])
+        self.assertEqual(result['order'],policy.stable_order(scores,ids))
+    def test_hard_timer_includes_parsing(self):
+        ids,cards,scores,facets,nouls=pool()
+        budget=coordinator.StudyBudget()
+        def slow(raw,qids): time.sleep(.2)
+        result=coordinator.guarded_operation(policy,slow,cards,'Find leads',facets,scores,nouls,list(reversed(ids)),0,
+            lambda *a,**k:(b'{}',1),timeout_s=.02,budget=budget)
+        self.assertEqual(result['status'],'failed')
+        self.assertEqual(result['order'],list(reversed(ids)))
+        self.assertEqual(result['actions'],[])
+        self.assertTrue(budget.unknown)
+        self.assertEqual(result['attempts'][0]['response_hex'],'7b7d')
+    def test_navigation_returns_exact_original_order(self):
+        ids,_,_,_,_=pool()
+        original=list(reversed(ids))
+        result=coordinator.navigation_control(original,ids,original[1])
+        self.assertEqual(result['order'],original)
+        self.assertEqual(result['attempts'],[])
+        self.assertTrue(result['passed'])
+    def test_field_overflow_makes_zero_calls(self):
+        ids,cards,scores,facets,nouls=pool()
+        cards[0]['snippet']='x'*1201
+        budget=coordinator.StudyBudget()
+        result=coordinator.guarded_operation(policy,parser,cards,'Find leads',facets,scores,nouls,ids,0,
+            lambda *a,**k:self.fail('overflow must prevent call'),budget=budget)
+        self.assertEqual(result['status'],'failed')
+        self.assertEqual(result['order'],ids)
+        self.assertEqual(result['attempts'],[])
+        self.assertEqual(budget.attempts,0)
+    def test_study_deadline_before_call(self):
+        ticks=iter([0,14400])
+        budget=coordinator.StudyBudget(clock=lambda:next(ticks))
+        with self.assertRaises(ValueError):budget.before_call()
+        self.assertEqual(budget.attempts,0)
+
+if __name__=='__main__':unittest.main()
