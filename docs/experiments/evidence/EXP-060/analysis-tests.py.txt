@@ -37,16 +37,19 @@ def fixture() -> dict:
             pools[qid]["target_url"] = question["target_url"]
 
     references = {reviewer: {} for reviewer in ("A", "B")}
-    facets_by_q = {qid: [facet["id"] for facet in questions[qid].get("facets", [])] for qid in analysis.PRIMARY}
+    facets_by_q = {
+        qid: [facet["id"] for facet in questions[qid].get("facets", [])]
+        for qid in (*analysis.PRIMARY, *analysis.NAVIGATION)
+    }
     for reviewer in ("A", "B"):
-        for qid in analysis.PRIMARY:
+        for qid in (*analysis.PRIMARY, *analysis.NAVIGATION):
             facets = facets_by_q[qid]
             rows = {}
             for i, card in enumerate(pools[qid]["cards"]):
                 tags = [facets[i]] if i < len(facets) else []
                 rows[card["id"]] = {
-                    "lead": 3 if i < 2 else (2 if i == 2 else 0),
-                    "visible": 2 if i < 3 else 0,
+                    "lead": 0 if qid in analysis.NAVIGATION else (3 if i < 2 else (2 if i == 2 else 0)),
+                    "visible": 0 if qid in analysis.NAVIGATION else (2 if i < 3 else 0),
                     "facets": tags,
                     "uncertain": False,
                     "rationale": "visible fixture evidence",
@@ -172,10 +175,20 @@ class AnalysisAdapterTests(unittest.TestCase):
         self.assertEqual(result["outcome"], "rejected")
         self.assertFalse(result["gates"]["both_reference_quality"])
 
-    def test_net_useful_count_cannot_hide_loss_of_multiple_useful_cards(self):
+    def test_full_thirteen_query_reference_inventory_includes_navigation_metadata(self):
         run = fixture()
-        # Make two additional cards useful, then exchange both incumbents for
-        # those cards. Counts remain constant, but two useful identities leave.
+        self.assertEqual(set(run["references"]["A"]), set((*analysis.PRIMARY, *analysis.NAVIGATION)))
+        nav = next(op for op in run["operations"] if op["case"] == "q9")
+        target = questions["q9"]["target_url"]
+        self.assertEqual(run["pools"]["q9"]["target_url"], target)
+        self.assertIn(target, [card["url"] for card in nav["cards"]])
+        del run["references"]["B"]["q13"]
+        self.assertEqual(analysis.analyze(run)["outcome"], "inconclusive")
+
+    def test_two_useful_identities_can_be_replaced_when_net_count_and_facets_hold(self):
+        run = fixture()
+        # Exchange two useful identities for two useful identities with the
+        # same facet support. EXP-042's frozen guard is net count, not identity.
         for reviewer in ("A", "B"):
             run["references"][reviewer]["q1"]["q1-c2"]["lead"] = 0
             for cid, facet_idx in (("q1-c11", 0), ("q1-c12", 1)):
@@ -185,11 +198,11 @@ class AnalysisAdapterTests(unittest.TestCase):
         q1e[0], q1e[11] = q1e[11], q1e[0]
         q1e[1], q1e[12] = q1e[12], q1e[1]
         result = analysis.analyze(run)
-        self.assertEqual(result["outcome"], "rejected")
         comparison = result["references"]["A"]["per_pool"]["q1"]["w0"]
         self.assertEqual(comparison["net_useful_loss"], 0)
         self.assertEqual(comparison["lost_useful_count"], 2)
-        self.assertFalse(comparison["passed"])
+        self.assertEqual(comparison["lost_useful_facets"], [])
+        self.assertTrue(result["references"]["A"]["useful_retention_gate"])
 
     def test_navigation_must_preserve_exact_w0_and_rank_fresh_d_top3(self):
         run = fixture()

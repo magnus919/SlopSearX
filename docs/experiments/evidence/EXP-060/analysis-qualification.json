@@ -6,7 +6,7 @@
   "runtime": "Python 3.13",
   "network_calls": 0,
   "provider_calls": 0,
-  "test_count": 19,
+  "test_count": 20,
   "test_result": "passed",
   "qualified_contract": {
     "input_schema": "exp060-run-artifacts/1",
@@ -14,6 +14,7 @@
     "historical_labels_reused": false,
     "primary_queries": ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8"],
     "navigation_queries": ["q9", "q10", "q11", "q12", "q13"],
+    "reference_inventory": "Each reviewer supplies complete fresh annotations for all 13 query pools; only the eight primary pools enter quality calculations.",
     "stability_queries": ["q1", "q4", "q7", "q8"],
     "fresh_candidate_http_budget_ms": 2000,
     "single_http_call_deadline_ms": 1000,
@@ -35,8 +36,8 @@
   },
   "test_coverage": [
     "complete controlled fixture passes all original conjunctive gates",
-    "missing operations, malformed inventories, duplicate ranks, historical labels, bad grades, unknown facets, and more than 80 cards fail closed",
-    "no primary uplift and loss of multiple useful identities reject",
+    "Missing operations, malformed inventories, duplicate ranks, historical labels, bad grades, unknown facets, and more than 80 cards fail closed; complete references cover all 13 pools.",
+    "No primary uplift rejects; useful retention matches frozen EXP-042 net-count loss and retains facet protection while preserving identity-loss diagnostics.",
     "navigation target ranking and exact E identity are enforced",
     "all four repeat/rotation stability triples and fixed rotation order are enforced",
     "at least four natural primary pools over 40 cards are required",

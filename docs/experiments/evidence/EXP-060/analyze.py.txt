@@ -218,9 +218,9 @@ def _validate_run(
     refs: dict[str, dict[str, dict[str, Any]]] = {"A": {}, "B": {}}
     for reviewer in ("A", "B"):
         reference = refs_raw[reviewer]
-        if not isinstance(reference, dict) or set(reference) != set(PRIMARY):
+        if not isinstance(reference, dict) or set(reference) != set((*PRIMARY, *NAVIGATION)):
             raise ValueError("reference_query_inventory_mismatch")
-        for qid in PRIMARY:
+        for qid in (*PRIMARY, *NAVIGATION):
             facet_ids = {facet["id"] for facet in expected_questions[qid].get("facets", [])}
             refs[reviewer][qid] = _valid_label_rows(reference[qid], set(pool_ids[qid]), facet_ids)
 
@@ -292,9 +292,13 @@ def analyze(run: Mapping[str, Any]) -> dict[str, Any]:
         row["id"]: [facet["id"] for facet in row.get("facets", [])]
         for row in cohort if row["kind"] == "research"
     }
+    primary_refs = {
+        reviewer: {qid: refs[reviewer][qid] for qid in PRIMARY}
+        for reviewer in ("A", "B")
+    }
     original = exp042.analyze(
         base_rankings,
-        refs,
+        primary_refs,
         facets,
         ndcg.ndcg_at_10,
         ndcg.paired_bootstrap,
@@ -323,15 +327,16 @@ def analyze(run: Mapping[str, Any]) -> dict[str, Any]:
                 loss = comparison.get("useful_loss")
                 lost_ids = comparison.get("lost_useful_ids")
                 top_count_ok = comparison.get("baseline10_requires_e_at_least9") is True
+                net_retention_ok = isinstance(loss, int) and not isinstance(loss, bool) and loss <= 1
                 pair_pass = (
                     isinstance(delta, (int, float)) and not isinstance(delta, bool)
                     and math.isfinite(delta) and delta >= -0.03
-                    and isinstance(lost_ids, list) and len(lost_ids) <= 1
+                    and net_retention_ok
                     and top_count_ok
                     and not comparison.get("lost_useful_facets")
                 )
                 perpool_gate &= pair_pass
-                retention_gate &= isinstance(lost_ids, list) and len(lost_ids) <= 1 and top_count_ok
+                retention_gate &= net_retention_ok and top_count_ok
                 facet_gate &= not comparison.get("lost_useful_facets")
                 comparisons[comparator] = {
                     "nDCG_delta_e_minus_comparator": delta,
