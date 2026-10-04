@@ -1,0 +1,63 @@
+{
+  "schema": "exp054-study-outcome/1",
+  "primary_outcome": "incomplete",
+  "references_invoked": 6,
+  "valid_references": 5,
+  "invalid_references": 1,
+  "not_invoked": 6,
+  "brave_attempts": 0,
+  "units": [
+    {
+      "unit": "P01-R1",
+      "status": "valid"
+    },
+    {
+      "unit": "P01-R2",
+      "status": "valid"
+    },
+    {
+      "unit": "P02-R1",
+      "status": "valid"
+    },
+    {
+      "unit": "P02-R2",
+      "status": "valid"
+    },
+    {
+      "unit": "P03-R1",
+      "status": "valid"
+    },
+    {
+      "unit": "P03-R2",
+      "status": "invalid"
+    },
+    {
+      "unit": "P04-R1",
+      "status": "not_invoked"
+    },
+    {
+      "unit": "P04-R2",
+      "status": "not_invoked"
+    },
+    {
+      "unit": "P05-R1",
+      "status": "not_invoked"
+    },
+    {
+      "unit": "P05-R2",
+      "status": "not_invoked"
+    },
+    {
+      "unit": "P06-R1",
+      "status": "not_invoked"
+    },
+    {
+      "unit": "P06-R2",
+      "status": "not_invoked"
+    }
+  ],
+  "reason": "P03-R2 used some in facet-support f, where the frozen vocabulary requires direct/partial/lead/none/uncertain. Original unchanged; no repair or retry.",
+  "execution_deviations": [
+    "P03-R2 sent an unsolicited progress message and duplicate assessment to the controller before its identical final answer. No controller feedback or peer-label exchange occurred."
+  ]
+}
