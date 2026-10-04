@@ -1,0 +1,28 @@
+# EXP-045 complete-action design review
+
+**Disposition:** The global-victim plus per-victim replacement branches are a better *hypothesis* than always naming the least-Score victim. They let the model compare incumbent marginal value in the context of the complete top ten, including unique-source value, while preserving deterministic control over which single replacement is applied. This is not evidence of improved quality and must not be chosen by replaying EXP-044 outcomes or tuning to its misses.
+
+## Proposed one-request action
+
+At each round, derive the unprotected current top-ten rows and eligible outside candidates (D Score >=5; exclude selected, previously evicted, and previously used IDs). In one Choice request, ask:
+
+1. A global question: KEEP, or identify one unprotected incumbent to consider replacing, based on the complete current set, caller purpose, facets, and visible evidence.
+2. One conditional-action question per unprotected incumbent: KEEP, or choose one eligible outside candidate that would improve the complete set *if that named incumbent were replaced*. Each branch explicitly names its victim and uses the same unchanged current selection and full-pool state.
+
+The questions are all prebuilt and independent; no branch may assume or refer to the global answer or another branch answer. After the response, deterministic code validates all IDs against the exact offered sets. Apply a replacement only when the global question selects victim V and V's own branch selects candidate C. If the global answer is KEEP, or branch V says KEEP, terminate selection for this pool; do not inspect another branch for a more favorable pair. Never choose the best-looking pair after seeing multiple branch outputs. This deliberately conservative resolution avoids turning the batch into an unregistered best-of-many search. Then protect C, exclude V and C from future victim/candidate eligibility, rebuild all questions from the updated state, and repeat, up to four accepted replacements. Any invalid/missing/extra answer or timed-out round returns full W0 and records operational failure.
+
+This design removes the arbitrary fixed victim and avoids conflicting independently applied facet choices. It asks the model to judge replacement value in the actual set context. It still permits a global-victim/branch-answer mismatch because Choice questions are independent; the stop-on-KEEP rule handles that without post-hoc selection. The global question should be framed as “which incumbent, if any, is the best one to consider replacing,” not as a claim that a replacement is guaranteed to exist.
+
+## Payload and limits
+
+With ten incumbents, the request has at most eleven Choice questions: one global and ten branches. Each branch has at most 70 outside actions plus KEEP (71 options), within the documented per-question option limit. Keep the complete pool, purpose, facets, and current set once in shared state. Branch options should use compact stable IDs and refer to rows in that state; do not repeat full titles/URLs/snippets in every victim×candidate option. Trusted question text must itself explain the visible-only decision rule, victim premise, no-inference rule, and KEEP semantics. Untrusted candidate data stays in state. Freeze canonical serialized bytes and offline worst-case validation for N=80, ten incumbents, maximum field lengths, four rounds, and all eleven questions before any provider call.
+
+This is structurally bounded but **not proven to fit the provider's token/context limit**. The prior body/state byte ceilings remain necessary, not a token-fit guarantee. Measure actual usage on every request. A Choice response must contain exactly the registered question IDs and one valid answer per question; do not accept partial output. Enforce the existing combined 2,000ms remote ceiling (historical D HTTP time plus all Choice HTTP time), each Choice deadline <=1,000ms, and preflight remaining time. If the whole bounded round cannot complete, use full W0 and report operational failure; do not publish D-only or partial decisions. Keep four rounds maximum, overall token/run caps, and no retries.
+
+## Risks and preregistration requirements
+
+- The 11-question batch increases reasoning and prompt size versus one global Choice. Benchmark only offline serialization, schema validation, and fake full-pipeline behavior before freezing. Do not use exploratory provider calls to compare question layouts.
+- Independent questions can disagree. The deterministic global-then-selected-branch rule is part of the treatment and must be fixed in advance; no fallback to another branch, averaging, confidence gate, or probability threshold.
+- Branches should each assess one replacement against the same complete top-ten context and the exact named victim, not separately optimize a facet. Include all facets, including already-covered ones, so the model may preserve unique evidence. Do not prefilter by Noul/facet predictions.
+- Freeze exact trusted wording, question IDs, option names/order, serialization, tie behavior, eligibility, stop conditions, and error handling before any call. The language must define “improve” as net visible evidence/usefulness for the whole request while preserving useful evidence supplied by the victim; it must not claim unseen source contents are known.
+- Keep EXP-044's references, labels, query set, quality thresholds, natural-pool guards, navigation bypass, membership, and stability gates unchanged. This is one fixed development candidate. A pass only qualifies a separately preregistered fresh confirmation; it does not adopt the policy or establish X-agent task uplift.
