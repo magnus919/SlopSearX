@@ -1,0 +1,67 @@
+from pathlib import Path
+import copy,importlib.machinery,importlib.util,json,unittest
+HERE=Path(__file__).resolve().parent;l=importlib.machinery.SourceFileLoader('exp063_contract',str(HERE/'reference-contract.py.txt'));s=importlib.util.spec_from_loader(l.name,l);C=importlib.util.module_from_spec(s);l.exec_module(C)
+
+class Tests(unittest.TestCase):
+    def fixture(self):
+        card={'id':'a','title':'Pipeline-aware regression testing','url':'https://fixture.invalid/paper','snippet':'Affected tests are selected from the dependency graph.'}
+        anchor={'field':'snippet','quote':'dependency graph'}
+        row={'card_sha256':C.fingerprint(card),'lead':3,'visible':2,'facets':['f1'],'uncertain':False,'rationale':'The visible card names dependency-graph test selection.','anchors':[anchor],'facet_anchors':{'f1':[anchor]}}
+        return [card],['f1'],{'a':row}
+    def test_valid_and_exact_metric_fields_preserved(self):
+        cards,facets,rows=self.fixture();result=C.validate(cards,facets,rows)
+        self.assertEqual(result['a'],{k:rows['a'][k] for k in ['lead','visible','facets','uncertain','rationale']})
+    def test_wrong_fingerprint_rejected(self):
+        cards,facets,rows=self.fixture();rows['a']['card_sha256']='0'*64
+        with self.assertRaisesRegex(ValueError,'fingerprint'):C.validate(cards,facets,rows)
+    def test_other_source_quote_rejected_even_with_correct_fingerprint(self):
+        cards,facets,rows=self.fixture();rows['a']['anchors'][0]['quote']='Unseen paper finding'
+        with self.assertRaisesRegex(ValueError,'anchor'):C.validate(cards,facets,rows)
+    def test_tag_without_own_anchor_rejected(self):
+        cards,facets,rows=self.fixture();rows['a']['facet_anchors']={}
+        with self.assertRaisesRegex(ValueError,'facet-anchor'):C.validate(cards,facets,rows)
+    def test_missing_or_unknown_card_rejected(self):
+        cards,facets,rows=self.fixture()
+        for modified in [{},{**rows,'unknown':rows['a']}]:
+            with self.assertRaisesRegex(ValueError,'inventory'):C.validate(cards,facets,modified)
+    def test_duplicate_or_unknown_facet_rejected(self):
+        cards,facets,rows=self.fixture()
+        for tags in [['f1','f1'],['unknown']]:
+            rows['a']['facets']=tags
+            with self.assertRaisesRegex(ValueError,'facet-tags'):C.validate(cards,facets,rows)
+    def test_bool_and_out_of_range_grade_rejected(self):
+        cards,facets,rows=self.fixture()
+        for value in [True,-1,4,2.0]:
+            rows['a']['lead']=value
+            with self.assertRaisesRegex(ValueError,'grade'):C.validate(cards,facets,rows)
+    def test_empty_rationale_rejected(self):
+        cards,facets,rows=self.fixture();rows['a']['rationale']=' '
+        with self.assertRaisesRegex(ValueError,'rationale'):C.validate(cards,facets,rows)
+    def test_extra_or_missing_field_rejected(self):
+        cards,facets,rows=self.fixture();base=copy.deepcopy(rows)
+        for change in ['extra','missing']:
+            rows=copy.deepcopy(base)
+            if change=='extra':rows['a']['invented']=1
+            else:del rows['a']['anchors']
+            with self.assertRaisesRegex(ValueError,'fields'):C.validate(cards,facets,rows)
+    def test_content_hash_key_order_invariant_but_same_id_content_changes(self):
+        cards,facets,rows=self.fixture();card=cards[0]
+        self.assertEqual(C.fingerprint(card),C.fingerprint(dict(reversed(list(card.items())))))
+        cards[0]['snippet']='Changed same-ID source content'
+        with self.assertRaisesRegex(ValueError,'fingerprint'):C.validate(cards,facets,rows)
+    def test_duplicate_json_keys_and_duplicate_source_ids_rejected(self):
+        with self.assertRaisesRegex(ValueError,'duplicate-json-key'):C.parse(b'{"a":1,"a":2}')
+        cards,facets,rows=self.fixture();cards.append(copy.deepcopy(cards[0]))
+        with self.assertRaisesRegex(ValueError,'duplicate-card'):C.validate(cards,facets,rows)
+    def test_anchor_empty_or_oversized_rejected(self):
+        cards,facets,rows=self.fixture()
+        for value in ['', 'x'*257]:
+            rows['a']['anchors'][0]['quote']=value
+            with self.assertRaisesRegex(ValueError,'anchor'):C.validate(cards,facets,rows)
+    def test_historical_wrong_paper_anchor_cannot_bind_to_bazel_overview(self):
+        audit=json.loads((HERE.parent/'EXP-062'/'reference-association-audit.json').read_bytes())
+        example=next(e for e in audit['examples'] if e['source_id']=='c17');card=example['actual_card'];original=example['sealed_reference_A']
+        rows={card['id']:{**original,'card_sha256':C.fingerprint(card),'anchors':[{'field':'title','quote':example['rationale_matches_different_card']['title']}],'facet_anchors':{f:[{'field':'title','quote':example['rationale_matches_different_card']['title']}] for f in original['facets']}}}
+        with self.assertRaisesRegex(ValueError,'wrong-source-anchor'):C.validate([card],original['facets'],rows)
+
+if __name__=='__main__':unittest.main()
