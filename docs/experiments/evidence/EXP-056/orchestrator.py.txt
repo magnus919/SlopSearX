@@ -3,6 +3,7 @@ import asyncio
 import hashlib
 import json
 import math
+import signal
 import time
 
 
@@ -12,22 +13,55 @@ def wire(request):
 
 class StudyBudget:
     """Shared across neutral and case attempts; unknown usage prevents more calls."""
-    def __init__(self):
+    def __init__(self, clock=time.monotonic):
+        self.clock = clock
+        self.started = clock()
         self.input_tokens = 0
         self.output_tokens = 0
         self.unknown = False
         self.attempts = 0
 
     def before_call(self):
-        if self.unknown or self.input_tokens + 64000 > 3000000 or self.output_tokens >= 100000 or self.attempts >= 85:
+        if self.clock() - self.started >= 14400 or self.unknown or self.input_tokens + 64000 > 3000000 or self.output_tokens >= 100000 or self.attempts >= 85:
             raise ValueError('study-call-budget')
         self.attempts += 1
 
     def observe(self, usage):
         self.input_tokens += usage['input_tokens']
         self.output_tokens += usage['output_tokens']
-        if self.input_tokens > 3000000 or self.output_tokens > 100000:
+        if self.clock() - self.started > 14400 or self.input_tokens > 3000000 or self.output_tokens > 100000:
             raise ValueError('study-observed-budget')
+
+
+def navigation_control(w0, ids, target_id):
+    if len(w0) != len(ids) or len(set(w0)) != len(ids) or set(w0) != set(ids):
+        raise ValueError('navigation-membership')
+    return {'order': list(w0), 'attempts': [], 'actions': [],
+            'facet_policy_bypassed': True, 'passed': target_id in w0[:3]}
+
+
+def guarded_operation(*args, timeout_s=60, **kwargs):
+    """POSIX normal-runner owner for the entire operation, including parsing.
+
+    The caller is serial in the main thread. Timer restoration preserves a caller's
+    earlier timer rather than granting more time when returning.
+    """
+    if not 0 < timeout_s <= 60:
+        raise ValueError('owned-operation-timeout')
+    old_handler = signal.getsignal(signal.SIGALRM)
+    old_timer = signal.getitimer(signal.ITIMER_REAL)
+    started = time.monotonic()
+    def expired(signum, frame):
+        raise TimeoutError('owned-operation-hard-deadline')
+    signal.signal(signal.SIGALRM, expired)
+    signal.setitimer(signal.ITIMER_REAL, min(timeout_s, old_timer[0]) if old_timer[0] else timeout_s)
+    try:
+        return operation(*args, **kwargs)
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, old_handler)
+        if old_timer[0]:
+            signal.setitimer(signal.ITIMER_REAL, max(.000001, old_timer[0] - (time.monotonic() - started)), old_timer[1])
 
 
 def operation(policy, parser, cards, purpose, facets, scores, nouls, w0,
@@ -37,7 +71,7 @@ def operation(policy, parser, cards, purpose, facets, scores, nouls, w0,
     transport(body_bytes, timeout_s=...) returns (exact_raw_bytes, measured_remote_ms).
     The normal transport must enforce its supplied timeout; injected test doubles
     cannot establish wall-clock enforcement.
-    Cancellation propagates after receipt capture; caller must stop the study.
+    Cancellation returns full fallback after receipt capture; caller stops the study.
     No retries, no response repair, and no automatic provider selection.
     """
     ids = [c['id'] for c in cards]
@@ -71,7 +105,7 @@ def operation(policy, parser, cards, purpose, facets, scores, nouls, w0,
                        'status': 'invoked', 'usage': None, 'request_utf8': body.decode('utf-8')}
             attempts.append(attempt)
             try:
-                raw, elapsed = transport(body, timeout_s=min(1.0, owned_remaining))
+                raw, elapsed = transport(body, timeout_s=owned_remaining)
             except BaseException:
                 attempt['status'] = 'transport-failed'
                 raise

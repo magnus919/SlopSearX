@@ -1,0 +1,156 @@
+"""One-shot guarded EXP-056 runner; live mode requires committed qualification."""
+import argparse
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+import re
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+HERE=Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+def load(name,file):
+    l=importlib.machinery.SourceFileLoader(name,str(HERE/file));s=importlib.util.spec_from_loader(name,l)
+    m=importlib.util.module_from_spec(s);l.exec_module(m);return m
+
+QUAL_FILES = {
+    'policy.py.txt','replay.py.txt','orchestrator.py.txt','transport.py.txt',
+    'http-wrapper.py.txt','prepare-plan.py.txt','normal-runner.py.txt',
+    'policy-tests.py.txt','response-tests.py.txt','orchestrator-tests.py.txt',
+    'transport-tests.py.txt','http-wrapper-tests.py.txt','mechanics-tests.py.txt',
+    'pipeline-qualification.py.txt','complete-operation-plan.json','neutral-request.json',
+    'qualification-review.md','qualification-result.json','provider-contract.md','budget-clarification.md',
+}
+
+
+def check_qualification(revision):
+    if type(revision) is not str or re.fullmatch(r'[0-9a-f]{40}',revision) is None:raise ValueError('exact-qualification-revision-required')
+    path='docs/experiments/evidence/EXP-056/qualification-integrity.json'
+    raw=subprocess.run(['git','show',f'{revision}:{path}'],cwd=REPO,capture_output=True,check=True).stdout
+    if (REPO/path).read_bytes()!=raw:raise ValueError('qualification-version')
+    manifest=json.loads(raw)
+    if manifest.get('schema')!='exp056-qualification-integrity/1' or set(manifest.get('files',{}))!=QUAL_FILES:raise ValueError('qualification-file-inventory')
+    if manifest.get('qualification_complete') is not True or manifest.get('permits_live_development_study') is not True:raise ValueError('qualification-not-ready')
+    for name,expected in manifest['files'].items():
+        local=HERE/name
+        if local.is_symlink() or not local.is_file() or sha(local.read_bytes())!=expected:raise ValueError('qualification-member-changed')
+        old=subprocess.run(['git','show',f'{revision}:docs/experiments/evidence/EXP-056/{name}'],cwd=REPO,capture_output=True,check=True).stdout
+        if old!=local.read_bytes():raise ValueError('qualification-member-version')
+    return sha(raw)
+
+
+def run(mode, output, revision=None):
+    started=time.monotonic()
+    if mode=='live' and not os.environ.get('TYPESAFE_API_KEY'):raise ValueError('missing-live-credential-before-attempt')
+    qualification=check_qualification(revision) if mode=='live' else None
+    replay=load('runnerreplay','replay.py.txt');plan_module=load('runnerplan','prepare-plan.py.txt')
+    coordinator=load('runnercoord','orchestrator.py.txt');policy=load('runnerpolicy','policy.py.txt')
+    transport_module=load('runnertransport','transport.py.txt')
+    plan=plan_module.prepare()
+    saved_plan=json.loads((HERE/'complete-operation-plan.json').read_bytes())
+    if plan!=saved_plan:raise ValueError('operation-plan-changed')
+    baseline,chain,data,grouped,specs,reg=replay.load_verified_baseline()
+    inventory=replay.prepare_inventory();specmap={x['id']:x for x in specs};planmap={x['operation_id']:x for x in plan['operations']}
+    output=Path(output)
+    output.mkdir(mode=0o700,parents=False,exist_ok=False)
+    (output/'started.json').write_text(json.dumps({'schema':'exp056-start/1','mode':mode,'qualification_sha256':qualification,'plan_sha256':sha((HERE/'complete-operation-plan.json').read_bytes()),'registration_sha256':reg,'new_search_calls':0,'brave_attempts':0},indent=2)+'\n')
+    budget=coordinator.StudyBudget()
+    budget.started=started
+    wrapper=str(HERE/'http-wrapper.py.txt')
+    command=[sys.executable,wrapper]
+    if mode!='live':command+=['--offline-fixture','neutral']
+    normal=transport_module.ChildTransport(command,http_timing=True)
+    failure=transport_module.ChildTransport([sys.executable,wrapper,'--offline-fixture','http-error'],http_timing=True)
+    owner_receipts=[]
+    def invoke(body,timeout_s,operation_id,fail=False):
+        number=budget.attempts
+        (output/f'{number:03d}.request.bin').write_bytes(body)
+        owner=failure if fail else normal
+        before=len(owner.receipts)
+        try:return owner(body,timeout_s)
+        finally:
+            if len(owner.receipts)>before:
+                receipt=owner.receipts[-1]
+                raw=receipt['stdout']
+                if raw is not None:(output/f'{number:03d}.response.bin').write_bytes(raw)
+                safe={k:(v.hex() if type(v) is bytes else v) for k,v in receipt.items()}
+                safe.update(operation_id=operation_id,number=number)
+                (output/f'{number:03d}.owner.json').write_text(json.dumps(safe,indent=2)+'\n')
+                owner_receipts.append(safe)
+    neutral,batch=plan_module.neutral_request();neutral_body=coordinator.wire(neutral)
+    if sha(neutral_body)!=plan['neutral']['body_sha256']:raise ValueError('neutral-plan-binding')
+    neutral_result={'status':'invoked','usage':None}
+    try:
+        budget.before_call()
+        raw,elapsed=invoke(neutral_body,60,'neutral')
+        parsed=replay.parse_noul_response(raw,batch['question_ids'])
+        neutral_result.update(usage=parsed['usage'],remote_http_ms=elapsed,response_sha256=sha(raw))
+        budget.observe(parsed['usage'])
+        if elapsed>1000:raise ValueError('neutral-remote-deadline')
+        neutral_result['status']='valid'
+    except Exception as error:
+        neutral_result.update(status='failed',reason=type(error).__name__)
+        if neutral_result['usage'] is None:budget.unknown=True
+    (output/'neutral.json').write_text(json.dumps(neutral_result,indent=2)+'\n')
+    if neutral_result['status']!='valid':
+        packet={'status':'incomplete','results':[],'uninvoked_ids':[x['id'] for x in inventory['operations']],'reason':'neutral-failed'}
+    else:
+        def execute(item):
+            d=specmap[item['d_request_id']];f=specmap[item['f_request_id']]
+            cardsmap={x['id']:x for x in grouped[item['pool']]};ids=d['candidate_ids']
+            w=specmap[item['pool']+'-w0'];w0=baseline.BASE.score_order(w,chain['receipts'][w['id']])
+            first=[True]
+            def transport(body,timeout_s):
+                if first[0]:
+                    if sha(body)!=planmap[item['id']]['round1_body_sha256']:raise ValueError('round1-plan-binding')
+                    first[0]=False
+                return invoke(body,timeout_s,item['id'],fail=(mode=='offline-failure' and item['id']=='q2-d'))
+            result=coordinator.guarded_operation(policy,replay.parse_noul_response,[cardsmap[x] for x in ids],d['task'],f['facets'],
+                chain['receipts'][d['id']]['scores'],chain['receipts'][f['id']]['nouls'],w0,
+                chain['receipts'][d['id']]['remote_http_ms']+chain['receipts'][f['id']]['remote_http_ms'],transport,budget=budget)
+            (output/(item['id']+'.result.json')).write_text(json.dumps(result,indent=2)+'\n')
+            return result
+        packet=coordinator.study(inventory['operations'],execute)
+    report={'schema':'exp056-normal-run/1','synthetic':mode!='live','mode':mode,'qualification_sha256':qualification,
+        'operations':packet,'neutral':neutral_result,'budget':{'attempts':budget.attempts,'input_tokens':budget.input_tokens,'output_tokens':budget.output_tokens,'unknown_usage':budget.unknown},
+        'owned_receipts':owner_receipts,'owned_elapsed_seconds':time.monotonic()-started,'search_calls':0,'brave_attempts':0,
+        'candidate_quality_established':False,'quality_analysis_performed':False}
+    if packet['status']=='complete':
+        by_id={row['operation_id']:row['result'] for row in packet['results']}
+        ranks,_,nav,facets=baseline.build_rankings(data,grouped,specs,chain['receipts'])
+        for pool in (*baseline.SOFTWARE,*baseline.EXTENDED):
+            ranks[pool]['e']=by_id[pool+'-d']['order']
+            if pool in baseline.EXTENDED:
+                ranks[pool]['repeat']=by_id[pool+'-d-repeat']['order']
+                ranks[pool]['rotated']=by_id[pool+'-d-rotated20']['order']
+        for row in nav:
+            w=specmap[f"nav-{row['query_id']}-{row['target_id']}-w0"]
+            w0=baseline.BASE.score_order(w,chain['receipts'][w['id']])
+            row['normal_control']=coordinator.navigation_control(w0,w['candidate_ids'],row['target_id'])
+        refs,ref_hashes=baseline.analysis_references(data,grouped)
+        analysis=baseline.analyze_rankings(ranks,refs,facets)
+        for ref in ('A','B'):
+            if set(analysis['primary'][ref]['paired_deltas'])!={f'q{i}' for i in range(1,9)}:raise ValueError('normal-primary-reference-inventory')
+        report.update(quality_analysis_performed=True,analysis=analysis,navigation=nav,reference_hashes=ref_hashes)
+        passed=analysis['development_screen_passed'] and all(x['normal_control']['passed'] for x in nav)
+        if mode!='live' and passed:raise ValueError('neutral-fixture-must-not-pass-quality')
+        report['development_screen_passed']=passed
+        report['candidate_quality_established']=mode=='live' and passed
+    report['new_jev_attempts']=budget.attempts if mode=='live' else 0
+    report['files']={x.name:sha(x.read_bytes()) for x in output.iterdir() if x.is_file()}
+    (output/'run.json').write_text(json.dumps(report,indent=2)+'\n')
+    return report
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('--mode',choices=['offline-neutral','offline-failure','live'],required=True)
+    p.add_argument('--output-dir',required=True);p.add_argument('--qualification-revision')
+    args=p.parse_args()
+    if args.mode=='live' and not args.qualification_revision:p.error('live requires committed qualification revision')
+    result=run(args.mode,args.output_dir,args.qualification_revision)
+    print(json.dumps({'status':result['operations']['status'],'operations':len(result['operations']['results']),'attempts':result['budget']['attempts'],'synthetic':result['synthetic']}))

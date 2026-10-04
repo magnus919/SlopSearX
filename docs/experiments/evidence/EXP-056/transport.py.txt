@@ -1,5 +1,8 @@
 """Bounded, deadline-enforced owned child transport; no endpoint defaults."""
 import os
+import json
+import math
+import hashlib
 import selectors
 import signal
 import subprocess
@@ -13,14 +16,15 @@ class ChildTransport:
     describe it as a complete response. The command is trusted local configuration.
     Child process wall time is conservative, not provider-only timing.
     """
-    def __init__(self, command):
+    def __init__(self, command, http_timing=False):
         if not command or any(type(x) is not str for x in command):
             raise ValueError('owned-command-contract')
         self.command = list(command)
+        self.http_timing = http_timing
         self.receipts = []
 
     def __call__(self, body, timeout_s):
-        if type(body) is not bytes or len(body) > 384000 or not 0 < timeout_s <= 1:
+        if type(body) is not bytes or len(body) > 384000 or not 0 < timeout_s <= 60:
             raise ValueError('transport-input-contract')
         started = time.monotonic()
         receipt = {'status': 'invoked', 'request': body, 'stdout': None,
@@ -86,4 +90,15 @@ class ChildTransport:
                     receipt['exit_code'] = process.returncode
                 receipt.update(stdout=bytes(buffers['stdout']), stderr=bytes(buffers['stderr']),
                     elapsed_ms=(time.monotonic() - started)*1000)
+        if self.http_timing:
+            receipt['status'] = 'timing-envelope-validation'
+            envelope = json.loads(receipt['stderr'])
+            if type(envelope) is not dict or set(envelope) != {'remote_http_ms', 'request_sha256', 'response_sha256'} or envelope['request_sha256'] != hashlib.sha256(body).hexdigest() or envelope['response_sha256'] != hashlib.sha256(receipt['stdout']).hexdigest():
+                raise ValueError('owned-http-timing-binding')
+            elapsed = envelope['remote_http_ms']
+            if type(elapsed) not in (int, float) or not math.isfinite(elapsed) or not 0 <= elapsed <= 1000:
+                raise ValueError('owned-http-timing-value')
+            receipt['status'] = 'returned'
+            receipt['remote_http_ms'] = elapsed
+            return receipt['stdout'], elapsed
         return receipt['stdout'], receipt['elapsed_ms']

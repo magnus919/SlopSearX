@@ -82,8 +82,8 @@ for p in repeated["proposals"]:
 
 # Question wording carries the full swap and question IDs reveal only round/positions/type.
 first = repeated["proposals"][0]
-add = request["questions"][first["addition_question_id"]]["instruction"]
-loss = request["questions"][first["loss_question_id"]]["instruction"]
+add = request["questions"][first["addition_question_id"]]["instructions"]
+loss = request["questions"][first["loss_question_id"]]["instructions"]
 for phrase in ("original current selected IDs", "remaining selected IDs", "resulting selected IDs", "facet-0", "Find useful source leads"):
     assert phrase in add
 for phrase in ("original current selected IDs", "remaining selected IDs", "resulting selected IDs", "any requested facet"):
@@ -105,7 +105,7 @@ scenario_cards[11]["snippet"] = "Visible abstract indicates greater scope but du
 scenario_scores["c11"] = 9.0
 scenario_f["c10"][0] = scenario_f["c11"][0] = 0.99
 scenario_request, scenario_batch = build_round(scenario_cards, "Find source leads about the topic", scenario_facets, scenario_scores, scenario_f, scenario_ids[:10], [], [], 1)
-scenario_texts = [q["instruction"] for q in scenario_request["questions"].values() if q["type"] == "noul"]
+scenario_texts = [q["instructions"] for q in scenario_request["questions"].values() if q["type"] == "noul"]
 visible_titles = {c["title"] for c in scenario_request["state"]["candidates"]}
 assert "Duplicate lead: same report" in visible_titles
 assert "Distinct reading lead: complementary study" in visible_titles
