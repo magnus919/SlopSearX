@@ -21,3 +21,11 @@ No refinement wording or probability threshold changes in this ordering study. A
 ## Before calls
 
 Complete independent design review, exact protocol/request schedules, runner source pins, offline cross-arm and shared-W0 qualification, durable pending receipts and one-shot state. Commit the reviewed registration and qualified runner before any provider call. Preserve every failure and do not rerun to obtain a pass.
+
+## Recent upstream experiment reconciliation
+
+A read-only GPT-6 Luna review and parent source check revisited the committed experiments before further provider calls. [PR #512](https://github.com/magnus919/SlopSearX/pull/512) records EXP-034/035/036: whole-pool transport was feasible, naive cross-batch score fusion was unstable, and card-local questions improved stability without establishing consistent quality uplift. In the fresh cardiac case, a title-only publication displaced useful visible evidence. These are reasons not to repeat basic whole-pool feasibility testing or assume larger pools improve research.
+
+[EXP-040](EXP-040-complete-purpose-source-selection.md) later improved purpose-aware reading-lead rankings, including cardiac, but lost a required research facet. Its failed safeguard remains binding. [The release reconciliation](slopsearx-v0.6-release-reconciliation.md) identifies the shipped transport, grouping, snapshots and service seams to reuse. Full snapshots do not mean the shipped first-40 ranker scores the full pool.
+
+EXP-061 isolates only input-order sensitivity on the exposed EXP-060 cards. It cannot repair missing navigation targets, establish additional naturally large pools, overturn prior rejected gates, or support adoption by itself. It preserves fixed IDs and distinct duplicate cards; it does not test invariance to ID reassignment. No new searches or provider calls were used for this review. Product qualification still requires untouched cases, both reference assessments, coverage and navigation retention, stability, sufficient naturally large pools, and runtime failure/compatibility checks.
