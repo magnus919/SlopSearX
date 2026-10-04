@@ -1,0 +1,501 @@
+{
+  "schema": "exp038-analysis/1",
+  "status": "complete",
+  "decision": "not_supported",
+  "scope": "exposed development replay; not fresh holdout, human gold, default authorization, or production latency qualification",
+  "paired_primary_q1_q8": {
+    "root": {
+      "mean": -0.018892205036089127,
+      "lower95": -0.08490348699098381,
+      "upper95": 0.028839522795431016,
+      "draws": 10000,
+      "seed": 91938
+    },
+    "peer": {
+      "mean": -0.03819750775634133,
+      "lower95": -0.11382235445057703,
+      "upper95": 0.026108763519463767,
+      "draws": 10000,
+      "seed": 91938
+    }
+  },
+  "per_query_q1_q8": {
+    "q1": {
+      "root": {
+        "w0_ndcg10": 0.8861107236627898,
+        "w2_ndcg10": 0.918846253041356,
+        "delta_ndcg10": 0.032735529378566275,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "benchmark",
+          "collaboration_conflict",
+          "coordination_conflict",
+          "coordination_measurement"
+        ],
+        "candidate_useful_top10_facets": [
+          "benchmark",
+          "collaboration_conflict",
+          "coordination_conflict",
+          "coordination_measurement"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 0.8861107236627898,
+        "w2_conditional_judged_ndcg10": 0.918846253041356
+      },
+      "peer": {
+        "w0_ndcg10": 0.9257857076266625,
+        "w2_ndcg10": 0.837249027877849,
+        "delta_ndcg10": -0.08853667974881341,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "benchmark",
+          "collaboration_conflict",
+          "coordination_conflict",
+          "coordination_measurement"
+        ],
+        "candidate_useful_top10_facets": [
+          "benchmark",
+          "collaboration_conflict",
+          "coordination_conflict",
+          "coordination_measurement"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 0.9257857076266625,
+        "w2_conditional_judged_ndcg10": 0.837249027877849
+      }
+    },
+    "q2": {
+      "root": {
+        "w0_ndcg10": 0.8954564279672653,
+        "w2_ndcg10": 0.9102234301534599,
+        "delta_ndcg10": 0.014767002186194533,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "approvals",
+          "audit_trails",
+          "policy_controls"
+        ],
+        "candidate_useful_top10_facets": [
+          "approvals",
+          "audit_trails",
+          "policy_controls"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 0.8954564279672653,
+        "w2_conditional_judged_ndcg10": 0.9102234301534599
+      },
+      "peer": {
+        "w0_ndcg10": 1.0,
+        "w2_ndcg10": 0.921723022686679,
+        "delta_ndcg10": -0.07827697731332095,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "approvals",
+          "audit_trails",
+          "policy_controls"
+        ],
+        "candidate_useful_top10_facets": [
+          "approvals",
+          "audit_trails",
+          "policy_controls"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 1.0,
+        "w2_conditional_judged_ndcg10": 0.921723022686679
+      }
+    },
+    "q3": {
+      "root": {
+        "w0_ndcg10": 0.9621404437403492,
+        "w2_ndcg10": 1.0,
+        "delta_ndcg10": 0.03785955625965076,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "durable_recovery",
+          "external_effects_idempotency",
+          "replay"
+        ],
+        "candidate_useful_top10_facets": [
+          "durable_recovery",
+          "external_effects_idempotency",
+          "replay"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 0.9621404437403492,
+        "w2_conditional_judged_ndcg10": 1.0
+      },
+      "peer": {
+        "w0_ndcg10": 0.8363737201414463,
+        "w2_ndcg10": 0.8838634664270282,
+        "delta_ndcg10": 0.04748974628558189,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "durable_recovery",
+          "external_effects_idempotency",
+          "replay"
+        ],
+        "candidate_useful_top10_facets": [
+          "durable_recovery",
+          "external_effects_idempotency",
+          "replay"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 0.8363737201414463,
+        "w2_conditional_judged_ndcg10": 0.8838634664270282
+      }
+    },
+    "q4": {
+      "root": {
+        "w0_ndcg10": 0.9636452638863133,
+        "w2_ndcg10": 1.0,
+        "delta_ndcg10": 0.03635473611368667,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "leakage_contamination",
+          "swe_bench",
+          "temporal_integrity"
+        ],
+        "candidate_useful_top10_facets": [
+          "leakage_contamination",
+          "swe_bench",
+          "temporal_integrity"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 0.9636452638863133,
+        "w2_conditional_judged_ndcg10": 1.0
+      },
+      "peer": {
+        "w0_ndcg10": 0.6969925086030754,
+        "w2_ndcg10": 0.7411060715113407,
+        "delta_ndcg10": 0.04411356290826529,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "leakage_contamination",
+          "swe_bench",
+          "temporal_integrity"
+        ],
+        "candidate_useful_top10_facets": [
+          "leakage_contamination",
+          "swe_bench",
+          "temporal_integrity"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 0.6969925086030754,
+        "w2_conditional_judged_ndcg10": 0.7411060715113407
+      }
+    },
+    "q5": {
+      "root": {
+        "w0_ndcg10": 0.9149920538053871,
+        "w2_ndcg10": 0.9580777588003657,
+        "delta_ndcg10": 0.04308570499497866,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "builder_identity_authenticity",
+          "threat_model_limits",
+          "verification"
+        ],
+        "candidate_useful_top10_facets": [
+          "builder_identity_authenticity",
+          "threat_model_limits",
+          "verification"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 0.9149920538053871,
+        "w2_conditional_judged_ndcg10": 0.9580777588003657
+      },
+      "peer": {
+        "w0_ndcg10": 0.9149920538053871,
+        "w2_ndcg10": 0.9580777588003657,
+        "delta_ndcg10": 0.04308570499497866,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "builder_identity_authenticity",
+          "threat_model_limits",
+          "verification"
+        ],
+        "candidate_useful_top10_facets": [
+          "builder_identity_authenticity",
+          "threat_model_limits",
+          "verification"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 0.9149920538053871,
+        "w2_conditional_judged_ndcg10": 0.9580777588003657
+      }
+    },
+    "q6": {
+      "root": {
+        "w0_ndcg10": 0.9872375505508731,
+        "w2_ndcg10": 0.9588282270969025,
+        "delta_ndcg10": -0.028409323453970625,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "agent_tool_spans",
+          "attributes_context",
+          "otel_conventions"
+        ],
+        "candidate_useful_top10_facets": [
+          "agent_tool_spans",
+          "attributes_context",
+          "otel_conventions"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 0.9872375505508731,
+        "w2_conditional_judged_ndcg10": 0.9588282270969025
+      },
+      "peer": {
+        "w0_ndcg10": 0.9875245551938469,
+        "w2_ndcg10": 0.9299794813643484,
+        "delta_ndcg10": -0.05754507382949847,
+        "w0_useful10": 10,
+        "w2_useful10": 9,
+        "useful10_loss": 1,
+        "baseline_useful_top10_facets": [
+          "agent_tool_spans",
+          "attributes_context",
+          "otel_conventions"
+        ],
+        "candidate_useful_top10_facets": [
+          "agent_tool_spans",
+          "attributes_context",
+          "otel_conventions"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 0.9875245551938469,
+        "w2_conditional_judged_ndcg10": 0.9299794813643484
+      }
+    },
+    "q7": {
+      "root": {
+        "w0_ndcg10": 1.0,
+        "w2_ndcg10": 0.7836578251205365,
+        "delta_ndcg10": -0.2163421748794635,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "benchmark_eval",
+          "claim_evidence_support",
+          "contradiction_sufficiency"
+        ],
+        "candidate_useful_top10_facets": [
+          "benchmark_eval",
+          "claim_evidence_support",
+          "contradiction_sufficiency"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 1.0,
+        "w2_conditional_judged_ndcg10": 0.7836578251205365
+      },
+      "peer": {
+        "w0_ndcg10": 1.0,
+        "w2_ndcg10": 0.7462300983924254,
+        "delta_ndcg10": -0.2537699016075746,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "benchmark_eval",
+          "claim_evidence_support",
+          "contradiction_sufficiency"
+        ],
+        "candidate_useful_top10_facets": [
+          "benchmark_eval",
+          "claim_evidence_support",
+          "contradiction_sufficiency"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 1.0,
+        "w2_conditional_judged_ndcg10": 0.7462300983924254
+      }
+    },
+    "q8": {
+      "root": {
+        "w0_ndcg10": 0.9738087157554693,
+        "w2_ndcg10": 0.9026200448671136,
+        "delta_ndcg10": -0.07118867088835579,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "evidence_gaps_coverage",
+          "stopping_criteria",
+          "uncertainty"
+        ],
+        "candidate_useful_top10_facets": [
+          "evidence_gaps_coverage",
+          "stopping_criteria",
+          "uncertainty"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 0.9738087157554693,
+        "w2_conditional_judged_ndcg10": 0.9026200448671136
+      },
+      "peer": {
+        "w0_ndcg10": 0.9224654597764764,
+        "w2_ndcg10": 0.9603250160361274,
+        "delta_ndcg10": 0.037859556259650984,
+        "w0_useful10": 10,
+        "w2_useful10": 10,
+        "useful10_loss": 0,
+        "baseline_useful_top10_facets": [
+          "evidence_gaps_coverage",
+          "stopping_criteria",
+          "uncertainty"
+        ],
+        "candidate_useful_top10_facets": [
+          "evidence_gaps_coverage",
+          "stopping_criteria",
+          "uncertainty"
+        ],
+        "lost_useful_facets": [],
+        "w0_conditional_judged_ndcg10": 0.9224654597764764,
+        "w2_conditional_judged_ndcg10": 0.9603250160361274
+      }
+    }
+  },
+  "q9_extension_separate": {
+    "root": {
+      "w0_ndcg10": 0.7442131846417965,
+      "w2_ndcg10": 0.8853533418192956,
+      "delta_ndcg10": 0.14114015717749906,
+      "w0_useful10": 9,
+      "w2_useful10": 10,
+      "useful10_loss": -1,
+      "lost_useful_facets": []
+    },
+    "peer": {
+      "w0_ndcg10": 0.8458664379199666,
+      "w2_ndcg10": 0.9010362095152994,
+      "delta_ndcg10": 0.05516977159533276,
+      "w0_useful10": 9,
+      "w2_useful10": 10,
+      "useful10_loss": -1,
+      "lost_useful_facets": []
+    }
+  },
+  "navigation_controls": [
+    {
+      "nav_id": 1,
+      "query_id": "q2",
+      "target_id": "c1",
+      "expected_target_url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ai-agents/governance-security-across-organization",
+      "w0_rank": 1,
+      "w2_rank": 1,
+      "passes": true
+    },
+    {
+      "nav_id": 2,
+      "query_id": "q4",
+      "target_id": "c0",
+      "expected_target_url": "https://openai.com/index/why-we-no-longer-evaluate-swe-bench-verified/",
+      "w0_rank": 1,
+      "w2_rank": 1,
+      "passes": true
+    },
+    {
+      "nav_id": 3,
+      "query_id": "q5",
+      "target_id": "c6",
+      "expected_target_url": "https://slsa.dev/spec/v1.2/verifying-artifacts",
+      "w0_rank": 1,
+      "w2_rank": 1,
+      "passes": true
+    },
+    {
+      "nav_id": 4,
+      "query_id": "q6",
+      "target_id": "c6",
+      "expected_target_url": "https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/",
+      "w0_rank": 1,
+      "w2_rank": 1,
+      "passes": true
+    },
+    {
+      "nav_id": 5,
+      "query_id": "q9",
+      "target_id": "c8",
+      "expected_target_url": "https://science.nasa.gov/climate-change/adaptation-mitigation/",
+      "w0_rank": 1,
+      "w2_rank": 1,
+      "passes": true
+    }
+  ],
+  "repeat_guards": [
+    {
+      "original": "q1-w0",
+      "repeat": "q1-w0-repeat",
+      "top10_overlap": 0.9,
+      "navigation_target_repeat_rank": null,
+      "passes": true
+    },
+    {
+      "original": "q1-w2",
+      "repeat": "q1-w2-repeat",
+      "top10_overlap": 1.0,
+      "navigation_target_repeat_rank": null,
+      "passes": true
+    },
+    {
+      "original": "nav3-w0",
+      "repeat": "nav3-w0-repeat",
+      "top10_overlap": 0.9,
+      "navigation_target_repeat_rank": 1,
+      "passes": true
+    },
+    {
+      "original": "nav3-w2",
+      "repeat": "nav3-w2-repeat",
+      "top10_overlap": 0.9,
+      "navigation_target_repeat_rank": 1,
+      "passes": true
+    }
+  ],
+  "guards": {
+    "all_calls_valid": true,
+    "q9_nonnegative_both": true,
+    "useful_loss_at_most_one_q1_q9": true,
+    "no_useful_baseline_facet_lost_q1_q9": true,
+    "navigation_targets_rank1_and_no_worse": true,
+    "repeat_guards": true,
+    "remote_http_under_one_second": true,
+    "token_ceilings": true
+  },
+  "operational": {
+    "all_32_valid": true,
+    "valid_receipts": 32,
+    "input_tokens": 588115,
+    "output_tokens": 15588,
+    "max_remote_http_ms": 622.9430960956961,
+    "max_transport_wall_ms": 945.9811658598483,
+    "within_token_ceilings": true
+  },
+  "missing_or_invalid": [],
+  "request_context": {
+    "W0": "current generic ten-level shared state",
+    "W2": "intent-aware card-local batched question"
+  }
+}

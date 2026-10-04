@@ -1,0 +1,120 @@
+"""Synthetic, no-network test checks for replay.py.txt."""
+import importlib.machinery
+import importlib.util
+import pathlib
+import sys
+import time
+import unittest
+
+HERE = pathlib.Path(__file__).resolve().parent
+LOADER = importlib.machinery.SourceFileLoader("exp038_replay", str(HERE / "replay.py.txt"))
+SPEC = importlib.util.spec_from_loader(LOADER.name, LOADER)
+replay = importlib.util.module_from_spec(SPEC)
+LOADER.exec_module(replay)
+
+class ReplayFixtures(unittest.TestCase):
+    def test_scores_are_strictly_bounded_without_probability_tolerance(self):
+        for arm_range, valid, invalid in (([0, 9], 9, 9.01), ([0, 3], 3, 3.01)):
+            req = {"candidate_ids": ["c0"], "score_range": arm_range}
+            scores, errors = replay.validate_response({"model": replay.MODEL, "answers": {"c0": {"type": "score", "score": valid}}}, req)
+            self.assertEqual(scores["c0"], float(valid))
+            self.assertEqual(errors, [])
+            scores, errors = replay.validate_response({"model": replay.MODEL, "answers": {"c0": {"type": "score", "score": invalid}}}, req)
+            self.assertEqual(scores, {})
+            self.assertEqual(errors, ["score:c0"])
+
+    def test_bad_model_type_membership_and_nonfinite_rejected(self):
+        req = {"candidate_ids": ["c0"], "score_range": [0, 3]}
+        variants = [
+            ({"model": "jev-other", "answers": {"c0": {"type": "score", "score": 2}}}, ["model_identity"]),
+            ({"model": replay.MODEL, "answers": {"c0": {"type": "choice", "score": 2}}}, ["type:c0"]),
+            ({"model": replay.MODEL, "answers": {"c0": {"type": "score", "score": float("nan")}}}, ["score:c0"]),
+            ({"model": replay.MODEL, "answers": {"c0": {"type": "score", "score": 2}, "c1": {"type": "score", "score": 1}}}, ["answer_membership"]),
+        ]
+        for response, expected in variants:
+            _, errors = replay.validate_response(response, req)
+            self.assertEqual(errors, expected)
+
+    def test_ranking_is_stable_on_ties_and_gain_is_exponential(self):
+        self.assertEqual(replay.order_ids({"c1": 1, "c0": 1}, ["c0", "c1"]), ["c0", "c1"])
+        self.assertEqual(replay.ndcg_at_10(["high", "low"], {"high": 3, "low": 0}), 1.0)
+        self.assertEqual(replay.useful_at_10(["a", "b"], {"a": 2, "b": 1}), 1)
+
+    def test_fixed_seed_bootstrap_and_reported_quantiles(self):
+        left = replay.paired_bootstrap({f"q{i}": (i - 3) / 10 for i in range(8)}, draws=200)
+        right = replay.paired_bootstrap({f"q{i}": (i - 3) / 10 for i in range(8)}, draws=200)
+        self.assertEqual(left, right)
+        self.assertAlmostEqual(replay.percentile([0, 1], .5), .5)
+
+    def test_answer_mismatch_does_not_partially_validate(self):
+        req = {"candidate_ids": ["c0", "c1"], "score_range": [0, 3]}
+        scores, errors = replay.validate_response({"model": replay.MODEL, "answers": {"c0": {"type": "score", "score": 3}}}, req)
+        self.assertEqual(scores, {})
+        self.assertEqual(errors, ["answer_membership"])
+
+    def test_strict_json_rejects_duplicate_keys_and_nonfinite_constants(self):
+        for raw in ('{"model":"x","model":"y"}', '{"score":NaN}', '{"score":Infinity}', '{"score":-Infinity}', '{"score":1e999}'):
+            with self.assertRaises(ValueError):
+                replay.strict_json_loads(raw)
+
+    def test_provider_envelope_is_exact_and_probability_mass_is_not_checked(self):
+        valid = {"model": replay.MODEL, "answers": {}, "usage": {"input_tokens": 1, "output_tokens": 2}, "_elapsed_ms": 10.0}
+        self.assertEqual(replay.parse_transport_result(replay.canonical_bytes(valid)), valid)
+        extra = dict(valid, extra="x")
+        with self.assertRaises(ValueError):
+            replay.parse_transport_result(replay.canonical_bytes(extra))
+        with self.assertRaises(ValueError):
+            replay.parse_transport_result(b'{"model":"x","model":"y","answers":{},"usage":{},"_elapsed_ms":1}')
+
+    def test_probability_rounding_is_not_an_arithmetic_gate(self):
+        probs = {str(i): p for i, p in enumerate((0.01, 0.03, 0.56, 0.16, 0.11, 0.08, 0.01, 0.02, 0.01, 0.0))}
+        answer = {"type": "score", "score": 2.88, "probabilities": probs}
+        req = {"candidate_ids": ["c0"], "score_range": [0, 9]}
+        scores, errors = replay.validate_response({"model": replay.MODEL, "answers": {"c0": answer}}, req)
+        self.assertEqual(scores, {"c0": 2.88})
+        self.assertEqual(errors, [])
+
+    def test_w0_and_w2_body_shapes_are_frozen(self):
+        card = {"id": "c0", "title": "T", "url": "https://example.test", "snippet": "S"}
+        w0 = (replay.MODEL, ("a", "b"), "Score `{id}`")
+        old = replay.make_body(replay.MODEL, "W0", "query", [card], w0)
+        self.assertEqual(old["state"], {"query": "query", "candidates": [card]})
+        self.assertEqual(old["questions"]["c0"]["instructions"], "Score `c0`")
+        new = replay.make_body(replay.MODEL, "W2", "query", [card], w0)
+        self.assertEqual(new["state"], {"query": "query"})
+        self.assertEqual(new["questions"]["c0"]["instructions"], {"task": replay.W2_INSTRUCTION.format(query="query"), "candidate": card})
+
+    def test_transport_stdout_limit_is_bounded_offline(self):
+        original_limit = replay.MAX_RESPONSE_BYTES
+        replay.MAX_RESPONSE_BYTES = 32
+        try:
+            raw, code, _, overflow = replay.bounded_process(
+                [sys.executable, "-c", "import sys; sys.stdin.buffer.read(); sys.stdout.buffer.write(b'x'*100000)"],
+                b"fixture",
+            )
+        finally:
+            replay.MAX_RESPONSE_BYTES = original_limit
+        self.assertTrue(overflow)
+        self.assertLessEqual(len(raw), 33)
+        self.assertNotEqual(code, 0)
+
+    def test_transport_not_reading_stdin_is_wall_bounded_offline(self):
+        original_timeout = replay.RUNNER_WALL_TIMEOUT_S
+        replay.RUNNER_WALL_TIMEOUT_S = .1
+        try:
+            started = time.monotonic()
+            raw, code, elapsed, overflow = replay.bounded_process(
+                [sys.executable, "-c", "import time; time.sleep(5)"],
+                b"x" * 128_000,
+            )
+            wall = time.monotonic() - started
+        finally:
+            replay.RUNNER_WALL_TIMEOUT_S = original_timeout
+        self.assertLess(wall, 2.0)
+        self.assertLess(elapsed, 2000)
+        self.assertNotEqual(code, 0)
+        self.assertEqual(raw, b"")
+        self.assertFalse(overflow)
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

@@ -33,3 +33,7 @@ Registration commit: `e6524b7`.
 - Historical evidence bytes are preserved. The trailing-whitespace and end-of-file mutation hooks exclude only raw evidence `.json`/`.txt` files and `docs/experiments/evidence/EXP-003/reproduce.md`; JSON syntax and the remaining checks still run.
 - No external provider calls, live searches, or fetched pages were used. Graphify had no checked-in `graphify-out/graph.json` at implementation time; the parent performed the required AST-only graph update separately.
 - Detailed fixture inventory, exact local commands, results, and the application-level memory limitation are in `evidence/EXP-037/qualification.md`.
+
+### Verified delivery
+
+[PR #518](https://github.com/magnus919/SlopSearX/pull/518) merged at `b8720d94b1e4aa410986a8b467a6280508ec652a` on 2026-10-04T04:26:35Z. Candidate `730727dba070a26061631816e584a12eb1aaf86a` had all applicable CI checks green, including Python 3.12/3.13, API compatibility, portal browser/contracts, optional Jev modes, Valkey integration, quality/analysis/security and both image builds. Droid posted positive substantive review with no actionable issues; an independent Luna review found no blocking issues and documented two narrow nonblocking limitations. Issue #514 closed completed. Local main fast-forwarded to the exact merge revision while preserving its unrelated lockfile bytes. No deployment was performed. Ranking qualification remains active in #516.
