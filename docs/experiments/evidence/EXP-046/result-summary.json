@@ -1,0 +1,48 @@
+{
+  "schema": "exp046-result-summary/1",
+  "decision": "development_candidate_rejected",
+  "complete_operations": 21,
+  "case_attempts": 21,
+  "total_attempts": 22,
+  "retries": 0,
+  "search_calls": 0,
+  "brave_attempts_used": 0,
+  "stop_reasons": {
+    "branch_keep": 3,
+    "global_keep": 18
+  },
+  "accepted_insertions": 0,
+  "primary": {
+    "A": {
+      "mean_gain": 0.21573501134163098,
+      "lower95": 0.13113018979621816,
+      "passed": true
+    },
+    "B": {
+      "mean_gain": 0.06771630375189336,
+      "lower95": 0.004149555323195928,
+      "passed": true
+    }
+  },
+  "quality_guards_passed": false,
+  "coverage_guard_passed": false,
+  "stability_passed": true,
+  "navigation_passed": true,
+  "usage_including_neutral": {
+    "input_tokens": 452997,
+    "output_tokens": 51153
+  },
+  "combined_historical_d_plus_choice_http_ms": {
+    "min": 570.6370719708502,
+    "max": 1006.2212289776653
+  },
+  "failed_guard": {
+    "reference": "B",
+    "pool": "research",
+    "comparator": "w0",
+    "lost_useful_facets": [
+      "evidence_grounding"
+    ]
+  },
+  "production_adoption_supported": false
+}
