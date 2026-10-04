@@ -1,0 +1,21 @@
+{
+  "schema": "exp058-offline-setup-history/1",
+  "synthetic": true,
+  "new_jev_calls": 0,
+  "brave_attempts": 0,
+  "attempts": [
+    {
+      "program": "pipeline-qualification.py.txt",
+      "arguments": [
+        "--owned-child"
+      ],
+      "exit_code": 1,
+      "source_sha256_before_fix": "a766c4f60822a2a9e5f0655ff58cf438e57c265448ee4083dde24e6d80b5a14b",
+      "observed_stderr_sha256": "5d96d4cb6330864047554176c18a36086e80ef01919c57e92dd21139808e484e",
+      "observed_stderr_bytes": 674,
+      "reason": "empty-or-incomplete-synthetic-receipt-inventory",
+      "boundary": "Inherited offline harness assumed exactly one call per operation; budget stops legitimately invoke zero. All 21 operations and both original reference inventories reached the analysis path before this receipt-count assertion failed.",
+      "fix": "Require one-to-one exact request/response digest linkage for every actually attempted call and explicit valid termination for zero-call operations; keep all 21 operations and original references."
+    }
+  ]
+}
