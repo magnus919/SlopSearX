@@ -75,3 +75,7 @@ Use a four-hour execution window for this development cycle. At the limit, prese
 - [Frozen facet vocabulary](evidence/EXP-039/task-facets.json)
 - [Shared confirmation-attempt budget](evidence/EXP-039/search-budget.json)
 - [EXP-039 delivery plan](evidence/EXP-039/delivery-plan.md)
+
+## Outcome
+
+Completed all 40 valid transactions. The explicit-purpose/source-selection combination passed both statistical comparisons but failed the registered useful-source identity-retention guard; it is not selected. See [readout](evidence/EXP-039/readout.md), [analysis](evidence/EXP-039/analysis.json), and preserved receipts. No Brave attempts were used.
