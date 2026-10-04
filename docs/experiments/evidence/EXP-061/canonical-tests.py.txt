@@ -1,0 +1,120 @@
+"""Offline deterministic tests for EXP-061 canonical request preparation."""
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import sys
+import unittest
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+sys.path.insert(0, str(REPO))
+
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+C = load("exp061_canonical", HERE / "canonical.py.txt")
+P = load("exp061_frozen_prepare_for_tests", REPO / "docs/experiments/evidence/EXP-060/prepare.py.txt")
+
+
+def q4_case():
+    rows = json.loads((REPO / "docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+    return next(row for row in rows if row["id"] == "q4")
+
+
+def q4_real_pool():
+    acquired = json.loads((REPO / "docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes())
+    return acquired["pools"]["q4"]["cards"]
+
+
+def fixture_cards(count):
+    return [
+        {"id": f"stable-{i:03d}", "title": f"title-{i:03d}",
+         "url": f"https://fixture.invalid/{i:03d}", "snippet": f"snippet-{i:03d}"}
+        for i in range(count)
+    ]
+
+
+class CanonicalPreparationTests(unittest.TestCase):
+    def test_q4_real_pool_base_and_rotation_have_identical_canonical_df_bytes(self):
+        case = q4_case()
+        base_cards = q4_real_pool()
+        rotated_cards = base_cards[20:] + base_cards[:20]
+        base = C.prepare(case, base_cards)
+        rotated = C.prepare(case, rotated_cards)
+        self.assertEqual(P.wire(base["treatmentprepared"]["d"]), P.wire(rotated["treatmentprepared"]["d"]))
+        self.assertEqual(P.wire(base["treatmentprepared"]["f"]), P.wire(rotated["treatmentprepared"]["f"]))
+
+        expected_ids = [card["id"] for card in base["policy_cards"]]
+        self.assertEqual(expected_ids, [card["id"] for card in rotated["policy_cards"]])
+        self.assertEqual(expected_ids, base["treatmentprepared"]["whole_ids"])
+        self.assertEqual(expected_ids, rotated["treatmentprepared"]["whole_ids"])
+        self.assertEqual(len(base_cards), len(expected_ids))
+        self.assertEqual(set(card["id"] for card in base_cards), set(expected_ids))
+
+        # Every projected card retains every source field byte-for-byte; only list order changes.
+        original_by_id = {card["id"]: card for card in base_cards}
+        canonical_by_id = {card["id"]: card for card in base["policy_cards"]}
+        self.assertEqual(set(original_by_id), set(canonical_by_id))
+        for card_id, original in original_by_id.items():
+            for field in ("id", "title", "url", "snippet"):
+                self.assertEqual(original[field].encode("utf-8"), canonical_by_id[card_id][field].encode("utf-8"))
+        self.assertEqual([card["id"] for card in base["provenance_cards"]], [card["id"] for card in base_cards])
+        self.assertEqual([card["id"] for card in rotated["provenance_cards"]], [card["id"] for card in rotated_cards])
+
+    def test_w0_remains_the_native_order_request(self):
+        case = q4_case()
+        cards = q4_real_pool()
+        prepared = C.prepare(case, cards)
+        ordinary = P.bodies(case, cards)
+        self.assertEqual(P.wire(prepared["nativeprepared"]["w0"]), P.wire(ordinary["w0"]))
+        self.assertEqual(prepared["nativeprepared"]["w0_local_to_pool"], ordinary["w0_local_to_pool"])
+        self.assertEqual(prepared["provenance_cards"], cards)
+
+    def test_exact_canonical_sort_key_is_utf8_url_title_snippet_stable_id(self):
+        cards = [
+            {"id": "z", "title": "a", "url": "https://x/é", "snippet": "a"},
+            {"id": "b", "title": "z", "url": "https://x/a", "snippet": "z"},
+            {"id": "a", "title": "a", "url": "https://x/a", "snippet": "a"},
+            {"id": "c", "title": "a", "url": "https://x/a", "snippet": "a"},
+        ]
+        result = C.canonical_policy_cards({"purpose": "p", "facets": []}, cards)
+        expected = sorted(cards, key=lambda c: tuple(c[k].encode("utf-8") for k in ("url", "title", "snippet", "id")))
+        self.assertEqual(result, expected)
+
+    def test_frozen_policy_accepts_80_and_rejects_overflow_duplicates_and_malformed_cards(self):
+        case = q4_case()
+        accepted = C.canonical_policy_cards(case, fixture_cards(80))
+        self.assertEqual(len(accepted), 80)
+        with self.assertRaises(ValueError):
+            C.canonical_policy_cards(case, fixture_cards(81))
+
+        duplicate = fixture_cards(4)
+        duplicate[3]["id"] = duplicate[0]["id"]
+        with self.assertRaises(ValueError):
+            C.canonical_policy_cards(case, duplicate)
+
+        malformed = fixture_cards(4)
+        malformed[0]["extra"] = "unexpected"
+        with self.assertRaises(ValueError):
+            C.canonical_policy_cards(case, malformed)
+
+        oversized = fixture_cards(4)
+        oversized[0]["title"] = "é" * 129
+        with self.assertRaises(ValueError):
+            C.canonical_policy_cards(case, oversized)
+
+        wrong_type = fixture_cards(4)
+        wrong_type[0]["snippet"] = None
+        with self.assertRaises(ValueError):
+            C.canonical_policy_cards(case, wrong_type)
+
+
+if __name__ == "__main__":
+    unittest.main()
