@@ -1,0 +1,64 @@
+"""Independent neutral EXP-051 delivery/record mutation probes. No grading."""
+import copy
+import hashlib
+import json
+import runpy
+import tempfile
+from pathlib import Path
+
+BASE = Path(__file__).resolve().parent
+ROOT = BASE.parents[3]
+
+def run_checks():
+    q = runpy.run_path(str(BASE / "review-validator-qualification.py.txt"))
+    validator = q["validator"]
+    serialize = q["canonical_bytes"]
+    results = []
+    with tempfile.TemporaryDirectory(prefix="exp051-root-combined-") as folder:
+        root = Path(folder); delivery = root / "delivery"; review_path = root / "neutral-review.json"
+        fixture = q["create_fixture"](ROOT, delivery, review_path)
+        original = {p.name: p.read_bytes() for p in delivery.iterdir()}
+        base = fixture["review"]
+        def reset():
+            for p in delivery.iterdir():
+                if p.is_symlink() or p.is_file(): p.unlink()
+                elif p.is_dir(): p.rmdir()
+            for name, raw in original.items(): (delivery / name).write_bytes(raw)
+            review_path.write_bytes(serialize(base))
+        def test(name, mutate, valid=False):
+            reset(); candidate = copy.deepcopy(base); mutate(candidate)
+            review_path.write_bytes(serialize(candidate))
+            report = validator.validate_review_fixture(delivery, review_path, "R1", fixture["manifest_sha256"], ROOT)
+            results.append({"check": name, "passed": report["valid"] is valid,
+                            "observed": "valid" if report["valid"] else report["errors"][0]})
+        test("neutral_complete_record", lambda r: None, True)
+        test("card_order_permutation_accepted", lambda r: r["pools"][0]["card_assessments"].reverse(), True)
+        test("duplicate_case_rejected", lambda r: r["cases"].__setitem__(1, copy.deepcopy(r["cases"][0])))
+        test("false_complete_read_rejected", lambda r: r["pools"][0].update(complete_pool_read=False))
+        test("missing_facet_rejected", lambda r: r["pools"][0]["card_assessments"][0]["facet_support"].pop())
+        def type_as_design(r):
+            card = r["pools"][0]["card_assessments"][0]
+            card.update(design_visibility="explicit_design_or_method_detail", design_evidence=[{"field":"metadata.fields.publication_types.values"}])
+        test("bibliography_is_not_design", type_as_design)
+        entry = fixture["manifest"]["chunks"][0]
+        name = entry["filename"]
+        test("truncated_chunk_rejected", lambda r: (delivery/name).write_bytes(original[name][:-5]))
+        test("missing_chunk_rejected", lambda r: (delivery/name).unlink())
+        def symlink_chunk(r):
+            (delivery/name).unlink(); (delivery/name).symlink_to(review_path)
+        test("symlink_chunk_rejected", symlink_chunk)
+        test("extra_directory_rejected", lambda r: (delivery/"extra").mkdir())
+        def wrong_marker(r):
+            r["pools"][0]["chunk_markers"][0] = "wrong-marker"
+        test("wrong_read_marker_rejected", wrong_marker)
+        reset(); review_path.write_bytes(b"["*2000+b"0"+b"]"*2000)
+        report=validator.validate_review_fixture(delivery,review_path,"R1",fixture["manifest_sha256"],ROOT)
+        results.append({"check":"deep_json_sanitized", "passed":not report["valid"], "observed":report["errors"][0] if report["errors"] else "valid"})
+    return {"schema":"exp051-root-combined-validator-probes/1", "status":"passed" if all(r["passed"] for r in results) else "failed",
+            "validator_sha256":hashlib.sha256((BASE/"review-validator.py.txt").read_bytes()).hexdigest(),
+            "checks":results,"checks_passed":sum(r["passed"] for r in results),
+            "reviewer_invocations":0,"provider_calls":0,"search_calls":0,
+            "meaning":"Neutral synthetic integrity probes only; no source judgments."}
+
+if __name__ == "__main__":
+    print(json.dumps(run_checks(), indent=2))

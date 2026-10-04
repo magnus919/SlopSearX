@@ -1,0 +1,25 @@
+{
+  "schema": "exp051-atomic-publish-probes/1",
+  "builder_sha256": "6479068319d42e03633145114a78657e04c791e78665c75816a497f4ad2a9163",
+  "checks": [
+    {
+      "check": "absent",
+      "passed": true,
+      "outcome": "published"
+    },
+    {
+      "check": "existing_empty",
+      "passed": true,
+      "outcome": "refused_preserving_inputs"
+    },
+    {
+      "check": "existing_nonempty",
+      "passed": true,
+      "outcome": "refused_preserving_inputs"
+    }
+  ],
+  "status": "passed",
+  "reviewer_invocations": 0,
+  "provider_calls": 0,
+  "search_calls": 0
+}

@@ -1,0 +1,648 @@
+#!/usr/bin/env python3
+"""Build the private, deterministic EXP-051 complete-pool review delivery.
+
+This module is standard-library-only. It reads the frozen EXP-048 public packet
+inputs from this checkout and a caller-supplied EXP-050 private projection. It
+does not make network calls. Abstract excerpts are emitted only to the caller's
+new private output directory; manifests and stdout contain counts and hashes,
+never metadata values or private source locations.
+"""
+
+from __future__ import annotations
+
+import argparse
+import ctypes
+import hashlib
+import json
+import math
+import os
+import re
+import shutil
+import sys
+import tempfile
+import errno
+from collections import Counter
+from pathlib import Path
+from typing import Any
+
+
+MAX_CHUNK_BYTES = 24_000
+EXPECTED_POOLS = ("P01", "P02", "P03", "P04", "P05", "P06")
+EXPECTED_POOL_ROWS = {"P01": 33, "P02": 32, "P03": 35, "P04": 44, "P05": 44, "P06": 44}
+EXPECTED_STATUS_COUNTS = {"matched": 117, "unknown": 20, "no_identifier": 95}
+EXPECTED_POOL_STATUS = {
+    "P01": {"matched": 8, "unknown": 5, "no_identifier": 20},
+    "P02": {"matched": 17, "unknown": 4, "no_identifier": 11},
+    "P03": {"matched": 17, "unknown": 4, "no_identifier": 14},
+    "P04": {"matched": 30, "unknown": 0, "no_identifier": 14},
+    "P05": {"matched": 22, "unknown": 3, "no_identifier": 19},
+    "P06": {"matched": 23, "unknown": 4, "no_identifier": 17},
+}
+EXPECTED_REGISTRATION_FILES = {
+    "docs/experiments/EXP-051-enriched-visible-support.md": "ad0f5283832af8396dc24abea633e8b0d30543849de79b675c958cada80c21c9",
+    "docs/experiments/evidence/EXP-051/delivery-design.md": "af736951a636fa6b83453dc787d84aa55c1412b86b3236f991945d736518ca51",
+    "docs/experiments/evidence/EXP-051/initial-review-findings.md": "ce3eb1b01ea8b9420c36c31ce53e6060d4ee23bc720d6c1ee761b855863d39d4",
+    "docs/experiments/evidence/EXP-051/input-inventory.json": "84b76e33191abd296dc68a77162ba20ef4c9d5fc68a2a5cd124e427c5078748c",
+    "docs/experiments/evidence/EXP-051/registration-review.md": "5aeb6acc1134e6ae3f46abd497f98eb885c21149b06c6096190a8648ff6d9244",
+    "docs/experiments/evidence/EXP-051/resource-plan.json": "614a1e372f0dc80bd47d5e68a2f9e38d03ecf06d5ab026ebbc8ffdffcb94a495",
+    "docs/experiments/evidence/EXP-051/review-contract.md": "77155f4913ad326ff44b7534fd7fe9a7de56561874c5dcaf9d6b387e7f868eea",
+    "docs/experiments/evidence/EXP-051/validation-plan.md": "92d7284957520ad1aca87079dc163a38b7d3d2093716d10003f652df93a8baae",
+    "docs/experiments/README.md": "90f5a39e50d9b90cb00ae44b20d6508755afd558634c61dfa5c0aa99786bacb3",
+    "docs/experiments/complete-pool-production-acceptance.md": "9a320aabb3579f7dd7d5cd368582d7e5b20501632c753a5af55580e9c4cbce3d",
+}
+EXPECTED_INPUT_FILES = {
+    "docs/experiments/evidence/EXP-048/delivery-manifest.json": "e91d796de147badef0f6b03dd2473480f41ea3555828bba469c7a4a18a78ea92",
+    "docs/experiments/evidence/EXP-048/pool-P01.json": "de5f2e54695b89683a5ef670d1d360ce0a5b5215d709361445ac0e60e38a15b3",
+    "docs/experiments/evidence/EXP-048/pool-P02.json": "0f1320635f50889369b0f658cbcec1b353b3472fdf2c891fe96011385aed3a11",
+    "docs/experiments/evidence/EXP-048/pool-P03.json": "fddad4dbae69eed5402b4550f0897d916868ae8438af2ae354d4378f6b040f35",
+    "docs/experiments/evidence/EXP-048/pool-P04.json": "5880266c2d413a3d6d014b5c8985b5ff773a84ca9504c0716ecad40f81d41126",
+    "docs/experiments/evidence/EXP-048/pool-P05.json": "04324051b34d16df24f67f35337a8242e09631be2cb8e8658d396ee064e851d2",
+    "docs/experiments/evidence/EXP-048/pool-P06.json": "0af11ab4c94ca5c719bf50f2eaeea6531c9eaf28159b4ca540294fad44280fb6",
+    "docs/experiments/evidence/EXP-050/result.json": "aacb4c75b483c6dd79b5217f672891965def92d3e2e54c3ac1e650cd24ada052",
+    "docs/experiments/evidence/EXP-050/information-screen.json": "78112c30534513a7b6cdc40f4943aee129c0abbeeef3f47caec48b4d4d4213da",
+    "docs/experiments/evidence/EXP-050/metadata-publication-view.json": "18a4da03bedd6f06daba9e4f1aba29833df87b2807f85533b77b4d67987ae3f5",
+}
+EXPECTED_REGISTRATION_INTEGRITY_SHA256 = "c4b028bffb726caa0d04b93d646869cf2137b70444110b7756db4501c5e5afc5"
+EXPECTED_PROJECTION_SHA256 = "b232ac53518950add8c1317c6357a0932cda77081a6b7e518cf81e6052de06b0"
+EXPECTED_PROJECTION_SCHEMA = "exp049-source-information-projection/1"
+
+CHUNK_SCHEMA = "exp051-enriched-review-chunk/1"
+MANIFEST_SCHEMA = "exp051-enriched-delivery-manifest/1"
+TOP_METADATA_REQUIRED_KEYS = (
+    "status",
+    "reason",
+    "reported_by",
+    "captured_at",
+    "later_lookup_provenance",
+    "original_engine_provenance",
+    "requested_identifier",
+)
+TOP_METADATA_OPTIONAL_KEYS = ("paper_id", "reported_identifiers", "fields")
+FIELD_KEYS = (
+    "title",
+    "publication_date",
+    "year",
+    "journal",
+    "publication_types",
+    "authors",
+    "abstract",
+)
+
+
+class DeliveryError(ValueError):
+    """Raised when a frozen source or output invariant does not hold."""
+
+
+def canonical_bytes(value: Any) -> bytes:
+    """One deterministic, compact UTF-8 JSON representation plus LF."""
+    try:
+        return (
+            json.dumps(
+                value,
+                ensure_ascii=False,
+                allow_nan=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+            + b"\n"
+        )
+    except (TypeError, ValueError, UnicodeEncodeError) as exc:
+        raise DeliveryError("value cannot be represented as canonical JSON") from exc
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _read_json(path: Path) -> Any:
+    try:
+        def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+            result: dict[str, Any] = {}
+            for key, value in pairs:
+                if key in result:
+                    raise DeliveryError("duplicate JSON object key")
+                result[key] = value
+            return result
+
+        def reject_constant(_value: str) -> None:
+            raise DeliveryError("non-finite JSON number")
+
+        def finite_float(value: str) -> float:
+            parsed = float(value)
+            if not math.isfinite(parsed):
+                raise DeliveryError("non-finite JSON number")
+            return parsed
+
+        return json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=unique_object,
+            parse_constant=reject_constant,
+            parse_float=finite_float,
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise DeliveryError(f"invalid or unreadable JSON input: {path.name}") from exc
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    try:
+        with path.open("rb") as stream:
+            for block in iter(lambda: stream.read(1024 * 1024), b""):
+                digest.update(block)
+    except OSError as exc:
+        raise DeliveryError(f"cannot read pinned input: {path.name}") from exc
+    return digest.hexdigest()
+
+
+def _rename_directory_noreplace(source: Path, destination: Path) -> None:
+    """Atomically publish a directory only when the destination is absent."""
+    source_text = os.fsencode(source)
+    destination_text = os.fsencode(destination)
+    if sys.platform == "darwin":
+        libc = ctypes.CDLL(None, use_errno=True)
+        renamex = getattr(libc, "renamex_np", None)
+        if renamex is None:
+            raise DeliveryError("exclusive atomic directory publish is unavailable")
+        renamex.argtypes = (ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint)
+        renamex.restype = ctypes.c_int
+        # RENAME_EXCL on Darwin prevents replacing any pre-existing target.
+        if renamex(source_text, destination_text, 0x00000004) != 0:
+            error = ctypes.get_errno()
+            if error == errno.EEXIST:
+                raise DeliveryError("destination appeared during build; refusing overwrite")
+            raise DeliveryError("exclusive atomic directory publish failed")
+        return
+    if sys.platform.startswith("linux"):
+        libc = ctypes.CDLL(None, use_errno=True)
+        renameat2 = getattr(libc, "renameat2", None)
+        if renameat2 is None:
+            raise DeliveryError("exclusive atomic directory publish is unavailable")
+        renameat2.argtypes = (ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint)
+        renameat2.restype = ctypes.c_int
+        at_fdcwd = -100
+        rename_noreplace = 1
+        if renameat2(at_fdcwd, source_text, at_fdcwd, destination_text, rename_noreplace) != 0:
+            error = ctypes.get_errno()
+            if error == errno.EEXIST:
+                raise DeliveryError("destination appeared during build; refusing overwrite")
+            raise DeliveryError("exclusive atomic directory publish failed")
+        return
+    raise DeliveryError("exclusive atomic directory publish is unsupported on this platform")
+
+
+def _verify_file_hashes(root: Path, expected: dict[str, str]) -> None:
+    for relative, expected_hash in expected.items():
+        path = root / relative
+        if not path.is_file() or _sha256_file(path) != expected_hash:
+            raise DeliveryError(f"pinned source hash mismatch: {relative}")
+
+
+def verify_registration(root: Path) -> dict[str, Any]:
+    integrity_path = root / "docs/experiments/evidence/EXP-051/registration-integrity.json"
+    if _sha256_file(integrity_path) != EXPECTED_REGISTRATION_INTEGRITY_SHA256:
+        raise DeliveryError("EXP-051 registration-integrity hash mismatch")
+    integrity = _read_json(integrity_path)
+    if integrity.get("schema") != "exp051-registration-integrity/1":
+        raise DeliveryError("unexpected registration-integrity schema")
+    if integrity.get("implementation_started") is not False:
+        raise DeliveryError("registration does not authorize first implementation")
+    if integrity.get("reviewer_invocations") != 0 or integrity.get("external_calls") != 0:
+        raise DeliveryError("registration records prior execution")
+    if integrity.get("files") != EXPECTED_REGISTRATION_FILES:
+        raise DeliveryError("registration file inventory differs from frozen pins")
+    _verify_file_hashes(root, EXPECTED_REGISTRATION_FILES)
+
+    inventory_path = root / "docs/experiments/evidence/EXP-051/input-inventory.json"
+    inventory = _read_json(inventory_path)
+    if inventory.get("schema") != "exp051-input-inventory/1":
+        raise DeliveryError("unexpected input-inventory schema")
+    if inventory.get("baseline") != "a627646895d019dda775500657687d104c9cd042":
+        raise DeliveryError("input-inventory baseline mismatch")
+    if inventory.get("files") != EXPECTED_INPUT_FILES:
+        raise DeliveryError("input file inventory differs from frozen pins")
+    if inventory.get("cards") != 232 or inventory.get("unique_matches") != 232:
+        raise DeliveryError("registered card or join count changed")
+    if inventory.get("missing") != 0 or inventory.get("ambiguous") != 0:
+        raise DeliveryError("registered source-only join was not unique")
+    if inventory.get("metadata_status_counts") != EXPECTED_STATUS_COUNTS:
+        raise DeliveryError("registered metadata status counts changed")
+    if inventory.get("provider_calls") != 0 or inventory.get("search_calls") != 0:
+        raise DeliveryError("source inventory records external calls")
+    if inventory.get("reviewer_invocations") != 0:
+        raise DeliveryError("source inventory records reviewer invocations")
+    _verify_file_hashes(root, EXPECTED_INPUT_FILES)
+    return inventory
+
+
+def _require_exact_keys(value: Any, keys: tuple[str, ...], label: str) -> None:
+    if not isinstance(value, dict) or set(value) != set(keys):
+        raise DeliveryError(f"unexpected {label} structure")
+
+
+def _triple(card: Any) -> tuple[str, str, str]:
+    if not isinstance(card, dict) or set(card) != {"id", "title", "url", "snippet"}:
+        raise DeliveryError("candidate does not have the exact registered visible fields")
+    if any(not isinstance(card.get(key), str) for key in ("id", "title", "url", "snippet")):
+        raise DeliveryError("candidate visible fields must be strings")
+    return card["title"], card["url"], card["snippet"]
+
+
+def _metadata_copy(metadata: Any) -> dict[str, Any]:
+    if not isinstance(metadata, dict):
+        raise DeliveryError("unexpected metadata structure")
+    allowed_top = set(TOP_METADATA_REQUIRED_KEYS) | set(TOP_METADATA_OPTIONAL_KEYS)
+    if not set(TOP_METADATA_REQUIRED_KEYS).issubset(metadata) or not set(metadata).issubset(allowed_top):
+        raise DeliveryError("unexpected metadata structure")
+    if metadata.get("status") == "matched":
+        if not {"paper_id", "reported_identifiers", "fields"}.issubset(metadata):
+            raise DeliveryError("matched metadata lacks registered report fields")
+    elif metadata.get("status") in {"unknown", "no_identifier"}:
+        if set(metadata).intersection(TOP_METADATA_OPTIONAL_KEYS):
+            raise DeliveryError("unresolved metadata unexpectedly contains a report")
+    else:
+        raise DeliveryError("unrecognized metadata status")
+    if "fields" in metadata and (not isinstance(metadata["fields"], dict) or set(metadata["fields"]) != set(FIELD_KEYS)):
+        raise DeliveryError("metadata field inventory differs from allowlist")
+    result = json.loads(json.dumps(metadata, ensure_ascii=False, allow_nan=False))
+    for field_name in result.get("fields", {}):
+        field = result["fields"][field_name]
+        if not isinstance(field, dict) or "status" not in field:
+            raise DeliveryError("metadata field lacks status")
+        if field["status"] not in {"reported", "unknown"}:
+            raise DeliveryError("metadata field status is not registered")
+        if field_name == "abstract":
+            allowed = {"status", "value", "clipped", "original_characters", "original_sha256"}
+            if not set(field).issubset(allowed) or not {"status", "value", "clipped", "original_characters", "original_sha256"}.issubset(field):
+                raise DeliveryError("abstract field differs from registered projection")
+            if not isinstance(field["clipped"], bool):
+                raise DeliveryError("abstract clipping/count metadata is invalid")
+            if field["value"] is not None and not isinstance(field["value"], str):
+                raise DeliveryError("abstract excerpt must be text or null")
+            if field["original_characters"] is not None and (type(field["original_characters"]) is not int or field["original_characters"] < 0):
+                raise DeliveryError("abstract original character count is invalid")
+            if field["original_sha256"] is not None and (not isinstance(field["original_sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", field["original_sha256"])):
+                raise DeliveryError("abstract source digest is malformed")
+            if field["value"] is None and (field["original_characters"] is not None or field["original_sha256"] is not None):
+                raise DeliveryError("empty abstract has inconsistent count or source digest")
+            field.pop("original_sha256")
+        elif field_name in {"title", "publication_date"}:
+            if set(field) != {"status", "value", "clipped", "original_characters"}:
+                raise DeliveryError("bounded text field differs from registered projection")
+            if field["value"] is not None and not isinstance(field["value"], str):
+                raise DeliveryError("bounded text field must be text or null")
+            if not isinstance(field["clipped"], bool):
+                raise DeliveryError("bounded text clipping/count metadata is invalid")
+            if field["original_characters"] is not None and (type(field["original_characters"]) is not int or field["original_characters"] < 0):
+                raise DeliveryError("bounded text character count is invalid")
+            if field["value"] is None and field["original_characters"] is not None:
+                raise DeliveryError("empty bounded text has inconsistent character count")
+        elif field_name == "year":
+            if set(field) != {"status", "value"}:
+                raise DeliveryError("year field differs from registered projection")
+            if field["value"] is not None and type(field["value"]) is not int:
+                raise DeliveryError("year field must be an integer or null")
+        elif field_name == "journal":
+            if set(field) != {"status", "value"}:
+                raise DeliveryError("journal field differs from registered projection")
+            journal_value = field["value"]
+            if journal_value is not None:
+                if not isinstance(journal_value, dict) or set(journal_value) != {"name", "volume", "pages"}:
+                    raise DeliveryError("journal field must preserve its bounded object shape")
+                for nested in journal_value.values():
+                    if not isinstance(nested, dict) or set(nested) != {"status", "value", "clipped", "original_characters"}:
+                        raise DeliveryError("journal subfield differs from registered projection")
+                    if nested["status"] not in {"reported", "unknown"} or not isinstance(nested["clipped"], bool):
+                        raise DeliveryError("journal subfield status or clipping flag is invalid")
+                    if nested["value"] is not None and not isinstance(nested["value"], str):
+                        raise DeliveryError("journal subfield value must be text or null")
+                    if nested["original_characters"] is not None and (type(nested["original_characters"]) is not int or nested["original_characters"] < 0):
+                        raise DeliveryError("journal subfield character count is invalid")
+        elif field_name in {"publication_types", "authors"}:
+            if set(field) != {"status", "values", "original_count", "clipped", "clipped_items"}:
+                raise DeliveryError("list metadata field differs from registered projection")
+            if field["values"] is not None and (not isinstance(field["values"], list) or any(not isinstance(item, str) for item in field["values"])):
+                raise DeliveryError("list metadata values must be text or null")
+            if type(field["clipped_items"]) is not int or field["clipped_items"] < 0:
+                raise DeliveryError("list clipping count is invalid")
+            if field["original_count"] is not None and (type(field["original_count"]) is not int or field["original_count"] < (len(field["values"]) if isinstance(field["values"], list) else 0)):
+                raise DeliveryError("list metadata count is invalid")
+            if field["original_count"] is None and field["values"] is not None:
+                raise DeliveryError("list metadata count is missing for reported values")
+            if not isinstance(field["clipped"], bool):
+                raise DeliveryError("list clipping flag is invalid")
+    if metadata.get("original_engine_provenance") != {"status": "unknown", "value": None}:
+        raise DeliveryError("original engine provenance must remain explicitly unknown")
+    if not isinstance(metadata.get("later_lookup_provenance"), str) or not metadata["later_lookup_provenance"]:
+        raise DeliveryError("later lookup provenance must remain explicit")
+    return result
+
+
+def _load_source_pools(root: Path) -> list[dict[str, Any]]:
+    pools: list[dict[str, Any]] = []
+    for pool_ref in EXPECTED_POOLS:
+        packet = _read_json(root / f"docs/experiments/evidence/EXP-048/pool-{pool_ref}.json")
+        if not isinstance(packet, dict) or set(packet) != {"schema", "pool", "cases", "delivery_end_marker"}:
+            raise DeliveryError(f"source packet wrapper mismatch for {pool_ref}")
+        if packet["schema"] != "exp048-pool-delivery/1":
+            raise DeliveryError(f"source packet schema mismatch for {pool_ref}")
+        pool = packet["pool"]
+        if not isinstance(pool, dict) or set(pool) != {"pool_ref", "purpose", "facets", "candidates", "selected_ids"}:
+            raise DeliveryError(f"source pool structure mismatch for {pool_ref}")
+        if pool.get("pool_ref") != pool_ref:
+            raise DeliveryError(f"source pool order/ref mismatch for {pool_ref}")
+        candidates = pool.get("candidates")
+        cases = packet.get("cases")
+        if not isinstance(candidates, list) or len(candidates) != EXPECTED_POOL_ROWS[pool_ref]:
+            raise DeliveryError(f"source candidate count mismatch for {pool_ref}")
+        if not isinstance(cases, list) or len(cases) != 2:
+            raise DeliveryError(f"source case count mismatch for {pool_ref}")
+        card_ids: list[str] = []
+        for candidate in candidates:
+            _triple(candidate)
+            card_ids.append(candidate["id"])
+        if len(set(card_ids)) != len(card_ids):
+            raise DeliveryError(f"duplicate candidate ID in {pool_ref}")
+        selected = pool.get("selected_ids")
+        if not isinstance(selected, list) or len(set(selected)) != len(selected) or not set(selected).issubset(card_ids):
+            raise DeliveryError(f"invalid selected IDs in {pool_ref}")
+        canonical_cases: list[dict[str, Any]] = []
+        baseline_sets: list[set[str]] = []
+        for case in cases:
+            if not isinstance(case, dict) or set(case) != {"case_id", "pool_ref", "removed_id", "added_id", "after_selected_ids"}:
+                raise DeliveryError(f"case structure mismatch in {pool_ref}")
+            after = case["after_selected_ids"]
+            if case["pool_ref"] != pool_ref or not isinstance(after, list):
+                raise DeliveryError(f"case pool or selection mismatch in {pool_ref}")
+            if case["removed_id"] not in card_ids or case["added_id"] not in card_ids:
+                raise DeliveryError(f"case references unknown candidate in {pool_ref}")
+            if len(set(after)) != len(after) or not set(after).issubset(card_ids):
+                raise DeliveryError(f"invalid case selected set in {pool_ref}")
+            baseline = set(after) - {case["added_id"]} | {case["removed_id"]}
+            if case["added_id"] in baseline or case["removed_id"] not in baseline:
+                raise DeliveryError(f"case replacement relation invalid in {pool_ref}")
+            baseline_sets.append(baseline)
+            canonical_cases.append(case)
+        if baseline_sets[0] != baseline_sets[1] or baseline_sets[0] != set(selected):
+            raise DeliveryError(f"two cases do not share the frozen current set in {pool_ref}")
+        if any(len(case["after_selected_ids"]) != len(selected) for case in cases):
+            raise DeliveryError(f"replacement changes selected-set cardinality in {pool_ref}")
+        annotated = set(selected)
+        for case in cases:
+            annotated.update(case["after_selected_ids"])
+        if len(annotated) > 12:
+            raise DeliveryError(f"selected-set union exceeds registered annotation cap in {pool_ref}")
+        pools.append(packet)
+    return pools
+
+
+def _load_projection(projection_path: Path) -> list[dict[str, Any]]:
+    if not projection_path.is_file() or _sha256_file(projection_path) != EXPECTED_PROJECTION_SHA256:
+        raise DeliveryError("private registered projection hash mismatch")
+    projection = _read_json(projection_path)
+    if not isinstance(projection, dict) or projection.get("schema") != EXPECTED_PROJECTION_SCHEMA:
+        raise DeliveryError("private registered projection schema mismatch")
+    rows = projection.get("pools")
+    if not isinstance(rows, list) or len(rows) != 423:
+        raise DeliveryError("private projection row count mismatch")
+    seen: set[tuple[str, str, str]] = set()
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != {"pool", "card", "metadata"}:
+            raise DeliveryError("private projection row structure mismatch")
+        triple = _triple(row["card"])
+        if triple in seen:
+            raise DeliveryError("projection contains ambiguous visible-card triple")
+        seen.add(triple)
+        _metadata_copy(row["metadata"])
+    return rows
+
+
+def _projection_index(rows: list[dict[str, Any]]) -> dict[tuple[str, str, str], dict[str, Any]]:
+    index: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for row in rows:
+        key = _triple(row["card"])
+        if key in index:
+            raise DeliveryError("projection join key is not unique")
+        index[key] = row
+    return index
+
+
+def _join_pool(packet: dict[str, Any], projection_index: dict[tuple[str, str, str], dict[str, Any]]) -> tuple[list[dict[str, Any]], Counter[str]]:
+    wrapped: list[dict[str, Any]] = []
+    statuses: Counter[str] = Counter()
+    used_projection_rows: set[int] = set()
+    for card in packet["pool"]["candidates"]:
+        triple = _triple(card)
+        row = projection_index.get(triple)
+        if row is None:
+            raise DeliveryError(f"candidate has no unique projection join in {packet['pool']['pool_ref']}")
+        row_identity = id(row)
+        if row_identity in used_projection_rows:
+            raise DeliveryError(f"projection row reused in {packet['pool']['pool_ref']}")
+        used_projection_rows.add(row_identity)
+        metadata = _metadata_copy(row["metadata"])
+        statuses[metadata["status"]] += 1
+        wrapped.append({"card": card, "metadata": metadata})
+    if len(wrapped) != EXPECTED_POOL_ROWS[packet["pool"]["pool_ref"]]:
+        raise DeliveryError("unexpected joined card count")
+    if {key: statuses.get(key, 0) for key in EXPECTED_STATUS_COUNTS} != EXPECTED_POOL_STATUS[packet["pool"]["pool_ref"]]:
+        raise DeliveryError("per-pool metadata status counts changed")
+    return wrapped, statuses
+
+
+def _make_chunk(packet: dict[str, Any], rows: list[dict[str, Any]], index: int, total: int) -> dict[str, Any]:
+    pool = packet["pool"]
+    return {
+        "schema": CHUNK_SCHEMA,
+        "pool_ref": pool["pool_ref"],
+        "chunk_index": index,
+        "chunk_total": total,
+        "purpose": pool["purpose"],
+        "facets": pool["facets"],
+        "selected_ids": pool["selected_ids"],
+        "cards": rows,
+        "cases": packet["cases"],
+        "end_marker": f"EXP051-{pool['pool_ref']}-CHUNK-{index:02d}-OF-{total:02d}-END",
+    }
+
+
+def _partition_pool(packet: dict[str, Any], rows: list[dict[str, Any]]) -> list[bytes]:
+    """Greedy whole-card chunks, iterated until marker total is stable."""
+    total_guess = 1
+    seen_totals: set[int] = set()
+    for _ in range(32):
+        if total_guess in seen_totals:
+            raise DeliveryError("chunk total did not converge")
+        seen_totals.add(total_guess)
+        groups: list[list[dict[str, Any]]] = []
+        current: list[dict[str, Any]] = []
+        for row in rows:
+            proposed = current + [row]
+            candidate_bytes = canonical_bytes(_make_chunk(packet, proposed, max(1, len(groups) + 1), total_guess))
+            if len(candidate_bytes) <= MAX_CHUNK_BYTES:
+                current = proposed
+                continue
+            if not current:
+                raise DeliveryError(f"one complete card exceeds chunk byte limit in {packet['pool']['pool_ref']}")
+            groups.append(current)
+            current = [row]
+            one_card_bytes = canonical_bytes(_make_chunk(packet, current, len(groups) + 1, total_guess))
+            if len(one_card_bytes) > MAX_CHUNK_BYTES:
+                raise DeliveryError(f"one complete card exceeds chunk byte limit in {packet['pool']['pool_ref']}")
+        if current:
+            groups.append(current)
+        actual_total = len(groups)
+        if actual_total == total_guess:
+            final: list[bytes] = []
+            for index, group in enumerate(groups, start=1):
+                encoded = canonical_bytes(_make_chunk(packet, group, index, actual_total))
+                if len(encoded) > MAX_CHUNK_BYTES:
+                    raise DeliveryError("stable chunk exceeds byte limit")
+                final.append(encoded)
+            return final
+        total_guess = actual_total
+    raise DeliveryError("chunk partition failed to converge")
+
+
+def _manifest(chunks: list[tuple[str, str, int, int, bytes, int]]) -> dict[str, Any]:
+    entries: list[dict[str, Any]] = []
+    for filename, pool_ref, index, total, body, candidate_count in chunks:
+        marker = f"EXP051-{pool_ref}-CHUNK-{index:02d}-OF-{total:02d}-END"
+        entries.append(
+            {
+                "filename": filename,
+                "pool_ref": pool_ref,
+                "chunk_index": index,
+                "chunk_total": total,
+                "sha256": sha256_bytes(body),
+                "bytes": len(body),
+                "candidate_count": candidate_count,
+                "case_count": 2,
+                "end_marker": marker,
+            }
+        )
+    return {
+        "schema": MANIFEST_SCHEMA,
+        "pool_count": 6,
+        "candidate_count": 232,
+        "case_count": 12,
+        "chunks": entries,
+    }
+
+
+def _validate_reassembly(packet: dict[str, Any], chunks: list[bytes]) -> None:
+    decoded = [json.loads(chunk.decode("utf-8")) for chunk in chunks]
+    if not decoded:
+        raise DeliveryError("pool has no chunks")
+    expected_rows = packet["pool"]["candidates"]
+    observed_rows: list[dict[str, Any]] = []
+    for ordinal, chunk in enumerate(decoded, start=1):
+        if chunk["pool_ref"] != packet["pool"]["pool_ref"] or chunk["chunk_index"] != ordinal or chunk["chunk_total"] != len(decoded):
+            raise DeliveryError("chunk membership or order changed")
+        if chunk["end_marker"] != f"EXP051-{packet['pool']['pool_ref']}-CHUNK-{ordinal:02d}-OF-{len(decoded):02d}-END":
+            raise DeliveryError("chunk terminal marker mismatch")
+        if chunk["purpose"] != packet["pool"]["purpose"] or chunk["facets"] != packet["pool"]["facets"] or chunk["selected_ids"] != packet["pool"]["selected_ids"] or chunk["cases"] != packet["cases"]:
+            raise DeliveryError("repeated pool context or case content changed")
+        observed_rows.extend(chunk["cards"])
+    rebuilt = [row["card"] for row in observed_rows]
+    if rebuilt != expected_rows or len(observed_rows) != len(expected_rows):
+        raise DeliveryError("whole-pool reconstruction mismatch")
+    if any(set(row) != {"card", "metadata"} for row in observed_rows):
+        raise DeliveryError("unexpected candidate wrapper keys")
+
+
+def prepare_delivery(projection_path: Path, repo_root: Path | None = None) -> tuple[list[dict[str, Any]], list[tuple[str, str, int, int, bytes, int]], dict[str, Any]]:
+    """Validate sources and deterministically prepare bytes without writing packets."""
+    root = (repo_root or Path(__file__).resolve().parents[4]).resolve()
+    verify_registration(root)
+    packets = _load_source_pools(root)
+    projection_rows = _load_projection(projection_path.expanduser().resolve())
+    index = _projection_index(projection_rows)
+
+    staged_chunks: list[tuple[str, str, int, int, bytes, int]] = []
+    total_status: Counter[str] = Counter()
+    for packet in packets:
+        pool_ref = packet["pool"]["pool_ref"]
+        rows, statuses = _join_pool(packet, index)
+        total_status.update(statuses)
+        bodies = _partition_pool(packet, rows)
+        _validate_reassembly(packet, bodies)
+        total = len(bodies)
+        for ordinal, body in enumerate(bodies, start=1):
+            filename = f"{pool_ref}-chunk-{ordinal:02d}-of-{total:02d}.json"
+            count = len(json.loads(body.decode("utf-8"))["cards"])
+            staged_chunks.append((filename, pool_ref, ordinal, total, body, count))
+    if {key: total_status.get(key, 0) for key in EXPECTED_STATUS_COUNTS} != EXPECTED_STATUS_COUNTS:
+        raise DeliveryError("overall metadata status counts changed")
+    if sum(len(packet["pool"]["candidates"]) for packet in packets) != 232:
+        raise DeliveryError("overall candidate count changed")
+    manifest = _manifest(staged_chunks)
+    manifest_bytes = canonical_bytes(manifest)
+    if json.loads(manifest_bytes.decode("utf-8")) != manifest:
+        raise DeliveryError("manifest canonical round-trip failed")
+    return packets, staged_chunks, manifest
+
+
+def build_delivery(projection_path: Path, output_path: Path, repo_root: Path | None = None) -> dict[str, Any]:
+    root = (repo_root or Path(__file__).resolve().parents[4]).resolve()
+    requested_output = output_path.expanduser().absolute()
+    if requested_output.exists() or requested_output.is_symlink():
+        raise DeliveryError("destination already exists; refusing overwrite")
+    output = requested_output.parent.resolve() / requested_output.name
+    try:
+        output.relative_to(root)
+    except ValueError:
+        pass
+    else:
+        raise DeliveryError("private packet destination must be outside the repository")
+    if not output.parent.is_dir():
+        raise DeliveryError("destination parent must already exist")
+
+    _packets, staged_chunks, manifest = prepare_delivery(projection_path, root)
+    manifest_bytes = canonical_bytes(manifest)
+    parsed_manifest = json.loads(manifest_bytes.decode("utf-8"))
+    if parsed_manifest != manifest:
+        raise DeliveryError("manifest canonical round-trip failed")
+
+    temp_path: Path | None = None
+    try:
+        temp_path = Path(tempfile.mkdtemp(prefix=".exp051-delivery-", dir=output.parent))
+        os.chmod(temp_path, 0o700)
+        for filename, _pool_ref, _index, _total, body, _count in staged_chunks:
+            (temp_path / filename).write_bytes(body)
+            os.chmod(temp_path / filename, 0o600)
+        (temp_path / "delivery-manifest.json").write_bytes(manifest_bytes)
+        os.chmod(temp_path / "delivery-manifest.json", 0o600)
+        # Verify exact staged bytes and manifest membership before publication.
+        if set(item.name for item in temp_path.iterdir()) != {item[0] for item in staged_chunks} | {"delivery-manifest.json"}:
+            raise DeliveryError("unexpected staged delivery file")
+        for filename, _pool_ref, _index, _total, body, _count in staged_chunks:
+            actual = (temp_path / filename).read_bytes()
+            if actual != body or len(actual) > MAX_CHUNK_BYTES:
+                raise DeliveryError("staged chunk differs from qualified bytes")
+        if (temp_path / "delivery-manifest.json").read_bytes() != manifest_bytes:
+            raise DeliveryError("staged manifest differs from qualified bytes")
+        _rename_directory_noreplace(temp_path, output)
+        temp_path = None
+    finally:
+        if temp_path is not None and temp_path.exists():
+            shutil.rmtree(temp_path)
+    return manifest
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--projection", required=True, type=Path)
+    parser.add_argument("--output", required=True, type=Path)
+    args = parser.parse_args(argv)
+    try:
+        result = build_delivery(args.projection, args.output)
+    except DeliveryError as exc:
+        print(f"delivery refused: {exc}", file=sys.stderr)
+        return 2
+    # Public-safe summary: no card metadata, abstracts, hashes, or local paths.
+    print(json.dumps({"schema": result["schema"], "pool_count": result["pool_count"], "candidate_count": result["candidate_count"], "case_count": result["case_count"], "chunk_count": len(result["chunks"]), "max_chunk_bytes": max(item["bytes"] for item in result["chunks"])}, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

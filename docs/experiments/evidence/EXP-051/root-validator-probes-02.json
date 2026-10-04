@@ -1,0 +1,22 @@
+{
+  "schema": "exp051-root-validator-probes/2",
+  "validator_sha256": "1d2fe7b01b4ed343583bdb55a6946a82adf941a508db444e2de4ceaabfbdd463",
+  "checks": [
+    {
+      "check": "whitespace_content_rejected",
+      "passed": true
+    },
+    {
+      "check": "unknown_abstract_rejected",
+      "passed": true
+    },
+    {
+      "check": "unhashable_pointer_sanitized",
+      "passed": true
+    }
+  ],
+  "status": "passed",
+  "reviewer_invocations": 0,
+  "provider_calls": 0,
+  "search_calls": 0
+}
