@@ -1,0 +1,75 @@
+{
+  "schema": "transport-overhead-diagnostic/1",
+  "status": "frozen-before-timing",
+  "purpose": "Measure local cold Python subprocess plus wrapper/import/pipe overhead against the same in-process offline HTTP.exchange fixture path used by the owned EXP-073 wrapper. This diagnoses local harness overhead only; it does not estimate provider latency, ranking quality, or adoption.",
+  "source_revision": "8544c90032281d32c1a0a2f6790fd84730b5c525",
+  "source_sha256": {
+    "docs/experiments/evidence/EXP-073/protocol.json": "e73af877c90df8c6f2cde9363925160aac74564ef9e333bb5381eb03c3613734",
+    "docs/experiments/evidence/EXP-073/prepare.py.txt": "47f24be0c0263ae07f160d144d2bfcbf4aa86fc31f8c082f10ad0157d1e72542",
+    "docs/experiments/evidence/EXP-073/fusion.py.txt": "5245d5d86e7e25bb0f574eee3b627eff34a08c08f098f58ae8bd4cb956bdaf14",
+    "docs/experiments/evidence/EXP-073/http-wrapper.py.txt": "6c6517527420ab9c27dbbd1ae55c1fc34f4e4b596adf0963cc937d7f7fa5189a",
+    "docs/experiments/evidence/EXP-059/http-wrapper.py.txt": "d9f5144fb3f9a936556d29228c196d8bb7c8e6b55a8b3214d94658fbea992bd3",
+    "docs/experiments/evidence/EXP-073/normal-runner.py.txt": "ceb7adf97abdc72817145d6c2c0c3057eb31ae3afe7cf765aabc3d160b2a9e50",
+    "slopsearx/rerank.py": "df518bac899fa457e713201192a65f8ee0c3599419382e5be221d5ac366b479e"
+  },
+  "environment": {
+    "python": "CPython 3.14.7",
+    "httpx": "0.28.1",
+    "httpcore": "1.0.9",
+    "anyio": "4.14.1",
+    "child_environment": "PATH and PYTHONIOENCODING only; no provider credentials inherited or read",
+    "network": "not used; explicit offline fixture opener only"
+  },
+  "fixture": {
+    "case": "synthetic neutral 80-card pool from the pinned EXP-073 runner fixture",
+    "requests_per_operation": [
+      "fresh W0 over the canonical first 40 local IDs, with native-order tail retained",
+      "fresh purpose-component request over all 80 global IDs"
+    ],
+    "expected_question_counts": {
+      "w0": 40,
+      "purpose_component": 80
+    },
+    "fixture_score": 2,
+    "fixture_usage": {
+      "input_tokens": 11,
+      "output_tokens": 3
+    },
+    "quality_credit": false
+  },
+  "arms": {
+    "cold_subprocess": "For each physical call, start a new child interpreter and invoke the pinned EXP-073 wrapper with the explicit offline neutral fixture flag. Parent captures raw stdout and stderr and validates the wrapper telemetry envelope.",
+    "in_process": "Use the already imported pinned EXP-073 wrapper modules and call the same EXP-059 HTTP.exchange function with its FixtureOpener neutral fixture; construct and validate the corresponding stdout/stderr telemetry envelope in memory."
+  },
+  "phase_definition": "Each measured operation begins immediately before creating and fsyncing the pending W0 receipt. It includes pending and finalized call receipts for both serial calls, raw response parsing, local W0 remapping and tail append, full-purpose ordering, exact rational fusion, and fsync of one final candidate-body receipt plus containing directory.",
+  "sample_plan": {
+    "paired_operations": 24,
+    "operations_per_arm": 24,
+    "physical_fixture_exchanges_per_arm": 48,
+    "cold_child_processes": 48,
+    "pair_order": "Alternating order by pair index: cold-subprocess then in-process for even zero-based indices; in-process then cold-subprocess for odd indices.",
+    "no_warmup": true,
+    "no_retries": true,
+    "subprocess_outer_timeout_seconds": 5,
+    "wrapper_fixture_exchange_deadline_seconds": 1
+  },
+  "measurements": [
+    "whole operation phase wall milliseconds",
+    "each call wall milliseconds",
+    "wrapper-reported exchange milliseconds",
+    "pending receipt durability milliseconds",
+    "response parse and order-construction milliseconds",
+    "call receipt finalization milliseconds",
+    "fusion milliseconds",
+    "final body receipt durability milliseconds",
+    "request, response, and telemetry SHA-256 values and byte counts"
+  ],
+  "summary_statistics": ["median", "nearest-rank p95", "min", "max", "per-pair cold-minus-in-process phase delta"],
+  "decision_rule": "A separate preregistered transport-path study is materially motivated by this local diagnostic only if median paired cold-minus-in-process phase delta is at least 100 ms, or cold-subprocess p95 exceeds 1000 ms while in-process p95 is at most 1000 ms. Meeting the rule motivates a distinct study; it does not authorize a code change, infer provider latency, correct the prior EXP-073 timing, or make any quality/adoption claim.",
+  "prohibitions": [
+    "No provider, search, DNS, key/environment credential, live gate, lease, or live run access.",
+    "No reuse of saved live responses or any measured output for quality scoring.",
+    "No adjustment or subtraction of diagnostic values from the prior EXP-073 live phase.",
+    "No ranking-quality, relevance, or adoption conclusion from synthetic fixtures."
+  ]
+}
