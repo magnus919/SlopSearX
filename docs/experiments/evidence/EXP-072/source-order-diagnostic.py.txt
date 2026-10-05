@@ -1,0 +1,15 @@
+from pathlib import Path
+import json,hashlib,argparse
+p=argparse.ArgumentParser(description='Offline source-order diagnosis of rejected EXP-072; no qualification or model calls.');p.add_argument('--repo',type=Path,default=Path('.'));p.add_argument('--run-dir',type=Path,required=True);p.add_argument('--output',type=Path,required=True);args=p.parse_args();root=args.repo;out=args.run_dir
+paths={'run':out/'run.json','analysis':out/'analysis.json','acquisition':root/'docs/experiments/evidence/EXP-060/fresh-acquisition.json','references':root/'docs/experiments/evidence/EXP-064/completed/metric-reference-view.json'}
+values={k:json.loads(v.read_text()) for k,v in paths.items()};run=values['run'];analysis=values['analysis'];acq=values['acquisition'];refs=values['references'];assert run['status']=='complete' and analysis['outcome']=='development_rejected' and analysis['structural_failures']==[]
+rows=[]
+for op in run['operations']:
+ if op['variant']!='base' or op['case'] not in ('q1','q2','q3','q4','q5','q6','q7','q8'):continue
+ q=op['case'];cards={c['id']:c for c in acq['pools'][q]['cards']};w=op['arms']['w0']['order_ids'];c=op['arms']['candidate']['order_ids'];changes=[]
+ for cid in dict.fromkeys(w[:10]+c[:10]):
+  changed={'id':cid,'title':cards[cid]['title'],'url':cards[cid]['url'],'w0_rank':w.index(cid)+1,'candidate_rank':c.index(cid)+1,'candidate_score':op['arms']['candidate']['scores'][cid],'reference_A':refs['A'][q][cid]['lead'],'reference_B':refs['B'][q][cid]['lead']}
+  changes.append(changed)
+ rows.append({'case':q,'candidate_minus_w0':{a:next(v for v in analysis['assessors'][a]['cases'] if v['case']==q)['candidate_minus_w0'] for a in ('A','B')},'both_useful_count_retained':all(next(v for v in analysis['assessors'][a]['cases'] if v['case']==q)['metrics']['candidate']['useful10']>=next(v for v in analysis['assessors'][a]['cases'] if v['case']==q)['metrics']['w0']['useful10'] for a in ('A','B')),'both_facet_coverage_retained':all(not next(v for v in analysis['assessors'][a]['cases'] if v['case']==q)['lost_w0_facets'] for a in ('A','B')),'demoted_out_of_top10':[v['id'] for v in changes if v['w0_rank']<=10<v['candidate_rank']],'promoted_into_top10':[v['id'] for v in changes if v['candidate_rank']<=10<v['w0_rank']],'changed_card_orders':changes})
+result={'schema':'exp072-posthoc-source-order-diagnosis/1','status':'diagnostic only; no candidate qualification','adoption_eligible':False,'provider_calls':0,'search_calls':0,'input_sha256':{k:hashlib.sha256(v.read_bytes()).hexdigest() for k,v in paths.items()},'cases':rows}
+args.output.write_text(json.dumps(result,indent=2)+'\n');print({'cases':len(rows),'all_count_facet_retained':all(v['both_useful_count_retained'] and v['both_facet_coverage_retained'] for v in rows),'quality_credit':False})
