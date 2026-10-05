@@ -2,7 +2,7 @@ import copy,importlib.machinery,importlib.util,unittest
 from pathlib import Path
 p=Path(__file__).with_name('decision.py.txt');loader=importlib.machinery.SourceFileLoader('exp077_decision',str(p));spec=importlib.util.spec_from_loader(loader.name,loader);m=importlib.util.module_from_spec(spec);loader.exec_module(m)
 def arm(status='complete'):
- return {'facet_assessments':[{'facet_id':'f1','status':status,'scope_match':'match','entailment':'supports','applicability':'applicable','unsupported_claim_indices':[],'unsupported_material_claims':[],'missed_qualifications':[],'claims':[{'references':['verified-evidence-fixture']}],'evidence_dispositions':[{'disposition':'used_with_support'},{'disposition':'not_acquired'}]}]}
+ return {'facet_assessments':[{'facet_id':'f1','status':status,'scope_match':'match','entailment':'supports','applicability':'applicable','unsupported_claim_indices':[],'unsupported_material_claims':[],'missed_qualifications':[],'claims':[{'references':[{'source_id':'s1','evidence_id':'e1'}]}],'evidence_dispositions':[{'disposition':'used_with_support','references':[{'source_id':'s1','evidence_id':'e1'}]},{'disposition':'not_acquired'}]}]}
 class DecisionTests(unittest.TestCase):
  def test_identity_is_only_diagnostic(self):
   rows={str(i):{'lead':2,'facets':['f1']} for i in range(12)}
@@ -20,11 +20,17 @@ class DecisionTests(unittest.TestCase):
   p=[(str(i),arm('partial') if i<3 else arm(),arm('partial') if i==7 else arm()) for i in range(8)];r=m.task_use_endpoint(p);self.assertEqual(r['additional_completed'],2);self.assertFalse(r['passes'])
  def test_no_anchor_cannot_self_certify(self):
   a=arm();a['facet_assessments'][0]['claims']=[];self.assertFalse(m.answer_endpoint(a)['complete'])
+ def test_cross_source_anchor_cannot_complete(self):
+  a=arm();a['facet_assessments'][0]['evidence_dispositions'][0]['references'][0]['source_id']='s2';self.assertFalse(m.answer_endpoint(a)['complete'])
+ def test_cross_passage_anchor_cannot_complete(self):
+  a=arm();a['facet_assessments'][0]['evidence_dispositions'][0]['references'][0]['evidence_id']='e2';self.assertFalse(m.answer_endpoint(a)['complete'])
  def test_missing_capture_not_automatic_unknown(self):self.assertTrue(m.answer_endpoint(arm())['complete'])
  def test_unknown_critical_prevents_pass(self):
   a=arm();a['facet_assessments'][0]['entailment']='uncertain';r=m.answer_endpoint(a);self.assertFalse(r['complete']);self.assertEqual(r['unknown_critical_facets'],['f1'])
  def test_material_unsupported_prevents_completion(self):
-  a=arm();a['facet_assessments'][0]['unsupported_claim_indices']=[0];r=m.answer_endpoint(a);self.assertFalse(r['complete']);self.assertTrue(r['material_failures'])
+  a=arm();a['facet_assessments'][0]['unsupported_material_claims']=['unsupported critical conclusion'];r=m.answer_endpoint(a);self.assertFalse(r['complete']);self.assertTrue(r['material_failures'])
+ def test_nonmaterial_index_is_not_a_material_hazard(self):
+  a=arm();f=a['facet_assessments'][0];f['claims'].append({'references':[]});f['unsupported_claim_indices']=[1];r=m.answer_endpoint(a);self.assertTrue(r['complete']);self.assertFalse(r['material_failures'])
  def test_independent_endpoints_not_pooled(self):
   p=[(str(i),arm('partial') if i<1 else arm(),arm()) for i in range(8)];self.assertFalse(m.task_use_endpoint(p)['passes'])
 if __name__=='__main__':unittest.main()

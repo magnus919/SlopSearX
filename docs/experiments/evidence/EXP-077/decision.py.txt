@@ -36,7 +36,7 @@ def answer_endpoint(arm):
     if not facets:raise ValueError('critical facets required')
     hazards=[];unknown=[];complete=True
     for f in facets:
-        for key in ('unsupported_claim_indices','unsupported_material_claims','missed_qualifications'):
+        for key in ('unsupported_material_claims','missed_qualifications'):
             if f[key]:hazards.append({'facet_id':f['facet_id'],'kind':key,'items':f[key]})
         if f['scope_match']=='mismatch' or f['applicability']=='not_applicable':
             hazards.append({'facet_id':f['facet_id'],'kind':'target_scope_or_applicability'})
@@ -44,7 +44,8 @@ def answer_endpoint(arm):
             unknown.append(f['facet_id'])
         # not_acquired is observed availability, never automatically an unknown.
         if any(d['disposition']=='not_assessable' for d in f['evidence_dispositions']):unknown.append(f['facet_id'])
-        anchored = bool(f['claims']) and any(c['references'] for c in f['claims']) and any(d['disposition']=='used_with_support' for d in f['evidence_dispositions'])
+        supported_anchors={(r['source_id'],r['evidence_id']) for d in f['evidence_dispositions'] if d['disposition']=='used_with_support' for r in d['references']}
+        anchored = any((r['source_id'],r['evidence_id']) in supported_anchors for i,c in enumerate(f['claims']) if i not in f['unsupported_claim_indices'] for r in c['references'])
         complete &= (anchored and f['status']=='complete' and f['scope_match']=='match' and f['applicability']=='applicable'
                      and f['entailment'] in ('supports','qualifies','contradicts'))
     return {'complete':bool(complete and not hazards and not unknown),'material_failures':hazards,'unknown_critical_facets':sorted(set(unknown))}
