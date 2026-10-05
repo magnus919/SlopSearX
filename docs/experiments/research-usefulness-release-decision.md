@@ -1,7 +1,8 @@
-# Bounded opt-in release decision — proposed, not approved
+# Bounded opt-in release decision — approved direction
 
-Status: proposed release bar awaiting maintainer decision. This document
-registers no acquisition or model run and changes no current acceptance gate.
+Status: prospective release bar approved by the maintainer on 2026-10-05.
+This document registers no acquisition or model run. It changes future release
+acceptance only; historical studies retain their original contracts.
 The full production objective and implementation scope remain unchanged.
 
 ## Candidate and decision boundary
@@ -20,11 +21,11 @@ delivery. Existing query-only
 behavior remains the default. This is not a smaller prefix feature or permission
 to bypass required production work.
 
-## Proposed practical release bar
+## Approved practical release bar
 
-The proposed change is to require at least +.02 mean nDCG@10 under each separate
+The approved prospective change requires at least +.02 mean nDCG@10 under each separate
 reference, with the same positive 95% bootstrap lower bound, instead of the
-current +.05. This change is **not approved**. It trades a larger card-ranking
+former +.05. It trades a larger card-ranking
 margin for an explicit demonstrated task-use benefit. No historical outcome is
 regraded and no output is analyzed against a silently changed threshold.
 
@@ -71,9 +72,9 @@ is authorized by this proposal alone.
 
 ## Approval and remaining work
 
-The [current acceptance checklist](complete-pool-production-acceptance.md) still
-requires +.05. The maintainer's usefulness decision retired only incumbent URL
-identity retention. Approval of this proposed prospective bar is required before
-sealing a new invocation. After that, finish the exact cohort/runner registration
+The [acceptance checklist](complete-pool-production-acceptance.md) now adopts
+this prospective +.02 bar together with the mandatory paired task-use endpoint.
+The separate usefulness decision retired incumbent URL-identity retention.
+Finish the exact cohort/runner registration
 and source qualification, execute once, and proceed through the complete
 SlopSearX/X product checklist only if the adopted study gates pass.
