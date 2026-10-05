@@ -86,7 +86,30 @@ class Exp076Tests(unittest.TestCase):
    result=asyncio.run(one());op=result['neutral']
    self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],1)
    self.assertEqual(op['calls'][-1]['dispatched'],False);self.assertEqual(op['arms']['candidate']['order_ids'],op['provenance_order_ids'])
+   self.assertTrue((pathlib.Path(tmp)/'run'/'receipts'/op['calls'][-1]['sidecar_path']).is_file())
+   final=json.loads((pathlib.Path(tmp)/'run'/'receipts'/op['final_receipt']['path']).read_bytes())
+   self.assertFalse(final['call_receipt']['dispatched'])
    self.assertEqual(op['final_receipt']['path'],'neutral-final.json')
+ def test_dispatch_denial_after_client_setup_is_durable_and_client_closes(self):
+  stats={'clients':0,'requests':0,'closed':0}
+  def factory(**kwargs):
+   stats['clients']+=1
+   if stats['clients']==2:time.sleep(1.05)
+   class Counted(N.httpx.AsyncClient):
+    async def aclose(self):
+     if not getattr(self,'_closed_once',False):self._closed_once=True;stats['closed']+=1
+     await super().aclose()
+   async def handler(req):
+    stats['requests']+=1;body=P.strict_json(req.content);return N.httpx.Response(200,content=P.response_fixture(body))
+   return Counted(transport=N.httpx.MockTransport(handler),**kwargs)
+  with tempfile.TemporaryDirectory() as tmp:
+   result=asyncio.run(N.run(self.acq,self.queries,pathlib.Path(tmp)/'out',client_factory=factory));op=result['neutral'];rec=op['calls'][-1]
+   self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],1)
+   self.assertEqual(stats['requests'],1);self.assertEqual(stats['clients'],stats['closed'])
+   self.assertFalse(rec['dispatched']);self.assertEqual(rec['usage_status'],'not_dispatched')
+   self.assertEqual(rec['failure']['type'],'DispatchDenied');self.assertTrue(rec['transport']['client_closed'])
+   final=json.loads((pathlib.Path(tmp)/'out'/'receipts'/op['final_receipt']['path']).read_bytes())
+   self.assertFalse(final['call_receipt']['dispatched']);self.assertEqual(op['arms']['candidate']['order_ids'],op['provenance_order_ids'])
  def test_deadline_includes_candidate_final_receipt_fsync_and_uses_native_fallback(self):
   original=N.durable
   def delayed(path,data,exclusive=False):

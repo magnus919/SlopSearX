@@ -204,12 +204,12 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,clie
   raw=path.read_bytes()
   return {'path':name,'sha256':digest(raw),'bytes':len(raw),'dispatched':bool(record.get('dispatched'))}
  index=0;stopped=False
- async def call(raw,opid,arm,deadline):
+ async def call(raw,opid,arm,deadline,pre_call_timings=None):
   nonlocal index
   name='call-%02d.json'%index;index+=1;path=receipts/name;rec={'schema':'exp076-call/1','sidecar_path':name,'status':'pending','dispatched':False,
     'operation':opid,'arm':arm,'request_hex':raw.hex(),'request_sha256':digest(raw),'raw_response_hex':None,'response_body_sha256':None,
     'response_bytes':0,'response_complete':False,'http_status':None,'usage':None,'usage_status':'not_dispatched','elapsed_ms':None,
-    'timings':{},'transport':{'kind':'inprocess-async-httpx','trust_env':False,'follow_redirects':False,'retries':0,'concurrency':1,
+    'timings':dict(pre_call_timings or {}),'transport':{'kind':'inprocess-async-httpx','trust_env':False,'follow_redirects':False,'retries':0,'concurrency':1,
       'request_sha256':digest(raw),'response_sha256':None,'client_closed':False},'failure':None}
   t0=time.perf_counter_ns();durable(path,rec);rec['timings']['pending_receipt_fsync_ms']=(time.perf_counter_ns()-t0)/1e6
   try:
@@ -242,6 +242,12 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,clie
     elif usage is not None:budget['input_tokens']+=usage['input_tokens'];budget['output_tokens']+=usage['output_tokens']
     rec['timings'].update(e.timings);rec['transport']['client_closed']=bool((owner.last_attempt or {}).get('client_closed'))
     raise CallFailure(rec,e.code) from None
+   except T.DispatchDenied:
+    attempt=owner.last_attempt or {}
+    rec.update(status='failed',dispatched=False,usage=None,usage_status='not_dispatched',
+       failure={'type':'DispatchDenied','code':'whole-phase-deadline'},elapsed_ms=None)
+    rec['timings'].update(attempt.get('timings',{}));rec['transport']['client_closed']=bool(attempt.get('client_closed'))
+    raise CallFailure(rec,'whole-phase-deadline') from None
    except asyncio.CancelledError:
     attempt=owner.last_attempt or {};partial=attempt.get('raw');dispatched=bool(attempt.get('dispatched'))
     usage=P.usage_from_raw(partial) if type(partial)is bytes else None
@@ -289,8 +295,7 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,clie
    build_start=time.perf_counter_ns();builder=build_candidate_fn or P.build_candidate;joint=builder(case,cards,item.get('variant','base'));build_ms=(time.perf_counter_ns()-build_start)/1e6
    serialize_start=time.perf_counter_ns();joint_raw=P.wire(joint['joint']);serialize_ms=(time.perf_counter_ns()-serialize_start)/1e6
    if len(joint_raw)>bounds['request_bytes'] or len(P.wire(joint['joint']['state']))>bounds['state_bytes']:raise ValueError('candidate-request-bound')
-   if deadline-time.perf_counter()<=0:raise CallFailure({'dispatched':False,'status':'failed','usage_status':'not_dispatched','failure':{'code':'whole-phase-deadline'}},'whole-phase-deadline')
-   raw,record=await call(joint_raw,opid,'candidate',deadline);record['timings'].update({'build_ms':build_ms,'serialization_ms':serialize_ms});durable(receipts/('call-%02d.json'%(index-1)),record);op['calls'].append(record)
+   raw,record=await call(joint_raw,opid,'candidate',deadline,{'build_ms':build_ms,'serialization_ms':serialize_ms});op['calls'].append(record)
    parsed=P.parse_candidate(raw,joint)
    op['arms'].update({k:{'status':'valid','order_ids':v['order_ids'],'scores':v.get('scores',{}),'raw_answers':v.get('raw_answers',{}),
       'rational_scores':v.get('rational_scores',{}),'usage':v['usage'],'elapsed_ms':record['elapsed_ms']} for k,v in parsed.items() if k in ARMS})
@@ -310,7 +315,8 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,clie
     failed={'schema':'exp076-receipt/1','operation':opid,'receipt_status':'candidate-failed-fallback','failure':op['failure'],'order_ids':op['provenance_order_ids'],
             'call_receipt':call_ref(record),
             'proposed_body_sha256':op['candidate_body_receipt']['sha256']}
-    op['final_receipt']=durable(receipts/(opid+'-final.json'),failed);op['candidate_phase_ms']=(time.perf_counter()-candidate_start)*1000;op['phase_endpoint_after_fsync']=True;return op,False
+    op['final_receipt']=durable(receipts/(opid+'-final.json'),failed);op['candidate_phase_ms']=(time.perf_counter()-candidate_start)*1000
+    op['paired_wall_ms']=(time.perf_counter()-phase)*1000;op['phase_endpoint_after_fsync']=True;return op,False
    return op,True
   except (CallFailure,ValueError) as e:
    code=e.code if isinstance(e,CallFailure) else str(e) if str(e).replace('-','').isalnum() else 'candidate-invalid'
