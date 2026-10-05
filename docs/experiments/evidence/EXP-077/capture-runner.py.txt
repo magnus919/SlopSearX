@@ -543,10 +543,14 @@ def main(argv=None):
     if args.cli_path.is_symlink() or not args.cli_path.is_file():
         raise ValueError("cli-path-invalid")
     cli_hash = sha(safe_file(args.cli_path))
-    external_cli = q.get("external_source_pins", {}).get("groktocrawl_cli", {})
-    if external_cli.get("sha256") != cli_hash:
+    external_pins = q.get("external_source_pins")
+    external_cli = external_pins.get("groktocrawl_cli") if isinstance(external_pins, dict) else None
+    if (not isinstance(external_cli, dict) or set(external_cli) != {"sha256", "revision"}
+            or external_cli.get("sha256") != cli_hash
+            or not re.fullmatch(r"[0-9a-f]{40}", str(external_cli.get("revision", "")))):
         raise ValueError("qualification-cli-pin-mismatch")
     admission["cli_sha256"] = cli_hash
+    admission["cli_source_revision"] = external_cli["revision"]
     inventory_raw = safe_file(args.inventory)
     inventory_obj, rows = validate_inventory(inventory_raw)
     stage_clock_raw = safe_file(args.stage_clock)

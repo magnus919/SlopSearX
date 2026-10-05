@@ -43,6 +43,8 @@
     "tuning_allowed": false
   },
   "capture": {
+    "assessment_context_character_limit_per_source": 8000,
+    "assessment_scope": "Complete eligible source inventory with a frozen first-8000-Unicode-character view per successful capture, prepared before selector output. Full raw capture remains private; retain both full and bounded context hashes and truncation flags. This is not exhaustive full-document factual review.",
     "budget_scope": "Owned experimental requests only: <=640 scrape requests plus one read-only candidate health request. Candidate-internal HTTP fanout is not bounded by this figure and is unknown unless separately exposed.",
     "format": "markdown",
     "health_calls_maximum_per_stage": 1,

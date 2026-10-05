@@ -183,7 +183,7 @@ def admit_live(stage: str, output: Path, acquisition: dict, cohorts: dict, clock
     qualification_fields = {"schema", "qualified", "qualified_source_revision", "files", "source_pins",
                             "dependencies", "environment", "protocol_sha256", "registration_sha256",
                             "stage_manifest_sha256"}
-    if (type(qualification) is not dict or set(qualification) != qualification_fields
+    if (type(qualification) is not dict or not qualification_fields <= set(qualification) or not set(qualification) <= (qualification_fields | {'external_source_pins'})
             or qualification.get("schema") != "exp077-qualification-integrity/1" or qualification.get("qualified") is not True):
         raise ValueError("runner-not-qualified")
     qrev = qualification.get("qualified_source_revision")

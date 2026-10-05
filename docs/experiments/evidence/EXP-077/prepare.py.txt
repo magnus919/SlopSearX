@@ -17,9 +17,12 @@ DESIGN_FILES = {"protocol.json", "cohorts.json", "candidate-source-pins.json", "
                 "prepare.py.txt", "selector-runner.py.txt", "selector-runner-tests.py.txt", "capture-runner.py.txt",
                 "answer-runner.py.txt", "answerer-prompt.txt", "source-assessor-prompt.txt",
                 "answer-assessor-prompt.txt", "card-assessor-prompt.txt", "assignment-plan.json",
-                "target-verification.json", "decision.py.txt", "decision-tests.py.txt",
+                "target-verification.json", "consumer-source-verification.json", "decision.py.txt", "decision-tests.py.txt",
                 "model-packets.py.txt", "model-packets-tests.py.txt", "answerer.schema.json",
-                "source-chunk.schema.json", "card-assessment.schema.json", "answer-assessment.schema.json"}
+                "source-chunk.schema.json", "card-assessment.schema.json", "answer-assessment.schema.json",
+                "acquire.py.txt", "acquire-tests.py.txt", "runner-tests.py.txt",
+                "source-assessment-adapter.py.txt", "source-assessment-adapter-tests.py.txt",
+                "prepare-stage.py.txt", "prepare-stage-tests.py.txt"}
 
 
 def _load(name: str, path: Path):

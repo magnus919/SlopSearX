@@ -1,0 +1,21 @@
+{
+  "schema": "exp077-integrity-contract/1",
+  "registration_path": "docs/experiments/evidence/EXP-077/registration-integrity.json",
+  "registration_schema": "exp077-registration/1",
+  "registration_required_fields": ["schema", "status", "registered_source_revision", "pins", "stage_manifest_sha256"],
+  "registration_status": "registered",
+  "registration_pins": "EXP077-relative filenames -> SHA256 of actual bytes; both static manifests and all declared design/source files included; excludes registration/qualification metadata themselves",
+  "qualification_path": "docs/experiments/evidence/EXP-077/qualification-integrity.json",
+  "qualification_schema": "exp077-qualification-integrity/1",
+  "qualification_required_fields": ["schema", "qualified", "qualified_source_revision", "files", "source_pins", "dependencies", "environment", "protocol_sha256", "registration_sha256", "stage_manifest_sha256"],
+  "qualification_files": "EXP077-relative declared design/runner/schema/test filenames -> SHA256; excludes qualification metadata itself",
+  "qualification_source_pins": "repository-relative reused dependency files -> SHA256; includes exact candidate dependencies and acquisition service/engine/measurement dependencies",
+  "dependencies": "installed distribution names -> exact versions used in qualification and required at live admission",
+  "environment": "python_implementation and python_version exact values",
+  "external_source_pins": "optional public source labels -> SHA256/revision for external pinned CLI; no personal paths or deployment endpoints",
+  "revision_semantics": "registered_source_revision points to the sealed design/source commit before registration metadata; qualified_source_revision points to source including registration before qualification metadata",
+  "artifact_commit_verification": "registration and qualification metadata bytes verified at current committed HEAD, not their own pointed-to prior source revisions",
+  "clock_source_revision": "qualification.qualified_source_revision",
+  "live_admission": "verify committed metadata, all current and prior-commit file pins, exact dependencies/environment, registered stage manifest, current nonexpired shared clock where applicable, and one-shot stage/phase lease before dispatch or credential access",
+  "synthetic_admission": "explicit fixture-only test path with temporary lease and injected MockTransport; never live credit"
+}
