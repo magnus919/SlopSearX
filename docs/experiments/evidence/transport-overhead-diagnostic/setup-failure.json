@@ -1,0 +1,26 @@
+{
+  "schema": "transport-overhead-diagnostic-setup-failure/1",
+  "status": "setup_failed_before_timing",
+  "failed_at": "in-process exchange setup for pair 0, before operation() was entered",
+  "attempted_command": "python3 docs/experiments/evidence/transport-overhead-diagnostic/measure.py.txt --out docs/experiments/evidence/transport-overhead-diagnostic/results.json",
+  "paired_operations_started": 0,
+  "cold_child_processes_started": 0,
+  "physical_fixture_exchanges": 0,
+  "timed_call_receipts": 0,
+  "pending_receipts": 0,
+  "result_file_written": false,
+  "failure": "The setup attempt passed an empty token into EXP-059 HTTP.exchange; the wrapper rejects/suppresses a response when the token occurs in it, and empty bytes occur in every response.",
+  "initial_protocol_sha256": "5994b4be43c5d24049eb8f94e95956fd48c6e77be5cc04156441e3269ae3cf42",
+  "initial_measure_script_sha256": "1a11a39f01512ea4a75520337788c16d13d431b2a5d3610125700d69ea0c0226",
+  "corrected_measure_script_sha256": "e4be41b86147da972448e835949acede675fc713dcbf5a313a7133928211cf90",
+  "registration_source_revision": "8544c90032281d32c1a0a2f6790fd84730b5c525",
+  "registration_pins": {
+    "docs/experiments/evidence/EXP-073/protocol.json": "e73af877c90df8c6f2cde9363925160aac74564ef9e333bb5381eb03c3613734",
+    "docs/experiments/evidence/EXP-073/prepare.py.txt": "47f24be0c0263ae07f160d144d2bfcbf4aa86fc31f8c082f10ad0157d1e72542",
+    "docs/experiments/evidence/EXP-073/fusion.py.txt": "5245d5d86e7e25bb0f574eee3b627eff34a08c08f098f58ae8bd4cb956bdaf14",
+    "docs/experiments/evidence/EXP-073/http-wrapper.py.txt": "6c6517527420ab9c27dbbd1ae55c1fc34f4e4b596adf0963cc937d7f7fa5189a",
+    "docs/experiments/evidence/EXP-059/http-wrapper.py.txt": "d9f5144fb3f9a936556d29228c196d8bb7c8e6b55a8b3214d94658fbea992bd3",
+    "docs/experiments/evidence/EXP-073/normal-runner.py.txt": "ceb7adf97abdc72817145d6c2c0c3057eb31ae3afe7cf765aabc3d160b2a9e50"
+  },
+  "correction": "Changed the in-process marker to offline-fixture-non-secret, identical to the cold wrapper marker. The sample plan is unchanged. No timed measurement has started; a new measurement remains held pending source-closure review."
+}

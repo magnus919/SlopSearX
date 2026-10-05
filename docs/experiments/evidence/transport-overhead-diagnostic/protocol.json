@@ -13,7 +13,7 @@
     "slopsearx/rerank.py": "df518bac899fa457e713201192a65f8ee0c3599419382e5be221d5ac366b479e",
     "slopsearx/service.py": "869befbfbfbf24b4c998a55d56ae6e180b8f2bf484a67c12f8c1a6929ba3ae33",
     "slopsearx/server.py": "a4245fe08f0f334afa33ba309d800ef6e4309babad642d820a5e6e75d7f94eda",
-    "docs/experiments/evidence/transport-overhead-diagnostic/measure.py.txt": "1a11a39f01512ea4a75520337788c16d13d431b2a5d3610125700d69ea0c0226"
+    "docs/experiments/evidence/transport-overhead-diagnostic/measure.py.txt": "e4be41b86147da972448e835949acede675fc713dcbf5a313a7133928211cf90"
   },
   "environment": {
     "python": "CPython 3.14.7",
@@ -93,5 +93,17 @@
     "The cold subprocess arm measures interpreter, imports, wrapper setup and pipes as a combined local effect; it does not isolate interpreter startup from module import.",
     "Both arms use only deterministic local synthetic response fixtures; wrapper-reported exchange time is fixture execution time.",
     "No diagnostic measurement is subtracted from the prior EXP-073 live phase, and no ranking quality is measured."
+  ],
+  "protocol_corrections": [
+    {
+      "correction_id": "setup-fixture-token-01",
+      "before_timing": true,
+      "initial_protocol_sha256": "5994b4be43c5d24049eb8f94e95956fd48c6e77be5cc04156441e3269ae3cf42",
+      "initial_measure_script_sha256": "1a11a39f01512ea4a75520337788c16d13d431b2a5d3610125700d69ea0c0226",
+      "reason": "The first setup-only invocation reached the in-process EXP-059 HTTP.exchange with an empty token; EXP-059 suppresses responses containing the token and bytes membership for an empty token matches every response, so it stopped before any timed operation.",
+      "change": "Use the same fixed non-secret offline-fixture-non-secret marker already used by the cold wrapper.",
+      "evidence": "setup-failure.json records the invocation outcome and verified zero paired operations, child processes, calls, and receipts; no result file was written.",
+      "sample_plan_changed": false
+    }
   ]
 }
