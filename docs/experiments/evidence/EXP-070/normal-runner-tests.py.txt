@@ -55,6 +55,15 @@ class PrepareTests(unittest.TestCase):
   req=json.loads(P.wire(q));cid=next(iter(req["questions"]));req["questions"][cid]["criteria"].pop("supported_4")
   with self.assertRaises(ValueError):P.validate_request(P.wire(req))
   w0=b["w0"];self.assertEqual(P.validate_score_response(choice_raw(w0),w0,list(w0["questions"]))["scores"]["c0"],5.0)
+  valid=json.loads(choice_raw(q));cases=[]
+  changed=json.loads(json.dumps(valid));changed["model"]="other-model";cases.append(json.dumps(changed).encode())
+  changed=json.loads(json.dumps(valid));changed["answers"].pop(next(iter(changed["answers"])));cases.append(json.dumps(changed).encode())
+  changed=json.loads(json.dumps(valid));changed["answers"]["unknown-id"]=next(iter(changed["answers"].values()));cases.append(json.dumps(changed).encode())
+  changed=json.loads(json.dumps(valid));aid=next(iter(changed["answers"]));changed["answers"][aid]["probabilities"]["unsupported"]=True;cases.append(json.dumps(changed).encode())
+  cases.append(choice_raw(q).replace(b"0.2",b"NaN",1))
+  cases.append(b'{"model":"jev-1.13.0","model":"jev-1.13.0","answers":{}}')
+  for malformed in cases:
+   with self.subTest(raw=malformed[:40]),self.assertRaises(ValueError):P.validate_choice_response(malformed,q,b["ids"])
  def test_choice_order_positive_support_then_conditional_expected_band_and_canonical_ties(self):
   ids=["z","a","m"];mass={"z":".7","a":".8","m":".5"};band={"z":"3","a":"2","m":None}
   self.assertEqual(P.choice_order(mass,band,ids),["z","a","m"])
@@ -111,6 +120,34 @@ class RunnerTests(unittest.TestCase):
    self.assertEqual((result["status"],Fake.n),("incomplete",3));op=result["operations"][0]
    self.assertEqual(op["arms"]["relative"]["status"],"failed");self.assertEqual(op["arms"]["relative"]["order_ids"],op["arms"]["w0"]["order_ids"])
    self.assertEqual(result["budget"]["input_tokens"],33);self.assertEqual(result["operations"][1]["arms"]["w0"]["status"],"uninvoked")
+ def test_owned_receives_remaining_deadline_only_for_candidate_calls(self):
+  acq=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes());queries=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+  class Fake:
+   timeouts=[]
+   def __init__(self,*_):self.last_raw=None
+   def __call__(self,body,timeout_s=60):
+    Fake.timeouts.append(timeout_s);req=P.strict_json(body);self.last_raw=choice_raw(req);return self.last_raw,.1
+  with tempfile.TemporaryDirectory() as tmp,patch.object(N,"Owned",Fake):
+   result=N.run(acq,queries,Path(tmp)/"out",True)
+   self.assertEqual(result["status"],"complete");self.assertEqual(len(Fake.timeouts),43)
+   self.assertLessEqual(Fake.timeouts[0],1);self.assertEqual(Fake.timeouts[1],60)
+   self.assertTrue(all(0<value<=1 for value in Fake.timeouts[2::2]))
+ def test_unknown_candidate_usage_is_charged_unknown_and_fails_stops(self):
+  acq=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes());queries=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+  class Fake:
+   n=0
+   def __init__(self,*_):self.last_raw=None
+   def __call__(self,body,timeout_s=60):
+    Fake.n+=1;req=P.strict_json(body)
+    if Fake.n==3:self.last_raw=choice_raw(req,usage=False)
+    else:self.last_raw=choice_raw(req)
+    return self.last_raw,.1
+  with tempfile.TemporaryDirectory() as tmp,patch.object(N,"Owned",Fake):
+   out=Path(tmp)/"out";result=N.run(acq,queries,out,True)
+   self.assertEqual((result["status"],Fake.n),("incomplete",3));self.assertTrue(result["budget"]["unknown_usage"])
+   self.assertEqual(result["budget"]["input_tokens"],22)
+   receipt=json.loads((out/"receipts"/"call-02.json").read_text());self.assertEqual(receipt["usage"],None);self.assertIsNotNone(receipt["raw_response"])
+   self.assertEqual(result["operations"][1]["arms"]["w0"]["status"],"uninvoked")
  def test_candidate_phase_overrun_fails_stops_and_falls_back(self):
   import time
   acq=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes());queries=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
