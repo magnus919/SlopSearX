@@ -1,0 +1,270 @@
+"""Inert EXP077 input contracts delegating selection to frozen EXP076 code."""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from datetime import datetime
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+SCHEMA = "exp077-captured-pools/1"
+ARMS = ("w0", "joint_query", "joint_purpose", "candidate")
+STUDY_PROTOCOL = json.loads((HERE / "protocol.json").read_bytes())
+DESIGN_FILES = {"protocol.json", "cohorts.json", "candidate-source-pins.json", "stage-clock-contract.json",
+                "prepare.py.txt", "selector-runner.py.txt", "selector-runner-tests.py.txt", "capture-runner.py.txt",
+                "answer-runner.py.txt", "answerer-prompt.txt", "source-assessor-prompt.txt",
+                "answer-assessor-prompt.txt", "card-assessor-prompt.txt", "assignment-plan.json",
+                "target-verification.json", "decision.py.txt", "decision-tests.py.txt",
+                "model-packets.py.txt", "model-packets-tests.py.txt", "answerer.schema.json",
+                "source-chunk.schema.json", "card-assessment.schema.json", "answer-assessment.schema.json"}
+
+
+def _load(name: str, path: Path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    if spec is None:
+        raise ValueError("source-loader")
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+FROZEN = _load("exp077_frozen_exp076_prepare", HERE.parent / "EXP-076" / "prepare.py.txt")
+PROTOCOL = {
+    "bounds": {
+        "calls": STUDY_PROTOCOL["jev_invocation"]["physical_calls_maximum_per_stage"],
+        "reported_input_tokens": STUDY_PROTOCOL["jev_invocation"]["reported_input_tokens_total_maximum"],
+        "reported_output_tokens": STUDY_PROTOCOL["jev_invocation"]["reported_output_tokens_total_maximum"],
+        "wall_seconds": STUDY_PROTOCOL["stage_wall_seconds_maximum"],
+        "legacy_control_request_bytes": STUDY_PROTOCOL["candidate"]["legacy_w0_request_bytes"],
+        "request_bytes": STUDY_PROTOCOL["candidate"]["request_bytes"],
+        "state_bytes": STUDY_PROTOCOL["candidate"]["state_bytes"],
+        "response_bytes": STUDY_PROTOCOL["candidate"]["response_bytes"],
+    },
+    "wire": FROZEN.PROTOCOL["wire"],
+}
+
+
+def digest(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def wire(value) -> bytes:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+def clock_wire(value) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n").encode("utf-8")
+
+
+def strict_json(raw: bytes):
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError("duplicate-json-key")
+            result[key] = value
+        return result
+
+    def constant(_):
+        raise ValueError("nonfinite-json")
+
+    return json.loads(raw, object_pairs_hook=pairs, parse_constant=constant)
+
+
+def stage_manifest_hash(stage: str, root: Path | None = None) -> str:
+    if stage not in ("development", "confirmation"):
+        raise ValueError("stage")
+    path = (root or HERE) / f"stage-{stage}-manifest.json"
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("stage-manifest-file")
+    raw = path.read_bytes()
+    manifest = strict_json(raw)
+    expected_fields = {"schema", "stage", "protocol_sha256", "cohorts_sha256", "ordered_task_ids", "files", "candidate_source_pins"}
+    if type(manifest) is not dict or set(manifest) != expected_fields or manifest.get("schema") != "exp077-stage-design/1" or manifest.get("stage") != stage:
+        raise ValueError("stage-manifest-schema")
+    if manifest["protocol_sha256"] != digest((HERE / "protocol.json").read_bytes()) or manifest["cohorts_sha256"] != digest((HERE / "cohorts.json").read_bytes()):
+        raise ValueError("stage-manifest-input-hash")
+    if manifest["ordered_task_ids"] != [case["id"] for case in case_index(strict_json((HERE / "cohorts.json").read_bytes()), stage)]:
+        raise ValueError("stage-manifest-tasks")
+    if type(manifest["files"]) is not dict or type(manifest["candidate_source_pins"]) is not dict:
+        raise ValueError("stage-manifest-inventory")
+    if set(manifest["files"]) != DESIGN_FILES:
+        raise ValueError("stage-manifest-file-closure")
+    files_root = root or HERE
+    for name, expected in manifest["files"].items():
+        file_path = files_root / name
+        if file_path.is_symlink() or not file_path.is_file() or digest(file_path.read_bytes()) != expected:
+            raise ValueError("stage-manifest-file-pin")
+    pin_file = files_root / "candidate-source-pins.json"
+    if pin_file.is_symlink() or not pin_file.is_file() or strict_json(pin_file.read_bytes()).get("pins") != manifest["candidate_source_pins"]:
+        raise ValueError("stage-manifest-source-pins")
+    return digest(raw)
+
+
+def case_index(cohorts: dict, stage: str) -> list[dict]:
+    if stage not in ("development", "confirmation"):
+        raise ValueError("stage")
+    entries = cohorts.get("cohorts", {}).get(stage) if type(cohorts) is dict else None
+    if type(entries) is not list or len(entries) != 13:
+        raise ValueError("cohort-size")
+    research = [case for case in entries if case.get("kind") == "research"]
+    navigation = [case for case in entries if case.get("kind") == "navigation"]
+    if len(research) != 8 or len(navigation) != 5:
+        raise ValueError("cohort-shape")
+    result = []
+    for entry in entries:
+        if type(entry.get("id")) is not str or not entry["id"] or type(entry.get("query")) is not str or not entry["query"]:
+            raise ValueError("case-identity")
+        if type(entry.get("purpose")) is not str or not entry["purpose"]:
+            raise ValueError("case-purpose")
+        if entry["kind"] == "research":
+            checks = entry.get("critical_checks")
+            if type(checks) is not list or len(checks) != 3 or any(type(x.get("check")) is not str for x in checks):
+                raise ValueError("critical-checks")
+            facets = [{"id": check["id"], "description": check["check"]} for check in checks]
+            target = None
+        elif entry["kind"] == "navigation":
+            facets = []
+            target = entry.get("target_url")
+            if type(target) is not str or not target.startswith("https://github.com/"):
+                raise ValueError("navigation-target")
+        else:
+            raise ValueError("case-kind")
+        result.append({"id": entry["id"], "query": entry["query"], "purpose": entry["purpose"], "facets": facets,
+                       "kind": entry["kind"], "target_url": target})
+    if len({case["id"] for case in result}) != len(result):
+        raise ValueError("duplicate-case-id")
+    return result
+
+
+def validate_acquisition(acquisition: dict, cohorts: dict, stage: str, manifest_root: Path | None = None):
+    cases = cohorts if type(cohorts) is list else case_index(cohorts, stage)
+    ids = {case["id"] for case in cases}
+    if type(acquisition) is not dict or set(acquisition) != {"schema", "stage", "pools", "engine_outcomes", "acquisition_receipt"}:
+        raise ValueError("acquisition-envelope")
+    if acquisition["schema"] != SCHEMA or acquisition["stage"] != stage:
+        raise ValueError("acquisition-identity")
+    if type(acquisition["pools"]) is not dict or set(acquisition["pools"]) != ids:
+        raise ValueError("pool-inventory")
+    if type(acquisition["engine_outcomes"]) is not dict or set(acquisition["engine_outcomes"]) != ids:
+        raise ValueError("engine-outcomes")
+    receipt = acquisition["acquisition_receipt"]
+    if type(receipt) is not dict or set(receipt) != {"stage_manifest_sha256", "stage_clock", "stage_clock_digest"}:
+        raise ValueError("acquisition-receipt")
+    clock = receipt["stage_clock"]
+    clock_fields = {"schema", "stage_id", "stage", "stage_started_utc", "stage_deadline_utc", "stage_manifest_sha256",
+                    "protocol_sha256", "cohorts_sha256", "source_revision", "ordered_task_ids"}
+    if type(clock) is not dict or set(clock) != clock_fields:
+        raise ValueError("stage-clock")
+    if clock["schema"] != "exp077-stage-clock/1" or clock["stage"] != stage or clock["stage_manifest_sha256"] != receipt["stage_manifest_sha256"]:
+        raise ValueError("stage-clock-binding")
+    try:
+        started = datetime.fromisoformat(clock["stage_started_utc"].replace("Z", "+00:00"))
+        deadline = datetime.fromisoformat(clock["stage_deadline_utc"].replace("Z", "+00:00"))
+    except (AttributeError, TypeError, ValueError):
+        raise ValueError("stage-clock") from None
+    if (started.tzinfo is None or deadline.tzinfo is None or started.utcoffset().total_seconds() != 0
+            or deadline.utcoffset().total_seconds() != 0 or deadline <= started):
+        raise ValueError("stage-clock")
+    if (deadline - started).total_seconds() != STUDY_PROTOCOL["stage_wall_seconds_maximum"]:
+        raise ValueError("stage-clock-bound")
+    manifest = receipt["stage_manifest_sha256"]
+    if type(manifest) is not str or len(manifest) != 64 or any(char not in "0123456789abcdef" for char in manifest):
+        raise ValueError("stage-manifest-hash")
+    if manifest != stage_manifest_hash(stage, manifest_root):
+        raise ValueError("stage-manifest-mismatch")
+    clock_digest = receipt["stage_clock_digest"]
+    if type(clock_digest) is not str or len(clock_digest) != 64 or any(char not in "0123456789abcdef" for char in clock_digest):
+        raise ValueError("stage-clock-digest")
+    if clock["protocol_sha256"] != digest((HERE / "protocol.json").read_bytes()):
+        raise ValueError("stage-protocol-binding")
+    if clock["cohorts_sha256"] != digest((HERE / "cohorts.json").read_bytes()):
+        raise ValueError("stage-cohort-binding")
+    if type(clock["stage_id"]) is not str or not clock["stage_id"] or type(clock["source_revision"]) is not str or len(clock["source_revision"]) != 40:
+        raise ValueError("stage-clock-identity")
+    if clock["ordered_task_ids"] != [case["id"] for case in cases]:
+        raise ValueError("stage-clock-tasks")
+    for case in cases:
+        record = acquisition["pools"][case["id"]]
+        if type(record) is not dict or set(record) != {"cards", "natural_count", "merged_count"}:
+            raise ValueError("pool-record")
+        cards = record["cards"]
+        if (type(cards) is not list or type(record["natural_count"]) is not int or type(record["merged_count"]) is not int
+                or record["natural_count"] < record["merged_count"] or record["merged_count"] != len(cards)):
+            raise ValueError("pool-count-or-truncation")
+        ids = set()
+        for card in cards:
+            if type(card) is not dict or set(card) != {"id", "url", "title", "snippet"}:
+                raise ValueError("card-shape")
+            if any(type(card[k]) is not str for k in card) or not card["id"] or not card["url"]:
+                raise ValueError("card-field")
+            if len(card["id"].encode("utf-8")) > 80 or len(card["url"].encode("utf-8")) > 512 or len(card["title"].encode("utf-8")) > 256 or len(card["snippet"].encode("utf-8")) > 1200:
+                raise ValueError("card-field-bound")
+            if card["id"] in ids:
+                raise ValueError("duplicate-card-id")
+            ids.add(card["id"])
+        if 2 <= len(cards) <= 80:
+            FROZEN.BASE.canonical(cards)
+        expected_engines = set(STUDY_PROTOCOL["acquisition"]["research_engines" if case["kind"] == "research" else "navigation_engines"])
+        outcomes = acquisition["engine_outcomes"][case["id"]]
+        if type(outcomes) is not dict or set(outcomes) != expected_engines:
+            raise ValueError("engine-outcome-record")
+        if any(type(value) is not dict or type(value.get("status")) is not str or not value["status"] for value in outcomes.values()):
+            raise ValueError("engine-outcome-status")
+    return acquisition, cases
+
+
+def schedule(cases):
+    research = [case for case in cases if case["kind"] == "research"]
+    stable_ids = {research[i - 1]["id"] for i in (1, 4, 7, 8)}
+    result = []
+    for case in cases:
+        result.append({"case": case["id"], "variant": "base", "arms": list(ARMS)})
+        if case["id"] in stable_ids:
+            result.extend({"case": case["id"], "variant": variant, "arms": list(ARMS)} for variant in ("repeat", "rotate"))
+    if len(result) != 21:
+        raise ValueError("operation-schedule")
+    return result
+
+
+def enforce_bounds(control, candidate):
+    control_raw, candidate_raw = FROZEN.enforce_bounds(control, candidate)
+    bounds = STUDY_PROTOCOL["candidate"]
+    if len(control_raw) > bounds["legacy_w0_request_bytes"] or len(candidate_raw) > bounds["request_bytes"]:
+        raise ValueError("request-byte-bound")
+    if len(wire(candidate["joint"]["state"])) > bounds["state_bytes"]:
+        raise ValueError("state-byte-bound")
+    if len(candidate["joint"]["questions"]) > bounds["maximum_questions"]:
+        raise ValueError("question-count-bound")
+    if len(candidate["cards"]) > bounds["maximum_cards"]:
+        raise ValueError("card-count-bound")
+    return control_raw, candidate_raw
+
+
+def prebuild(acquisition, cases, stage, manifest_root=None):
+    acquisition, cases = validate_acquisition(acquisition, cases, stage, manifest_root)
+    byid = {case["id"]: case for case in cases}
+    prepared = []
+    for item in schedule(cases):
+        case = byid[item["case"]]
+        cards = acquisition["pools"][case["id"]]["cards"]
+        if not 2 <= len(cards) <= STUDY_PROTOCOL["candidate"]["maximum_cards"]:
+            prepared.append((item, case, cards, None, None, None, None))
+            continue
+        control = FROZEN.build_control(case, cards, item["variant"])
+        candidate = FROZEN.build_candidate(case, cards, item["variant"])
+        control_raw, candidate_raw = enforce_bounds(control, candidate)
+        prepared.append((item, case, cards, control, candidate, control_raw, candidate_raw))
+    return prepared
+
+
+def usage_from_raw(raw):
+    return FROZEN.usage_from_raw(raw)
+
+
+def valid_usage(value):
+    return FROZEN.valid_usage(value)
