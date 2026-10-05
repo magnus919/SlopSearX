@@ -53,6 +53,31 @@ def bootstrap95(values):
     return [samples[249], samples[9749]]
 
 
+def reference_quality_gates(orders, references, primary_cases):
+    """Apply the registered A/B mean, bootstrap, case-loss, useful-count, and facet gates."""
+    assessors = {}
+    for assessor in ("A", "B"):
+        rows_by_case = references[assessor]
+        records = []
+        for case in primary_cases:
+            rows = rows_by_case[case]
+            metrics = {arm: {"ndcg10": ndcg(orders[(case, "base", arm)], rows),
+                             "useful10": useful(orders[(case, "base", arm)], rows),
+                             "covered_facets": sorted(covered(orders[(case, "base", arm)], rows))}
+                       for arm in ("w0", "candidate")}
+            delta = metrics["candidate"]["ndcg10"] - metrics["w0"]["ndcg10"]
+            lost = sorted(set(metrics["w0"]["covered_facets"]) - set(metrics["candidate"]["covered_facets"]))
+            records.append({"case": case, "metrics": metrics, "candidate_minus_w0": delta,
+                            "lost_w0_facets": lost,
+                            "per_case_passed": delta >= -.03 - 1e-12 and not lost
+                                and metrics["candidate"]["useful10"] >= metrics["w0"]["useful10"]})
+        deltas = [row["candidate_minus_w0"] for row in records]
+        mean, ci = statistics.mean(deltas), bootstrap95(deltas)
+        assessors[assessor] = {"cases": records, "mean_candidate_minus_w0": mean, "bootstrap95": ci,
+            "quality_gate_passed": mean >= .05 - 1e-12 and ci[0] > 0 and all(row["per_case_passed"] for row in records)}
+    return assessors
+
+
 def _json_finite(value):
     if value is None or type(value) in (str, bool, int):
         return True
@@ -219,8 +244,13 @@ def _neutral(neutral, errors):
         errors.append("neutral-identity")
     if neutral.get("phase_endpoint_after_fsync") is not True:
         errors.append("neutral-phase-endpoint")
-    if (type(neutral.get("calls")) is not list or len(neutral.get("calls", [])) not in (1, 2)
-            or type(neutral.get("baseline_receipt")) is not dict or type(neutral.get("final_receipt")) is not dict):
+    neutral_calls = neutral.get("calls")
+    if (type(neutral_calls) is not list or len(neutral_calls) not in (1, 2)
+            or type(neutral.get("baseline_receipt")) is not dict
+            or (type(neutral_calls) is list and len(neutral_calls) == 2
+                and type(neutral.get("final_receipt")) is not dict)
+            or (type(neutral_calls) is list and len(neutral_calls) == 1
+                and neutral.get("final_receipt") is not None)):
         errors.append("neutral-durable-receipts")
     cards = neutral.get("cards")
     if type(cards) is not list or len(cards) != 80:
@@ -628,7 +658,6 @@ def analyze(run, acquisition, references, queries, protocol,
         if type(by_case) is not dict:
             return {**result, "quality_analysis_performed": False, "outcome": "incomplete",
                     "structural_failures": [assessor + "-reference-assessor"]}
-        records = []
         for case in protocol["primary_cases"]:
             reference_rows = by_case.get(case)
             pool_ids = {card["id"] for card in pools[case]["cards"]}
@@ -640,19 +669,7 @@ def analyze(run, acquisition, references, queries, protocol,
                         or type(row.get("facets")) is not list or any(type(f) is not str for f in row.get("facets", []))):
                     return {**result, "quality_analysis_performed": False, "outcome": "incomplete",
                             "structural_failures": [assessor + "-" + case + "-reference-row"]}
-            metrics = {arm: {"ndcg10": ndcg(orders[(case, "base", arm)], reference_rows),
-                             "useful10": useful(orders[(case, "base", arm)], reference_rows),
-                             "covered_facets": sorted(covered(orders[(case, "base", arm)], reference_rows))}
-                       for arm in ("w0", "candidate")}
-            delta = metrics["candidate"]["ndcg10"] - metrics["w0"]["ndcg10"]
-            lost = sorted(set(metrics["w0"]["covered_facets"]) - set(metrics["candidate"]["covered_facets"]))
-            records.append({"case": case, "metrics": metrics, "candidate_minus_w0": delta, "lost_w0_facets": lost,
-                            "per_case_passed": delta >= -.03 - 1e-12 and not lost
-                                and metrics["candidate"]["useful10"] >= metrics["w0"]["useful10"]})
-        deltas = [row["candidate_minus_w0"] for row in records]
-        mean, ci = statistics.mean(deltas), bootstrap95(deltas)
-        result["assessors"][assessor] = {"cases": records, "mean_candidate_minus_w0": mean, "bootstrap95": ci,
-            "quality_gate_passed": mean >= .05 - 1e-12 and ci[0] > 0 and all(row["per_case_passed"] for row in records)}
+    result["assessors"] = reference_quality_gates(orders, references, protocol["primary_cases"])
     result["development_quality_passed"] = all(row["quality_gate_passed"] for row in result["assessors"].values()) and all(row["passed"] for row in stability)
     result["navigation_gate_met"] = all(row["candidate_target_top1"] for row in navigation if row["target_present"])
     result["development_all_gates_passed"] = result["development_quality_passed"] and result["navigation_gate_met"] and result["acquisition_recall_met"]
