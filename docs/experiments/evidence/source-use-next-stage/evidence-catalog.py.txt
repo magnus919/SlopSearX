@@ -1,0 +1,53 @@
+"""Private deterministic passage catalog. References prove identity, not entailment.
+
+Offsets are Python Unicode character offsets in the exact delivered context.
+Catalogs must be constructed from each arm's assigned contexts, not the union.
+"""
+import hashlib
+
+
+def digest(text):
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+
+
+def build(sources, max_chars=600):
+    if type(max_chars) is not int or max_chars < 1:
+        raise ValueError('invalid passage size')
+    result = {'version': 1, 'sources': {}, 'passages': {}}
+    for source in sources:
+        sid, context = source['source_id'], source['context']
+        if not isinstance(sid, str) or not sid or sid in result['sources']:
+            raise ValueError('invalid or duplicate source')
+        if not isinstance(context, str):
+            raise ValueError('invalid context')
+        sha = digest(context)
+        result['sources'][sid] = {'context_sha256': sha, 'characters': len(context)}
+        # Lossless fixed-width segments avoid heuristic extraction or model calls.
+        for start in range(0, len(context), max_chars):
+            end = min(start + max_chars, len(context))
+            text = context[start:end]
+            eid = digest(f'{sid}\0{sha}\0{start}\0{end}')
+            result['passages'][eid] = {'source_id': sid, 'start': start, 'end': end,
+                                      'context_sha256': sha, 'passage_sha256': digest(text),
+                                      'text': text}
+    return result
+
+
+def resolve(catalog, evidence_id, contexts, assigned_source_ids):
+    passage = catalog['passages'].get(evidence_id)
+    if passage is None:
+        raise ValueError('unknown evidence id')
+    sid = passage['source_id']
+    if sid not in assigned_source_ids or sid not in contexts:
+        raise ValueError('evidence not delivered to this arm')
+    context = contexts[sid]
+    if digest(context) != passage['context_sha256']:
+        raise ValueError('context changed')
+    start, end = passage['start'], passage['end']
+    if type(start) is not int or type(end) is not int or not 0 <= start < end <= len(context):
+        raise ValueError('invalid offsets')
+    expected_id = digest(f'{sid}\0{digest(context)}\0{start}\0{end}')
+    text = context[start:end]
+    if evidence_id != expected_id or text != passage['text'] or digest(text) != passage['passage_sha256']:
+        raise ValueError('passage changed')
+    return text

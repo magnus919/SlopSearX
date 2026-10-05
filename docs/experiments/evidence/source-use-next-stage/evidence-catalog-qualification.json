@@ -1,0 +1,48 @@
+{
+  "status": "deterministic_catalog_qualification_only",
+  "max_passage_characters": 600,
+  "arms": [
+    {
+      "task_id": "q6",
+      "arm": "w0",
+      "source_count": 5,
+      "passage_count": 70,
+      "context_characters": 40507,
+      "all_passages_resolved": true,
+      "lossless_reconstruction": true
+    },
+    {
+      "task_id": "q6",
+      "arm": "candidate",
+      "source_count": 5,
+      "passage_count": 70,
+      "context_characters": 40465,
+      "all_passages_resolved": true,
+      "lossless_reconstruction": true
+    },
+    {
+      "task_id": "q8",
+      "arm": "w0",
+      "source_count": 5,
+      "passage_count": 69,
+      "context_characters": 39571,
+      "all_passages_resolved": true,
+      "lossless_reconstruction": true
+    },
+    {
+      "task_id": "q8",
+      "arm": "candidate",
+      "source_count": 5,
+      "passage_count": 67,
+      "context_characters": 38534,
+      "all_passages_resolved": true,
+      "lossless_reconstruction": true
+    }
+  ],
+  "model_calls": 0,
+  "search_calls": 0,
+  "entailment_verified": false,
+  "task_utility_gain_verified": false,
+  "code_sha256": "0a197e720543c54239f618284bcd9fdbbcf2e7bd65af73bc1632c04c0831958b",
+  "tests_passed": 6
+}
