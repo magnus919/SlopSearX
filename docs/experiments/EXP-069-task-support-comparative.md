@@ -1,0 +1,11 @@
+# EXP-069: separate task support and comparative reading priority
+
+Registered before implementation or calls. EXP-067 made full-pool ordering stable but missed quality; EXP-068 explicit scope-first wording still promoted wrong-target material and lost a useful source. This separates an inspectable yes/no direct-task-support judgment from the unchanged EXP-067 comparative Score.
+
+Both judgments cover every canonical candidate, up to 80. The Noul transaction isolates each card within its own question and carries original purpose/facets as state; no sibling answers or open-ended explanations. The Score transaction remains exactly EXP-067. A fixed threshold (>0.5) places supported leads first, then relative Score orders each class. Every source remains in the full permutation. Probability magnitude is not utility, certainty or calibrated correctness; exactly 0.5 is in the second class.
+
+This differs from EXP-066, which retained W0 native order inside a broad positive class and failed rotation stability. Here comparative ordering replaces native ordering within both classes. It is not a reduced shortlist, facet quota, batch-score fusion, posthoc grade repair or default change.
+
+The composite candidate retains the one-second owned-HTTP budget: the sum of both serial exchanges must be <=1000ms. Each exchange also has an independent one-second hard bound. The complete candidate phase wall time (including transport/receipt overhead) must also be <=1000ms; no second dispatch after its remaining deadline is exhausted. Two maximum-card neutral calls plus 21 W0/gate/relative operations yield at most 65 calls; each request has at most 80 questions. Existing total token caps, request/response/card bounds, zero retries and two-hour wall limit remain. The increase in call count is explicit; no guarantee the serial experiment can finish within admission caps.
+
+All source pins, cases, fixed A/B references, +0.05 mean/positive confidence-bound gates, per-case loss/useful-source/facet protections, repeat/rotation, navigation/recall distinctions and untouched-confirmation requirements remain. No searches; Brave stays 8/10. This is exposed development only. Full production acceptance remains open; live calls require independent runner qualification after registration.
