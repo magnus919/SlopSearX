@@ -95,3 +95,11 @@ The receipt retained that usage and the aggregate counted it with
 or usage-bound responses; unknown applies only to a dispatched call lacking
 valid usage. The owner was asked to fix this and add both regressions. No real
 provider request occurred.
+
+The independent GPT-6 Luna source review confirmed that usage finding and
+identified a second material gap: failed final receipts lacked a binding to
+the physical call's durable sidecar. The owner must include call identity and
+digest for dispatched failure paths, with explicit absence for pre-dispatch
+failures. The independent verifier must reject a changed failed-call sidecar
+when the run manifest and final receipt remain unchanged. These are findings
+from the completed bounded review pass; fixes and regressions are pending.
