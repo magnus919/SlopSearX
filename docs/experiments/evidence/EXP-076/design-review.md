@@ -30,8 +30,11 @@ GPT-6 Luna review identified these required checks:
   produce identical complete component permutations and exact Fraction RRF
   results. W0 remains the independent ordinary first-forty comparator with its
   original tail and provenance-sensitive mapping.
-- Register 160 questions for the 80-card maximum, retaining the existing
-  candidate byte/state envelopes. Offline byte fit is not token-context or
+- Register 160 questions for the 80-card maximum and explicitly select the new
+  capability's aggregate request/state admission bounds. Matching EXP-075's
+  numeric envelopes does not guarantee that all otherwise eligible 80-card
+  pools fit; oversized complete inputs must fail admission without trimming.
+  Offline byte fit is not token-context or
   provider acceptance. The short synthetic maximum does not establish natural
   80-card capacity. Context rejection must remain terminal, without trimming,
   retries or partial output.
@@ -64,3 +67,11 @@ from 36,179 to 251,111 bytes. The short synthetic 80-card request was 270,847
 bytes with 10,462 bytes of state and 160 questions. These figures supersede the
 preliminary projection estimates; exact prompt/ID construction affects size.
 This is offline structural evidence only, with zero provider/search calls.
+
+GPT-6 Luna independently reproduced both the JSON and Markdown exactly and
+confirmed the input/projection bindings and four-way invariance. Its remaining
+design concern is aggregate admission: short synthetic cards do not exercise
+every maximum-length field. The protocol must justify its explicitly selected
+bounds, reject oversized complete requests, and avoid presenting an 80-card
+count bound as an unconditional natural-pool capacity guarantee. Parser/fusion
+invariance still requires separate fixed-score/tie tests.
