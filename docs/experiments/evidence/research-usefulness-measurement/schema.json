@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "research-usefulness-assessment/1",
+  "title": "Closed independent assessor packet",
+  "description": "Integrity-only prototype schema. Exact task, arm, facet, pool-source, delivery, frozen claim, and assessor assignment membership is checked against the separately frozen registry by validate.py.txt. Source and answer packets are separate; the validator never joins assessors or computes semantic truth. Quote/hash/offset fields are deterministic integrity envelopes for a future frozen hydrator, not fields a model must reproduce; this prototype does not implement that hydrator.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "packet_id", "assessor_id", "packet_kind", "tasks"],
+  "properties": {
+    "schema": {"const": "research-usefulness-assessment/1"},
+    "packet_id": {"type": "string", "minLength": 1},
+    "assessor_id": {"type": "string", "minLength": 1},
+    "packet_kind": {"enum": ["source", "answer"]},
+    "tasks": {"type": "array", "minItems": 1}
+  },
+  "allOf": [{
+    "if": {"properties": {"packet_kind": {"const": "source"}}},
+    "then": {"properties": {"tasks": {"items": {"$ref": "#/$defs/sourceTask"}}}},
+    "else": {"properties": {"tasks": {"items": {"$ref": "#/$defs/answerTask"}}}}
+  }],
+  "$defs": {
+    "reference": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "context_sha256", "start", "end", "evidence_id", "quote"],
+      "properties": {
+        "source_id": {"type": "string", "minLength": 1},
+        "context_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "start": {"type": "integer", "minimum": 0},
+        "end": {"type": "integer", "minimum": 1},
+        "evidence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "quote": {"type": "string", "minLength": 1}
+      }
+    },
+    "not_assessable": {
+      "type": "object", "required": ["judgment", "reason"],
+      "properties": {
+        "judgment": {"const": "not_assessable"},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "judgment": {"enum": ["match", "mismatch", "uncertain", "not_assessable"]},
+    "sourceDisposition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "disposition", "scope_match", "entailment", "applicability", "not_assessable_reason", "references", "reason"],
+      "properties": {
+        "source_id": {"type": "string", "minLength": 1},
+        "disposition": {"enum": ["not_acquired", "acquired_unusable", "evidence_available", "not_assessable"]},
+        "scope_match": {"$ref": "#/$defs/judgment"},
+        "entailment": {"enum": ["supports", "contradicts", "qualifies", "does_not_entail", "uncertain", "not_assessable"]},
+        "applicability": {"enum": ["applicable", "not_applicable", "uncertain", "not_assessable"]},
+        "not_assessable_reason": {"type": "string"},
+        "references": {"type": "array", "items": {"$ref": "#/$defs/reference"}},
+        "reason": {"type": "string"}
+      }
+    },
+    "sourceFacet": {
+      "type": "object", "additionalProperties": false,
+      "required": ["facet_id", "evidence_dispositions", "limitations"],
+      "properties": {
+        "facet_id": {"type": "string"},
+        "evidence_dispositions": {"type": "array", "items": {"$ref": "#/$defs/sourceDisposition"}},
+        "limitations": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "sourceArm": {
+      "type": "object", "additionalProperties": false,
+      "required": ["arm_id", "facet_assessments"],
+      "properties": {"arm_id": {"type": "string"}, "facet_assessments": {"type": "array", "items": {"$ref": "#/$defs/sourceFacet"}}}
+    },
+    "sourceTask": {
+      "type": "object", "additionalProperties": false,
+      "required": ["task_id", "arms"],
+      "properties": {"task_id": {"type": "string"}, "arms": {"type": "array", "items": {"$ref": "#/$defs/sourceArm"}}}
+    },
+    "answerEvidenceDisposition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "disposition", "not_assessable_reason", "references", "reason"],
+      "properties": {
+        "source_id": {"type": "string"},
+        "disposition": {"enum": ["not_acquired", "acquired_unusable", "available_not_delivered", "delivered_unused", "used_with_support", "used_invalidly", "not_assessable"]},
+        "not_assessable_reason": {"type": "string"},
+        "references": {"type": "array", "items": {"$ref": "#/$defs/reference"}},
+        "reason": {"type": "string"}
+      }
+    },
+    "claim": {
+      "type": "object", "additionalProperties": false,
+      "required": ["claim_id", "text", "references"],
+      "properties": {"claim_id": {"type": "string"}, "text": {"type": "string"}, "references": {"type": "array", "items": {"$ref": "#/$defs/reference"}}
+      }
+    },
+    "answerFacet": {
+      "type": "object", "additionalProperties": false,
+      "required": ["facet_id", "status", "not_assessable_reason", "conclusion", "claims", "unsupported_claim_indices", "unsupported_material_claims", "missed_qualifications", "evidence_found_but_unused", "evidence_dispositions", "scope_match", "entailment", "applicability", "reason"],
+      "properties": {
+        "facet_id": {"type": "string"},
+        "status": {"enum": ["complete", "partial", "unsupported", "not_assessable"]},
+        "not_assessable_reason": {"type": "string"},
+        "conclusion": {"type": "string"},
+        "claims": {"type": "array", "items": {"$ref": "#/$defs/claim"}},
+        "unsupported_claim_indices": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+        "unsupported_material_claims": {"type": "array", "items": {"type": "string"}},
+        "missed_qualifications": {"type": "array", "items": {"type": "string"}},
+        "evidence_found_but_unused": {"type": "array", "items": {"type": "string"}},
+        "evidence_dispositions": {"type": "array", "items": {"$ref": "#/$defs/answerEvidenceDisposition"}},
+        "scope_match": {"$ref": "#/$defs/judgment"},
+        "entailment": {"enum": ["supports", "contradicts", "qualifies", "does_not_entail", "uncertain", "not_assessable"]},
+        "applicability": {"enum": ["applicable", "not_applicable", "uncertain", "not_assessable"]},
+        "reason": {"type": "string"}
+      }
+    },
+    "answerArm": {
+      "type": "object", "additionalProperties": false,
+      "required": ["arm_id", "facet_assessments", "limitations"],
+      "properties": {"arm_id": {"type": "string"}, "facet_assessments": {"type": "array", "items": {"$ref": "#/$defs/answerFacet"}}, "limitations": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "answerTask": {
+      "type": "object", "additionalProperties": false,
+      "required": ["task_id", "arms"],
+      "properties": {"task_id": {"type": "string"}, "arms": {"type": "array", "items": {"$ref": "#/$defs/answerArm"}}
+      }
+    }
+  }
+}
