@@ -1,0 +1,166 @@
+"""Bounded local EXP-073 wrapper startup diagnostic; offline fixtures only."""
+from __future__ import annotations
+import hashlib, importlib.machinery, importlib.metadata, importlib.util, json, math, os, platform, statistics, subprocess, sys, tempfile, time
+from pathlib import Path
+
+HERE=Path(__file__).resolve().parent; REPO=HERE.parents[3]
+PROTOCOL=json.loads((HERE/'protocol.json').read_bytes())
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader);module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+P=load('overhead_prepare',REPO/'docs/experiments/evidence/EXP-073/prepare.py.txt')
+N=load('overhead_runner',REPO/'docs/experiments/evidence/EXP-073/normal-runner.py.txt')
+W=load('overhead_wrapper',REPO/'docs/experiments/evidence/EXP-073/http-wrapper.py.txt')
+
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+def atomic_json(path,value): N.atomic(path,json.dumps(value,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode())
+def sync_pending(path,value):
+    raw=json.dumps(value,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()
+    with path.open('xb') as f: f.write(raw);f.flush();os.fsync(f.fileno())
+    N.sync_directory(path.parent)
+
+def check_sources():
+    for relative,want in PROTOCOL['source_sha256'].items():
+        path=REPO/relative
+        if not path.is_file() or path.is_symlink() or sha(path.read_bytes())!=want: raise ValueError('source-pin')
+    if platform.python_implementation()!='CPython' or platform.python_version()!=PROTOCOL['environment']['python'].split()[-1]: raise ValueError('python-version')
+    for package in ('httpx','httpcore','anyio'):
+        if importlib.metadata.version(package)!=PROTOCOL['environment'][package]: raise ValueError('dependency-version')
+
+def fixture_operation():
+    case,cards=N.synthetic_case()
+    built=P.bodies(case,cards)
+    if len(cards)!=80 or len(built['w0']['questions'])!=40 or len(built['purpose_component']['questions'])!=80: raise ValueError('fixture-shape')
+    if built['tail_ids']!=built['provenance_order_ids'][40:]: raise ValueError('native-tail')
+    return case,built
+
+def one_call(kind,body,request,expected_ids,maximum,opid,arm,path):
+    request_sha=sha(body);start=time.perf_counter_ns()
+    pending={'status':'pending','operation':opid,'arm':arm,'request_hex':body.hex(),'request_sha256':request_sha,
+             'raw_response_hex':None,'response_body_sha256':None,'usage':None,'elapsed_ms':None,'transport':None,'failure':None}
+    t0=time.perf_counter_ns();sync_pending(path,pending);pending_ms=(time.perf_counter_ns()-t0)/1e6
+    call_start=time.perf_counter_ns()
+    if kind=='cold_subprocess':
+        child_env={'PATH':os.environ.get('PATH',''),'PYTHONIOENCODING':'utf-8'}
+        proc=subprocess.run([sys.executable,str(REPO/'docs/experiments/evidence/EXP-073/http-wrapper.py.txt'),'--offline-fixture','neutral'],
+                            input=body,capture_output=True,timeout=5,check=False,env=child_env)
+        raw,stderr=proc.stdout,proc.stderr
+        if proc.returncode!=0: raise ValueError('fixture-subprocess-failed')
+    elif kind=='in_process':
+        P.BASE.validate_request(body)
+        timing={};raw=W.HTTP.exchange(body,'offline-fixture-non-secret',W.FixtureOpener('neutral'),timing=timing)
+        stderr=(json.dumps({'request_sha256':request_sha,'response_sha256':sha(raw),'remote_http_ms':timing['remote_http_ms']})+'\n').encode()
+    else: raise ValueError('arm')
+    call_wall_ms=(time.perf_counter_ns()-call_start)/1e6
+    envelope=P.strict_json(stderr)
+    if set(envelope)!={'request_sha256','response_sha256','remote_http_ms'} or envelope['request_sha256']!=request_sha or envelope['response_sha256']!=sha(raw): raise ValueError('fixture-telemetry-binding')
+    remote=envelope['remote_http_ms']
+    if type(remote) not in (int,float) or isinstance(remote,bool) or not math.isfinite(remote) or not 0<=remote<=1000: raise ValueError('fixture-telemetry-time')
+    receipt=pending|{'status':'returned','raw_response_hex':raw.hex(),'response_body_sha256':sha(raw),'usage':P.BASE.usage_from_raw(raw),
+                    'elapsed_ms':float(remote),'transport':{'status':'offline-fixture' if kind=='in_process' else 'offline-subprocess',
+                    'request_sha256':request_sha,'response_sha256':sha(raw),'stdout_sha256':sha(raw),'stderr_sha256':sha(stderr),
+                    'stderr_hex':stderr.hex(),'remote_http_ms':float(remote)}}
+    t1=time.perf_counter_ns();atomic_json(path,receipt);finalize_ms=(time.perf_counter_ns()-t1)/1e6
+    parse_start=time.perf_counter_ns();parsed=P.validate_score_response(raw,request,expected_ids,maximum)
+    order=P.order_scores(parsed['scores'],expected_ids,maximum)
+    parse_ms=(time.perf_counter_ns()-parse_start)/1e6
+    receipt.update(status='validated')
+    t2=time.perf_counter_ns();atomic_json(path,receipt);finalize_ms+=(time.perf_counter_ns()-t2)/1e6
+    return {'parsed':parsed,'order':order,'usage':parsed['usage'],'timings':{'pending_receipt_ms':pending_ms,'call_wall_ms':call_wall_ms,
+            'reported_fixture_exchange_ms':float(remote),'parse_and_order_ms':parse_ms,'call_receipt_finalize_ms':finalize_ms},
+            'hashes':{'request_sha256':request_sha,'response_sha256':sha(raw),'stderr_sha256':sha(stderr)},
+            'bytes':{'request':len(body),'response':len(raw),'stderr':len(stderr)}}
+
+def operation(kind,root,index,case,built):
+    root.mkdir();receipts=root/'receipts';receipts.mkdir()
+    opid='neutral-%02d'%index;started=time.perf_counter_ns();op={'id':opid,'case':'neutral','variant':'neutral','provenance_order_ids':built['provenance_order_ids'],
+        'cards':built['cards'],'candidate_phase_ms':None,'arms':{}}
+    wreq=built['w0'];wids=list(wreq['questions'])
+    w=one_call(kind,P.wire(wreq),wreq,wids,9,opid,'w0',receipts/'call-00.json')
+    map_start=time.perf_counter_ns();worder=[built['w0_local_to_pool'][x] for x in w['order']]+list(built['tail_ids'])
+    wscores={built['w0_local_to_pool'][k]:v for k,v in w['parsed']['scores'].items()}
+    wraw={built['w0_local_to_pool'][k]:v for k,v in w['parsed']['raw_answers'].items()}
+    w['timings']['w0_remap_tail_ms']=(time.perf_counter_ns()-map_start)/1e6
+    op['arms']['w0']={'status':'valid','order_ids':worder,'scores':wscores,'raw_answers':wraw,'rational_scores':{},'usage':w['usage'],'elapsed_ms':w['timings']['reported_fixture_exchange_ms']}
+    preq=built['purpose_component'];pids=list(preq['questions'])
+    purpose=one_call(kind,P.wire(preq),preq,pids,3,opid,'purpose_component',receipts/'call-01.json')
+    porder=purpose['order'];op['arms']['purpose_component']={'status':'valid','order_ids':porder,'scores':purpose['parsed']['scores'],
+        'raw_answers':purpose['parsed']['raw_answers'],'rational_scores':{},'usage':purpose['usage'],'elapsed_ms':purpose['timings']['reported_fixture_exchange_ms']}
+    fuse_start=time.perf_counter_ns();fused=N.FUSE.fuse(built['cards'],worder,porder)
+    op['arms']['candidate']={'status':'body_durable_pending_deadline','order_ids':fused['order_ids'],'scores':{},'raw_answers':{},
+        'rational_scores':fused['rational_scores'],'usage':{'input_tokens':w['usage']['input_tokens']+purpose['usage']['input_tokens'],
+        'output_tokens':w['usage']['output_tokens']+purpose['usage']['output_tokens']},'elapsed_ms':None}
+    t0=time.perf_counter_ns();atomic_json(receipts/(opid+'-final.json'),{'receipt_status':'durable-candidate-body','operation':op});final_ms=(time.perf_counter_ns()-t0)/1e6
+    endpoint=time.perf_counter_ns();phase_ms=(endpoint-started)/1e6;op['candidate_phase_ms']=phase_ms
+    op['arms']['candidate']['elapsed_ms']=(endpoint-fuse_start)/1e6;op['arms']['candidate']['status']='valid'
+    # Receipt contents intentionally remain the immutable pre-deadline body, like EXP-073.
+    public_calls=[]
+    for result in (w,purpose):
+        result['timings']['durable_receipt_ms']=result['timings']['pending_receipt_ms']+result['timings']['call_receipt_finalize_ms']
+        public_calls.append({key:result[key] for key in ('timings','hashes','bytes','usage')})
+    return {'kind':kind,'phase_ms':phase_ms,'calls':public_calls,
+            'local_ms':{'pending_receipt_ms':w['timings']['pending_receipt_ms']+purpose['timings']['pending_receipt_ms'],
+                        'call_receipt_finalize_ms':w['timings']['call_receipt_finalize_ms']+purpose['timings']['call_receipt_finalize_ms'],
+                        'parse_and_order_ms':w['timings']['parse_and_order_ms']+purpose['timings']['parse_and_order_ms'],
+                        'w0_remap_tail_ms':w['timings']['w0_remap_tail_ms'],
+                        'fusion_and_durable_final_ms':op['arms']['candidate']['elapsed_ms'],
+                        'final_receipt_durable_write_ms':final_ms},
+            'candidate_order_sha256':sha(P.wire(fused['order_ids']))}
+
+def nearest_rank(values,p): return sorted(values)[max(0,math.ceil(p*len(values))-1)]
+def summarize(values): return {'n':len(values),'min':min(values),'median':statistics.median(values),'p95_nearest_rank':nearest_rank(values,.95),'max':max(values)}
+
+def run(out):
+    out=Path(out)
+    if out.exists(): raise ValueError('output-exists')
+    attempt_root=HERE/'attempt-receipts'
+    if attempt_root.exists(): raise ValueError('attempt-receipts-exist')
+    check_sources();case,built=fixture_operation();samples=[];child_count=0
+    attempt_root.mkdir()
+    temp=attempt_root
+    for i in range(PROTOCOL['sample_plan']['paired_operations']):
+        order=('cold_subprocess','in_process') if i%2==0 else ('in_process','cold_subprocess');pair={'index':i,'order':list(order)}
+        for kind in order:
+            value=operation(kind,temp/('%02d-%s'%(i,kind)),i,case,built);pair[kind]=value
+            if kind=='cold_subprocess': child_count+=2
+        for arm in ('cold_subprocess','in_process'):
+            _same=[{k:v for k,v in x['hashes'].items() if k!='stderr_sha256'} for x in pair[arm]['calls']]
+            _other=[{k:v for k,v in x['hashes'].items() if k!='stderr_sha256'} for x in pair['in_process' if arm=='cold_subprocess' else 'cold_subprocess']['calls']]
+            if _same!=_other: raise ValueError('paired-bytes-differ')
+        pair['phase_delta_cold_minus_in_process_ms']=pair['cold_subprocess']['phase_ms']-pair['in_process']['phase_ms']
+        samples.append(pair)
+    if child_count!=PROTOCOL['sample_plan']['cold_child_processes']: raise ValueError('child-count')
+    cold=[x['cold_subprocess']['phase_ms'] for x in samples];inside=[x['in_process']['phase_ms'] for x in samples]
+    deltas=[x['phase_delta_cold_minus_in_process_ms'] for x in samples]
+    p95_cross=summarize(cold)['p95_nearest_rank']>1000 and summarize(inside)['p95_nearest_rank']<=1000
+    material=statistics.median(deltas)>=100 or p95_cross
+    versions={name:importlib.metadata.version(name) for name in ('httpx','httpcore','anyio')}
+    result={'schema':'transport-overhead-diagnostic-result/1','protocol_sha256':sha((HERE/'protocol.json').read_bytes()),
+            'source_revision':PROTOCOL['source_revision'],'synthetic':True,'provider_calls':0,'search_calls':0,'credential_access':False,
+            'input_shape':{'synthetic_cards':len(built['cards']),'w0_questions':len(built['w0']['questions']),
+                           'purpose_questions':len(built['purpose_component']['questions'])},
+            'environment':{'python_implementation':platform.python_implementation(),'python':platform.python_version(),'packages':versions},
+            'counts':{'paired_operations':len(samples),'cold_child_processes':child_count,'in_process_calls':len(samples)*2,
+                      'cold_subprocess_calls':len(samples)*2,'physical_fixture_exchanges':len(samples)*4},
+            'summary':{'cold_subprocess_phase_ms':summarize(cold),'in_process_phase_ms':summarize(inside),
+                       'paired_phase_delta_ms':summarize(deltas),
+                       'cold_call_wall_ms':summarize([c['timings']['call_wall_ms'] for x in samples for c in x['cold_subprocess']['calls']]),
+                       'in_process_call_wall_ms':summarize([c['timings']['call_wall_ms'] for x in samples for c in x['in_process']['calls']]),
+                       'cold_reported_fixture_exchange_ms':summarize([c['timings']['reported_fixture_exchange_ms'] for x in samples for c in x['cold_subprocess']['calls']]),
+                       'cold_local_phase_components_ms':{name:summarize([x['cold_subprocess']['local_ms'][name] for x in samples]) for name in samples[0]['cold_subprocess']['local_ms']},
+                       'in_process_reported_fixture_exchange_ms':summarize([c['timings']['reported_fixture_exchange_ms'] for x in samples for c in x['in_process']['calls']]),
+                       'in_process_local_phase_components_ms':{name:summarize([x['in_process']['local_ms'][name] for x in samples]) for name in samples[0]['in_process']['local_ms']}},
+            'decision':{'material_transport_study_motivated':material,'median_delta_at_least_100ms':statistics.median(deltas)>=100,
+                        'cold_p95_over_1000_while_in_process_p95_at_most_1000':p95_cross,
+                        'rule':PROTOCOL['decision_rule']},
+            'timing_caveat':'All reported exchange times are local offline fixture timings. They are not estimates of provider latency. Paired deltas compare these diagnostic paths only; no prior EXP-073 measurement was adjusted.',
+            'samples':samples}
+    raw=json.dumps(result,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()
+    out.write_bytes(raw)
+    return result
+
+if __name__=='__main__':
+    import argparse
+    parser=argparse.ArgumentParser();parser.add_argument('--out',type=Path,default=HERE/'results.json');args=parser.parse_args()
+    value=run(args.out)
+    print(json.dumps({'status':'complete','paired_operations':value['counts']['paired_operations'],
+                      'provider_calls':0,'search_calls':0,'material_transport_study_motivated':value['decision']['material_transport_study_motivated']}))
