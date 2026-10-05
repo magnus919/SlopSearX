@@ -1,0 +1,218 @@
+"""Offline-only integration fixtures for the EXP-077 stage bridge."""
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import importlib.machinery
+import importlib.util
+import tempfile
+import unittest
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+B = load("exp077_prepare_stage_tests", HERE / "prepare-stage.py.txt")
+S = B.SELECTOR
+COHORTS = B.strict_json((HERE / "cohorts.json").read_bytes())
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def make_manifest(root, stage):
+    p = S.P
+    for name in p.DESIGN_FILES:
+        source = HERE / name
+        raw = source.read_bytes() if source.is_file() else f"fixture pin {name}\n".encode()
+        (root / name).write_bytes(raw)
+    pins = (HERE / "candidate-source-pins.json").read_bytes()
+    (root / "candidate-source-pins.json").write_bytes(pins)
+    cases = p.case_index(COHORTS, stage)
+    manifest = {"schema": "exp077-stage-design/1", "stage": stage,
+                "protocol_sha256": sha((HERE / "protocol.json").read_bytes()),
+                "cohorts_sha256": sha((HERE / "cohorts.json").read_bytes()),
+                "ordered_task_ids": [case["id"] for case in cases],
+                "files": {name: sha((root / name).read_bytes()) for name in p.DESIGN_FILES},
+                "candidate_source_pins": B.strict_json(pins)["pins"]}
+    (root / f"stage-{stage}-manifest.json").write_bytes(p.wire(manifest))
+    return sha((root / f"stage-{stage}-manifest.json").read_bytes())
+
+
+def make_acquisition_dir(root, stage="development"):
+    root.mkdir()
+    static_root = root / "static"
+    static_root.mkdir()
+    manifest_sha = make_manifest(static_root, stage)
+    cases = S.P.case_index(COHORTS, stage)
+    task_ids = [case["id"] for case in cases]
+    started = datetime.now(timezone.utc)
+    stage_clock = {"schema": "exp077-stage-clock/1", "stage_id": "1f3a2f22-6912-4ec2-8ff6-3c8ae159c347",
+                   "stage": stage, "stage_started_utc": started.isoformat().replace("+00:00", "Z"),
+                   "stage_deadline_utc": (started + timedelta(seconds=28_800)).isoformat().replace("+00:00", "Z"),
+                   "stage_manifest_sha256": manifest_sha,
+                   "protocol_sha256": sha((HERE / "protocol.json").read_bytes()),
+                   "cohorts_sha256": sha((HERE / "cohorts.json").read_bytes()),
+                   "source_revision": "a" * 40, "ordered_task_ids": task_ids}
+    clock_raw = S.P.clock_wire(stage_clock)
+    (root / "stage-clock.json").write_bytes(clock_raw)
+    physical_calls = 0
+    for index, task in enumerate(cases, 1):
+        engine_names = (["arxiv", "openalex", "github", "wikipedia"]
+                        if task["kind"] == "research" else ["github"])
+        count = 41 if task["kind"] == "research" else 10
+        results = []
+        for result_index in range(count):
+            if task["kind"] == "navigation" and result_index == 0:
+                url = task["target_url"]
+            elif task["kind"] == "research" and result_index == 0:
+                url = "https://example.org/shared?source=one"
+            else:
+                url = f"https://example.org/{task['id']}/{result_index}"
+            title = "Title " + str(result_index)
+            content = f"Native content for {task['id']} result {result_index}. " + ("é" * 1200)
+            if task["id"] == "d1" and result_index == 0:
+                title = "t" * 255 + "🚀"
+                content = "s" * 1199 + "🚀" + " tail"
+            results.append({"url": url, "title": title, "content": content,
+                            "engine": engine_names[0], "engines": list(engine_names), "score": 1.0,
+                            "position": result_index, "category": "reference", "published_date": None,
+                            "thumbnail": None, "img_src": None, "tier": 1, "media": None, "payload": None,
+                            "work_group": None})
+        calls = len(engine_names)
+        physical_calls += calls
+        receipt = {"stage_id": stage_clock["stage_id"], "stage_clock_digest": sha(clock_raw),
+                   "stage_manifest_sha256": manifest_sha, "qualification_sha256": "b" * 64,
+                   "task_id": task["id"], "kind": task["kind"], "query": task["query"],
+                   "purpose": task["purpose"], "target_url": task.get("target_url"),
+                   "selected_engines": engine_names, "scope_rule": "fixture", "results": results,
+                   "engine_outcomes": [{"engine": engine, "status": "ok", "result_count": count,
+                                        "latency_ms": 1.0} for engine in engine_names],
+                   "partial": False, "all_unresponsive": False, "deadline_exceeded": False,
+                   "cached": False, "suggestions": [], "ranking_explanation": "presence",
+                   "post_group_pool_count": count, "logical_elapsed_ms": 1.0,
+                   "physical_http_calls": calls, "stage_physical_http_calls": physical_calls,
+                   "http_calls": [{"engine": engine, "status_code": 200} for engine in engine_names],
+                   "guard_events": [], "max_parallel_http_calls": 1, "fatal_stop": None}
+        (root / f"query-{index:02d}-{task['id']}.json").write_bytes(B.canonical_json(receipt))
+    final = {"schema": "exp077-acquisition-run/1", "stage": stage,
+             "stage_id": stage_clock["stage_id"], "stage_clock_digest": sha(clock_raw),
+             "stage_clock": stage_clock, "stage_manifest_sha256": manifest_sha,
+             "registration_sha256": "c" * 64, "qualification_sha256": "b" * 64,
+             "lease_identity": "d" * 64, "source_revision": stage_clock["source_revision"],
+             "status": "complete", "synthetic": False, "quality_credit": False,
+             "adoption_eligible": False, "protocol_sha256": stage_clock["protocol_sha256"],
+             "cohorts_sha256": stage_clock["cohorts_sha256"], "cohort_task_count": len(cases),
+             "completed_logical_searches": len(cases), "physical_http_calls": physical_calls,
+             "max_parallel_http_calls": 1, "http_budget": 53,
+             "fatal_stop": None, "eligibility": {"eligible_for_next_stage": True,
+                "capture_or_model_calls_authorized_by_this_result": False},
+             "ended_utc": datetime.now(timezone.utc).isoformat()}
+    (root / "stage-final.json").write_bytes(B.canonical_json(final))
+    return root, static_root / "stage-clock.json"
+
+
+class PrepareStageTests(unittest.TestCase):
+    def test_pinned_source_view_policy_filters_challenge_deduplicates_and_prefers_nonvideo(self):
+        openings = [
+            {"card_id": "c0", "source_id": "video", "state": "success", "context": "useful video"},
+            {"card_id": "c1", "source_id": "challenge", "state": "success",
+             "context": "Please enable JavaScript to continue"},
+            {"card_id": "c2", "source_id": "n1", "state": "success", "context": "n1"},
+            {"card_id": "c3", "source_id": "n1", "state": "success", "context": "duplicate"},
+            {"card_id": "c4", "source_id": "n2", "state": "success", "context": "n2"},
+            {"card_id": "c5", "source_id": "n3", "state": "success", "context": "n3"},
+            {"card_id": "c6", "source_id": "n4", "state": "success", "context": "n4"},
+        ]
+        urls = {"video": "https://youtube.com/watch?v=1", "challenge": "https://challenge.example/",
+                "n1": "https://example.org/a", "n2": "https://example.org/b",
+                "n3": "https://example.org/c", "n4": "https://example.org/d"}
+        B._apply_source_policy(None, openings, urls)
+        self.assertEqual(openings[1]["state"], "refused")
+        self.assertEqual(openings[3]["state"], "duplicate")
+        projection = B.PACKETS.answer_projection([row["card_id"] for row in openings], openings,
+            arm_id="w0", max_cards=10, max_successes=5, context_chars=8000)
+        projection = B._apply_source_policy(projection, openings, urls)
+        self.assertEqual(projection["assigned_source_ids"], ["n1", "n2", "n3", "n4", "video"])
+
+    def test_acquire_to_capture_selector_to_answer_packet_offline(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            acquisition_dir, _ = make_acquisition_dir(root / "acquisition")
+            # Keep the actual stage clock at the acquisition root for all phases.
+            bridge = B.prepare_stage(acquisition_dir, "development", cohorts=COHORTS)
+            inventory_bytes = B.canonical_json(bridge["capture_inventory"])
+            inventory, normalized = B.CAPTURE.validate_inventory(inventory_bytes)
+            self.assertEqual(inventory["stage_clock_digest"], bridge["stage_clock_digest"])
+            self.assertEqual(len(normalized), len(inventory["sources"]))
+            self.assertEqual(len(bridge["native_records_by_task"]["d1"]), 41)
+            self.assertEqual(bridge["capture_inventory"]["native_query_receipts"][0]["results"][0]["work_group"], None)
+            # The projection exactly uses production byte slicing (partial UTF-8
+            # sequences are dropped by the same decode(errors="ignore") rule).
+            projected = bridge["selector_acquisition"]["pools"]["d1"]["cards"][0]
+            self.assertEqual(len(projected["title"].encode("utf-8")), 255)
+            self.assertEqual(projected["snippet"], "s" * 1199)
+            self.assertEqual(projected["url"], "https://example.org/shared")
+            self.assertEqual(bridge["selector_acquisition"]["pools"]["d1"]["natural_count"], 41)
+            # Distinct occurrences remain pool cards while shared URLs map to
+            # one capture source identity.
+            shared = [r for task in ("d1", "d2")
+                      for r in bridge["native_records_by_task"][task] if r["result_index"] == 0]
+            self.assertNotEqual(shared[0]["global_id"], shared[1]["global_id"])
+            self.assertEqual(shared[0]["source_id"], shared[1]["source_id"])
+
+            selector_out = root / "selector-run"
+            selector_run = asyncio.run(S.run_stage(bridge["selector_acquisition"], COHORTS, "development",
+                selector_out, offline=True, clock_path=acquisition_dir / "stage-clock.json",
+                manifest_root=acquisition_dir / "static"))
+            self.assertEqual(selector_run["status"], "complete")
+
+            capture_root = root / "capture"
+            raw_root = capture_root / "private-raw"
+            raw_root.mkdir(parents=True)
+            captures = []
+            for i, source in enumerate(inventory["sources"], 1):
+                markdown = f"Captured source {source['source_id']} supports public research context."
+                raw_path = raw_root / f"source-{i:04d}.json"
+                raw_path.write_bytes(B.canonical_json({"source_id": source["source_id"],
+                    "url": source["url"], "markdown": markdown}))
+                captures.append({"source_id": source["source_id"],
+                    "url_sha256": sha((source["url"] or "").encode()), "status": "captured", "accepted": True,
+                    "captured_bytes": len(markdown.encode()), "captured_sha256": sha(markdown.encode()),
+                    "assessment_context_characters": len(markdown[:8000]),
+                    "assessment_context_sha256": sha(markdown[:8000].encode()),
+                    "assessment_context_truncated": False,
+                    "raw_path": f"private-raw/{raw_path.name}"})
+            capture_result = {"schema": "exp077-source-capture/1", "status": "complete", "synthetic": False,
+                "stage_clock": {**B.strict_json((acquisition_dir / "stage-clock.json").read_bytes()),
+                    "stage_clock_digest": bridge["stage_clock_digest"]},
+                "inventory_count": len(captures), "captures": captures}
+            packet = B.build_answer_packet(bridge, capture_result, capture_root, selector_run, cohorts=COHORTS)
+            self.assertEqual(packet["schema"], "exp077-answer-packet/1")
+            self.assertEqual(len(packet["assignments"]), 16)
+            self.assertTrue(all(row["model_input"]["delivered_sources"] for row in packet["assignments"]))
+            for row in packet["assignments"]:
+                for source in row["model_input"]["delivered_sources"]:
+                    self.assertTrue(source["passages"])
+                    self.assertTrue(all(set(passage) == {"evidence_id", "text"} for passage in source["passages"]))
+
+    def test_missing_query_receipt_fails_closed_without_repair(self):
+        with tempfile.TemporaryDirectory() as temp:
+            acquisition_dir, _ = make_acquisition_dir(Path(temp) / "acquisition")
+            (acquisition_dir / "query-01-d1.json").unlink()
+            with self.assertRaisesRegex(B.BridgeError, "input-file-type"):
+                B.prepare_stage(acquisition_dir, "development", cohorts=COHORTS)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

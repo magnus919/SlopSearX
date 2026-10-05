@@ -122,18 +122,31 @@ def validate_packet(raw: bytes, schema: dict) -> tuple[dict, list[dict]]:
             raise ValueError("answer-context-count")
         delivered_ids = set()
         evidence_ids = set()
+        delivered_contexts = []
         for source in delivered:
-            if (not isinstance(source, dict) or set(source) != {"source_id", "context", "evidence_ids"}
-                    or not isinstance(source["context"], str) or len(source["context"]) > 8000
+            if (not isinstance(source, dict) or set(source) != {"source_id", "passages"}
                     or not isinstance(source["source_id"], str) or source["source_id"] in delivered_ids
-                    or not isinstance(source["evidence_ids"], list)):
+                    or not isinstance(source["passages"], list) or not source["passages"]):
                 raise ValueError("answer-delivered-source")
             delivered_ids.add(source["source_id"])
-            for eid in source["evidence_ids"]:
+            context_parts = []
+            source_evidence_ids = []
+            for passage in source["passages"]:
+                if (not isinstance(passage, dict) or set(passage) != {"evidence_id", "text"}
+                        or not isinstance(passage["text"], str) or not passage["text"]):
+                    raise ValueError("answer-delivered-passage")
+                eid = passage["evidence_id"]
                 if (not isinstance(eid, str) or not schema["evidence_id_pattern"].fullmatch(eid)
                         or eid in evidence_ids):
                     raise ValueError("answer-delivered-evidence-id")
                 evidence_ids.add(eid)
+                source_evidence_ids.append(eid)
+                context_parts.append(passage["text"])
+            context = "".join(context_parts)
+            if len(context) > 8000:
+                raise ValueError("answer-delivered-context-bound")
+            delivered_contexts.append({"source_id": source["source_id"], "context": context,
+                                       "evidence_ids": source_evidence_ids})
         if (not isinstance(binding["assigned_source_ids"], list)
                 or binding["assigned_source_ids"] != [source["source_id"] for source in delivered]):
             raise ValueError("answer-private-assignment-binding")
@@ -150,7 +163,8 @@ def validate_packet(raw: bytes, schema: dict) -> tuple[dict, list[dict]]:
         catalog_spec = importlib.util.spec_from_loader("exp077_answer_catalog", loader)
         catalog_module = importlib.util.module_from_spec(catalog_spec)
         loader.exec_module(catalog_module)
-        expected_catalog = (catalog_module.build(delivered) if delivered else
+        expected_catalog = (catalog_module.build([{"source_id": row["source_id"], "context": row["context"]}
+                                                   for row in delivered_contexts]) if delivered_contexts else
                             {"version": 1, "sources": {}, "passages": {}})
         if expected_catalog != binding["catalog"]:
             raise ValueError("answer-catalog-context-binding")
@@ -159,8 +173,14 @@ def validate_packet(raw: bytes, schema: dict) -> tuple[dict, list[dict]]:
             if not schema["evidence_id_pattern"].fullmatch(eid):
                 raise ValueError("answer-private-catalog-passage-id")
             expected_by_source[passage["source_id"]].append(eid)
-        for source in delivered:
-            if source["evidence_ids"] != expected_by_source[source["source_id"]]:
+        for source in delivered_contexts:
+            expected_ids = expected_by_source[source["source_id"]]
+            matching_delivery = next(item for item in delivered
+                                     if item["source_id"] == source["source_id"])
+            delivered_texts = [row["text"] for row in matching_delivery["passages"]]
+            catalog_texts = [expected_catalog["passages"][eid]["text"] for eid in expected_ids]
+            if (source["evidence_ids"] != expected_ids or
+                    delivered_texts != catalog_texts):
                 raise ValueError("answer-catalog-evidence-binding")
         output_schema = model_input["output_schema"]
         if (not isinstance(output_schema, dict) or output_schema.get("type") != "object"
@@ -480,7 +500,7 @@ def main(argv=None):
     capture = importlib.util.module_from_spec(spec)
     loader.exec_module(capture)
     capture.verify_qualification(q, qraw, args.qualification, expected)
-    admission = capture.validate_static()
+    admission = capture.validate_static(live=True)
     cohorts_raw = safe_file(HERE / "cohorts.json")
     cohorts_obj = strict_json(cohorts_raw)
     stage_clock_raw = safe_file(args.stage_clock)

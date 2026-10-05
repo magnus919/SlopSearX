@@ -205,12 +205,16 @@ def validate_stage_clock(raw: bytes, admission: dict) -> dict:
 
 
 def validate_static(protocol_path: Path = PROTOCOL, cohorts_path: Path = COHORTS,
-                    pin_path: Path = PINFILE) -> dict:
+                    pin_path: Path = PINFILE, *, live: bool = False) -> dict:
     protocol_raw, cohorts_raw, pins_raw = safe_file(protocol_path), safe_file(cohorts_path), safe_file(pin_path)
     protocol = strict_json(protocol_raw)
     cohorts = strict_json(cohorts_raw)
     pins = strict_json(pins_raw)
-    if protocol.get("schema") != "exp077-fixed-usefulness-study/1" or protocol.get("status") != "design_draft_harness_unqualified":
+    protocol_status = protocol.get("status")
+    pin_status = pins.get("status")
+    if (protocol.get("schema") != "exp077-fixed-usefulness-study/1"
+            or (protocol_status != "registered" if live else
+                protocol_status not in {"design_draft_harness_unqualified", "registered"})):
         raise ValueError("protocol-not-frozen")
     if protocol.get("capture", {}).get("owned_attempts_maximum_per_stage") != MAX_ATTEMPTS:
         raise ValueError("capture-budget-mismatch")
@@ -221,8 +225,11 @@ def validate_static(protocol_path: Path = PROTOCOL, cohorts_path: Path = COHORTS
     for stage, rows in cohorts["cohorts"].items():
         if not isinstance(rows, list) or len(rows) != 13 or len({r.get("id") for r in rows}) != 13:
             raise ValueError("cohort-size-or-duplicates:" + stage)
-    if pins.get("status") != "draft source inventory; registration seal pending":
-        raise ValueError("source-pins-not-draft")
+    allowed_pin_states = {"frozen_candidate_source_inventory"}
+    if not live:
+        allowed_pin_states.add("draft source inventory; registration seal pending")
+    if pin_status not in allowed_pin_states:
+        raise ValueError("source-pins-not-frozen")
     actual = {}
     for rel, digest in pins.get("pins", {}).items():
         if not re.fullmatch(r"[0-9a-f]{64}", str(digest)) or sha(safe_file(REPO / rel)) != digest:
@@ -539,7 +546,7 @@ def main(argv=None):
     parser.add_argument("--qualification", type=Path)
     parser.add_argument("--cli-path", type=Path)
     args = parser.parse_args(argv)
-    admission = validate_static()
+    admission = validate_static(live=args.mode == "live")
     if args.mode == "offline":
         return offline_fixture(args.outdir)
     # Live is deliberately blocked until a separately reviewed, exact-hash
