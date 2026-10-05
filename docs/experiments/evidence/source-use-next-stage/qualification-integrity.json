@@ -1,0 +1,46 @@
+{
+  "schema": "source-use-capture-qualification/1",
+  "qualified": true,
+  "selector_qualification": false,
+  "untouched_confirmation": false,
+  "owned_files": {
+    "capture-runner.py.txt": "2cf1e0aa751054f9ef2a8c64986bb0d87a73af0ee30b48eb38bac66c340b07b4",
+    "capture-tests.py.txt": "cbfa8c63f32e5b0c5db7fc0c14c8673e3c2e345704b5a56c63beb2314c3c30fc"
+  },
+  "input_files": {
+    "pilot-manifest.json": "78e581acd50e27bb2082ff85b96f7f4a031c12311e8d31e29525a33a9a430e5f",
+    "answerer-prompt.txt": "117bb672dd2162dfafbeefe8d62e56a1f0dbc37f728f202dc8e9baba86a52562",
+    "answer-output-schema.json": "adcf4757008eaf7a3a9481bb7feeb60551c09e8aae56f29e44372c10b36cbc28",
+    "source-assessor-prompt.txt": "5ba8c9b81d2415de0fe4ebe18e41c717763610c297ea93f757dd2b61af8dd766",
+    "answer-assessor-prompt.txt": "1ac7eea2e7606be827f97b4984417c6188b9216405d6275e9644b55681296f13"
+  },
+  "checks": {
+    "capture_tests": {
+      "passed": 10,
+      "skipped": 0,
+      "live_http_calls": 0
+    },
+    "span_tests": {
+      "passed": 9
+    },
+    "root_actual_consumer_fake_transport": {
+      "calls": 29,
+      "source_union_counts": [
+        13,
+        15
+      ],
+      "answer_packets": 4,
+      "sources_per_answer": 5,
+      "markdown_characters": 8000,
+      "shared_context_identity": "passed",
+      "sockets_opened": 0
+    },
+    "independent_luna_review": "resolved all material findings before capture"
+  },
+  "limits": [
+    "Unix main-thread SIGALRM required for hard owned request deadlines.",
+    "Internal service fetches/countermeasures not controlled or fully counted.",
+    "Qualification proves helper behavior only, not task utility or production ranking improvement.",
+    "Each fresh answerer receives only its individual opaque packet and prompt/schema."
+  ]
+}
