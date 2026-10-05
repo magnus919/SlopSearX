@@ -143,3 +143,13 @@ Full runner-to-verifier regressions for all three paths are required. Earlier
 runner-only tests did not establish that these packets could be independently
 verified. This is the completed substantive verifier review pass; disposition
 and exact integrated tests remain pending.
+
+## Integrated analyzer checkpoint
+
+Root integrated the analyzer/verifier checkpoint at `0c56b96` and independently
+passed all four analysis unit tests. The committed verifier integration suite
+then failed on the complete nonsynthetic-shaped local packet with
+`receipt-receipt-inventory`. The error was reproduced on both the draft and
+root's committed integration; the committed result is authoritative. The owner
+is resolving expected versus retained receipt membership without relaxing exact
+inventory checks. This checkpoint is unqualified and made no provider calls.
