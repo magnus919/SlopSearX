@@ -194,9 +194,11 @@ class CaptureRunnerTests(unittest.TestCase):
 
             # HTTP429 receives no retry, even when the ambient policy requests three.
             out4=root/"rate-limited"; out4.mkdir(mode=0o700); calls.clear(); mode["ratelimit"]=True
-            with patch.dict(os.environ, {"GROKTOCRAWL_RETRY_MAX_ATTEMPTS":"3"}), patch.object(requests,"request",side_effect=fake_request), patch.object(time,"sleep",side_effect=AssertionError("unexpected retry sleep")):
+            with patch.dict(os.environ, {"GROKTOCRAWL_RETRY_MAX_ATTEMPTS":"3", "GROKTOCRAWL_API_URL":"https://unintended.invalid"}), patch.object(requests,"request",side_effect=fake_request), patch.object(time,"sleep",side_effect=AssertionError("unexpected retry sleep")):
                 rate_result=R._live(m,out4,integrity,Path(cli_path),repo,packet_ids,source_order)
                 self.assertEqual(os.environ["GROKTOCRAWL_RETRY_MAX_ATTEMPTS"],"3")
+                self.assertEqual(os.environ["GROKTOCRAWL_API_URL"],"https://unintended.invalid")
+                self.assertTrue(all(not call[1].startswith("https://unintended.invalid") for call in calls))
             self.assertEqual(len(calls),29)
             self.assertFalse(rate_result["captures"][2]["accepted"])
             transport=json.loads((out4/"private-raw/http-transport.json").read_text())
@@ -221,12 +223,23 @@ class CaptureRunnerTests(unittest.TestCase):
             self.assertEqual(rows[3]["status"],"budget_error")
             self.assertTrue(all(x["status"]=="not_attempted_budget_suffix" for x in rows[4:]))
 
+    def test_environment_restored_when_cli_construction_fails(self):
+        ambient={"GROKTOCRAWL_API_URL":"https://unintended.invalid", "FIRECRAWL_API_URL":"https://legacy.invalid", "GROKTOCRAWL_RETRY_MAX_ATTEMPTS":"3"}
+        with patch.dict(os.environ,ambient), patch.object(R,"_capture_live",side_effect=ImportError("client construction failed")):
+            with self.assertRaises(ImportError): R._live({},Path("unused"),{},Path("unused"),Path("unused"),{}, {})
+            self.assertTrue(all(os.environ[name]==value for name,value in ambient.items()))
+
     def test_lease_is_exclusive_and_durable(self):
         with tempfile.TemporaryDirectory() as td:
             lease = R.acquire_lease(Path(td))
             self.assertTrue(lease.is_file())
             with self.assertRaises(FileExistsError):
                 R.acquire_lease(Path(td))
+            first=R.acquire_lease(Path(td), "a"*64)
+            second=R.acquire_lease(Path(td), "b"*64)
+            self.assertNotEqual(first,second)
+            with self.assertRaises(FileExistsError): R.acquire_lease(Path(td), "a"*64)
+            self.assertTrue(lease.exists())
 
 
 if __name__ == "__main__":
