@@ -104,7 +104,7 @@ class AcquisitionTests(unittest.TestCase):
         static = {"schema": "exp077-stage-design/1", "stage": "development",
                   "protocol_sha256": protocol_sha, "cohorts_sha256": cohorts_sha,
                   "ordered_task_ids": [row["id"] for row in self.rows],
-                  "files": {"slopsearx/service.py": source_pin},
+                  "files": {"design-notes.md": A.digest((BASE / "design-notes.md").read_bytes())},
                   "candidate_source_pins": {"slopsearx/service.py": source_pin}}
         self.static_path = self.root / "stage-development-manifest.json"
         self.static_path.write_bytes(A.canonical_json(static))
@@ -247,7 +247,6 @@ class AcquisitionTests(unittest.TestCase):
 
     def test_static_committed_source_hash_mismatch_fails_before_dispatch(self):
         changed = json.loads(self.static_path.read_text())
-        changed["files"]["slopsearx/service.py"] = "0" * 64
         changed["candidate_source_pins"]["slopsearx/service.py"] = "0" * 64
         self.static_path.write_bytes(A.canonical_json(changed))
         registration = json.loads(self.registration_path.read_text())

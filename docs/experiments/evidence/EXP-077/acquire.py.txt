@@ -531,7 +531,7 @@ def _validate_stage_design(stage: str, tasks: list[dict[str, Any]], protocol_sha
             raise AcquisitionError(f"static stage design {key} does not match frozen inputs")
     for pin_key in ("files", "candidate_source_pins"):
         pins = static.get(pin_key)
-        if not isinstance(pins, dict) or any(
+        if not isinstance(pins, dict) or not pins or any(
             not isinstance(path, str) or not isinstance(value, str) or len(value) != 64 or
             any(ch not in "0123456789abcdef" for ch in value)
             for path, value in pins.items()
@@ -539,31 +539,19 @@ def _validate_stage_design(stage: str, tasks: list[dict[str, Any]], protocol_sha
             raise AcquisitionError(f"static stage design {pin_key} is malformed")
     files = static["files"]
     candidate_pins = static["candidate_source_pins"]
-    if not candidate_pins or any(files.get(path) != value for path, value in candidate_pins.items()):
-        raise AcquisitionError("candidate source pins must be an exact subset of stage file pins")
-    for relative, expected_sha in files.items():
-        rel = pathlib.PurePosixPath(relative)
-        if rel.is_absolute() or ".." in rel.parts or "\\" in relative:
-            raise AcquisitionError("static source pin path is not repository-relative")
-        candidate = repo_root.joinpath(*rel.parts)
-        try:
-            cursor = repo_root
-            symlinked = False
-            for part in rel.parts:
-                cursor = cursor / part
-                symlinked = symlinked or cursor.is_symlink()
-            if (symlinked or not candidate.is_file() or
-                not candidate.resolve().is_relative_to(repo_root.resolve())):
-                raise AcquisitionError("static source pin is missing, symlinked, or non-file")
-            current = candidate.read_bytes()
-            committed = subprocess.run(
-                ["git", "show", f"{source_revision}:{relative}"], cwd=repo_root,
-                check=True, capture_output=True, timeout=3,
-            ).stdout
-        except (OSError, subprocess.SubprocessError) as exc:
-            raise AcquisitionError("cannot verify committed static source pin") from exc
-        if digest(current) != expected_sha or digest(committed) != expected_sha:
-            raise AcquisitionError(f"static source pin differs from current and committed bytes: {relative}")
+    for pin_map, exp077_relative in ((files, True), (candidate_pins, False)):
+        for relative, expected_sha in pin_map.items():
+            candidate = _exp077_repo_path(repo_root, relative, exp077_relative=exp077_relative)
+            try:
+                current = candidate.read_bytes()
+                committed = subprocess.run(
+                    ["git", "show", f"{source_revision}:{candidate.relative_to(repo_root).as_posix()}"],
+                    cwd=repo_root, check=True, capture_output=True, timeout=3,
+                ).stdout
+            except (OSError, subprocess.SubprocessError) as exc:
+                raise AcquisitionError("cannot verify committed static source pin") from exc
+            if digest(current) != expected_sha or digest(committed) != expected_sha:
+                raise AcquisitionError(f"static source pin differs from current and committed bytes: {relative}")
     return static, static_sha, registration_sha, source_revision, raw, registration_raw
 
 
