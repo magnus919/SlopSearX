@@ -1,0 +1,197 @@
+import copy
+import importlib.machinery
+import importlib.util
+import json
+import pathlib
+import unittest
+
+ROOT = pathlib.Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("analysis072", str(ROOT / "analyze.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+A = importlib.util.module_from_spec(spec)
+loader.exec_module(A)
+
+
+def answer(value):
+    return {"type": "score", "score": value, "confidence": .7,
+            "legend": {"0": "no fit", "1": "adjacent", "2": "partial", "3": "direct"}}
+
+
+def arm(ids, scores, order, usage=None):
+    return {"status": "valid", "scores": scores, "order_ids": order,
+            "raw_answers": {cid: answer(scores[cid]) for cid in ids},
+            "usage": usage or {"input_tokens": 100, "output_tokens": 100}, "elapsed_ms": 100}
+
+
+def fixture():
+    protocol = json.loads((ROOT / "protocol.json").read_text())
+    acquisition = {"pools": {}}
+    refs = {"A": {}, "B": {}}
+    queries = []
+    for qnum in range(1, 14):
+        q = f"q{qnum}"
+        cards = [{"id": f"c{j:02}", "title": f"Title {j:02}",
+                  "url": f"https://example.org/{j:02}", "snippet": f"snippet {j:02}"}
+                 for j in range(41)]
+        target = "https://example.org/00" if qnum in (9, 12, 13) else "https://target.example/missing"
+        acquisition["pools"][q] = {"cards": cards}
+        queries.append({"id": q, "kind": "navigation" if qnum >= 9 else "research", "target_url": target})
+        judgments = {c["id"]: {"lead": 3 if j < 10 else 0, "facets": ["f1"] if j < 10 else []}
+                     for j, c in enumerate(cards)}
+        refs["A"][q] = copy.deepcopy(judgments)
+        refs["B"][q] = copy.deepcopy(judgments)
+
+    neutral_ids = [f"neutral-{i:02}" for i in range(80)]
+    neutral_scores = {cid: 3 - i / 100 for i, cid in enumerate(neutral_ids)}
+    neutral = {"status": "valid", "questions": 80, "synthetic_input": True,
+               "scores": neutral_scores,
+               "raw_answers": {cid: answer(v) for cid, v in neutral_scores.items()},
+               "usage": {"input_tokens": 100, "output_tokens": 100},
+               "elapsed_ms": 100, "candidate_phase_ms": 120}
+
+    operations = []
+    for plan in protocol["schedule"]:
+        q, variant = plan["case"], plan["variant"]
+        native = [c["id"] for c in acquisition["pools"][q]["cards"]]
+        provenance = native
+        if variant == "rotate":
+            offset = 20 % len(native)
+            provenance = native[offset:] + native[:offset]
+        canonical = A.canonical_ids(acquisition["pools"][q]["cards"])
+        prefix, tail = provenance[:40], provenance[40:]
+        w0_scores = {cid: i / 40 * 9 for i, cid in enumerate(prefix)}
+        w0_order = sorted(prefix, key=lambda cid: -w0_scores[cid]) + tail
+        control_scores = {cid: 9 - i / 100 for i, cid in enumerate(canonical)}
+        control_order = sorted(canonical, key=lambda cid: -control_scores[cid])
+        candidate_scores = {cid: 3 - i / 100 for i, cid in enumerate(canonical)}
+        candidate_order = sorted(canonical, key=lambda cid: -candidate_scores[cid])
+        operations.append({"case": q, "variant": variant, "provenance_order_ids": provenance,
+                           "candidate_phase_ms": 120,
+                           "arms": {"w0": arm(prefix, w0_scores, w0_order),
+                                    "absolute_control": arm(native, control_scores, control_order),
+                                    "candidate": arm(native, candidate_scores, candidate_order)}})
+    budget = {"attempts": 64, "unknown_usage": False,
+              "input_tokens": 64 * 100, "output_tokens": 64 * 100}
+    run = {"schema": "exp072-run/1", "status": "complete", "synthetic": False,
+           "input_pins": copy.deepcopy(protocol["inputs"]), "budget": budget, "wall_seconds": 5,
+           "neutral": neutral, "operations": operations}
+    return run, acquisition, refs, queries, protocol
+
+
+class AnalyzerTests(unittest.TestCase):
+    def test_complete_candidate_quality_is_still_not_adoption(self):
+        result = A.analyze(*fixture())
+        self.assertEqual(result["structural_failures"], [])
+        self.assertTrue(result["development_quality_passed"])
+        self.assertFalse(result["development_all_gates_passed"])  # q10/q11 target acquisition absent
+        self.assertFalse(result["adoption_eligible"])
+        self.assertEqual(result["schema"], "exp072-analysis/1")
+        self.assertEqual(result["natural_long_pools"], 13)
+        self.assertEqual(len(result["assessors"]["A"]["cases"]), 8)
+
+    def test_missing_navigation_targets_remain_unmet(self):
+        result = A.analyze(*fixture())
+        nav = {x["case"]: x for x in result["navigation"]}
+        self.assertTrue(nav["q9"]["target_present"] and nav["q9"]["candidate_target_top1"])
+        for q in ("q10", "q11"):
+            self.assertFalse(nav[q]["target_present"])
+            self.assertFalse(nav[q]["candidate_target_top1"])
+        self.assertFalse(result["acquisition_recall_met"])
+
+    def test_absolute_control_cannot_substitute_for_candidate(self):
+        x = fixture()
+        for op in x[0]["operations"]:
+            row = op["arms"]["candidate"]
+            ids = list(row["scores"])
+            canonical = A.canonical_ids(x[1]["pools"][op["case"]]["cards"])
+            prefix = [c["id"] for c in x[1]["pools"][op["case"]]["cards"]][:40]
+            # Keep control ideal; candidate deliberately follows W0's reverse prefix and native tail.
+            order = list(reversed(prefix)) + ids[40:]
+            scores = {cid: 3 - i / 100 for i, cid in enumerate(order)}
+            order = sorted(ids, key=lambda cid: -scores[cid])
+            row.update(scores=scores, order_ids=order,
+                       raw_answers={cid: answer(v) for cid, v in scores.items()})
+        result = A.analyze(*x)
+        self.assertEqual(result["structural_failures"], [])
+        self.assertGreater(result["assessors"]["A"]["cases"][0]["metrics"]["absolute_control"]["ndcg10"],
+                           result["assessors"]["A"]["cases"][0]["metrics"]["candidate"]["ndcg10"])
+        self.assertFalse(result["development_quality_passed"])
+
+    def test_synthetic_never_receives_quality_credit(self):
+        x = fixture()
+        x[0]["synthetic"] = True
+        result = A.analyze(*x)
+        self.assertFalse(result["quality_analysis_performed"])
+        self.assertFalse(result["development_quality_passed"])
+        self.assertFalse(result["adoption_eligible"])
+        self.assertEqual(result["outcome"], "synthetic_fixture_only")
+
+    def test_candidate_scores_must_be_finite_bounded_and_derive_order(self):
+        for value in (True, float("nan"), float("inf"), 3.01, 10**1000):
+            x = fixture()
+            row = x[0]["operations"][0]["arms"]["candidate"]
+            cid = next(iter(row["scores"]))
+            row["scores"][cid] = value
+            row["raw_answers"][cid] = answer(value)
+            self.assertEqual(A.analyze(*x)["outcome"], "incomplete", repr(value))
+        x = fixture()
+        x[0]["operations"][0]["arms"]["candidate"]["order_ids"].reverse()
+        self.assertIn("q1-base-candidate-candidate-score-order", A.analyze(*x)["structural_failures"])
+
+    def test_raw_answer_metadata_score_must_match_score_map(self):
+        x = fixture()
+        row = x[0]["operations"][0]["arms"]["candidate"]
+        cid = next(iter(row["scores"]))
+        row["raw_answers"][cid]["score"] -= .1
+        self.assertIn("q1-base-candidate-raw-score-mismatch", A.analyze(*x)["structural_failures"])
+
+    def test_exact_arm_and_schedule_inventory_is_required(self):
+        x = fixture()
+        del x[0]["operations"][0]["arms"]["candidate"]
+        self.assertIn("q1-arms", A.analyze(*x)["structural_failures"])
+        x = fixture()
+        x[0]["operations"].pop()
+        self.assertIn("registered-schedule", A.analyze(*x)["structural_failures"])
+
+    def test_rotated_over_40_pool_scores_rotated_prefix_and_keeps_rotated_tail(self):
+        x = fixture()
+        op = next(o for o in x[0]["operations"] if (o["case"], o["variant"]) == ("q4", "rotate"))
+        provenance = op["provenance_order_ids"]
+        w0_order = op["arms"]["w0"]["order_ids"]
+        self.assertEqual(set(w0_order[:40]), set(provenance[:40]))
+        self.assertEqual(w0_order[40:], provenance[40:])
+        wrong = list(w0_order)
+        wrong[0], wrong[40] = wrong[40], wrong[0]  # substitute the unrotated tail
+        op["arms"]["w0"]["order_ids"] = wrong
+        failures = A.analyze(*x)["structural_failures"]
+        self.assertIn("q4-rotate-w0-w0-prefix-tail", failures)
+
+    def test_usage_unknown_aggregate_overflow_and_input_pins_fail_closed(self):
+        x = fixture()
+        x[0]["budget"]["unknown_usage"] = True
+        self.assertIn("unknown-usage", A.analyze(*x)["structural_failures"])
+        x = fixture()
+        x[0]["budget"]["input_tokens"] += 1
+        self.assertIn("usage-sum", A.analyze(*x)["structural_failures"])
+        x = fixture()
+        x[0]["input_pins"]["docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"] = "wrong"
+        self.assertIn("input-pins", A.analyze(*x)["structural_failures"])
+
+    def test_neutral_and_candidate_phase_deadlines_fail_closed(self):
+        x = fixture()
+        x[0]["neutral"]["candidate_phase_ms"] = 1001
+        self.assertIn("neutral-phase", A.analyze(*x)["structural_failures"])
+        x = fixture()
+        x[0]["operations"][0]["candidate_phase_ms"] = 1001
+        self.assertIn("q1-base-candidate-phase", A.analyze(*x)["structural_failures"])
+
+    def test_neutral_id_inventory_is_the_registered_synthetic_set(self):
+        x = fixture()
+        value = x[0]["neutral"]["scores"].pop("neutral-79")
+        x[0]["neutral"]["scores"]["unregistered-79"] = value
+        x[0]["neutral"]["raw_answers"]["unregistered-79"] = x[0]["neutral"]["raw_answers"].pop("neutral-79")
+        self.assertIn("neutral-id-inventory", A.analyze(*x)["structural_failures"])
+
+
+if __name__ == "__main__":
+    unittest.main()

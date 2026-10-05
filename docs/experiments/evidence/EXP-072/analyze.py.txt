@@ -1,0 +1,336 @@
+"""Offline EXP-072 analyzer. Exposed development is never production adoption."""
+import math
+import random
+import statistics
+
+ARMS = ("w0", "absolute_control", "candidate")
+TOKEN_CAPS = {"input_tokens": 3_000_000, "output_tokens": 160_000}
+PER_CALL_CAP = 64_000
+PHASE_TOLERANCE_MS = 1e-6
+
+
+def finite_number(value, low, high):
+    if type(value) not in (int, float):
+        return False
+    try:
+        return math.isfinite(value) and low <= value <= high
+    except (OverflowError, TypeError, ValueError):
+        return False
+
+
+def canonical_ids(cards):
+    return [c["id"] for c in sorted(
+        cards, key=lambda c: tuple(c[k].encode("utf-8") for k in ("url", "title", "snippet", "id")))]
+
+
+def ndcg(order, rows):
+    def dcg(ids):
+        return sum((2 ** rows[c]["lead"] - 1) / math.log2(i + 2)
+                   for i, c in enumerate(ids[:10]))
+    ideal = dcg(sorted(rows, key=lambda c: -rows[c]["lead"]))
+    return dcg(order) / ideal if ideal else 0.0
+
+
+def useful(order, rows):
+    return sum(rows[c]["lead"] >= 2 for c in order[:10])
+
+
+def covered(order, rows):
+    return {f for c in order[:10] if rows[c]["lead"] >= 2 for f in rows[c]["facets"]}
+
+
+def bootstrap95(values):
+    rng = random.Random(6501)
+    samples = sorted(statistics.mean(rng.choices(values, k=len(values))) for _ in range(10_000))
+    return [samples[249], samples[9749]]
+
+
+def _json_finite(value):
+    if value is None or type(value) in (str, bool, int):
+        return True
+    if type(value) is float:
+        return math.isfinite(value)
+    if type(value) is list:
+        return all(_json_finite(x) for x in value)
+    if type(value) is dict:
+        return all(type(k) is str and _json_finite(v) for k, v in value.items())
+    return False
+
+
+def _validate_answer_map(raw_answers, scores, ids, low, high, errors, label):
+    if type(raw_answers) is not dict or set(raw_answers) != set(ids):
+        errors.append(label + "-raw-answer-inventory")
+        return
+    for cid in ids:
+        answer = raw_answers[cid]
+        if type(answer) is not dict or answer.get("type") != "score" or "score" not in answer:
+            errors.append(label + "-raw-answer-schema")
+            continue
+        if not _json_finite(answer):
+            errors.append(label + "-raw-answer-nonfinite")
+        value = answer.get("score")
+        if not finite_number(value, low, high):
+            errors.append(label + "-raw-score-range")
+        elif type(scores) is dict and cid in scores:
+            supplied = scores[cid]
+            if not finite_number(supplied, low, high) or type(supplied) is not type(value) or supplied != value:
+                errors.append(label + "-raw-score-mismatch")
+
+
+def _score_policy(row, ids, lo, hi, tie_ids, errors, label):
+    scores = row.get("scores")
+    if type(scores) is not dict or set(scores) != set(ids):
+        errors.append(label + "-scores-inventory")
+        _validate_answer_map(row.get("raw_answers"), scores, ids, lo, hi, errors, label)
+        return None
+    if any(not finite_number(v, lo, hi) for v in scores.values()):
+        errors.append(label + "-scores-range")
+        return None
+    _validate_answer_map(row.get("raw_answers"), scores, ids, lo, hi, errors, label)
+    return sorted(ids, key=lambda cid: (-scores[cid], tie_ids.index(cid)))
+
+
+def _validate_neutral(neutral, errors):
+    if type(neutral) is not dict:
+        errors.append("neutral-schema")
+        return None
+    if neutral.get("status") != "valid" or neutral.get("questions") != 80 or neutral.get("synthetic_input") is not True:
+        errors.append("neutral-acceptance")
+    scores = neutral.get("scores")
+    ids = list(scores) if type(scores) is dict else []
+    expected_ids = [f"neutral-{i:02}" for i in range(80)]
+    if len(ids) != 80 or set(ids) != set(expected_ids):
+        errors.append("neutral-id-inventory")
+    else:
+        _validate_answer_map(neutral.get("raw_answers"), scores, ids, 0, 3, errors, "neutral")
+        if any(not finite_number(v, 0, 3) for v in scores.values()):
+            errors.append("neutral-scores-range")
+    elapsed = neutral.get("elapsed_ms")
+    phase = neutral.get("candidate_phase_ms")
+    if not finite_number(elapsed, 0, 1000):
+        errors.append("neutral-deadline")
+    if (not finite_number(phase, 0, 1000) or not finite_number(elapsed, 0, 1000)
+            or phase + PHASE_TOLERANCE_MS < elapsed):
+        errors.append("neutral-phase")
+    return neutral
+
+
+def _metrics(order, rows):
+    return {"ndcg10": ndcg(order, rows), "useful10": useful(order, rows),
+            "covered_facets": sorted(covered(order, rows))}
+
+
+def analyze(run, acquisition, references, queries, protocol):
+    errors = []
+    schedule = protocol.get("schedule", [])
+    operations = run.get("operations", []) if type(run) is dict else []
+    expected = [(x.get("case"), x.get("variant")) for x in schedule if type(x) is dict]
+    actual = [(x.get("case"), x.get("variant")) for x in operations if type(x) is dict]
+    if actual != expected or len(actual) != len(operations):
+        errors.append("registered-schedule")
+    if any(x.get("arms") != list(ARMS) for x in schedule if type(x) is dict):
+        errors.append("registered-arm-schedule")
+    ids_q = [q.get("id") for q in queries if type(q) is dict]
+    if len(ids_q) != 13 or set(ids_q) != {f"q{i}" for i in range(1, 14)}:
+        errors.append("query-inventory")
+    if {q.get("id") for q in queries if type(q) is dict and q.get("kind") == "navigation"} != {f"q{i}" for i in range(9, 14)}:
+        errors.append("navigation-inventory")
+    if run.get("schema") != "exp072-run/1":
+        errors.append("run-schema")
+    if protocol.get("schema") != "exp072-constraint-specific-reading-scale/1":
+        errors.append("protocol-schema")
+    if protocol.get("primary_cases") != [f"q{i}" for i in range(1, 9)]:
+        errors.append("primary-case-inventory")
+    if run.get("input_pins") != protocol.get("inputs"):
+        errors.append("input-pins")
+    if run.get("status") != "complete":
+        errors.append("incomplete-run")
+    if type(run.get("synthetic")) is not bool:
+        errors.append("execution-identity")
+    budget = run.get("budget", {})
+    if type(budget) is not dict:
+        budget = {}
+    if budget.get("unknown_usage") is not False:
+        errors.append("unknown-usage")
+    if budget.get("attempts") != 64:
+        errors.append("physical-call-inventory")
+    for key, cap in TOKEN_CAPS.items():
+        if type(budget.get(key)) is not int or not 0 <= budget[key] <= cap:
+            errors.append("budget-" + key)
+    wall = run.get("wall_seconds")
+    if not finite_number(wall, 0, 7200):
+        errors.append("wall-deadline")
+
+    neutral = _validate_neutral(run.get("neutral"), errors)
+    usage_rows = [neutral] if neutral is not None else []
+    policies = {}
+    orders = {}
+    pool_rows = acquisition.get("pools", {})
+    for op in operations:
+        if type(op) is not dict:
+            errors.append("operation-schema")
+            continue
+        case, variant = op.get("case"), op.get("variant")
+        if type(case) is not str or case not in pool_rows:
+            errors.append("unknown-operation-case")
+            continue
+        cards = pool_rows[case].get("cards", [])
+        native = [c.get("id") for c in cards]
+        if not native or any(type(cid) is not str for cid in native) or len(set(native)) != len(native):
+            errors.append(case + "-corpus-ids")
+            continue
+        provenance = native
+        if variant == "rotate":
+            cut = 20 % len(native)
+            provenance = native[cut:] + native[:cut]
+        if op.get("provenance_order_ids") != provenance:
+            errors.append(case + "-provenance")
+        canonical = canonical_ids(cards)
+        # W0 scores the actual provenance order, including the registered rotation.
+        arms = op.get("arms")
+        if type(arms) is not dict or set(arms) != set(ARMS):
+            errors.append(case + "-arms")
+            continue
+        for arm in ARMS:
+            row = arms[arm]
+            label = case + "-" + variant + "-" + arm
+            if type(row) is not dict:
+                errors.append(label + "-schema")
+                continue
+            if row.get("status") != "valid":
+                errors.append(label + "-failure")
+            order = row.get("order_ids")
+            if (type(order) is not list or any(type(cid) is not str for cid in order)
+                    or len(order) != len(native) or len(set(order)) != len(order) or set(order) != set(native)):
+                errors.append(label + "-membership")
+                order = []
+            if arm == "w0":
+                prefix, tail = provenance[:40], provenance[40:]
+                if set(order[:40]) != set(prefix) or order[40:] != tail:
+                    errors.append(label + "-w0-prefix-tail")
+                scores_order = _score_policy(row, prefix, 0, 9, prefix, errors, label)
+                if scores_order is not None and order != scores_order + tail:
+                    errors.append(label + "-w0-score-order")
+            elif arm == "absolute_control":
+                score_order = _score_policy(row, native, 0, 9, canonical, errors, label)
+                if score_order is not None and order != score_order:
+                    errors.append(label + "-control-score-order")
+            else:
+                score_order = _score_policy(row, native, 0, 3, canonical, errors, label)
+                if score_order is not None and order != score_order:
+                    errors.append(label + "-candidate-score-order")
+            if not finite_number(row.get("elapsed_ms"), 0, 1000):
+                errors.append(label + "-deadline")
+            usage_rows.append(row)
+            if order:
+                orders[(case, variant, arm)] = order
+        phase = op.get("candidate_phase_ms")
+        c_row = arms.get("candidate") if type(arms) is dict else None
+        c_elapsed = c_row.get("elapsed_ms") if type(c_row) is dict else None
+        if not finite_number(phase, 0, 1000) or not finite_number(c_elapsed, 0, 1000) or phase + PHASE_TOLERANCE_MS < c_elapsed:
+            errors.append(case + "-" + str(variant) + "-candidate-phase")
+
+    if len(usage_rows) != 64:
+        errors.append("receipt-count")
+    totals = {key: 0 for key in TOKEN_CAPS}
+    for row in usage_rows:
+        usage = row.get("usage") if type(row) is dict else None
+        if (type(usage) is not dict or set(usage) != set(totals)
+                or any(type(v) is not int or not 0 <= v <= PER_CALL_CAP for v in usage.values())):
+            errors.append("per-call-usage")
+            continue
+        if any(totals[key] + PER_CALL_CAP > TOKEN_CAPS[key] for key in totals):
+            errors.append("usage-reservation-admission")
+        for key in totals:
+            totals[key] += usage[key]
+    if any(totals[k] != budget.get(k) for k in totals):
+        errors.append("usage-sum")
+
+    for assessor in ("A", "B"):
+        by_case = references.get(assessor) if type(references) is dict else None
+        if type(by_case) is not dict:
+            errors.append(assessor + "-reference-assessor")
+            continue
+        for q in protocol.get("primary_cases", []):
+            rows = by_case.get(q)
+            pool_ids = {c.get("id") for c in pool_rows.get(q, {}).get("cards", [])}
+            if type(rows) is not dict or set(rows) != pool_ids:
+                errors.append(assessor + "-" + q + "-reference-inventory")
+                continue
+            for cid, row in rows.items():
+                if (type(row) is not dict or type(row.get("lead")) is not int or not 0 <= row["lead"] <= 3
+                        or type(row.get("facets")) is not list
+                        or any(type(f) is not str for f in row.get("facets", []))):
+                    errors.append(assessor + "-" + q + "-reference-row")
+                    break
+
+    result = {
+        "schema": "exp072-analysis/1",
+        "dataset": "exposed development; not untouched confirmation",
+        "adoption_eligible": False,
+        "quality_analysis_performed": False,
+        "structural_failures": sorted(set(errors)),
+        "synthetic": run.get("synthetic") if type(run) is dict else None,
+        "assessors": {},
+    }
+    if errors:
+        result["outcome"] = "incomplete"
+        return result
+
+    stability = []
+    for q in ("q1", "q4", "q7", "q8"):
+        base = set(orders[(q, "base", "candidate")][:10])
+        for variant in ("repeat", "rotate"):
+            other = set(orders[(q, variant, "candidate")][:10])
+            overlap = len(base & other) / 10
+            stability.append({"case": q, "variant": variant, "overlap": overlap, "passed": overlap >= .8})
+    nav = []
+    for query in queries:
+        if query.get("kind") != "navigation":
+            continue
+        q = query["id"]
+        target = query["target_url"].rstrip("/")
+        targets = {c["id"] for c in pool_rows[q]["cards"] if c["url"].rstrip("/") == target}
+        candidate_order = orders[(q, "base", "candidate")]
+        nav.append({"case": q, "target_present": bool(targets), "target_ids": sorted(targets),
+                    "candidate_target_top1": bool(targets and candidate_order[0] in targets)})
+
+    result.update(stability=stability, navigation=nav,
+                  natural_long_pools=sum(len(p["cards"]) > 40 for p in pool_rows.values()))
+    for assessor in ("A", "B"):
+        records = []
+        control_deltas = []
+        for q in protocol["primary_cases"]:
+            rows = references[assessor][q]
+            pool_ids = {c["id"] for c in pool_rows[q]["cards"]}
+            metric = {arm: _metrics(orders[(q, "base", arm)], rows) for arm in ARMS}
+            delta = metric["candidate"]["ndcg10"] - metric["w0"]["ndcg10"]
+            control_delta = metric["absolute_control"]["ndcg10"] - metric["w0"]["ndcg10"]
+            control_deltas.append(control_delta)
+            lost = sorted(set(metric["w0"]["covered_facets"]) - set(metric["candidate"]["covered_facets"]))
+            records.append({"case": q, "metrics": metric, "candidate_minus_w0": delta,
+                            "absolute_control_minus_w0_descriptive": control_delta, "lost_w0_facets": lost,
+                            "per_case_passed": delta >= -.03 - 1e-12 and not lost
+                                and metric["candidate"]["useful10"] >= metric["w0"]["useful10"]})
+        deltas = [r["candidate_minus_w0"] for r in records]
+        mean = statistics.mean(deltas) if deltas else float("nan")
+        ci = bootstrap95(deltas) if deltas else [float("nan"), float("nan")]
+        result["assessors"][assessor] = {"cases": records, "mean_candidate_minus_w0": mean, "bootstrap95": ci,
+            "mean_absolute_control_minus_w0_descriptive": statistics.mean(control_deltas),
+            "quality_gate_passed": len(records) == 8 and mean >= .05 - 1e-12 and ci[0] > 0
+                and all(r["per_case_passed"] for r in records)}
+    if result["structural_failures"]:
+        result["outcome"] = "incomplete"
+        result["quality_analysis_performed"] = False
+        return result
+    result["quality_analysis_performed"] = run.get("synthetic") is False
+    result["development_quality_passed"] = run.get("synthetic") is False and all(
+        x["quality_gate_passed"] for x in result["assessors"].values()) and all(x["passed"] for x in stability)
+    result["navigation_gate_met"] = all(x["candidate_target_top1"] for x in nav if x["target_present"])
+    result["acquisition_recall_met"] = all(x["target_present"] for x in nav)
+    result["development_all_gates_passed"] = result["development_quality_passed"] and result["navigation_gate_met"] and result["acquisition_recall_met"]
+    result["outcome"] = ("synthetic_fixture_only" if run.get("synthetic") is True else
+                         "development_pass" if result["development_all_gates_passed"] else
+                         "development_quality_pass_navigation_unmet" if result["development_quality_passed"] else
+                         "development_rejected")
+    return result
