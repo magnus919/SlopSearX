@@ -52,3 +52,15 @@ completed readouts. Full production acceptance still requires untouched tasks
 and pools, a qualified selector, explicit caller-context propagation, ordinary
 compatibility, substantive review, required CI and verified implementation
 merges. This review completes none of those acceptance items.
+
+## Independently reproduced offline preview
+
+Root read the credential-free calculator and invoked `calculate()` without
+writing its report files. The result exactly matched the committed JSON
+(`74a65dedc6372e54a0de476907125c9e4443b437c10799ae2ba25fb4a4e49169`).
+All thirteen pinned natural pools had identical candidate request bytes and
+mapping hashes under all four input permutations. Their request sizes ranged
+from 36,179 to 251,111 bytes. The short synthetic 80-card request was 270,847
+bytes with 10,462 bytes of state and 160 questions. These figures supersede the
+preliminary projection estimates; exact prompt/ID construction affects size.
+This is offline structural evidence only, with zero provider/search calls.
