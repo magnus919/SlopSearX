@@ -24,15 +24,21 @@
       "facets": [
         {
           "id": "q6_f1",
-          "description": "Incremental diagnostics"
+          "description": "Incremental diagnostics",
+          "expected_evidence": "Identify how compiler or language-server diagnostics can be collected after an edit and compared with the prior state, including file or symbol scope where the source describes it.",
+          "boundary_checks": "Distinguish an implemented mechanism from a proposed capability; do not infer that compilation success proves behavior preservation."
         },
         {
           "id": "q6_f2",
-          "description": "Refactoring workflow"
+          "description": "Refactoring workflow",
+          "expected_evidence": "Describe a supported multi-file refactoring sequence that locates affected references, prepares or applies edits, and verifies the resulting change; report absent steps explicitly.",
+          "boundary_checks": "Distinguish semantic refactoring operations from unrestricted text replacement and documented workflows from independently tested reliability."
         },
         {
           "id": "q6_f3",
-          "description": "Correctness checks"
+          "description": "Correctness checks",
+          "expected_evidence": "Identify source-supported validation beyond merely applying an edit, such as build, tests or behavior-preservation checks, and state what each check can establish.",
+          "boundary_checks": "Do not equate passing tests, valid syntax or a tool claim with complete correctness; preserve stated limitations."
         }
       ],
       "critical_facets": [
@@ -253,15 +259,21 @@
       "facets": [
         {
           "id": "q8_f1",
-          "description": "Failure classification"
+          "description": "Failure classification",
+          "expected_evidence": "Identify source-supported signals distinguishing nondeterministic failure from a deterministic change-induced regression, including uncertainty and alternative explanations.",
+          "boundary_checks": "A successful rerun alone cannot establish that a failure is harmless or that no regression exists; distinguish heuristic classification from demonstrated cause."
         },
         {
           "id": "q8_f2",
-          "description": "Reproduction and diagnosis"
+          "description": "Reproduction and diagnosis",
+          "expected_evidence": "Describe evidence collection or controlled reproduction steps that isolate code, environment, timing, ordering or state factors before proposing a repair.",
+          "boundary_checks": "Do not assume a diagnosis from a title or general flaky-test claim; retain unresolved causes and distinguish observed evidence from hypotheses."
         },
         {
           "id": "q8_f3",
-          "description": "Repair validation"
+          "description": "Repair validation",
+          "expected_evidence": "Describe source-supported repair validation that addresses the suspected failure mechanism and checks for regressions or inadequate test coverage.",
+          "boundary_checks": "Do not treat deleting, disabling or weakening a test, or one passing run, as demonstrated repair; preserve limitations on validation strength."
         }
       ],
       "critical_facets": [
@@ -665,7 +677,10 @@
     "model_authority": "advisory utility-definition pilot only; no ranking adoption or production transfer claim",
     "source_assessor_prompt": "source-assessor-prompt.txt",
     "answer_assessor_prompt": "answer-assessor-prompt.txt",
-    "blind_packet_id_rule": "P plus first 8 hex characters of SHA256(taskID, NUL, arm), with no mapping in agent packets"
+    "blind_packet_id_rule": "Random opaque UUID generated once by the controller; task/arm mapping private and excluded from all agent packets.",
+    "blinding_scope": "Fresh fork-none agents receive assigned packets only, without registration, ranking labels, scores, complete orders, prior results or controller mappings. Content is inherently public and cannot provide cryptographic arm secrecy; record this limitation.",
+    "source_assessor_order": "Randomized union-source order, with controller-only recorded permutation.",
+    "answer_context_order": "Preserve selected ranked context order to match the treatment; randomizing it would change the consumer mechanism under study."
   },
   "capture_contract": {
     "client": "unmodified installed GroktoCrawl CLI Client.scrape library, verified by SHA",
