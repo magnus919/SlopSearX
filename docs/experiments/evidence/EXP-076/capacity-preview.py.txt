@@ -1,0 +1,329 @@
+"""Credential-free preview of a canonical full-pool query/purpose request.
+
+This calculates deterministic JSON envelopes from frozen EXP-075 inputs. It
+does not contact a provider or search service, read credentials, score cards,
+rank results, or qualify an EXP-076 design.
+"""
+from __future__ import annotations
+
+import copy
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import random
+import subprocess
+import sys
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+EXP075 = HERE.parent / "EXP-075"
+BASE_REVISION = "c9f2b48437c65c4ebc17f2c7ee18011ae440c119"
+
+
+def load(name: str, path: Path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+P = load("exp076_capacity_exp075_prepare", EXP075 / "prepare.py.txt")
+sys.path.insert(0, str(REPO))
+from slopsearx.rerank import INSTRUCTIONS, LEVELS  # noqa: E402
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def wire(value) -> bytes:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+def project_body(case: dict, cards: list[dict]) -> tuple[dict, dict]:
+    """Project both full-pool score populations in canonical card order."""
+    query, purpose, facets = P.BASE.validate_context(case)
+    canonical = P.BASE.canonical(cards)
+    candidates = [dict(card) for card in canonical]
+    state = {
+        "query": query,
+        "candidates": candidates,
+        "caller_context": {
+            "purpose": purpose,
+            "requested_facets": [dict(facet) for facet in facets],
+        },
+    }
+    questions = {}
+    query_keys = []
+    purpose_keys = []
+    for card in canonical:
+        global_id = card["id"]
+        key = "query:" + global_id
+        query_keys.append(key)
+        questions[key] = {
+            "type": "score",
+            "instructions": INSTRUCTIONS.format(id=global_id),
+            "criteria": list(LEVELS),
+        }
+    for card in canonical:
+        global_id = card["id"]
+        key = "purpose:" + global_id
+        purpose_keys.append(key)
+        questions[key] = {
+            "type": "score",
+            "instructions": {
+                "candidate": dict(card),
+                "question": P.PROTOCOL["wire"]["purpose_question_prefix"] + P.BASE.PROTOCOL["instructions"],
+            },
+            "criteria": list(P.BASE.PROTOCOL["criteria"]),
+        }
+    body = {"model": P.MODEL, "state": state, "questions": questions}
+    mapping = {card["id"]: card["id"] for card in canonical}
+    return body, {
+        "canonical_global_ids": [card["id"] for card in canonical],
+        "global_to_candidate_id": mapping,
+        "query_question_ids": query_keys,
+        "purpose_question_ids": purpose_keys,
+    }
+
+
+def permuted(cards: list[dict]) -> dict[str, list[dict]]:
+    shuffled = list(cards)
+    random.Random(7605).shuffle(shuffled)
+    offset = 20 % len(cards)
+    return {
+        "base": list(cards),
+        "reverse": list(reversed(cards)),
+        "rotate_20": list(cards[offset:]) + list(cards[:offset]),
+        "shuffle_seed_7605": shuffled,
+    }
+
+
+def summarize_projection(case: dict, cards: list[dict]) -> dict:
+    variants = {}
+    for label, order in permuted(cards).items():
+        body, mapping = project_body(case, order)
+        raw = wire(body)
+        variants[label] = {
+            "request_sha256": sha(raw),
+            "request_bytes": len(raw),
+            "state_bytes": len(wire(body["state"])),
+            "question_count": len(body["questions"]),
+            "query_question_count": len(mapping["query_question_ids"]),
+            "purpose_question_count": len(mapping["purpose_question_ids"]),
+            "mapping_sha256": sha(wire(mapping)),
+        }
+    request_hashes = {row["request_sha256"] for row in variants.values()}
+    mapping_hashes = {row["mapping_sha256"] for row in variants.values()}
+    first = next(iter(variants.values()))
+    return {
+        "pool_cards": len(cards),
+        "request_bytes": first["request_bytes"],
+        "state_bytes": first["state_bytes"],
+        "query_question_count": first["query_question_count"],
+        "purpose_question_count": first["purpose_question_count"],
+        "total_question_count": first["question_count"],
+        "identical_request_bytes_across_permutations": len(request_hashes) == 1,
+        "identical_canonical_mapping_across_permutations": len(mapping_hashes) == 1,
+        "permutations": variants,
+    }
+
+
+def observed_exp075(run_path: Path, diagnosis_path: Path) -> dict:
+    run_raw = run_path.read_bytes()
+    run = P.strict_json(run_raw)
+    diagnosis = P.strict_json(diagnosis_path.read_bytes())
+    if diagnosis.get("source_run_sha256") != sha(run_raw):
+        raise ValueError("q4-diagnosis-source-run-mismatch")
+    records = [run["neutral"], *run["operations"]]
+    arms = {"w0": [], "joint": []}
+    for operation in records:
+        for call in operation.get("calls", []):
+            if call.get("arm") not in arms or not call.get("request_hex"):
+                continue
+            raw = bytes.fromhex(call["request_hex"])
+            request = P.strict_json(raw)
+            arms[call["arm"]].append({
+                "request_bytes": len(raw),
+                "state_bytes": len(wire(request["state"])),
+                "question_count": len(request["questions"]),
+            })
+    ranges = {}
+    for arm, rows in arms.items():
+        ranges[arm] = {
+            field: {"min": min(row[field] for row in rows), "max": max(row[field] for row in rows)}
+            for field in ("request_bytes", "state_bytes", "question_count")
+        }
+    q4_receipts = {}
+    receipt_root = run_path.parent / "receipts"
+    for label in ("q4-base", "q4-repeat", "q4-rotate"):
+        receipt_raw = (receipt_root / f"{label}-candidate-body.json").read_bytes()
+        sidecar = P.strict_json(receipt_raw)
+        operation = sidecar["operation"]
+        recorded = next(item for item in run["operations"] if item["id"] == label)
+        if (recorded.get("candidate_body_receipt", {}).get("sha256") != sha(receipt_raw)
+                or operation.get("id") != recorded.get("id")
+                or operation.get("cards") != recorded.get("cards")
+                or operation.get("variant") != recorded.get("variant")
+                or operation.get("calls") != recorded.get("calls")):
+            raise ValueError("q4-candidate-sidecar-run-mismatch")
+        joint = next(call for call in operation["calls"] if call["arm"] == "joint")
+        raw = bytes.fromhex(joint["request_hex"])
+        request = P.strict_json(raw)
+        q4_receipts[label] = {
+            "sidecar_sha256": sha(receipt_raw),
+            "request_sha256": sha(raw),
+            "request_bytes": len(raw),
+            "state_bytes": len(wire(request["state"])),
+            "question_count": len(request["questions"]),
+        }
+    return {
+        "status": run.get("status"),
+        "synthetic": run.get("synthetic"),
+        "source_run_sha256": sha(run_raw),
+        "diagnosis_sha256": sha(diagnosis_path.read_bytes()),
+        "actual_arm_ranges": ranges,
+        "q4_joint_receipts": q4_receipts,
+        "diagnosis_repeat_request_identity": diagnosis["repeat_comparison"]["joint_request_byte_identity"],
+    }
+
+
+def calculate() -> dict:
+    input_bytes = {path: (REPO / path).read_bytes() for path in P.PINS}
+    proof = P.validate_inputs(input_bytes)
+    acquisition, queries = P.source_data(input_bytes)
+    bounds = P.PROTOCOL["bounds"]
+    pool_rows = []
+    for case in queries:
+        cards = acquisition["pools"][case["id"]]["cards"]
+        pool_rows.append({"id": case["id"], **summarize_projection(case, cards)})
+    synthetic_case, synthetic_cards = P.synthetic_case()
+    synthetic = summarize_projection(synthetic_case, synthetic_cards)
+
+    protocol_raw = (EXP075 / "protocol.json").read_bytes()
+    registration_raw = (EXP075 / "registration-integrity.json").read_bytes()
+    rerank_raw = (REPO / "slopsearx/rerank.py").read_bytes()
+    source_file = Path(__file__).resolve()
+    out = {
+        "schema": "exp076-canonical-capacity-preview/1",
+        "classification": "hypothetical deterministic serialization preview; not registered or qualified",
+        "base_revision": BASE_REVISION,
+        "calculator_sha256": sha(source_file.read_bytes()),
+        "source_bindings": {
+            "exp075_protocol_sha256": sha(protocol_raw),
+            "exp075_registration_sha256": sha(registration_raw),
+            "exp075_input_revision": proof["input_revision"],
+            "exp075_frozen_input_pins": proof["input_pins"],
+            "exp075_prepare_sha256": sha((EXP075 / "prepare.py.txt").read_bytes()),
+            "exp072_builder_sha256": P.EXP072_PREP_SHA256,
+            "exp072_protocol_sha256": P.PROTOCOL["inputs"]["docs/experiments/evidence/EXP-072/protocol.json"],
+            "slopsearx_rerank_sha256": sha(rerank_raw),
+        },
+        "candidate_projection": {
+            "state": "original query, all canonical full-pool candidates with unchanged global IDs, original caller purpose and ordered facets",
+            "canonical_order": "UTF-8 tuple (url,title,snippet,global_id)",
+            "questions": "all query:<global_id> questions in canonical order, then all purpose:<global_id> questions in canonical order",
+            "query_instructions_source": "existing SlopSearX ordinary W0 INSTRUCTIONS and ten LEVELS",
+            "purpose_instructions_source": "EXP-075 purpose prefix plus frozen EXP-072 purpose instructions and four criteria",
+            "fusion": "not executed; the draft follow-on proposes exact Fraction 1/(60+query_rank)+1/(60+purpose_rank), but this capacity preview calculates no scores or ranks",
+        },
+        "provider_calls": 0,
+        "search_calls": 0,
+        "credential_access": False,
+        "existing_exp075_bounds_for_comparison_only": {
+            "candidate_request_bytes": bounds["request_bytes"],
+            "state_bytes": bounds["state_bytes"],
+            "questions": bounds["questions"],
+            "legacy_w0_request_bytes": bounds["legacy_control_request_bytes"],
+            "note": "These are EXP-075 bounds, not an EXP-076 admission or provider-acceptance claim.",
+        },
+        "existing_pinned_pools_full_population_projection": pool_rows,
+        "existing_pool_projection_extrema": {
+            "pool_cards": {"min": min(row["pool_cards"] for row in pool_rows), "max": max(row["pool_cards"] for row in pool_rows)},
+            "request_bytes": {"min": min(row["request_bytes"] for row in pool_rows), "max": max(row["request_bytes"] for row in pool_rows)},
+            "state_bytes": {"min": min(row["state_bytes"] for row in pool_rows), "max": max(row["state_bytes"] for row in pool_rows)},
+            "question_count": {"min": min(row["total_question_count"] for row in pool_rows), "max": max(row["total_question_count"] for row in pool_rows)},
+            "all_request_bytes_identical_across_permutations": all(row["identical_request_bytes_across_permutations"] for row in pool_rows),
+            "all_mappings_identical_across_permutations": all(row["identical_canonical_mapping_across_permutations"] for row in pool_rows),
+        },
+        "synthetic_80_preview": synthetic,
+        "synthetic_80_comparison": {
+            "request_within_exp075_candidate_byte_bound": synthetic["request_bytes"] <= bounds["request_bytes"],
+            "state_within_exp075_byte_bound": synthetic["state_bytes"] <= bounds["state_bytes"],
+            "questions_within_exp075_question_bound": synthetic["total_question_count"] <= bounds["questions"],
+            "required_question_capacity_for_80_cards": 2 * len(synthetic_cards),
+            "warning": "Short synthetic card fields do not establish natural 80-card request size, token context fit, or provider acceptance.",
+        },
+        "saved_q4_observation": observed_exp075(
+            EXP075 / "completed/run.json",
+            EXP075 / "q4-instability-diagnosis.json",
+        ),
+        "limits": [
+            "This is request-shape and byte accounting only; it does not produce scores or rankings.",
+            "Stable bytes under provenance permutation remove order-induced request variation only; they do not remove score drift or response variability.",
+            "The largest pinned natural pool has 59 cards; no natural 80-card request was measured.",
+            "Byte lengths do not establish tokenizer-based provider context fit or request acceptance.",
+            "The 80-card projection has 160 questions, exceeding the current EXP-075 cap of 120; a new protocol would be required to study it.",
+        ],
+    }
+    return out
+
+
+def render_markdown(data: dict) -> str:
+    extrema = data["existing_pool_projection_extrema"]
+    s = data["synthetic_80_preview"]
+    q4 = data["saved_q4_observation"]["q4_joint_receipts"]
+    lines = [
+        "# EXP-076 canonical population capacity preview",
+        "",
+        "Status: **hypothetical offline serialization preview; not registered, qualified, or a ranking result.**",
+        "",
+        "The preview reuses pinned EXP-075 inputs and the ordinary W0 query instructions, while projecting two complete question populations against one canonical full-pool state. Candidate IDs remain the frozen global IDs. It writes all query questions first, then all purpose questions. Four permutations (base, reverse, rotate by 20, and deterministic shuffle) are serialized for each pool.",
+        "",
+        "No provider, search, or credential access occurred. No scores, ranks, or fusion outputs were calculated.",
+        "",
+        "## Capacity results",
+        "",
+        f"Across the 13 pinned natural pools (largest n={extrema['pool_cards']['max']}), projected requests range from {extrema['request_bytes']['min']:,} to {extrema['request_bytes']['max']:,} bytes; state from {extrema['state_bytes']['min']:,} to {extrema['state_bytes']['max']:,} bytes; total questions from {extrema['question_count']['min']} to {extrema['question_count']['max']}. Every base/reverse/rotate/shuffle request and global-ID mapping is identical within each pool.",
+        "",
+        f"The synthetic 80-card fixture serializes to {s['request_bytes']:,} request bytes and {s['state_bytes']:,} state bytes with {s['query_question_count']} query plus {s['purpose_question_count']} purpose questions ({s['total_question_count']} total). Those byte lengths fit EXP-075's 384,000-byte candidate and 128,000-byte state envelopes, but 160 questions exceed its 120-question cap.",
+        "",
+        "The synthetic card text is short, while the largest pinned natural pool has 59 cards. These measurements do not establish natural 80-card envelope size, token context fit, or provider acceptance.",
+        "",
+        "## Relation to saved q4 evidence",
+        "",
+        f"The source-bound saved q4 candidate bodies were {q4['q4-base']['request_bytes']:,} bytes (base), {q4['q4-repeat']['request_bytes']:,} bytes (repeat), and {q4['q4-rotate']['request_bytes']:,} bytes (rotated). Base and repeat SHA-256 values are equal; rotation differs. Canonical complete-pool bodies remove this deterministic permutation effect in the projection, but cannot explain or prevent the score changes and same-request repeat variation already observed.",
+        "",
+        "## Frozen source bindings",
+        "",
+        f"Base revision: `{data['base_revision']}`. EXP-075 protocol SHA-256: `{data['source_bindings']['exp075_protocol_sha256']}`. Registration SHA-256: `{data['source_bindings']['exp075_registration_sha256']}`. The JSON records all seven EXP-075 frozen input hashes and the builder source hashes.",
+        "",
+        "This projection changes the question inventory from at most 120 to 160 at 80 cards. Any experiment using it needs a separate protocol and fresh admission/quality gates; no EXP-075 protocol or result is changed here.",
+        "",
+        "Reproduce with `python3 docs/experiments/evidence/EXP-076/capacity-preview.py.txt` from the repository root. The script reads pinned files and local source only.",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def main() -> None:
+    report = calculate()
+    json_path = HERE / "capacity-preview.json"
+    markdown_path = HERE / "capacity-preview.md"
+    json_path.write_bytes(wire(report) + b"\n")
+    markdown_path.write_text(render_markdown(report), encoding="utf-8")
+    print(json.dumps({
+        "schema": report["schema"],
+        "natural_pool_count": len(report["existing_pinned_pools_full_population_projection"]),
+        "natural_projection_extrema": report["existing_pool_projection_extrema"],
+        "synthetic80": report["synthetic_80_comparison"],
+        "provider_calls": report["provider_calls"],
+        "search_calls": report["search_calls"],
+    }, separators=(",", ":")))
+
+
+if __name__ == "__main__":
+    main()
