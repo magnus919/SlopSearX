@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["answer", "facets", "limitations"],
+  "properties": {
+    "answer": {"type": "string"},
+    "limitations": {"type": "array", "items": {"type": "string"}},
+    "facets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["facet_id", "status", "conclusion", "claims"],
+        "properties": {
+          "facet_id": {"type": "string"},
+          "status": {"enum": ["supported", "partial", "unsupported"]},
+          "conclusion": {"type": "string"},
+          "claims": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["claim", "source_id", "quote", "role"],
+              "properties": {
+                "claim": {"type": "string"},
+                "source_id": {"type": "string"},
+                "quote": {"type": "string"},
+                "role": {"enum": ["support", "contradict", "qualify"]}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
