@@ -21,6 +21,9 @@ def analyze(run,acquisition,references,queries,protocol):
     expected=[(x['case'],x['variant']) for x in schedule]
     actual=[(x.get('case'),x.get('variant')) for x in operations]
     structural=[]
+    query_ids=[q.get('id') for q in queries]
+    if len(query_ids)!=13 or set(query_ids)!={f'q{i}' for i in range(1,14)}:structural.append('query-inventory')
+    if {q.get('id') for q in queries if q.get('kind')=='navigation'}!={f'q{i}' for i in range(9,14)}:structural.append('navigation-inventory')
     if actual!=expected:structural.append('registered_schedule')
     if run.get('status')!='complete':structural.append('incomplete_run')
     if run.get('budget',{}).get('unknown_usage')is not False:structural.append('unknown_usage')
@@ -33,6 +36,16 @@ def analyze(run,acquisition,references,queries,protocol):
     if neutral.get('status')!='valid' or neutral.get('questions')!=80 or neutral.get('synthetic_input')is not True:structural.append('neutral-acceptance')
     elapsed=neutral.get('elapsed_ms')
     if type(elapsed)not in (int,float) or not math.isfinite(elapsed) or not 0<=elapsed<=1000:structural.append('neutral-deadline')
+    usage_rows=[neutral]+[row for op in operations for row in op.get('arms',{}).values()]
+    totals={'input_tokens':0,'output_tokens':0}
+    for row in usage_rows:
+        usage=row.get('usage',{})
+        if type(usage)is not dict or set(usage)!=set(totals) or any(type(v)is not int or not 0<=v<=64000 for v in usage.values()):structural.append('per-call-usage')
+        else:
+            for key in totals:totals[key]+=usage[key]
+    if any(totals[key]!=run.get('budget',{}).get(key) for key in totals):structural.append('usage-sum')
+    wall=run.get('wall_seconds')
+    if type(wall)not in (int,float) or not math.isfinite(wall) or not 0<=wall<=7200:structural.append('wall-deadline')
     for op in operations:
         cards=acquisition['pools'][op['case']]['cards'];ids=[c['id'] for c in cards]
         if op['variant']=='rotate':
