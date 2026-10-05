@@ -1,0 +1,47 @@
+{
+  "schema": "exp073-qualification-integrity/1",
+  "qualified": true,
+  "source_revision": "0955d43541bd3967016f69a6d5ad321865cae967",
+  "files": {
+    "analysis-tests.py.txt": "0fe7bc0471f42efb0ea700c7b4dc2de2641398053d01ab0b4ca0affbd26869b7",
+    "analyze.py.txt": "7343a9d864b4e4bfde7184183a42327557f5940214a4cd491e4ab1abf88db922",
+    "fusion-tests.py.txt": "25f830972edf7ac41488bd5595eb13b1b8f047592c5656695dddfc89c4931032",
+    "fusion.py.txt": "5245d5d86e7e25bb0f574eee3b627eff34a08c08f098f58ae8bd4cb956bdaf14",
+    "http-wrapper.py.txt": "6c6517527420ab9c27dbbd1ae55c1fc34f4e4b596adf0963cc937d7f7fa5189a",
+    "normal-runner-tests.py.txt": "475016827b30d55caf20a145210aaa583eb6af363f19c7af32d42788714c63eb",
+    "normal-runner.py.txt": "ceb7adf97abdc72817145d6c2c0c3057eb31ae3afe7cf765aabc3d160b2a9e50",
+    "prepare.py.txt": "47f24be0c0263ae07f160d144d2bfcbf4aa86fc31f8c082f10ad0157d1e72542",
+    "verifier-tests.py.txt": "7dd5604d0c4f76f148aa9911c46343124a28bb739803dccbafae427ab3f0f541",
+    "verify-raw-receipts.py.txt": "d52ec271a922e6368f1027742fd1d65d69a164ea7346bb94fbfb950b9721f6c7"
+  },
+  "source_pins": {
+    "docs/experiments/evidence/EXP-039/source-selection-contract.json": "0cdf759b83ab96bad92666bbeabbb5d232aa81876712a314f931645082291c1b",
+    "docs/experiments/evidence/EXP-059/http-wrapper.py.txt": "d9f5144fb3f9a936556d29228c196d8bb7c8e6b55a8b3214d94658fbea992bd3",
+    "docs/experiments/evidence/EXP-060/fresh-acquisition.json": "69f72e2895031d4804733f7cdb38197a2d2c43d7cddaa8589abc9a43397d1882",
+    "docs/experiments/evidence/EXP-060/queries.json": "010a418d7e37e9df198d6cb313b4612d82e76ba8bef4cc2a9502f2074bf85836",
+    "docs/experiments/evidence/EXP-064/completed/metric-reference-view.json": "99625962fd078543d3dbf7630fc445dcfaff7fe55ab9289ef7c6f8a6ffb4afd9",
+    "docs/experiments/evidence/EXP-064/completed/semantic-correction-audit-final.json": "9622c053eba6f6979aef36b75e46fed038dcfd6f2837b6c08d474903a0ff42b1",
+    "docs/experiments/evidence/EXP-064/completed/source-bound-references.json": "1b2be2e0556f3f1fd39237456917b0daa0a9795d1297822a4c43b8ea211f8f05",
+    "docs/experiments/evidence/EXP-072/prepare.py.txt": "2389e24b4159246a5e7fac60b764d5b80f0751b883f2f85f82da1fb4e7f3b7e5",
+    "docs/experiments/evidence/EXP-072/protocol.json": "8b39478ae79cc6b74b07428554559d7d8a9d5deb1e9e827a6f6dd57c4dcf675d",
+    "docs/experiments/evidence/EXP-073/fusion.py.txt": "5245d5d86e7e25bb0f574eee3b627eff34a08c08f098f58ae8bd4cb956bdaf14",
+    "docs/experiments/evidence/EXP-073/protocol.json": "e73af877c90df8c6f2cde9363925160aac74564ef9e333bb5381eb03c3613734",
+    "docs/experiments/evidence/EXP-073/registration-correction.json": "7fb3389076f006e8485bed0f9400d9b0fabc986bdd94dfd1715febc3ea5ac633",
+    "docs/experiments/evidence/EXP-073/registration-integrity.json": "9f1c849c71f8671ecb2756df4ce1631acfd3b35cd684689f1e5e3406dfca5c7b",
+    "slopsearx/rerank.py": "df518bac899fa457e713201192a65f8ee0c3599419382e5be221d5ac366b479e"
+  },
+  "protocol_sha256": "e73af877c90df8c6f2cde9363925160aac74564ef9e333bb5381eb03c3613734",
+  "registration_sha256": "9f1c849c71f8671ecb2756df4ce1631acfd3b35cd684689f1e5e3406dfca5c7b",
+  "tests": {
+    "runner": 17,
+    "verifier": 18,
+    "analyzer": 17,
+    "fusion": 3
+  },
+  "review": "Independent focused review findings addressed and final-slot resolution verified at source_revision.",
+  "provider_calls": 0,
+  "search_calls": 0,
+  "quality_evidence": false,
+  "adoption_eligible": false,
+  "interpretation": "Qualification of the bounded experiment harness only; no selector quality or production readiness claim."
+}

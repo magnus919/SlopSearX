@@ -1,0 +1,11 @@
+# EXP-073 harness qualification
+
+The experiment harness is qualified at source revision `0955d43541bd3967016f69a6d5ad321865cae967`. This permits the registered bounded comparison; it does not qualify the selector, establish ranking improvement, or complete the production acceptance checklist.
+
+All 55 focused tests pass: 17 runner, 18 raw-verifier, 17 analyzer and 3 exact-fusion tests. The actual frozen-input offline execution completes 44 synthetic attempts across 21 research/navigation operations plus the synthetic neutral operation. Its analyzer returns `synthetic_fixture_only`, with no structural failures or quality metrics. In-process fixture timing cannot prove provider latency.
+
+The initial integration failures and reproduced terminal-status verification defect remain retained. Independent review findings were addressed: research/navigation schema differences, null timing after interruption, serial wall accounting, operation identity, the 80-card ceiling, actual HTTP 503 response/usage preservation, complete versus interrupted terminal states, full failure-sidecar binding, and failure on the last physical call or final durable-body deadline. The final-slot correction received focused independent verification at the source revision above.
+
+The verifier reconstructs request bytes, scores, both component orders and exact rational rank fusion from saved responses. It binds retained wrapper telemetry to response/request hashes, recomputes usage admission, distinguishes provisional fused bodies from accepted full-baseline fallbacks, and compares saved analysis with fresh offline analysis. A failed study stops; changing qualification files cannot reopen its protocol/input-bound lease.
+
+`qualification-integrity.json` pins ten owned source/test files and fourteen registered dependencies. Live admission requires those bytes and the qualification record to match committed source before DNS, credential inspection, lease acquisition or output creation. The registered 44-call ceiling, combined one-second phase deadline, token reservations, no-retry policy, fixed quality gates and untouched-confirmation requirement remain unchanged. No provider or search calls were used for qualification.
