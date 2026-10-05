@@ -1,0 +1,33 @@
+"""Read-only posthoc diagnostic; never a selector or qualification result."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+
+
+def build(repo):
+    names = {'run': 'EXP-072/completed/run.json', 'refs': 'EXP-064/completed/metric-reference-view.json', 'pools': 'EXP-060/fresh-acquisition.json'}
+    files = {k: repo / 'docs/experiments/evidence' / n for k, n in names.items()}
+    data = {k: json.loads(p.read_text()) for k, p in files.items()}
+    result = {'status': 'posthoc_diagnostic_not_qualification', 'input_sha256': {names[k]: hashlib.sha256(p.read_bytes()).hexdigest() for k,p in files.items()}, 'cases': {}}
+    for op in data['run']['operations']:
+        if op['variant'] != 'base' or op['case'] not in {'q2', 'q6', 'q7', 'q8'}:
+            continue
+        case = op['case']
+        ranks = {arm: {sid:i+1 for i,sid in enumerate(value['order_ids'])} for arm,value in op['arms'].items()}
+        rows = []
+        for card in data['pools']['pools'][case]['cards']:
+            sid = card['id']; a,b = (data['refs'][r][case][sid] for r in ['A','B'])
+            rows.append({'id':sid,'url':card['url'],'card_sha256':hashlib.sha256(json.dumps(card,sort_keys=True,separators=(',',':')).encode()).hexdigest(),'ranks':{arm:r[sid] for arm,r in ranks.items()},'scores':{arm:value['scores'][sid] for arm,value in op['arms'].items()},'references':{'A':a,'B':b},'lead_disagreement':a['lead']!=b['lead'],'facet_disagreement':set(a['facets'])!=set(b['facets']),'w0_top10':ranks['w0'][sid]<=10,'candidate_top10':ranks['candidate'][sid]<=10})
+        assert len({r['id'] for r in rows})==len(rows)
+        result['cases'][case]=rows
+    return result
+
+
+if __name__=='__main__':
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--repo',type=Path,required=True)
+    parser.add_argument('--output',type=Path,required=True)
+    args=parser.parse_args()
+    with args.output.open('x') as f:
+        json.dump(build(args.repo),f,indent=2);f.write('\n')

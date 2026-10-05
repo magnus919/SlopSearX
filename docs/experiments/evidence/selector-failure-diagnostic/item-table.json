@@ -1,0 +1,5553 @@
+{
+  "status": "posthoc_diagnostic_not_qualification",
+  "input_sha256": {
+    "EXP-072/completed/run.json": "8e3513b1758e9cd1528ee672c3474423cacc05aa3ae0b57c2fdae4d7f9ac78ba",
+    "EXP-064/completed/metric-reference-view.json": "99625962fd078543d3dbf7630fc445dcfaff7fe55ab9289ef7c6f8a6ffb4afd9",
+    "EXP-060/fresh-acquisition.json": "69f72e2895031d4804733f7cdb38197a2d2c43d7cddaa8589abc9a43397d1882"
+  },
+  "cases": {
+    "q2": [
+      {
+        "id": "c0",
+        "url": "https://docs.openrewrite.org/recipes/java/migrate/upgradetojava21",
+        "card_sha256": "c710f3609b76011684086325c8c8e640347e6b48007a2c96dc05bf0230cfadae",
+        "ranks": {
+          "w0": 1,
+          "absolute_control": 3,
+          "candidate": 1
+        },
+        "scores": {
+          "w0": 4.8,
+          "absolute_control": 7.95,
+          "candidate": 2.88
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "The snippet provides a Gradle configuration activating the Java 21 OpenRewrite recipe."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "Official recipe page names UpgradeToJava21 and a concrete dependency/configuration."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c1",
+        "url": "https://docs.openrewrite.org/recipes/java/recipes/upgradeteststojava21",
+        "card_sha256": "c1d9eebae01b395358b91a44a1c4022f46adf86264e9216e33f9445c66cd6989",
+        "ranks": {
+          "w0": 4,
+          "absolute_control": 15,
+          "candidate": 14
+        },
+        "scores": {
+          "w0": 3.66,
+          "absolute_control": 5.79,
+          "candidate": 1.62
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 1,
+            "facets": [
+              "q2_f1",
+              "q2_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The OpenRewrite entry concerns migrating tests to Java 21, relevant to test-suite updates."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q2_f1",
+              "q2_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Java 21 test migration recipe indicates using Java 21 features in tests."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c2",
+        "url": "https://github.com/openrewrite/rewrite-migrate-java",
+        "card_sha256": "84a8e8ffc537b81924171a7f9f405e361e304033ea83a81faa4dd72f14628822",
+        "ranks": {
+          "w0": 7,
+          "absolute_control": 2,
+          "candidate": 2
+        },
+        "scores": {
+          "w0": 3.62,
+          "absolute_control": 8.02,
+          "candidate": 2.74
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "This is the OpenRewrite Java migration recipe module and explicitly supports Maven and Gradle."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "Official repository states Java-version migration recipes and Maven/Gradle support."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c3",
+        "url": "https://docs.openrewrite.org/recipes/java/migrate",
+        "card_sha256": "eee531d7003088d07a6e6bb34bd23e6f912017c1bf19f619cf6c8160441ad948",
+        "ranks": {
+          "w0": 12,
+          "absolute_control": 4,
+          "candidate": 4
+        },
+        "scores": {
+          "w0": 3.1,
+          "absolute_control": 7.8,
+          "candidate": 2.51
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "The docs index clearly lists a Java 21 migration recipe among many targets."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "Catalog visibly includes Java 21 and other migration recipes."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c4",
+        "url": "https://docs.openrewrite.org/running-recipes/popular-recipe-guides/migrate-to-java-17",
+        "card_sha256": "63446c31e9690b7b352062789698038429832315f6189cf721b3893aaf5babeb",
+        "ranks": {
+          "w0": 5,
+          "absolute_control": 11,
+          "candidate": 11
+        },
+        "scores": {
+          "w0": 3.66,
+          "absolute_control": 6.69,
+          "candidate": 1.99
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q2_f1",
+              "q2_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Tutorial directly migrates Java 8 to 17 with OpenRewrite, a close staging lead for the requested upgrade."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q2_f1",
+              "q2_f2"
+            ],
+            "uncertain": false,
+            "rationale": "OpenRewrite walkthrough explicitly automates Java 8 to 17; useful adjacent upgrade path."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c5",
+        "url": "https://dev.to/verhasi/simplify-java-and-spring-boot-migration-with-openrewrite-2026-refresh-6eb",
+        "card_sha256": "17369a09b3521e030ec89787da981089f000952bf093c19ca9bc37a98710ebcb",
+        "ranks": {
+          "w0": 2,
+          "absolute_control": 1,
+          "candidate": 5
+        },
+        "scores": {
+          "w0": 4.77,
+          "absolute_control": 8.03,
+          "candidate": 2.37
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q2_f1",
+              "q2_f2",
+              "q2_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The account reports rerunning an OpenRewrite migration from a Java 8 baseline and confirming tests pass."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 3,
+            "facets": [
+              "q2_f2",
+              "q2_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Reports rerunning migration and verifying baseline and upgraded tests; target extends past Java 21."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c6",
+        "url": "https://docs.openrewrite.org/recipes/java/migrate/upgradetojava8",
+        "card_sha256": "dd167237b13611c68caa98bc80a0ab3a8a57da43525f13cf6c2c47bacd584d75",
+        "ranks": {
+          "w0": 10,
+          "absolute_control": 21,
+          "candidate": 21
+        },
+        "scores": {
+          "w0": 3.31,
+          "absolute_control": 4.36,
+          "candidate": 0.79
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "This Java 8 upgrade recipe targets the source baseline rather than Java 21."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "Upgrade-to-Java-8 recipe is opposite-direction/legacy migration."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c7",
+        "url": "https://docs.openrewrite.org/recipes/java/migrate/upgradejavaversion",
+        "card_sha256": "e8a427f42186cb9db5f73fe7c6786243d62a5a9aa550cc57deca9a21f41ebefe",
+        "ranks": {
+          "w0": 11,
+          "absolute_control": 7,
+          "candidate": 8
+        },
+        "scores": {
+          "w0": 3.2,
+          "absolute_control": 7.29,
+          "candidate": 2.29
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "The catalog visibly lists Java 21 build upgrades among composite recipes, but gives no procedure."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q2_f1",
+              "q2_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Composite recipe list includes Java 21 build upgrade, but appears mixed-version and broad."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c8",
+        "url": "https://docs.openrewrite.org/recipes/java/recipes",
+        "card_sha256": "dc38f5f5ca485824df90bd732efff54b0a298b14be53fee3e4b3fd7c1e368ab4",
+        "ranks": {
+          "w0": 13,
+          "absolute_control": 6,
+          "candidate": 6
+        },
+        "scores": {
+          "w0": 3.07,
+          "absolute_control": 7.38,
+          "candidate": 2.31
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 1,
+            "facets": [
+              "q2_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Recipe tests and Java 21 test migration appear in this catalog snippet, with little detail."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q2_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Recipe test cases are a potentially useful validation source, but the card is a broad recipe listing."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c9",
+        "url": "https://medium.com/@vishal.kr.singh/modernizing-legacy-microservices-upgrading-from-java-8-spring-boot-2-to-java-21-spring-boot-3-3-c38a2abe728d",
+        "card_sha256": "a764cb72d7ed9e7351f719be476011a9392edcff06c431b9046c614a2601f781",
+        "ranks": {
+          "w0": 3,
+          "absolute_control": 8,
+          "candidate": 3
+        },
+        "scores": {
+          "w0": 3.91,
+          "absolute_control": 7.23,
+          "candidate": 2.74
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q2_f1",
+              "q2_f3"
+            ],
+            "uncertain": true,
+            "rationale": "The article covers the exact Java 8 to Java 21 transition using OpenRewrite, but visible validation detail is sparse."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 3,
+            "facets": [
+              "q2_f1",
+              "q2_f2",
+              "q2_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Case describes automated Java 8 to Java 21 migration and build verification."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c10",
+        "url": "https://docs.openrewrite.org/recipes/java/migrate/upgradepluginsforjava21",
+        "card_sha256": "5c253a00c54e3759ec96e1d2cf8db613489eb20fca39120c76ea2eba5dc70b0a",
+        "ranks": {
+          "w0": 6,
+          "absolute_control": 12,
+          "candidate": 12
+        },
+        "scores": {
+          "w0": 3.66,
+          "absolute_control": 6.38,
+          "candidate": 1.98
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q2_f1",
+              "q2_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The specific Java 21 recipe updates plugins and dependencies to compatible versions."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q2_f1",
+              "q2_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Java 21 plugin recipe updates plugins and dependencies for compatibility."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c11",
+        "url": "https://docs.openrewrite.org/recipes/java/migrate/java8tojava11",
+        "card_sha256": "ac28a1f29e506c79a0edf06877c595cf9d0e52c3d6b4f3af57feb85857a997b6",
+        "ranks": {
+          "w0": 9,
+          "absolute_control": 13,
+          "candidate": 13
+        },
+        "scores": {
+          "w0": 3.35,
+          "absolute_control": 6.36,
+          "candidate": 1.95
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q2_f1",
+              "q2_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The Java 11 migration description highlights Java 8 compatibility changes for removed bundled libraries and deprecated APIs."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q2_f1",
+              "q2_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Java 8-to-11 recipe covers removed J2EE libraries and deprecated API replacements."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c12",
+        "url": "https://docs.openrewrite.org/recipes/java/camel/migrate",
+        "card_sha256": "5f88a373c4e39e9d2726f73894d4763680f661d5f666e66d6d0205036a2b5be8",
+        "ranks": {
+          "w0": 20,
+          "absolute_control": 17,
+          "candidate": 18
+        },
+        "scores": {
+          "w0": 1.58,
+          "absolute_control": 5.3,
+          "candidate": 1.27
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": true,
+            "rationale": "The generic migration index names OpenRewrite recipes but no relevant target or method."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "Generic migrate landing page names OpenRewrite recipes without target or checks."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c13",
+        "url": "https://docs.openrewrite.org/recipes/java/testing",
+        "card_sha256": "6dc5c459764273dd8949197b5c7391f97f9cbdb8c7fb3b03adb60c6bef51b7bc",
+        "ranks": {
+          "w0": 19,
+          "absolute_control": 18,
+          "candidate": 15
+        },
+        "scores": {
+          "w0": 1.75,
+          "absolute_control": 4.78,
+          "candidate": 1.48
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "A generic Testing index provides no visible Java migration or validation details."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": false,
+            "rationale": "Testing landing card redirects readers to a recipe catalog; no migration checks visible."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c14",
+        "url": "https://docs.openrewrite.org/recipes/java/migrate/javaee8-recipe",
+        "card_sha256": "e7611f180dbe317f7c4b7d91aecdfd3ce3b0d5695859b1f3d285227fec644b84",
+        "ranks": {
+          "w0": 18,
+          "absolute_control": 20,
+          "candidate": 20
+        },
+        "scores": {
+          "w0": 1.76,
+          "absolute_control": 4.58,
+          "candidate": 0.87
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": true,
+            "rationale": "Java EE 8 migration is a different migration; the card only signals recipe behavior."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q2_f1",
+              "q2_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Java EE 8 migration recipes are adjacent compatibility work."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c15",
+        "url": "https://docs.openrewrite.org/reference/all-recipes",
+        "card_sha256": "53bf65e52c820cb6923a03afd6eb4c8f94e5b16d9ea556a4680690e52a332eb7",
+        "ranks": {
+          "w0": 16,
+          "absolute_control": 5,
+          "candidate": 9
+        },
+        "scores": {
+          "w0": 2.45,
+          "absolute_control": 7.55,
+          "candidate": 2.25
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": true,
+            "rationale": "A recipe-by-module catalog can lead to migration recipes, but no Java 21 detail is visible."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "Module catalog identifies migration modules, but provides little visible detail."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c16",
+        "url": "https://docs.openrewrite.org/recipes/java/migrate/upgradebuildtojava21",
+        "card_sha256": "55de5793c53b3bbafbaae6a63d5c435d783d5f0f014aeb51889d8385f322e198",
+        "ranks": {
+          "w0": 8,
+          "absolute_control": 10,
+          "candidate": 10
+        },
+        "scores": {
+          "w0": 3.61,
+          "absolute_control": 6.79,
+          "candidate": 2.21
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "The recipe explicitly changes build files to target/source Java 21."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q2_f1",
+              "q2_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Recipe updates build files to target/source Java 21."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c17",
+        "url": "https://docs.openrewrite.org/recipes/java/migrate/upgradetojava25",
+        "card_sha256": "0d0f9121e2897a91b881150189616d17f83e2669fb300b64732d6b27b17dafb0",
+        "ranks": {
+          "w0": 15,
+          "absolute_control": 14,
+          "candidate": 16
+        },
+        "scores": {
+          "w0": 2.57,
+          "absolute_control": 6.25,
+          "candidate": 1.4
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "This recipe targets Java 25, beyond the requested target, and only signals migration capability."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "Java 25 recipe is adjacent migration material, not the requested Java 21 target."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c18",
+        "url": "https://docs.openrewrite.org/recipes/java/migrate/javaee8",
+        "card_sha256": "29d80361cdf144c4e576dfd25c7168ca35d5a6325b0deb5b633ed57b819b07bd",
+        "ranks": {
+          "w0": 17,
+          "absolute_control": 16,
+          "candidate": 17
+        },
+        "scores": {
+          "w0": 1.77,
+          "absolute_control": 5.77,
+          "candidate": 1.35
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": true,
+            "rationale": "The Java EE recipe collection is migration-adjacent, but no concrete transformation is visible."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": false,
+            "rationale": "Java EE 8 recipe is a component migration, not Java 21."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c19",
+        "url": "https://docs.openrewrite.org/recipes/timefold/solver/migration/v8",
+        "card_sha256": "d2db7db47c407573b1caf0bee4dbda8843f5a2fc8118eeb9f37762cb89a273e7",
+        "ranks": {
+          "w0": 21,
+          "absolute_control": 19,
+          "candidate": 19
+        },
+        "scores": {
+          "w0": 1.25,
+          "absolute_control": 4.64,
+          "candidate": 0.98
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q2_f1"
+            ],
+            "uncertain": true,
+            "rationale": "The V8 recipe index is only loosely related and contains no Java 21 procedure."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": false,
+            "rationale": "V8 recipes refer to a different project migration."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c20",
+        "url": "https://doi.org/10.1145/3770855.3817526",
+        "card_sha256": "24b46d7ef01dcd6be80fac3cd1556b3b499bdb7f9ddc790d57ad87053f4ec9a9",
+        "ranks": {
+          "w0": 14,
+          "absolute_control": 9,
+          "candidate": 7
+        },
+        "scores": {
+          "w0": 2.61,
+          "absolute_control": 6.87,
+          "candidate": 2.31
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q2_f3"
+            ],
+            "uncertain": false,
+            "rationale": "MigrationBench directly evaluates repository-level code migration from Java 8, but it is a benchmark lead."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 3,
+            "facets": [
+              "q2_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Repository-level benchmark directly evaluates code migration from Java 8."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c21",
+        "url": "https://doi.org/10.5381/jot.2026.25.2.a2",
+        "card_sha256": "97b633954c97105f2c05e4f8c27928b3af249ff9117cea697c69646760f24903",
+        "ranks": {
+          "w0": 22,
+          "absolute_control": 23,
+          "candidate": 23
+        },
+        "scores": {
+          "w0": 1.07,
+          "absolute_control": 2.18,
+          "candidate": 0.65
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q2_f2"
+            ],
+            "uncertain": true,
+            "rationale": "The paper discusses compile-time versus runtime checks in test frameworks, indirectly relevant to validation."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q2_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Testing framework implementation paper gives static-checking motivation, not application migration."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c22",
+        "url": "https://openalex.org/W7132657940",
+        "card_sha256": "b90165cf07f5d04faaf21529378a51360eebbefe8f5db1f286a6287286cc8cc0",
+        "ranks": {
+          "w0": 23,
+          "absolute_control": 22,
+          "candidate": 22
+        },
+        "scores": {
+          "w0": 0.83,
+          "absolute_control": 3.05,
+          "candidate": 0.69
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "The survey concerns software rejuvenation broadly; its title does not identify Java migration tooling or checks."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q2_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Practitioner survey on software rejuvenation is broad migration-process background."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      }
+    ],
+    "q6": [
+      {
+        "id": "c0",
+        "url": "https://circleci.com/blog/claude-code-lsp/",
+        "card_sha256": "da4eb42530b1322848131ebc774731c09de67bc7804ea03a284e3dbbec4f33e0",
+        "ranks": {
+          "w0": 18,
+          "absolute_control": 14,
+          "candidate": 13
+        },
+        "scores": {
+          "w0": 3.95,
+          "absolute_control": 6.99,
+          "candidate": 2.18
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q6_f1",
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "It directly argues LSP grounds edits in compiler logic and provides instant validation feedback."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Explains LSP grounding and compiler-accurate feedback in agent editing loop."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c1",
+        "url": "https://amirteymoori.com/lsp-language-server-protocol-ai-coding-tools/",
+        "card_sha256": "50cb5c9a534d3ed837223e3b3ea211588673515288dd5846851a83f7ffa9ca0b",
+        "ranks": {
+          "w0": 2,
+          "absolute_control": 12,
+          "candidate": 12
+        },
+        "scores": {
+          "w0": 5.72,
+          "absolute_control": 7.0,
+          "candidate": 2.19
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "It explains LSP rename/refactoring across files and compiler checks on AI-proposed edits."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The LSP guide describes rename-across-files and refactoring/code actions that respect scope."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c2",
+        "url": "https://kondasamy.com/blog/2026/how-ai-coding-agents-edit-code/",
+        "card_sha256": "9e5e79f49232aa420f708e366137ae7d01b734172c1335337e3ed44b8325cf6c",
+        "ranks": {
+          "w0": 7,
+          "absolute_control": 10,
+          "candidate": 8
+        },
+        "scores": {
+          "w0": 4.83,
+          "absolute_control": 7.2,
+          "candidate": 2.29
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "OpenCode formats after edits then queries LSP for compiler diagnostics and returns errors to the model."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The excerpt says edits trigger formatting and LSP compiler diagnostics before the next turn."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c3",
+        "url": "https://www.gocodeo.com/post/how-ai-coding-models-handle-context-switching-and-multi-file-refactoring",
+        "card_sha256": "d9874e1efd0c57c82929221efc177645d609db4ee4b9759f83a3a3ed4c0ddb08",
+        "ranks": {
+          "w0": 6,
+          "absolute_control": 5,
+          "candidate": 7
+        },
+        "scores": {
+          "w0": 5.01,
+          "absolute_control": 7.41,
+          "candidate": 2.38
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The article describes multi-file planning and using language servers while editing."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The excerpt discusses context switching and multi-file refactoring through language-server and filesystem tools."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c4",
+        "url": "https://arxiv.org/pdf/2510.22907",
+        "card_sha256": "929d44f3fe026442524615a2f69aaf345a901a3e08c55fd4e947007ede133da1",
+        "ranks": {
+          "w0": 9,
+          "absolute_control": 2,
+          "candidate": 2
+        },
+        "scores": {
+          "w0": 4.6,
+          "absolute_control": 7.99,
+          "candidate": 2.74
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q6_f1",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The paper explicitly uses LSP diagnostics and compiler feedback for coding agents."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The study directly examines compiler and language-server feedback for coding agents."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c5",
+        "url": "https://skywork.ai/skypage/en/ai-agent-typescript-refactoring/1980821689958838272",
+        "card_sha256": "4fe27d8b2bdd7737e9d12af53d1189aa19113dbaba60ae6816afa2017546efc8",
+        "ranks": {
+          "w0": 3,
+          "absolute_control": 4,
+          "candidate": 5
+        },
+        "scores": {
+          "w0": 5.42,
+          "absolute_control": 7.6,
+          "candidate": 2.55
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The article describes project-wide rename, definition/reference navigation, diagnostics, and hover through an MCP server."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The TypeScript MCP deep dive describes safe project-wide symbol refactoring and code exploration."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c6",
+        "url": "https://kiro.dev/blog/refactoring-made-right/",
+        "card_sha256": "64bccfd61e60331a576ef1e5171de359beb6b93c4325f7979f7a885fcee7f35b",
+        "ranks": {
+          "w0": 5,
+          "absolute_control": 9,
+          "candidate": 4
+        },
+        "scores": {
+          "w0": 5.23,
+          "absolute_control": 7.23,
+          "candidate": 2.56
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "It describes choosing IDE refactoring tools and using the language server to validate changes."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Explains symbol/file refactoring through IDE tools and language-server workflow."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c7",
+        "url": "https://github.com/blackwell-systems/agent-lsp",
+        "card_sha256": "a56ccf559d54a32fee2697ed416e209be96ef895631048ddf43c5a2da9114af7",
+        "ranks": {
+          "w0": 1,
+          "absolute_control": 1,
+          "candidate": 1
+        },
+        "scores": {
+          "w0": 6.88,
+          "absolute_control": 8.42,
+          "candidate": 2.78
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The tool previews edits, checks diagnostic changes, applies or discards, then verifies builds and tests."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The server previews edits, checks diagnostic changes, then applies or discards them."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c8",
+        "url": "https://www.augmentcode.com/learn/automate-multi-file-code-refactoring-with-ai-agents-a-step-by-step-guide",
+        "card_sha256": "6685c41e84ef82b84f1bde186dc0d87c21cdcafc19dde82b6029ca7f6d602bb4",
+        "ranks": {
+          "w0": 17,
+          "absolute_control": 15,
+          "candidate": 11
+        },
+        "scores": {
+          "w0": 3.99,
+          "absolute_control": 6.89,
+          "candidate": 2.22
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f2"
+            ],
+            "uncertain": false,
+            "rationale": "It describes repository-wide rename and automatic dependency tracking, a practical multi-file refactor lead."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Concrete multi-file refactor steps enumerate renames, imports, paths, docs, config and tests."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c9",
+        "url": "https://github.com/Sindlish/Sindlish/issues/87",
+        "card_sha256": "1f85cc4f13b58cf4fde89a213bb86691ed393be89be1b91255dfa6e0f706f8f4",
+        "ranks": {
+          "w0": 19,
+          "absolute_control": 18,
+          "candidate": 18
+        },
+        "scores": {
+          "w0": 3.59,
+          "absolute_control": 6.56,
+          "candidate": 2.04
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The issue exposes a diagnostics pipeline weakness: one caught exception can mask later errors."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Issue identifies single-error diagnostics and requests multiple severities, directly matching compiler feedback."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c10",
+        "url": "https://github.com/dev-camo/mcplsb/issues/3",
+        "card_sha256": "fe2927facf95ecde232bb8e1bdf39beb4a08e152a9faf6352aeed0ad277adac9",
+        "ranks": {
+          "w0": 15,
+          "absolute_control": 7,
+          "candidate": 14
+        },
+        "scores": {
+          "w0": 4.19,
+          "absolute_control": 7.35,
+          "candidate": 2.15
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The issue specifies cross-file rename/refactoring tests against real language-server fixtures and records support."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The issue directly specifies cross-file rename and refactoring through language-server fixtures, with supported-operation coverage to validate behavior."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c11",
+        "url": "https://www.ijraset.com/best-journal/evaluating-multiagent-ai-systems-for-automated-bug-detection-and-code-refactoring",
+        "card_sha256": "15b1b3c58edde7cf51e978c402d321bcd01803f7be296eede07127ec1f0ad5e4",
+        "ranks": {
+          "w0": 10,
+          "absolute_control": 17,
+          "candidate": 19
+        },
+        "scores": {
+          "w0": 4.54,
+          "absolute_control": 6.57,
+          "candidate": 2.04
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The verifier runs tests, regression checks, linters, and type analyzers before accepting patches."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Verifier agent runs full tests after refactoring; useful workflow signal."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c12",
+        "url": "https://github.com/wieslawsoltes/SharpForge/issues/292",
+        "card_sha256": "acec6ddc3aaf415b8f1a971dcf2188957af7d82d5f40f92436a1afe5197a99d8",
+        "ranks": {
+          "w0": 21,
+          "absolute_control": 13,
+          "candidate": 9
+        },
+        "scores": {
+          "w0": 3.25,
+          "absolute_control": 7.0,
+          "candidate": 2.25
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f1",
+              "q6_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The issue concerns implementing diagnostics and code fixes in an LSP service."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The issue explicitly requests a diagnostics and code-fix pipeline under language services, LSP and refactoring."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c13",
+        "url": "https://arxiv.org/html/2503.07832v1",
+        "card_sha256": "e841fde5a53cfacbf3dc1d82ff642cef870c36355d5b080138f66f3c2cbdd929",
+        "ranks": {
+          "w0": 20,
+          "absolute_control": 21,
+          "candidate": 17
+        },
+        "scores": {
+          "w0": 3.26,
+          "absolute_control": 6.27,
+          "candidate": 2.06
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": true,
+            "rationale": "The card concerns benchmark filtration and validation, not refactoring feedback workflow."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Refactor benchmark emphasizes evaluation but excerpt offers little multi-file feedback detail."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c14",
+        "url": "https://github.com/ptw1255/agentic-workflow-factory/issues/16",
+        "card_sha256": "daeda51d0f52760bdefe732203b2fcc6a96b6239542bd78464c2d6d34d8b259f",
+        "ranks": {
+          "w0": 13,
+          "absolute_control": 8,
+          "candidate": 10
+        },
+        "scores": {
+          "w0": 4.25,
+          "absolute_control": 7.27,
+          "candidate": 2.23
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f1",
+              "q6_f3"
+            ],
+            "uncertain": true,
+            "rationale": "The issue describes a project compiler resolving resources and validating a graph, adjacent to multi-file diagnostics."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f1",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Issue describes project compiler and diagnostics across parsed resources and graph validation."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c15",
+        "url": "https://kiro.dev/docs/tools/code-intelligence/",
+        "card_sha256": "96068d94c01769ed6903b3f924d4fe17b21769fe5bff135a2b39dccdd66e55e2",
+        "ranks": {
+          "w0": 16,
+          "absolute_control": 19,
+          "candidate": 20
+        },
+        "scores": {
+          "w0": 4.08,
+          "absolute_control": 6.56,
+          "candidate": 1.91
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f1"
+            ],
+            "uncertain": false,
+            "rationale": "Kiro documents code intelligence including symbol search, outlines, and definition lookup across languages."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "The code-intelligence overview is broad and its visible excerpt does not address compiler diagnostics or refactoring feedback."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c16",
+        "url": "https://arxiv.org/html/2609.04898v1",
+        "card_sha256": "d0a2e558ecc121dd7971ebc414a26f45a26ca165e0dcd54a59c418626c643662",
+        "ranks": {
+          "w0": 4,
+          "absolute_control": 3,
+          "candidate": 6
+        },
+        "scores": {
+          "w0": 5.25,
+          "absolute_control": 7.66,
+          "candidate": 2.46
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "RefactorPlatform targets behavior-preserving changes propagated across files."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Repository-scale refactoring harness focuses on behavior-preserving edits across files."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c17",
+        "url": "https://arxiv.org/html/2511.03153v1",
+        "card_sha256": "6e92573e8bf98c6a8652ff651249b823faac9c7a702ccc0949892c49fe26ef37",
+        "ranks": {
+          "w0": 11,
+          "absolute_control": 6,
+          "candidate": 3
+        },
+        "scores": {
+          "w0": 4.34,
+          "absolute_control": 7.39,
+          "candidate": 2.61
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The framework sends compile status from a compiler agent before further tester validation."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "RefAgent runs Maven compilation and advances to testing only after successful compilation."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c18",
+        "url": "https://www.datacamp.com/blog/what-is-opencode",
+        "card_sha256": "3786640005511a74663ee2f87a62c3b0cafea308a0c152e04d9fc183379862ab",
+        "ranks": {
+          "w0": 8,
+          "absolute_control": 20,
+          "candidate": 16
+        },
+        "scores": {
+          "w0": 4.68,
+          "absolute_control": 6.34,
+          "candidate": 2.1
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "OpenCode feeds compiler and linter diagnostics from its LSP integration back to the model."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f1",
+              "q6_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Describes LSP integration feeding compiler and linter diagnostics back to model after edits."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c19",
+        "url": "https://code.visualstudio.com/api/language-extensions/language-server-extension-guide",
+        "card_sha256": "2ddc27f49e5b9a4508da844dcc0f04880efba563c06ba4015ebad20368078155",
+        "ranks": {
+          "w0": 14,
+          "absolute_control": 23,
+          "candidate": 21
+        },
+        "scores": {
+          "w0": 4.21,
+          "absolute_control": 6.03,
+          "candidate": 1.87
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f1"
+            ],
+            "uncertain": false,
+            "rationale": "The VS Code guide explains that its example lacks cross-file and workspace diagnostics."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f1",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The extension guide distinguishes per-document validation from workspace-wide diagnostics."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c20",
+        "url": "https://openalex.org/W7209116714",
+        "card_sha256": "81f1f039b37f080fdd98dc8f99c092170a66dc8814d13e352e84d9660ad84e09",
+        "ranks": {
+          "w0": 24,
+          "absolute_control": 22,
+          "candidate": 22
+        },
+        "scores": {
+          "w0": 2.54,
+          "absolute_control": 6.22,
+          "candidate": 1.83
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The study evaluates whether LLM refactors preserve external behavior."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The study directly evaluates reliability of LLM-generated refactorings, while the excerpt gives limited workflow detail."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c21",
+        "url": "https://doi.org/10.48550/arxiv.2609.04898",
+        "card_sha256": "c4703d2a7a3374a711c4f01bab08460671c6405ca95e1ab6fa7e713c21d06bb6",
+        "ranks": {
+          "w0": 12,
+          "absolute_control": 11,
+          "candidate": 15
+        },
+        "scores": {
+          "w0": 4.26,
+          "absolute_control": 7.1,
+          "candidate": 2.12
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Open-source harness directly evaluates repository-scale behavior-preserving refactoring agents."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The harness directly studies repository-scale changes across interdependent files while preserving behavior."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c22",
+        "url": "https://doi.org/10.3929/ethz-a-010098048",
+        "card_sha256": "0b11952d637f7e255752b6211629651386c008a751e1851cc3206bd55fb220af",
+        "ranks": {
+          "w0": 40,
+          "absolute_control": 40,
+          "candidate": 40
+        },
+        "scores": {
+          "w0": 0.72,
+          "absolute_control": 1.57,
+          "candidate": 0.33
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "JVM code cache performance is unrelated to source refactoring workflow."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "JVM code-cache optimization is unrelated to agent-guided repository refactoring."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c23",
+        "url": "https://doi.org/10.48550/arxiv.2505.19443",
+        "card_sha256": "070b9e710fb1fc03f9f6123a5787174dafd2f08dec01357369cb07fcdd2b334f",
+        "ranks": {
+          "w0": 34,
+          "absolute_control": 38,
+          "candidate": 36
+        },
+        "scores": {
+          "w0": 1.89,
+          "absolute_control": 3.44,
+          "candidate": 0.98
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Broad vibe/agentic coding review has no visible compiler feedback procedure."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "The review contrasts coding paradigms but the excerpt shows no multi-file refactoring feedback mechanism."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c24",
+        "url": "https://doi.org/10.48550/arxiv.2605.11006",
+        "card_sha256": "561a45bb1d7f81463d3a9e527b6e8b0abcc4a77a5ba4c3088c1e8aec5c59e847",
+        "ranks": {
+          "w0": 25,
+          "absolute_control": 31,
+          "candidate": 26
+        },
+        "scores": {
+          "w0": 2.27,
+          "absolute_control": 4.06,
+          "candidate": 1.14
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The benchmark questions whether passing tests alone establish semantic reasoning, a correctness-check caveat."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The execution-verified semantic benchmark is a useful correctness-evaluation lead, though it does not describe a refactoring workflow."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c25",
+        "url": "https://doi.org/10.48550/arxiv.2604.03515",
+        "card_sha256": "6c5b4a67aa624dcf0efe58eee1aa885d1ac862929d11d652575d6c0a6396b11f",
+        "ranks": {
+          "w0": 26,
+          "absolute_control": 25,
+          "candidate": 25
+        },
+        "scores": {
+          "w0": 2.15,
+          "absolute_control": 4.63,
+          "candidate": 1.19
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent architecture taxonomy is broad and not visibly focused on LSP feedback."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Coding-agent architecture taxonomy is broad."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c26",
+        "url": "https://doi.org/10.20944/preprints202510.0924.v1",
+        "card_sha256": "0aa32aa31b65db241403964527c6f88a6fd221d3c9905ff1295e8b2d3a5c6607",
+        "ranks": {
+          "w0": 35,
+          "absolute_control": 28,
+          "candidate": 30
+        },
+        "scores": {
+          "w0": 1.86,
+          "absolute_control": 4.33,
+          "candidate": 1.09
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Code retrieval research does not show refactoring or compiler/LSP feedback mechanics."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [],
+            "uncertain": false,
+            "rationale": "The card discusses retrieval of code and documentation for agents, which is broad context rather than compiler feedback."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c27",
+        "url": "https://doi.org/10.48550/arxiv.2605.18747",
+        "card_sha256": "79f5165dfa886223973eba7b598d015b8f0bbf22af88b9a1eaebba113b189ede",
+        "ranks": {
+          "w0": 27,
+          "absolute_control": 29,
+          "candidate": 33
+        },
+        "scores": {
+          "w0": 2.15,
+          "absolute_control": 4.12,
+          "candidate": 1.05
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Code as agent harness is a broad architecture topic without clear LSP refactor specifics."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent-harness overview is broad; no compiler feedback mechanism visible."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c28",
+        "url": "https://doi.org/10.5281/zenodo.21682075",
+        "card_sha256": "b176872f20b395e47afb354e221aca0ca91729843191fd8f24d60e9bcc0e72a7",
+        "ranks": {
+          "w0": 33,
+          "absolute_control": 33,
+          "candidate": 34
+        },
+        "scores": {
+          "w0": 1.9,
+          "absolute_control": 3.69,
+          "candidate": 1.05
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Broad agentic lifecycle discussion gives no specific LSP refactor workflow."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "The SDLC article is broad agentic-coding context without visible compiler or refactoring details."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c29",
+        "url": "https://doi.org/10.5281/zenodo.21678595",
+        "card_sha256": "b209ca2bb01d49602f9c477f3cc779ebdbebff8192002a914772c554ce6ec895",
+        "ranks": {
+          "w0": 36,
+          "absolute_control": 36,
+          "candidate": 32
+        },
+        "scores": {
+          "w0": 1.81,
+          "absolute_control": 3.63,
+          "candidate": 1.06
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Generic SDLC overview lacks visible compiler or refactoring detail."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "This SDLC article provides broad context but no visible multi-file feedback mechanism."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c30",
+        "url": "https://doi.org/10.48550/arxiv.2510.12399",
+        "card_sha256": "a62b36afa7792a74640a3caccc1b80ffae5cb809de72379a310c49cd451dacfb",
+        "ranks": {
+          "w0": 38,
+          "absolute_control": 37,
+          "candidate": 37
+        },
+        "scores": {
+          "w0": 1.72,
+          "absolute_control": 3.46,
+          "candidate": 0.96
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": true,
+            "rationale": "The survey mentions outcome validation broadly but not compiler-guided refactoring."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "The vibe-coding survey is broad and does not show the requested refactoring workflow."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c31",
+        "url": "https://doi.org/10.48550/arxiv.2603.15976",
+        "card_sha256": "2a9fc4b5596496e316240162548bc7357a9aafbca59621f261ff86e1a63fd3d2",
+        "ranks": {
+          "w0": 30,
+          "absolute_control": 30,
+          "candidate": 27
+        },
+        "scores": {
+          "w0": 1.97,
+          "absolute_control": 4.09,
+          "candidate": 1.11
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Scientific-code evaluation highlights correctness beyond passing tests, but domain-specific."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Evaluates generated scientific code beyond functional correctness."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c32",
+        "url": "https://doi.org/10.48550/arxiv.2609.12742",
+        "card_sha256": "080a723c1de0ab348c47edd0fd77711adfc8a7125343755a1bce2ebcc5b9963f",
+        "ranks": {
+          "w0": 37,
+          "absolute_control": 34,
+          "candidate": 38
+        },
+        "scores": {
+          "w0": 1.78,
+          "absolute_control": 3.67,
+          "candidate": 0.89
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Repository knowledge skills are unrelated to compiler/LSP-guided refactoring."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "The card concerns repository skill optimization, not multi-file refactoring or compiler feedback."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c33",
+        "url": "https://doi.org/10.48550/arxiv.2511.11012",
+        "card_sha256": "34154d26766ce47a6c54e2fed185eee9b5848a8d32ed3ebea42ba0ffa2b12759",
+        "ranks": {
+          "w0": 23,
+          "absolute_control": 16,
+          "candidate": 23
+        },
+        "scores": {
+          "w0": 2.88,
+          "absolute_control": 6.59,
+          "candidate": 1.67
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The paper studies coordinated multi-hunk repairs across disjoint code regions."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f2",
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The study concerns coordinated changes across disjoint code regions, relevant to multi-file correctness."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c34",
+        "url": "https://doi.org/10.48550/arxiv.2608.21918",
+        "card_sha256": "54cdd9b4ff9c0d5e76ea8838d2e12526b1d368d78e1e2fe7f9de53b9d835f132",
+        "ranks": {
+          "w0": 39,
+          "absolute_control": 39,
+          "candidate": 39
+        },
+        "scores": {
+          "w0": 1.37,
+          "absolute_control": 2.03,
+          "candidate": 0.46
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Optimizing agent architectures is unrelated to compiler feedback for refactors."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Optimizes multi-agent architecture unrelated to refactoring feedback."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c35",
+        "url": "https://doi.org/10.1145/3770855.3818488",
+        "card_sha256": "a883f506834ada59730269e2662f6fb72d5638e122b46ad2f9fd827b397ea887",
+        "ranks": {
+          "w0": 31,
+          "absolute_control": 27,
+          "candidate": 31
+        },
+        "scores": {
+          "w0": 1.96,
+          "absolute_control": 4.34,
+          "candidate": 1.07
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Mobile-app benchmark is unrelated to refactoring feedback mechanisms."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "The mobile coding benchmark is unrelated to compiler or language-server feedback for a refactor."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c36",
+        "url": "https://doi.org/10.1007/s10664-026-10858-8",
+        "card_sha256": "c16bcc157bc358d1dfe9de56b4d4aac776daa7f3474449003eec8afc73034d47",
+        "ranks": {
+          "w0": 22,
+          "absolute_control": 24,
+          "candidate": 24
+        },
+        "scores": {
+          "w0": 2.92,
+          "absolute_control": 5.23,
+          "candidate": 1.41
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": true,
+            "rationale": "SonarQube code-quality repair evaluation is adjacent, with no multi-file/LSP workflow shown."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Evaluates automated code-quality fixes, a useful correctness-check lead."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c37",
+        "url": "https://doi.org/10.48550/arxiv.2607.07946",
+        "card_sha256": "c80ae12b9dea9090e22c082c3b7fcfe25debb9e71850da162ff65b75ae6ca77a",
+        "ranks": {
+          "w0": 29,
+          "absolute_control": 35,
+          "candidate": 35
+        },
+        "scores": {
+          "w0": 2.04,
+          "absolute_control": 3.66,
+          "candidate": 1.03
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Long-horizon coding-task benchmark is only broadly related to evaluating refactors."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Long-horizon coding benchmark is broad task evaluation."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c38",
+        "url": "https://doi.org/10.48550/arxiv.2409.16299",
+        "card_sha256": "4f59bbbc9660c98b094ac8f79da7463880e97e5944ca248c8ed157ac9ac1bb8c",
+        "ranks": {
+          "w0": 32,
+          "absolute_control": 26,
+          "candidate": 29
+        },
+        "scores": {
+          "w0": 1.93,
+          "absolute_control": 4.36,
+          "candidate": 1.1
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": true,
+            "rationale": "General software-agent benchmark coverage is only indirectly useful for refactoring correctness."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "The general coding-task agent framework is not specifically about multi-file refactoring or compiler feedback."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c39",
+        "url": "https://doi.org/10.1145/3816153",
+        "card_sha256": "dceec4b2ed3fe12b9ee9fd2206da7e5d2d9d625b633a8f2ea635bb4794350393",
+        "ranks": {
+          "w0": 28,
+          "absolute_control": 32,
+          "candidate": 28
+        },
+        "scores": {
+          "w0": 2.09,
+          "absolute_control": 3.89,
+          "candidate": 1.1
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q6_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Cross-ISA migration benchmark is not about source refactoring, though build correctness is relevant."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "ISA migration benchmark is unrelated to multi-file feedback."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      }
+    ],
+    "q7": [
+      {
+        "id": "c0",
+        "url": "https://stribog.com/blog/database-migration-tool-selection-schema-versioning-rollback",
+        "card_sha256": "baacceb794b15186e861efa89eb0ae7dbb610ec69d75173c586876a2449890bc",
+        "ranks": {
+          "w0": 1,
+          "absolute_control": 4,
+          "candidate": 4
+        },
+        "scores": {
+          "w0": 5.9,
+          "absolute_control": 7.63,
+          "candidate": 2.62
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q7_f1",
+              "q7_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The tool computes and documents down plans with pre-migration checks, a direct migration planning/rollback lead."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f1",
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Atlas down-plan and pre-migration checks are directly relevant to rollback/review evidence."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c1",
+        "url": "https://oneuptime.com/blog/post/2026-08-06-database-compatible-rollbacks-forward-fixes/view",
+        "card_sha256": "47e9524618483fc0e454f18e5902fff160fa97b5ced33249e9fb819e3f4aed71",
+        "ranks": {
+          "w0": 17,
+          "absolute_control": 7,
+          "candidate": 6
+        },
+        "scores": {
+          "w0": 3.91,
+          "absolute_control": 7.49,
+          "candidate": 2.56
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The card explicitly recommends testing schema, data, code reverts, and forward fixes before release."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Directly calls for testing compatibility, data semantics, code reverts and forward fixes."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c2",
+        "url": "https://qaskills.sh/blog/database-testing-migration-rollback-safety",
+        "card_sha256": "5ab10ca354ab3bd99b55945cdbf0f2232aef4f479be742bd6dccca4d3c8c983d",
+        "ranks": {
+          "w0": 5,
+          "absolute_control": 2,
+          "candidate": 2
+        },
+        "scores": {
+          "w0": 5.29,
+          "absolute_control": 7.8,
+          "candidate": 2.76
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The article distinguishes script execution from testing rollback data and old-code compatibility."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Explains rollback safety depends on post-migration data and old-code compatibility."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c3",
+        "url": "https://pgroll.com/blog/levels-of-a-database-rollback-strategy",
+        "card_sha256": "d60f94b8026ed0c9cbf8acae4c7b17710cb4d55a92aed34d4c2cd28d1196f254",
+        "ranks": {
+          "w0": 6,
+          "absolute_control": 5,
+          "candidate": 5
+        },
+        "scores": {
+          "w0": 4.97,
+          "absolute_control": 7.59,
+          "candidate": 2.61
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q7_f1",
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The expand-contract strategy keeps schema changes backward compatible until validation is complete."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f1",
+              "q7_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Explains expand-contract until schema validated and ready."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c4",
+        "url": "https://www.augmentcode.com/tools/8-ai-coding-agents-that-actually-accelerate-database-schema-migrations",
+        "card_sha256": "0bc9fadbe3cb017bd0750dee6ab4856352584ef8c7ab9bdcedc3719246640566",
+        "ranks": {
+          "w0": 16,
+          "absolute_control": 14,
+          "candidate": 12
+        },
+        "scores": {
+          "w0": 3.92,
+          "absolute_control": 6.97,
+          "candidate": 2.35
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q7_f1",
+              "q7_f3"
+            ],
+            "uncertain": true,
+            "rationale": "The article discusses database-specific constraints and data-type compatibility for migration agents, but details are sparse."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q7_f1",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Highlights database-specific transaction, foreign-key and type constraints for migration agents."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c5",
+        "url": "https://planetscale.com/blog/backward-compatible-databases-changes",
+        "card_sha256": "351bfeb95a18ff42fc84c23ebd8aa8896ec2d5d740d4257e1de44bf419c20904",
+        "ranks": {
+          "w0": 11,
+          "absolute_control": 10,
+          "candidate": 10
+        },
+        "scores": {
+          "w0": 4.13,
+          "absolute_control": 7.27,
+          "candidate": 2.43
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "PlanetScale explains rollback of application code while schema remains backward compatible."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f1",
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Explains backward-compatible schema allows application rollback."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c6",
+        "url": "https://tech-champion.com/database/backward-compatible-database-migrations-the-expand-contract-pattern-for-zero-downtime-releases/",
+        "card_sha256": "9d7b3f56079ac1e68bcde1e38f3adc4bdd0518c3fd710bde891a1672e84c5666",
+        "ranks": {
+          "w0": 3,
+          "absolute_control": 1,
+          "candidate": 1
+        },
+        "scores": {
+          "w0": 5.69,
+          "absolute_control": 7.94,
+          "candidate": 2.86
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "It tests old application code against expanded schema after a rollback, directly exercising compatibility."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Specifically tests old application against expanded schema after rollback."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c7",
+        "url": "https://zylos.ai/research/2026-06-28-agent-infrastructure-upgrade-patterns/",
+        "card_sha256": "70c015562dab7be4fcd674b8ee4d991a58632eedd60acb132e82a05c6bf7779c",
+        "ranks": {
+          "w0": 21,
+          "absolute_control": 21,
+          "candidate": 21
+        },
+        "scores": {
+          "w0": 2.51,
+          "absolute_control": 5.23,
+          "candidate": 1.28
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent runtime/config rollback is unrelated to schema migration despite similar terminology."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent runtime migration guide concerns memory/config, not database schema."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c8",
+        "url": "https://www.getkanu.com/blog/rollback-strategies-database-migration-failures",
+        "card_sha256": "323d85d386b7ef6b306e64346344702a29124ddf42e17ba0278bf6b299aba8bb",
+        "ranks": {
+          "w0": 10,
+          "absolute_control": 12,
+          "candidate": 9
+        },
+        "scores": {
+          "w0": 4.42,
+          "absolute_control": 7.11,
+          "candidate": 2.45
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "It recommends backward-compatible database changes before code updates to preserve rollback safety."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f1",
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Explains backward-compatible schema changes before code updates to support rollback."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c9",
+        "url": "https://www.mindstudio.ai/blog/ai-agents-data-migration-guide",
+        "card_sha256": "278ee3b4e25198a1c75944192e5aee20c578ffc51d73aedb531ac588fb73b14a",
+        "ranks": {
+          "w0": 18,
+          "absolute_control": 17,
+          "candidate": 18
+        },
+        "scores": {
+          "w0": 3.71,
+          "absolute_control": 6.38,
+          "candidate": 2.01
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q7_f1"
+            ],
+            "uncertain": true,
+            "rationale": "AI data migration advice is not clearly about database schema safety or reversible changes."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q7_f1",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "AI data-migration guide warns about truncation and requires testing mappings."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c10",
+        "url": "https://www.pingcap.com/article/database-design-patterns-for-ensuring-backward-compatibility/",
+        "card_sha256": "f5e8427294ecba096eda64b41aecadf68278ddd9c73f33743d2a16366d33bc78",
+        "ranks": {
+          "w0": 13,
+          "absolute_control": 8,
+          "candidate": 14
+        },
+        "scores": {
+          "w0": 4.03,
+          "absolute_control": 7.46,
+          "candidate": 2.32
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q7_f1",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Additive schema and dual-write patterns are relevant planning and compatibility mechanisms."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q7_f1",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Mentions additive changes and dual-write patterns for compatibility and data integrity."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c11",
+        "url": "https://blog.jetbrains.com/idea/2025/02/database-migrations-in-the-real-world/",
+        "card_sha256": "698f32ffd6bbe2fc8cefc7893abb0fdaafbbf168af747cbc1d9d926e51ba3723",
+        "ranks": {
+          "w0": 15,
+          "absolute_control": 16,
+          "candidate": 16
+        },
+        "scores": {
+          "w0": 3.93,
+          "absolute_control": 6.54,
+          "candidate": 2.18
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q7_f1",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Views and phased database changes are concrete compatibility-oriented migration planning advice."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f1",
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Practical database changes guide advocates phased rollout and views."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c12",
+        "url": "https://qaskills.sh/blog/migration-rollback-testing-schema-changes",
+        "card_sha256": "ae89db5dc1737b7013d555c478b62b18981fe42d1144391193761afd631d3505",
+        "ranks": {
+          "w0": 2,
+          "absolute_control": 3,
+          "candidate": 3
+        },
+        "scores": {
+          "w0": 5.83,
+          "absolute_control": 7.67,
+          "candidate": 2.71
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The guide uses expand-contract and says rollback tests validate compatibility assumptions before traffic moves."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f1",
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Explains expand-contract ordering and rollback tests before traffic shifts."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c13",
+        "url": "https://codeopinion.com/database-migration-strategies/",
+        "card_sha256": "8a0cfda0f4d1102f0551024d85d283013d3422c2a2957eabee19032118db6f94",
+        "ranks": {
+          "w0": 19,
+          "absolute_control": 20,
+          "candidate": 20
+        },
+        "scores": {
+          "w0": 3.66,
+          "absolute_control": 5.88,
+          "candidate": 1.9
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q7_f1",
+              "q7_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Nullable fields and upcasting preserve compatibility in event-based database evolution."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q7_f1",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Nullable fields and runtime upcasting preserve backward compatibility."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c14",
+        "url": "https://github.com/Fremont-Derby/fremontderby/issues/1716",
+        "card_sha256": "7930998510ee9cf97f6c040d1221f77a122a84116705d1b090f0fa7084c5eb8c",
+        "ranks": {
+          "w0": 7,
+          "absolute_control": 9,
+          "candidate": 11
+        },
+        "scores": {
+          "w0": 4.93,
+          "absolute_control": 7.28,
+          "candidate": 2.38
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f1",
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The deployment contract separates compatible ordering from later destructive cleanup and requires proof."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f1",
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Issue requires compatible deployment order and proof before destructive cleanup."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c15",
+        "url": "https://github.com/SoroScan/soroscan/issues/1315",
+        "card_sha256": "bfe6f7b58766eb2ff4e03fc02e97e5e784811b168dabaf7fcb4045cfc36af781",
+        "ranks": {
+          "w0": 8,
+          "absolute_control": 11,
+          "candidate": 8
+        },
+        "scores": {
+          "w0": 4.87,
+          "absolute_control": 7.24,
+          "candidate": 2.48
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The issue requests tests for each migration's forward and backward compatibility."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Issue calls for testing forward and backward compatibility for every migration."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c16",
+        "url": "https://github.com/Stellar-Unified-Price-Oracle/-Stellar-Unified-Price-Oracle-Aggregator-API-Backend/issues/548",
+        "card_sha256": "750dd9831a8c95e49d072ba3b1b5e37820651bdb84d5ed59f2189d680d882c11",
+        "ranks": {
+          "w0": 4,
+          "absolute_control": 6,
+          "candidate": 7
+        },
+        "scores": {
+          "w0": 5.54,
+          "absolute_control": 7.57,
+          "candidate": 2.55
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The issue says rollback drills must cross the schema migration boundary to test the actual failure mode."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Issue identifies tests must cross migration boundary to exercise rollback failure mode."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c17",
+        "url": "https://adhdecode.com/databases/database-migrations-and-schema-evolution/backward-compatibility/",
+        "card_sha256": "315927adcd1b5e9b917619a8ab8cd1e0aec7e6266fbcfaa82a058afceaae1fce",
+        "ranks": {
+          "w0": 14,
+          "absolute_control": 18,
+          "candidate": 17
+        },
+        "scores": {
+          "w0": 3.98,
+          "absolute_control": 6.33,
+          "candidate": 2.07
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Routing traffic across old and new code paths is relevant to staged compatibility."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q7_f1",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Canary traffic routing preserves old behavior while introducing a new implementation."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c18",
+        "url": "https://github.com/ourdao/ourdao-backend/issues/197",
+        "card_sha256": "7afae53f12adbf47d7835987c7ce5cdbf5dcb84619fa885ba5706ca84524a3b0",
+        "ranks": {
+          "w0": 9,
+          "absolute_control": 13,
+          "candidate": 13
+        },
+        "scores": {
+          "w0": 4.69,
+          "absolute_control": 7.02,
+          "candidate": 2.32
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q7_f1",
+              "q7_f2"
+            ],
+            "uncertain": false,
+            "rationale": "It identifies the danger of forward-only migrations and demands a documented reversibility policy."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q7_f1",
+              "q7_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Issue frames forward-only versus reversible migration policy and rollback compatibility."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c19",
+        "url": "https://stonetusker.com/automating-database-migrations-in-your-ci-cd-pipeline/",
+        "card_sha256": "b852119f2582ce6aee42e08c9209b16486cf64f0ccaeaf01fd1424b9472e9ce2",
+        "ranks": {
+          "w0": 12,
+          "absolute_control": 15,
+          "candidate": 15
+        },
+        "scores": {
+          "w0": 4.06,
+          "absolute_control": 6.74,
+          "candidate": 2.21
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The article says rollback commands and automated tests can validate Flyway migrations before release."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q7_f2",
+              "q7_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Flyway CI example includes rollback commands or automated migration tests."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c20",
+        "url": "https://doi.org/10.1080/0960085x.2018.1524417",
+        "card_sha256": "c5be80e51087bc380ae90ba7b38a7715dbd34777bfed60938a56b86ecc712ff6",
+        "ranks": {
+          "w0": 25,
+          "absolute_control": 29,
+          "candidate": 27
+        },
+        "scores": {
+          "w0": 1.58,
+          "absolute_control": 2.27,
+          "candidate": 0.73
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q7_f1"
+            ],
+            "uncertain": true,
+            "rationale": "Cloud migration process modeling is only broadly related; target is database schema migration."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Generic cloud migration model is unrelated to database schema safety."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c21",
+        "url": "https://doi.org/10.1145/3830418.3843858",
+        "card_sha256": "37f23491ecbd7952a998aef72181879a81ddf4f4bc3130bb6582c861bfd448e8",
+        "ranks": {
+          "w0": 26,
+          "absolute_control": 25,
+          "candidate": 28
+        },
+        "scores": {
+          "w0": 1.44,
+          "absolute_control": 2.87,
+          "candidate": 0.7
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent filesystem safety does not relate to schema migration."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q7_f2"
+            ],
+            "uncertain": true,
+            "rationale": "Agent filesystem data-loss study is indirect safety context."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c22",
+        "url": "https://doi.org/10.36227/techrxiv.174681482.27435614/v1",
+        "card_sha256": "2d95d42cd4233650c39e2e3057fac8af6d7725dbce5712735b5cfc4b5ee53f0e",
+        "ranks": {
+          "w0": 28,
+          "absolute_control": 32,
+          "candidate": 31
+        },
+        "scores": {
+          "w0": 1.38,
+          "absolute_control": 1.73,
+          "candidate": 0.41
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Vibe coding review is unrelated to database migrations."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Vibe coding review is broad."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c23",
+        "url": "https://doi.org/10.55708/js0506001",
+        "card_sha256": "692c8de813435bee9d0f0f2508d25625c2031313c7ec63c486793a9c3253782b",
+        "ranks": {
+          "w0": 37,
+          "absolute_control": 34,
+          "candidate": 36
+        },
+        "scores": {
+          "w0": 0.63,
+          "absolute_control": 1.48,
+          "candidate": 0.13
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "SNMP protocol migration is a different domain from database schema migration."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "SNMP security migration is unrelated."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c24",
+        "url": "https://doi.org/10.70593/978-81-6632-064-4",
+        "card_sha256": "329b3322f6f151126490b4b33f993de176874185be41e9e0ecf0f842b722984a",
+        "ranks": {
+          "w0": 29,
+          "absolute_control": 28,
+          "candidate": 30
+        },
+        "scores": {
+          "w0": 1.32,
+          "absolute_control": 2.43,
+          "candidate": 0.56
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "AI agent stack governance is unrelated to schema rollback."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "General agent architecture is unrelated to database migrations."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c25",
+        "url": "https://doi.org/10.36227/techrxiv.175695645.52670060/v1",
+        "card_sha256": "c34d4d9f3fe749e3bfc48ac4745464ba6c3f372f7d6bbfb6ebc149006c8eca69",
+        "ranks": {
+          "w0": 30,
+          "absolute_control": 36,
+          "candidate": 35
+        },
+        "scores": {
+          "w0": 1.12,
+          "absolute_control": 1.19,
+          "candidate": 0.17
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent orchestration toolchain taxonomy is unrelated."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "LLM toolchain taxonomy is unrelated."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c26",
+        "url": "https://doi.org/10.64751/ijdim.2026.v5i1.297",
+        "card_sha256": "4fe6bef6542baed17b5673704e9425aadc54b5552b60466ebd73b9abe53ac762",
+        "ranks": {
+          "w0": 22,
+          "absolute_control": 22,
+          "candidate": 23
+        },
+        "scores": {
+          "w0": 1.73,
+          "absolute_control": 3.55,
+          "candidate": 0.86
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "The card describes distributed cloud-native test architecture generally; schema migration planning, rollback, and schema compatibility are not visible."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Cloud-native test architecture is not migration-specific."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c27",
+        "url": "https://doi.org/10.62643/ijerst.v20.n4.pp300-307",
+        "card_sha256": "9a8b02b7560c212ee11f0e79f1a0b1fc1318f3f7df199812c9e0ead749649d67",
+        "ranks": {
+          "w0": 20,
+          "absolute_control": 19,
+          "candidate": 19
+        },
+        "scores": {
+          "w0": 2.71,
+          "absolute_control": 6.19,
+          "candidate": 1.91
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Hybrid database security compliance does not address schema migration."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q7_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Continuous compliance pipeline for hybrid databases is adjacent, not schema migration focused."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c28",
+        "url": "https://doi.org/10.20944/preprints202601.2199.v1",
+        "card_sha256": "801ae95c3edf2e2db7ddeaa5d7af9371ed521fcfdf25abe6bb7d8308c8abeae9",
+        "ranks": {
+          "w0": 34,
+          "absolute_control": 30,
+          "candidate": 29
+        },
+        "scores": {
+          "w0": 0.92,
+          "absolute_control": 2.23,
+          "candidate": 0.63
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "CRM architecture is unrelated to schema migration."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "CRM architecture is broad and not schema migration guidance."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c29",
+        "url": "https://doi.org/10.63125/51kxtf08",
+        "card_sha256": "00a383591c12de7b9725f4fd941adc12d28b75aa642d6b67294dbb0470b4cc2f",
+        "ranks": {
+          "w0": 27,
+          "absolute_control": 26,
+          "candidate": 24
+        },
+        "scores": {
+          "w0": 1.41,
+          "absolute_control": 2.83,
+          "candidate": 0.83
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "AI-ready data pipeline architecture is unrelated to database schema migration safety."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Data platform review is not migration safety."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c30",
+        "url": "https://doi.org/10.70593/978-81-69589-46-8",
+        "card_sha256": "324325f49a131675e62fbfec272568e1fa83f43fa5824a9557419afd76e6f4c3",
+        "ranks": {
+          "w0": 31,
+          "absolute_control": 27,
+          "candidate": 26
+        },
+        "scores": {
+          "w0": 1.05,
+          "absolute_control": 2.44,
+          "candidate": 0.77
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Enterprise data and AI platform engineering is unrelated to schema migration safety."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Enterprise data/AI platform guide is broad."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c31",
+        "url": "https://doi.org/10.63530/ijcsitr_2022_03_01_017",
+        "card_sha256": "c75abb9fc8fb5145ed7f1958d5bd626acd3b2dc32162020c0459f734b7e0bc7f",
+        "ranks": {
+          "w0": 36,
+          "absolute_control": 31,
+          "candidate": 33
+        },
+        "scores": {
+          "w0": 0.64,
+          "absolute_control": 1.74,
+          "candidate": 0.37
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Insurance portal modernization is unrelated to database migration."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Insurance portal modernization lacks schema migration safety details."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c32",
+        "url": "https://doi.org/10.52783/jisem.v10i62s.13551",
+        "card_sha256": "df37f7c7aad16f865111528a453ee39e0e098bb11f50ed1adfe948efe503abf7",
+        "ranks": {
+          "w0": 32,
+          "absolute_control": 33,
+          "candidate": 32
+        },
+        "scores": {
+          "w0": 0.99,
+          "absolute_control": 1.63,
+          "candidate": 0.4
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Government compliance architecture is unrelated to database migrations."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Government LCNC architecture does not address DB migration."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c33",
+        "url": "https://doi.org/10.48550/arxiv.2606.00288",
+        "card_sha256": "6a57422012f01ef88ccb63672a724c6690b798c008abddb9d078cfe0808cc355",
+        "ranks": {
+          "w0": 35,
+          "absolute_control": 38,
+          "candidate": 37
+        },
+        "scores": {
+          "w0": 0.91,
+          "absolute_control": 0.81,
+          "candidate": 0.06
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Model-native systems architecture is unrelated."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "General computing architecture is unrelated."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c34",
+        "url": "https://doi.org/10.48550/arxiv.2512.01155",
+        "card_sha256": "a63b64952a105e4f3bd1b72922f990fcea06dfb40681161fd2241b184705d1bc",
+        "ranks": {
+          "w0": 24,
+          "absolute_control": 24,
+          "candidate": 25
+        },
+        "scores": {
+          "w0": 1.65,
+          "absolute_control": 3.1,
+          "candidate": 0.79
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Brownfield AI productivity framework is unrelated to database rollback constraints."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Brownfield AI productivity framework is only broad context."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c35",
+        "url": "https://doi.org/10.56726/irjmets30142",
+        "card_sha256": "5ca1f6f719f714508009ea13151e0e9d19f84bdcae6d6bdb2b69d76778b766d0",
+        "ranks": {
+          "w0": 23,
+          "absolute_control": 23,
+          "candidate": 22
+        },
+        "scores": {
+          "w0": 1.69,
+          "absolute_control": 3.48,
+          "candidate": 1.03
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Microservice architecture overview is not a schema migration source."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Microservice architecture survey is general background."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c36",
+        "url": "https://doi.org/10.48550/arxiv.2608.18733",
+        "card_sha256": "f96a0e5c9d0cf29c19625d0a7b87016d39a27b16394560f3264fb36f37770c7c",
+        "ranks": {
+          "w0": 38,
+          "absolute_control": 37,
+          "candidate": 38
+        },
+        "scores": {
+          "w0": 0.6,
+          "absolute_control": 0.96,
+          "candidate": 0.06
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "The Python API framework is unrelated to database schema migrations."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Python API framework is unrelated."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c37",
+        "url": "https://openalex.org/W7116211246",
+        "card_sha256": "f7dd1a3649e64a0f76096ff74841fae2facc8a914e0e190d638e251bbaa089ed",
+        "ranks": {
+          "w0": 39,
+          "absolute_control": 39,
+          "candidate": 39
+        },
+        "scores": {
+          "w0": 0.35,
+          "absolute_control": 0.55,
+          "candidate": 0.02
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent communication security protocols are unrelated to database migrations."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent communication security is unrelated."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c38",
+        "url": "https://openalex.org/W7112343888",
+        "card_sha256": "2c19af5a9501a004fa8db00e0c6db5c1f539c281e27fecec7a9c678995e233dc",
+        "ranks": {
+          "w0": 33,
+          "absolute_control": 35,
+          "candidate": 34
+        },
+        "scores": {
+          "w0": 0.94,
+          "absolute_control": 1.33,
+          "candidate": 0.3
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "EDMS installation automation does not concern database schema migration."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q7_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Installation verification is general platform testing, not database schema changes."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      }
+    ],
+    "q8": [
+      {
+        "id": "c0",
+        "url": "https://deska.dev/blog/agent-fixes-flaky-tests",
+        "card_sha256": "7edf46d99c2d7b7e50eba2a5e46364146ccba479eb9a77784127b602a286f1d3",
+        "ranks": {
+          "w0": 4,
+          "absolute_control": 12,
+          "candidate": 7
+        },
+        "scores": {
+          "w0": 5.87,
+          "absolute_control": 7.28,
+          "candidate": 2.65
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The article describes rapid reproduction, identifying missing synchronization, and proposing fixes."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Describes log-based reproduction and fixes for missing synchronization."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c1",
+        "url": "https://dev.to/yureki_lab/how-i-killed-63-flaky-tests-in-one-week-with-claude-code-5-lessons-29m0",
+        "card_sha256": "9204d3e194cc3f9e66fbd6836649bc28bd6684049e024703c9d9914311712566",
+        "ranks": {
+          "w0": 2,
+          "absolute_control": 13,
+          "candidate": 13
+        },
+        "scores": {
+          "w0": 6.01,
+          "absolute_control": 7.21,
+          "candidate": 2.48
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": true,
+            "rationale": "The firsthand report emphasizes reproduction harnesses and diagnosis before agent repair."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Firsthand report emphasizes reproduction harness and diagnosis before fixing/quarantining."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c2",
+        "url": "https://www.augmentcode.com/guides/test-maintenance-automation",
+        "card_sha256": "f754a675f88cb592403023eb317d17cceeb85a0eeec77dbf9a2c7259f2073a0b",
+        "ranks": {
+          "w0": 14,
+          "absolute_control": 18,
+          "candidate": 19
+        },
+        "scores": {
+          "w0": 4.39,
+          "absolute_control": 6.95,
+          "candidate": 2.16
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q8_f1"
+            ],
+            "uncertain": true,
+            "rationale": "Locator drift triage applies to UI automation failures, a narrower adjacent use case."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Explains failure triage before repair for locator drift."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c3",
+        "url": "https://www.emergentmind.com/topics/flakyguard",
+        "card_sha256": "6f8edb7210ad613a4be9056a22c0d89400ca5cf2658d91385a6ab12adb0ce847",
+        "ranks": {
+          "w0": 6,
+          "absolute_control": 14,
+          "candidate": 12
+        },
+        "scores": {
+          "w0": 5.47,
+          "absolute_control": 7.06,
+          "candidate": 2.5
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "FlakyGuard includes error diagnostics and reproduction rates in repair context."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "FlakyGuard uses diagnostics, stack traces and reproduction rates for test-only repair."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c4",
+        "url": "https://www.agent-kits.com/kit/flaky-test-triager",
+        "card_sha256": "a10f74feb8622494030a1452fa472fe104bf54b936215c66811f34aba3f4625c",
+        "ranks": {
+          "w0": 3,
+          "absolute_control": 9,
+          "candidate": 17
+        },
+        "scores": {
+          "w0": 5.94,
+          "absolute_control": 7.31,
+          "candidate": 2.33
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The triage agent backtests against recent failures to verify it masks zero regressions before quarantine."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Triage playbook recommends advise mode and backtesting to ensure no regressions are masked."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c5",
+        "url": "https://www.getpanto.ai/blog/detect-flaky-tests",
+        "card_sha256": "0da5924c98528032c1639447f4ca9d784ec5d66965701e97b78248b002916fe9",
+        "ranks": {
+          "w0": 18,
+          "absolute_control": 5,
+          "candidate": 3
+        },
+        "scores": {
+          "w0": 3.58,
+          "absolute_control": 7.47,
+          "candidate": 2.83
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The card directly calls for multi-signal classification across code, environment, and execution context."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Calls for multi-signal classification across code, environment and execution context."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c6",
+        "url": "https://konghq.com/blog/engineering/how-we-used-agentic-ai-to-fix-kong-gateways-flakiest-tests",
+        "card_sha256": "102478cfc809aa3987b73ef7558fa152271fcb226e847584ab872aafb96c8979",
+        "ranks": {
+          "w0": 7,
+          "absolute_control": 6,
+          "candidate": 9
+        },
+        "scores": {
+          "w0": 5.3,
+          "absolute_control": 7.35,
+          "candidate": 2.61
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": true,
+            "rationale": "The report describes root-cause investigation and prolonged validation of flaky-test fixes."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Agent scans logs for root cause and babysits validation over time."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c7",
+        "url": "https://www.testrail.com/blog/flaky-tests/",
+        "card_sha256": "a8267c5e9be294430d85739783df4fe8c94f2cf71cf1e61ed5c5c798dd2ca818",
+        "ranks": {
+          "w0": 25,
+          "absolute_control": 16,
+          "candidate": 11
+        },
+        "scores": {
+          "w0": 2.79,
+          "absolute_control": 6.97,
+          "candidate": 2.53
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f1",
+              "q8_f2"
+            ],
+            "uncertain": false,
+            "rationale": "It describes intermittent failures, environment checks, and manual reproduction."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Explains intermittent failures, reproduction cost, and risk of hiding real regressions."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c8",
+        "url": "https://github.com/anusha-saxena/repair-ai-agent",
+        "card_sha256": "f610f6ba4762159a8f4227c89960906c516e0133cdb71fe7ec94901eee1ba6bf",
+        "ranks": {
+          "w0": 1,
+          "absolute_control": 2,
+          "candidate": 2
+        },
+        "scores": {
+          "w0": 6.58,
+          "absolute_control": 8.24,
+          "candidate": 2.84
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The tool uses controlled perturbations to gather evidence, classify causes, and propose fixes."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Tool uses controlled perturbations to classify flaky tests and propose repairs."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c9",
+        "url": "https://www.codewithjason.com/how-i-fix-flaky-tests/",
+        "card_sha256": "19f3042302f9aa3e7aec14ecb82664d804887dbf131dc0f34395762c82bd598a",
+        "ranks": {
+          "w0": 15,
+          "absolute_control": 7,
+          "candidate": 8
+        },
+        "scores": {
+          "w0": 4.3,
+          "absolute_control": 7.33,
+          "candidate": 2.63
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The advice explicitly separates flaky-test diagnosis after reproduction and before fixing."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Explicitly separates reproducing a flaky failure, diagnosis, and repair."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c10",
+        "url": "https://medium.com/@QuarkAndCode/how-to-fix-flaky-tests-reproduce-diagnose-prevent-in-ci-cd-60f45226851f",
+        "card_sha256": "90f606ab2a07df327313857ca50d4afa67879b0ee629db11608ca55cd01b5732",
+        "ranks": {
+          "w0": 8,
+          "absolute_control": 4,
+          "candidate": 4
+        },
+        "scores": {
+          "w0": 5.29,
+          "absolute_control": 7.47,
+          "candidate": 2.78
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The guide explicitly recommends reproduce-diagnose-fix and record/replay debugging."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q8_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Guide promises reproduction and diagnosis, but visible details are brief."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c11",
+        "url": "https://momentic.ai/blog/how-to-fix-flaky-tests",
+        "card_sha256": "4df466b87f230606209792ed153c1cf49478efb3d63b29bcefffdc9de9c6cda4",
+        "ranks": {
+          "w0": 20,
+          "absolute_control": 17,
+          "candidate": 15
+        },
+        "scores": {
+          "w0": 3.5,
+          "absolute_control": 6.95,
+          "candidate": 2.46
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q8_f1"
+            ],
+            "uncertain": true,
+            "rationale": "The card concerns locator drift causing false UI-test failures, a specialized flakiness signal."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Explains resilient intent-based locators to prevent markup-change flakes."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c12",
+        "url": "https://arxiv.org/pdf/2404.09398",
+        "card_sha256": "09b1397f27033b2b5a661e8f1fd935a999e37d3f408183d9586388f236dc91f0",
+        "ranks": {
+          "w0": 12,
+          "absolute_control": 11,
+          "candidate": 5
+        },
+        "scores": {
+          "w0": 4.72,
+          "absolute_control": 7.29,
+          "candidate": 2.74
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 2,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The paper evaluates automated flake repair with a manual post-validation check."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Study reports automated validation and manual checks of flaky-test repairs."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c13",
+        "url": "https://getautonoma.com/blog/regression-testing-ai-generated-code",
+        "card_sha256": "d07316073a0f7a9ae221c424fd8bb06556fd50d99ad0840f921e1a40c60143e6",
+        "ranks": {
+          "w0": 23,
+          "absolute_control": 22,
+          "candidate": 23
+        },
+        "scores": {
+          "w0": 2.91,
+          "absolute_control": 5.72,
+          "candidate": 1.83
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q8_f3"
+            ],
+            "uncertain": true,
+            "rationale": "The article concerns keeping regression coverage current, not classifying flaky failures."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Discusses selector failures and diagnosis costs, but is a broad industry article."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c14",
+        "url": "https://www.ranorex.com/blog/flaky-tests/",
+        "card_sha256": "5150394dd3800934aa9311e2c95681418734d667edd52acd9eba29e4be2f3070",
+        "ranks": {
+          "w0": 27,
+          "absolute_control": 23,
+          "candidate": 21
+        },
+        "scores": {
+          "w0": 2.47,
+          "absolute_control": 5.55,
+          "candidate": 1.94
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f1",
+              "q8_f2"
+            ],
+            "uncertain": false,
+            "rationale": "It describes rerunning flaky failures to confirm whether they are valid."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f1",
+              "q8_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Explains reruns used to determine whether flaky failures are valid."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c15",
+        "url": "https://quashbugs.com/blog/how-to-fix-flaky-tests-complete-diagnosis-guide",
+        "card_sha256": "40607e824bf0f59915a25e2163e7d67e70c8acced7d59af85108dccbe9ca26e3",
+        "ranks": {
+          "w0": 21,
+          "absolute_control": 8,
+          "candidate": 6
+        },
+        "scores": {
+          "w0": 3.1,
+          "absolute_control": 7.31,
+          "candidate": 2.74
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f1",
+              "q8_f2"
+            ],
+            "uncertain": false,
+            "rationale": "It identifies timezone and locale as environmental sources of intermittent UI-test failures."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f2"
+            ],
+            "uncertain": false,
+            "rationale": "Diagnosis guide connects locale/timezone environment to intermittent failures."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c16",
+        "url": "https://www.tricentis.com/learn/agentic-regression-testing",
+        "card_sha256": "9c63ea87aa93490375f1e6bdf91deb0f1922017a1518f7ff6cacabd2afbd19f3",
+        "ranks": {
+          "w0": 17,
+          "absolute_control": 24,
+          "candidate": 24
+        },
+        "scores": {
+          "w0": 3.9,
+          "absolute_control": 5.19,
+          "candidate": 1.51
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q8_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Agentic regression-testing guide is broad and offers no flake classification detail in the title."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Agentic regression testing selects and repairs broken scripts; useful but broad."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c17",
+        "url": "https://dl.acm.org/doi/pdf/10.1145/3597503.3639115",
+        "card_sha256": "76fd4ef7f3b65509e6371c4735f19dab3425ccc8b49cc8b4e25b53c8452d8e0a",
+        "ranks": {
+          "w0": 13,
+          "absolute_control": 19,
+          "candidate": 14
+        },
+        "scores": {
+          "w0": 4.48,
+          "absolute_control": 6.84,
+          "candidate": 2.48
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": true,
+            "rationale": "FlakeSync uses runtime critical/barrier points for async flakes, a specialized reproduction approach."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Repairs async flakes by injecting synchronization barriers at runtime."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c18",
+        "url": "https://pith.science/paper/2605.21677",
+        "card_sha256": "a6be46b7ee08549cf5e4274102b10cc3e9d677ce6a434831746f905482b402c0",
+        "ranks": {
+          "w0": 5,
+          "absolute_control": 1,
+          "candidate": 1
+        },
+        "scores": {
+          "w0": 5.8,
+          "absolute_control": 8.46,
+          "candidate": 2.92
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The dataset provides reproduction scripts, fix verification, and passing/failing logs."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Dataset supplies scripts/logs for reproducing flakes and verifying fixes."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": true
+      },
+      {
+        "id": "c19",
+        "url": "https://getautonoma.com/blog/flaky-tests",
+        "card_sha256": "eeb5e90756c4dec4bb56eec51a30ef35ab487caf20cd2e38dda527f198526a14",
+        "ranks": {
+          "w0": 19,
+          "absolute_control": 15,
+          "candidate": 10
+        },
+        "scores": {
+          "w0": 3.52,
+          "absolute_control": 6.98,
+          "candidate": 2.57
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f1",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "It warns retries can mask genuine regressions and do not fix underlying flakiness."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Warns retries mask regressions and discusses timing-aware isolated tests."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": true
+      },
+      {
+        "id": "c20",
+        "url": "https://doi.org/10.48550/arxiv.2607.28871",
+        "card_sha256": "b01bf276a9c86087cf362500a4fd5e28c898f74693b315b316f6937385a9305a",
+        "ranks": {
+          "w0": 9,
+          "absolute_control": 10,
+          "candidate": 18
+        },
+        "scores": {
+          "w0": 5.06,
+          "absolute_control": 7.3,
+          "candidate": 2.2
+        },
+        "references": {
+          "A": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "The study tests whether repair-agent validation commands actually exercise the reported bug across source states."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Validation replay checks whether passing repair commands actually test the bug."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c21",
+        "url": "https://doi.org/10.51903/jtie.v4i1.484",
+        "card_sha256": "1ba785a9c66837120a8bd092eb70dee2957a644c5c4642cb71cbbc5be1f386da",
+        "ranks": {
+          "w0": 11,
+          "absolute_control": 3,
+          "candidate": 16
+        },
+        "scores": {
+          "w0": 4.88,
+          "absolute_control": 7.69,
+          "candidate": 2.39
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f1",
+              "q8_f2"
+            ],
+            "uncertain": false,
+            "rationale": "The CI repair paper distinguishes failure-type classification from log-based diagnosis and patching."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Pipeline decomposes CI diagnosis into failure classification and repair."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c22",
+        "url": "https://doi.org/10.48550/arxiv.2608.03598",
+        "card_sha256": "adfcb8cb9716dcb9e716edac7b4095dd308ab42774f744d8cb297298f1016584",
+        "ranks": {
+          "w0": 16,
+          "absolute_control": 25,
+          "candidate": 26
+        },
+        "scores": {
+          "w0": 3.92,
+          "absolute_control": 5.17,
+          "candidate": 1.39
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q8_f2"
+            ],
+            "uncertain": true,
+            "rationale": "GUI bug reproduction is adjacent reproduction research but not test flake triage."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Automates reproduction and validation of reported GUI bugs, adjacent to flaky diagnosis."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c23",
+        "url": "https://doi.org/10.1145/3715754",
+        "card_sha256": "d521b2ee1d12179f351df8867040dd555d72db148ccd147896d0ab3e688249c3",
+        "ranks": {
+          "w0": 34,
+          "absolute_control": 34,
+          "candidate": 30
+        },
+        "scores": {
+          "w0": 2.08,
+          "absolute_control": 3.63,
+          "candidate": 1.05
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "General LLM coding-agent survey is not flake-focused."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "General agent survey is not flakiness-specific."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c24",
+        "url": "https://doi.org/10.48550/arxiv.2407.01489",
+        "card_sha256": "34e2bfef9d6360af697ec056e260e174397a24840118b46ab4a58b02355f2959",
+        "ranks": {
+          "w0": 35,
+          "absolute_control": 33,
+          "candidate": 31
+        },
+        "scores": {
+          "w0": 2.04,
+          "absolute_control": 3.66,
+          "candidate": 1.04
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q8_f3"
+            ],
+            "uncertain": true,
+            "rationale": "General software-engineering agent survey is broad and not flake-specific."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "General agent survey is not focused on test flakes."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c25",
+        "url": "https://openalex.org/W7209116714",
+        "card_sha256": "1ced5e0352d04cd5562472d9779ddd10593fe3fe2432905536c7e7b8dfe9a5d7",
+        "ranks": {
+          "w0": 37,
+          "absolute_control": 31,
+          "candidate": 32
+        },
+        "scores": {
+          "w0": 1.86,
+          "absolute_control": 3.92,
+          "candidate": 0.98
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q8_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Refactoring reliability is adjacent validation context, not flaky-versus-regression diagnosis."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q8_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Refactoring reliability is adjacent validation evidence but not flakiness."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c26",
+        "url": "https://doi.org/10.48550/arxiv.2606.20243",
+        "card_sha256": "876a5738bb0f576224a68ed06abc8d969f546d07a4c0d104b581aefd14f11be6",
+        "ranks": {
+          "w0": 10,
+          "absolute_control": 21,
+          "candidate": 22
+        },
+        "scores": {
+          "w0": 5.05,
+          "absolute_control": 6.63,
+          "candidate": 1.92
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Phoenix uses baseline-aware test evaluation in an agent issue-resolution system."
+          },
+          "B": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f1",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Agent issue repair system uses baseline-aware test evaluation."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": true,
+        "w0_top10": true,
+        "candidate_top10": false
+      },
+      {
+        "id": "c27",
+        "url": "https://doi.org/10.2139/ssrn.7442692",
+        "card_sha256": "ba6fbd8748b58eeb4d2ec91752a5f80b2f6122e8214047bea9317fa4401bc51c",
+        "ranks": {
+          "w0": 31,
+          "absolute_control": 26,
+          "candidate": 25
+        },
+        "scores": {
+          "w0": 2.32,
+          "absolute_control": 5.13,
+          "candidate": 1.42
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q8_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Agentic unit-test generation/correction evaluation is adjacent but not specifically flake triage."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q8_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Unit-test generation/correction evaluation is adjacent but no flakiness signal is visible."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c28",
+        "url": "https://doi.org/10.1007/s10009-025-00794-1",
+        "card_sha256": "df3023b38f8ff805b5a234e868c28ea8c7d8fdfd7361fa14da6e6539ec9fc848",
+        "ranks": {
+          "w0": 32,
+          "absolute_control": 30,
+          "candidate": 29
+        },
+        "scores": {
+          "w0": 2.29,
+          "absolute_control": 3.97,
+          "candidate": 1.1
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q8_f3"
+            ],
+            "uncertain": true,
+            "rationale": "General assertions survey is broad testing validation background, not flake classification."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q8_f3"
+            ],
+            "uncertain": true,
+            "rationale": "Assertions survey is general verification background."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c29",
+        "url": "https://doi.org/10.48550/arxiv.2409.02977",
+        "card_sha256": "1284a325935ab6a39d38ab75ec566dc0121670e793aa63e77ece880dcd2b61d6",
+        "ranks": {
+          "w0": 33,
+          "absolute_control": 35,
+          "candidate": 34
+        },
+        "scores": {
+          "w0": 2.12,
+          "absolute_control": 3.35,
+          "candidate": 0.95
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "General software-engineering agent survey has no visible flaky-test relevance."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "General LLM software engineering survey is not about flaky tests."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c30",
+        "url": "https://doi.org/10.48550/arxiv.2606.09060",
+        "card_sha256": "86f2738a88ea40380b1659baf333d1d180ca6620a14361cf43e46548910b60db",
+        "ranks": {
+          "w0": 40,
+          "absolute_control": 32,
+          "candidate": 33
+        },
+        "scores": {
+          "w0": 1.35,
+          "absolute_control": 3.69,
+          "candidate": 0.97
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Exploit-version failure analysis is unrelated to flaky test diagnosis."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q8_f1",
+              "q8_f2"
+            ],
+            "uncertain": true,
+            "rationale": "Trace-driven failure analysis is adjacent diagnosis, but exploit failures differ from flaky tests."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c31",
+        "url": "https://doi.org/10.48550/arxiv.2609.04148",
+        "card_sha256": "3f247e597bd8304c681062038992bf2015f4d390619495f3585bf8fe4c15de68",
+        "ranks": {
+          "w0": 28,
+          "absolute_control": 40,
+          "candidate": 39
+        },
+        "scores": {
+          "w0": 2.47,
+          "absolute_control": 2.29,
+          "candidate": 0.61
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Terminal agent training environments are unrelated to flake/regression classification."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Terminal training environments are unrelated to flaky-test triage."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c32",
+        "url": "https://doi.org/10.48550/arxiv.2607.13683",
+        "card_sha256": "48b6bd638d565c2d50d04404a4493c4b76c0f0f79d3cf37f533a7e5a31266d1a",
+        "ranks": {
+          "w0": 29,
+          "absolute_control": 38,
+          "candidate": 38
+        },
+        "scores": {
+          "w0": 2.41,
+          "absolute_control": 2.85,
+          "candidate": 0.68
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent-harness self-evolution is unrelated to flaky tests."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Harness evolution paper is unrelated to flaky tests."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c33",
+        "url": "https://doi.org/10.59543/jidmis.v3.2033",
+        "card_sha256": "edff3821ec9e95683785a28a5ad255472e0b19fdc7fd01227f765eda59f178ca",
+        "ranks": {
+          "w0": 22,
+          "absolute_control": 20,
+          "candidate": 20
+        },
+        "scores": {
+          "w0": 2.93,
+          "absolute_control": 6.81,
+          "candidate": 2.1
+        },
+        "references": {
+          "A": {
+            "lead": 2,
+            "visible": 2,
+            "facets": [
+              "q8_f1",
+              "q8_f2"
+            ],
+            "uncertain": false,
+            "rationale": "It discusses separating genuine defects from infrastructure noise to restore trusted test verdicts."
+          },
+          "B": {
+            "lead": 3,
+            "visible": 3,
+            "facets": [
+              "q8_f1",
+              "q8_f2",
+              "q8_f3"
+            ],
+            "uncertain": false,
+            "rationale": "Distributed test infrastructure distinguishes genuine defects from infrastructure noise."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c34",
+        "url": "https://doi.org/10.48550/arxiv.2609.23377",
+        "card_sha256": "c8f4c6b6e01d9859af5f8c7ddd824ee65f89aca4ec42e13cdea03ea066ea138a",
+        "ranks": {
+          "w0": 36,
+          "absolute_control": 37,
+          "candidate": 37
+        },
+        "scores": {
+          "w0": 1.9,
+          "absolute_control": 2.89,
+          "candidate": 0.84
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent RL category balancing has no relation to flaky tests."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent training across task categories is unrelated to flaky-test diagnosis."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c35",
+        "url": "https://doi.org/10.48550/arxiv.2608.20664",
+        "card_sha256": "cdd928499a810576dc31a75910d29788be2243186fe37826237181bda55a1f1d",
+        "ranks": {
+          "w0": 38,
+          "absolute_control": 39,
+          "candidate": 40
+        },
+        "scores": {
+          "w0": 1.86,
+          "absolute_control": 2.67,
+          "candidate": 0.55
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent memory hygiene benchmark is unrelated to test failure classification."
+          },
+          "B": {
+            "lead": 0,
+            "visible": 1,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent memory benchmark is unrelated."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c36",
+        "url": "https://doi.org/10.1109/icst46399.2020.00022",
+        "card_sha256": "ad091094ea4c3146b40269ee287636ff0e299a071974dd0ed85c016cfcf1cc81",
+        "ranks": {
+          "w0": 30,
+          "absolute_control": 27,
+          "candidate": 28
+        },
+        "scores": {
+          "w0": 2.38,
+          "absolute_control": 4.97,
+          "candidate": 1.23
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q8_f2"
+            ],
+            "uncertain": true,
+            "rationale": "Node event-race detection offers a potential root-cause method for race-induced flakes."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q8_f2"
+            ],
+            "uncertain": true,
+            "rationale": "Event race detection may explain one source of nondeterminism but is not test flakiness guidance."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c37",
+        "url": "https://doi.org/10.48550/arxiv.2607.16387",
+        "card_sha256": "d8ba0ccc08b5912e2b0140c31e454668ea259a6c997389da85935ada2f98461e",
+        "ranks": {
+          "w0": 26,
+          "absolute_control": 29,
+          "candidate": 35
+        },
+        "scores": {
+          "w0": 2.48,
+          "absolute_control": 3.99,
+          "candidate": 0.92
+        },
+        "references": {
+          "A": {
+            "lead": 0,
+            "visible": 0,
+            "facets": [],
+            "uncertain": true,
+            "rationale": "Agent trace taxonomy research is unrelated to flaky test diagnosis."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q8_f1",
+              "q8_f2"
+            ],
+            "uncertain": true,
+            "rationale": "Execution traces and taxonomy are general failure-feedback mechanisms, not test flakiness specifically."
+          }
+        },
+        "lead_disagreement": true,
+        "facet_disagreement": true,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c38",
+        "url": "https://doi.org/10.48550/arxiv.2605.12270",
+        "card_sha256": "c0411741bbc07ce13457787f0549e0fb37d56211e98a77eff0b9cd4a3620d8ff",
+        "ranks": {
+          "w0": 24,
+          "absolute_control": 28,
+          "candidate": 27
+        },
+        "scores": {
+          "w0": 2.86,
+          "absolute_control": 4.81,
+          "candidate": 1.24
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q8_f1"
+            ],
+            "uncertain": true,
+            "rationale": "General agent failure modes are relevant only as broad regression diagnosis background."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 2,
+            "facets": [
+              "q8_f1"
+            ],
+            "uncertain": true,
+            "rationale": "General issue-resolution failure modes are adjacent, not test-flake specific."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      },
+      {
+        "id": "c39",
+        "url": "https://doi.org/10.67228/30713498/ijadsmc-2018pii3c8z",
+        "card_sha256": "7f9f45a34d3ac7d5576c04a200b72d6b9b36c269e8dc3a48d6051d8609987b55",
+        "ranks": {
+          "w0": 39,
+          "absolute_control": 36,
+          "candidate": 36
+        },
+        "scores": {
+          "w0": 1.72,
+          "absolute_control": 3.33,
+          "candidate": 0.9
+        },
+        "references": {
+          "A": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q8_f2"
+            ],
+            "uncertain": true,
+            "rationale": "Fault localization in neural-augmented code is adjacent diagnosis material."
+          },
+          "B": {
+            "lead": 1,
+            "visible": 1,
+            "facets": [
+              "q8_f2"
+            ],
+            "uncertain": true,
+            "rationale": "Neural-augmented fault localization is general diagnosis background."
+          }
+        },
+        "lead_disagreement": false,
+        "facet_disagreement": false,
+        "w0_top10": false,
+        "candidate_top10": false
+      }
+    ]
+  }
+}
