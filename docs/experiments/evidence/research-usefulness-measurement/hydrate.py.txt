@@ -1,0 +1,168 @@
+"""Deterministic evidence-ID hydration for the usefulness assessment validator.
+
+This module expands opaque evidence IDs from a frozen catalog. It does not
+repair model output, join assessors, or make semantic/quality judgments.
+"""
+import copy
+import hashlib
+import json
+
+
+SCHEMA = 'research-usefulness-assessment/1'
+KINDS = {'source_pool', 'answer_arm'}
+FORBIDDEN = {'context_sha256', 'start', 'end', 'quote', 'passage_sha256',
+             'offset', 'offsets', 'span', 'coordinates'}
+
+
+class HydrationError(ValueError):
+    pass
+
+
+def _sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _canonical(value):
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')
+
+
+def _reject_pairs(pairs):
+    out = {}
+    for key, value in pairs:
+        if key in out:
+            raise HydrationError(f'duplicate JSON key: {key}')
+        out[key] = value
+    return out
+
+
+def _no_constant(value):
+    raise HydrationError(f'non-finite JSON value: {value}')
+
+
+def _forbidden(value, path='$'):
+    if isinstance(value, dict):
+        keys = set(value)
+        bad = keys & FORBIDDEN
+        if 'references' in keys:
+            bad.add('references')
+        if 'source_id' in keys and 'evidence_id' in keys:
+            bad.add('source_id')
+        if bad:
+            raise HydrationError(f'model-authored expanded coordinate at {path}: {sorted(bad)}')
+        for key, child in value.items():
+            _forbidden(child, f'{path}.{key}')
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            _forbidden(child, f'{path}[{index}]')
+
+
+def _check_catalog(catalog, contexts, assigned_ids, expected_catalog_sha256):
+    if not isinstance(catalog, dict) or set(catalog) != {'version', 'sources', 'passages'} or catalog['version'] != 1:
+        raise HydrationError('catalog schema mismatch')
+    if not isinstance(expected_catalog_sha256, str) or _sha(_canonical(catalog)) != expected_catalog_sha256:
+        raise HydrationError('frozen catalog hash mismatch')
+    if not isinstance(contexts, dict) or not isinstance(assigned_ids, (list, tuple, set)):
+        raise HydrationError('contexts/assigned IDs malformed')
+    assigned = set(assigned_ids)
+    if len(assigned) != len(assigned_ids) or assigned != set(catalog['sources']) or assigned != set(contexts):
+        raise HydrationError('catalog membership differs from explicit assignment')
+    if not isinstance(catalog['passages'], dict):
+        raise HydrationError('catalog passages malformed')
+    seen = {sid: [] for sid in assigned}
+    for sid, row in catalog['sources'].items():
+        context = contexts.get(sid)
+        if not isinstance(context, str) or not isinstance(row, dict) or set(row) != {'context_sha256', 'characters'}:
+            raise HydrationError('catalog source/context malformed')
+        digest = _sha(context.encode('utf-8'))
+        if row['context_sha256'] != digest or type(row['characters']) is not int or row['characters'] != len(context):
+            raise HydrationError('catalog source hash/Unicode length mismatch')
+    for evidence_id, passage in catalog['passages'].items():
+        if not isinstance(evidence_id, str) or not isinstance(passage, dict) or set(passage) != {
+                'source_id', 'start', 'end', 'context_sha256', 'passage_sha256', 'text'}:
+            raise HydrationError('catalog passage malformed')
+        sid = passage['source_id']
+        if sid not in assigned:
+            raise HydrationError('catalog passage source outside explicit assignment')
+        context = contexts[sid]
+        start, end = passage['start'], passage['end']
+        if type(start) is not int or type(end) is not int or not 0 <= start < end <= len(context):
+            raise HydrationError('catalog has invalid Unicode offsets')
+        text = context[start:end]
+        source_sha = catalog['sources'][sid]['context_sha256']
+        expected_id = _sha(f'{sid}\0{source_sha}\0{start}\0{end}'.encode('utf-8'))
+        if (evidence_id != expected_id or passage['context_sha256'] != source_sha or
+                passage['text'] != text or passage['passage_sha256'] != _sha(text.encode('utf-8'))):
+            raise HydrationError('catalog passage hash/text/ID mismatch')
+        seen[sid].append((start, end))
+    for sid, ranges in seen.items():
+        ranges.sort()
+        cursor = 0
+        for start, end in ranges:
+            if start != cursor:
+                raise HydrationError('catalog passage coverage has gap or overlap')
+            cursor = end
+        if cursor != len(contexts[sid]):
+            raise HydrationError('catalog does not cover exact frozen context')
+    return assigned
+
+
+def hydrate(raw_model_bytes, *, packet_kind, catalog, contexts, assigned_source_ids,
+            expected_catalog_sha256):
+    """Return raw hash and separate expanded packet envelope.
+
+    ``packet_kind`` is an explicit caller choice: ``source_pool`` selects a
+    frozen pool catalog; ``answer_arm`` selects one arm-only catalog. The
+    supplied catalog and assigned IDs must match exactly, preventing implicit
+    assessor joins or cross-arm reference expansion.
+    """
+    if packet_kind not in KINDS:
+        raise HydrationError('caller must explicitly choose source_pool or answer_arm')
+    if not isinstance(raw_model_bytes, bytes):
+        raise HydrationError('raw model packet must be exact bytes')
+    try:
+        model = json.loads(raw_model_bytes.decode('utf-8'), object_pairs_hook=_reject_pairs,
+                           parse_constant=_no_constant)
+    except HydrationError:
+        raise
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise HydrationError('invalid UTF-8 JSON model packet') from exc
+    if not isinstance(model, dict) or model.get('schema') != SCHEMA or model.get('packet_kind') != (
+            'source' if packet_kind == 'source_pool' else 'answer'):
+        raise HydrationError('packet kind/schema does not match explicit catalog choice')
+    _forbidden(model)
+    assigned = _check_catalog(catalog, contexts, assigned_source_ids, expected_catalog_sha256)
+    passages = catalog['passages']
+    expanded = copy.deepcopy(model)
+
+    def replace_ids(node, path='$'):
+        if isinstance(node, dict):
+            for key, value in list(node.items()):
+                if key == 'evidence_ids':
+                    if not isinstance(value, list) or any(not isinstance(x, str) for x in value) or len(value) != len(set(value)):
+                        raise HydrationError(f'{path}: evidence_ids must be unique string array')
+                    refs = []
+                    for eid in value:
+                        passage = passages.get(eid)
+                        if passage is None:
+                            raise HydrationError(f'{path}: unknown evidence ID')
+                        sid = passage['source_id']
+                        if sid not in assigned:
+                            raise HydrationError(f'{path}: evidence ID not assigned to this catalog')
+                        refs.append({'source_id': sid, 'context_sha256': passage['context_sha256'],
+                                     'start': passage['start'], 'end': passage['end'],
+                                     'evidence_id': eid, 'quote': passage['text']})
+                    node['references'] = refs
+                    del node[key]
+                else:
+                    replace_ids(value, f'{path}.{key}')
+        elif isinstance(node, list):
+            for index, value in enumerate(node):
+                replace_ids(value, f'{path}[{index}]')
+
+    replace_ids(expanded)
+    return {'raw_model_sha256': _sha(raw_model_bytes),
+            'expanded_envelope': expanded,
+            'hydration': {'catalog_kind': packet_kind,
+                          'catalog_sha256': expected_catalog_sha256,
+                          'expanded_sha256': _sha(_canonical(expanded)),
+                          'semantic_completion': 'not_claimed'}}
