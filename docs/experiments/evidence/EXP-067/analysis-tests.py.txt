@@ -23,7 +23,7 @@ class Tests(unittest.TestCase):
         for rows in x[2]['B'].values():
             for cid,row in rows.items():row['lead']=3 if int(cid[1:])<4 else 0
         self.assertFalse(A.analyze(*x)['development_quality_passed'])
-    def test_probability_sort_is_not_registered_policy(self):
+    def test_order_must_match_relative_scores(self):
         x=fixture();row=x[0]['operations'][0]['arms']['relative'];row['order_ids'][:4]=reversed(row['order_ids'][:4]);self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
     def test_canonical_ties_and_fractional_scores(self):
         x=fixture();row=x[0]['operations'][0]['arms']['relative'];row['scores']={c:2.5 for c in row['order_ids']};cards=x[1]['pools']['q1']['cards'];row['order_ids']=[c['id'] for c in sorted(cards,key=lambda c:tuple(c[k].encode() for k in ('url','title','snippet','id')))];self.assertFalse(A.analyze(*x)['structural_failures'])
