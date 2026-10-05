@@ -1,0 +1,87 @@
+"""Offline regressions for the separate EXP-075 post-run evaluator.
+
+The non-synthetic flag below is test metadata only: every response is generated
+by local MockTransport fixtures, and the fake qualification is never used to
+admit a provider call or to claim study quality.
+"""
+import asyncio
+import hashlib
+import importlib.machinery
+import importlib.util
+import importlib.metadata
+import json
+import platform
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE=Path(__file__).resolve().parent
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path))
+    spec=importlib.util.spec_from_loader(loader.name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+
+N=load("exp075_postrun_test_runner",HERE/"normal-runner.py.txt")
+P=N.P
+POST=load("exp075_postrun_test_module",HERE/"postrun-analyze.py.txt")
+
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+
+class PostrunAnalyzerTests(unittest.TestCase):
+    def test_exact_patch_is_source_bound_and_one_occurrence_only(self):
+        original=(HERE/"analyze.py.txt").read_bytes()
+        module,patched=POST.corrected_module(original,sha(original))
+        self.assertNotEqual(sha(patched),sha(original))
+        self.assertEqual(original.count(POST.OLD_LINE),1)
+        with self.assertRaisesRegex(ValueError,"qualified-analyzer-hash"):
+            POST.corrected_module(original,b"0"*64)
+        with self.assertRaisesRegex(ValueError,"patch-count"):
+            changed=original.replace(POST.OLD_LINE,b"")
+            POST.corrected_module(changed,sha(changed))
+
+    def test_complete_offline_packet_exercises_nonsynthetic_metric_path(self):
+        # Run only local MockTransport fixtures; deliberately do not invoke
+        # the live qualification validator or raw provider transport.
+        inputs={name:(N.REPO/name).read_bytes() for name in P.PINS}
+        acquisition,queries=P.source_data(inputs)
+        references=P.strict_json(inputs["docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"])
+        protocol_raw=(HERE/"protocol.json").read_bytes()
+        registration_raw=(HERE/"registration-integrity.json").read_bytes()
+        protocol=P.strict_json(protocol_raw)
+        original=(HERE/"analyze.py.txt").read_bytes()
+        corrected,_=POST.corrected_module(original,sha(original))
+        with tempfile.TemporaryDirectory() as temporary:
+            out=Path(temporary)/"fixture-run"
+            packet=asyncio.run(N.run(acquisition,queries,out,offline=True,
+                                     client_factory=N.fixture_client_factory()))
+            self.assertEqual(packet["status"],"complete")
+            self.assertTrue(packet["synthetic"])
+            # Explicit, in-memory fixture metadata traverses the nonsynthetic
+            # analyzer path so a synthetic-only shortcut cannot hide the bug.
+            packet["synthetic"]=False
+            environment={"python_implementation":platform.python_implementation(),
+                         "python_version":platform.python_version()}
+            dependencies={name:importlib.metadata.version(name) for name in ("httpx","httpcore","anyio")}
+            source=packet["source_integrity"]
+            fake_qualification={"schema":"exp075-qualification-integrity/1","qualified":True,
+                "qualified_source_revision":packet["input_revision"],"files":{"analyze.py.txt":sha(original)},
+                "source_pins":{},"dependencies":dependencies,"environment":environment,
+                "protocol_sha256":source["protocol_sha256"],"registration_sha256":source["registration_sha256"]}
+            qualification_raw=P.wire(fake_qualification)
+            source.update(qualification_sha256=sha(qualification_raw),
+                          qualified_source_revision=fake_qualification["qualified_source_revision"],
+                          lease_identity="test-only-offline-fixture",environment=environment,dependencies=dependencies)
+            with self.assertRaises(KeyError):
+                POST.load("exp075_original_analyzer_bug_regression",HERE/"analyze.py.txt").analyze(
+                    packet,acquisition,references,queries,protocol,inputs,protocol_raw,registration_raw,qualification_raw)
+            result=corrected.analyze(packet,acquisition,references,queries,protocol,
+                                     inputs,protocol_raw,registration_raw,qualification_raw)
+            self.assertEqual(result["structural_failures"],[])
+            self.assertTrue(result["quality_analysis_performed"])
+            self.assertFalse(result["adoption_eligible"])
+            self.assertEqual(set(result["assessors"]),{"A","B"})
+            self.assertEqual(len(result["assessors"]["A"]["cases"]),8)
+            self.assertEqual(len(result["assessors"]["B"]["cases"]),8)
+
+if __name__=="__main__":
+    unittest.main()
