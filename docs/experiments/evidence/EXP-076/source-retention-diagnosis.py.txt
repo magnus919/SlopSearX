@@ -1,0 +1,24 @@
+"""Offline descriptive diagnosis; no candidate fitting, model or search calls."""
+from pathlib import Path
+import hashlib,json
+HERE=Path(__file__).resolve().parent;REPO=HERE.parents[3]
+PINS=['docs/experiments/evidence/EXP-076/completed/run.json','docs/experiments/evidence/EXP-076/completed/analysis.json','docs/experiments/evidence/EXP-064/completed/source-bound-references.json']
+def calculate():
+ raw={name:(REPO/name).read_bytes() for name in PINS}
+ run,analysis,refs=[json.loads(raw[name]) for name in PINS]
+ assert run['status']=='complete' and analysis['outcome']=='development_rejected'
+ rows=[]
+ for op in run['operations']:
+  if op['variant']!='base' or op['case'] not in ['q'+str(i) for i in range(1,9)]:continue
+  case=op['case'];arms=op['arms'];w=arms['w0']['order_ids'][:10];c=arms['candidate']['order_ids'][:10]
+  def detail(sid):
+   return {'id':sid,'grades':{a:refs[a][case][sid]['lead'] for a in ['A','B']},'facets':{a:refs[a][case][sid]['facets'] for a in ['A','B']},'ranks':{arm:arms[arm]['order_ids'].index(sid)+1 for arm in ['w0','joint_query','joint_purpose','candidate']}}
+  removed=[detail(sid) for sid in w if sid not in c];added=[detail(sid) for sid in c if sid not in w]
+  for assessor in ['A','B']:
+   expected=next(x for x in analysis['assessors'][assessor]['cases'] if x['case']==case)
+   assert sorted(x['id'] for x in removed if x['grades'][assessor]>=2)==expected['displaced_useful_source_ids']
+  rows.append({'case':case,'removed':removed,'added':added,'removed_useful_in_both':sum(all(x['grades'][a]>=2 for a in ['A','B']) for x in removed),'added_useful_in_both':sum(all(x['grades'][a]>=2 for a in ['A','B']) for x in added)})
+ assert len(rows)==8
+ return {'schema':'exp076-source-retention-diagnosis/1','provider_calls':0,'search_calls':0,'candidate_or_threshold_changes':False,'adoption_credit':False,'source_pins':{name:hashlib.sha256(raw[name]).hexdigest() for name in PINS},'cases':rows}
+if __name__=='__main__':
+ (HERE/'source-retention-diagnosis.json').write_text(json.dumps(calculate(),sort_keys=True,separators=(',',':'))+'\n')
