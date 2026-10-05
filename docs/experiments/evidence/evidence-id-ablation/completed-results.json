@@ -1,0 +1,529 @@
+{
+  "status": "completed_exposed_process_comparison_not_selector_qualification",
+  "answer_turns": 8,
+  "assessor_turns": 2,
+  "search_calls": 0,
+  "brave_calls": 0,
+  "jev_calls": 0,
+  "answers": [
+    {
+      "answer_id": "a9177460-a881-4c20-ad52-efa76f975b1e",
+      "task_id": "q6",
+      "source_order": "w0",
+      "format": "quote",
+      "sha256": "e603fb31dccd83921bc28fbabade943e0efec934b1db13113422a8e87d6b7197",
+      "claims": 7,
+      "valid_links": 7,
+      "invalid_links": 0
+    },
+    {
+      "answer_id": "cf864329-c6ec-4a35-b028-e1cd62bd21eb",
+      "task_id": "q6",
+      "source_order": "w0",
+      "format": "id",
+      "sha256": "2da3cab239a7215058525e2e06bac0fa414a45dce1306e1bf7976175db8afce1",
+      "claims": 9,
+      "valid_links": 9,
+      "invalid_links": 0
+    },
+    {
+      "answer_id": "3e6df64d-0356-4a88-8684-e16020edfe37",
+      "task_id": "q6",
+      "source_order": "candidate",
+      "format": "quote",
+      "sha256": "dd503e0e5b7827ff10219a762cbae54a53461de7f604dbef8beb180dfd6613df",
+      "claims": 9,
+      "valid_links": 9,
+      "invalid_links": 0
+    },
+    {
+      "answer_id": "4c147999-a718-444c-a0e6-e199c868f962",
+      "task_id": "q6",
+      "source_order": "candidate",
+      "format": "id",
+      "sha256": "d6b97da97d1fe27a0dc700215595dbb08848f607bdeaa7f484b10ed9a15b56d1",
+      "claims": 10,
+      "valid_links": 10,
+      "invalid_links": 0
+    },
+    {
+      "answer_id": "4bd69685-e3d2-4620-af84-ef418641548d",
+      "task_id": "q8",
+      "source_order": "w0",
+      "format": "quote",
+      "sha256": "c27d0a1200f8f38dbe08f783df9494bcee68f131cd23ab5cdf30995d65969ebf",
+      "claims": 9,
+      "valid_links": 9,
+      "invalid_links": 0
+    },
+    {
+      "answer_id": "78a3294d-4465-4c65-b650-6782d401528b",
+      "task_id": "q8",
+      "source_order": "w0",
+      "format": "id",
+      "sha256": "82e55d67c21fcaf575c43322df1e14d83250f2574cec89136c52974c214fd433",
+      "claims": 9,
+      "valid_links": 9,
+      "invalid_links": 0
+    },
+    {
+      "answer_id": "89814318-4146-4485-8c5a-6a7428def479",
+      "task_id": "q8",
+      "source_order": "candidate",
+      "format": "quote",
+      "sha256": "be11867a33a640efdd14c6c492824b67edc450f3032cc3ddce357d8164e56f3c",
+      "claims": 6,
+      "valid_links": 2,
+      "invalid_links": 4
+    },
+    {
+      "answer_id": "cfe5920a-3e48-4bee-a75e-05bd9eaf6c3c",
+      "task_id": "q8",
+      "source_order": "candidate",
+      "format": "id",
+      "sha256": "a61dd7167968d2c1ccf00d38bf7beaa66cb3cda272993d4b1de312e83b867541",
+      "claims": 9,
+      "valid_links": 9,
+      "invalid_links": 0
+    }
+  ],
+  "assessors": {
+    "r1": {
+      "raw_sha256": "a80ed3b188e10bda1e06fd58364ef4ba8624d01c67216ce28fbd064344ce9870",
+      "answers": [
+        {
+          "answer_id": "cf864329-c6ec-4a35-b028-e1cd62bd21eb",
+          "task_id": "q6",
+          "source_order": "w0",
+          "format": "id",
+          "task_complete": false,
+          "facet_states": {
+            "q6_f1": "partial",
+            "q6_f2": "partial",
+            "q6_f3": "partial"
+          },
+          "unsupported_claim_indices": {
+            "q6_f1": [],
+            "q6_f2": [],
+            "q6_f3": []
+          }
+        },
+        {
+          "answer_id": "a9177460-a881-4c20-ad52-efa76f975b1e",
+          "task_id": "q6",
+          "source_order": "w0",
+          "format": "quote",
+          "task_complete": false,
+          "facet_states": {
+            "q6_f1": "partial",
+            "q6_f2": "partial",
+            "q6_f3": "partial"
+          },
+          "unsupported_claim_indices": {
+            "q6_f1": [],
+            "q6_f2": [],
+            "q6_f3": []
+          }
+        },
+        {
+          "answer_id": "89814318-4146-4485-8c5a-6a7428def479",
+          "task_id": "q8",
+          "source_order": "candidate",
+          "format": "quote",
+          "task_complete": false,
+          "facet_states": {
+            "q8_f1": "partial",
+            "q8_f2": "partial",
+            "q8_f3": "partial"
+          },
+          "unsupported_claim_indices": {
+            "q8_f1": [
+              1
+            ],
+            "q8_f2": [
+              2,
+              3
+            ],
+            "q8_f3": [
+              4
+            ]
+          }
+        },
+        {
+          "answer_id": "cfe5920a-3e48-4bee-a75e-05bd9eaf6c3c",
+          "task_id": "q8",
+          "source_order": "candidate",
+          "format": "id",
+          "task_complete": false,
+          "facet_states": {
+            "q8_f1": "complete",
+            "q8_f2": "complete",
+            "q8_f3": "partial"
+          },
+          "unsupported_claim_indices": {
+            "q8_f1": [],
+            "q8_f2": [],
+            "q8_f3": []
+          }
+        },
+        {
+          "answer_id": "78a3294d-4465-4c65-b650-6782d401528b",
+          "task_id": "q8",
+          "source_order": "w0",
+          "format": "id",
+          "task_complete": false,
+          "facet_states": {
+            "q8_f1": "complete",
+            "q8_f2": "complete",
+            "q8_f3": "partial"
+          },
+          "unsupported_claim_indices": {
+            "q8_f1": [],
+            "q8_f2": [],
+            "q8_f3": []
+          }
+        },
+        {
+          "answer_id": "4bd69685-e3d2-4620-af84-ef418641548d",
+          "task_id": "q8",
+          "source_order": "w0",
+          "format": "quote",
+          "task_complete": false,
+          "facet_states": {
+            "q8_f1": "complete",
+            "q8_f2": "complete",
+            "q8_f3": "partial"
+          },
+          "unsupported_claim_indices": {
+            "q8_f1": [],
+            "q8_f2": [],
+            "q8_f3": []
+          }
+        },
+        {
+          "answer_id": "4c147999-a718-444c-a0e6-e199c868f962",
+          "task_id": "q6",
+          "source_order": "candidate",
+          "format": "id",
+          "task_complete": false,
+          "facet_states": {
+            "q6_f1": "partial",
+            "q6_f2": "partial",
+            "q6_f3": "partial"
+          },
+          "unsupported_claim_indices": {
+            "q6_f1": [],
+            "q6_f2": [],
+            "q6_f3": []
+          }
+        },
+        {
+          "answer_id": "3e6df64d-0356-4a88-8684-e16020edfe37",
+          "task_id": "q6",
+          "source_order": "candidate",
+          "format": "quote",
+          "task_complete": false,
+          "facet_states": {
+            "q6_f1": "partial",
+            "q6_f2": "partial",
+            "q6_f3": "partial"
+          },
+          "unsupported_claim_indices": {
+            "q6_f1": [],
+            "q6_f2": [],
+            "q6_f3": []
+          }
+        }
+      ],
+      "structural_errors": [],
+      "judgments_advisory": true
+    },
+    "r2": {
+      "raw_sha256": "87e57b7825dbf4d55247f74ae5594ab9e52669e17258ba10e0c86ea3ef92bdeb",
+      "answers": [
+        {
+          "answer_id": "89814318-4146-4485-8c5a-6a7428def479",
+          "task_id": "q8",
+          "source_order": "candidate",
+          "format": "quote",
+          "task_complete": false,
+          "facet_states": {
+            "q8_f1": "partial",
+            "q8_f2": "partial",
+            "q8_f3": "partial"
+          },
+          "unsupported_claim_indices": {
+            "q8_f1": [
+              1
+            ],
+            "q8_f2": [
+              2,
+              3
+            ],
+            "q8_f3": [
+              4
+            ]
+          }
+        },
+        {
+          "answer_id": "4c147999-a718-444c-a0e6-e199c868f962",
+          "task_id": "q6",
+          "source_order": "candidate",
+          "format": "id",
+          "task_complete": false,
+          "facet_states": {
+            "q6_f1": "partial",
+            "q6_f2": "complete",
+            "q6_f3": "complete"
+          },
+          "unsupported_claim_indices": {
+            "q6_f1": null,
+            "q6_f2": null,
+            "q6_f3": null
+          }
+        },
+        {
+          "answer_id": "78a3294d-4465-4c65-b650-6782d401528b",
+          "task_id": "q8",
+          "source_order": "w0",
+          "format": "id",
+          "task_complete": true,
+          "facet_states": {
+            "q8_f1": "complete",
+            "q8_f2": "complete",
+            "q8_f3": "complete"
+          },
+          "unsupported_claim_indices": {
+            "q8_f1": null,
+            "q8_f2": null,
+            "q8_f3": null
+          }
+        },
+        {
+          "answer_id": "3e6df64d-0356-4a88-8684-e16020edfe37",
+          "task_id": "q6",
+          "source_order": "candidate",
+          "format": "quote",
+          "task_complete": false,
+          "facet_states": {
+            "q6_f1": "partial",
+            "q6_f2": "complete",
+            "q6_f3": "complete"
+          },
+          "unsupported_claim_indices": {
+            "q6_f1": null,
+            "q6_f2": null,
+            "q6_f3": null
+          }
+        },
+        {
+          "answer_id": "cf864329-c6ec-4a35-b028-e1cd62bd21eb",
+          "task_id": "q6",
+          "source_order": "w0",
+          "format": "id",
+          "task_complete": false,
+          "facet_states": {
+            "q6_f1": "partial",
+            "q6_f2": "complete",
+            "q6_f3": "complete"
+          },
+          "unsupported_claim_indices": {
+            "q6_f1": null,
+            "q6_f2": null,
+            "q6_f3": null
+          }
+        },
+        {
+          "answer_id": "a9177460-a881-4c20-ad52-efa76f975b1e",
+          "task_id": "q6",
+          "source_order": "w0",
+          "format": "quote",
+          "task_complete": false,
+          "facet_states": {
+            "q6_f1": "partial",
+            "q6_f2": "partial",
+            "q6_f3": "complete"
+          },
+          "unsupported_claim_indices": {
+            "q6_f1": null,
+            "q6_f2": null,
+            "q6_f3": null
+          }
+        },
+        {
+          "answer_id": "4bd69685-e3d2-4620-af84-ef418641548d",
+          "task_id": "q8",
+          "source_order": "w0",
+          "format": "quote",
+          "task_complete": true,
+          "facet_states": {
+            "q8_f1": "complete",
+            "q8_f2": "complete",
+            "q8_f3": "complete"
+          },
+          "unsupported_claim_indices": {
+            "q8_f1": null,
+            "q8_f2": null,
+            "q8_f3": null
+          }
+        },
+        {
+          "answer_id": "cfe5920a-3e48-4bee-a75e-05bd9eaf6c3c",
+          "task_id": "q8",
+          "source_order": "candidate",
+          "format": "id",
+          "task_complete": false,
+          "facet_states": {
+            "q8_f1": "complete",
+            "q8_f2": "complete",
+            "q8_f3": "partial"
+          },
+          "unsupported_claim_indices": {
+            "q8_f1": null,
+            "q8_f2": null,
+            "q8_f3": null
+          }
+        }
+      ],
+      "structural_errors": [
+        {
+          "answer_id": "4c147999-a718-444c-a0e6-e199c868f962",
+          "facet_id": "q6_f1",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "4c147999-a718-444c-a0e6-e199c868f962",
+          "facet_id": "q6_f2",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "4c147999-a718-444c-a0e6-e199c868f962",
+          "facet_id": "q6_f3",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "78a3294d-4465-4c65-b650-6782d401528b",
+          "facet_id": "q8_f1",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "78a3294d-4465-4c65-b650-6782d401528b",
+          "facet_id": "q8_f2",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "78a3294d-4465-4c65-b650-6782d401528b",
+          "facet_id": "q8_f3",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "3e6df64d-0356-4a88-8684-e16020edfe37",
+          "facet_id": "q6_f1",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "3e6df64d-0356-4a88-8684-e16020edfe37",
+          "facet_id": "q6_f2",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "3e6df64d-0356-4a88-8684-e16020edfe37",
+          "facet_id": "q6_f3",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "cf864329-c6ec-4a35-b028-e1cd62bd21eb",
+          "facet_id": "q6_f1",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "cf864329-c6ec-4a35-b028-e1cd62bd21eb",
+          "facet_id": "q6_f2",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "cf864329-c6ec-4a35-b028-e1cd62bd21eb",
+          "facet_id": "q6_f3",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "a9177460-a881-4c20-ad52-efa76f975b1e",
+          "facet_id": "q6_f1",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "a9177460-a881-4c20-ad52-efa76f975b1e",
+          "facet_id": "q6_f2",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "a9177460-a881-4c20-ad52-efa76f975b1e",
+          "facet_id": "q6_f3",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "4bd69685-e3d2-4620-af84-ef418641548d",
+          "facet_id": "q8_f1",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "4bd69685-e3d2-4620-af84-ef418641548d",
+          "facet_id": "q8_f2",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "4bd69685-e3d2-4620-af84-ef418641548d",
+          "facet_id": "q8_f3",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "cfe5920a-3e48-4bee-a75e-05bd9eaf6c3c",
+          "facet_id": "q8_f1",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "cfe5920a-3e48-4bee-a75e-05bd9eaf6c3c",
+          "facet_id": "q8_f2",
+          "rule": "missing_unsupported_claim_indices"
+        },
+        {
+          "answer_id": "cfe5920a-3e48-4bee-a75e-05bd9eaf6c3c",
+          "facet_id": "q8_f3",
+          "rule": "missing_unsupported_claim_indices"
+        }
+      ],
+      "judgments_advisory": true
+    }
+  },
+  "assessment_freeze": {
+    "answer_sha256": {
+      "a9177460-a881-4c20-ad52-efa76f975b1e": "e603fb31dccd83921bc28fbabade943e0efec934b1db13113422a8e87d6b7197",
+      "cf864329-c6ec-4a35-b028-e1cd62bd21eb": "2da3cab239a7215058525e2e06bac0fa414a45dce1306e1bf7976175db8afce1",
+      "3e6df64d-0356-4a88-8684-e16020edfe37": "dd503e0e5b7827ff10219a762cbae54a53461de7f604dbef8beb180dfd6613df",
+      "4c147999-a718-444c-a0e6-e199c868f962": "d6b97da97d1fe27a0dc700215595dbb08848f607bdeaa7f484b10ed9a15b56d1",
+      "4bd69685-e3d2-4620-af84-ef418641548d": "c27d0a1200f8f38dbe08f783df9494bcee68f131cd23ab5cdf30995d65969ebf",
+      "78a3294d-4465-4c65-b650-6782d401528b": "82e55d67c21fcaf575c43322df1e14d83250f2574cec89136c52974c214fd433",
+      "89814318-4146-4485-8c5a-6a7428def479": "be11867a33a640efdd14c6c492824b67edc450f3032cc3ddce357d8164e56f3c",
+      "cfe5920a-3e48-4bee-a75e-05bd9eaf6c3c": "a61dd7167968d2c1ccf00d38bf7beaa66cb3cda272993d4b1de312e83b867541"
+    },
+    "assessment_packet_sha256": "87f0da7f9d3c98eb9c211342eb030a773445af5c281602a4f34f4a1ef4b0e56c",
+    "answer_count": 8,
+    "model_answer_turns": 8,
+    "assessment_turns_completed": 0,
+    "randomized_once": true,
+    "assessment_builder_sha256": "fc93df36948876f3aec14412c4541cf8f5b6494787571110180494a58a2d4f0a",
+    "status_scope": "Pre-assessment snapshot; completed assessment count is recorded at top level."
+  },
+  "mechanical_totals": {
+    "quote": {
+      "claims": 31,
+      "valid": 27,
+      "invalid": 4
+    },
+    "id": {
+      "claims": 37,
+      "valid": 37,
+      "invalid": 0
+    }
+  }
+}
