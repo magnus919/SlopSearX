@@ -1,6 +1,6 @@
 # EXP-075: single-transaction dual-Score rank fusion
 
-Status: prospective registration draft; no implementation or provider calls.
+Status: prospective registration; no implementation or provider calls.
 Issue: #516. Baseline source: `1b286066bde749fed32a0d2033586b9e59d18ee6`.
 The machine-readable protocol is `evidence/EXP-075/protocol.json`.
 
