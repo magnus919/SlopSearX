@@ -85,7 +85,7 @@ def validate_response(raw, request, expected_ids):
     if type(expected_ids)is not list or len(set(expected_ids))!=len(expected_ids): raise ValueError("expected-membership")
     scores={}
     for key,answer in answers.items():
-        if type(answer)is not dict or set(answer)!={"type","score"} or answer.get("type")!="score" or type(answer.get("score")) not in (int,float): raise ValueError("score-type")
+        if type(answer)is not dict or not {"type","score"}.issubset(answer) or answer.get("type")!="score" or type(answer.get("score")) not in (int,float): raise ValueError("score-type")
         score=answer["score"]
         if not math.isfinite(score) or not 0<=score<=9: raise ValueError("score-range")
         scores[key]=float(score)

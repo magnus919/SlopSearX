@@ -1,0 +1,90 @@
+{
+  "schema": "exp065-run/1",
+  "status": "incomplete",
+  "operations": [
+    {
+      "id": "q1-base",
+      "case": "q1",
+      "variant": "base",
+      "provenance_order_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28"
+      ],
+      "arms": {
+        "w0": {
+          "status": "failed",
+          "order_ids": [
+            "c0",
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6",
+            "c7",
+            "c8",
+            "c9",
+            "c10",
+            "c11",
+            "c12",
+            "c13",
+            "c14",
+            "c15",
+            "c16",
+            "c17",
+            "c18",
+            "c19",
+            "c20",
+            "c21",
+            "c22",
+            "c23",
+            "c24",
+            "c25",
+            "c26",
+            "c27",
+            "c28"
+          ],
+          "scores": {},
+          "elapsed_ms": null,
+          "fallback": "complete native incumbent order",
+          "failure": "ValueError",
+          "failure_code": "score-type"
+        }
+      }
+    }
+  ],
+  "synthetic": false,
+  "budget": {
+    "attempts": 1,
+    "input_tokens": 11375,
+    "output_tokens": 429,
+    "unknown_usage": false
+  }
+}
