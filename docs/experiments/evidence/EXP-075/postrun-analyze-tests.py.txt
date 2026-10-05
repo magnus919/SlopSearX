@@ -14,6 +14,7 @@ import platform
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 HERE=Path(__file__).resolve().parent
 def load(name,path):
@@ -74,14 +75,37 @@ class PostrunAnalyzerTests(unittest.TestCase):
             with self.assertRaises(KeyError):
                 POST.load("exp075_original_analyzer_bug_regression",HERE/"analyze.py.txt").analyze(
                     packet,acquisition,references,queries,protocol,inputs,protocol_raw,registration_raw,qualification_raw)
-            result=corrected.analyze(packet,acquisition,references,queries,protocol,
-                                     inputs,protocol_raw,registration_raw,qualification_raw)
-            self.assertEqual(result["structural_failures"],[])
-            self.assertTrue(result["quality_analysis_performed"])
-            self.assertFalse(result["adoption_eligible"])
-            self.assertEqual(set(result["assessors"]),{"A","B"})
-            self.assertEqual(len(result["assessors"]["A"]["cases"]),8)
-            self.assertEqual(len(result["assessors"]["B"]["cases"]),8)
+            (out/"run.json").write_bytes(P.wire(packet))
+            (out/"qualification-integrity.json").write_bytes(qualification_raw)
+            original_run=(out/"run.json").read_bytes()
+            original_packet_files=sorted(path.name for path in out.iterdir())
+            artifact_dir=Path(temporary)/"postrun-artifacts"
+
+            # Mock only the seal/commit qualification audit: the fixture is
+            # synthetic and must never qualify or authorize a provider call.
+            # V.verify still independently checks every raw call and receipt.
+            with patch.object(POST.V,"verify_qualification",side_effect=lambda raw,*_args: raw):
+                report=POST.analyze_preserved_run(out,artifact_dir)
+            self.assertTrue(report["raw_receipts_verified_with_postrun_evaluator"])
+            self.assertEqual(report["raw_verification"]["physical_attempts"],44)
+            self.assertTrue(report["quality_analysis_performed"])
+            self.assertFalse(report["adoption_eligible"])
+            self.assertEqual(report["evaluator"]["qualified_source_sha256"],sha(original))
+            self.assertEqual(report["evaluator"]["qualified_source_revision"],packet["input_revision"])
+            self.assertTrue(report["evaluator"]["postrun_evaluator"]["committed_byte_binding"])
+            self.assertEqual(report["evaluator"]["postrun_evaluator"]["file_sha256"],
+                             sha((HERE/"postrun-analyze.py.txt").read_bytes()))
+            self.assertEqual((out/"run.json").read_bytes(),original_run)
+            self.assertEqual(sorted(path.name for path in out.iterdir()),original_packet_files)
+            analysis_raw=(artifact_dir/"analysis-postrun.json").read_bytes()
+            analysis=P.strict_json(analysis_raw)
+            self.assertTrue(analysis["quality_analysis_performed"])
+            self.assertFalse(analysis["adoption_eligible"])
+            self.assertEqual(set(analysis["assessors"]),{"A","B"})
+            self.assertEqual(len(analysis["assessors"]["A"]["cases"]),8)
+            self.assertEqual(len(analysis["assessors"]["B"]["cases"]),8)
+            saved_report=P.strict_json((artifact_dir/"verification-postrun.json").read_bytes())
+            self.assertEqual(saved_report["analysis_sha256"],sha(analysis_raw))
 
 if __name__=="__main__":
     unittest.main()
