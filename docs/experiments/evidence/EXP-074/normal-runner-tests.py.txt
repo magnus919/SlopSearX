@@ -1,0 +1,108 @@
+"""Offline-only implementation tests for the EXP-074 async runner."""
+import asyncio, hashlib, importlib.machinery, importlib.util, json, tempfile, unittest
+from pathlib import Path
+from unittest.mock import patch
+
+HERE=Path(__file__).resolve().parent
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(loader.name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+
+P=load('exp074_test_prepare',HERE/'prepare.py.txt')
+N=load('exp074_test_runner',HERE/'normal-runner.py.txt')
+T=N.T
+
+def data():
+    raw={name:(N.REPO/name).read_bytes() for name in P.PINS}
+    proof=N.validate_inputs(raw,P.REGISTRATION_REVISION)
+    acquisition,queries=P.source_data(raw)
+    return acquisition,queries,proof
+
+class RequestAndPreflightTests(unittest.TestCase):
+    def test_registered_request_bytes_match_exact_pinned_exp073_adapter(self):
+        acq,queries,_=data();byid={q['id']:q for q in queries}
+        self.assertEqual(len(P.PROTOCOL['schedule']),21)
+        for item in P.PROTOCOL['schedule']:
+            built=P.build_requests(byid[item['case']],acq['pools'][item['case']]['cards'],item['variant'])
+            old=P.BASE.bodies(byid[item['case']],acq['pools'][item['case']]['cards'],item['variant'])
+            self.assertEqual(P.wire(built['w0']),P.wire(old['w0']))
+            self.assertEqual(P.wire(built['purpose_component']),P.wire(old['purpose_component']))
+
+    def test_mutated_input_fails_before_run_directory_or_transport(self):
+        acq,queries,proof=data();raw={name:(N.REPO/name).read_bytes() for name in P.PINS}
+        first=next(iter(raw));raw[first]+=b' '
+        with tempfile.TemporaryDirectory() as tmp:
+            out=Path(tmp)/'run'
+            with self.assertRaises(ValueError):N.validate_inputs(raw,P.REGISTRATION_REVISION)
+            self.assertFalse(out.exists())
+
+class AsyncTransportTests(unittest.IsolatedAsyncioTestCase):
+    async def test_no_factory_offline_runner_uses_fixture_and_closes_both_clients(self):
+        acq,queries,proof=data();stats={'clients':0,'requests':0,'closed':0}
+        factory=N.fixture_client_factory('neutral',stats)
+        # Any escape to HTTPX's real network transport fails the test immediately.
+        with patch.object(N,'fixture_client_factory',return_value=factory), \
+             patch.object(T.httpx.AsyncHTTPTransport,'handle_async_request',side_effect=AssertionError('real-network-forbidden')):
+            with tempfile.TemporaryDirectory() as tmp:
+                result=await N.run(acq,queries,Path(tmp)/'run',offline=True,source_integrity=proof,prebuilt=[])
+        self.assertEqual(result['neutral']['status'],'fixture_only')
+        self.assertEqual((result['budget']['attempts'],stats['requests'],stats['clients'],stats['closed']),(2,2,2,2))
+        self.assertFalse(result['quality_credit']);self.assertFalse(result['adoption_eligible'])
+        self.assertTrue(all(call['transport']['client_closed'] for call in result['neutral']['calls']))
+
+    async def test_http_503_is_terminal_with_known_usage_and_no_purpose_retry(self):
+        acq,queries,proof=data();stats={'clients':0,'requests':0,'closed':0}
+        factory=N.fixture_client_factory('http-error',stats)
+        with tempfile.TemporaryDirectory() as tmp:
+            out=Path(tmp)/'run'
+            result=await N.run(acq,queries,out,offline=True,source_integrity=proof,prebuilt=[],client_factory=factory)
+            call=json.loads((out/'receipts'/'call-00.json').read_bytes())
+        self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],1)
+        self.assertEqual(stats['requests'],1);self.assertEqual(call['http_status'],503)
+        self.assertEqual(call['usage'],{'input_tokens':11,'output_tokens':3})
+        self.assertEqual(call['response_body_sha256'],hashlib.sha256(bytes.fromhex(call['raw_response_hex'])).hexdigest())
+        self.assertTrue(call['transport']['client_closed']);self.assertEqual(call['failure']['code'],'http-status')
+        self.assertEqual(result['operations'],[])
+
+    async def test_redirect_is_not_followed_and_stops_before_second_call(self):
+        acq,queries,proof=data();stats={'clients':0,'requests':0,'closed':0}
+        with tempfile.TemporaryDirectory() as tmp:
+            result=await N.run(acq,queries,Path(tmp)/'run',offline=True,source_integrity=proof,
+                               prebuilt=[],client_factory=N.fixture_client_factory('redirect',stats))
+        self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],1)
+        self.assertEqual(stats['requests'],1);self.assertEqual(stats['clients'],stats['closed'])
+        call=result['neutral']['calls'][0]
+        self.assertEqual(call['http_status'],302);self.assertFalse(call['transport']['follow_redirects'])
+        self.assertEqual(call['failure']['code'],'http-status')
+
+    async def test_missing_usage_is_unknown_and_stops_all_future_operations(self):
+        acq,queries,proof=data();stats={'clients':0,'requests':0,'closed':0}
+        item=P.PROTOCOL['schedule'][0]
+        byid={q['id']:q for q in queries}
+        built=P.build_requests(byid[item['case']],acq['pools'][item['case']]['cards'],item['variant'])
+        with tempfile.TemporaryDirectory() as tmp:
+            out=Path(tmp)/'run'
+            result=await N.run(acq,queries,out,offline=True,source_integrity=proof,
+                               prebuilt=[(item,built)],
+                               client_factory=N.fixture_client_factory('missing-usage',stats))
+            call=json.loads((out/'receipts'/'call-00.json').read_bytes())
+        self.assertEqual(result['status'],'incomplete');self.assertTrue(result['budget']['unknown_usage'])
+        self.assertEqual(result['budget']['attempts'],1);self.assertIsNone(call['usage'])
+        self.assertEqual(call['usage_status'],'unknown');self.assertEqual(stats['requests'],1)
+        self.assertEqual(result['operations'][0]['arms']['w0']['status'],'uninvoked')
+
+    async def test_partial_timeout_keeps_observed_bytes_unknown_usage_and_closed_client(self):
+        acq,queries,proof=data();stats={'clients':0,'requests':0,'closed':0}
+        with tempfile.TemporaryDirectory() as tmp:
+            out=Path(tmp)/'run'
+            result=await N.run(acq,queries,out,offline=True,source_integrity=proof,prebuilt=[],
+                               client_factory=N.fixture_client_factory('partial-timeout',stats))
+            call=json.loads((out/'receipts'/'call-00.json').read_bytes())
+        self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],1)
+        self.assertTrue(result['budget']['unknown_usage']);self.assertTrue(call['dispatched'])
+        self.assertIsNotNone(call['raw_response_hex']);self.assertGreater(call['response_bytes'],0)
+        self.assertFalse(call['response_complete']);self.assertEqual(call['usage_status'],'unknown')
+        self.assertGreater(call['timings']['stream_ms'],0);self.assertTrue(call['transport']['client_closed'])
+        self.assertEqual(stats['requests'],1);self.assertEqual(stats['clients'],stats['closed'])
+
+if __name__=='__main__':unittest.main()

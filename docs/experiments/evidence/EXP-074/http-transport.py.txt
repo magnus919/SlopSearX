@@ -33,14 +33,14 @@ class AsyncHTTPTransport:
         if not isinstance(timeout_s,(int,float)) or isinstance(timeout_s,bool) or not 0<timeout_s<=1:
             raise ValueError('timeout-bound')
         started=time.perf_counter_ns();raw=bytearray();status=None;complete=False;dispatched=False
-        client_setup_ms=0.0;stream_ms=0.0;client=None;marker=api_key.encode('utf-8')
+        client_setup_ms=0.0;stream_ms=0.0;client_close_ms=0.0;client=None;marker=api_key.encode('utf-8')
         self.last_attempt={'raw':None,'http_status':None,'response_complete':False,'timings':{},
                            'failure':None,'dispatched':False,'client_closed':False}
         def attempt(failure=None,available=None):
             closed=bool(client is not None and client.is_closed)
             retained=bytes(raw) if (bool(raw) or complete) else None
             if available is False:retained=None
-            timings={'client_setup_ms':client_setup_ms,'stream_ms':stream_ms,
+            timings={'client_setup_ms':client_setup_ms,'stream_ms':stream_ms,'client_close_ms':client_close_ms,
                      'exchange_ms':(time.perf_counter_ns()-started)/1e6}
             self.last_attempt={'raw':retained,'http_status':status,'response_complete':complete,
                                'timings':timings,'failure':failure,'dispatched':dispatched,'client_closed':closed}
@@ -50,7 +50,7 @@ class AsyncHTTPTransport:
                 client_start=time.perf_counter_ns()
                 client=self.client_factory(timeout=httpx.Timeout(float(timeout_s)),follow_redirects=False,trust_env=False)
                 client_setup_ms=(time.perf_counter_ns()-client_start)/1e6
-                async with client:
+                try:
                     if on_dispatch is not None:on_dispatch()
                     dispatched=True
                     async with client.stream('POST',self.endpoint,content=body,
@@ -68,6 +68,10 @@ class AsyncHTTPTransport:
                                 timings,retained=attempt('response-too-large')
                                 raise TransportFailure('response-too-large',retained,status,False,timings,True)
                         complete=True;stream_ms=(time.perf_counter_ns()-stream_start)/1e6
+                finally:
+                    close_start=time.perf_counter_ns()
+                    await client.aclose()
+                    client_close_ms=(time.perf_counter_ns()-close_start)/1e6
                 if status!=200:
                     timings,retained=attempt('http-status')
                     raise TransportFailure('http-status',retained,status,True,timings,True)

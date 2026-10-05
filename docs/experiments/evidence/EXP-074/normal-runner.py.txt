@@ -13,7 +13,7 @@ FUSE=P.FUSE
 T=load('exp074_http_transport',HERE/'http-transport.py.txt')
 REGISTRATION_REVISION=P.REGISTRATION_REVISION
 OWNED_FILES={'prepare.py.txt','http-transport.py.txt','normal-runner.py.txt','normal-runner-tests.py.txt',
-              'fusion.py.txt','fusion-tests.py.txt','analyze.py.txt','analysis-tests.py.txt',
+              'analyze.py.txt','analysis-tests.py.txt',
               'verify-raw-receipts.py.txt','verifier-tests.py.txt'}
 SOURCE_FILES=set(P.PINS)|{
     'docs/experiments/evidence/EXP-074/protocol.json','docs/experiments/evidence/EXP-074/registration-integrity.json',
@@ -21,7 +21,8 @@ SOURCE_FILES=set(P.PINS)|{
     'docs/experiments/evidence/EXP-072/protocol.json','docs/experiments/evidence/EXP-072/prepare.py.txt',
     'docs/experiments/evidence/EXP-073/protocol.json','docs/experiments/evidence/EXP-073/registration-integrity.json',
     'docs/experiments/evidence/EXP-073/registration-correction.json','docs/experiments/evidence/EXP-073/prepare.py.txt',
-    'docs/experiments/evidence/EXP-073/fusion.py.txt','docs/experiments/evidence/EXP-039/source-selection-contract.json',
+    'docs/experiments/evidence/EXP-073/fusion.py.txt','docs/experiments/evidence/EXP-073/fusion-tests.py.txt',
+    'docs/experiments/evidence/EXP-039/source-selection-contract.json',
     'docs/experiments/evidence/EXP-059/http-wrapper.py.txt','slopsearx/rerank.py'}
 DEPENDENCIES=('httpx','httpcore','anyio')
 
