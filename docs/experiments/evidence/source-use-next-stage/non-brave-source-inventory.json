@@ -1,0 +1,143 @@
+{
+  "schema": "source-use-offline-acquisition-inventory/1",
+  "status": "code inventory only; no live availability or pool-size claim",
+  "source_revision": "85b3997f879a89448579944b4166ce25e966478e",
+  "brave_attempts_used": 8,
+  "brave_attempts_remaining": 2,
+  "brave_excluded_from_this_inventory": true,
+  "search_calls": 0,
+  "provider_calls": 0,
+  "declared_free_metadata_is_not_current_provider_policy_verification": true,
+  "engines": [
+    {
+      "adapter": "arxiv",
+      "source": "engines/arxiv.py",
+      "sha256": "4e174dc8af03bafc662b4ccadd724d4727ec63a1ea02579de27af5fe9fa2f408",
+      "declared_metadata": {
+        "name": "arxiv",
+        "engine_type": "api",
+        "categories": [
+          "science",
+          "reference"
+        ],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free"
+      }
+    },
+    {
+      "adapter": "pubmed",
+      "source": "engines/pubmed.py",
+      "sha256": "ac7b78c12f890ac5bcb9360cfc0c7059377b680b77902e016181ba70ae0f688c",
+      "declared_metadata": {
+        "name": "pubmed",
+        "engine_type": "api",
+        "categories": [
+          "science",
+          "reference",
+          "medical",
+          "health"
+        ],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free"
+      }
+    },
+    {
+      "adapter": "semanticscholar",
+      "source": "engines/semanticscholar.py",
+      "sha256": "4a5daf809e77ff7001f9ba2b92f3d035eec507a7e3c199d2180582de3d4b8b8c",
+      "declared_metadata": {
+        "name": "semanticscholar",
+        "engine_type": "api",
+        "categories": [
+          "science",
+          "reference"
+        ],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free"
+      }
+    },
+    {
+      "adapter": "openalex",
+      "source": "engines/openalex.py",
+      "sha256": "537f1da9deda5f75ffde429167620c0006d93c485d0e5e8723b5c39f6c102e59",
+      "declared_metadata": {
+        "name": "openalex",
+        "engine_type": "api",
+        "categories": [
+          "science",
+          "reference"
+        ],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free"
+      }
+    },
+    {
+      "adapter": "wikipedia",
+      "source": "engines/wikipedia.py",
+      "sha256": "a4b0cc05ea817594fb202698c6f3ab633c918f5be1585247df4986d265cddb1b",
+      "declared_metadata": {
+        "name": "wikipedia",
+        "engine_type": "api",
+        "categories": [
+          "general",
+          "science",
+          "reference"
+        ],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free"
+      }
+    },
+    {
+      "adapter": "github",
+      "source": "engines/github.py",
+      "sha256": "4b66aa998dcff010c9f14d2d8f195482d583a0e6b9f858467ee98be8751881c7",
+      "declared_metadata": {
+        "name": "github",
+        "engine_type": "api",
+        "categories": [
+          "reference",
+          "github:code",
+          "github:issues",
+          "github:prs"
+        ],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout",
+          "unavailable"
+        ],
+        "cost_class": "free"
+      }
+    }
+  ],
+  "limits": [
+    "Runtime credentials/health were not inspected.",
+    "Natural full-pool breadth remains unmeasured.",
+    "Grouping and eligibility must precede selector input.",
+    "GitHub code search requires configured authentication; repo/issues mode differs.",
+    "No sensitive engines are proposed.",
+    "Register exact dispatch/model budgets before any new acquisition or comparison."
+  ]
+}
