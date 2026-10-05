@@ -12,9 +12,11 @@ Do not change questions, criteria, representation, weights, model or projection
 after registration. Historical EXP-076 remains rejected under its original
 requirements. A new study is not a rerun of its exposed cases.
 
-A passing fresh study selects this candidate for full opt-in implementation
-and fresh confirmation under the adopted protocol, followed by compatibility,
-security, integration, review and actual product PR delivery. Existing query-only
+A passing development study advances the frozen candidate to its required
+separate untouched confirmation. Register both stages up front and permit no
+tuning between them. Only after both pass may full opt-in implementation begin,
+followed by compatibility, security, integration, review and actual product PR
+delivery. Existing query-only
 behavior remains the default. This is not a smaller prefix feature or permission
 to bypass required production work.
 
@@ -26,8 +28,9 @@ current +.05. This change is **not approved**. It trades a larger card-ranking
 margin for an explicit demonstrated task-use benefit. No historical outcome is
 regraded and no output is analyzed against a silently changed threshold.
 
-For eight new primary research tasks and new naturally acquired pools, require
-under each independently frozen assessor:
+Use eight new primary research tasks/pools for the first stage and eight
+distinct untouched tasks/pools for confirmation; apply the same criteria to
+each stage under each independently frozen assessor:
 
 - At least two additional completed tasks relative to W0 under equal opening,
   context, answerer and time/token budgets. Report paired wins/ties/losses and
@@ -55,7 +58,9 @@ repair/retry or averaging away assessor disagreement.
 
 ## Stop conditions
 
-Exactly one registered candidate, one fixed cohort and one invocation. A failing
+Exactly one registered candidate and one invocation per predeclared stage.
+The two-stage protocol preserves the full development/confirmation requirement;
+it does not create a tuning cycle. A failing
 or inconclusive study does not trigger automatic tuning or a replacement run.
 Retain the evidence and make an explicit reassessment. No runtime implementation
 claim follows from validator fixtures, catalog integrity or a documentation merge.
