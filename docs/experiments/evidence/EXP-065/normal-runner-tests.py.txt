@@ -73,7 +73,8 @@ class RunnerTests(unittest.TestCase):
         acquisition=json.loads((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes())
         queries=json.loads((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
         with tempfile.TemporaryDirectory() as tmp:
-            result=N.run(acquisition,queries,Path(tmp)/"run",True)
+            result=N.run(acquisition,queries,Path(tmp)/"run",True,{"synthetic_fixture":True})
+            self.assertEqual(json.loads((Path(tmp)/"run"/"source-integrity.json").read_text()),{"synthetic_fixture":True})
             self.assertEqual(result["status"],"complete");self.assertEqual(len(result["operations"]),21)
             self.assertEqual(result["budget"]["attempts"],63);self.assertTrue(result["synthetic"])
             self.assertEqual(len(list((Path(tmp)/"run"/"receipts").glob("call-*.json"))),63)

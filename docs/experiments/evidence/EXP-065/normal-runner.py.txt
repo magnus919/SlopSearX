@@ -105,9 +105,10 @@ def live_gate(acq_raw,query_raw,revision):
     identity=hashlib.sha256(protocol_raw+acq_raw+query_raw).hexdigest()
     lease=Path(tempfile.gettempdir())/("exp065-lease-"+identity)
     create_lease(lease,identity)
-    return {"protocol_sha256":hashlib.sha256(protocol_raw).hexdigest(),"acquisition_sha256":hashlib.sha256(acq_raw).hexdigest(),"queries_sha256":hashlib.sha256(query_raw).hexdigest()}
-def run(acquisition,queries,outdir,offline=True):
+    return {"input_revision":revision,"runner_revision":subprocess.run(["git","rev-parse","HEAD"],cwd=REPO,check=True,capture_output=True,text=True).stdout.strip(),"qualification_sha256":hashlib.sha256(qpath.read_bytes()).hexdigest(),"source_pins":pins,"runner_files":files,"protocol_sha256":hashlib.sha256(protocol_raw).hexdigest(),"acquisition_sha256":hashlib.sha256(acq_raw).hexdigest(),"queries_sha256":hashlib.sha256(query_raw).hexdigest()}
+def run(acquisition,queries,outdir,offline=True,source_integrity=None):
     outdir.mkdir(parents=True,exist_ok=False);receipt_dir=outdir/"receipts";receipt_dir.mkdir()
+    if source_integrity is not None:atomic(outdir/"source-integrity.json",source_integrity)
     ops=[];total_in=total_out=0;unknown=False;status="complete";start=time.monotonic();pool={k:v["cards"] for k,v in acquisition["pools"].items()};cases={q["id"]:q for q in queries};owned=Owned(receipt_dir,offline)
     for item in P.PROTOCOL["schedule"]:
         case=cases[item["case"]];built=P.bodies(case,pool[item["case"]],item["variant"]);expected=built["ids"]
@@ -170,8 +171,8 @@ def run(acquisition,queries,outdir,offline=True):
 def main():
     p=argparse.ArgumentParser();p.add_argument("--mode",choices=("offline","live"),default="offline");p.add_argument("--acquisition",type=Path,default=REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json");p.add_argument("--queries",type=Path,default=REPO/"docs/experiments/evidence/EXP-060/queries.json");p.add_argument("--outdir",type=Path,required=True);p.add_argument("--input-revision");a=p.parse_args()
     acq_raw=a.acquisition.read_bytes();query_raw=a.queries.read_bytes();acq=json.loads(acq_raw);queries=json.loads(query_raw)
-    if a.mode=="live":live_gate(acq_raw,query_raw,a.input_revision or "")
-    result=run(acq,queries,a.outdir,a.mode=="offline");print(json.dumps({"status":result["status"],"operations":len(result["operations"]),"attempts":result["budget"]["attempts"],"synthetic":result["synthetic"]}));return 0 if result["status"]=="complete" else 2
+    integrity=live_gate(acq_raw,query_raw,a.input_revision or "") if a.mode=="live" else None
+    result=run(acq,queries,a.outdir,a.mode=="offline",integrity);print(json.dumps({"status":result["status"],"operations":len(result["operations"]),"attempts":result["budget"]["attempts"],"synthetic":result["synthetic"]}));return 0 if result["status"]=="complete" else 2
 if __name__=="__main__":
     try:sys.exit(main())
     except Exception as exc:print("exp065-setup-"+type(exc).__name__,file=sys.stderr);sys.exit(2)
