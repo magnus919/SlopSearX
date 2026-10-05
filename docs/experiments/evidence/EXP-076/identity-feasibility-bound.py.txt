@@ -1,0 +1,32 @@
+"""Optimistic mathematical bound only; grades are unavailable to a runtime selector."""
+import hashlib,json,math
+from pathlib import Path
+HERE=Path(__file__).resolve().parent;REPO=HERE.parents[3]
+PATHS=['docs/experiments/evidence/EXP-076/completed/run.json','docs/experiments/evidence/EXP-076/completed/analysis.json','docs/experiments/evidence/EXP-064/completed/source-bound-references.json']
+def calculate():
+ raw={p:(REPO/p).read_bytes() for p in PATHS};run,analysis,refs=[json.loads(raw[p]) for p in PATHS]
+ assert run['status']=='complete' and analysis['outcome']=='development_rejected'
+ result={}
+ for assessor in ['A','B']:
+  cases=[]
+  for op in run['operations']:
+   if op['variant']!='base' or op['case'] not in ['q'+str(i) for i in range(1,9)]:continue
+   rows=refs[assessor][op['case']];ids=op['arms']['w0']['order_ids'];w=ids[:10]
+   def dcg(order):return sum((2**rows[s]['lead']-1)/math.log2(i+2) for i,s in enumerate(order[:10]))
+   def ordered(items):return sorted(items,key=lambda s:(-rows[s]['lead'],s))
+   ideal=dcg(ordered(ids));assert ideal>0
+   incumbent=dcg(w)/ideal
+   original=next(x for x in analysis['assessors'][assessor]['cases'] if x['case']==op['case'])
+   assert abs(incumbent-original['w0']['ndcg10'])<1e-12
+   protected=[s for s in w if rows[s]['lead']>=2];best=0.0
+   for omit in [None,*protected]:
+    keep=[s for s in protected if s!=omit]
+    remaining=ordered([s for s in ids if s not in keep])
+    picked=ordered(keep+remaining[:10-len(keep)])
+    assert len(picked)==10 and len(set(protected)-set(picked))<=1
+    best=max(best,dcg(picked)/ideal)
+   cases.append({'case':op['case'],'w0_ndcg10':incumbent,'optimistic_identity_bound_ndcg10':best,'optimistic_gain':best-incumbent})
+  assert len(cases)==8
+  result[assessor]={'cases':cases,'optimistic_mean_gain':sum(x['optimistic_gain'] for x in cases)/8}
+ return {'schema':'exp076-identity-feasibility-bound/1','source_pins':{p:hashlib.sha256(raw[p]).hexdigest() for p in PATHS},'assessors':result,'provider_calls':0,'search_calls':0,'candidate_tested':False,'adoption_credit':False,'ignores_other_constraints':True,'uses_reference_grades_unavailable_at_runtime':True}
+if __name__=='__main__':(HERE/'identity-feasibility-bound.json').write_text(json.dumps(calculate(),sort_keys=True,separators=(',',':'))+'\n')
