@@ -331,6 +331,25 @@ def offline_fixture(outdir: Path) -> dict:
     return result
 
 
+def capture_acceptance(result):
+    """Apply the exact pinned prior refusal/challenge policy; no new heuristic."""
+    policy_path=HERE.parent/'source-use-next-stage'/'capture-runner.py.txt'
+    pin_key='docs/experiments/evidence/source-use-next-stage/capture-runner.py.txt'
+    pins=strict_json(safe_file(PINFILE)).get('pins',{})
+    if sha(safe_file(policy_path)) != pins.get(pin_key):
+        raise ValueError('consumer-predicate-source-pin')
+    loader=importlib.machinery.SourceFileLoader('exp077_pinned_consumer_policy',str(policy_path))
+    spec=importlib.util.spec_from_loader(loader.name,loader)
+    policy=importlib.util.module_from_spec(spec);loader.exec_module(policy)
+    data=result.get('data',result) if isinstance(result,dict) else {}
+    markdown=data.get('markdown') if isinstance(data,dict) else None
+    classification={'barrier_flagged':policy.barrier_flagged(result),
+                    'markdown_challenge':policy.markdown_challenge(markdown if isinstance(markdown,str) else None),
+                    'refusal':bool(isinstance(result,dict) and (result.get('error') or result.get('refusal') or (isinstance(data,dict) and data.get('refusal'))))}
+    accepted=bool(isinstance(result,dict) and result.get('success') is True and isinstance(markdown,str) and markdown.strip() and not any(classification.values()))
+    return accepted,markdown,classification
+
+
 def live_capture(inventory: list[dict], cli_path: Path, outdir: Path,
                  admission: dict, stage_clock: dict, *, client_factory=None) -> dict:
     """Run one serialized capture against the existing configured CLI.
@@ -458,11 +477,9 @@ def live_capture(inventory: list[dict], cli_path: Path, outdir: Path,
                         remaining["status"] = "not_attempted_stage_deadline"
                     durable(outdir / "receipts.json", receipts)
                     break
-                data = result.get("data", result) if isinstance(result, dict) else {}
-                markdown = data.get("markdown") if isinstance(data, dict) else None
-                failed = (not isinstance(result, dict) or result.get("success") is not True
-                          or not isinstance(markdown, str) or not markdown.strip()
-                          or bool(result.get("error") or result.get("refusal")))
+                accepted,markdown,classification=capture_acceptance(result)
+                row['consumer_classification']=classification
+                failed=not accepted
                 if failed:
                     row.update(status="failed_or_refused", accepted=False,
                                outcome_sha256=sha(json.dumps(result, sort_keys=True, default=str).encode()))

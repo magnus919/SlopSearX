@@ -125,7 +125,7 @@ def _assignment_id(*parts):
     return _hash('\0'.join(str(p) for p in parts).encode('utf-8'))
 
 
-def card_assignments(task_id, cards, facets, assessors=('A', 'B')):
+def card_assignments(task_id, cards, facets, assessors=('A', 'B'), *, global_ids=None):
     """Freeze same-card fingerprints and independent assessor assignments."""
     if not isinstance(task_id, str) or not task_id or not isinstance(cards, list) or not cards:
         raise PacketError('task and nonempty card list required')
@@ -133,13 +133,16 @@ def card_assignments(task_id, cards, facets, assessors=('A', 'B')):
             any(not isinstance(f, str) or not f for f in facets) or
             len(set(assessors)) != len(assessors) or any(a not in {'A', 'B'} for a in assessors)):
         raise PacketError('card limit or assessor assignment invalid')
+    if global_ids is not None and (len(global_ids)!=len(cards) or len(set(global_ids))!=len(global_ids) or any(not isinstance(i,str) or not i for i in global_ids)):
+        raise PacketError('global card identity inventory invalid')
     frozen = []
-    seen = set()
-    for card in cards:
+    seen = set();identity_by_sha={}
+    for index,card in enumerate(cards):
         if not isinstance(card, dict) or set(card) != {'title', 'url', 'snippet'} or any(
                 not isinstance(card[k], str) for k in ('title', 'url', 'snippet')):
             raise PacketError('card must have exact title/url/snippet strings')
-        digest = _hash(_canonical(card))
+        digest = _hash(_canonical(card if global_ids is None else {'global_id':global_ids[index],'card':card}))
+        if global_ids is not None:identity_by_sha[digest]=global_ids[index]
         if digest in seen:
             raise PacketError('duplicate frozen card')
         seen.add(digest)
@@ -151,7 +154,7 @@ def card_assignments(task_id, cards, facets, assessors=('A', 'B')):
     schema['properties']['records']['items']['properties']['uncertain']['items'] = {'enum': list(facets)}
     schema['properties']['records']['items']['properties']['facet_anchors']['propertyNames'] = {'enum': list(facets)}
     assignments = [{'assignment_id': _assignment_id('card', task_id, a), 'task_id': task_id,
-                    'assessor_id': a, 'cards': frozen, 'facets': list(facets),
+                    'assessor_id': a, 'cards': frozen, 'facets': list(facets),'global_id_by_sha':dict(identity_by_sha),
                     'schema': schema} for a in assessors]
     return assignments
 

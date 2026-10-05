@@ -29,6 +29,14 @@ class ModelPacketTests(unittest.TestCase):
         with self.assertRaisesRegex(M.PacketError, 'exact bounded substring'):
             M.verify_card_response(rows[0], response)
 
+    def test_repeated_visible_cards_preserve_each_global_occurrence(self):
+        card={'title':'T','url':'https://example.test/x','snippet':'S'}
+        rows=M.card_assignments('d1',[card,card],['f1'],global_ids=['g1','g2'])
+        self.assertEqual(len(rows[0]['cards']),2)
+        self.assertNotEqual(rows[0]['cards'][0]['card_sha256'],rows[0]['cards'][1]['card_sha256'])
+        self.assertEqual(set(rows[0]['global_id_by_sha'].values()),{'g1','g2'})
+        self.assertNotIn('global_id_by_sha',M.card_model_input(rows[0]))
+
     def test_source_chunks_cover_full_inventory_for_each_assessor_without_dropping_unknown_states(self):
         sources = [{'source_id': f's{i}', 'state': 'success', 'context': f'Context {i} 🚀'}
                    for i in range(40)]

@@ -51,6 +51,13 @@ def assignments():
 
 
 class RunnerTests(unittest.TestCase):
+    def test_exact_pinned_consumer_barrier_policy(self):
+        accepted,_,flags=capture.capture_acceptance({'success':True,'data':{'markdown':'Please verify you are a human'}})
+        self.assertFalse(accepted);self.assertTrue(flags['markdown_challenge'])
+        accepted,_,flags=capture.capture_acceptance({'success':True,'data':{'markdown':'Useful technical content','quality':{'checks':{'block_detected':'warn'}}}})
+        self.assertFalse(accepted);self.assertTrue(flags['barrier_flagged'])
+        self.assertTrue(capture.capture_acceptance({'success':True,'data':{'markdown':'Useful technical content'}})[0])
+
     def test_root_protocol_and_cohort_closure(self):
         protocol = json.loads((HERE / "protocol.json").read_text())
         cohorts = json.loads((HERE / "cohorts.json").read_text())
