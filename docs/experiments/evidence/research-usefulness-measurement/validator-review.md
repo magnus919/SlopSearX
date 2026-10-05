@@ -46,3 +46,17 @@ These passes establish bounded integrity behavior only. No live admission,
 semantic entailment/coverage, model-packet hydration or task-completion result is
 qualified. The deterministic evidence-ID hydrator and its envelope integration
 remain under construction before any prospective model study.
+
+## Evidence-ID integration checkpoint
+
+Root integrated the deterministic hydrator at `7efb06f` and independently
+passed six synthetic hydration tests, including actual validator integration.
+The earlier 15 validator tests pass on the integrated source. This finishes
+the assigned offline prototype scope; no new validator expansion is needed
+before the next study design.
+
+The helper resolves one explicit frozen catalog/assignment per invocation.
+A study must predeclare per-task/per-arm assessment packet partitioning and
+complete cohort coverage; these fixtures do not qualify that orchestration.
+Raw model bytes are hashed separately, non-reference semantic fields are
+preserved, and semantic completion is expressly not claimed.
