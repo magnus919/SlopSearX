@@ -1,0 +1,260 @@
+"""Offline integration and tamper tests for EXP-075 raw receipt verification."""
+import asyncio
+import importlib.machinery
+import importlib.util
+import json
+import pathlib
+import shutil
+import tempfile
+import time
+import unittest
+
+HERE = pathlib.Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp075_test_verifier", str(HERE / "verify-raw-receipts.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+V = importlib.util.module_from_spec(spec)
+loader.exec_module(V)
+N = V.N
+
+
+def run_to(outdir, mode="scores"):
+    inputs, acquisition, queries, references, protocol_raw, registration_raw = V.inputs_and_data()
+    proof = N.validate_inputs(inputs)
+    prepared = N.P.prebuild(acquisition, queries)
+    if mode == "joint-503":
+        stats = {"requests": 0}
+
+        async def handler(request):
+            stats["requests"] += 1
+            payload = N.P.strict_json(request.content)
+            if any(key.startswith("purpose:") for key in payload["questions"]):
+                return N.httpx.Response(503, content=N.P.response_fixture(payload))
+            return N.httpx.Response(200, content=N.P.response_fixture(payload))
+
+        def factory(**kwargs):
+            return N.httpx.AsyncClient(transport=N.httpx.MockTransport(handler), **kwargs)
+
+        client_factory = factory
+    elif mode == "candidate-overrun":
+        stats = {"clients": 0, "requests": 0, "closed": 0}
+        original_build = N.P.build_joint
+        build_calls = {"count": 0}
+
+        def delayed_build(case, cards, variant="base"):
+            build_calls["count"] += 1
+            if build_calls["count"] == 1:
+                time.sleep(1.05)
+            return original_build(case, cards, variant)
+
+        client_factory = N.fixture_client_factory("scores", stats)
+    else:
+        stats = {"clients": 0, "requests": 0, "closed": 0}
+        client_factory = N.fixture_client_factory("http-error" if mode == "neutral-503" else "scores", stats)
+    output = asyncio.run(N.run(acquisition, queries, outdir, offline=True, source_integrity=proof,
+                               prebuilt=prepared, client_factory=client_factory,
+                               build_joint_fn=delayed_build if mode == "candidate-overrun" else None))
+    run = V.read(outdir / "run.json")
+    analysis = V.A.analyze(run, acquisition, references, queries, V.P.PROTOCOL,
+                           inputs, protocol_raw, registration_raw, qualification_bytes=None)
+    (outdir / "analysis.json").write_text(json.dumps(analysis, separators=(",", ":")), encoding="utf-8")
+    return output, analysis, stats
+
+
+class RawVerifierTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.root = pathlib.Path(cls.tmp.name)
+        cls.complete_dir = cls.root / "complete"
+        cls.complete, cls.analysis, cls.complete_stats = run_to(cls.complete_dir)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def test_complete_fixture_verifies_all_44_calls_and_quality_remains_synthetic(self):
+        verified = V.verify(self.complete_dir)
+        self.assertTrue(verified["verified"])
+        self.assertEqual(verified["status"], "complete")
+        self.assertTrue(verified["synthetic"])
+        self.assertEqual(verified["physical_attempts"], 44)
+        self.assertEqual(self.complete_stats["requests"], 44)
+        self.assertEqual(verified["analysis_policy"], "synthetic_fixture_only")
+        self.assertFalse(verified["analysis"]["quality_analysis_performed"])
+        self.assertFalse(verified["analysis"]["adoption_eligible"])
+
+    def test_neutral_http_failure_verifies_terminal_incomplete_without_quality(self):
+        output_dir = self.root / "neutral-failure"
+        result, analysis, stats = run_to(output_dir, "neutral-503")
+        self.assertEqual(result["status"], "incomplete")
+        self.assertEqual(stats["requests"], 1)
+        self.assertEqual(result["budget"]["attempts"], 1)
+        verified = V.verify(output_dir)
+        self.assertEqual(verified["physical_attempts"], 1)
+        self.assertEqual(verified["analysis_policy"], "incomplete")
+        self.assertFalse(analysis["quality_analysis_performed"])
+
+    def test_joint_http_failure_after_control_keeps_complete_native_incumbent(self):
+        output_dir = self.root / "joint-failure"
+        result, analysis, stats = run_to(output_dir, "joint-503")
+        neutral = result["neutral"]
+        self.assertEqual(stats["requests"], 2)
+        self.assertEqual([call["arm"] for call in neutral["calls"]], ["w0", "joint"])
+        self.assertEqual(neutral["arms"]["w0"]["status"], "valid")
+        self.assertEqual(neutral["arms"]["candidate"]["order_ids"], neutral["provenance_order_ids"])
+        self.assertEqual(len(neutral["arms"]["candidate"]["order_ids"]), 80)
+        verified = V.verify(output_dir)
+        self.assertEqual(verified["physical_attempts"], 2)
+        self.assertEqual(verified["analysis_policy"], "incomplete")
+        self.assertFalse(analysis["quality_analysis_performed"])
+
+        path = output_dir / "run.json"
+        original = path.read_bytes()
+        try:
+            tampered = json.loads(original)
+            tampered["neutral"]["final_receipt"] = None
+            path.write_text(json.dumps(tampered, separators=(",", ":")), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                V.verify(output_dir)
+        finally:
+            path.write_bytes(original)
+
+    def test_neutral_failure_without_durable_baseline_receipt_is_rejected(self):
+        output_dir = self.root / "neutral-failure-no-receipt"
+        run_to(output_dir, "neutral-503")
+        path = output_dir / "run.json"
+        original = path.read_bytes()
+        try:
+            run = json.loads(original)
+            ref = run["neutral"]["baseline_receipt"]
+            self.assertIsNotNone(ref)
+            (output_dir / "receipts" / ref["path"]).unlink()
+            run["neutral"]["baseline_receipt"] = None
+            path.write_text(json.dumps(run, separators=(",", ":")), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                V.verify(output_dir)
+        finally:
+            path.write_bytes(original)
+
+    def test_zero_call_incomplete_run_with_no_receipts_is_rejected(self):
+        output_dir = self.root / "zero-call-tamper"
+        shutil.copytree(self.complete_dir, output_dir)
+        run_path = output_dir / "run.json"
+        run = json.loads(run_path.read_bytes())
+        run["status"] = "incomplete"
+        run["wall_seconds"] = 0.0
+        run["budget"] = {"attempts": 0, "input_tokens": 0, "output_tokens": 0, "unknown_usage": False}
+        neutral = run["neutral"]
+        neutral["status"] = "failed"
+        neutral["calls"] = []
+        neutral["arms"]["w0"]["status"] = "failed"
+        neutral["arms"]["candidate"] = {"status": "failed-fallback", "order_ids": neutral["provenance_order_ids"],
+                                            "scores": {}, "raw_answers": {}, "rational_scores": {},
+                                            "usage": None, "elapsed_ms": None}
+        neutral["baseline_receipt"] = None
+        neutral["candidate_body_receipt"] = None
+        neutral["final_receipt"] = None
+        for op in run["operations"]:
+            op["calls"] = []
+            op["arms"] = {name: {"status": "uninvoked", "order_ids": [], "scores": {}, "raw_answers": {},
+                                 "rational_scores": {}, "usage": None, "elapsed_ms": None}
+                          for name in N.P.ARMS}
+            op["baseline_receipt"] = op["candidate_body_receipt"] = op["final_receipt"] = None
+        run_path.write_text(json.dumps(run, separators=(",", ":")), encoding="utf-8")
+        for receipt in (output_dir / "receipts").iterdir():
+            receipt.unlink()
+        inputs, acquisition, queries, references, protocol_raw, registration_raw = V.inputs_and_data()
+        analysis = V.A.analyze(run, acquisition, references, queries, V.P.PROTOCOL,
+                               inputs, protocol_raw, registration_raw, qualification_bytes=None)
+        (output_dir / "analysis.json").write_text(json.dumps(analysis, separators=(",", ":")), encoding="utf-8")
+        with self.assertRaises(ValueError):
+            V.verify(output_dir)
+
+    def test_measured_joint_build_deadline_failure_verifies_predispatch_fallback(self):
+        output_dir = self.root / "candidate-overrun"
+        result, analysis, stats = run_to(output_dir, "candidate-overrun")
+        neutral = result["neutral"]
+        self.assertEqual(stats["requests"], 1)
+        self.assertEqual(result["budget"]["attempts"], 1)
+        self.assertEqual([call["arm"] for call in neutral["calls"]], ["w0", "joint"])
+        self.assertTrue(neutral["calls"][1]["timings"]["build_ms"] > 1000)
+        self.assertFalse(neutral["calls"][1]["dispatched"])
+        self.assertEqual(neutral["arms"]["candidate"]["order_ids"], neutral["provenance_order_ids"])
+        self.assertEqual(neutral["calls"][0]["usage"], {"input_tokens": 17, "output_tokens": 6})
+        self.assertFalse(analysis["quality_analysis_performed"])
+        verified = V.verify(output_dir)
+        self.assertEqual(verified["physical_attempts"], 1)
+        self.assertEqual(verified["analysis_policy"], "incomplete")
+
+    def test_tampered_raw_response_hash_fails(self):
+        path = self.complete_dir / "receipts" / "call-00.json"
+        original = path.read_bytes()
+        try:
+            receipt = json.loads(original)
+            receipt["response_body_sha256"] = "0" * 64
+            path.write_text(json.dumps(receipt, separators=(",", ":")), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                V.verify(self.complete_dir)
+        finally:
+            path.write_bytes(original)
+
+    def _mutate_run_and_assert_rejected(self, mutate):
+        path = self.complete_dir / "run.json"
+        original = path.read_bytes()
+        try:
+            run = json.loads(original)
+            mutate(run)
+            path.write_text(json.dumps(run, separators=(",", ":")), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                V.verify(self.complete_dir)
+        finally:
+            path.write_bytes(original)
+
+    def test_tampered_request_binding_fails(self):
+        self._mutate_run_and_assert_rejected(
+            lambda run: run["neutral"]["calls"][0].update(request_sha256="0" * 64))
+
+    def test_tampered_known_usage_fails_budget_binding(self):
+        self._mutate_run_and_assert_rejected(
+            lambda run: run["budget"].update(input_tokens=run["budget"]["input_tokens"] + 1))
+
+    def test_tampered_candidate_membership_fails(self):
+        self._mutate_run_and_assert_rejected(
+            lambda run: run["neutral"]["arms"]["candidate"]["order_ids"].pop())
+
+    def test_tampered_durable_receipt_reference_fails(self):
+        self._mutate_run_and_assert_rejected(
+            lambda run: run["neutral"]["candidate_body_receipt"].update(sha256="0" * 64))
+
+    def test_tampered_source_integrity_fails(self):
+        self._mutate_run_and_assert_rejected(
+            lambda run: run["source_integrity"].update(registration_sha256="0" * 64))
+
+    def test_tampered_namespace_mapping_fails_recomputation(self):
+        path = self.complete_dir / "run.json"
+        original = path.read_bytes()
+        try:
+            run = json.loads(original)
+            run["neutral"]["arms"]["joint_query"]["order_ids"][0] = "not-a-card"
+            path.write_text(json.dumps(run, separators=(",", ":")), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                V.verify(self.complete_dir)
+        finally:
+            path.write_bytes(original)
+
+    def test_tampered_fraction_scores_fail_recomputation(self):
+        path = self.complete_dir / "run.json"
+        original = path.read_bytes()
+        try:
+            run = json.loads(original)
+            key = next(iter(run["neutral"]["arms"]["candidate"]["rational_scores"]))
+            run["neutral"]["arms"]["candidate"]["rational_scores"][key] = [1, 1]
+            path.write_text(json.dumps(run, separators=(",", ":")), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                V.verify(self.complete_dir)
+        finally:
+            path.write_bytes(original)
+
+
+if __name__ == "__main__":
+    unittest.main()
