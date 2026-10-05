@@ -123,3 +123,23 @@ that manifest could have been generated. The manifest must be checked against
 its committed current tree while source closure remains bound to the qualified
 code revision. This draft finding was sent to the owner; the integrated unmocked
 check is required before admission.
+
+## Independent verifier review
+
+The bounded Luna review identified three material terminal-path defects in the
+combined runner/verifier draft. These were sent to the owners before admission:
+
+- A deadline expiry in the transport dispatch callback raises DispatchDenied
+  after client creation. The runner must persist the non-dispatched failure
+  and stop normally; the verifier must preserve truthful client cleanup.
+- A build-overrun path appended a synthetic call without a persisted sidecar.
+  It must use a durable pre-dispatch record or an explicit no-call representation
+  shared by runner and verifier.
+- Overflow transport evidence retains one sentinel byte beyond the response
+  cap. The verifier must accept only that bounded incomplete overflow evidence,
+  while denying successful response or quality credit.
+
+Full runner-to-verifier regressions for all three paths are required. Earlier
+runner-only tests did not establish that these packets could be independently
+verified. This is the completed substantive verifier review pass; disposition
+and exact integrated tests remain pending.
