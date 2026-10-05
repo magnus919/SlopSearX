@@ -1,5 +1,5 @@
 """Negative tests for the independent EXP-073 receipt verifier; entirely offline."""
-import copy,hashlib,json,tempfile,unittest
+import copy,hashlib,inspect,json,tempfile,unittest
 from unittest.mock import patch
 from pathlib import Path
 HERE=Path(__file__).resolve().parent
@@ -57,6 +57,44 @@ class RawReceiptVerifierTests(unittest.TestCase):
     def test_analysis_must_match_current_analyzer_result(self):
         d=self.clone(self.complete);p=d/'analysis.json';v=json.loads(p.read_bytes());v['outcome']='quality_improved';p.write_text(json.dumps(v,separators=(',',':')))
         with self.assertRaisesRegex(ValueError,'analysis-binding'): M.verify(d)
+    def test_complete_run_cannot_be_mislabeled_incomplete(self):
+        d=self.clone(self.complete);p=d/'run.json';run=json.loads(p.read_bytes());run['status']='incomplete';p.write_text(json.dumps(run,separators=(',',':')));self._bind_analysis(d)
+        with self.assertRaisesRegex(ValueError,'incomplete-without-single-stop'): M.verify(d)
+    def test_interrupted_run_cannot_be_mislabeled_complete(self):
+        d=self.clone(self.interrupted);p=d/'run.json';run=json.loads(p.read_bytes());run['status']='complete';p.write_text(json.dumps(run,separators=(',',':')));self._bind_analysis(d)
+        with self.assertRaisesRegex(ValueError,'failed-operation-in-complete-run'): M.verify(d)
+    def test_unknown_run_status_is_rejected(self):
+        d=self.clone(self.complete);p=d/'run.json';run=json.loads(p.read_bytes());run['status']='completed';p.write_text(json.dumps(run,separators=(',',':')))
+        with self.assertRaisesRegex(ValueError,'run-status'): M.verify(d,require_analysis=False)
+    def test_nonsynthetic_interrupted_run_has_no_quality_or_adoption_credit(self):
+        d=self.clone(self.interrupted);p=d/'run.json';run=json.loads(p.read_bytes());run['synthetic']=False;p.write_text(json.dumps(run,separators=(',',':')));self._bind_analysis(d)
+        result=M.verify(d)
+        self.assertEqual(result['status'],'incomplete');self.assertEqual(result['analysis']['outcome'],'incomplete')
+        self.assertFalse(result['analysis']['quality_analysis_performed']);self.assertFalse(result['analysis']['adoption_eligible'])
+    def test_failure_sidecar_must_match_full_fallback_operation(self):
+        inputs={k:(N.REPO/k).read_bytes() for k in P.PINS};acq,queries=N.source_data(inputs);out=self.root/'sidecar';clock=[0.0]
+        def mono(): clock[0]+=.001;return clock[0]
+        original=N.atomic
+        def slow_final(path,value):
+            op=value.get('operation',{})
+            if Path(path).name=='q1-base-final.json' and op.get('arms',{}).get('candidate',{}).get('status')=='body_durable_pending_deadline': clock[0]+=1.01
+            return original(path,value)
+        class Good:
+            def __init__(self,*_): self.last_raw=None;self.last_transport=None
+            def __call__(self,body,timeout_s=1):
+                req=P.BASE.strict_json(body);self.last_raw=P.response_fixture(req,usage={'input_tokens':10,'output_tokens':2});sha=hashlib.sha256(body).hexdigest();rh=hashlib.sha256(self.last_raw).hexdigest();empty=hashlib.sha256(b'').hexdigest()
+                self.last_transport={'status':'offline-fixture','request_sha256':sha,'response_sha256':rh,'stdout_sha256':rh,'stderr_sha256':empty,'stderr_hex':'','remote_http_ms':.01};return self.last_raw,.01
+        with patch.object(N,'Owned',Good),patch.object(N.time,'monotonic',side_effect=mono),patch.object(N,'atomic',side_effect=slow_final): N.run(acq,queries,out,offline=True)
+        self._bind_analysis(out);M.verify(out)
+        p=out/'receipts'/'q1-base-failure.json';v=json.loads(p.read_bytes());v['operation']['arms']['candidate']['order_ids'].reverse();p.write_text(json.dumps(v,separators=(',',':')))
+        with self.assertRaisesRegex(ValueError,'failure-receipt-binding'): M.verify(out,require_analysis=False)
+    def test_study_lease_identity_ignores_qualification_revision_but_tracks_registered_inputs(self):
+        inputs={k:(N.REPO/k).read_bytes() for k in P.PINS};protocol=(HERE/'protocol.json').read_bytes();registration=(HERE/'registration-integrity.json').read_bytes()
+        before=N.study_identity(protocol,registration,inputs);qualification_a=b'qualification-a';qualification_b=b'qualification-b'
+        self.assertNotEqual(hashlib.sha256(qualification_a).digest(),hashlib.sha256(qualification_b).digest())
+        self.assertEqual(before,N.study_identity(protocol,registration,inputs));self.assertNotIn('qualification',inspect.signature(N.study_identity).parameters)
+        changed=dict(inputs);key=next(iter(changed));changed[key]+=b'x'
+        self.assertNotEqual(before,N.study_identity(protocol,registration,changed))
     def test_transport_timeout_with_unknown_usage_is_a_single_attempt_and_stops(self):
         inputs={k:(N.REPO/k).read_bytes() for k in P.PINS};acq,queries=N.source_data(inputs);out=self.root/'timeout'
         class Timeout:

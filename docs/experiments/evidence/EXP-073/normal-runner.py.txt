@@ -22,6 +22,10 @@ def sync_directory(path):
     finally: os.close(fd)
 def committed(path,revision): return P.committed(path,revision)
 
+def study_identity(protocol_raw,registration_raw,input_bytes):
+    if type(protocol_raw)is not bytes or type(registration_raw)is not bytes or type(input_bytes)is not dict or set(input_bytes)!=set(P.PINS) or any(type(v)is not bytes for v in input_bytes.values()): raise ValueError('study-identity-inputs')
+    return hashlib.sha256(protocol_raw+registration_raw+b''.join(k.encode()+b'\0'+input_bytes[k] for k in sorted(input_bytes))).hexdigest()
+
 class Owned:
     def __init__(self,offline=True,fixture='neutral'):
         self.offline=offline;self.fixture=fixture;self.last_raw=None;self.last_transport=None
@@ -88,7 +92,8 @@ def live_gate(input_bytes,input_revision,protocol_bytes=None,registration_bytes=
     if bounds['calls']!=44 or bounds['reported_input_tokens']!=3000000 or bounds['reported_output_tokens']!=160000: raise ValueError('usage-admission-contract')
     socket.getaddrinfo('api.typesafe.ai',443,type=socket.SOCK_STREAM)
     if not os.environ.get('TYPESAFE_API_KEY'): raise ValueError('missing-credential')
-    identity=hashlib.sha256(protocol_raw+reg_raw+qraw+b''.join(k.encode()+b'\0'+input_bytes[k] for k in sorted(input_bytes))).hexdigest()
+    # Qualification revisions do not create a new study or permit a rerun.
+    identity=study_identity(protocol_raw,reg_raw,input_bytes)
     lease=Path(tempfile.gettempdir())/('exp073-lease-'+identity)
     fd=os.open(lease,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
     with os.fdopen(fd,'w') as f: f.write(identity+'\n');f.flush();os.fsync(f.fileno())

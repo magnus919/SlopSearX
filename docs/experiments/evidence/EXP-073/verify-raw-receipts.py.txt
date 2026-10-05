@@ -41,6 +41,8 @@ def verify(outdir,require_analysis=True):
     outdir=Path(outdir); run=_read(outdir/'run.json'); receipts=outdir/'receipts'
     inputs,acq,queries,refs,protocol_raw,reg_raw=_analysis_inputs(); protocol=P.strict_json(protocol_raw)
     _need(run.get('schema')=='exp073-run/1','schema')
+    _need(run.get('status') in ('complete','incomplete'),'run-status')
+    _need(type(run.get('synthetic'))is bool,'execution-identity')
     _need(run.get('input_pins')==P.PINS,'input-pins')
     _need(run.get('source_integrity',{}).get('protocol_sha256')==_sha(protocol_raw),'protocol-pin')
     _need(run.get('source_integrity',{}).get('registration_sha256')==_sha(reg_raw),'registration-pin')
@@ -50,10 +52,11 @@ def verify(outdir,require_analysis=True):
     for item in protocol['schedule']:
         built=P.bodies(byid[item['case']],acq['pools'][item['case']]['cards'],item['variant'])
         schedule.append((item['case']+'-'+item['variant'],byid[item['case']],built['cards'],built))
+    _need(len(run.get('operations',[]))==21 and [(x.get('case'),x.get('variant')) for x in run['operations']]==[(x['case'],x['variant']) for x in protocol['schedule']],'operation-schedule')
     paths=sorted(receipts.glob('call-*.json'),key=lambda p:int(p.stem.split('-')[1]))
     _need(len(paths)<=44,'call-cap')
     call_rows=[_read(p) for p in paths]
-    attempts=0; known_in=known_out=0; unknown=False; cursor=0; computed={}; fusion_expected={}; expected_calls=[]
+    attempts=0; known_in=known_out=0; unknown=False; cursor=0; computed={}; fusion_expected={}; terminal=False
     for opid,case,cards,built in schedule:
         op=run['neutral'] if opid=='neutral' else next((x for x in run['operations'] if x.get('id')==opid),None)
         _need(type(op)is dict,'operation-missing')
@@ -63,6 +66,11 @@ def verify(outdir,require_analysis=True):
         else:
             recorded=op
             _need(recorded.get('cards')==cards and recorded.get('provenance_order_ids')==built['provenance_order_ids'],'operation-membership')
+        if terminal:
+            _need(cursor==len(call_rows),'calls-after-failure')
+            _need(all(v.get('status')=='uninvoked' for v in recorded.get('arms',{}).values()),'post-failure-invocation')
+            computed[opid]=[]
+            continue
         op_receipts=[]
         for arm in ('w0','purpose_component'):
             if cursor>=len(call_rows): break
@@ -90,7 +98,7 @@ def verify(outdir,require_analysis=True):
                     _need(envelope.get('remote_http_ms')==remote,'telemetry-time-binding')
                     _need(rec.get('elapsed_ms')==remote,'elapsed-time-binding')
                 else:
-                    _need(run.get('synthetic') is True and transport.get('status') in ('offline-fixture','timeout'),'unmeasured-live-time')
+                    _need(transport.get('status') in ('offline-fixture','timeout'),'unmeasured-live-time')
             else:
                 _need(rec.get('status')=='pending' or (rec.get('status')=='failed' and rec.get('failure') in ('candidate-phase-deadline','wall-budget')),'transport-missing')
             attempted=type(transport)is dict or rec.get('status') in ('returned','validated')
@@ -106,7 +114,6 @@ def verify(outdir,require_analysis=True):
                     known_in+=usage['input_tokens'];known_out+=usage['output_tokens']
                     _need(usage['input_tokens']<=64000 and usage['output_tokens']<=64000,'per-call-usage')
             op_receipts.append((arm,rec,raw,usage))
-            expected_calls.append((opid,arm))
             if rec.get('status')!='validated': break
         computed[opid]=op_receipts
         if not op_receipts and all(x.get('status')=='uninvoked' for x in recorded.get('arms',{}).values()): continue
@@ -118,6 +125,32 @@ def verify(outdir,require_analysis=True):
         _need(phase+1e-6>=sum(elapsed),'phase-lower-bound')
         if all(arms_now.get(n,{}).get('status')=='valid' for n in ('w0','purpose_component','candidate')):
             _need(phase<=1000,'successful-phase-deadline')
+        all_valid=all(arms_now.get(n,{}).get('status')=='valid' for n in ('w0','purpose_component','candidate'))
+        if all_valid:
+            _need(len(op_receipts)==2 and all(row[1].get('status')=='validated' for row in op_receipts),'valid-arms-without-two-receipts')
+        else:
+            _need(run.get('status')=='incomplete','failed-operation-in-complete-run')
+            failed_receipt=any(row[0] in ('w0','purpose_component') and row[1].get('status')=='failed' for row in op_receipts)
+            post_response_deadline=(len(op_receipts)==2 and all(row[1].get('status')=='validated' for row in op_receipts)
+                                    and arms_now.get('candidate',{}).get('status')=='failed')
+            if post_response_deadline:
+                code=(recorded.get('failure') or {}).get('code')
+                _need(code in ('candidate-phase-deadline','wall-budget') and (code=='wall-budget' or phase>1000),'post-response-deadline-evidence')
+            _need(failed_receipt or post_response_deadline,'interrupted-stop-evidence')
+            terminal=True
+            failure_path=receipts/(opid+'-failure.json')
+            _need(failure_path.is_file(),'failure-receipt-missing')
+            failure=_read(failure_path)
+            embedded=failure.get('operation')
+            if opid=='neutral':
+                _need(type(embedded)is dict and set(embedded)==set(recorded)|{'failure'},'failure-receipt-fields')
+                _need({k:v for k,v in embedded.items() if k!='failure'}==recorded,'failure-receipt-binding')
+                detail=embedded.get('failure');_need(type(detail)is dict and set(detail)=={'type','code'} and all(type(v)is str and v for v in detail.values()),'failure-receipt-error')
+                failed_arms=[x for x in recorded['arms'].values() if x.get('status')=='failed']
+                _need(bool(failed_arms) and all(x.get('failure')==detail['type'] for x in failed_arms),'failure-receipt-arm-binding')
+            else:
+                _need(embedded==recorded,'failure-receipt-binding')
+            _need(failure.get('receipt_status')=='failed','failure-receipt-status')
         if len(op_receipts)==2 and all(r[1].get('status')=='validated' for r in op_receipts):
             wraw=op_receipts[0][2]; praw=op_receipts[1][2]
             wparsed=P.validate_score_response(wraw,built['w0'],list(built['w0']['questions']),9)
@@ -139,10 +172,6 @@ def verify(outdir,require_analysis=True):
                 _need(cand.get('order_ids')==exact_order and cand.get('rational_scores')==exact_rows,'fusion')
             else:
                 _need(cand.get('status')=='failed' and cand.get('order_ids')==worder and cand.get('rational_scores')=={},'failure-fallback')
-                failure_path=receipts/(opid+'-failure.json')
-                _need(failure_path.is_file(),'failure-receipt-missing')
-                failure=_read(failure_path)
-                _need(failure.get('receipt_status')=='failed' and failure.get('operation',{}).get('id')==opid,'failure-receipt-binding')
             u0,u1=op_receipts[0][3],op_receipts[1][3]
             aggregate={'input_tokens':u0['input_tokens']+u1['input_tokens'],'output_tokens':u0['output_tokens']+u1['output_tokens']}
             _need(cand.get('usage')==aggregate,'aggregate-usage')
@@ -164,6 +193,11 @@ def verify(outdir,require_analysis=True):
     _need(budget.get('input_tokens')==known_in and budget.get('output_tokens')==known_out,'budget-totals')
     _need(budget.get('unknown_usage')==unknown,'unknown-usage')
     _need(known_in<=3_000_000 and known_out<=160_000,'budget-cap')
+    if run['status']=='complete':
+        _need(not terminal and attempts==44 and len(call_rows)==44 and all(row.get('status')=='validated' for row in call_rows),'complete-call-inventory')
+        _need(run['neutral'].get('status')=='fixture_only' and run['neutral'].get('quality_credit') is False,'complete-neutral-status')
+    else:
+        _need(terminal and attempts<44,'incomplete-without-single-stop')
     # Validate final body receipts against independently recomputed fusion fields.
     for opid,case,cards,built in schedule:
         if opid!='neutral' and not any(x.get('id')==opid for x in run['operations']): continue
@@ -187,9 +221,17 @@ def verify(outdir,require_analysis=True):
     if require_analysis:
         _need(analysis_path.is_file(),'analysis-missing')
         _need(_read(analysis_path)==analyzer,'analysis-binding')
-    _need(analyzer.get('quality_analysis_performed') is False if run.get('synthetic') else True,'synthetic-quality-credit')
+    if run['status']=='complete':
+        _need(analyzer.get('outcome')!='incomplete' and analyzer.get('structural_failures')==[],'complete-analysis-structure')
+        if run['synthetic']:
+            _need(analyzer.get('outcome')=='synthetic_fixture_only' and analyzer.get('quality_analysis_performed') is False and analyzer.get('adoption_eligible') is False,'synthetic-quality-credit')
+        else:
+            _need(analyzer.get('quality_analysis_performed') is True and analyzer.get('adoption_eligible') is False,'real-complete-analysis-policy')
+    else:
+        _need(analyzer.get('outcome')=='incomplete' and analyzer.get('quality_analysis_performed') is False and analyzer.get('adoption_eligible') is False,'interrupted-analysis-policy')
     report={'schema':'exp073-raw-verification/1','verified':True,'status':run['status'],'synthetic':run['synthetic'],'physical_attempts':attempts,
             'known_usage':{'input_tokens':known_in,'output_tokens':known_out},'unknown_usage':unknown,
+            'analysis_policy':'completed-real-structure-only' if run['status']=='complete' and not run['synthetic'] else ('synthetic-no-quality' if run['synthetic'] else 'interrupted-no-quality'),
             'raw_calls_checked':len(call_rows),'wrapper_telemetry_checked':sum(bool((r.get('transport') or {}).get('stderr_hex')) for r in call_rows),
             'timing_limitation':'Wrapper timings are independently checked only when raw stderr telemetry is retained and parsed. In-process synthetic fixtures have locally measured elapsed values but no independent remote clock evidence.',
             'analysis':analyzer}
