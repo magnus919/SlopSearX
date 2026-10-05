@@ -1,0 +1,114 @@
+import copy,importlib.machinery,importlib.util,json,pathlib,unittest
+from decimal import Decimal
+ROOT=pathlib.Path(__file__).resolve().parent
+l=importlib.machinery.SourceFileLoader('analysis070',str(ROOT/'analyze.py.txt'));s=importlib.util.spec_from_loader(l.name,l);A=importlib.util.module_from_spec(s);l.exec_module(A)
+
+def answer(support_band=4,support_mass=Decimal('.8')):
+    probs={k:Decimal(0) for k in A.OPTIONS}
+    probs['unsupported']=Decimal(1) if support_band is None else Decimal(1)-support_mass
+    if support_band is not None:probs[f'supported_{support_band}']=support_mass
+    raw={k:float(v) for k,v in probs.items()}
+    choice=max(A.OPTIONS,key=lambda k:raw[k])
+    return {'type':'choice','choice':choice,'probabilities':raw,'confidence':.7}
+
+def add_policy(raw_choices,ids):
+    normalized={};mass={};conditional={}
+    for cid in ids:
+        raw=raw_choices[cid]['probabilities'];d={k:Decimal(str(raw[k])) for k in A.OPTIONS};total=sum(d.values(),Decimal(0));norm={k:d[k]/total for k in A.OPTIONS}
+        support=sum((norm[f'supported_{i}'] for i in range(1,5)),Decimal(0));band=(sum((Decimal(i)*norm[f'supported_{i}'] for i in range(1,5)),Decimal(0))/support) if support>Decimal('.5') else None
+        normalized[cid]={k:str(v) for k,v in norm.items()};mass[cid]=str(support);conditional[cid]=None if band is None else str(band)
+    return normalized,mass,conditional
+
+def fixture():
+    protocol=json.loads((ROOT/'protocol.json').read_text());acq={'pools':{}};refs={'A':{},'B':{}};queries=[];ops=[]
+    for i in range(1,14):
+        q=f'q{i}';cards=[{'id':f'c{j}','title':f'title{j}','url':f'https://example.org/{j}','snippet':'fixture'} for j in range(12)];acq['pools'][q]={'cards':cards};queries.append({'id':q,'kind':'navigation' if i>=9 else 'research','target_url':'https://example.org/10'})
+        for who in refs:refs[who][q]={c['id']:{'lead':3 if j>=8 else 0,'facets':['f1'],'visible':1,'uncertain':False,'rationale':'fixture'} for j,c in enumerate(cards)}
+    neutral_ids=[f'n{j}' for j in range(80)];neutral_choices={cid:answer() for cid in neutral_ids};nn,nm,nc=add_policy(neutral_choices,neutral_ids)
+    neutral={'status':'valid','questions':80,'synthetic_input':True,'choices':neutral_choices,'normalized_probabilities':nn,'support_mass':nm,'conditional_expected_band':nc,'elapsed_ms':200,'candidate_phase_ms':250,'usage':{'input_tokens':1,'output_tokens':1}}
+    for plan in protocol['schedule']:
+        q=plan['case'];base=[c['id'] for c in acq['pools'][q]['cards']];native=base[8:]+base[:8] if plan['variant']=='rotate' else base
+        choices={cid:answer(2 if int(cid[1:])<4 else 3 if int(cid[1:])<8 else 4) for cid in base}
+        # Policy bands 4,3,2 deliberately move visible useful references upward.
+        nn,nm,nc=add_policy(choices,base);canonical=A.canonical_ids(acq['pools'][q]['cards'])
+        policy={'support_mass':{cid:Decimal(nm[cid]) for cid in base},'conditional':{cid:None if nc[cid] is None else Decimal(nc[cid]) for cid in base}}
+        relative=A.expected_order(canonical,policy)
+        w0={'status':'valid','order_ids':base,'scores':{c:9-j/100 for j,c in enumerate(base)},'elapsed_ms':200,'usage':{'input_tokens':1,'output_tokens':1}}
+        rel={'status':'valid','order_ids':relative,'choices':choices,'normalized_probabilities':nn,'support_mass':nm,'conditional_expected_band':nc,'elapsed_ms':300,'usage':{'input_tokens':1,'output_tokens':1}}
+        ops.append({'case':q,'variant':plan['variant'],'provenance_order_ids':native,'arms':{'w0':w0,'relative':rel},'candidate_phase_ms':400})
+    run={'wall_seconds':1,'status':'complete','synthetic':False,'neutral':neutral,'budget':{'attempts':43,'input_tokens':43,'output_tokens':43,'unknown_usage':False},'operations':ops}
+    return run,acq,refs,queries,protocol
+
+class Tests(unittest.TestCase):
+    def test_complete_quality_never_authorizes_adoption(self):
+        r=A.analyze(*fixture());self.assertTrue(r['development_all_gates_passed']);self.assertFalse(r['adoption_eligible']);self.assertEqual(r['schema'],'exp070-joint-support-priority-analysis/1')
+    def test_synthetic_cannot_be_quality_or_adoption(self):
+        x=fixture();x[0]['synthetic']=True;r=A.analyze(*x);self.assertFalse(r['development_quality_passed']);self.assertFalse(r['quality_analysis_performed']);self.assertFalse(r['adoption_eligible']);self.assertEqual(r['outcome'],'synthetic_fixture_only')
+    def test_other_assessor_veto_and_useful_retention(self):
+        x=fixture()
+        for rows in x[2]['B'].values():
+            for cid,row in rows.items():row['lead']=3 if int(cid[1:])<4 else 0
+        self.assertFalse(A.analyze(*x)['development_quality_passed'])
+        x=fixture()
+        for rows in x[2]['A'].values():
+            for cid,row in rows.items():row['lead']=3 if int(cid[1:])<4 else 0
+        self.assertFalse(A.analyze(*x)['development_quality_passed'])
+    def test_raw_choice_distribution_schema_range_mass_and_argmax(self):
+        mutations=('bool','nan','range','huge-integer','mass','argmax','confidence','unknown-option','unknown-answer-key','unknown-distribution-key','missing','wrong-id')
+        for mutation in mutations:
+            x=fixture();a=x[0]['operations'][0]['arms']['relative']['choices']['c0']
+            if mutation=='bool':a['probabilities']['unsupported']=True
+            elif mutation=='nan':a['probabilities']['unsupported']=float('nan')
+            elif mutation=='range':a['probabilities']['unsupported']=1.1
+            elif mutation=='huge-integer':a['probabilities']['unsupported']=10**1000
+            elif mutation=='mass':a['probabilities']['supported_1']=.3
+            elif mutation=='argmax':a['choice']='unsupported'
+            elif mutation=='confidence':a['confidence']=float('nan')
+            elif mutation=='unknown-option':a['choice']='other'
+            elif mutation=='unknown-answer-key':a['metadata']='extra'
+            elif mutation=='unknown-distribution-key':a['probabilities']['other']=0
+            elif mutation=='missing':del x[0]['operations'][0]['arms']['relative']['choices']['c0']
+            elif mutation=='wrong-id':
+                row=x[0]['operations'][0]['arms']['relative'];row['choices']['not-a-card']=row['choices'].pop('c0')
+            self.assertEqual(A.analyze(*x)['outcome'],'incomplete',mutation)
+    def test_argmax_is_validation_only_supported_mass_controls_class(self):
+        x=fixture();row=x[0]['operations'][0]['arms']['relative'];a=row['choices']['c8']
+        a['probabilities']={'unsupported':.4,'supported_1':.15,'supported_2':.15,'supported_3':.15,'supported_4':.15};a['choice']='unsupported'
+        n,m,c=add_policy(row['choices'],list(row['choices']));row['normalized_probabilities']=n;row['support_mass']=m;row['conditional_expected_band']=c
+        canonical=A.canonical_ids(x[1]['pools']['q1']['cards']);p={'support_mass':{cid:Decimal(m[cid]) for cid in m},'conditional':{cid:Decimal(c[cid]) if c[cid] is not None else None for cid in c}};row['order_ids']=A.expected_order(canonical,p)
+        self.assertEqual(Decimal(m['c8']),Decimal('.6'));self.assertFalse(A.analyze(*x)['structural_failures'])
+    def test_tied_maximum_choice_is_valid(self):
+        x=fixture();row=x[0]['operations'][0]['arms']['relative'];a=row['choices']['c8']
+        a['probabilities']={'unsupported':.4,'supported_1':.2,'supported_2':0,'supported_3':0,'supported_4':.4};a['choice']='unsupported'
+        n,m,c=add_policy(row['choices'],list(row['choices']));row.update(normalized_probabilities=n,support_mass=m,conditional_expected_band=c)
+        canonical=A.canonical_ids(x[1]['pools']['q1']['cards']);p={'support_mass':{cid:Decimal(m[cid]) for cid in m},'conditional':{cid:Decimal(c[cid]) if c[cid] is not None else None for cid in c}};row['order_ids']=A.expected_order(canonical,p)
+        self.assertEqual(Decimal(m['c8']),Decimal('.6'));self.assertFalse(A.analyze(*x)['structural_failures'])
+    def test_exact_half_and_zero_support_are_canonical_second_bucket(self):
+        x=fixture();row=x[0]['operations'][0]['arms']['relative'];a=row['choices']['c0'];a.update(answer(2,Decimal('.5')))
+        # A zero-support card must avoid conditional division and remain canonical in the lower bucket.
+        z=row['choices']['c1'];z.update(answer(None,Decimal(1)))
+        n,m,c=add_policy(row['choices'],list(row['choices']));row.update(normalized_probabilities=n,support_mass=m,conditional_expected_band=c)
+        canonical=A.canonical_ids(x[1]['pools']['q1']['cards']);p={'support_mass':{cid:Decimal(m[cid]) for cid in m},'conditional':{cid:Decimal(c[cid]) if c[cid] is not None else None for cid in c}};row['order_ids']=A.expected_order(canonical,p)
+        self.assertEqual(m['c0'],'0.5');self.assertIsNone(c['c0']);self.assertEqual(m['c1'],'0');self.assertIsNone(c['c1']);self.assertFalse(A.analyze(*x)['structural_failures'])
+    def test_claimed_normalized_signals_and_final_order_are_recomputed(self):
+        x=fixture();row=x[0]['operations'][0]['arms']['relative'];row['support_mass']['c0']='0.9';self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+        x=fixture();row=x[0]['operations'][0]['arms']['relative'];row['order_ids'].reverse();self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+    def test_call_count_full_schedule_usage_sum_and_per_call_caps(self):
+        x=fixture();x[0]['budget']['attempts']=42;self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+        x=fixture();x[0]['budget']['input_tokens']=44;self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+        x=fixture();x[0]['neutral']['usage']['output_tokens']=64001;self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+        x=fixture();x[4]['schedule'][0]['arms']=['w0'];self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+    def test_candidate_and_neutral_phase_wall_include_http(self):
+        x=fixture();x[0]['operations'][0]['candidate_phase_ms']=299.9;self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+        x=fixture();x[0]['operations'][0]['candidate_phase_ms']=1001;self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+        x=fixture();x[0]['neutral']['candidate_phase_ms']=199;self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+    def test_neutral_requires_exact_80_answer_inventory_and_policy(self):
+        x=fixture();del x[0]['neutral']['choices']['n0'];self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+        x=fixture();x[0]['neutral']['support_mass']['n0']='.9';self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+    def test_absent_navigation_target_remains_unmet_and_no_adoption(self):
+        x=fixture();x[3][9]['target_url']='https://example.org/missing';r=A.analyze(*x);self.assertTrue(r['navigation_gate_met']);self.assertFalse(r['acquisition_recall_met']);self.assertFalse(r['development_all_gates_passed']);self.assertFalse(r['adoption_eligible'])
+    def test_missing_or_duplicate_navigation_inputs_cannot_pass(self):
+        x=list(fixture());x[3]=[q for q in x[3] if q['kind']!='navigation'];self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+        x=list(fixture());x[3].append(copy.deepcopy(x[3][-1]));self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+
+if __name__=='__main__':unittest.main()
