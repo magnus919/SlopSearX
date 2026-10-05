@@ -1,0 +1,116 @@
+"""Offline structural tests for the EXP-077 source assessment adapter."""
+import copy
+import importlib.machinery
+import pathlib
+import unittest
+
+
+HERE = pathlib.Path(__file__).resolve().parent
+M = importlib.machinery.SourceFileLoader(
+    "exp077_source_adapter_test_packets", str(HERE / "model-packets.py.txt")).load_module()
+A = importlib.machinery.SourceFileLoader(
+    "exp077_source_assessment_adapter", str(HERE / "source-assessment-adapter.py.txt")).load_module()
+
+
+class SourceAssessmentAdapterTests(unittest.TestCase):
+    def setUp(self):
+        self.task = {"id": "d1", "query": "Which behavior applies?", "purpose": "Check current behavior."}
+        self.facets = ["d1_f1", "d1_f2"]
+        self.sources = [
+            {"source_id": "s-success", "state": "success", "context": "Current behavior applies to version 2. 🚀"},
+            {"source_id": "s-not-acquired", "state": "not_acquired"},
+            {"source_id": "s-unusable", "state": "acquired_unusable"},
+            {"source_id": "s-failed", "state": "failed"},
+            {"source_id": "s-future", "state": "adapter_state_pending"},
+        ]
+        self.plan = M.source_chunk_assignments("d1", self.sources, self.facets, chunk_size=20)
+        self.outputs = []
+        for chunk in self.plan["chunks"]:
+            if not chunk["model_call_required"]:
+                continue
+            rows = []
+            for source in chunk["sources"]:
+                rows.append({"source_id": source["source_id"], "facets": [
+                    {"facet_id": facet, "disposition": "evidence_available",
+                     "scope_match": "match", "entailment": "supports",
+                     "applicability": "applicable", "not_assessable_reason": "",
+                     "evidence_ids": [source["evidence_ids"][0]],
+                     "reason": "The passage directly addresses the criterion.",
+                     "limitations": ["The captured passage is bounded."]}
+                    for facet in self.facets]})
+            self.outputs.append({"task_id": chunk["task_id"], "assessor_id": chunk["assessor_id"],
+                                 "chunk_id": chunk["assignment_id"], "source_assessments": rows})
+
+    def test_closes_each_assessor_full_inventory_without_fabricating_unknown_judgments(self):
+        result = A.close_source_chunk_assessments(self.plan, self.outputs, self.task)
+        self.assertEqual(result["inventory_source_ids"], [row["source_id"] for row in self.sources])
+        self.assertFalse(result["assessors_joined"])
+        self.assertEqual(set(result["assessors"]), {"R1", "R2"})
+        for assessor, closed in result["assessors"].items():
+            self.assertEqual(closed["raw_packet"]["assessor_id"], assessor)
+            self.assertEqual(closed["raw_packet"]["packet_kind"], "source")
+            self.assertEqual(closed["validation"]["structurally_valid"], True)
+            self.assertEqual(closed["structural_validation"]["assessment_state"], "not_assessable")
+            self.assertEqual(closed["critical_endpoint"], {
+                "state": "not_computed", "semantic_completion": "not_claimed"})
+            arm = closed["own_source_assessment"]["tasks"][0]["arms"][0]
+            self.assertEqual(arm["arm_id"], "source_pool")
+            facets = arm["facet_assessments"]
+            self.assertEqual([row["facet_id"] for row in facets], self.facets)
+            for facet in facets:
+                by_source = {row["source_id"]: row for row in facet["evidence_dispositions"]}
+                self.assertEqual(list(by_source), [row["source_id"] for row in self.sources])
+                self.assertEqual(by_source["s-success"]["disposition"], "evidence_available")
+                ref = by_source["s-success"]["references"][0]
+                self.assertEqual(ref["quote"], self.sources[0]["context"])
+                self.assertEqual(by_source["s-not-acquired"]["disposition"], "not_acquired")
+                self.assertEqual(by_source["s-unusable"]["disposition"], "acquired_unusable")
+                self.assertEqual(by_source["s-failed"]["disposition"], "acquired_unusable")
+                self.assertEqual(by_source["s-future"]["disposition"], "not_assessable")
+                self.assertEqual(closed["registry"]["tasks"][0]["pool_sources"]["s-failed"]["scope"]["capture_state"], "failed")
+                for unavailable in ("s-not-acquired", "s-unusable", "s-failed", "s-future"):
+                    self.assertEqual(by_source[unavailable]["scope_match"], "not_assessable")
+                    self.assertEqual(by_source[unavailable]["entailment"], "not_assessable")
+                    self.assertEqual(by_source[unavailable]["applicability"], "not_assessable")
+            self.assertEqual(closed["capture_availability"], [
+                {"source_id": row["source_id"], "observed_state": row["state"]} for row in self.sources])
+            self.assertEqual(closed["chunk_outputs"], [row for row in self.outputs if row["assessor_id"] == assessor])
+            self.assertEqual(set(closed["runtime_pins"]), {
+                "adapter_sha256", "model_packets_sha256", "hydrator_sha256", "validator_sha256"})
+            answer_template = M.answer_assessor_template(
+                "answer-packet", assessor, "d1", "candidate", self.facets,
+                {facet: [] for facet in self.facets}, [row["source_id"] for row in self.sources],
+                {"arm_id": "candidate", "assigned_source_ids": [], "opening_outcomes": [],
+                 "delivered_sources": [], "catalog": {"version": 1, "sources": {}, "passages": {}},
+                 "catalog_sha256": "0" * 64},
+                [{"facet_id": facet} for facet in self.facets], closed["own_source_assessment"])
+            self.assertEqual(answer_template["own_source_assessment"]["assessor_id"], assessor)
+            self.assertEqual(answer_template["own_source_assessment"]["tasks"],
+                             closed["own_source_assessment"]["tasks"])
+
+    def test_unknown_or_missing_chunk_output_rejects_without_repair(self):
+        bad = copy.deepcopy(self.outputs)
+        bad[0]["chunk_id"] = "not-a-frozen-chunk"
+        with self.assertRaisesRegex(A.AdapterError, "exact frozen assignments"):
+            A.close_source_chunk_assessments(self.plan, bad, self.task)
+        with self.assertRaisesRegex(A.AdapterError, "exact frozen assignments"):
+            A.close_source_chunk_assessments(self.plan, self.outputs[:-1], self.task)
+
+    def test_observed_unavailable_inventory_is_structurally_closed_without_endpoint_inference(self):
+        sources = [
+            {"source_id": "s1", "state": "not_acquired"},
+            {"source_id": "s2", "state": "acquired_unusable"},
+        ]
+        plan = M.source_chunk_assignments("d1", sources, ["d1_f1"])
+        result = A.close_source_chunk_assessments(plan, [], self.task)
+        for closed in result["assessors"].values():
+            self.assertTrue(closed["structural_validation"]["structurally_valid"])
+            self.assertEqual(closed["structural_validation"]["assessment_state"], "not_assessable")
+            self.assertEqual(closed["critical_endpoint"]["state"], "not_computed")
+            dispositions = closed["own_source_assessment"]["tasks"][0]["arms"][0]["facet_assessments"][0]["evidence_dispositions"]
+            self.assertEqual([row["disposition"] for row in dispositions], ["not_acquired", "acquired_unusable"])
+        self.assertTrue(result["coverage"]["assessors"]["R1"]["complete"])
+
+
+if __name__ == "__main__":
+    unittest.main()

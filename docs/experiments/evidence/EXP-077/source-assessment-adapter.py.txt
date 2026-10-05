@@ -1,0 +1,247 @@
+"""Close deterministic EXP-077 source chunks into validator packets.
+
+This adapter performs no grading, completion inference, or assessor joining.
+It preserves observed capture states and does not turn missing passages into
+positive/negative semantic judgments.
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import json
+from pathlib import Path
+
+
+HERE = Path(__file__).resolve().parent
+MEASUREMENT = HERE.parent / "research-usefulness-measurement"
+PACKETS_PATH = HERE / "model-packets.py.txt"
+HYDRATOR_PATH = MEASUREMENT / "hydrate.py.txt"
+VALIDATOR_PATH = MEASUREMENT / "validate.py.txt"
+M = importlib.machinery.SourceFileLoader("exp077_source_adapter_packets", str(PACKETS_PATH)).load_module()
+H = importlib.machinery.SourceFileLoader("exp077_source_adapter_hydrator", str(HYDRATOR_PATH)).load_module()
+V = importlib.machinery.SourceFileLoader("exp077_source_adapter_validator", str(VALIDATOR_PATH)).load_module()
+
+SCHEMA = "exp077-source-assessment-adapter/1"
+SOURCE_POOL_ARM = "source_pool"
+UNAVAILABLE_DISPOSITION = {
+    "not_acquired": "not_acquired",
+    "acquired_unusable": "acquired_unusable",
+    # These terminal capture outcomes mean the source was attempted but no
+    # usable context was retained. Their original names remain in registry.
+    "failed": "acquired_unusable",
+    "refused": "acquired_unusable",
+    "duplicate": "acquired_unusable",
+}
+
+
+class AdapterError(ValueError):
+    """The frozen source chunks cannot be closed without repair or inference."""
+
+
+def _canonical(value) -> bytes:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True,
+                      separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+def _sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _runtime_pins() -> dict:
+    return {
+        "adapter_sha256": _sha(Path(__file__).read_bytes()),
+        "model_packets_sha256": _sha(PACKETS_PATH.read_bytes()),
+        "hydrator_sha256": _sha(HYDRATOR_PATH.read_bytes()),
+        "validator_sha256": _sha(VALIDATOR_PATH.read_bytes()),
+    }
+
+
+def _unavailable_judgment(reason: str) -> dict:
+    return {"scope_match": "not_assessable", "entailment": "not_assessable",
+            "applicability": "not_assessable", "not_assessable_reason": reason,
+            "evidence_ids": [], "reason": reason}
+
+
+def _packet_id(task_id: str, assessor_id: str, plan: dict, outputs: list[dict]) -> str:
+    basis = {"schema": SCHEMA, "task_id": task_id, "assessor_id": assessor_id,
+             "inventory_source_ids": plan["inventory_source_ids"],
+             "pool_catalog_sha256": plan["pool_catalog_sha256"],
+             "outputs": outputs}
+    return "exp077-source-" + _sha(_canonical(basis))[:32]
+
+
+def close_source_chunk_assessments(plan: dict, outputs: list[dict], task: dict) -> dict:
+    """Return one closed, validated source packet per independent assessor.
+
+    ``outputs`` are exact model JSON objects keyed only by each frozen
+    ``chunk_id``. Coverage is checked by the existing EXP-077 helper before
+    any conversion. The packet registry retains source state and context metadata
+    for the full inventory; only successful captured contexts enter the evidence
+    catalog. The result keeps structural validation separate from the study's
+    required critical-endpoint assessment, which is deliberately not computed.
+    """
+    if not isinstance(task, dict) or not isinstance(task.get("id"), str) or not task["id"]:
+        raise AdapterError("task identity is required")
+    if not isinstance(plan, dict) or not isinstance(outputs, list):
+        raise AdapterError("frozen plan and output list required")
+    facets = plan.get("chunks", [{}])[0].get("facets") if plan.get("chunks") else None
+    if (not isinstance(facets, list) or not facets or any(not isinstance(x, str) or not x for x in facets)
+            or len(facets) != len(set(facets))):
+        raise AdapterError("frozen facet inventory missing or duplicated")
+    if plan.get("inventory_complete") is not True or not isinstance(plan.get("inventory_source_ids"), list):
+        raise AdapterError("complete frozen source inventory required")
+    if (not isinstance(plan.get("pool_catalog"), dict) or
+            M._hash(_canonical(plan["pool_catalog"])) != plan.get("pool_catalog_sha256")):
+        raise AdapterError("frozen pool catalog hash mismatch")
+    try:
+        coverage = M.verify_source_chunk_coverage(plan, outputs)
+    except Exception as exc:
+        raise AdapterError("source chunk outputs do not match exact frozen assignments") from exc
+
+    chunks = plan["chunks"]
+    if not chunks:
+        raise AdapterError("source plan has no assessor inventory")
+    task_ids = {chunk.get("task_id") for chunk in chunks}
+    if task_ids != {task["id"]}:
+        raise AdapterError("source plan belongs to a different task")
+    assessors = list(plan.get("assessor_ids", []))
+    if not assessors or set(assessors) != set(coverage["assessors"]):
+        raise AdapterError("source plan assessor inventory mismatch")
+    for assessor in assessors:
+        rows = [chunk for chunk in chunks if chunk.get("assessor_id") == assessor]
+        seen = [sid for chunk in rows for sid in chunk.get("source_ids", [])]
+        if seen != plan["inventory_source_ids"]:
+            raise AdapterError("assessor source inventory is incomplete or reordered")
+
+    output_by_chunk = {row["chunk_id"]: row for row in outputs}
+    source_rows = {}
+    for chunk in chunks:
+        for row in chunk["source_inventory"]:
+            sid = row["source_id"]
+            prior = source_rows.get(sid)
+            value = {k: row[k] for k in row}
+            if prior is not None and prior != value:
+                raise AdapterError("assessors received different frozen source inventory")
+            source_rows[sid] = value
+    if list(source_rows) != plan["inventory_source_ids"]:
+        raise AdapterError("source inventory differs from frozen ordered IDs")
+
+    by_assessor = {}
+    for assessor in assessors:
+        assessor_outputs = [output_by_chunk[chunk["assignment_id"]]
+                            for chunk in chunks
+                            if chunk["assessor_id"] == assessor and chunk["model_call_required"]]
+        assessments = {}
+        for chunk in chunks:
+            if chunk["assessor_id"] != assessor or not chunk["model_call_required"]:
+                continue
+            output = output_by_chunk[chunk["assignment_id"]]
+            for source_assessment in output["source_assessments"]:
+                assessments[source_assessment["source_id"]] = source_assessment
+
+        facet_assessments = []
+        for facet_id in facets:
+            limitations = []
+            evidence_dispositions = []
+            for source_id in plan["inventory_source_ids"]:
+                source = source_rows[source_id]
+                state = source["state"]
+                if state == "success":
+                    item = assessments.get(source_id)
+                    if not isinstance(item, dict):
+                        raise AdapterError("successful capture lacks exact chunk assessment")
+                    source_facet = next((row for row in item["facets"] if row["facet_id"] == facet_id), None)
+                    if source_facet is None:
+                        raise AdapterError("source facet coverage missing")
+                    limitations.extend(source_facet["limitations"])
+                    disposition = {
+                        "source_id": source_id,
+                        "disposition": source_facet["disposition"],
+                        "scope_match": source_facet["scope_match"],
+                        "entailment": source_facet["entailment"],
+                        "applicability": source_facet["applicability"],
+                        "not_assessable_reason": source_facet["not_assessable_reason"],
+                        "reason": source_facet["reason"],
+                        "evidence_ids": list(source_facet["evidence_ids"]),
+                    }
+                    evidence_dispositions.append(disposition)
+                else:
+                    observed = f"Observed capture state: {state}"
+                    disposition = UNAVAILABLE_DISPOSITION.get(state, "not_assessable")
+                    unknown_reason = observed if disposition == "not_assessable" else ""
+                    evidence_dispositions.append({
+                        "source_id": source_id,
+                        "disposition": disposition,
+                        **_unavailable_judgment(unknown_reason or observed),
+                    })
+            facet_assessments.append({
+                "facet_id": facet_id,
+                "evidence_dispositions": evidence_dispositions,
+                "limitations": limitations,
+            })
+
+        packet_id = _packet_id(task["id"], assessor, plan, assessor_outputs)
+        raw_packet = {
+            "schema": V.SCHEMA,
+            "packet_id": packet_id,
+            "assessor_id": assessor,
+            "packet_kind": "source",
+            "tasks": [{"task_id": task["id"], "arms": [{
+                "arm_id": SOURCE_POOL_ARM,
+                "facet_assessments": facet_assessments,
+            }]}],
+        }
+        pool_sources = {}
+        contexts = {}
+        for source_id in plan["inventory_source_ids"]:
+            source = source_rows[source_id]
+            record = {"scope": {"capture_state": source["state"], "observed": True}}
+            if source["state"] == "success":
+                context = source["context"]
+                contexts[source_id] = context
+                record.update({"context": context, "context_sha256": V.sha256(context)})
+            pool_sources[source_id] = record
+        registry = {
+            "tasks": [{"task_id": task["id"], "arms": [SOURCE_POOL_ARM],
+                       "critical_facets": list(facets), "pool_sources": pool_sources,
+                       "delivered_sources": {SOURCE_POOL_ARM: []}}],
+            "assignments": [{"packet_id": packet_id, "assessor_id": assessor,
+                             "packet_kind": "source"}],
+        }
+        raw_bytes = _canonical(raw_packet)
+        try:
+            hydrated = M.hydrate_and_validate_packet(
+                raw_bytes, catalog_kind="source_pool", catalog=plan["pool_catalog"],
+                contexts=contexts, assigned_source_ids=list(contexts),
+                expected_catalog_sha256=plan["pool_catalog_sha256"], registry=registry)
+        except Exception as exc:
+            raise AdapterError(f"closed source packet failed structural validation for {assessor}") from exc
+        validation = hydrated["validation"]
+        if validation.get("structurally_valid") is not True:
+            raise AdapterError("validator did not confirm structural validity")
+        by_assessor[assessor] = {
+            "packet_id": packet_id,
+            "raw_packet": raw_packet,
+            "registry": registry,
+            "own_source_assessment": hydrated["expanded_envelope"],
+            "raw_packet_sha256": _sha(raw_bytes),
+            "validation": validation,
+            "structural_validation": {
+                "structurally_valid": validation["structurally_valid"],
+                "assessment_state": validation["assessment_state"],
+                "not_assessable_judgment_count": validation["not_assessable_judgment_count"],
+            },
+            "capture_availability": [
+                {"source_id": sid, "observed_state": source_rows[sid]["state"]}
+                for sid in plan["inventory_source_ids"]
+            ],
+            "critical_endpoint": {"state": "not_computed", "semantic_completion": "not_claimed"},
+            "runtime_pins": _runtime_pins(),
+            "chunk_outputs": M.copy_json(assessor_outputs),
+        }
+    return {"schema": SCHEMA, "task_id": task["id"],
+            "inventory_source_ids": list(plan["inventory_source_ids"]),
+            "inventory_complete": True, "assessors_joined": False,
+            "assessors": by_assessor, "coverage": coverage,
+            "required_critical_endpoint": {"state": "not_computed", "semantic_completion": "not_claimed"},
+            "runtime_pins": _runtime_pins()}
