@@ -25,3 +25,18 @@ wire contract and capacity preview. Correct the implementation source lookup,
 not the immutable registration. The smoke dispatched no request and never
 reached parsing. Complete build/parse and preview-byte regression coverage is
 required before source qualification.
+
+## Subsequent draft smoke
+
+After both source fixes, root passed 52 natural build/parse checks (thirteen
+pools under four permutations), with candidate bodies equal to the sealed
+calculator's projection. A 160-answer synthetic response also parsed fully.
+These are local structural fixtures, not ranking evidence or final source
+qualification.
+
+The synthetic smoke exposed a further mismatch: the new builder's fixture
+produced a 267,151-byte request rather than the sealed preview fixture's
+270,847 bytes. The maximum shape has 160 questions in both cases, but its exact
+inventory/context differs. The owning agent must use the registered preview's
+exact synthetic cards and context before neutral admission. Do not revise the
+immutable preview or treat a shorter substitute as its capacity test.
