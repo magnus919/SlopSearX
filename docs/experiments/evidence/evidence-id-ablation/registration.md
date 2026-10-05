@@ -7,3 +7,7 @@ Eight fresh Luna answer turns form four matched quote/ID pairs, followed by two 
 The protocol, exact prompts/schemas and immutable source pins must be committed and the packet builder/validator independently qualified before any model invocation. Freeze private packet hashes and neutral synthetic checks before dispatch. Assessor blinding and current model checkpoint limitations must be disclosed. A mechanical pass is not entailment, task utility, ranking improvement or production qualification.
 
 See [protocol](protocol.json). Full complete-pool selector and cross-service delivery remain open.
+
+## Completed outcome
+
+[Readout](readout.md): ID references resolved 37/37; copied references resolved 27/31. Neither advisory assessor found a task-completion increase. Missing fields in the second assessment and assessor-contract timing limitations are retained. Mechanical validity passed; utility and selector qualification remain unproved.
