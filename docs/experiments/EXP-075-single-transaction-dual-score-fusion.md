@@ -1,11 +1,6 @@
 # EXP-075: single-transaction dual-Score rank fusion
 
-Status: completed; development rejected. The prospective protocol below is
-retained unchanged as the registration record. The qualified producer completed
-44 calls; the original evaluator failed before metrics. Separately source-bound
-post-run verification retained that failure and established rejection under the
-corrected evaluator. See the [completed readout](evidence/EXP-075/completed/readout.md)
-and [bounded offline diagnosis](evidence/EXP-075/q4-instability-diagnosis.md).
+Status: prospective registration; no implementation or provider calls.
 Issue: #516. Baseline source: `1b286066bde749fed32a0d2033586b9e59d18ee6`.
 The machine-readable protocol is `evidence/EXP-075/protocol.json`.
 
