@@ -1,6 +1,6 @@
 {
   "schema": "transport-overhead-diagnostic/1",
-  "status": "frozen-before-timing",
+  "status": "amended-before-next-attempt-after-partial-failure",
   "purpose": "Measure local cold Python subprocess plus wrapper/import/pipe overhead against the same in-process offline HTTP.exchange fixture path used by the owned EXP-073 wrapper. This diagnoses local harness overhead only; it does not estimate provider latency, ranking quality, or adoption.",
   "source_revision": "8544c90032281d32c1a0a2f6790fd84730b5c525",
   "source_sha256": {
@@ -13,7 +13,7 @@
     "slopsearx/rerank.py": "df518bac899fa457e713201192a65f8ee0c3599419382e5be221d5ac366b479e",
     "slopsearx/service.py": "869befbfbfbf24b4c998a55d56ae6e180b8f2bf484a67c12f8c1a6929ba3ae33",
     "slopsearx/server.py": "a4245fe08f0f334afa33ba309d800ef6e4309babad642d820a5e6e75d7f94eda",
-    "docs/experiments/evidence/transport-overhead-diagnostic/measure.py.txt": "e4be41b86147da972448e835949acede675fc713dcbf5a313a7133928211cf90"
+    "docs/experiments/evidence/transport-overhead-diagnostic/measure.py.txt": "53f543f99b9be22b466fb43a80292e86f9daf1ce58720031f89fa0df44c60e61"
   },
   "environment": {
     "python": "CPython 3.14.7",
@@ -97,12 +97,21 @@
   "protocol_corrections": [
     {
       "correction_id": "setup-fixture-token-01",
-      "before_timing": true,
+      "before_timing": false,
       "initial_protocol_sha256": "5994b4be43c5d24049eb8f94e95956fd48c6e77be5cc04156441e3269ae3cf42",
       "initial_measure_script_sha256": "1a11a39f01512ea4a75520337788c16d13d431b2a5d3610125700d69ea0c0226",
       "reason": "The first setup-only invocation reached the in-process EXP-059 HTTP.exchange with an empty token; EXP-059 suppresses responses containing the token and bytes membership for an empty token matches every response, so it stopped before any timed operation.",
       "change": "Use the same fixed non-secret offline-fixture-non-secret marker already used by the cold wrapper.",
-      "evidence": "setup-failure.json records the invocation outcome and verified zero paired operations, child processes, calls, and receipts; no result file was written.",
+      "evidence": "setup-failure.json preserves the partial pair-0 attempt. This first correction record was later found inaccurate about control flow and is explicitly superseded by attempt-evidence-and-control-flow-02.",
+      "sample_plan_changed": false
+    },
+    {
+      "correction_id": "attempt-evidence-and-control-flow-02",
+      "before_any_new_timing": true,
+      "corrects": "setup-failure.json and correction setup-fixture-token-01",
+      "reason": "Review of run() control flow established that pair 0 executes the cold_subprocess arm before in_process. The initial attempt therefore completed the cold operation, including two offline child calls and local phase/final-receipt timing, then failed during the in-process W0 exchange. TemporaryDirectory cleanup removed those receipts, and the result file was never written. The earlier zero-operation/zero-call statement was incorrect.",
+      "known_counts": "One pair entered; cold arm completed 2 subprocess calls and 2 fixture exchanges with two logical call receipt paths plus one final candidate receipt (six call-receipt writes plus one final receipt write). The in-process arm wrote its pending W0 receipt and invoked the local fixture opener once before empty-token suppression raised. Thus 3 fixture exchanges were attempted, 2 calls returned validated responses, 1 call failed, and temporary evidence was deleted during exception cleanup. Exact timings/raw receipts are unavailable.",
+      "change": "Future attempts reject pre-existing output and attempt-receipts at function entry and retain per-call/final receipts under attempt-receipts instead of deleting temporary evidence.",
       "sample_plan_changed": false
     }
   ]

@@ -110,20 +110,24 @@ def nearest_rank(values,p): return sorted(values)[max(0,math.ceil(p*len(values))
 def summarize(values): return {'n':len(values),'min':min(values),'median':statistics.median(values),'p95_nearest_rank':nearest_rank(values,.95),'max':max(values)}
 
 def run(out):
+    out=Path(out)
+    if out.exists(): raise ValueError('output-exists')
+    attempt_root=HERE/'attempt-receipts'
+    if attempt_root.exists(): raise ValueError('attempt-receipts-exist')
     check_sources();case,built=fixture_operation();samples=[];child_count=0
-    with tempfile.TemporaryDirectory(prefix='overhead-diagnostic-') as temp:
-        temp=Path(temp)
-        for i in range(PROTOCOL['sample_plan']['paired_operations']):
-            order=('cold_subprocess','in_process') if i%2==0 else ('in_process','cold_subprocess');pair={'index':i,'order':list(order)}
-            for kind in order:
-                value=operation(kind,temp/('%02d-%s'%(i,kind)),i,case,built);pair[kind]=value
-                if kind=='cold_subprocess': child_count+=2
-            for arm in ('cold_subprocess','in_process'):
-                _same=[{k:v for k,v in x['hashes'].items() if k!='stderr_sha256'} for x in pair[arm]['calls']]
-                _other=[{k:v for k,v in x['hashes'].items() if k!='stderr_sha256'} for x in pair['in_process' if arm=='cold_subprocess' else 'cold_subprocess']['calls']]
-                if _same!=_other: raise ValueError('paired-bytes-differ')
-            pair['phase_delta_cold_minus_in_process_ms']=pair['cold_subprocess']['phase_ms']-pair['in_process']['phase_ms']
-            samples.append(pair)
+    attempt_root.mkdir()
+    temp=attempt_root
+    for i in range(PROTOCOL['sample_plan']['paired_operations']):
+        order=('cold_subprocess','in_process') if i%2==0 else ('in_process','cold_subprocess');pair={'index':i,'order':list(order)}
+        for kind in order:
+            value=operation(kind,temp/('%02d-%s'%(i,kind)),i,case,built);pair[kind]=value
+            if kind=='cold_subprocess': child_count+=2
+        for arm in ('cold_subprocess','in_process'):
+            _same=[{k:v for k,v in x['hashes'].items() if k!='stderr_sha256'} for x in pair[arm]['calls']]
+            _other=[{k:v for k,v in x['hashes'].items() if k!='stderr_sha256'} for x in pair['in_process' if arm=='cold_subprocess' else 'cold_subprocess']['calls']]
+            if _same!=_other: raise ValueError('paired-bytes-differ')
+        pair['phase_delta_cold_minus_in_process_ms']=pair['cold_subprocess']['phase_ms']-pair['in_process']['phase_ms']
+        samples.append(pair)
     if child_count!=PROTOCOL['sample_plan']['cold_child_processes']: raise ValueError('child-count')
     cold=[x['cold_subprocess']['phase_ms'] for x in samples];inside=[x['in_process']['phase_ms'] for x in samples]
     deltas=[x['phase_delta_cold_minus_in_process_ms'] for x in samples]
@@ -150,8 +154,7 @@ def run(out):
                         'rule':PROTOCOL['decision_rule']},
             'timing_caveat':'All reported exchange times are local offline fixture timings. They are not estimates of provider latency. Paired deltas compare these diagnostic paths only; no prior EXP-073 measurement was adjusted.',
             'samples':samples}
-    raw=json.dumps(result,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode();out=Path(out)
-    if out.exists(): raise ValueError('output-exists')
+    raw=json.dumps(result,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()
     out.write_bytes(raw)
     return result
 
