@@ -23,7 +23,7 @@
   "rotation": "Run the fixed base/repeat/rotate variants; rotation left by20 modulo pool length preserves the exact frozen global IDs and card bytes. W0 preserves ordinary production first40 behavior and the native tail. The candidate canonicalizer ignores provenance order and sorts all cards by the existing canonical UTF-8 tuple (url,title,snippet,global_id). Record original provenance_order_ids.",
   "dataset": "EXP-060 exposed public pools and frozen EXP-064 independent references; development only, never untouched confirmation; q10/q11 targets absent and unmet.",
   "schema": "exp076-shared-canonical-pool/1",
-  "status": "draft_unregistered_no_implementation_no_provider_calls_no_quality_computation",
+  "status": "design_registered_harness_unqualified_no_provider_calls_no_quality_computation",
   "schedule": [
     {
       "case": "q1",

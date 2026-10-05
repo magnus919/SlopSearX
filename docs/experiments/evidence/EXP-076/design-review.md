@@ -1,6 +1,6 @@
 # EXP-076 prospective design review
 
-This review does not register or qualify a provider run. No provider or search
+This review does not qualify or execute a provider run. No provider or search
 calls were made. The mechanism remains subject to exact protocol and source
 qualification before execution.
 
@@ -75,3 +75,14 @@ every maximum-length field. The protocol must justify its explicitly selected
 bounds, reject oversized complete requests, and avoid presenting an 80-card
 count bound as an unconditional natural-pool capacity guarantee. Parser/fusion
 invariance still requires separate fixed-score/tie tests.
+
+## Final design review disposition
+
+GPT-6 Luna found one material ambiguity in the final draft: design registration
+was placed after harness qualification. Root corrected the sequence to committed
+immutable design registration, inert harness implementation, exact source
+qualification, then gated provider admission. Root also verified all eight input
+pins and made the existing 64,000/32,000 per-call reservations explicit. The
+review found no other material issue in the complete-pool projection, independent
+W0 comparator, native-order fallback, limits or safeguards. No provider call or
+production qualification follows from this completed design review.

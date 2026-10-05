@@ -1,6 +1,6 @@
 # EXP-076: shared canonical complete-pool query and purpose scores
 
-**Status: draft; not registered.** This document authorizes no implementation, provider calls, key access, search, or qualification. Baseline: `c9f2b48437c65c4ebc17f2c7ee18011ae440c119` (repaired current main, 2026-10-05). Issue: #516. The prospective machine protocol is [evidence/EXP-076/protocol.json](evidence/EXP-076/protocol.json); independent design-review requirements are recorded in [evidence/EXP-076/design-review.md](evidence/EXP-076/design-review.md).
+**Status: design registered; comparison harness not qualified.** The immutable design permits building the inert comparison harness. It authorizes no provider calls, key access, searches, production implementation, or qualification claim. Baseline: `c9f2b48437c65c4ebc17f2c7ee18011ae440c119` (repaired current main, 2026-10-05). Issue: #516. The prospective machine protocol is [evidence/EXP-076/protocol.json](evidence/EXP-076/protocol.json); independent design-review requirements are recorded in [evidence/EXP-076/design-review.md](evidence/EXP-076/design-review.md).
 
 ## Question and hypothesis
 
