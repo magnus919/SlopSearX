@@ -1,0 +1,17 @@
+"""Fixed complete-permutation rank fusion; no provider calls or quality claims."""
+from fractions import Fraction
+
+
+def fuse(cards, incumbent, purpose):
+    ids=[c['id'] for c in cards]
+    if len(ids)!=len(set(ids)):
+        raise ValueError('duplicate eligible id')
+    for order in [incumbent,purpose]:
+        if len(order)!=len(ids) or len(set(order))!=len(order) or set(order)!=set(ids):
+            raise ValueError('incomplete or invalid permutation')
+    w={sid:i+1 for i,sid in enumerate(incumbent)}
+    p={sid:i+1 for i,sid in enumerate(purpose)}
+    scores={sid:Fraction(1,60+w[sid])+Fraction(1,60+p[sid]) for sid in ids}
+    keys={c['id']:tuple(c[k].encode('utf-8') for k in ['url','title','snippet','id']) for c in cards}
+    order=sorted(ids,key=lambda sid:(-scores[sid],keys[sid]))
+    return {'order_ids':order,'rational_scores':{sid:[v.numerator,v.denominator] for sid,v in scores.items()}}
