@@ -1,0 +1,110 @@
+"""Inert paired analysis; exposed development is never production adoption."""
+import math,random,statistics
+
+ARMS=('w0','binary')
+
+def ndcg(order,rows):
+    def dcg(ids):return sum((2**rows[c]['lead']-1)/math.log2(i+2) for i,c in enumerate(ids[:10]))
+    ideal=dcg(sorted(rows,key=lambda c:-rows[c]['lead']))
+    return dcg(order)/ideal if ideal else 0.0
+
+def useful(order,rows):return sum(rows[c]['lead']>=2 for c in order[:10])
+
+def covered(order,rows):return {f for c in order[:10] if rows[c]['lead']>=2 for f in rows[c]['facets']}
+
+def interval(values):
+    rng=random.Random(6501);samples=sorted(statistics.mean(rng.choices(values,k=len(values))) for _ in range(10000))
+    return [samples[249],samples[9749]]
+
+def analyze(run,acquisition,references,queries,protocol):
+    schedule=protocol['schedule'];operations=run.get('operations',[])
+    expected=[(x['case'],x['variant']) for x in schedule]
+    actual=[(x.get('case'),x.get('variant')) for x in operations]
+    structural=[]
+    query_ids=[q.get('id') for q in queries]
+    if len(query_ids)!=13 or set(query_ids)!={f'q{i}' for i in range(1,14)}:structural.append('query-inventory')
+    if {q.get('id') for q in queries if q.get('kind')=='navigation'}!={f'q{i}' for i in range(9,14)}:structural.append('navigation-inventory')
+    if actual!=expected:structural.append('registered_schedule')
+    if run.get('status')!='complete':structural.append('incomplete_run')
+    if run.get('budget',{}).get('unknown_usage')is not False:structural.append('unknown_usage')
+    if run.get('budget',{}).get('attempts')!=43:structural.append('physical_call_inventory')
+    if type(run.get('synthetic'))is not bool:structural.append('missing_execution_identity')
+    for key,cap in (('input_tokens',3000000),('output_tokens',160000)):
+        value=run.get('budget',{}).get(key)
+        if type(value)is not int or not 0<=value<=cap:structural.append('budget-'+key)
+    neutral=run.get('neutral',{})
+    if neutral.get('status')!='valid' or neutral.get('questions')!=80 or neutral.get('synthetic_input')is not True:structural.append('neutral-acceptance')
+    elapsed=neutral.get('elapsed_ms')
+    if type(elapsed)not in (int,float) or not math.isfinite(elapsed) or not 0<=elapsed<=1000:structural.append('neutral-deadline')
+    usage_rows=[neutral]+[row for op in operations for row in op.get('arms',{}).values()]
+    totals={'input_tokens':0,'output_tokens':0}
+    for row in usage_rows:
+        usage=row.get('usage',{})
+        if type(usage)is not dict or set(usage)!=set(totals) or any(type(v)is not int or not 0<=v<=64000 for v in usage.values()):structural.append('per-call-usage')
+        else:
+            for key in totals:totals[key]+=usage[key]
+    if any(totals[key]!=run.get('budget',{}).get(key) for key in totals):structural.append('usage-sum')
+    wall=run.get('wall_seconds')
+    if type(wall)not in (int,float) or not math.isfinite(wall) or not 0<=wall<=7200:structural.append('wall-deadline')
+    for op in operations:
+        cards=acquisition['pools'][op['case']]['cards'];ids=[c['id'] for c in cards]
+        if op['variant']=='rotate':
+            offset=20%len(ids);ids=ids[offset:]+ids[:offset]
+        if op.get('provenance_order_ids')!=ids:structural.append(op['case']+'-provenance')
+        canonical=[c['id'] for c in sorted(cards,key=lambda c:tuple(c[f].encode('utf-8') for f in ('url','title','snippet','id')))]
+        if set(op.get('arms',{}))!=set(ARMS):structural.append(op['case']+'-arms');continue
+        for arm in ARMS:
+            row=op['arms'][arm];order=row.get('order_ids',[])
+            if row.get('status')!='valid':structural.append(op['case']+'-'+arm+'-failure')
+            if len(order)!=len(ids) or len(set(order))!=len(order) or set(order)!=set(ids):structural.append(op['case']+'-'+arm+'-membership')
+            if arm=='w0' and (set(order[:40])!=set(ids[:40]) or order[40:]!=ids[40:]):structural.append(op['case']+'-w0-tail')
+            if arm=='w0':
+                scores=row.get('scores',{})
+                if type(scores)is not dict or set(scores)!=set(ids[:40]) or any(type(v)not in (int,float) or not math.isfinite(v) or not 0<=v<=9 for v in scores.values()):structural.append(op['case']+'-w0-scores')
+                elif order!=sorted(ids[:40],key=lambda c:-scores[c])+ids[40:]:structural.append(op['case']+'-w0-score_order')
+            else:
+                probabilities=row.get('probabilities',{})
+                incumbent=op['arms']['w0'].get('order_ids',[])
+                if type(probabilities)is not dict or set(probabilities)!=set(ids) or any(type(v)not in (int,float) or not math.isfinite(v) or not 0<=v<=1 for v in probabilities.values()):structural.append(op['case']+'-binary-probabilities')
+                elif len(incumbent)==len(ids) and set(incumbent)==set(ids):
+                    fill=iter([c for c in incumbent if probabilities[c]>.5]+[c for c in incumbent if probabilities[c]<.5])
+                    partition=[c if probabilities[c]==.5 else next(fill) for c in incumbent]
+                    if order!=partition:structural.append(op['case']+'-binary-partition')
+            elapsed=row.get('elapsed_ms')
+            if type(elapsed)not in (int,float) or not math.isfinite(elapsed) or not 0<=elapsed<=1000:structural.append(op['case']+'-'+arm+'-deadline')
+    result={'schema':'exp066-paired-analysis/1','dataset':'exposed development; not untouched confirmation','adoption_eligible':False,'quality_analysis_performed':False,'structural_failures':structural,'synthetic':run.get('synthetic'),'assessors':{}}
+    if structural:return dict(result,outcome='incomplete')
+    bykey={(op['case'],op['variant']):op for op in operations}
+    stability=[]
+    for q in ('q1','q4','q7','q8'):
+        base=set(bykey[q,'base']['arms']['binary']['order_ids'][:10])
+        for variant in ('repeat','rotate'):
+            other=set(bykey[q,variant]['arms']['binary']['order_ids'][:10]);overlap=len(base&other)/min(10,len(base))
+            stability.append({'case':q,'variant':variant,'overlap':overlap,'passed':overlap>=.8})
+    nav=[]
+    for q in queries:
+        if q['kind']!='navigation':continue
+        target=q['target_url'].rstrip('/');cards=acquisition['pools'][q['id']]['cards']
+        targets={c['id'] for c in cards if c['url'].rstrip('/')==target}
+        orders=bykey[q['id'],'base']['arms']
+        nav.append({'case':q['id'],'target_present':bool(targets),'target_ids':sorted(targets),'binary_target_top1':bool(targets and orders['binary']['order_ids'][0] in targets)})
+    result.update(stability=stability,navigation=nav,natural_long_pools=sum(len(p['cards'])>40 for p in acquisition['pools'].values()))
+    for assessor in ('A','B'):
+        records=[]
+        for q in protocol['primary_cases']:
+            rows=references[assessor][q];cards=acquisition['pools'][q]['cards'];assert set(rows)=={c['id'] for c in cards}
+            for row in rows.values():
+                assert type(row['lead'])is int and 0<=row['lead']<=3
+            orders=bykey[q,'base']['arms'];metrics={arm:{'ndcg10':ndcg(orders[arm]['order_ids'],rows),'useful10':useful(orders[arm]['order_ids'],rows),'covered_facets':sorted(covered(orders[arm]['order_ids'],rows))} for arm in ARMS}
+            delta=metrics['binary']['ndcg10']-metrics['w0']['ndcg10']
+            lost=sorted(set(metrics['w0']['covered_facets'])-set(metrics['binary']['covered_facets']))
+            records.append({'case':q,'metrics':metrics,'binary_minus_w0':delta,'lost_w0_facets':lost,'per_case_passed':delta>=-.03-1e-12 and not lost and metrics['binary']['useful10']>=metrics['w0']['useful10']})
+        deltas=[r['binary_minus_w0'] for r in records];mean=statistics.mean(deltas);ci=interval(deltas)
+        result['assessors'][assessor]={'cases':records,'mean_binary_minus_w0':mean,'bootstrap95':ci,'quality_gate_passed':mean>=.05-1e-12 and ci[0]>0 and all(r['per_case_passed'] for r in records)}
+    result['quality_analysis_performed']=run.get('synthetic')is False
+    result['development_quality_passed']=run.get('synthetic')is False and all(r['quality_gate_passed'] for r in result['assessors'].values()) and all(r['passed'] for r in stability)
+    result['navigation_gate_met']=all(r['binary_target_top1'] for r in nav if r['target_present'])
+    result['acquisition_recall_met']=all(r['target_present'] for r in nav)
+    result['development_all_gates_passed']=result['development_quality_passed'] and result['navigation_gate_met'] and result['acquisition_recall_met']
+    result['outcome']='synthetic_fixture_only' if run.get('synthetic')is not False else 'development_pass' if result['development_all_gates_passed'] else 'development_quality_pass_navigation_unmet' if result['development_quality_passed'] else 'development_rejected'
+    return result

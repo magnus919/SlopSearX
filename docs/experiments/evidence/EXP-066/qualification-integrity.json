@@ -1,0 +1,30 @@
+{
+  "schema": "exp066-qualification-integrity/1",
+  "qualified": true,
+  "files": {
+    "prepare.py.txt": "19414bdbf2dedf00e58950aafb6fc1c66ea67b3f9373ee80fa4bf9ceef488f6b",
+    "http-wrapper.py.txt": "f494245126888fe5e484d2b2609192974dbc3de3824dbc0c979eaea451966a4b",
+    "normal-runner.py.txt": "d1503d61f7f0a961ef14e261060998c227d51564afcf04200d77ce6418e24416",
+    "normal-runner-tests.py.txt": "a0676f18830e5d4af480fad387c26cb24a5d6f6eacda8ad010fcafe6fb13d073",
+    "analyze.py.txt": "1c16d3ef7ddda54bef424047d63c7740cd70e1281398f8d9458110634dac0723",
+    "analysis-tests.py.txt": "a677648e4510514b1aa94d86131ac5246d950086540c8a33aa331d6596ea3c5d"
+  },
+  "source_pins": {
+    "docs/experiments/evidence/EXP-059/transport.py.txt": "ef500dc8a13f4a28e92d7a6a667855c2be6bdaf699afb3e4d219ef05b9795519",
+    "docs/experiments/evidence/EXP-059/http-wrapper.py.txt": "d9f5144fb3f9a936556d29228c196d8bb7c8e6b55a8b3214d94658fbea992bd3",
+    "slopsearx/rerank.py": "df518bac899fa457e713201192a65f8ee0c3599419382e5be221d5ac366b479e",
+    "docs/experiments/evidence/EXP-039/source-selection-contract.json": "0cdf759b83ab96bad92666bbeabbb5d232aa81876712a314f931645082291c1b"
+  },
+  "protocol_sha256": "cee9e2c7fc8ca9a5f5773c74066f986b46547f9ff43af1ddd6c55390332fcb2d",
+  "registration_sha256": "553032752c582e9abbb01c0703e77349590b8efafc3cd63bada8613f8de36149",
+  "offline_tests": {
+    "runner": 14,
+    "analysis": 8,
+    "synthetic_calls": 43,
+    "operations": 21,
+    "partition_random_cases": 500
+  },
+  "review": "qualification.md",
+  "provider_calls": 0,
+  "search_calls": 0
+}
