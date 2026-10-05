@@ -79,7 +79,8 @@ def analyze(run,acquisition,references,queries,protocol):
         deltas=[r['local_minus_w0'] for r in records];mean=statistics.mean(deltas);ci=interval(deltas)
         result['assessors'][assessor]={'cases':records,'mean_local_minus_w0':mean,'bootstrap95':ci,'quality_gate_passed':mean>=.05-1e-12 and ci[0]>0 and all(r['per_case_passed'] for r in records)}
     result['quality_analysis_performed']=run.get('synthetic')is False
-    result['development_quality_passed']=all(r['quality_gate_passed'] for r in result['assessors'].values()) and all(r['passed'] for r in stability)
+    result['development_quality_passed']=run.get('synthetic')is False and all(r['quality_gate_passed'] for r in result['assessors'].values()) and all(r['passed'] for r in stability)
     result['navigation_gate_met']=all(r['target_present'] and r['local_target_top1'] for r in nav)
-    result['outcome']='synthetic_fixture_only' if run.get('synthetic')is not False else 'development_pass' if result['development_quality_passed'] else 'development_rejected'
+    result['development_all_gates_passed']=result['development_quality_passed'] and result['navigation_gate_met']
+    result['outcome']='synthetic_fixture_only' if run.get('synthetic')is not False else 'development_pass' if result['development_all_gates_passed'] else 'development_quality_pass_navigation_unmet' if result['development_quality_passed'] else 'development_rejected'
     return result

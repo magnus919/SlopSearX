@@ -21,7 +21,9 @@ class AnalysisTests(unittest.TestCase):
     def test_paired_quality_does_not_authorize_adoption(self):
         r=A.analyze(*fixture());self.assertTrue(r['development_quality_passed']);self.assertTrue(r['navigation_gate_met']);self.assertFalse(r['adoption_eligible'])
     def test_synthetic_is_never_model_quality(self):
-        args=fixture();args[0]['synthetic']=True;r=A.analyze(*args);self.assertEqual(r['outcome'],'synthetic_fixture_only');self.assertFalse(r['quality_analysis_performed'])
+        args=fixture();args[0]['synthetic']=True;r=A.analyze(*args);self.assertEqual(r['outcome'],'synthetic_fixture_only');self.assertFalse(r['quality_analysis_performed']);self.assertFalse(r['development_quality_passed']);self.assertFalse(r['development_all_gates_passed'])
+    def test_missing_navigation_target_is_not_complete_pass(self):
+        args=fixture();args[3][9]['target_url']='https://example.org/missing';r=A.analyze(*args);self.assertTrue(r['development_quality_passed']);self.assertFalse(r['navigation_gate_met']);self.assertFalse(r['development_all_gates_passed']);self.assertEqual(r['outcome'],'development_quality_pass_navigation_unmet')
     def test_second_assessor_can_veto(self):
         args=fixture()
         for rows in args[2]['B'].values():
