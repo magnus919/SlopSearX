@@ -1,0 +1,23 @@
+"""Read-only joins of retained public metadata; no new semantic grading."""
+from pathlib import Path
+import hashlib,json
+HERE=Path(__file__).resolve().parent;REPO=HERE.parents[3]
+PINS=['docs/experiments/evidence/source-use-next-stage/pilot-manifest.json','docs/experiments/evidence/source-use-next-stage/live-capture-receipt.json','docs/experiments/evidence/source-use-next-stage/pilot-outcome.json']
+def calculate():
+ raw={name:(REPO/name).read_bytes() for name in PINS};manifest,capture,outcome=[json.loads(raw[n]) for n in PINS]
+ sources={x['source_id']:x for x in capture['sources']};assert len(sources)==len(capture['sources'])
+ rows=[]
+ for case in manifest['cases']:
+  cid=case['id'];pool={x['neutral_source_id'] for x in case['sources']};assert pool<=set(sources)
+  for arm in ['w0','candidate']:
+   selected=capture['selected_source_ids'][cid][arm];assert len(selected)==len(set(selected)) and set(selected)<=pool
+   answer=next(x for x in outcome['answers'] if x['task_id']==cid and x['arm']==arm)
+   assert answer['valid_links']+len(answer['errors'])==answer['claims']
+   reviewers={}
+   for rid,packet in outcome['reviewers'].items():
+    assessed=next(x for x in packet['answers'] if x['task_id']==cid and x['arm']==arm)
+    reviewers[rid]={'reported_task_complete':assessed['task_complete'],'reported_facet_states':assessed['facet_states'],'grading_link_error_count':len(assessed['grading_link_errors']),'source_reference_validation':outcome['source_validation'][rid]}
+   rows.append({'task':cid,'arm':arm,'pool_sources':len(pool),'pool_capture_failures':sum(sources[s]['accepted'] is not True for s in pool),'selected_sources':len(selected),'selected_capture_failures':sum(sources[s]['accepted'] is not True for s in selected),'claims':answer['claims'],'reported_valid_answer_links':answer['valid_links'],'reported_answer_link_errors':len(answer['errors']),'answer_sha256':answer['answer_sha256'],'independent_assessors':reviewers,'causal_failure_attribution':'unassessable','reason':'Retained metadata joins do not establish critical source-text support, entailment or independent causal attribution.'})
+ assert len(rows)==4 and all(x['selected_capture_failures']==0 for x in rows)
+ return {'schema':'research-usefulness-saved-metadata-audit/1','source_pins':{n:hashlib.sha256(raw[n]).hexdigest() for n in PINS},'provider_calls':0,'search_calls':0,'new_semantic_grades':False,'original_span_checks_reperformed':False,'adoption_credit':False,'rows':rows}
+if __name__=='__main__':(HERE/'saved-audit.json').write_text(json.dumps(calculate(),sort_keys=True,separators=(',',':'))+'\n')
