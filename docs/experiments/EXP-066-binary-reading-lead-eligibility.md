@@ -1,6 +1,6 @@
 # EXP-066: binary direct-reading-lead eligibility
 
-Status: proposed execution plan, not yet registered for provider calls. Production acceptance remains open under #516. No search, provider call, runtime or deployment change accompanies this plan.
+Status: prospective registration before implementation; live calls remain gated on qualification. Production acceptance remains open under #516. No search, provider call, runtime or deployment change accompanies this plan.
 
 ## Evidence and hypothesis
 
@@ -29,3 +29,11 @@ Retain EXP-065's numeric adoption gates: local candidate minus fresh W0 primary 
 Before live measurement, register exact protocol, source/input hashes, field/usage/wall bounds, complete request schedule and deterministic policy; implement offline evidence runner, validate actual Noul schema against shipped upstream helpers, test .5/adjacent boundaries, anchored abstentions, every-ID membership, native tail, rotation, malformed/provider metadata, deadline and rollback paths, and obtain independent Luna review. Preserve and publish every outcome in a PR.
 
 Only a qualifying candidate can proceed to untouched confirmation and the full cross-service production checklist. The opt-in SlopSearX provider/service/cache/singleflight/HTTP/MCP/portal/snapshot and X caller-context work remains required; no second Jev client or replacement of shipped safeguards is proposed.
+
+## Frozen wire and resource contract
+
+The protocol pins exact proposition, criteria, card fields, context and global IDs. Historical EXP-059 live receipts establish type=noul/noul response shape. Extra metadata is ignored; type/range/membership/usage checks remain strict. Maximum43 calls includes one eighty-question synthetic neutral. Reserve64K input/output each before a call; totals3Minput/160Koutput, per-call64K each, two-hour wall. Card byte caps are80/256/512/1200 for id/title/url/snippet, purpose4096, facet description256. State128K, request384K (W0 128K), response2M; max80cards/fourfacets. No retry/search. Qualified committed source pins are still required before calls.
+
+## Pre-freeze independent review
+
+A GPT-6 Luna review found the binary proposition/anchored partition distinct from prior facet/swap policies. Gate names now explicitly refer to the binary candidate, and per-case loss is checked under both references. Present official targets must retain top-one; absent targets remain unmet recall evidence. Resource admission explicitly uses observed cumulative usage plus one64K reservation; unused reservations are released after the serial response, not added to past spending. The prior EXP-065 completed63 calls with31,620 observed output under this arithmetic. No completion guarantee follows: reaching more than96K observed output prevents another call. This clarification retains strict pre-dispatch admission and the160K cap.
