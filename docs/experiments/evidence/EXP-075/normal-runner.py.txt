@@ -25,6 +25,7 @@ SOURCE_FILES=set(P.PINS)|{
     'docs/experiments/evidence/EXP-059/http-wrapper.py.txt','slopsearx/rerank.py','slopsearx/service.py'}
 DEPENDENCIES=('httpx','httpcore','anyio')
 _ADMISSION_SEAL=object()
+_ISSUED_ADMISSIONS={}
 
 class _LiveAdmission:
     __slots__=('seal','input_identity','qualification_raw','proof_raw','output_path','api_key','used')
@@ -119,6 +120,7 @@ def live_gate(input_bytes,input_revision=REGISTRATION_REVISION,output_path=None)
     proof.update({'qualification_sha256':digest(qraw),'lease_identity':identity,'qualified_source_revision':revision,
                   'environment':dict(env),'dependencies':dict(q['dependencies'])})
     admission=_LiveAdmission(identity,qraw,proof,output_path,api_key)
+    _ISSUED_ADMISSIONS[id(admission)]=admission
     return proof,qraw,admission
 
 def fixture_client_factory(mode='scores',stats=None):
@@ -174,7 +176,9 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,preb
         api_key='offline-fixture-non-secret'
     else:
         if (not isinstance(admission,_LiveAdmission) or admission.seal is not _ADMISSION_SEAL or admission.used
+                or _ISSUED_ADMISSIONS.get(id(admission)) is not admission
                 or type(input_bytes)is not dict or type(qualification_bytes)is not bytes):raise ValueError('live-admission-required')
+        admission.used=True;_ISSUED_ADMISSIONS.pop(id(admission),None)
         identity=study_identity((HERE/'protocol.json').read_bytes(),(HERE/'registration-integrity.json').read_bytes(),input_bytes)
         proof_raw=json.dumps(source_integrity,sort_keys=True,separators=(',',':')).encode()
         if (identity!=admission.input_identity or digest(qualification_bytes)!=digest(admission.qualification_raw)
@@ -186,7 +190,7 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,preb
         expected_prepared=P.prebuild(expected_acquisition,expected_queries)
         if acquisition!=expected_acquisition or queries!=expected_queries or prepared!=expected_prepared:
             raise ValueError('live-input-object-mismatch')
-        api_key=admission.api_key;admission.used=True
+        api_key=admission.api_key
     outdir.mkdir();receipts=outdir/'receipts';receipts.mkdir()
     if not offline:atomic(outdir/'qualification-integrity.json',qualification_bytes)
     if offline and client_factory is None:client_factory=fixture_client_factory()

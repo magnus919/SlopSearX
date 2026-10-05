@@ -98,6 +98,14 @@ class RunnerTests(unittest.TestCase):
                                       source_integrity=proof, prebuilt=self.prepared,
                                       client_factory=N.fixture_client_factory(), api_key="offline-fixture-non-secret",
                                       qualification_bytes=b"{}", input_bytes=inputs))
+                identity = N.study_identity((N.HERE / "protocol.json").read_bytes(),
+                                            (N.HERE / "registration-integrity.json").read_bytes(), inputs)
+                forged = N._LiveAdmission(identity, b"{}", proof, pathlib.Path(temp) / "forged", "fixture-only")
+                with self.assertRaisesRegex(ValueError, "live-admission-required"):
+                    asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "forged",
+                                      offline=False, source_integrity=proof, prebuilt=self.prepared,
+                                      client_factory=N.fixture_client_factory(), qualification_bytes=b"{}",
+                                      admission=forged, input_bytes=inputs))
         self.assertEqual(escaped, [])
 
     def test_usage_admission_reserves_full_next_call_at_exact_and_insufficient_boundaries(self):
