@@ -1,0 +1,49 @@
+import copy,importlib.machinery,importlib.util,json,pathlib,unittest
+ROOT=pathlib.Path(__file__).resolve().parent
+loader=importlib.machinery.SourceFileLoader('exp065_analysis',str(ROOT/'analyze.py.txt'));spec=importlib.util.spec_from_loader(loader.name,loader);A=importlib.util.module_from_spec(spec);loader.exec_module(A)
+
+def fixture():
+    protocol=json.loads((ROOT/'protocol.json').read_text());acq={'pools':{}};refs={'A':{},'B':{}};queries=[];ops=[]
+    for i in range(1,14):
+        q=f'q{i}';cards=[{'id':f'c{j}','title':f'title {j}','url':f'https://example.org/{j}','snippet':'public fixture'} for j in range(12)]
+        acq['pools'][q]={'cards':cards};queries.append({'id':q,'kind':'navigation' if i>=9 else 'research','target_url':'https://example.org/11'})
+        for assessor in refs:refs[assessor][q]={c['id']:{'lead':3 if j>=8 else 0,'facets':['f1' if j%2 else 'f2'],'visible':1,'uncertain':False,'rationale':'fixture'} for j,c in enumerate(cards)}
+    for plan in protocol['schedule']:
+        q=plan['case'];native=[c['id'] for c in acq['pools'][q]['cards']];local=native[8:][::-1]+native[:8]
+        if plan['variant']=='rotate':native=native[20%len(native):]+native[:20%len(native)]
+        arms={}
+        for arm,order in [('w0',native),('shared',native),('local',local)]:arms[arm]={'status':'valid','order_ids':order,'scores':{c:9-j/100 for j,c in enumerate(order)},'elapsed_ms':100}
+        ops.append(dict(id=q+'-'+plan['variant'],case=q,variant=plan['variant'],provenance_order_ids=native,arms=arms))
+    run={'status':'complete','synthetic':False,'budget':{'attempts':63,'input_tokens':63,'output_tokens':63,'unknown_usage':False},'operations':ops}
+    return run,acq,refs,queries,protocol
+
+class AnalysisTests(unittest.TestCase):
+    def test_paired_quality_does_not_authorize_adoption(self):
+        r=A.analyze(*fixture());self.assertTrue(r['development_quality_passed']);self.assertTrue(r['navigation_gate_met']);self.assertFalse(r['adoption_eligible'])
+    def test_synthetic_is_never_model_quality(self):
+        args=fixture();args[0]['synthetic']=True;r=A.analyze(*args);self.assertEqual(r['outcome'],'synthetic_fixture_only');self.assertFalse(r['quality_analysis_performed'])
+    def test_second_assessor_can_veto(self):
+        args=fixture()
+        for rows in args[2]['B'].values():
+            for cid,row in rows.items():row['lead']=3 if int(cid[1:])<4 else 0
+        r=A.analyze(*args);self.assertTrue(r['assessors']['A']['quality_gate_passed']);self.assertFalse(r['development_quality_passed'])
+    def test_coverage_loss_blocks_positive_average(self):
+        args=fixture()
+        for rows in (args[2]['A']['q1'],args[2]['B']['q1']):rows['c9']['facets']=['special']
+        row=args[0]['operations'][0]['arms']['local'];row['order_ids']=['c11','c10','c8']+[f'c{i}' for i in range(8)]+['c9']
+        row['scores']={c:9-j/100 for j,c in enumerate(row['order_ids'])}
+        r=A.analyze(*args);self.assertIn('special',r['assessors']['A']['cases'][0]['lost_w0_facets']);self.assertFalse(r['development_quality_passed'])
+    def test_incomplete_failure_not_imputed_quality(self):
+        args=fixture();args[0]['operations'][0]['arms']['local']['status']='failed';r=A.analyze(*args);self.assertFalse(r['quality_analysis_performed']);self.assertEqual(r['outcome'],'incomplete')
+    def test_membership_deadline_and_usage_are_required(self):
+        for kind in ('duplicate','deadline','usage','score'):
+            args=fixture();row=args[0]['operations'][0]['arms']['local']
+            if kind=='duplicate':row['order_ids'][0]=row['order_ids'][1]
+            elif kind=='deadline':row['elapsed_ms']=1001
+            elif kind=='usage':args[0]['budget']['unknown_usage']=True
+            else:row['scores']['c1']=float('nan')
+            self.assertEqual(A.analyze(*args)['outcome'],'incomplete')
+    def test_registered_schedule_cannot_be_subset(self):
+        args=fixture();args[0]['operations'].pop();self.assertEqual(A.analyze(*args)['outcome'],'incomplete')
+
+if __name__=='__main__':unittest.main()
