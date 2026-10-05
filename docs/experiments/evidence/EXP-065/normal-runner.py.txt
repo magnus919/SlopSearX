@@ -1,0 +1,177 @@
+"""EXP-065 inert finite runner: offline by default; qualified exact inputs gate live."""
+from pathlib import Path
+import argparse, hashlib, importlib.machinery, importlib.util, json, math, os, re, socket, subprocess, sys, tempfile, time
+HERE=Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader);mod=importlib.util.module_from_spec(spec);loader.exec_module(mod);return mod
+P=load("exp065_prepare",HERE/"prepare.py.txt")
+T=load("exp065_transport",REPO/"docs/experiments/evidence/EXP-059/transport.py.txt")
+def atomic(path,value):
+    raw=json.dumps(jsonable(value),ensure_ascii=False,indent=2).encode();fd,tmp=tempfile.mkstemp(prefix=".exp065-",dir=path.parent)
+    try:
+        with os.fdopen(fd,"wb") as f:f.write(raw);f.flush();os.fsync(f.fileno())
+        os.replace(tmp,path)
+    finally:
+        if os.path.exists(tmp):os.unlink(tmp)
+def sync_directory(path):
+    directory=os.open(str(path),os.O_RDONLY)
+    try:os.fsync(directory)
+    finally:os.close(directory)
+def jsonable(value):
+    if type(value)is bytes:return value.hex()
+    if type(value)is dict:return {k:jsonable(v) for k,v in value.items()}
+    if type(value)is list:return [jsonable(v) for v in value]
+    return value
+def usage_from_raw(raw):
+    try:
+        if type(raw)is not bytes or len(raw)>2_000_000:return None
+        def unique(pairs):
+            out={}
+            for key,value in pairs:
+                if key in out:raise ValueError("duplicate-json-key")
+                out[key]=value
+            return out
+        data=json.loads(raw,object_pairs_hook=unique)
+        value=data.get("usage") if type(data)is dict else None
+        if type(value)is not dict or set(value)!={"input_tokens","output_tokens"} or any(type(v)is not int or v<0 for v in value.values()):return None
+        return value
+    except (ValueError,TypeError,UnicodeDecodeError):return None
+def create_lease(path,identity):
+    with path.open("x") as f:f.write(identity);f.flush();os.fsync(f.fileno())
+    sync_directory(path.parent)
+class Receipts(list):
+    def __init__(self,path):super().__init__();self.path=path
+    def append(self,item):
+        super().append(item);p=self.path/("call-%02d.json"%(len(self)-1))
+        with p.open("x") as f:json.dump(jsonable(item),f);f.flush();os.fsync(f.fileno())
+        sync_directory(self.path)
+    def update_last(self):atomic(self.path/("call-%02d.json"%(len(self)-1)),self[-1])
+class Owned:
+    def __init__(self,path,offline):
+        child_path=path/"transport";child_path.mkdir(exist_ok=True)
+        self.child=T.ChildTransport([sys.executable,str(HERE/"http-wrapper.py.txt")]+(["--offline-fixture"] if offline else []),http_timing=False)
+        self.child.receipts=Receipts(child_path)
+    def __call__(self,body):
+        before=len(self.child.receipts)
+        try:
+            raw,elapsed=self.child(body,timeout_s=60)
+            env=json.loads(self.child.receipts[-1]["stderr"])
+            if set(env)!={"request_sha256","response_sha256","remote_http_ms"} or env["request_sha256"]!=hashlib.sha256(body).hexdigest() or env["response_sha256"]!=hashlib.sha256(raw).hexdigest():raise ValueError("timing-binding")
+            ms=env["remote_http_ms"]
+            if type(ms) not in (int,float) or not math.isfinite(ms) or not 0<=ms<=1000:raise ValueError("http-deadline")
+            return raw,ms
+        finally:
+            if len(self.child.receipts)>before:self.child.receipts.update_last()
+def live_gate(acq_raw,query_raw,revision):
+    if type(revision)is not str or not re.fullmatch(r"[0-9a-f]{40}",revision):raise ValueError("input-revision")
+    registration_revision="800c240bfb882e51f7fb2732c0eb7e715af822cd"
+    protocol_raw=subprocess.run(["git","show",registration_revision+":docs/experiments/evidence/EXP-065/protocol.json"],cwd=REPO,check=True,capture_output=True).stdout
+    integrity_raw=subprocess.run(["git","show",registration_revision+":docs/experiments/evidence/EXP-065/registration-integrity.json"],cwd=REPO,check=True,capture_output=True).stdout
+    if protocol_raw!=(HERE/"protocol.json").read_bytes() or integrity_raw!=(HERE/"registration-integrity.json").read_bytes():raise ValueError("registration-pin")
+    protocol=json.loads(protocol_raw); expected=protocol["inputs"]
+    supplied={"docs/experiments/evidence/EXP-060/fresh-acquisition.json":acq_raw,"docs/experiments/evidence/EXP-060/queries.json":query_raw}
+    for relative,digest in expected.items():
+        raw=supplied.get(relative)
+        path=REPO/relative
+        if raw is None:
+            if path.is_symlink() or not path.is_file():raise ValueError("input-pin")
+            raw=path.read_bytes()
+        if hashlib.sha256(raw).hexdigest()!=digest:raise ValueError("input-pin")
+        committed=subprocess.run(["git","show",revision+":"+relative],cwd=REPO,check=True,capture_output=True).stdout
+        if committed!=raw:raise ValueError("input-revision")
+    # This runner has no qualification manifest until independent review commits one.
+    qpath=HERE/"qualification-integrity.json"
+    if not qpath.is_file():raise ValueError("runner-not-qualified")
+    committed_qualification=subprocess.run(["git","show","HEAD:docs/experiments/evidence/EXP-065/qualification-integrity.json"],cwd=REPO,check=True,capture_output=True).stdout
+    if committed_qualification!=qpath.read_bytes():raise ValueError("uncommitted-qualification")
+    qualification=json.loads(qpath.read_bytes())
+    if qualification.get("schema")!="exp065-qualification/1" or qualification.get("qualified") is not True:raise ValueError("runner-not-qualified")
+    required={"prepare.py.txt","normal-runner.py.txt","normal-runner-tests.py.txt","http-wrapper.py.txt","analyze.py.txt","analysis-tests.py.txt"}
+    files=qualification.get("files",{})
+    if type(files)is not dict or set(files)!=required:raise ValueError("qualification-files")
+    for relative,digest in files.items():
+        path=HERE/relative
+        if path.is_symlink() or not path.is_file() or not re.fullmatch(r"[0-9a-f]{64}",str(digest)) or hashlib.sha256(path.read_bytes()).hexdigest()!=digest:raise ValueError("qualification-pin")
+    required_sources={"docs/experiments/evidence/EXP-059/transport.py.txt","slopsearx/rerank.py","docs/experiments/evidence/EXP-059/http-wrapper.py.txt","docs/experiments/evidence/EXP-060/normal-runner.py.txt","docs/experiments/evidence/EXP-039/source-selection-contract.json"}
+    pins=qualification.get("source_pins",{})
+    if type(pins)is not dict or set(pins)!=required_sources:raise ValueError("qualification-source-files")
+    for relative,digest in pins.items():
+        path=REPO/relative
+        if Path(relative).is_absolute() or ".." in Path(relative).parts or path.is_symlink() or not path.is_file() or not re.fullmatch(r"[0-9a-f]{64}",str(digest)) or hashlib.sha256(path.read_bytes()).hexdigest()!=digest:raise ValueError("qualification-source-pin")
+    # DNS preflight precedes credential inspection and one-shot lease creation.
+    socket.getaddrinfo("api.typesafe.ai",443,type=socket.SOCK_STREAM)
+    if not os.environ.get("TYPESAFE_API_KEY"):raise ValueError("missing-credential")
+    identity=hashlib.sha256(protocol_raw+acq_raw+query_raw).hexdigest()
+    lease=Path(tempfile.gettempdir())/("exp065-lease-"+identity)
+    create_lease(lease,identity)
+    return {"protocol_sha256":hashlib.sha256(protocol_raw).hexdigest(),"acquisition_sha256":hashlib.sha256(acq_raw).hexdigest(),"queries_sha256":hashlib.sha256(query_raw).hexdigest()}
+def run(acquisition,queries,outdir,offline=True):
+    outdir.mkdir(parents=True,exist_ok=False);receipt_dir=outdir/"receipts";receipt_dir.mkdir()
+    ops=[];total_in=total_out=0;unknown=False;status="complete";start=time.monotonic();pool={k:v["cards"] for k,v in acquisition["pools"].items()};cases={q["id"]:q for q in queries};owned=Owned(receipt_dir,offline)
+    for item in P.PROTOCOL["schedule"]:
+        case=cases[item["case"]];built=P.bodies(case,pool[item["case"]],item["variant"]);expected=built["ids"]
+        incumbent=[c["id"] for c in pool[item["case"]]]
+        row={"id":item["case"]+"-"+item["variant"],"case":item["case"],"variant":item["variant"],"provenance_order_ids":built["provenance_order_ids"],"arms":{}}
+        ops.append(row);atomic(outdir/"run.json",{"status":"running","operations":ops,"synthetic":offline,"budget":{"attempts":0,"input_tokens":total_in,"output_tokens":total_out,"unknown_usage":unknown}})
+        for arm in item["arms"]:
+            output={"status":"uninvoked","order_ids":list(incumbent),"scores":{},"elapsed_ms":None,"fallback":"complete native acquisition order"}
+            row["arms"][arm]=output
+            if arm=="w0" and len(built["w0"]["questions"])<2:
+                output.update(status="valid",order_ids=list(incumbent),fallback="native acquisition order (under-two bypass)");continue
+            attempts_so_far=sum(1 for _ in receipt_dir.glob("call-*.json"))
+            reserve_in=1 if offline else 64000
+            reserve_out=1 if offline else 64000
+            if total_in+reserve_in>3_000_000 or total_out+reserve_out>160_000 or time.monotonic()-start>=7200 or attempts_so_far>=63:
+                status="incomplete";break
+            body=P.wire(built[arm]);receipt_index=sum(1 for _ in receipt_dir.glob("call-*.json"))
+            if len(body)> (128000 if arm=="w0" else 384000):status="incomplete";break
+            pending={"status":"pending","arm":arm,"operation":row["id"],"request":body.hex(),"request_sha256":hashlib.sha256(body).hexdigest(),"raw_response":None,"usage":None,"failure":None}
+            with (receipt_dir/("call-%02d.json"%receipt_index)).open("x") as f:json.dump(pending,f);f.flush();os.fsync(f.fileno())
+            sync_directory(receipt_dir)
+            raw=None
+            usage_accounted=False
+            try:
+                raw,elapsed=owned(body)
+                arm_expected=list(built[arm]["questions"]) if arm=="w0" else expected
+                validated=P.validate_response(raw,built[arm],arm_expected)
+                usage=validated["usage"]
+                # Native labels in W0 are provider-local IDs; map back and append untouched full tail.
+                scores=validated["scores"]
+                ids=built["ids"] if arm!="w0" else list(built["w0_local_to_pool"])
+                ordered=P.order(scores,ids)
+                if arm=="w0":ordered=[built["w0_local_to_pool"][i] for i in ordered]+built["tail_ids"]
+                stored_scores={built["w0_local_to_pool"][k]:v for k,v in scores.items()} if arm=="w0" else scores
+                output.update(status="valid",order_ids=ordered,scores=stored_scores,elapsed_ms=elapsed,fallback=None)
+                if usage is None:unknown=True;raise ValueError("unknown-usage")
+                if usage["input_tokens"]>64000:raise ValueError("per-call-input-budget")
+                total_in+=usage["input_tokens"];total_out+=usage["output_tokens"]
+                usage_accounted=True
+                if usage["output_tokens"]>64000:raise ValueError("per-call-output-budget")
+                if total_in>3_000_000 or total_out>160_000:raise ValueError("usage-budget")
+                pending.update(status="returned",raw_response=raw.hex(),usage=usage,elapsed_ms=elapsed)
+            except BaseException as exc:
+                if type(raw)is bytes:pending["raw_response"]=raw.hex()
+                observed=usage_from_raw(raw) if type(raw)is bytes else None
+                if observed is None:unknown=True
+                elif not usage_accounted:
+                    pending["usage"]=observed;total_in+=observed["input_tokens"];total_out+=observed["output_tokens"]
+                fallback=(row["arms"].get("w0",{}).get("order_ids") if arm!="w0" else incumbent) or incumbent
+                code=str(exc) if re.fullmatch(r"[a-z0-9-]{1,64}",str(exc)) else "unclassified"
+                output.update(status="failed",order_ids=list(fallback),scores={},failure=type(exc).__name__,failure_code=code,fallback="complete native incumbent order")
+                pending.update(status="failed",failure=type(exc).__name__,failure_code=code)
+                status="incomplete"
+                atomic(receipt_dir/("call-%02d.json"%receipt_index),pending);break
+            atomic(receipt_dir/("call-%02d.json"%receipt_index),pending)
+        atomic(outdir/"run.json",{"status":status,"operations":ops,"synthetic":offline,"budget":{"attempts":sum(1 for _ in receipt_dir.glob("call-*.json")),"input_tokens":total_in,"output_tokens":total_out,"unknown_usage":unknown}})
+        if status!="complete":break
+    final={"schema":"exp065-run/1","status":status,"operations":ops,"synthetic":offline,"budget":{"attempts":sum(1 for _ in receipt_dir.glob("call-*.json")),"input_tokens":total_in,"output_tokens":total_out,"unknown_usage":unknown}}
+    atomic(outdir/"run.json",final);return final
+def main():
+    p=argparse.ArgumentParser();p.add_argument("--mode",choices=("offline","live"),default="offline");p.add_argument("--acquisition",type=Path,default=REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json");p.add_argument("--queries",type=Path,default=REPO/"docs/experiments/evidence/EXP-060/queries.json");p.add_argument("--outdir",type=Path,required=True);p.add_argument("--input-revision");a=p.parse_args()
+    acq_raw=a.acquisition.read_bytes();query_raw=a.queries.read_bytes();acq=json.loads(acq_raw);queries=json.loads(query_raw)
+    if a.mode=="live":live_gate(acq_raw,query_raw,a.input_revision or "")
+    result=run(acq,queries,a.outdir,a.mode=="offline");print(json.dumps({"status":result["status"],"operations":len(result["operations"]),"attempts":result["budget"]["attempts"],"synthetic":result["synthetic"]}));return 0 if result["status"]=="complete" else 2
+if __name__=="__main__":
+    try:sys.exit(main())
+    except Exception as exc:print("exp065-setup-"+type(exc).__name__,file=sys.stderr);sys.exit(2)
