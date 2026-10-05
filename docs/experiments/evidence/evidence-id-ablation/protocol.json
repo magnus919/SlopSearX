@@ -1,0 +1,58 @@
+{
+  "status": "prospective_registration_no_measurement",
+  "hypothesis": "Replacing quotation copying with immutable passage references reduces mechanical attribution failures without demonstrating entailment or selector quality.",
+  "dataset": "Four exposed frozen source-use contexts; no new acquisition; cannot be untouched confirmation",
+  "arms": [
+    "quote",
+    "id"
+  ],
+  "schedule": {
+    "fresh_answer_turns": 8,
+    "independent_assessor_turns": 2,
+    "max_concurrency": 2,
+    "model": "gpt-6-luna",
+    "retries": 0,
+    "search_calls": 0,
+    "brave_calls": 0,
+    "jev_calls": 0
+  },
+  "matching": [
+    "Same source bytes, order, task purpose and original facets for each matched pair.",
+    "Both formats see identical fixed-width passage segmentation; only ID arm has explicit reference identifiers.",
+    "Same prospective observable checks supplied to both arms. Completed pilot outcomes remain unchanged.",
+    "Fresh answerers receive one packet only; no prior assessment/order labels.",
+    "Assessor delivery replaces both reference forms with mechanically resolved text; unresolved links remain failures with zero evidence credit. Assessor blinding is imperfect because response wording can reveal format.",
+    "Both reference forms identify one whole identical passage of at most 600 characters; quote arm copies the whole passage, ID arm selects its identifier. This differs from old pilot short-quote protocol and does not repair or remeasure it."
+  ],
+  "metrics": [
+    "Per-arm total claims, mechanically valid/invalid reference counts and rates, missing/unknown/source-mismatch counts.",
+    "Per-context facet completeness, unsupported material claims and abstentions from two independent advisory assessors.",
+    "No ordinal quality or task-completion claim from reference resolution alone."
+  ],
+  "decision": "Process validity only if every ID answer contains at least one evidence-bearing claim, every ID reference resolves with exact claimed source identity, and no unknown/cross-context/undelivered reference is accepted. Compare error counts/rates and claim counts descriptively against matched quote controls; zero errors alone does not demonstrate reduction. Advisory assessors compare paired answers facet-by-facet and record unsupported claims and losses independently, preserving disagreements. No observed harm can only support bounded noninferiority, not utility improvement. No selector adoption credit regardless of result.",
+  "stop": [
+    "Any input hash/schema/packet isolation failure before invocation.",
+    "Any unexpected model/search/provider invocation.",
+    "No output repair, case substitution or rerun on an invalid result."
+  ],
+  "input_pins": {
+    "docs/experiments/evidence/source-use-next-stage/evidence-catalog.py.txt": "0a197e720543c54239f618284bcd9fdbbcf2e7bd65af73bc1632c04c0831958b",
+    "docs/experiments/evidence/source-use-next-stage/pilot-manifest.json": "1a2beae40b71d3cf9003a251234bb098e3538414387980ef610b1b100ce6f324",
+    "docs/experiments/evidence/selector-failure-diagnostic/prospective-task-checks.json": "79759ceae3cec01cc33b519aea1c09bafc2e9ce22f51ca16323a5791dc669f6e"
+  },
+  "bounds": {
+    "passage_characters": 600,
+    "answer_words": 800,
+    "claims_per_answer": 40,
+    "json_output_bytes": 60000,
+    "source_context_bytes": "unchanged frozen contexts, no reclipping",
+    "model_checkpoint": "alias exposed only; immutable checkpoint unknown",
+    "total_turns": 10
+  },
+  "validation": [
+    "Quote must equal one complete delivered passage with the claimed source_id. No normalization or repair.",
+    "ID must resolve against this packet catalog and assigned sources; returned passage source_id must equal output source_id.",
+    "Schema, 40-claim bound, 600-character passage unit, 60000-byte JSON and 800 answer-word bound are verified before advisory assessment; failures retained."
+  ],
+  "freeze": "Before dispatch record SHA256 of every exact prompt, schema, protocol, registration, builder/validator and isolated packet; private mapping and complete randomized eight-answer dispatch schedule also sealed. All answers sealed before randomized assessor packets are prepared and hash sealed. Randomization is recorded once, never redrawn based on outputs."
+}

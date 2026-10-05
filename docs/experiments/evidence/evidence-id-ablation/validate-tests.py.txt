@@ -1,0 +1,24 @@
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import unittest
+base=Path(__file__).parent
+loader=importlib.machinery.SourceFileLoader('validate',str(base/'validate.py.txt'));spec=importlib.util.spec_from_loader(loader.name,loader);v=importlib.util.module_from_spec(spec);loader.exec_module(v)
+
+class ValidateTests(unittest.TestCase):
+    def test_source_mismatch_and_unknown_id(self):
+        eid='a'*64;packet={'facets':[{'id':'f'}],'passages':[{'source_id':'S1','text':'text','evidence_id':eid}]};cat={'passages':{eid:{'source_id':'S1','text':'text'}}};schema=json.loads((base/'id-answer-schema.json').read_text())
+        answer={'answer':'answer','limitations':[],'facets':[{'facet_id':'f','status':'partial','conclusion':'c','claims':[{'claim':'c','source_id':'S1','evidence_id':eid,'role':'support'}]}]}
+        self.assertEqual(v.validate(answer,packet,cat,'id',schema)['valid_links'],1)
+        claim=answer['facets'][0]['claims'][0];claim['source_id']='S2';self.assertEqual(v.validate(answer,packet,cat,'id',schema)['invalid_links'],1)
+        claim['source_id']='S1';claim['evidence_id']='b'*64;self.assertEqual(v.validate(answer,packet,cat,'id',schema)['invalid_links'],1)
+
+    def test_quote_requires_whole_passage(self):
+        packet={'facets':[{'id':'f'}],'passages':[{'source_id':'S1','text':'full **text**'}]};schema=json.loads((base/'quote-answer-schema.json').read_text());claim={'claim':'c','source_id':'S1','quote':'full **text**','role':'support'};answer={'answer':'a','limitations':[],'facets':[{'facet_id':'f','status':'partial','conclusion':'c','claims':[claim]}]}
+        self.assertEqual(v.validate(answer,packet,{},'quote',schema)['valid_links'],1)
+        claim['quote']='full text';self.assertEqual(v.validate(answer,packet,{},'quote',schema)['invalid_links'],1)
+        answer['facets'].append(answer['facets'][0])
+        with self.assertRaises(ValueError):v.validate(answer,packet,{},'quote',schema)
+
+if __name__=='__main__':unittest.main()
