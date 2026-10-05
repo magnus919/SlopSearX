@@ -1,0 +1,14 @@
+"""Descriptive bound for a proposed per-request retention policy, not the registered gate."""
+from pathlib import Path
+import hashlib,json
+HERE=Path(__file__).resolve().parent
+p=HERE/'completed/run.json';raw=p.read_bytes();run=json.loads(raw)
+rows=[]
+for case in ['q1','q4','q7','q8']:
+ ops={op['variant']:op for op in run['operations'] if op['case']==case}
+ base=set(ops['base']['arms']['w0']['order_ids'][:10])
+ for variant in ['repeat','rotate']:
+  other=set(ops[variant]['arms']['w0']['order_ids'][:10]);common=len(base&other)
+  rows.append({'case':case,'variant':variant,'w0_base_top10':sorted(base),'w0_variant_top10':sorted(other),'incumbent_common_count':common,'candidate_common_count_upper_bound_if_each_retains_nine':min(10,common+2)})
+result={'schema':'exp076-per-request-incumbent-stability-bound/1','run_sha256':hashlib.sha256(raw).hexdigest(),'provider_calls':0,'search_calls':0,'candidate_tested':False,'applies_to_original_base_case_identity_gate':False,'rows':rows}
+(HERE/'incumbent-stability-check.json').write_text(json.dumps(result,sort_keys=True,separators=(',',':'))+'\n')
