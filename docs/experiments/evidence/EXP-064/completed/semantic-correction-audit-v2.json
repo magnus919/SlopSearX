@@ -1,0 +1,726 @@
+{
+  "assessor": "exp064_semantic_audit",
+  "scope": "Independent semantic recheck of every corrected-v2 replacement against the rubric and same-card content. Original grades were not used as evidence.",
+  "coverage": {
+    "A": 5,
+    "B": 32,
+    "total": 37
+  },
+  "status_counts": {
+    "pass": 34,
+    "judgment_ambiguity": 2,
+    "material_concern": 1
+  },
+  "records": [
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "A",
+      "case": "q1",
+      "id": "q1-a-012",
+      "status": "pass",
+      "assessment": "The Bazel guide visibly discusses monorepo test setup but not graph-based selection; the replacement lowers grades and removes both unsupported facets.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "A/cards.json": "8ac8f482968542eceacf5e62eba0121cafd1b5033cb5e0cdc6a67faa61991d00",
+        "A/corrected-v2/reference-q1.json": "d149fdb64ba7ab32aeb7d119bc01c221083db656a29833d8eabbd1942190b8a3",
+        "A/corrected-v2/corrections.json": "f6d2f75b3dedd714708455d5154dc6245dc8a10d63ff305cbb35ece0d0aa626e"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "A",
+      "case": "q3",
+      "id": "q3-a-001",
+      "status": "pass",
+      "assessment": "The coding-assistant security card gives only a copyright topic signal; the replacement removes unsupported provenance-detection facets.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "A/cards.json": "8ac8f482968542eceacf5e62eba0121cafd1b5033cb5e0cdc6a67faa61991d00",
+        "A/corrected-v2/reference-q3.json": "cc0c661a58e3728be259da9bedbf956ecbbe156063d6e26109aae5f587f579bb",
+        "A/corrected-v2/corrections.json": "f6d2f75b3dedd714708455d5154dc6245dc8a10d63ff305cbb35ece0d0aa626e"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "A",
+      "case": "q3",
+      "id": "q3-a-007",
+      "status": "pass",
+      "assessment": "The governable-agentic-engineering card is broad and shows no provenance mechanism; no facet tags remain.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "A/cards.json": "8ac8f482968542eceacf5e62eba0121cafd1b5033cb5e0cdc6a67faa61991d00",
+        "A/corrected-v2/reference-q3.json": "cc0c661a58e3728be259da9bedbf956ecbbe156063d6e26109aae5f587f579bb",
+        "A/corrected-v2/corrections.json": "f6d2f75b3dedd714708455d5154dc6245dc8a10d63ff305cbb35ece0d0aa626e"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "A",
+      "case": "q4",
+      "id": "q4-a-006",
+      "status": "pass",
+      "assessment": "The card concerns logical REST testing, not property-based design, shrinking, or oracle limits; the replacement narrows it to a low-priority lead.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "A/cards.json": "8ac8f482968542eceacf5e62eba0121cafd1b5033cb5e0cdc6a67faa61991d00",
+        "A/corrected-v2/reference-q4.json": "c02deb0464c5fbc1447b264624705872f2df0491560e02266c15d3e05a459fdf",
+        "A/corrected-v2/corrections.json": "f6d2f75b3dedd714708455d5154dc6245dc8a10d63ff305cbb35ece0d0aa626e"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "A",
+      "case": "q7",
+      "id": "q7-a-034",
+      "status": "pass",
+      "assessment": "The distributed cloud-native test-architecture card does not show schema migration safety; the replacement removes q7_f3.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "A/cards.json": "8ac8f482968542eceacf5e62eba0121cafd1b5033cb5e0cdc6a67faa61991d00",
+        "A/corrected-v2/reference-q7.json": "f3ab37555c5b27c27eada2565124294e8fff498e35f6ebb89c14df07fd5d6eae",
+        "A/corrected-v2/corrections.json": "f6d2f75b3dedd714708455d5154dc6245dc8a10d63ff305cbb35ece0d0aa626e"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q3",
+      "id": "q3-b-006",
+      "status": "pass",
+      "assessment": "Removed the unsupported attribution facet; the ethics card remains a low-priority topic lead with no visible code provenance mechanism.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q3.json": "09adaf6d6b4771189658a157254918d2097f98b08f313d73b19932f6df4504d0",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q3",
+      "id": "q3-b-026",
+      "status": "pass",
+      "assessment": "Removed the unsupported provenance facet; the lifecycle card is broad agentic-coding context and the new rationale says so.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q3.json": "09adaf6d6b4771189658a157254918d2097f98b08f313d73b19932f6df4504d0",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q3",
+      "id": "q3-b-031",
+      "status": "judgment_ambiguity",
+      "assessment": "The security benchmark is only a citation and has no visible license-provenance content; zero is defensible, though the title gives a weak AI-generated-code topic signal.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q3.json": "09adaf6d6b4771189658a157254918d2097f98b08f313d73b19932f6df4504d0",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q3",
+      "id": "q3-b-033",
+      "status": "pass",
+      "assessment": "Removed the unsupported provenance facet from the duplicate lifecycle card; the broad topic-only grade and rationale align.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q3.json": "09adaf6d6b4771189658a157254918d2097f98b08f313d73b19932f6df4504d0",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-016",
+      "status": "pass",
+      "assessment": "The mobile-app coding benchmark is unrelated to compiler/LSP-guided refactoring; zero grades and empty facets align.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-017",
+      "status": "pass",
+      "assessment": "The issue explicitly names diagnostics, code fixes, LSP, and refactoring; its direct grades, facets, and rationale align.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-018",
+      "status": "pass",
+      "assessment": "The execution-verified semantic benchmark is a useful correctness-evaluation lead; the q6_f3 tag is supported.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-019",
+      "status": "judgment_ambiguity",
+      "assessment": "The card gives substantive code-retrieval context for agents but does not address compiler/LSP feedback; lead 1 is sound and visible 2 is a broad relevance judgment.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-020",
+      "status": "pass",
+      "assessment": "The coding-paradigm review is broad context without the target feedback workflow; low lead and empty facets align.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-021",
+      "status": "pass",
+      "assessment": "The card directly studies reliability of LLM-generated refactorings, supporting a useful workflow/correctness lead.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-022",
+      "status": "pass",
+      "assessment": "The same-card excerpt describes post-edit formatting and LSP compiler diagnostics sent to the model; grades and facets align.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-023",
+      "status": "pass",
+      "assessment": "The broad SDLC article has no visible compiler/refactoring detail; low lead and empty facets are appropriate.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-024",
+      "status": "pass",
+      "assessment": "Repository SKILL optimization is unrelated to the requested refactor-feedback mechanism; the replacement removes facets and gives no lead.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-025",
+      "status": "pass",
+      "assessment": "RefAgent explicitly gates tester validation on successful Maven compilation; the direct compiler/refactor facets and grades align.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-026",
+      "status": "pass",
+      "assessment": "The vibe-coding survey is broad and shows no target workflow; low lead with no facets is supported.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-027",
+      "status": "pass",
+      "assessment": "The study directly concerns coordinated edits across disjoint code regions, a useful partial refactoring/correctness lead.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-028",
+      "status": "pass",
+      "assessment": "The LSP guide visibly covers cross-file rename and refactoring actions; it is a high-priority source with relevant workflow facets.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-029",
+      "status": "pass",
+      "assessment": "RefactorPlatform explicitly targets repository-scale behavior-preserving changes, supporting direct refactoring and correctness facets.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-030",
+      "status": "pass",
+      "assessment": "The agent-lsp card describes previewing edits and diagnostic deltas before apply/discard; all three facets are supported.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-031",
+      "status": "material_concern",
+      "assessment": "The issue visibly requests cross-file rename, refactoring, formatting, and language-server fixture coverage, but it does not indicate diagnostics or incremental diagnostic feedback; q6_f1 is unsupported under the title/snippet-only facet rule.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-032",
+      "status": "pass",
+      "assessment": "Kiro code-intelligence documentation is broad and the excerpt lacks compiler/refactor feedback; low lead and empty facets fit.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-033",
+      "status": "pass",
+      "assessment": "The guide distinguishes per-document checks from workspace diagnostics, a useful diagnostics/validation limitation.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-034",
+      "status": "pass",
+      "assessment": "The SDLC overview is broad agent context without the requested feedback mechanism; low lead and empty facets fit.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-035",
+      "status": "pass",
+      "assessment": "The article explicitly concerns multi-file refactoring with language-server/file-system tools; a useful partial workflow lead.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-036",
+      "status": "pass",
+      "assessment": "JVM code-cache optimization is unrelated to repository refactoring; zero grades and empty facets fit.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-037",
+      "status": "pass",
+      "assessment": "The MCP deep dive describes safe project-wide rename and code exploration; direct refactoring and diagnostics lead.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-038",
+      "status": "pass",
+      "assessment": "The generalist coding-agent benchmark lacks refactoring or feedback specifics; low lead and empty facets fit.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-039",
+      "status": "pass",
+      "assessment": "The study directly concerns compiler and language-server feedback for coding agents; high lead and corresponding facets fit.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q6.json": "292fbcbc1e71301acc579921b8e55e6cce7f8c0a60789e1ccbd945b3fc40eb74",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q10",
+      "id": "q10-b-003",
+      "status": "pass",
+      "assessment": "The portfolio only compares assistants and mentions Continue; low priority with a topic-only visible score is appropriate.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q10.json": "caef2689a0db3fd4a438fd608072e57ade34e6d79f3bec3ac9692035cc136749",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q10",
+      "id": "q10-b-004",
+      "status": "pass",
+      "assessment": "The card says the separate assistant was inspired by Continue; it is a low-priority relation, not official source.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q10.json": "caef2689a0db3fd4a438fd608072e57ade34e6d79f3bec3ac9692035cc136749",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q10",
+      "id": "q10-b-005",
+      "status": "pass",
+      "assessment": "The third-party profile identifies Continue and exposes product details; it is a useful secondary lead with substantial visible detail.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q10.json": "caef2689a0db3fd4a438fd608072e57ade34e6d79f3bec3ac9692035cc136749",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    },
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q10",
+      "id": "q10-b-007",
+      "status": "pass",
+      "assessment": "The repository name signals Continue, but the generic assistant-platform description does not establish official identity; low lead is appropriate.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v2/reference-q10.json": "caef2689a0db3fd4a438fd608072e57ade34e6d79f3bec3ac9692035cc136749",
+        "B/corrected-v2/corrections.json": "cfe82aaa5721d449d2ade3fbb8ea74485b4a530579174a0b95e5426465cdd9b1"
+      }
+    }
+  ],
+  "source_binding_check": {
+    "rows": 37,
+    "fingerprint_matches": 37,
+    "all_anchor_quotes_match_same_card": 37,
+    "all_facet_anchor_bindings_match_tags": 37,
+    "failures": 0
+  }
+}

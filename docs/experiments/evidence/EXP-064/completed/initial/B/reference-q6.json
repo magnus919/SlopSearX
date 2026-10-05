@@ -1,0 +1,1004 @@
+{
+  "q6-b-000": {
+    "card_sha256": "590bf1f86ffc9bc40bca6d8d6afa17a1510b47ff1bece176a162e717748d6746",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q6_f3"
+    ],
+    "uncertain": true,
+    "rationale": "Refactor benchmark emphasizes evaluation but excerpt offers little multi-file feedback detail.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "While being the strongest open-source signal for software engineering tasks at scale, Github is inherently noisy through its snapshot nature, also requiring strong filtration "
+      }
+    ],
+    "facet_anchors": {
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "While being the strongest open-source signal for software engineering tasks at scale, Github is inherently noisy through its snapshot nature, also requiring strong filtration "
+        }
+      ]
+    }
+  },
+  "q6-b-001": {
+    "card_sha256": "2f040b6432f2f74377c35ab225235604dca72bb38251d6576f6827ec35474a27",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q6_f1",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Issue identifies single-error diagnostics and requests multiple severities, directly matching compiler feedback.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>Validation is a single try/except around lex, parse, resolve and compile</strong>. The handler catches one exception, formats it, appends it, and the pass is over. The"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Validation is a single try/except around lex, parse, resolve and compile</strong>. The handler catches one exception, formats it, appends it, and the pass is over. The"
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Validation is a single try/except around lex, parse, resolve and compile</strong>. The handler catches one exception, formats it, appends it, and the pass is over. The"
+        }
+      ]
+    }
+  },
+  "q6-b-002": {
+    "card_sha256": "31d8a3e4e2c8bf36f33d9559ab80244a8ef6e3806d1727ec2ca20fe6677b50d1",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Evaluates automated code-quality fixes, a useful correctness-check lead.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "This empirical study investigates how state-of-the-art Large Language Models (LLMs) can automatically resolve code issues identified by SonarQube, a widely used static analysi"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "This empirical study investigates how state-of-the-art Large Language Models (LLMs) can automatically resolve code issues identified by SonarQube, a widely used static analysi"
+        }
+      ]
+    }
+  },
+  "q6-b-003": {
+    "card_sha256": "20642125ce70ab2f92751cd940a47887267c3b141179088f9cf62f0b9bf671d9",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q6_f1",
+      "q6_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Explains LSP grounding and compiler-accurate feedback in agent editing loop.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "An LSP streamlines code creation by grounding Claude’s inner loop in compiler-accurate logic. Instead of wasting time on text-search guesswork, the agent navigates your codeba"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "An LSP streamlines code creation by grounding Claude’s inner loop in compiler-accurate logic. Instead of wasting time on text-search guesswork, the agent navigates your codeba"
+        }
+      ],
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "An LSP streamlines code creation by grounding Claude’s inner loop in compiler-accurate logic. Instead of wasting time on text-search guesswork, the agent navigates your codeba"
+        }
+      ]
+    }
+  },
+  "q6-b-004": {
+    "card_sha256": "7ad9987e986e11b82e701c5c4c5b1b5764db42b8b9860ad89b724400e03722f9",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Evaluates generated scientific code beyond functional correctness.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "While LLMs have accelerated scientific code generation, comprehensively evaluating generated code remains challenging. Many benchmarks emphasize functional correctness or task"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "While LLMs have accelerated scientific code generation, comprehensively evaluating generated code remains challenging. Many benchmarks emphasize functional correctness or task"
+        }
+      ]
+    }
+  },
+  "q6-b-005": {
+    "card_sha256": "1bd747f944e94a765ada53ae8794b43b95c7ef715697ed83583cd0054c35ab1b",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q6_f2",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Repository-scale refactoring harness focuses on behavior-preserving edits across files.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Function-level benchmarks reveal little about this regime (Liu et al., 2023), and while repository-scale suites like SWE-bench better reflect production engineering (Jimenez e"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "Function-level benchmarks reveal little about this regime (Liu et al., 2023), and while repository-scale suites like SWE-bench better reflect production engineering (Jimenez e"
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "Function-level benchmarks reveal little about this regime (Liu et al., 2023), and while repository-scale suites like SWE-bench better reflect production engineering (Jimenez e"
+        }
+      ]
+    }
+  },
+  "q6-b-006": {
+    "card_sha256": "2645eeb2629610608e20e8e8579274b581119a96acce3caa1d99aaf281b19760",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Agent-harness overview is broad; no compiler feedback mechanism visible.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Recent large language models (LLMs) have demonstrated strong capabilities in understanding and generating code, from competitive programming to repository-level software engin"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-007": {
+    "card_sha256": "cb9733bbe0f431b9cdc5e00b3d0ac9f73ea59eb3172c5b7ee125ec300baf2ecc",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Optimizes multi-agent architecture unrelated to refactoring feedback.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Automated evolution of Multi-Agent Systems (MAS) holds significant potential for reducing the manual effort required to design and optimize LLM-based agent architectures. Howe"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-008": {
+    "card_sha256": "e4be936a9e21265c30d74c84e74907d80bc97391ff35daf3c7b165f1d1fad48a",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q6_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Concrete multi-file refactor steps enumerate renames, imports, paths, docs, config and tests.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "You start by describing the goal clearly: &quot;Refactor the entire repository so the &#x27;auth&#x27; package becomes &#x27;identity&#x27;. Update all imports, class names, f"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "You start by describing the goal clearly: &quot;Refactor the entire repository so the &#x27;auth&#x27; package becomes &#x27;identity&#x27;. Update all imports, class names, f"
+        }
+      ]
+    }
+  },
+  "q6-b-009": {
+    "card_sha256": "d501e36a5198c4f9cae319c9a3528ef4d2d952330179cf82cd48e450564716ad",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q6_f1",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Issue describes project compiler and diagnostics across parsed resources and graph validation.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Read factory.yaml, discover resources, parse YAML/JSON, resolve references, merge environment overrides, apply policies, validate graphs, load Canvas layout data, and generate"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "Read factory.yaml, discover resources, parse YAML/JSON, resolve references, merge environment overrides, apply policies, validate graphs, load Canvas layout data, and generate"
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "Read factory.yaml, discover resources, parse YAML/JSON, resolve references, merge environment overrides, apply policies, validate graphs, load Canvas layout data, and generate"
+        }
+      ]
+    }
+  },
+  "q6-b-010": {
+    "card_sha256": "9bc21ca43c1c8d9c343fe8ed175856480cfde2100bdefba460b0ab07977209d9",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Coding-agent architecture taxonomy is broad.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "LLM-based coding agents can localize bugs, generate patches, and run tests with diminishing human oversight, yet the scaffolding code that surrounds the language model (the co"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-011": {
+    "card_sha256": "63a29f287c11043706a8b240be89f526e6ee035929b022b864ea4424fe88ee47",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q6_f1",
+      "q6_f2",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Explains symbol/file refactoring through IDE tools and language-server workflow.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>When the agent has to rename a symbol or move a file, it intelligently recognizes the intent, selects the appropriate refactoring tool, and invokes it</strong>. The ag"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "<strong>When the agent has to rename a symbol or move a file, it intelligently recognizes the intent, selects the appropriate refactoring tool, and invokes it</strong>. The ag"
+        }
+      ],
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "<strong>When the agent has to rename a symbol or move a file, it intelligently recognizes the intent, selects the appropriate refactoring tool, and invokes it</strong>. The ag"
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "<strong>When the agent has to rename a symbol or move a file, it intelligently recognizes the intent, selects the appropriate refactoring tool, and invokes it</strong>. The ag"
+        }
+      ]
+    }
+  },
+  "q6-b-012": {
+    "card_sha256": "d3f14c51551077844f31f565276a27e088400e14bf9991c7e56ddf16299e88cb",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "ISA migration benchmark is unrelated to multi-file feedback.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Large language models (LLMs) have shown growing potential in software engineering, yet few benchmarks evaluate their ability to repair software during migration across instruc"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-013": {
+    "card_sha256": "bdf043ed2562458fd43436c07024246a77f734ee7913d1e6a06d79cf048bc164",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q6_f2",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Verifier agent runs full tests after refactoring; useful workflow signal.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Refactorings are documented alongside patches so · reviewers can distinguish between functional fixes and structural improvements. E. Verifier Agent · The Verifier Agent enfor"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "Refactorings are documented alongside patches so · reviewers can distinguish between functional fixes and structural improvements. E. Verifier Agent · The Verifier Agent enfor"
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "Refactorings are documented alongside patches so · reviewers can distinguish between functional fixes and structural improvements. E. Verifier Agent · The Verifier Agent enfor"
+        }
+      ]
+    }
+  },
+  "q6-b-014": {
+    "card_sha256": "364043d2d2e92daffa4e39df5391fb54bd73e63c5cecbe56174e3df8d09aba76",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Long-horizon coding benchmark is broad task evaluation.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "DeepSWE is a benchmark of 113 original, long-horizon software engineering tasks for evaluating coding agents. Most public agentic coding benchmarks follow SWE-bench in mining "
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-015": {
+    "card_sha256": "1035c8506e88fd1cdd951ef692904b9d1a60daa85eb091caf24ed5330193c6cf",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q6_f1",
+      "q6_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Describes LSP integration feeding compiler and linter diagnostics back to model after edits.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>Inside a session, the agent reads relevant files, may draft a plan, edits code, and runs commands when needed</strong>. Its Language Server Protocol (LSP) integration "
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Inside a session, the agent reads relevant files, may draft a plan, edits code, and runs commands when needed</strong>. Its Language Server Protocol (LSP) integration "
+        }
+      ],
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Inside a session, the agent reads relevant files, may draft a plan, edits code, and runs commands when needed</strong>. Its Language Server Protocol (LSP) integration "
+        }
+      ]
+    }
+  },
+  "q6-b-016": {
+    "card_sha256": "478a3117263d64ed96aaf1bb64b6e45fecead5350741f7295437614ecb65a5f5",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q6_f1",
+      "q6_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Issue directly scopes language-service diagnostics and code-fix pipeline.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Can large language model agents develop industry-level mobile applications? We introduce \\textbf{SWE-Bench Mobile}, a benchmark for evaluating coding agents on realistic softw"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "Can large language model agents develop industry-level mobile applications? We introduce \\textbf{SWE-Bench Mobile}, a benchmark for evaluating coding agents on realistic softw"
+        }
+      ],
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "Can large language model agents develop industry-level mobile applications? We introduce \\textbf{SWE-Bench Mobile}, a benchmark for evaluating coding agents on realistic softw"
+        }
+      ]
+    }
+  },
+  "q6-b-017": {
+    "card_sha256": "3402c10771538b49383517695f9c59e1c8c056987df51d0e88b91a5062f5a5ca",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q6_f1",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Execution-verified semantic benchmark supports correctness checks, but not workflow detail.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Implement diagnostics and codefix pipeline Area: A21 — Language services LSP and refactoring Parent: SF-A21-E01 Priority / phase: P1 / P1 Foundations Audited starting point Pr"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "Implement diagnostics and codefix pipeline Area: A21 — Language services LSP and refactoring Parent: SF-A21-E01 Priority / phase: P1 / P1 Foundations Audited starting point Pr"
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "Implement diagnostics and codefix pipeline Area: A21 — Language services LSP and refactoring Parent: SF-A21-E01 Priority / phase: P1 / P1 Foundations Audited starting point Pr"
+        }
+      ]
+    }
+  },
+  "q6-b-018": {
+    "card_sha256": "6e3361725bdc642685ca48a26a47a2e7df3e15077ad25892ad4e9aafed3b8dd7",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Code retrieval study is adjacent context, not compiler or LSP feedback.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Evaluating whether large language models (LLMs) can recover execution-relevant program structure, rather than only produce code that passes tests, remains an open problem. Exi"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-019": {
+    "card_sha256": "e5a4736a98aa73c495caa7d2cd3e8b04b8bc2721dee142b43ed18cdaa87e71e2",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "General coding paradigm review is not focused on refactoring feedback.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Code retrieval is central to coding agents. It is the process of sourcing relevant code snippets, documentation, or knowledge from repositories into the context for the agent "
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-020": {
+    "card_sha256": "b0454d36b19e77f6ee420141300bf32014a02a3cf29a9fbc7558bd30271998a3",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q6_f2",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Studies reliability of automated code refactorings.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "This review presents a comprehensive analysis of two emerging paradigms in AI-assisted software development: vibe coding and agentic coding. While both leverage large language"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "This review presents a comprehensive analysis of two emerging paradigms in AI-assisted software development: vibe coding and agentic coding. While both leverage large language"
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "This review presents a comprehensive analysis of two emerging paradigms in AI-assisted software development: vibe coding and agentic coding. While both leverage large language"
+        }
+      ]
+    }
+  },
+  "q6-b-021": {
+    "card_sha256": "8b0314198b08143ef935e23ffe245c864c20f3607aeecf80667ccbc56a989493",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q6_f1",
+      "q6_f2",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Shows formatter then LSP compiler diagnostics are sent after edits.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "With the rapid advancement of Large Language Models (LLMs), there is growing interest in leveraging these models to automate software engineering tasks such as code refactorin"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "With the rapid advancement of Large Language Models (LLMs), there is growing interest in leveraging these models to automate software engineering tasks such as code refactorin"
+        }
+      ],
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "With the rapid advancement of Large Language Models (LLMs), there is growing interest in leveraging these models to automate software engineering tasks such as code refactorin"
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "With the rapid advancement of Large Language Models (LLMs), there is growing interest in leveraging these models to automate software engineering tasks such as code refactorin"
+        }
+      ]
+    }
+  },
+  "q6-b-022": {
+    "card_sha256": "066f5cc6a3d44c59ca78c71d06a6bdb2353e5369f8447ecaa0e431d0ebea7c23",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Broad SDLC analysis does not show the requested mechanism.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>After applying an edit, OpenCode runs project formatters (Prettier, Black, Biome) to standardize whitespace on disk before the next turn</strong>. It then queries the "
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-023": {
+    "card_sha256": "610ee7321dd23e8b99b822fb985e918d537535ee6813a43c2aec135cf74e4831",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Repository skill optimization is not about refactoring feedback.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "The evolution of Large Language Models (LLMs) has triggered a transition from stateless code completion to \"\"Agentic Coding\"\", where autonomous systems engage in multi-step re"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-024": {
+    "card_sha256": "fccf49566060c96c054d45aa09f101b0aae421c9aa2e434a7072196dfde68384",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q6_f1",
+      "q6_f2",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Compiler agent gates next validation stage on successful compilation.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Coding agents increasingly read repository knowledge from SKILLs --- plain \\texttt{.md} files versioned alongside the code. Recent work synthesizes these files automatically, "
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "Coding agents increasingly read repository knowledge from SKILLs --- plain \\texttt{.md} files versioned alongside the code. Recent work synthesizes these files automatically, "
+        }
+      ],
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "Coding agents increasingly read repository knowledge from SKILLs --- plain \\texttt{.md} files versioned alongside the code. Recent work synthesizes these files automatically, "
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "Coding agents increasingly read repository knowledge from SKILLs --- plain \\texttt{.md} files versioned alongside the code. Recent work synthesizes these files automatically, "
+        }
+      ]
+    }
+  },
+  "q6-b-025": {
+    "card_sha256": "6efb3a283d32fed959b41fc54cdbd40443c6e13bb131b5d63d0c235a9c19b7a2",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Vibe-coding survey is broad.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "This tool executes the Maven ... the compiler agent, detailing the compilation status. –<strong>If compilation succeeds (100%), the compiler agent confirms success and proceed"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-026": {
+    "card_sha256": "240be358dccf518840c12253d0179d8863f6b2f897a883ab3c19e69f440e4b69",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q6_f2",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Studies coordinated multi-hunk repair, adjacent to multi-file changes.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "The advancement of large language models (LLMs) has catalyzed a paradigm shift from code generation assistance to autonomous coding agents, enabling a novel development method"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "The advancement of large language models (LLMs) has catalyzed a paradigm shift from code generation assistance to autonomous coding agents, enabling a novel development method"
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "The advancement of large language models (LLMs) has catalyzed a paradigm shift from code generation assistance to autonomous coding agents, enabling a novel development method"
+        }
+      ]
+    }
+  },
+  "q6-b-027": {
+    "card_sha256": "9edec0fdb31710bf91959b25c54113cc1b06122c3fc4f0587da179c8ba318113",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q6_f1",
+      "q6_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Explains LSP refactoring and rename-across-files.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Automated program repair has traditionally focused on single-hunk defects, overlooking multi-hunk bugs that are prevalent in real-world systems. Repairing these bugs requires "
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "Automated program repair has traditionally focused on single-hunk defects, overlooking multi-hunk bugs that are prevalent in real-world systems. Repairing these bugs requires "
+        }
+      ],
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "Automated program repair has traditionally focused on single-hunk defects, overlooking multi-hunk bugs that are prevalent in real-world systems. Repairing these bugs requires "
+        }
+      ]
+    }
+  },
+  "q6-b-028": {
+    "card_sha256": "6104ce17d4c0655efa7e24fd5225cf5bcff2e300fc3d519c9c30d2a09949e98e",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q6_f2",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Harness isolates design choices for behavior-preserving repository refactoring.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "LSP also handles refactoring, code actions, semantic tokens, and inline hints. Modern tools use the full protocol to deliver rename-across-files and AI-suggested edits that re"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "LSP also handles refactoring, code actions, semantic tokens, and inline hints. Modern tools use the full protocol to deliver rename-across-files and AI-suggested edits that re"
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "LSP also handles refactoring, code actions, semantic tokens, and inline hints. Modern tools use the full protocol to deliver rename-across-files and AI-suggested edits that re"
+        }
+      ]
+    }
+  },
+  "q6-b-029": {
+    "card_sha256": "f2504e892a4cb7c441f3cca621f238879d9ff513199fbe17236bec01af9b736f",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q6_f1",
+      "q6_f2",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "LSP server previews edits, checks diagnostic deltas, and can apply or discard.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Repository-scale refactoring requires coding agents to propagate a single change across many interdependent files without altering program behavior, yet to our knowledge no ex"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "Repository-scale refactoring requires coding agents to propagate a single change across many interdependent files without altering program behavior, yet to our knowledge no ex"
+        }
+      ],
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "Repository-scale refactoring requires coding agents to propagate a single change across many interdependent files without altering program behavior, yet to our knowledge no ex"
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "Repository-scale refactoring requires coding agents to propagate a single change across many interdependent files without altering program behavior, yet to our knowledge no ex"
+        }
+      ]
+    }
+  },
+  "q6-b-030": {
+    "card_sha256": "3457dc63fccea0de1db212bfeb75bda29ff90663e23197b7e7a38a4034d22a81",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q6_f2",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Issue asks to demonstrate cross-file rename/refactoring/formatting with real fixtures.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Speculative editing simulate_edit → preview changes in memory, check diagnostic delta, apply or discard. Test edits before touching disk. Workflow orchestration 24 skills that"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "Speculative editing simulate_edit → preview changes in memory, check diagnostic delta, apply or discard. Test edits before touching disk. Workflow orchestration 24 skills that"
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "Speculative editing simulate_edit → preview changes in memory, check diagnostic delta, apply or discard. Test edits before touching disk. Workflow orchestration 24 skills that"
+        }
+      ]
+    }
+  },
+  "q6-b-031": {
+    "card_sha256": "04f94348dfdb4f2c6a646549301066c6755971f26addbd1a35f41354f3865f78",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Code intelligence overview is broad and snippet does not show compiler feedback.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>Demonstrate cross-file rename, at least one supported refactoring, and formatting through an MCP client against real language-server fixtures</strong>. Record which se"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-032": {
+    "card_sha256": "762a7f62b7827ae83edd4edf46dad49fd3d05dd0aa3cf22327d34c31be0ad1db",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q6_f1",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "VS Code guide distinguishes per-file validation from workspace diagnostics.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "OverviewData protectionCode referencesCompliance validationInfrastructure securityIAM permissionsFirewalls, proxies, and data perimetersVPC endpoints (AWS PrivateLink) ... Tre"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "OverviewData protectionCode referencesCompliance validationInfrastructure securityIAM permissionsFirewalls, proxies, and data perimetersVPC endpoints (AWS PrivateLink) ... Tre"
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "OverviewData protectionCode referencesCompliance validationInfrastructure securityIAM permissionsFirewalls, proxies, and data perimetersVPC endpoints (AWS PrivateLink) ... Tre"
+        }
+      ]
+    }
+  },
+  "q6-b-033": {
+    "card_sha256": "877b47a866c6f677de0aa7bc3edb03a3bbb9eb15fa934d15bbb2e74c788e1465",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Duplicate broad SDLC analysis lacks targeted details.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "This example sets interFileDependencies to false because each document is validated independently, and workspaceDiagnostics to false because it does not provide workspace-wide"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-034": {
+    "card_sha256": "2fa0fe59a46e7d3558a1ed93abb7ec5be8ae5898c62a313b233754e085226835",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q6_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Discusses language servers and tools supporting stateful multi-file refactors.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "The evolution of Large Language Models (LLMs) has triggered a transition from stateless code completion to \"\"Agentic Coding\"\", where autonomous systems engage in multi-step re"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "The evolution of Large Language Models (LLMs) has triggered a transition from stateless code completion to \"\"Agentic Coding\"\", where autonomous systems engage in multi-step re"
+        }
+      ]
+    }
+  },
+  "q6-b-035": {
+    "card_sha256": "2261c2ba2431aef5abaddc4351a0ed086dda7d044d8ce3fd46bf4558474a7606",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "JVM code-cache paper is unrelated.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Advanced tools like GoCodeo or Cursor IDE utilize agentic frameworks where models interact with the file system, language servers, or other tools to maintain stateful context."
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-036": {
+    "card_sha256": "5b51ded8388f161f42a804ae4847486160a9c30417c4947ad7c410d2f1a029b0",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q6_f1",
+      "q6_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Details project-wide refactoring through an MCP server and language tooling.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Past activities in optimizing the performance of the HotSpot TM Java Virtual Machine focused on the performance of the dynamic compilers and the supporting runtime.Since dynam"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "Past activities in optimizing the performance of the HotSpot TM Java Virtual Machine focused on the performance of the dynamic compilers and the supporting runtime.Since dynam"
+        }
+      ],
+      "q6_f2": [
+        {
+          "field": "snippet",
+          "quote": "Past activities in optimizing the performance of the HotSpot TM Java Virtual Machine focused on the performance of the dynamic compilers and the supporting runtime.Since dynam"
+        }
+      ]
+    }
+  },
+  "q6-b-037": {
+    "card_sha256": "71ec5afdb07990c0b056c285a34aaf34d5b74db996ee881a0d340272354c6724",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "General software engineering agent benchmark is not targeted to compiler feedback.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Why This Matters This fusion unlocks capabilities that were previously impossible for AI agents: Safe, Project-Wide Refactoring: Rename a symbol across dozens of files with co"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q6-b-038": {
+    "card_sha256": "fb79a196cc5400b6422bc71fc27965e51baa187a0c572457893242fccd856643",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q6_f3"
+    ],
+    "uncertain": true,
+    "rationale": "General software engineering agent benchmark offers broad correctness context.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Large Language Models (LLMs) have revolutionized software engineering (SE), showcasing remarkable proficiency in various coding tasks. Despite recent advancements that have en"
+      }
+    ],
+    "facet_anchors": {
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "Large Language Models (LLMs) have revolutionized software engineering (SE), showcasing remarkable proficiency in various coding tasks. Despite recent advancements that have en"
+        }
+      ]
+    }
+  },
+  "q6-b-039": {
+    "card_sha256": "975930bc874f4f72e4f333187716478b833b315c50aae0776a6a21ee9c97ef81",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q6_f1",
+      "q6_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Studies learning from compiler and language-server feedback.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "--allow-dirty) so that CI systems and planning agents can configure them explicitly, making ... Language servers, compilers, and static analysis. The Language Server Protocol "
+      }
+    ],
+    "facet_anchors": {
+      "q6_f1": [
+        {
+          "field": "snippet",
+          "quote": "--allow-dirty) so that CI systems and planning agents can configure them explicitly, making ... Language servers, compilers, and static analysis. The Language Server Protocol "
+        }
+      ],
+      "q6_f3": [
+        {
+          "field": "snippet",
+          "quote": "--allow-dirty) so that CI systems and planning agents can configure them explicitly, making ... Language servers, compilers, and static analysis. The Language Server Protocol "
+        }
+      ]
+    }
+  }
+}

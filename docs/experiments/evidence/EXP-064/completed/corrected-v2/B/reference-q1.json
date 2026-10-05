@@ -1,0 +1,753 @@
+{
+  "q1-b-000": {
+    "card_sha256": "019ccfc976306a012a06df4270167b27448bccca00b8bbc8046d54b8d0a8f5a0",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f1"
+    ],
+    "uncertain": false,
+    "rationale": "Bazel caching selects affected rebuild parts; it is relevant but framed around builds.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "As a monorepo grows, a small change in one service can trigger a full rebuild of the entire codebase, often due to limitations in the build system or tooling. On the other hand, languages like Scala, known for features s"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "As a monorepo grows, a small change in one service can trigger a full rebuild of the entire codebase, often due to limitations in the build system or tooling. On the other hand, languages like Scala, known for features s"
+        }
+      ]
+    }
+  },
+  "q1-b-001": {
+    "card_sha256": "7db98d1ab821277f1a43ca04b8f3660c8eeffa00093e71a0bbe60addf23a9045",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Visible Nx graph analysis directly links dependencies to affected projects and tests.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Intelligent Dependency Graph Analysis: <strong>By analyzing the dependency graph of projects within the monorepo, Nx can precisely determine which projects are affected by changes</strong>. This allows for targeted build"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "Intelligent Dependency Graph Analysis: <strong>By analyzing the dependency graph of projects within the monorepo, Nx can precisely determine which projects are affected by changes</strong>. This allows for targeted build"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "Intelligent Dependency Graph Analysis: <strong>By analyzing the dependency graph of projects within the monorepo, Nx can precisely determine which projects are affected by changes</strong>. This allows for targeted build"
+        }
+      ]
+    }
+  },
+  "q1-b-002": {
+    "card_sha256": "0df99d32cb569cbd8480f512dc960afe0bfe62a952cb9cebda18e71be59f6342",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Names graph analysis and affected-file detection, though it is a broad tool roundup.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Nx and Turborepo also provide built-in support for affected file detection and project graph analysis, which streamlines PR workflows. For readers newer to monorepos, this primer on what a monorepo is and why it matters "
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "Nx and Turborepo also provide built-in support for affected file detection and project graph analysis, which streamlines PR workflows. For readers newer to monorepos, this primer on what a monorepo is and why it matters "
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "Nx and Turborepo also provide built-in support for affected file detection and project graph analysis, which streamlines PR workflows. For readers newer to monorepos, this primer on what a monorepo is and why it matters "
+        }
+      ]
+    }
+  },
+  "q1-b-003": {
+    "card_sha256": "0f2d250ce7fa3a4f0f2fe51bd1f60d36801a42ec2f4afe015c36cfdb304dbfdf",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q1_f1",
+      "q1_f2",
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "RIG explicitly models dependencies, tests, coverage edges, and evidence-backed structure.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Repository aware coding agents often struggle to recover build and test structure, especially in multilingual projects where cross language dependencies are encoded across heterogeneous build systems and tooling. We intr"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "Repository aware coding agents often struggle to recover build and test structure, especially in multilingual projects where cross language dependencies are encoded across heterogeneous build systems and tooling. We intr"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "Repository aware coding agents often struggle to recover build and test structure, especially in multilingual projects where cross language dependencies are encoded across heterogeneous build systems and tooling. We intr"
+        }
+      ],
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "Repository aware coding agents often struggle to recover build and test structure, especially in multilingual projects where cross language dependencies are encoded across heterogeneous build systems and tooling. We intr"
+        }
+      ]
+    }
+  },
+  "q1-b-004": {
+    "card_sha256": "56c7dd901220bd4067b5aade5ff27b319c9f3e24934c3d50a82726412634a5ee",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Issue directly proposes Bazel for dependency graph and affected-test orchestration.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>Evaluate Bazel as the repository-level dependency graph and build/test orchestration layer for Bifrost</strong>, with a particular focus on replacing the structural dependency-analysis responsibilities currently "
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Evaluate Bazel as the repository-level dependency graph and build/test orchestration layer for Bifrost</strong>, with a particular focus on replacing the structural dependency-analysis responsibilities currently "
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Evaluate Bazel as the repository-level dependency graph and build/test orchestration layer for Bifrost</strong>, with a particular focus on replacing the structural dependency-analysis responsibilities currently "
+        }
+      ]
+    }
+  },
+  "q1-b-005": {
+    "card_sha256": "d2f652884a4a72e287e65faf008ed7b1fac82eafddf89343af0b38673719a567",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f1"
+    ],
+    "uncertain": false,
+    "rationale": "Explains dependency graphs and affected rebuilds; useful background, little test-selection detail.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "In monorepos, projects often have intricate interdependencies. <strong>A well-structured dependency graph helps identify and isolate these relationships, ensuring that changes in one module trigger rebuilds only in affec"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "In monorepos, projects often have intricate interdependencies. <strong>A well-structured dependency graph helps identify and isolate these relationships, ensuring that changes in one module trigger rebuilds only in affec"
+        }
+      ]
+    }
+  },
+  "q1-b-006": {
+    "card_sha256": "c226ac475e77f54b14d4dbd8c03e2a8a401259255f4e93ccb3174dca57699c1a",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Graph-based execution selects affected nodes, though snippet is abbreviated.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Selective builds are even more ... (like Bazel, Nx, or Pants) support graph-based execution, where <strong>CI only rebuilds affected nodes and their dependents</strong>...."
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "Selective builds are even more ... (like Bazel, Nx, or Pants) support graph-based execution, where <strong>CI only rebuilds affected nodes and their dependents</strong>...."
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "Selective builds are even more ... (like Bazel, Nx, or Pants) support graph-based execution, where <strong>CI only rebuilds affected nodes and their dependents</strong>...."
+        }
+      ]
+    }
+  },
+  "q1-b-007": {
+    "card_sha256": "28d0f3ec13b3700ba1184416004f070684696a46c6361e714f620eb2d1badf6c",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q1_f1",
+      "q1_f2",
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Guide promises graph, affected-selection algorithms, CI wiring, and failure diagnosis.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "This guide targets QA and test-automation engineers working in pnpm/npm/yarn workspaces, Nx-style graphs, Turborepo pipelines, or Bazel-ish graphs, especially where AI agents generate tests and code across package bounda"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "This guide targets QA and test-automation engineers working in pnpm/npm/yarn workspaces, Nx-style graphs, Turborepo pipelines, or Bazel-ish graphs, especially where AI agents generate tests and code across package bounda"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "This guide targets QA and test-automation engineers working in pnpm/npm/yarn workspaces, Nx-style graphs, Turborepo pipelines, or Bazel-ish graphs, especially where AI agents generate tests and code across package bounda"
+        }
+      ],
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "This guide targets QA and test-automation engineers working in pnpm/npm/yarn workspaces, Nx-style graphs, Turborepo pipelines, or Bazel-ish graphs, especially where AI agents generate tests and code across package bounda"
+        }
+      ]
+    }
+  },
+  "q1-b-008": {
+    "card_sha256": "72d2210adfe0350cc7a7f57e42ca37c9fa7bacc905cf34df3d53c5fd9f25683b",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": false,
+    "rationale": "Bazel monorepo background; visible excerpt does not explain affected selection.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Debugging issues specific to monorepos also presents unique challenges, though the underlying principles may feel familiar. Additionally, they allow for the configuration of a single bundler to handle unit tests, integra"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q1-b-009": {
+    "card_sha256": "f6a2caf398a104c05b90048f0b7739ed7b14523e06172050908ff81818a0f282",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The example explicitly excludes modeling inter-package dependencies, a useful scope limitation.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "To be clear about scope, this post covers Bazelifying one package from the monorepo (the hooks package) end to end: install, build, test, and lint. The goal was not to migrate the whole repo overnight, but to understand "
+      }
+    ],
+    "facet_anchors": {
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "To be clear about scope, this post covers Bazelifying one package from the monorepo (the hooks package) end to end: install, build, test, and lint. The goal was not to migrate the whole repo overnight, but to understand "
+        }
+      ]
+    }
+  },
+  "q1-b-010": {
+    "card_sha256": "d222a7520a0a1daea4dfa13c9b504033448c58e64d49a8aeb6c060925058afb4",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Names graph and reverse-dependency commands for affected target selection.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>Nx can visualize affected projects with nx graph --affected</strong>. Pants can list dependencies and transitive dependents. Bazel rdeps identifies reverse dependencies within a universe. Turborepo queries and fi"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Nx can visualize affected projects with nx graph --affected</strong>. Pants can list dependencies and transitive dependents. Bazel rdeps identifies reverse dependencies within a universe. Turborepo queries and fi"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Nx can visualize affected projects with nx graph --affected</strong>. Pants can list dependencies and transitive dependents. Bazel rdeps identifies reverse dependencies within a universe. Turborepo queries and fi"
+        }
+      ]
+    }
+  },
+  "q1-b-011": {
+    "card_sha256": "7851f096ea94b142c3df59ac46b283c83e698b87e2d186f470b0be9c197b299e",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Discusses measuring build performance and deterministic incremental builds, indirect to test selection.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Monorepo builds slow down in predictable ways - growing task graphs, cold CI starts, non-incremental workflows, and environments that drift from local to CI. This guide explains how to measure where time actually goes, h"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "Monorepo builds slow down in predictable ways - growing task graphs, cold CI starts, non-incremental workflows, and environments that drift from local to CI. This guide explains how to measure where time actually goes, h"
+        }
+      ]
+    }
+  },
+  "q1-b-012": {
+    "card_sha256": "f35bf7bd7917ad4ec1a69f05d30c8e30245ba418225f5efce257dcb326e32cbd",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": false,
+    "rationale": "Official Bazel scale description gives little task-specific selection detail.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Scale your organization, codebase, and Continuous Integration systems. Bazel handles codebases of any size, whether in multiple repositories or a huge monorepo."
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q1-b-013": {
+    "card_sha256": "b4ab7934c703a9fbfb0e59699d159b6bf2ad921ee71f66e46d01a2d66b520fe2",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Describes Nx project graph and running only affected tasks.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Pick Bazel when polyglot reach and reproducibility are existential, not nice-to-have. Nx, developed by Nrwl, is a JS/TS monorepo tool with first-party support for React, Angular, Node, and Next.js. It builds a project gr"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "Pick Bazel when polyglot reach and reproducibility are existential, not nice-to-have. Nx, developed by Nrwl, is a JS/TS monorepo tool with first-party support for React, Angular, Node, and Next.js. It builds a project gr"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "Pick Bazel when polyglot reach and reproducibility are existential, not nice-to-have. Nx, developed by Nrwl, is a JS/TS monorepo tool with first-party support for React, Angular, Node, and Next.js. It builds a project gr"
+        }
+      ]
+    }
+  },
+  "q1-b-014": {
+    "card_sha256": "d4fb80e039557f35ce729f178dd89698af8ed36fcf745ac38acb692c28f00f94",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q1_f1"
+    ],
+    "uncertain": false,
+    "rationale": "Monorepo architecture research is related background; no affected-test mechanism visible.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Large-scale information systems (IS) and software complexes increasingly integrate heterogeneous services, interfaces and data pipelines, yet fragmented repositories and brittle cross-team processes often constrain their"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "Large-scale information systems (IS) and software complexes increasingly integrate heterogeneous services, interfaces and data pipelines, yet fragmented repositories and brittle cross-team processes often constrain their"
+        }
+      ]
+    }
+  },
+  "q1-b-015": {
+    "card_sha256": "bc1fa823ca05489ac23cd3cb484f11f287b0aa3f9871f15c44c4601285e0d338",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Focuses on governance for shared automated-test codebases, but no selection method shown.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "The increasing adoption of monorepos as a strategic choice for managing large, multi-team software projects introduces unique complexities, particularly concerning the shared codebase for automated tests. To harness the "
+      }
+    ],
+    "facet_anchors": {
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "The increasing adoption of monorepos as a strategic choice for managing large, multi-team software projects introduces unique complexities, particularly concerning the shared codebase for automated tests. To harness the "
+        }
+      ]
+    }
+  },
+  "q1-b-016": {
+    "card_sha256": "512ac1ce3156a5ffa710e68df9996aecf121dded924ed82f64eaf8914d15e1ff",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f1"
+    ],
+    "uncertain": false,
+    "rationale": "Repository knowledge graphs for code generation are adjacent to recovering architecture, not testing.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Large language models (LLMs) have transformed software development by enabling automated code generation, yet they frequently suffer from systematic errors that limit practical deployment. We identify two critical failur"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "Large language models (LLMs) have transformed software development by enabling automated code generation, yet they frequently suffer from systematic errors that limit practical deployment. We identify two critical failur"
+        }
+      ]
+    }
+  },
+  "q1-b-017": {
+    "card_sha256": "9ef6e6f810f33a94ba2f3fb0d2b7d956c5d8954ea45f6ba8a576a6255e053c13",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Gives readiness criteria and warns there is no universal threshold.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>A monorepo is ready for a graph-aware build tool when duplicated work and implicit dependencies are measurable problems and when the team can own a new build model</strong>. There is no universal threshold of pro"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "<strong>A monorepo is ready for a graph-aware build tool when duplicated work and implicit dependencies are measurable problems and when the team can own a new build model</strong>. There is no universal threshold of pro"
+        }
+      ]
+    }
+  },
+  "q1-b-018": {
+    "card_sha256": "49d7e728a7717326a36f514b55ed0a268f4845d037c2bb73316dec2f2f37de24",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Repository directly implements Bazel target diffing for test selection.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>Performs Bazel Target Diffing between two revisions in Git, allowing for Test Target Selection and Selective Building</strong> - Tinder/bazel-diff"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Performs Bazel Target Diffing between two revisions in Git, allowing for Test Target Selection and Selective Building</strong> - Tinder/bazel-diff"
+        }
+      ]
+    }
+  },
+  "q1-b-019": {
+    "card_sha256": "905e1ce3e246629fa38581cf769dca3fe03a33c1944c2832c6ead2e5d4616e05",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Runnable Python Bazel pipeline example includes build and tests.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "An example pipeline that builds and tests a Python monorepo using Bazel and dynamic pipelines.🪁 - buildkite/bazel-monorepo-example"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "An example pipeline that builds and tests a Python monorepo using Bazel and dynamic pipelines.🪁 - buildkite/bazel-monorepo-example"
+        }
+      ]
+    }
+  },
+  "q1-b-020": {
+    "card_sha256": "d7ffdd1c22adcace68a9b588a84590cd4da3358caeb089764fabd339852898fd",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Dependency-version conflict study is adjacent context, not affected-test selection.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Against the backdrop of the expansion of microservice architectures and Platform Engineering practices, monorepositories serve as a key mechanism for standardizing the software development lifecycle. At the same time, th"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "Against the backdrop of the expansion of microservice architectures and Platform Engineering practices, monorepositories serve as a key mechanism for standardizing the software development lifecycle. At the same time, th"
+        }
+      ]
+    }
+  },
+  "q1-b-021": {
+    "card_sha256": "f1a2de8c31fa6843570fb8801b4c6c4769e486ce0545d53e89dc85b5f60da6e9",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": false,
+    "rationale": "Monorepo migration thesis offers broad background, no test-selection detail visible.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "This thesis examines the process and impact of migrating multiple independent code repositories into a Monorepo, with a focus on enhancing code reuse, streamlining dependency management, and improving collaboration acros"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q1-b-022": {
+    "card_sha256": "b23b0fb350a22f89aaa4fb86242e44f0f5cbddcf9e2c9c96dbe1a52150600438",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Flaky-test repair study is about test reliability, not selecting affected tests.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Flaky tests that non-deterministically pass or fail waste developer time and slow release cycles. While large language models (LLMs) show promise for automatically repairing flaky tests, existing approaches like FlakyDoc"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "Flaky tests that non-deterministically pass or fail waste developer time and slow release cycles. While large language models (LLMs) show promise for automatically repairing flaky tests, existing approaches like FlakyDoc"
+        }
+      ]
+    }
+  },
+  "q1-b-023": {
+    "card_sha256": "03363a1cd1d38b9be8692e6ddd9ac276f75d96b6f4f2fe481f6aa060184135a6",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f2",
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Pipeline-aware regression-test optimization directly concerns test selection at scale.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Massive, multi-language, monolithic repositories form the backbone of many modern, complex software systems. To ensure consistent code quality while still allowing fast development cycles, Continuous Integration (CI) is "
+      }
+    ],
+    "facet_anchors": {
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "Massive, multi-language, monolithic repositories form the backbone of many modern, complex software systems. To ensure consistent code quality while still allowing fast development cycles, Continuous Integration (CI) is "
+        }
+      ],
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "Massive, multi-language, monolithic repositories form the backbone of many modern, complex software systems. To ensure consistent code quality while still allowing fast development cycles, Continuous Integration (CI) is "
+        }
+      ]
+    }
+  },
+  "q1-b-024": {
+    "card_sha256": "c041821c5d084e4490c210d9eab6c31857164fd8501fcbb66cecc4d774fe435e",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Large-repository change-management requirements are relevant validation context, not selection mechanism.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Giant monolithic source-code repositories are one of the fundamental pillars of the back end infrastructure in large and fast-paced software companies. The sheer volume of everyday code changes demands a reliable and eff"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "Giant monolithic source-code repositories are one of the fundamental pillars of the back end infrastructure in large and fast-paced software companies. The sheer volume of everyday code changes demands a reliable and eff"
+        }
+      ]
+    }
+  },
+  "q1-b-025": {
+    "card_sha256": "8bf1f89b69f8c99b8dc2788ced4c5b098668e622282b357a75d966e37955ba9a",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": false,
+    "rationale": "General Bazel advocacy offers no visible affected-test method.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Bazel is a new generation of build systems that’s built for the realities of software development today. As monorepos become increasingly common and codebases keep getting larger, smart build systems aren’t a luxury — th"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q1-b-026": {
+    "card_sha256": "1b1152d2fb8b29326e9448513872149da523403c69a64b96975f6f279c3f9096",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q1_f2",
+      "q1_f1"
+    ],
+    "uncertain": false,
+    "rationale": "Explains CI runs tests affected by code and dependency updates.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>Most Bazel monorepos are set up so that CI only runs the tests affected by your change</strong>. That includes updates to third-party libraries — even if you didn’t change any of your own code — because those upd"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Most Bazel monorepos are set up so that CI only runs the tests affected by your change</strong>. That includes updates to third-party libraries — even if you didn’t change any of your own code — because those upd"
+        }
+      ],
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Most Bazel monorepos are set up so that CI only runs the tests affected by your change</strong>. That includes updates to third-party libraries — even if you didn’t change any of your own code — because those upd"
+        }
+      ]
+    }
+  },
+  "q1-b-027": {
+    "card_sha256": "d12e72400c05cfbca8e47f09f9665c3f4968c30f3e8fd5a4d15876ef1d8b4d4a",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f2",
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Discusses automated test selection and the error-proneness of manual mappings.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Some ppl manually curate a mapping ... That&#x27;s very error prone. <strong>Bazel gives automatic test selection just based on having high cache hit rates for anything unaffected by the developers changes</strong>...."
+      }
+    ],
+    "facet_anchors": {
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "Some ppl manually curate a mapping ... That&#x27;s very error prone. <strong>Bazel gives automatic test selection just based on having high cache hit rates for anything unaffected by the developers changes</strong>...."
+        }
+      ],
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "Some ppl manually curate a mapping ... That&#x27;s very error prone. <strong>Bazel gives automatic test selection just based on having high cache hit rates for anything unaffected by the developers changes</strong>...."
+        }
+      ]
+    }
+  },
+  "q1-b-028": {
+    "card_sha256": "41a7095016b70ab798a478190f081ffe45838693e7e6fa4b663c7720c39bfa45",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Example pipeline builds and tests a Python monorepo; snippet mentions BEP output.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Requires GraphViz. Also annotates the build with custom Markdown driven by Bazel’s BEP output:"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "Requires GraphViz. Also annotates the build with custom Markdown driven by Bazel’s BEP output:"
+        }
+      ]
+    }
+  }
+}

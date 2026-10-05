@@ -1,0 +1,960 @@
+{
+  "q7-b-000": {
+    "card_sha256": "400ffe41d3a9a0d542601de643b0aa2acc2fca4e4758aae0c9d7db0bea4cceed",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q7_f1",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Canary traffic routing preserves old behavior while introducing a new implementation.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "You can <strong>route traffic to the new implementation for a subset of requests, while the rest still hit the old, stable one</strong>. The code path for the old behavior rem"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f1": [
+        {
+          "field": "snippet",
+          "quote": "You can <strong>route traffic to the new implementation for a subset of requests, while the rest still hit the old, stable one</strong>. The code path for the old behavior rem"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "You can <strong>route traffic to the new implementation for a subset of requests, while the rest still hit the old, stable one</strong>. The code path for the old behavior rem"
+        }
+      ]
+    }
+  },
+  "q7-b-001": {
+    "card_sha256": "84b110a02321da3225227e2dd44fdba6bf9f4ef42804784bc6abd96475331a2c",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q7_f1",
+      "q7_f2",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Explains backward-compatible schema changes before code updates to support rollback.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "One way to address this is by using ... Change. This involves <strong>deploying backward-compatible database changes ahead of code updates, creating a buffer that preserves th"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f1": [
+        {
+          "field": "snippet",
+          "quote": "One way to address this is by using ... Change. This involves <strong>deploying backward-compatible database changes ahead of code updates, creating a buffer that preserves th"
+        }
+      ],
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "One way to address this is by using ... Change. This involves <strong>deploying backward-compatible database changes ahead of code updates, creating a buffer that preserves th"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "One way to address this is by using ... Change. This involves <strong>deploying backward-compatible database changes ahead of code updates, creating a buffer that preserves th"
+        }
+      ]
+    }
+  },
+  "q7-b-002": {
+    "card_sha256": "f1f0003641346249cc032b468f525924608eb5a5c34d52469cd835615aa148da",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q7_f1",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Highlights database-specific transaction, foreign-key and type constraints for migration agents.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "AWS DMS with Generative AI succeeds because it understands database-specific constraints that generic AI agents miss: transaction isolation levels, foreign key cascade behavio"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f1": [
+        {
+          "field": "snippet",
+          "quote": "AWS DMS with Generative AI succeeds because it understands database-specific constraints that generic AI agents miss: transaction isolation levels, foreign key cascade behavio"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "AWS DMS with Generative AI succeeds because it understands database-specific constraints that generic AI agents miss: transaction isolation levels, foreign key cascade behavio"
+        }
+      ]
+    }
+  },
+  "q7-b-003": {
+    "card_sha256": "25a3b6e132e025ace901f5d65f406285efc82e90db1a2b5672d597f4d6033e1b",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q7_f3"
+    ],
+    "uncertain": true,
+    "rationale": "Continuous compliance pipeline for hybrid databases is adjacent, not schema migration focused.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Hybrid data platforms that pair Oracle RDBMS with Apache Cassandra deliver both ACID guarantees and internet-scale availability, yet they complicate security and regulatory co"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "Hybrid data platforms that pair Oracle RDBMS with Apache Cassandra deliver both ACID guarantees and internet-scale availability, yet they complicate security and regulatory co"
+        }
+      ]
+    }
+  },
+  "q7-b-004": {
+    "card_sha256": "507c42adf10c0fb08e1fca071a09e29eb4dc509f3f6ae292e3e046d67ec0f0ff",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q7_f2",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Issue calls for testing forward and backward compatibility for every migration.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Title: test: add tests for database migration rollbacks Labels: testing database Complexity: medium Description: <strong>Create tests for every migration that verify forward A"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "Title: test: add tests for database migration rollbacks Labels: testing database Complexity: medium Description: <strong>Create tests for every migration that verify forward A"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "Title: test: add tests for database migration rollbacks Labels: testing database Complexity: medium Description: <strong>Create tests for every migration that verify forward A"
+        }
+      ]
+    }
+  },
+  "q7-b-005": {
+    "card_sha256": "500a81c93c060258bdd27efa5df46abcc28e9373cef8390a0d1397e483fffdc5",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q7_f1",
+      "q7_f2",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Practical database changes guide advocates phased rollout and views.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>Use views for logical changes</strong>: To reduce the application code changes supporting both old and new schemas, use database views when possible. While making data"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f1": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Use views for logical changes</strong>: To reduce the application code changes supporting both old and new schemas, use database views when possible. While making data"
+        }
+      ],
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Use views for logical changes</strong>: To reduce the application code changes supporting both old and new schemas, use database views when possible. While making data"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Use views for logical changes</strong>: To reduce the application code changes supporting both old and new schemas, use database views when possible. While making data"
+        }
+      ]
+    }
+  },
+  "q7-b-006": {
+    "card_sha256": "977eba7192e8ca2605ffa88b0cfe9c9c5ebd509dc6f314941092af8aeadd085e",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Generic cloud migration model is unrelated to database schema safety.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "The cloud computing literature provides various ways to utilise cloud services, each with a different viewpoint and focus and mostly using heterogeneous technical-centric term"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-007": {
+    "card_sha256": "c72f59da9c3124277f1787acda95504f7b2524210fe78847f2c0c9d90282f685",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q7_f2",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Directly calls for testing compatibility, data semantics, code reverts and forward fixes.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>Test schema compatibility, data semantics, code reverts, and forward fixes before a database-backed release reaches production</strong>."
+      }
+    ],
+    "facet_anchors": {
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Test schema compatibility, data semantics, code reverts, and forward fixes before a database-backed release reaches production</strong>."
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Test schema compatibility, data semantics, code reverts, and forward fixes before a database-backed release reaches production</strong>."
+        }
+      ]
+    }
+  },
+  "q7-b-008": {
+    "card_sha256": "20526b90b568d1ecf5b66e35ff98b9c27f785cc266eb09a9e79f4386fa7d071c",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Brownfield AI productivity framework is only broad context.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Brownfield engineering work involving legacy systems, incomplete documentation, and fragmented architectural knowledge poses unique challenges for the effective use of large l"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-009": {
+    "card_sha256": "6d8d2179fbb1b2d745733f233d8ad25b6f63486a14710c7b32c5d0d4075ff06c",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q7_f1",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Mentions additive changes and dual-write patterns for compatibility and data integrity.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "By employing design patterns such as semantic versioning, additive schema changes, and dual-write patterns, developers can mitigate risks and maintain data integrity. Effectiv"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f1": [
+        {
+          "field": "snippet",
+          "quote": "By employing design patterns such as semantic versioning, additive schema changes, and dual-write patterns, developers can mitigate risks and maintain data integrity. Effectiv"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "By employing design patterns such as semantic versioning, additive schema changes, and dual-write patterns, developers can mitigate risks and maintain data integrity. Effectiv"
+        }
+      ]
+    }
+  },
+  "q7-b-010": {
+    "card_sha256": "e0d8368f485a23a0fff78c23e44101dbe88d6d1a25bcef59259ca42efb0b8947",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Agent runtime migration guide concerns memory/config, not database schema.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Full rollback with memory freeze. <strong>Revert the runtime and restore config, but leave memory files in place</strong> (the state they were in after the partial new-version"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-011": {
+    "card_sha256": "0b43c5da8bc9d9c8c7c0824ab46315c6e39fcf80748fb1c95929e370c6727233",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Python API framework is unrelated.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "We present Flama, an open-source Python framework for developing and deploying production-ready web APIs, machine learning services, and large-language-model (LLM) application"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-012": {
+    "card_sha256": "8ceee27e566e89ba1b6fca02b7befa6d0225d5bd046b2bd3d3a222edef96c0f8",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q7_f1",
+      "q7_f2",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Explains backward-compatible schema allows application rollback.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "For this reason, consider testing the performance at this step. A nice benefit of this approach is that <strong>you can always rollback the application code after it is deploy"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f1": [
+        {
+          "field": "snippet",
+          "quote": "For this reason, consider testing the performance at this step. A nice benefit of this approach is that <strong>you can always rollback the application code after it is deploy"
+        }
+      ],
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "For this reason, consider testing the performance at this step. A nice benefit of this approach is that <strong>you can always rollback the application code after it is deploy"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "For this reason, consider testing the performance at this step. A nice benefit of this approach is that <strong>you can always rollback the application code after it is deploy"
+        }
+      ]
+    }
+  },
+  "q7-b-013": {
+    "card_sha256": "5e8e664c9a5215ac3ebbea6e739f5711503ad700d0242c2a6db0e9dd779a0bb5",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q7_f2",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Issue identifies tests must cross migration boundary to exercise rollback failure mode.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "The current drills cannot detect this because they do not cross a migration boundary, so the project&#x27;s confidence in rollback rests on tests that do not exercise the fail"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "The current drills cannot detect this because they do not cross a migration boundary, so the project&#x27;s confidence in rollback rests on tests that do not exercise the fail"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "The current drills cannot detect this because they do not cross a migration boundary, so the project&#x27;s confidence in rollback rests on tests that do not exercise the fail"
+        }
+      ]
+    }
+  },
+  "q7-b-014": {
+    "card_sha256": "9aa9ec1c5f579aa6f6171579b53e64061e185928eb88c2b97af06480bfddf4b5",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "General agent architecture is unrelated to database migrations.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "An AI demonstration can make a difficult task look effortless. A system receives a request, finds information, chooses a tool, and returns a convincing result. The harder ques"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-015": {
+    "card_sha256": "5a7a5f1e5987a2a79b411338e22f918acb32e4f11e02e7de54018ac1b434dbd3",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Insurance portal modernization lacks schema migration safety details.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Modernization of insurance portals has played a crucial role that legacy systems are unable to advance to meet the performance, scalability and flexibility requirements in the"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-016": {
+    "card_sha256": "aa8cebdd889e5ab14f549360363cecd7d059071baaf79b054317af186e24e427",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q7_f1",
+      "q7_f2",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Explains expand-contract ordering and rollback tests before traffic shifts.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Blue-green works best with expand and contract migrations: add compatible structures, deploy code, backfill, then remove old structures later. <strong>Rollback tests prove tho"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f1": [
+        {
+          "field": "snippet",
+          "quote": "Blue-green works best with expand and contract migrations: add compatible structures, deploy code, backfill, then remove old structures later. <strong>Rollback tests prove tho"
+        }
+      ],
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "Blue-green works best with expand and contract migrations: add compatible structures, deploy code, backfill, then remove old structures later. <strong>Rollback tests prove tho"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "Blue-green works best with expand and contract migrations: add compatible structures, deploy code, backfill, then remove old structures later. <strong>Rollback tests prove tho"
+        }
+      ]
+    }
+  },
+  "q7-b-017": {
+    "card_sha256": "232abb5c212dd35c0bd3cb0562de5e5e828857ad1bfbc9e448a7ebb5bc8cc61e",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q7_f1",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "AI data-migration guide warns about truncation and requires testing mappings.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Failure: Ignoring model context limits Large record sets or complex schemas can exceed a model’s context window, causing the agent to miss or hallucinate mappings for fields t"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f1": [
+        {
+          "field": "snippet",
+          "quote": "Failure: Ignoring model context limits Large record sets or complex schemas can exceed a model’s context window, causing the agent to miss or hallucinate mappings for fields t"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "Failure: Ignoring model context limits Large record sets or complex schemas can exceed a model’s context window, causing the agent to miss or hallucinate mappings for fields t"
+        }
+      ]
+    }
+  },
+  "q7-b-018": {
+    "card_sha256": "0208e63f8d56c147929b8c152d073a9997dbd2f2ffbe530310aa2b10cb2ea32c",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q7_f3"
+    ],
+    "uncertain": true,
+    "rationale": "Installation verification is general platform testing, not database schema changes.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Software installation is a reoccurring task in complex energy data management system (EDMS) platform development projects. The installation verification is part of the deploym"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "Software installation is a reoccurring task in complex energy data management system (EDMS) platform development projects. The installation verification is part of the deploym"
+        }
+      ]
+    }
+  },
+  "q7-b-019": {
+    "card_sha256": "0386ec217fd6196ba9b5d69939b74cf33a818b1a8e881e398e89498dff086927",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q7_f1",
+      "q7_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Issue frames forward-only versus reversible migration policy and rollback compatibility.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "With forward-only migrations applied automatically on boot, rolling the image back leaves the schema ahead of the code, and nothing documents whether that is safe. Decide the "
+      }
+    ],
+    "facet_anchors": {
+      "q7_f1": [
+        {
+          "field": "snippet",
+          "quote": "With forward-only migrations applied automatically on boot, rolling the image back leaves the schema ahead of the code, and nothing documents whether that is safe. Decide the "
+        }
+      ],
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "With forward-only migrations applied automatically on boot, rolling the image back leaves the schema ahead of the code, and nothing documents whether that is safe. Decide the "
+        }
+      ]
+    }
+  },
+  "q7-b-020": {
+    "card_sha256": "e4aae531ac2d8540cd33630fc92c5bd9a60ea7580a453230f3515e0287428295",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Data platform review is not migration safety.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "This systematic review investigates AI-ready data engineering pipelines by analyzing 106 studies published between 2010 and 2022, focusing on Medallion Architecture, cloud-nat"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-021": {
+    "card_sha256": "60798e8d658e67d5885ccf245acc35b7b15453d251af076d7fe0d62836ba6e18",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Agent communication security is unrelated.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "In recent years, as multi-agent systems have rapidly expanded in open environments, trustworthy communication between agents has become a critical component of artificial inte"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-022": {
+    "card_sha256": "ff1a78724f775f089553408f1306fd81dfb0cb4bce56cf94efe86b024a4c87f6",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "CRM architecture is broad and not schema migration guidance.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Enterprise Customer Relationship Management (CRM) platforms have evolved from simple contact databases into complex, multi-tenant cloud ecosystems that serve as the operationa"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-023": {
+    "card_sha256": "ea8295d0242a206834922b5589447aeb2479715e7dae7fa22be8b5c6c74b4872",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q7_f2"
+    ],
+    "uncertain": true,
+    "rationale": "Agent filesystem data-loss study is indirect safety context.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "AI coding agents regularly misuse their filesystem access, causing data corruption, loss, and leakage. We conduct the first systematic study of this problem through an analysi"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "AI coding agents regularly misuse their filesystem access, causing data corruption, loss, and leakage. We conduct the first systematic study of this problem through an analysi"
+        }
+      ]
+    }
+  },
+  "q7-b-024": {
+    "card_sha256": "72419aa4e9062d810dbcdbb78f0d6c495134cd7c7d06088e6f8af92fa1a3617d",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "General computing architecture is unrelated.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Large language models are undergoing a transition from model technology to system technology. Engineering challenges like cache reuse, context capacity, agent scheduling, and "
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-025": {
+    "card_sha256": "4ce57294e5abd89bfada1b19869fdf0e8236c8e472729b8bc53a10164cc5e83f",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Government LCNC architecture does not address DB migration.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Government institutions modernizing legacy infrastructure encounter persistent tension between operational standardization and jurisdictional autonomy. Traditional system repl"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-026": {
+    "card_sha256": "14d64db48ec339564c8a0c76d9be4d893264029a7b8ab6c7d656b3e36fa84209",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q7_f1",
+      "q7_f2",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Atlas down-plan and pre-migration checks are directly relevant to rollback/review evidence.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Atlas computes a down plan from the live database and documents it as working &quot;regardless of the state of the latest applied migration&quot;, but bounds that twice: by de"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f1": [
+        {
+          "field": "snippet",
+          "quote": "Atlas computes a down plan from the live database and documents it as working &quot;regardless of the state of the latest applied migration&quot;, but bounds that twice: by de"
+        }
+      ],
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "Atlas computes a down plan from the live database and documents it as working &quot;regardless of the state of the latest applied migration&quot;, but bounds that twice: by de"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "Atlas computes a down plan from the live database and documents it as working &quot;regardless of the state of the latest applied migration&quot;, but bounds that twice: by de"
+        }
+      ]
+    }
+  },
+  "q7-b-027": {
+    "card_sha256": "197bf76d9471dcd1e5bed4fb3399088a795465b53be7393a9f411c00286c0d1b",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Enterprise data/AI platform guide is broad.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "The company is in a new digital transformation era. The evolution of the organizations has progressed from transaction processing and enterprise integration to business intell"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-028": {
+    "card_sha256": "f91b5e2effb64d8f6a6defd2d58d758042a5a19fdbd0ba23d61b023b0c7fcbf6",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q7_f2",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Explains rollback safety depends on post-migration data and old-code compatibility.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "That sequence proves only that the migration tool can execute the scripts on the chosen fixture. Rollback safety also depends on data written after the up migration, compatibi"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "That sequence proves only that the migration tool can execute the scripts on the chosen fixture. Rollback safety also depends on data written after the up migration, compatibi"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "That sequence proves only that the migration tool can execute the scripts on the chosen fixture. Rollback safety also depends on data written after the up migration, compatibi"
+        }
+      ]
+    }
+  },
+  "q7-b-029": {
+    "card_sha256": "455d3904b19ad0c6d7a03e4e8c34470e6c9344659ee1383aa9516b09c397fa8e",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "SNMP security migration is unrelated.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Legacy SNMP versions 1 and 2c send community strings in cleartext with no authentication or encryption. In financial mainframe environments that operate IBM z/OS and are tied "
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-030": {
+    "card_sha256": "d6b0bd116632dd16be925afc50c87d3fb05457356e6c502de704938104937588",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Microservice architecture survey is general background.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "The author contends that microservice architectures (MSAs) have become a widely adopted architectural paradigm for developing scalable, resilient, and independently deployable"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-031": {
+    "card_sha256": "c0f40aa25a69d4cad0a801617e221101d9b39a6c59e6ab415fd3598fbec86952",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q7_f1",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Nullable fields and runtime upcasting preserve backward compatibility.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "There’s no rigid schema like in a relational database, it’s all defined in code. So you make your changes backwards compatible by <strong>allowing new fields to be nullable or"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f1": [
+        {
+          "field": "snippet",
+          "quote": "There’s no rigid schema like in a relational database, it’s all defined in code. So you make your changes backwards compatible by <strong>allowing new fields to be nullable or"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "There’s no rigid schema like in a relational database, it’s all defined in code. So you make your changes backwards compatible by <strong>allowing new fields to be nullable or"
+        }
+      ]
+    }
+  },
+  "q7-b-032": {
+    "card_sha256": "0aa2202218555eb2e10bebb0049e212943370f25d8dde02e98265ef33930e3a7",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q7_f2",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Specifically tests old application against expanded schema after rollback.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>Rollback testing specifically exercises the scenario where application code reverts to a previous version while the database remains at the expanded schema state</stro"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Rollback testing specifically exercises the scenario where application code reverts to a previous version while the database remains at the expanded schema state</stro"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Rollback testing specifically exercises the scenario where application code reverts to a previous version while the database remains at the expanded schema state</stro"
+        }
+      ]
+    }
+  },
+  "q7-b-033": {
+    "card_sha256": "cc47e1d38ef6fd6774a1875683693518291598e7c1f008a92bccbd48cfa15204",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Cloud-native test architecture is not migration-specific.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Test Architecture Patterns for Distributed Systems In the modern cloud-native environment, the architecture of testing is changing to accommodate distributed systems. These sy"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-034": {
+    "card_sha256": "a70debc3ae5188d40e2bd73e0dec7d91ee97d77107ca4ae2be74ae058e7338dc",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q7_f1",
+      "q7_f2",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Issue requires compatible deployment order and proof before destructive cleanup.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "App rollback does not require schema rollback. Destructive cleanup is a separate later step with explicit proof. CI/documentation rejects one-step breaking migrations for rele"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f1": [
+        {
+          "field": "snippet",
+          "quote": "App rollback does not require schema rollback. Destructive cleanup is a separate later step with explicit proof. CI/documentation rejects one-step breaking migrations for rele"
+        }
+      ],
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "App rollback does not require schema rollback. Destructive cleanup is a separate later step with explicit proof. CI/documentation rejects one-step breaking migrations for rele"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "App rollback does not require schema rollback. Destructive cleanup is a separate later step with explicit proof. CI/documentation rejects one-step breaking migrations for rele"
+        }
+      ]
+    }
+  },
+  "q7-b-035": {
+    "card_sha256": "1b19f75e43f4ed7e6ffce80ac8660ba8d67f0d843fd3f7061c0cc31dbdafc2fa",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q7_f1",
+      "q7_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Explains expand-contract until schema validated and ready.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Here, teams adopt the expand-contract pattern, a deliberate and safer way to make database changes. The core idea is to <strong>ensure that all schema changes are backward-com"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f1": [
+        {
+          "field": "snippet",
+          "quote": "Here, teams adopt the expand-contract pattern, a deliberate and safer way to make database changes. The core idea is to <strong>ensure that all schema changes are backward-com"
+        }
+      ],
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "Here, teams adopt the expand-contract pattern, a deliberate and safer way to make database changes. The core idea is to <strong>ensure that all schema changes are backward-com"
+        }
+      ]
+    }
+  },
+  "q7-b-036": {
+    "card_sha256": "54d5b1fc2bf5c37d9b0d68ada2f062c273f359d5cc9c419325454d81482dcd49",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "LLM toolchain taxonomy is unrelated.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "This paper presents a comparative overview of the LangChain, LangGraph, and LangSmith as toolchains for agentic orchestration, covering architecture, functionality, and end-to"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-037": {
+    "card_sha256": "36b36da02e9c896b2c7f384d70b3169a4d90a0ddeba61f0853370d658b1c904b",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Vibe coding review is broad.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Vibe coding-where high-level natural-language directives orchestrate end-to-end software creation-has emerged as a transformative paradigm in modern development. Going beyond "
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q7-b-038": {
+    "card_sha256": "0070cd86a0ff517df063b053a2decd03156ecd6a70245825df8d14f6e7f601d4",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q7_f2",
+      "q7_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Flyway CI example includes rollback commands or automated migration tests.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>Rollback commands or automated tests can be included to validate migrations before production release</strong>. Here’s a simplified step-by-step guide to automate migr"
+      }
+    ],
+    "facet_anchors": {
+      "q7_f2": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Rollback commands or automated tests can be included to validate migrations before production release</strong>. Here’s a simplified step-by-step guide to automate migr"
+        }
+      ],
+      "q7_f3": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Rollback commands or automated tests can be included to validate migrations before production release</strong>. Here’s a simplified step-by-step guide to automate migr"
+        }
+      ]
+    }
+  }
+}

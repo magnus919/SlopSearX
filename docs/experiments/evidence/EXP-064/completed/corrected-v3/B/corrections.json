@@ -1,0 +1,78 @@
+[
+  {
+    "case": "q6",
+    "id": "q6-b-031",
+    "original_v2": {
+      "card_sha256": "04f94348dfdb4f2c6a646549301066c6755971f26addbd1a35f41354f3865f78",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "q6_f1",
+        "q6_f2",
+        "q6_f3"
+      ],
+      "uncertain": false,
+      "rationale": "The issue calls for cross-file rename, refactoring and formatting tests against language-server fixtures.",
+      "anchors": [
+        {
+          "field": "title",
+          "quote": "Add LSP-backed renames, refactorings, and formatting · Issue #3 · dev-camo/mcplsb"
+        }
+      ],
+      "facet_anchors": {
+        "q6_f1": [
+          {
+            "field": "title",
+            "quote": "Add LSP-backed renames, refactorings, and formatting · Issue #3 · dev-camo/mcplsb"
+          }
+        ],
+        "q6_f2": [
+          {
+            "field": "title",
+            "quote": "Add LSP-backed renames, refactorings, and formatting · Issue #3 · dev-camo/mcplsb"
+          }
+        ],
+        "q6_f3": [
+          {
+            "field": "title",
+            "quote": "Add LSP-backed renames, refactorings, and formatting · Issue #3 · dev-camo/mcplsb"
+          }
+        ]
+      }
+    },
+    "replacement_v3": {
+      "card_sha256": "04f94348dfdb4f2c6a646549301066c6755971f26addbd1a35f41354f3865f78",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "q6_f2",
+        "q6_f3"
+      ],
+      "uncertain": false,
+      "rationale": "The issue directly specifies cross-file rename and refactoring through language-server fixtures, with supported-operation coverage to validate behavior.",
+      "anchors": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Demonstrate cross-file rename, at least one supported refactoring, and formatting through an MCP client against real language-server fixtures</strong>"
+        }
+      ],
+      "facet_anchors": {
+        "q6_f2": [
+          {
+            "field": "snippet",
+            "quote": "<strong>Demonstrate cross-file rename, at least one supported refactoring, and formatting through an MCP client against real language-server fixtures</strong>"
+          }
+        ],
+        "q6_f3": [
+          {
+            "field": "snippet",
+            "quote": "<strong>Demonstrate cross-file rename, at least one supported refactoring, and formatting through an MCP client against real language-server fixtures</strong>"
+          }
+        ]
+      }
+    },
+    "source_title": "Add LSP-backed renames, refactorings, and formatting · Issue #3 · dev-camo/mcplsb",
+    "source_sha256": "04f94348dfdb4f2c6a646549301066c6755971f26addbd1a35f41354f3865f78",
+    "reason": "The card specifies rename/refactoring/formatting fixture coverage but does not mention diagnostics or incremental diagnostic feedback; q6_f1 is unsupported. q6_f2 and q6_f3 remain grounded in refactoring and operation coverage."
+  }
+]

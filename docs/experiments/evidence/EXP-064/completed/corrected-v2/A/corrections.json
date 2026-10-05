@@ -1,0 +1,249 @@
+{
+  "q1-a-012": {
+    "case": "q1",
+    "source": {
+      "title": "Building a Monorepo with Bazel - Earthly Blog",
+      "card_sha256": "7b4f309a1ae030ae68277c5f3dc523984e5a585801cf067aacaa11e9047fbf2c"
+    },
+    "audit_reason": "The Bazel monorepo example only shows a build/test setup; no dependency graph or affected-test selection is visible, despite q1_f1 and q1_f2 tags.",
+    "original": {
+      "card_sha256": "7b4f309a1ae030ae68277c5f3dc523984e5a585801cf067aacaa11e9047fbf2c",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "q1_f1",
+        "q1_f2"
+      ],
+      "uncertain": true,
+      "rationale": "Bazel monorepo build and test setup is relevant background, but the snippet lacks selection detail.",
+      "anchors": [
+        {
+          "field": "title",
+          "quote": "Building a Monorepo with Bazel - Earthly Blog"
+        }
+      ],
+      "facet_anchors": {
+        "q1_f1": [
+          {
+            "field": "title",
+            "quote": "Building a Monorepo with Bazel - Earthly Blog"
+          }
+        ],
+        "q1_f2": [
+          {
+            "field": "title",
+            "quote": "Building a Monorepo with Bazel - Earthly Blog"
+          }
+        ]
+      }
+    },
+    "replacement": {
+      "card_sha256": "7b4f309a1ae030ae68277c5f3dc523984e5a585801cf067aacaa11e9047fbf2c",
+      "lead": 1,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The title and snippet identify a Bazel monorepo guide that discusses unit and integration test setup, a broad background lead; affected selection and dependency graphs are not visible.",
+      "anchors": [
+        {
+          "field": "snippet",
+          "quote": "single bundler to handle unit tests, integration tests"
+        }
+      ],
+      "facet_anchors": {}
+    },
+    "reason": "Removed unsupported facet tags and revised grades, uncertainty, and rationale to match only evidence shown on the card."
+  },
+  "q3-a-001": {
+    "case": "q3",
+    "source": {
+      "title": "Security Concerns in Generative AI Coding Assistants: Insights from Online Discussions on GitHub Copilot",
+      "card_sha256": "a212d6e2e5aa4c8d7182b26e0d835b35939623076a0077a3a6ee1da453896638"
+    },
+    "audit_reason": "The rationale says no specific provenance mechanism or limitation is visible, while q3_f3 (automated detection limitations) is tagged.",
+    "original": {
+      "card_sha256": "a212d6e2e5aa4c8d7182b26e0d835b35939623076a0077a3a6ee1da453896638",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "q3_f3"
+      ],
+      "uncertain": true,
+      "rationale": "The card broadly signals copyright concerns but shows no specific provenance mechanism or limitation.",
+      "anchors": [
+        {
+          "field": "title",
+          "quote": "Security Concerns in Generative AI Coding Assistants"
+        }
+      ],
+      "facet_anchors": {
+        "q3_f3": [
+          {
+            "field": "title",
+            "quote": "Security Concerns in Generative AI Coding Assistants"
+          }
+        ]
+      }
+    },
+    "replacement": {
+      "card_sha256": "a212d6e2e5aa4c8d7182b26e0d835b35939623076a0077a3a6ee1da453896638",
+      "lead": 1,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The title and snippet signal copyright concerns in coding assistants, but show no provenance-retention method or detection limitation for incorporated code.",
+      "anchors": [
+        {
+          "field": "snippet",
+          "quote": "copyright infringement"
+        }
+      ],
+      "facet_anchors": {}
+    },
+    "reason": "Removed unsupported facet tags and revised grades, uncertainty, and rationale to match only evidence shown on the card."
+  },
+  "q3-a-007": {
+    "case": "q3",
+    "source": {
+      "title": "Cheap Code, Costly Judgment: A Case Study on Governable Agentic Software Engineering",
+      "card_sha256": "77d3e27134fa225b74a6e0d2cc02bc50a0aaac4358ec3c242b9b497d49b404c8"
+    },
+    "audit_reason": "The general governable-agentic-engineering card shows no license provenance mechanism, despite the q3_f1 provenance-capture tag.",
+    "original": {
+      "card_sha256": "77d3e27134fa225b74a6e0d2cc02bc50a0aaac4358ec3c242b9b497d49b404c8",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "q3_f1"
+      ],
+      "uncertain": true,
+      "rationale": "The case study concerns governable agent engineering generally; no license provenance mechanism appears in the card.",
+      "anchors": [
+        {
+          "field": "title",
+          "quote": "Cheap Code, Costly Judgment: A Case Study on Governable Agentic Software Engineering"
+        }
+      ],
+      "facet_anchors": {
+        "q3_f1": [
+          {
+            "field": "title",
+            "quote": "Cheap Code, Costly Judgment: A Case Study on Governable Agentic Software Engineering"
+          }
+        ]
+      }
+    },
+    "replacement": {
+      "card_sha256": "77d3e27134fa225b74a6e0d2cc02bc50a0aaac4358ec3c242b9b497d49b404c8",
+      "lead": 1,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The card discusses governable agentic engineering and inspectability broadly, with no visible license provenance or attribution mechanism.",
+      "anchors": [
+        {
+          "field": "snippet",
+          "quote": "remains inspectable, correctable, and maintainable"
+        }
+      ],
+      "facet_anchors": {}
+    },
+    "reason": "Removed unsupported facet tags and revised grades, uncertainty, and rationale to match only evidence shown on the card."
+  },
+  "q4-a-006": {
+    "case": "q4",
+    "source": {
+      "title": "LogiAgent: Automated Logical Testing for REST Systems with LLM-Based Multi-Agents",
+      "card_sha256": "6a531f39e2daefbbc98e9fc3871f4217b050e9d95eaecf9238ce3edd0a40ccfd"
+    },
+    "audit_reason": "The rationale calls this “property-based testing,” but the card only describes multi-agent logical REST testing; that method is not visible on the card.",
+    "original": {
+      "card_sha256": "6a531f39e2daefbbc98e9fc3871f4217b050e9d95eaecf9238ce3edd0a40ccfd",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "q4_f1"
+      ],
+      "uncertain": false,
+      "rationale": "Logical property-based testing for REST systems is a useful testing design lead.",
+      "anchors": [
+        {
+          "field": "title",
+          "quote": "LogiAgent: Automated Logical Testing for REST Systems"
+        }
+      ],
+      "facet_anchors": {
+        "q4_f1": [
+          {
+            "field": "title",
+            "quote": "LogiAgent: Automated Logical Testing for REST Systems"
+          }
+        ]
+      }
+    },
+    "replacement": {
+      "card_sha256": "6a531f39e2daefbbc98e9fc3871f4217b050e9d95eaecf9238ce3edd0a40ccfd",
+      "lead": 1,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "This is a low-priority testing lead about LLM-based logical REST testing; property-based design, shrinking, and oracle limits are not visible.",
+      "anchors": [
+        {
+          "field": "title",
+          "quote": "Automated Logical Testing for REST Systems"
+        }
+      ],
+      "facet_anchors": {}
+    },
+    "reason": "Removed unsupported facet tags and revised grades, uncertainty, and rationale to match only evidence shown on the card."
+  },
+  "q7-a-034": {
+    "case": "q7",
+    "source": {
+      "title": "AI-DRIVEN TEST ENGINEERING FOR CLOUD-NATIVE SYSTEMS",
+      "card_sha256": "9a11707026491393d810c2c9f8af712803b563c0555f79e0c7271b34826fa478"
+    },
+    "audit_reason": "The card concerns broad cloud-native test architecture and does not visibly cover schema compatibility, despite the q7_f3 compatibility-testing tag.",
+    "original": {
+      "card_sha256": "9a11707026491393d810c2c9f8af712803b563c0555f79e0c7271b34826fa478",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "q7_f3"
+      ],
+      "uncertain": true,
+      "rationale": "Distributed-system test engineering is broad and does not visibly focus on schema compatibility.",
+      "anchors": [
+        {
+          "field": "title",
+          "quote": "AI-DRIVEN TEST ENGINEERING FOR CLOUD-NATIVE SYSTEMS"
+        }
+      ],
+      "facet_anchors": {
+        "q7_f3": [
+          {
+            "field": "title",
+            "quote": "AI-DRIVEN TEST ENGINEERING FOR CLOUD-NATIVE SYSTEMS"
+          }
+        ]
+      }
+    },
+    "replacement": {
+      "card_sha256": "9a11707026491393d810c2c9f8af712803b563c0555f79e0c7271b34826fa478",
+      "lead": 1,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "The card describes distributed cloud-native test architecture generally; schema migration planning, rollback, and schema compatibility are not visible.",
+      "anchors": [
+        {
+          "field": "snippet",
+          "quote": "test engineering designs of this type of distributed system"
+        }
+      ],
+      "facet_anchors": {}
+    },
+    "reason": "Removed unsupported facet tags and revised grades, uncertainty, and rationale to match only evidence shown on the card."
+  }
+}
