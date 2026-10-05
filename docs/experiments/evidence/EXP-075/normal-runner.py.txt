@@ -179,8 +179,13 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,preb
         proof_raw=json.dumps(source_integrity,sort_keys=True,separators=(',',':')).encode()
         if (identity!=admission.input_identity or digest(qualification_bytes)!=digest(admission.qualification_raw)
                 or proof_raw!=admission.proof_raw or str(outdir.resolve())!=admission.output_path
-                or source_integrity.get('qualification_sha256')!=digest(qualification_bytes)):
+                or source_integrity.get('qualification_sha256')!=digest(qualification_bytes)
+                or client_factory is not None or build_joint_fn is not None):
             raise ValueError('live-admission-binding')
+        expected_acquisition,expected_queries=P.source_data(input_bytes)
+        expected_prepared=P.prebuild(expected_acquisition,expected_queries)
+        if acquisition!=expected_acquisition or queries!=expected_queries or prepared!=expected_prepared:
+            raise ValueError('live-input-object-mismatch')
         api_key=admission.api_key;admission.used=True
     outdir.mkdir();receipts=outdir/'receipts';receipts.mkdir()
     if not offline:atomic(outdir/'qualification-integrity.json',qualification_bytes)
