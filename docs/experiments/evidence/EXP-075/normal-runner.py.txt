@@ -22,8 +22,16 @@ SOURCE_FILES=set(P.PINS)|{
     'docs/experiments/evidence/EXP-073/fusion.py.txt','docs/experiments/evidence/EXP-073/fusion-tests.py.txt',
     'docs/experiments/evidence/EXP-074/http-transport.py.txt',
     'docs/experiments/evidence/EXP-039/source-selection-contract.json',
-    'docs/experiments/evidence/EXP-059/http-wrapper.py.txt','slopsearx/rerank.py'}
+    'docs/experiments/evidence/EXP-059/http-wrapper.py.txt','slopsearx/rerank.py','slopsearx/service.py'}
 DEPENDENCIES=('httpx','httpcore','anyio')
+_ADMISSION_SEAL=object()
+
+class _LiveAdmission:
+    __slots__=('seal','input_identity','qualification_raw','proof_raw','output_path','api_key','used')
+    def __init__(self,input_identity,qualification_raw,proof,output_path,api_key):
+        self.seal=_ADMISSION_SEAL;self.input_identity=input_identity;self.qualification_raw=bytes(qualification_raw)
+        self.proof_raw=json.dumps(proof,sort_keys=True,separators=(',',':')).encode()
+        self.output_path=str(Path(output_path).resolve());self.api_key=api_key;self.used=False
 
 def digest(raw):return hashlib.sha256(raw).hexdigest()
 def atomic(path,value):
@@ -55,9 +63,13 @@ def study_identity(protocol_raw,registration_raw,input_bytes):
     if any(type(value)is not bytes for value in input_bytes.values()):raise ValueError('study-identity-inputs')
     return digest(protocol_raw+registration_raw+b''.join(name.encode()+b'\0'+input_bytes[name] for name in sorted(input_bytes)))
 
+def usage_admissible(budget,bounds):
+    return (budget['input_tokens']+64_000<=bounds['reported_input_tokens']
+            and budget['output_tokens']+32_000<=bounds['reported_output_tokens'])
+
 def validate_inputs(input_bytes,input_revision=REGISTRATION_REVISION):return P.validate_inputs(input_bytes,input_revision)
 
-def live_gate(input_bytes,input_revision=REGISTRATION_REVISION):
+def live_gate(input_bytes,input_revision=REGISTRATION_REVISION,output_path=None):
     proof=validate_inputs(input_bytes,input_revision)
     qpath=HERE/'qualification-integrity.json'
     if qpath.is_symlink() or not qpath.is_file():raise ValueError('runner-not-qualified')
@@ -87,12 +99,14 @@ def live_gate(input_bytes,input_revision=REGISTRATION_REVISION):
         raise ValueError('qualification-python-pin')
     if q['protocol_sha256']!=proof['protocol_sha256'] or q['registration_sha256']!=proof['registration_sha256']:
         raise ValueError('qualification-registration-pin')
+    if (output_path is None or Path(output_path).exists() or Path(output_path).is_symlink()
+            or not Path(output_path).parent.is_dir() or not os.access(Path(output_path).parent,os.W_OK)):
+        raise ValueError('output-path')
     bounds=P.PROTOCOL['bounds']
     if bounds['calls']!=44 or bounds['retries']!=0 or bounds['concurrency']!=1:raise ValueError('usage-admission-contract')
     # A setup failure after this durable exclusive create burns the run identity.
     identity=study_identity((HERE/'protocol.json').read_bytes(),(HERE/'registration-integrity.json').read_bytes(),input_bytes)
-    state_root=os.getenv('EXP075_LEASE_DIR') or os.getenv('XDG_STATE_HOME') or str(Path.home()/'.local/state')
-    lease_dir=Path(state_root)/'exp075';durable_mkdirs(lease_dir)
+    lease_dir=Path.home()/'.local/state/exp075';durable_mkdirs(lease_dir)
     if lease_dir.is_symlink() or not lease_dir.is_dir():raise ValueError('lease-directory')
     lease=lease_dir/('study-'+identity)
     try:fd=os.open(lease,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
@@ -104,7 +118,8 @@ def live_gate(input_bytes,input_revision=REGISTRATION_REVISION):
     if not api_key:raise ValueError('missing-credential')
     proof.update({'qualification_sha256':digest(qraw),'lease_identity':identity,'qualified_source_revision':revision,
                   'environment':dict(env),'dependencies':dict(q['dependencies'])})
-    return proof,api_key,qraw
+    admission=_LiveAdmission(identity,qraw,proof,output_path,api_key)
+    return proof,qraw,admission
 
 def fixture_client_factory(mode='scores',stats=None):
     stats=stats if stats is not None else {'clients':0,'requests':0,'closed':0}
@@ -145,7 +160,7 @@ class CallFailure(Exception):
     def __init__(self,record,code):super().__init__(code);self.record=record;self.code=code
 
 async def run(acquisition,queries,outdir,offline=True,source_integrity=None,prebuilt=None,client_factory=None,
-              api_key=None,qualification_bytes=None,build_joint_fn=None):
+              api_key=None,qualification_bytes=None,build_joint_fn=None,admission=None,input_bytes=None):
     prepared=prebuilt if prebuilt is not None else P.prebuild(acquisition,queries)
     if type(source_integrity)is not dict:
         source_integrity={'input_pins':dict(P.PINS),'input_revision':REGISTRATION_REVISION,
@@ -154,8 +169,19 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,preb
     outdir=Path(outdir)
     if outdir.exists() or outdir.is_symlink():raise ValueError('output-exists')
     if not outdir.parent.is_dir() or not os.access(outdir.parent,os.W_OK):raise ValueError('output-parent')
-    if not offline and (type(qualification_bytes)is not bytes or source_integrity.get('qualification_sha256')!=digest(qualification_bytes)):
-        raise ValueError('qualification-output-binding')
+    if offline:
+        if admission is not None:raise ValueError('offline-admission-not-allowed')
+        api_key='offline-fixture-non-secret'
+    else:
+        if (not isinstance(admission,_LiveAdmission) or admission.seal is not _ADMISSION_SEAL or admission.used
+                or type(input_bytes)is not dict or type(qualification_bytes)is not bytes):raise ValueError('live-admission-required')
+        identity=study_identity((HERE/'protocol.json').read_bytes(),(HERE/'registration-integrity.json').read_bytes(),input_bytes)
+        proof_raw=json.dumps(source_integrity,sort_keys=True,separators=(',',':')).encode()
+        if (identity!=admission.input_identity or digest(qualification_bytes)!=digest(admission.qualification_raw)
+                or proof_raw!=admission.proof_raw or str(outdir.resolve())!=admission.output_path
+                or source_integrity.get('qualification_sha256')!=digest(qualification_bytes)):
+            raise ValueError('live-admission-binding')
+        api_key=admission.api_key;admission.used=True
     outdir.mkdir();receipts=outdir/'receipts';receipts.mkdir()
     if not offline:atomic(outdir/'qualification-integrity.json',qualification_bytes)
     if offline and client_factory is None:client_factory=fixture_client_factory()
@@ -195,7 +221,7 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,preb
             atomic(path,base)
             if phase_deadline-time.perf_counter()<=0:raise TimeoutError('whole-phase-deadline')
             if budget['attempts']>=bounds['calls']:raise ValueError('call-count')
-            if budget['input_tokens']>=bounds['reported_input_tokens'] or budget['output_tokens']>=bounds['reported_output_tokens']:
+            if not usage_admissible(budget,bounds):
                 raise ValueError('total-usage-admission')
             timeout_s=min(1.0,phase_deadline-time.perf_counter())
             call_start=time.perf_counter_ns()
@@ -209,7 +235,8 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,preb
                     atomic(path,base);raise T.DispatchDenied()
                 base['timings']['dispatch_receipt_fsync_ms']=dispatch_fsync
             try:
-                raw,status,complete,transport_timings=await owner.exchange(raw_request,api_key or 'offline-fixture-non-secret',timeout_s,endpoint,on_dispatch=dispatch)
+                if type(api_key)is not str or not api_key:raise ValueError('missing-credential')
+                raw,status,complete,transport_timings=await owner.exchange(raw_request,api_key,timeout_s,endpoint,on_dispatch=dispatch)
                 rec=owner.last_attempt or {};usage=P.usage_from_raw(raw)
                 base.update(status='returned',raw_response_hex=raw.hex(),response_body_sha256=digest(raw),response_bytes=len(raw),
                             response_complete=complete,http_status=status,usage=usage,usage_status='known' if usage is not None else 'unknown')
@@ -413,8 +440,13 @@ def main():
         if args.outdir.exists() or args.outdir.is_symlink():raise ValueError('output-exists')
         if not args.outdir.parent.is_dir() or not os.access(args.outdir.parent,os.W_OK):raise ValueError('output-parent')
         qraw=None;factory=fixture_client_factory(args.offline_fixture) if args.mode=='offline' else None
-        if args.mode=='live':proof,key,qraw=live_gate(input_bytes,args.input_revision)
-        result=asyncio.run(run(acquisition,queries,args.outdir,args.mode=='offline',proof,prepared,factory,key,qraw))
+        admission=None
+        if args.mode=='live':
+            if args.outdir.exists() or args.outdir.is_symlink() or not args.outdir.parent.is_dir() or not os.access(args.outdir.parent,os.W_OK):
+                raise ValueError('output-path')
+            proof,qraw,admission=live_gate(input_bytes,args.input_revision,args.outdir)
+        result=asyncio.run(run(acquisition,queries,args.outdir,args.mode=='offline',proof,prepared,factory,None,qraw,
+                              admission=admission,input_bytes=input_bytes if args.mode=='live' else None))
         print(json.dumps({'status':result['status'],'attempts':result['budget']['attempts'],
                           'operations':len(result['operations']),'synthetic':result['synthetic']}))
         return 0 if result['status']=='complete' else 2

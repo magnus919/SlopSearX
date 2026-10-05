@@ -3,7 +3,9 @@ import asyncio
 import importlib.machinery
 import importlib.util
 import json
+import os
 import pathlib
+import platform
 import tempfile
 import time
 import unittest
@@ -78,6 +80,33 @@ class RunnerTests(unittest.TestCase):
                                     op["calls"][0]["elapsed_ms"] + op["baseline_parse_ms"])
             self.assertGreater(op["calls"][0]["timings"]["response_receipt_fsync_ms"], 0)
             self.assertGreater(op["calls"][1]["timings"]["response_receipt_fsync_ms"], 0)
+
+    def test_live_run_api_rejects_caller_supplied_proof_key_and_fixture_client_without_capability(self):
+        escaped = []
+
+        async def forbid_network(_transport, _request):
+            escaped.append(True)
+            raise AssertionError("live-admission-bypass-network")
+
+        inputs = {name: (P.REPO / name).read_bytes() for name in P.PINS}
+        proof = N.validate_inputs(inputs)
+        with tempfile.TemporaryDirectory() as temp:
+            outdir = pathlib.Path(temp) / "run"
+            with mock.patch.object(N.httpx.AsyncHTTPTransport, "handle_async_request", forbid_network):
+                with self.assertRaisesRegex(ValueError, "live-admission-required"):
+                    asyncio.run(N.run(self.acquisition, self.queries, outdir, offline=False,
+                                      source_integrity=proof, prebuilt=self.prepared,
+                                      client_factory=N.fixture_client_factory(), api_key="offline-fixture-non-secret",
+                                      qualification_bytes=b"{}", input_bytes=inputs))
+        self.assertEqual(escaped, [])
+
+    def test_usage_admission_reserves_full_next_call_at_exact_and_insufficient_boundaries(self):
+        bounds = P.PROTOCOL["bounds"]
+        allowed = {"input_tokens": bounds["reported_input_tokens"] - 64_000,
+                   "output_tokens": bounds["reported_output_tokens"] - 32_000}
+        self.assertTrue(N.usage_admissible(allowed, bounds))
+        self.assertFalse(N.usage_admissible({**allowed, "input_tokens": allowed["input_tokens"] + 1}, bounds))
+        self.assertFalse(N.usage_admissible({**allowed, "output_tokens": allowed["output_tokens"] + 1}, bounds))
 
     def test_timed_build_overrun_never_dispatches_joint_and_keeps_native_incumbent(self):
         original = P.build_joint
@@ -175,6 +204,139 @@ class RunnerTests(unittest.TestCase):
         self.assertIsNone(call["response_body_sha256"])
         self.assertTrue(output["budget"]["unknown_usage"])
         self.assertTrue(all(not op["calls"] for op in output["operations"]))
+
+    def _fake_qualified_checkout(self, root):
+        root = pathlib.Path(root)
+        for name in N.OWNED_FILES:
+            destination = root / name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            source = N.HERE / name
+            destination.write_bytes(source.read_bytes() if source.is_file() else b"synthetic analyzer-owned fixture\n")
+        for name in ("protocol.json", "registration-integrity.json"):
+            (root / name).write_bytes((N.HERE / name).read_bytes())
+        source_pins = {name: N.digest((N.REPO / name).read_bytes()) for name in N.SOURCE_FILES}
+        manifest = {
+            "schema": "exp075-qualification-integrity/1", "qualified": True,
+            "qualified_source_revision": "a" * 40,
+            "files": {name: N.digest((root / name).read_bytes()) for name in N.OWNED_FILES},
+            "source_pins": source_pins,
+            "dependencies": {name: N.importlib.metadata.version(name) for name in N.DEPENDENCIES},
+            "environment": {"python_implementation": platform.python_implementation(),
+                            "python_version": platform.python_version()},
+            "protocol_sha256": N.digest((root / "protocol.json").read_bytes()),
+            "registration_sha256": N.digest((root / "registration-integrity.json").read_bytes()),
+        }
+        qpath = root / "qualification-integrity.json"
+        qpath.write_bytes(json.dumps(manifest, separators=(",", ":")).encode())
+        inputs = {name: (N.REPO / name).read_bytes() for name in P.PINS}
+        real_committed = P.committed
+
+        def committed(path, revision=None):
+            if revision is None:
+                revision = P.REGISTRATION_REVISION
+            prefix = "docs/experiments/evidence/EXP-075/"
+            if path.startswith(prefix) and path[len(prefix):] in N.OWNED_FILES:
+                return (root / path[len(prefix):]).read_bytes()
+            if path in {"docs/experiments/evidence/EXP-075/protocol.json",
+                        "docs/experiments/evidence/EXP-075/registration-integrity.json"}:
+                return (root / pathlib.Path(path).name).read_bytes()
+            if path in N.SOURCE_FILES:
+                return (N.REPO / path).read_bytes()
+            return real_committed(path, revision)
+
+        return root, qpath, inputs, committed
+
+    def _with_fake_qualification(self, root, action):
+        root, qpath, inputs, committed = self._fake_qualified_checkout(root)
+        patchers = [mock.patch.object(N, "HERE", root),
+                    mock.patch.object(N, "committed", committed),
+                    mock.patch.object(N, "committed_head", lambda _path: qpath.read_bytes()),
+                    mock.patch.object(P, "committed", committed)]
+        try:
+            for patcher in patchers:
+                patcher.start()
+            return action(root, qpath, inputs)
+        finally:
+            for patcher in reversed(patchers):
+                patcher.stop()
+
+    def test_qualification_closure_precedes_lease_dns_and_key_and_changed_manifest_cannot_reset_lease(self):
+        def exercise(root, qpath, inputs):
+            lease_root = root / ".local" / "state"
+            identity = N.study_identity((root / "protocol.json").read_bytes(),
+                                        (root / "registration-integrity.json").read_bytes(), inputs)
+            lease = lease_root / "exp075" / ("study-" + identity)
+            events = []
+            original = dict(os.environ)
+            test_case = self
+
+            class EnvSentinel(dict):
+                def get(self, key, default=None):
+                    if key == "TYPESAFE_API_KEY":
+                        events.append("key")
+                        test_case.assertTrue(lease.is_file(), "key-before-lease")
+                    return super().get(key, default)
+
+            def dns(*_args, **_kwargs):
+                events.append("dns")
+                self.assertTrue(lease.is_file(), "dns-before-lease")
+                return []
+
+            env = EnvSentinel(original)
+            env["TYPESAFE_API_KEY"] = "fixture-only-non-secret"
+            with mock.patch.object(N.Path, "home", return_value=root), mock.patch.object(N.os, "environ", env), mock.patch.object(N.socket, "getaddrinfo", dns):
+                proof, first_raw, admission = N.live_gate(inputs, output_path=root / "run-output")
+            self.assertEqual(events, ["dns", "key"])
+            self.assertEqual(admission.api_key, "fixture-only-non-secret")
+            self.assertEqual(proof["lease_identity"], identity)
+            self.assertFalse(admission.used)
+            self.assertEqual(lease.stat().st_mode & 0o777, 0o600)
+            self.assertEqual(lease.parent.stat().st_mode & 0o777, 0o700)
+            self.assertTrue(first_raw == qpath.read_bytes())
+
+            # A byte-different qualification manifest with identical study
+            # protocol, registration and input identity cannot consume again.
+            second_manifest = json.loads(first_raw)
+            qpath.write_bytes(json.dumps(second_manifest, indent=2).encode())
+            events.clear()
+
+            def forbidden_dns(*_args, **_kwargs):
+                events.append("dns")
+                raise AssertionError("dns-before-existing-lease-rejection")
+
+            try:
+                with mock.patch.object(N.Path, "home", return_value=root), mock.patch.object(N.os, "environ", env), mock.patch.object(N.socket, "getaddrinfo", forbidden_dns):
+                    N.live_gate(inputs, output_path=root / "run-output")
+            except ValueError as error:
+                self.assertEqual(str(error), "study-already-consumed")
+            else:
+                self.fail("changed-qualification-reran-study")
+            self.assertEqual(events, [])
+        
+        with tempfile.TemporaryDirectory() as temp:
+            self._with_fake_qualification(pathlib.Path(temp) / "qualified", exercise)
+
+    def test_mutated_qualified_file_rejects_before_lease_dns_or_key(self):
+        def exercise(root, _qpath, inputs):
+            lease_root = root / ".local" / "state"
+            (root / "normal-runner.py.txt").write_bytes((root / "normal-runner.py.txt").read_bytes() + b"mutated")
+            events = []
+            original = dict(os.environ)
+
+            class EnvSentinel(dict):
+                def get(self, key, default=None):
+                    if key == "TYPESAFE_API_KEY": events.append("key")
+                    return super().get(key, default)
+
+            def dns(*_args, **_kwargs): events.append("dns");raise AssertionError("dns-before-source-closure")
+            env = EnvSentinel(original)
+            with mock.patch.object(N.Path, "home", return_value=root), mock.patch.object(N.os, "environ", env), mock.patch.object(N.socket, "getaddrinfo", dns):
+                with self.assertRaisesRegex(ValueError, "qualification-file-pin"):
+                    N.live_gate(inputs, output_path=root / "run-output")
+            self.assertEqual(events, [])
+            self.assertFalse(lease_root.exists())
+        with tempfile.TemporaryDirectory() as temp:
+            self._with_fake_qualification(pathlib.Path(temp) / "qualified", exercise)
 
 
 if __name__ == "__main__":
