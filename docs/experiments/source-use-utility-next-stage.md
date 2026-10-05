@@ -1,6 +1,6 @@
 # Next evidence stage: does opening the source advance the task?
 
-Status: execution plan, not a registered ranking comparison or a qualified selector. EXP-072 remains rejected. This plan adds task-use evidence; it does not replace or relax the existing two-reference quality, retention, stability, navigation, full-membership, natural-large-pool or resource gates. The full production acceptance checklist remains the final delivery requirement.
+Status: bounded diagnostic pilot completed; [outcome](evidence/source-use-next-stage/pilot-outcome.md) shows no task-completion improvement. No selector qualifies. EXP-072 remains rejected. This plan adds task-use evidence; it does not replace or relax the existing two-reference quality, retention, stability, navigation, full-membership, natural-large-pool or resource gates. The full production acceptance checklist remains the final delivery requirement.
 
 ## First small pilot
 
@@ -31,4 +31,4 @@ Use the pilot's observed attribution gaps to design a materially different, just
 
 After both qualification stages, implement the full shared SlopSearX contract and X propagation, compatibility/security tests, substantive review, required CI and implementation PR merges. Neither this plan nor a diagnostic pilot is production delivery. No deployment, Hermes or default changes are part of this stage.
 
-One bounded independent Luna design review found no blocking corrections. No source-opening, answer-generation, model or search calls have been performed for this stage. The exact task manifest and request/acquisition budgets must still be frozen before execution.
+The frozen pilot completed 28 source attempts and eight Luna turns. Six sources were blocked; attribution failures and reviewer disagreement are retained in the outcome. No controller search, Brave or Jev calls were made. The next step is deterministic evidence-catalog qualification and clearer observable task checks before registering another model comparison.

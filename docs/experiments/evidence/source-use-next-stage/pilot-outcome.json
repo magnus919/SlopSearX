@@ -1,0 +1,412 @@
+{
+  "status": "diagnostic_only_no_qualification",
+  "model_turns": 8,
+  "controller_search_calls": 0,
+  "controller_brave_calls": 0,
+  "controller_jev_calls": 0,
+  "internal_calls": "not fully observed",
+  "capture": {
+    "attempted_sources": 28,
+    "accepted": 22,
+    "failed": 6,
+    "owned_http_calls": 29
+  },
+  "answers": [
+    {
+      "task_id": "q6",
+      "arm": "w0",
+      "answer_sha256": "73e6b720883e926deacbd5cc997e40a2b18d350f89574a30fd7e621456168e3b",
+      "answer_words": 46,
+      "claims": 10,
+      "valid_links": 10,
+      "errors": []
+    },
+    {
+      "task_id": "q6",
+      "arm": "candidate",
+      "answer_sha256": "e08d51a5e9bb5b549e809d90da946ff48fa233778e1882cbad22de1170e01652",
+      "answer_words": 63,
+      "claims": 8,
+      "valid_links": 8,
+      "errors": []
+    },
+    {
+      "task_id": "q8",
+      "arm": "w0",
+      "answer_sha256": "d375b24ed7c02700d0de6d9dcd1b1105aba8cf6840bd2692d58b9f2e64472bd1",
+      "answer_words": 75,
+      "claims": 11,
+      "valid_links": 7,
+      "errors": [
+        {
+          "facet_id": "q8_f1",
+          "claim_index": 3,
+          "source_id": "S011",
+          "rules": [
+            "not_exact_substring"
+          ]
+        },
+        {
+          "facet_id": "q8_f2",
+          "claim_index": 1,
+          "source_id": "S007",
+          "rules": [
+            "not_exact_substring"
+          ]
+        },
+        {
+          "facet_id": "q8_f2",
+          "claim_index": 2,
+          "source_id": "S007",
+          "rules": [
+            "not_exact_substring"
+          ]
+        },
+        {
+          "facet_id": "q8_f3",
+          "claim_index": 2,
+          "source_id": "S011",
+          "rules": [
+            "not_exact_substring"
+          ]
+        }
+      ]
+    },
+    {
+      "task_id": "q8",
+      "arm": "candidate",
+      "answer_sha256": "58aca46eba18bd2b27f561a8abbc3aa62424651b2714abbd629d66c4dcebfafd",
+      "answer_words": 54,
+      "claims": 12,
+      "valid_links": 9,
+      "errors": [
+        {
+          "facet_id": "q8_f3",
+          "claim_index": 1,
+          "source_id": "S011",
+          "rules": [
+            "not_exact_substring"
+          ]
+        },
+        {
+          "facet_id": "q8_f3",
+          "claim_index": 2,
+          "source_id": "S011",
+          "rules": [
+            "not_exact_substring"
+          ]
+        },
+        {
+          "facet_id": "q8_f3",
+          "claim_index": 3,
+          "source_id": "S011",
+          "rules": [
+            "not_exact_substring"
+          ]
+        }
+      ]
+    }
+  ],
+  "reviewers": {
+    "r1": {
+      "raw_sha256": "ecf0f78f44bb169094be29ad9886c7ad54cec540c5cdaa77fef703dd39997f42",
+      "answers": [
+        {
+          "task_id": "q6",
+          "arm": "w0",
+          "task_complete": false,
+          "facet_states": {
+            "q6_f1": "partial",
+            "q6_f2": "complete",
+            "q6_f3": "partial"
+          },
+          "valid_grading_links": 10,
+          "grading_link_errors": [],
+          "blocker_count": 2,
+          "rejected_links_recorded_as_unsupported": []
+        },
+        {
+          "task_id": "q6",
+          "arm": "candidate",
+          "task_complete": false,
+          "facet_states": {
+            "q6_f1": "partial",
+            "q6_f2": "complete",
+            "q6_f3": "complete"
+          },
+          "valid_grading_links": 7,
+          "grading_link_errors": [
+            {
+              "facet_id": "q6_f3",
+              "source_id": "S012",
+              "rule": "unbound_grading_claim_marked_supported_or_misapplied"
+            }
+          ],
+          "blocker_count": 1,
+          "rejected_links_recorded_as_unsupported": []
+        },
+        {
+          "task_id": "q8",
+          "arm": "w0",
+          "task_complete": false,
+          "facet_states": {
+            "q8_f1": "complete",
+            "q8_f2": "partial",
+            "q8_f3": "partial"
+          },
+          "valid_grading_links": 7,
+          "grading_link_errors": [],
+          "blocker_count": 2,
+          "rejected_links_recorded_as_unsupported": []
+        },
+        {
+          "task_id": "q8",
+          "arm": "candidate",
+          "task_complete": false,
+          "facet_states": {
+            "q8_f1": "complete",
+            "q8_f2": "partial",
+            "q8_f3": "partial"
+          },
+          "valid_grading_links": 8,
+          "grading_link_errors": [],
+          "blocker_count": 2,
+          "rejected_links_recorded_as_unsupported": []
+        }
+      ],
+      "found_but_unused_delivery_classification": [
+        {
+          "task_id": "q6",
+          "arm": "w0",
+          "source_id": "S001",
+          "facet_id": "q6_f1",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        },
+        {
+          "task_id": "q6",
+          "arm": "w0",
+          "source_id": "S021",
+          "facet_id": "q6_f1",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        },
+        {
+          "task_id": "q6",
+          "arm": "w0",
+          "source_id": "S027",
+          "facet_id": "q6_f2",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        },
+        {
+          "task_id": "q6",
+          "arm": "candidate",
+          "source_id": "S001",
+          "facet_id": "q6_f1",
+          "delivery": "union_only_not_delivered",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        },
+        {
+          "task_id": "q6",
+          "arm": "candidate",
+          "source_id": "S021",
+          "facet_id": "q6_f2",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        },
+        {
+          "task_id": "q6",
+          "arm": "candidate",
+          "source_id": "S027",
+          "facet_id": "q6_f2",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        },
+        {
+          "task_id": "q8",
+          "arm": "w0",
+          "source_id": "S022",
+          "facet_id": "q8_f3",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        },
+        {
+          "task_id": "q8",
+          "arm": "w0",
+          "source_id": "S011",
+          "facet_id": "q8_f3",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        },
+        {
+          "task_id": "q8",
+          "arm": "candidate",
+          "source_id": "S023",
+          "facet_id": "q8_f3",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        },
+        {
+          "task_id": "q8",
+          "arm": "candidate",
+          "source_id": "S019",
+          "facet_id": "q8_f2",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        }
+      ]
+    },
+    "r2": {
+      "raw_sha256": "bf9593765d1a198b0c534452fb84b90a42b30a0f5ef1b7077c6bc3abf005ef22",
+      "answers": [
+        {
+          "task_id": "q6",
+          "arm": "w0",
+          "task_complete": true,
+          "facet_states": {
+            "q6_f1": "complete",
+            "q6_f2": "complete",
+            "q6_f3": "complete"
+          },
+          "valid_grading_links": 10,
+          "grading_link_errors": [],
+          "blocker_count": 0,
+          "rejected_links_recorded_as_unsupported": []
+        },
+        {
+          "task_id": "q6",
+          "arm": "candidate",
+          "task_complete": true,
+          "facet_states": {
+            "q6_f1": "complete",
+            "q6_f2": "complete",
+            "q6_f3": "complete"
+          },
+          "valid_grading_links": 8,
+          "grading_link_errors": [],
+          "blocker_count": 0,
+          "rejected_links_recorded_as_unsupported": []
+        },
+        {
+          "task_id": "q8",
+          "arm": "w0",
+          "task_complete": false,
+          "facet_states": {
+            "q8_f1": "partial",
+            "q8_f2": "partial",
+            "q8_f3": "partial"
+          },
+          "valid_grading_links": 7,
+          "grading_link_errors": [],
+          "blocker_count": 2,
+          "rejected_links_recorded_as_unsupported": [
+            {
+              "facet_id": "q8_f1",
+              "source_id": "S011",
+              "disposition": "Recorded unsupported link; zero evidence credit."
+            },
+            {
+              "facet_id": "q8_f2",
+              "source_id": "S007",
+              "disposition": "Recorded unsupported link; zero evidence credit."
+            },
+            {
+              "facet_id": "q8_f2",
+              "source_id": "S007",
+              "disposition": "Recorded unsupported link; zero evidence credit."
+            },
+            {
+              "facet_id": "q8_f3",
+              "source_id": "S011",
+              "disposition": "Recorded unsupported link; zero evidence credit."
+            }
+          ]
+        },
+        {
+          "task_id": "q8",
+          "arm": "candidate",
+          "task_complete": false,
+          "facet_states": {
+            "q8_f1": "complete",
+            "q8_f2": "partial",
+            "q8_f3": "partial"
+          },
+          "valid_grading_links": 9,
+          "grading_link_errors": [],
+          "blocker_count": 2,
+          "rejected_links_recorded_as_unsupported": [
+            {
+              "facet_id": "q8_f3",
+              "source_id": "S011",
+              "disposition": "Recorded unsupported link; zero evidence credit."
+            },
+            {
+              "facet_id": "q8_f3",
+              "source_id": "S011",
+              "disposition": "Recorded unsupported link; zero evidence credit."
+            },
+            {
+              "facet_id": "q8_f3",
+              "source_id": "S011",
+              "disposition": "Recorded unsupported link; zero evidence credit."
+            }
+          ]
+        }
+      ],
+      "found_but_unused_delivery_classification": [
+        {
+          "task_id": "q6",
+          "arm": "w0",
+          "source_id": "S001",
+          "facet_id": "q6_f1",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        },
+        {
+          "task_id": "q6",
+          "arm": "w0",
+          "source_id": "S001",
+          "facet_id": "q6_f2",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        },
+        {
+          "task_id": "q6",
+          "arm": "candidate",
+          "source_id": "S002",
+          "facet_id": "q6_f1",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        },
+        {
+          "task_id": "q6",
+          "arm": "candidate",
+          "source_id": "S002",
+          "facet_id": "q6_f2",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        },
+        {
+          "task_id": "q8",
+          "arm": "candidate",
+          "source_id": "S023",
+          "facet_id": "q8_f3",
+          "delivery": "assigned_but_unused",
+          "semantic_adequacy": "advisory_not_independently_verified"
+        }
+      ]
+    }
+  },
+  "source_validation": {
+    "r1": {
+      "valid_quotes": 60,
+      "invalid_quotes": 0
+    },
+    "r2": {
+      "valid_quotes": 33,
+      "invalid_quotes": 18,
+      "whole_assessment_passed": false
+    }
+  }
+}
