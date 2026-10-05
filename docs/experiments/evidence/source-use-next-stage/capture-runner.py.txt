@@ -145,8 +145,9 @@ def validate_outdir(path: Path):
     os.chmod(path, 0o700)
 
 
-def acquire_lease(temp_root: Path | None = None):
-    p = (temp_root or Path(tempfile.gettempdir())) / LEASE
+def acquire_lease(temp_root: Path | None = None, manifest_digest: str | None = None):
+    name = LEASE + ("." + manifest_digest if manifest_digest else "")
+    p = (temp_root or Path(tempfile.gettempdir())) / name
     fd = os.open(p, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
     with os.fdopen(fd, "w") as f:
         f.write(json.dumps({"pid": os.getpid(), "started": datetime.now(timezone.utc).isoformat()}))
@@ -209,9 +210,28 @@ def offline_fixture(manifest: dict, outdir: Path):
 def _live(manifest: dict, outdir: Path, integrity: dict, cli_path: Path,
           consumer_repo: Path, packet_ids: dict, source_order: dict):
     """Serial capture using the hash-verified installed CLI Client.scrape."""
-    import requests
+    endpoint_names = ("GROKTOCRAWL_API_URL", "FIRECRAWL_API_URL")
+    inherited_endpoints = {name: os.environ.pop(name, None) for name in endpoint_names}
     prior_retry = os.environ.get("GROKTOCRAWL_RETRY_MAX_ATTEMPTS")
     os.environ["GROKTOCRAWL_RETRY_MAX_ATTEMPTS"] = "1"
+    try:
+        return _capture_live(manifest, outdir, integrity, cli_path,
+                             consumer_repo, packet_ids, source_order)
+    finally:
+        for name, value in inherited_endpoints.items():
+            if value is not None:
+                os.environ[name] = value
+            else:
+                os.environ.pop(name, None)
+        if prior_retry is None:
+            os.environ.pop("GROKTOCRAWL_RETRY_MAX_ATTEMPTS", None)
+        else:
+            os.environ["GROKTOCRAWL_RETRY_MAX_ATTEMPTS"] = prior_retry
+
+
+def _capture_live(manifest, outdir, integrity, cli_path,
+                  consumer_repo, packet_ids, source_order):
+    import requests
     loader = importlib.machinery.SourceFileLoader("pinned_groktocrawl_cli", str(cli_path))
     spec = importlib.util.spec_from_loader("pinned_groktocrawl_cli", loader)
     cli = importlib.util.module_from_spec(spec)
@@ -387,10 +407,6 @@ def _live(manifest: dict, outdir: Path, integrity: dict, cli_path: Path,
         return result
     finally:
         requests.request = original_request
-        if prior_retry is None:
-            os.environ.pop("GROKTOCRAWL_RETRY_MAX_ATTEMPTS", None)
-        else:
-            os.environ["GROKTOCRAWL_RETRY_MAX_ATTEMPTS"] = prior_retry
 
 def _durable(path: Path, obj):
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -449,7 +465,7 @@ def main(argv=None):
         import random
         random.SystemRandom().shuffle(pool)
         source_order[case["id"]] = pool
-    lease = acquire_lease()
+    lease = acquire_lease(manifest_digest=identity["manifest_sha256"])
     validate_outdir(a.outdir)
     try:
         return _live(manifest, a.outdir, {**identity, **qualification},

@@ -703,7 +703,9 @@
     "projection": "pinned SourceArtifact.to_document with default 8000 characters",
     "selection": "shared frozen source availability; deduplicate URLs; prefer non-video then videos as fallback; first five accepted artifacts in each first-ten order",
     "metadata_privacy": "only public requested URLs, timestamps, class/status and selected runtime identity fields; no API endpoint, credential, personal path or raw environment in public artifacts",
-    "raw_source_copyright": "full source responses private; public evidence bounded quotations/spans and hashes only"
+    "raw_source_copyright": "full source responses private; public evidence bounded quotations/spans and hashes only",
+    "endpoint_selection": "Use existing Hermes .env through unmodified CLI discovery in an isolated child with inherited GROKTOCRAWL_API_URL and FIRECRAWL_API_URL removed; no explicit endpoint supplied and no persistent configuration changed.",
+    "setup_evidence": "First qualified preflight failed before any source capture because the inherited shell endpoint differed from existing Hermes configuration; retain as setup-only zero-credit evidence."
   },
   "outcome": "not run",
   "prompt_pins": {
