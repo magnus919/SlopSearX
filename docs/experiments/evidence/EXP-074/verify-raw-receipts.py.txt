@@ -70,7 +70,7 @@ def _verify_qualification(raw, run, protocol_raw, registration_raw):
     environment = {"python_implementation": platform.python_implementation(), "python_version": platform.python_version()}
     dependencies = {name: importlib.metadata.version(name) for name in ("httpx", "httpcore", "anyio")}
     _need(q["environment"] == environment and q["dependencies"] == dependencies, "qualification-runtime")
-    committed_raw = N.committed("docs/experiments/evidence/EXP-074/qualification-integrity.json", "HEAD")
+    committed_raw = N.committed_head("docs/experiments/evidence/EXP-074/qualification-integrity.json")
     _need(committed_raw == raw, "qualification-not-committed")
     _need(set(q["files"]) == N.OWNED_FILES and set(q["source_pins"]) == N.SOURCE_FILES,
           "qualification-closure-inventory")

@@ -5,9 +5,12 @@ import hashlib
 import importlib.machinery
 import importlib.util
 import json
+import platform
+import importlib.metadata
 import pathlib
 import shutil
 import tempfile
+import types
 import unittest
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -217,6 +220,72 @@ class RawReceiptVerifierTests(unittest.TestCase):
         (out / "qualification-integrity.json").write_text("{}")
         with self.assertRaisesRegex(ValueError, "qualification-schema|qualification-binding"):
             V.verify(out, require_analysis=False)
+
+    def test_qualification_resolves_head_and_source_closure_without_literal_head_revision(self):
+        # Exercise the nonsynthetic qualification path with mocked, read-only
+        # committed bytes. This verifies that HEAD is resolved by the helper
+        # designed for it, while every pinned source is checked at a 40-hex SHA.
+        owned = sorted(N.OWNED_FILES)
+        sources = sorted(N.SOURCE_FILES)
+        qualified_revision = "a" * 40
+        protocol_raw = (HERE / "protocol.json").read_bytes()
+        registration_raw = (HERE / "registration-integrity.json").read_bytes()
+        file_bytes = {name: (HERE / name).read_bytes() for name in owned}
+        source_bytes = {name: (V.REPO / name).read_bytes() for name in sources}
+        qualification_path = "docs/experiments/evidence/EXP-074/qualification-integrity.json"
+        qualification_bytes = json.dumps({
+            "schema": "exp074-qualification-integrity/1",
+            "qualified": True,
+            "qualified_source_revision": qualified_revision,
+            "files": {name: hashlib.sha256(raw).hexdigest() for name, raw in file_bytes.items()},
+            "source_pins": {name: hashlib.sha256(raw).hexdigest() for name, raw in source_bytes.items()},
+            "dependencies": {name: importlib.metadata.version(name) for name in ("httpx", "httpcore", "anyio")},
+            "environment": {"python_implementation": platform.python_implementation(),
+                            "python_version": platform.python_version()},
+            "protocol_sha256": hashlib.sha256(protocol_raw).hexdigest(),
+            "registration_sha256": hashlib.sha256(registration_raw).hexdigest(),
+        }, sort_keys=True, separators=(",", ":")).encode()
+        run = {"source_integrity": {
+            "qualification_sha256": hashlib.sha256(qualification_bytes).hexdigest(),
+            "qualified_source_revision": qualified_revision,
+            "lease_identity": "fixture-only-lease",
+            "environment": {"python_implementation": platform.python_implementation(),
+                            "python_version": platform.python_version()},
+            "dependencies": {name: importlib.metadata.version(name) for name in ("httpx", "httpcore", "anyio")},
+        }}
+        original_run = N.subprocess.run
+        calls = []
+        try:
+            def committed(path, revision):
+                calls.append((revision, path))
+                self.assertRegex(revision, r"^[0-9a-f]{40}$")
+                self.assertNotEqual(revision, "HEAD")
+                if path == qualification_path:
+                    return qualification_bytes
+                if path == "docs/experiments/evidence/EXP-074/protocol.json":
+                    return protocol_raw
+                if path == "docs/experiments/evidence/EXP-074/registration-integrity.json":
+                    return registration_raw
+                if path.startswith("docs/experiments/evidence/EXP-074/"):
+                    name = path.rsplit("/", 1)[1]
+                    return file_bytes[name]
+                return source_bytes[path]
+            def fake_run(argv, **kwargs):
+                if argv == ["git", "rev-parse", "HEAD"]:
+                    return types.SimpleNamespace(stdout=qualified_revision + "\n")
+                self.assertEqual(argv[:2], ["git", "show"])
+                revision, path = argv[2].split(":", 1)
+                return types.SimpleNamespace(stdout=committed(path, revision))
+            N.subprocess.run = fake_run
+            self.assertEqual(V._verify_qualification(qualification_bytes, run, protocol_raw, registration_raw),
+                             qualification_bytes)
+        finally:
+            N.subprocess.run = original_run
+        self.assertIn((qualified_revision, qualification_path), calls)
+        self.assertEqual(sum(revision == qualified_revision and path != qualification_path
+                             for revision, path in calls), len(owned) + len(sources))
+        with self.assertRaises(ValueError):
+            N.committed("docs/experiments/evidence/EXP-074/qualification-integrity.json", "HEAD")
 
 
 if __name__ == "__main__":
