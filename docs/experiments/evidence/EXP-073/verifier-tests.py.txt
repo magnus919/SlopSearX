@@ -141,5 +141,35 @@ class RawReceiptVerifierTests(unittest.TestCase):
         self.assertEqual(Good.calls,4);self._bind_analysis(out);r=M.verify(out)
         self.assertEqual((r['status'],r['physical_attempts']),('incomplete',4))
         run=json.loads((out/'run.json').read_bytes());self.assertEqual(run['operations'][0]['arms']['candidate']['order_ids'],run['operations'][0]['arms']['w0']['order_ids'])
+    def test_final_44th_http_503_is_valid_bounded_interruption(self):
+        inputs={k:(N.REPO/k).read_bytes() for k in P.PINS};acq,queries=N.source_data(inputs);out=self.root/'final-http-error'
+        class After43:
+            def __init__(self,*_): self.calls=0;self.good=ORIGINAL_OWNED(True,'neutral');self.bad=ORIGINAL_OWNED(True,'http-error');self.last_raw=None;self.last_transport=None
+            def __call__(self,body,timeout_s=1):
+                target=self.good if self.calls<43 else self.bad;self.calls+=1
+                try: return target(body,timeout_s)
+                finally: self.last_raw=target.last_raw;self.last_transport=target.last_transport
+        with patch.object(N,'Owned',After43): N.run(acq,queries,out,offline=True)
+        self._bind_analysis(out);result=M.verify(out)
+        self.assertEqual((result['status'],result['physical_attempts'],result['wrapper_telemetry_checked']),('incomplete',44,1))
+        run=json.loads((out/'run.json').read_bytes());self.assertEqual(run['operations'][-1]['id'],'q13-base');self.assertEqual(run['operations'][-1]['arms']['purpose_component']['status'],'failed')
+    def test_final_44th_response_then_durable_deadline_is_valid_bounded_interruption(self):
+        inputs={k:(N.REPO/k).read_bytes() for k in P.PINS};acq,queries=N.source_data(inputs);out=self.root/'final-postbody';clock=[0.0]
+        def mono(): clock[0]+=.001;return clock[0]
+        original=N.atomic
+        def slow_final(path,value):
+            op=value.get('operation',{})
+            if Path(path).name=='q13-base-final.json' and op.get('arms',{}).get('candidate',{}).get('status')=='body_durable_pending_deadline': clock[0]+=1.01
+            return original(path,value)
+        class Good:
+            calls=0
+            def __init__(self,*_): self.last_raw=None;self.last_transport=None
+            def __call__(self,body,timeout_s=1):
+                Good.calls+=1;req=P.BASE.strict_json(body);self.last_raw=P.response_fixture(req,usage={'input_tokens':10,'output_tokens':2});sha=hashlib.sha256(body).hexdigest();rh=hashlib.sha256(self.last_raw).hexdigest();empty=hashlib.sha256(b'').hexdigest()
+                self.last_transport={'status':'offline-fixture','request_sha256':sha,'response_sha256':rh,'stdout_sha256':rh,'stderr_sha256':empty,'stderr_hex':'','remote_http_ms':.01};return self.last_raw,.01
+        with patch.object(N,'Owned',Good),patch.object(N.time,'monotonic',side_effect=mono),patch.object(N,'atomic',side_effect=slow_final): N.run(acq,queries,out,offline=True)
+        self.assertEqual(Good.calls,44);self._bind_analysis(out);result=M.verify(out)
+        self.assertEqual((result['status'],result['physical_attempts']),('incomplete',44))
+        run=json.loads((out/'run.json').read_bytes());self.assertEqual(run['operations'][-1]['id'],'q13-base');self.assertGreater(run['operations'][-1]['candidate_phase_ms'],1000)
 
 if __name__=='__main__': unittest.main()

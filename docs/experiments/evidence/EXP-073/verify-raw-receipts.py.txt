@@ -197,7 +197,7 @@ def verify(outdir,require_analysis=True):
         _need(not terminal and attempts==44 and len(call_rows)==44 and all(row.get('status')=='validated' for row in call_rows),'complete-call-inventory')
         _need(run['neutral'].get('status')=='fixture_only' and run['neutral'].get('quality_credit') is False,'complete-neutral-status')
     else:
-        _need(terminal and attempts<44,'incomplete-without-single-stop')
+        _need(terminal and attempts<=44,'incomplete-without-single-stop')
     # Validate final body receipts against independently recomputed fusion fields.
     for opid,case,cards,built in schedule:
         if opid!='neutral' and not any(x.get('id')==opid for x in run['operations']): continue
