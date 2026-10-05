@@ -1,0 +1,700 @@
+{
+  "schema": "source-use-pilot-manifest/1",
+  "status": "frozen before source openings and answer generation",
+  "selector_qualification": false,
+  "untouched_confirmation": false,
+  "inputs": {
+    "docs/experiments/evidence/EXP-060/queries.json": "010a418d7e37e9df198d6cb313b4612d82e76ba8bef4cc2a9502f2074bf85836",
+    "docs/experiments/evidence/EXP-060/fresh-acquisition.json": "69f72e2895031d4804733f7cdb38197a2d2c43d7cddaa8589abc9a43397d1882",
+    "docs/experiments/evidence/EXP-072/completed/run.json": "8e3513b1758e9cd1528ee672c3474423cacc05aa3ae0b57c2fdae4d7f9ac78ba",
+    "docs/experiments/source-use-utility-next-stage.md": "c929718a43e79fd7fa81ed229193316842e1125ad3824f351ec0d6c4bcc65cf8"
+  },
+  "cli_sha256": "c954eebc4e25a4bca2d12e1a670cdac492ca63a741ba242244c0d95a2b25bb99",
+  "consumer_revision": "3612affba3b51e7240a0e60d079499739052c0b1",
+  "consumer_source_pins": {
+    "agent-svc/agent/research/sources.py": "051e8c575d165703898547fc1892b521adeb64974e5ecd0a5d61b3c9dc25195d",
+    "common/url.py": "9ad7655f0995930765987442112ed9887eb0b09eef1e346ad9a367e1b9dc1774",
+    "agent-svc/agent/research/discovery.py": "b35ac59adf43bab290e70c49335f531ecff9e551f6f9ce54c9a9bbf9a0d03342",
+    "agent-svc/agent/models.py": "f0cff4bc05b1a3d02e61688bff9a29b04595d80c30ba1bf0b3be91ef84371dd2"
+  },
+  "cases": [
+    {
+      "id": "q6",
+      "purpose": "Guide a multi-file agent refactor using compiler and language-server feedback. Seek public technical documentation, implementations and research reading leads; distinguish visible evidence from unseen findings.",
+      "facets": [
+        {
+          "id": "q6_f1",
+          "description": "Incremental diagnostics"
+        },
+        {
+          "id": "q6_f2",
+          "description": "Refactoring workflow"
+        },
+        {
+          "id": "q6_f3",
+          "description": "Correctness checks"
+        }
+      ],
+      "critical_facets": [
+        "q6_f1",
+        "q6_f2",
+        "q6_f3"
+      ],
+      "complete_orders": {
+        "w0": [
+          "c7",
+          "c1",
+          "c5",
+          "c16",
+          "c6",
+          "c3",
+          "c2",
+          "c18",
+          "c4",
+          "c11",
+          "c17",
+          "c21",
+          "c14",
+          "c19",
+          "c10",
+          "c15",
+          "c8",
+          "c0",
+          "c9",
+          "c13",
+          "c12",
+          "c36",
+          "c33",
+          "c20",
+          "c24",
+          "c25",
+          "c27",
+          "c39",
+          "c37",
+          "c31",
+          "c35",
+          "c38",
+          "c28",
+          "c23",
+          "c26",
+          "c29",
+          "c32",
+          "c30",
+          "c34",
+          "c22"
+        ],
+        "candidate": [
+          "c7",
+          "c4",
+          "c17",
+          "c6",
+          "c5",
+          "c16",
+          "c3",
+          "c2",
+          "c12",
+          "c14",
+          "c8",
+          "c1",
+          "c0",
+          "c10",
+          "c21",
+          "c18",
+          "c13",
+          "c9",
+          "c11",
+          "c15",
+          "c19",
+          "c20",
+          "c33",
+          "c36",
+          "c25",
+          "c24",
+          "c31",
+          "c39",
+          "c38",
+          "c26",
+          "c35",
+          "c29",
+          "c27",
+          "c28",
+          "c37",
+          "c23",
+          "c30",
+          "c32",
+          "c34",
+          "c22"
+        ]
+      },
+      "presentation_orders": {
+        "w0": [
+          "c7",
+          "c1",
+          "c5",
+          "c16",
+          "c6",
+          "c3",
+          "c2",
+          "c18",
+          "c4",
+          "c11"
+        ],
+        "candidate": [
+          "c7",
+          "c4",
+          "c17",
+          "c6",
+          "c5",
+          "c16",
+          "c3",
+          "c2",
+          "c12",
+          "c14"
+        ]
+      },
+      "sources": [
+        {
+          "id": "c1",
+          "snippet": "LSP also handles refactoring, code actions, semantic tokens, and inline hints. Modern tools use the full protocol to deliver rename-across-files and AI-suggested edits that respect scope. Unlikely. AI plus LSP is stronger than either alone. AI proposes edits; LSP verifies they compile, find references, and rename safely.",
+          "title": "LSP: The Secret Weapon for AI Coding Tools | Amir Teymoori",
+          "url": "https://amirteymoori.com/lsp-language-server-protocol-ai-coding-tools/",
+          "neutral_source_id": "S001"
+        },
+        {
+          "id": "c17",
+          "snippet": "This tool executes the Maven ... the compiler agent, detailing the compilation status. \u2013<strong>If compilation succeeds (100%), the compiler agent confirms success and proceeds to the Tester agent for further validation</strong>....",
+          "title": "RefAgent: A Multi-agent LLM-based Framework for Automatic Software Refactoring",
+          "url": "https://arxiv.org/html/2511.03153v1",
+          "neutral_source_id": "S002"
+        },
+        {
+          "id": "c16",
+          "snippet": "Function-level benchmarks reveal little about this regime (Liu et al., 2023), and while repository-scale suites like SWE-bench better reflect production engineering (Jimenez et al., 2023), refactoring imposes a stricter requirement: edits must be behavior-preserving while still propagating across files. RefactorBench targets exactly this setting with AST-verified multi-file tasks (Gautam et al., 2025), and SWE-Refactor (Xu et al., 2026) verifies developer-written refactorings through compilation, tests, and RefactoringMiner (Tsantalis et al., 2022).",
+          "title": "RefactorPlatform: An Open-Source Harness for Controlled Evaluation of Repository-Scale Refactoring Agents",
+          "url": "https://arxiv.org/html/2609.04898v1",
+          "neutral_source_id": "S003"
+        },
+        {
+          "id": "c4",
+          "snippet": "--allow-dirty) so that CI systems and planning agents can configure them explicitly, making ... Language servers, compilers, and static analysis. The Language Server Protocol provides a \u00b7 transport-agnostic interface for definitions, references, diagnostics, and edits across IDEs and \u00b7 tools (Microsoft, 2025a); we instantiate Lanser-CLI with Pyright for Python (Microsoft, 2025b). Relative to AST differencing and refactoring systems such as GumTree (Falleri et al., 2014) and",
+          "title": "Reinforcement Learning from Compiler and Language Server Feedback Yifan Zhang",
+          "url": "https://arxiv.org/pdf/2510.22907",
+          "neutral_source_id": "S005"
+        },
+        {
+          "id": "c7",
+          "snippet": "Speculative editing simulate_edit \u2192 preview changes in memory, check diagnostic delta, apply or discard. Test edits before touching disk. Workflow orchestration 24 skills that chain LSP operations into complete pipelines: /lsp-refactor \u2192 impact analysis \u2192 preview \u2192 apply \u2192 verify build \u2192 run tests",
+          "title": "GitHub - blackwell-systems/agent-lsp: MCP server that orchestrates language servers into agent-native workflows. 65 tools, 30 CI-verified languages. \u00b7 GitHub",
+          "url": "https://github.com/blackwell-systems/agent-lsp",
+          "neutral_source_id": "S012"
+        },
+        {
+          "id": "c14",
+          "snippet": "Read factory.yaml, discover resources, parse YAML/JSON, resolve references, merge environment overrides, apply policies, validate graphs, load Canvas layout data, and generate a deterministic compiled artifact. The compiler starts from factory.yaml and resolves all referenced resources. YAML parsing preserves enough document structure to support source patches. Diagnostics contain file path, line, column, severity, code, and message.",
+          "title": "[IDE Phase 4] Build the multi-file project compiler and source diagnostics \u00b7 Issue #16 \u00b7 ptw1255/agentic-workflow-factory",
+          "url": "https://github.com/ptw1255/agentic-workflow-factory/issues/16",
+          "neutral_source_id": "S013"
+        },
+        {
+          "id": "c12",
+          "snippet": "Implement diagnostics and codefix pipeline Area: A21 \u2014 Language services LSP and refactoring Parent: SF-A21-E01 Priority / phase: P1 / P1 Foundations Audited starting point Product source: 011f2bc3...",
+          "title": "[SF-A21-T04] Implement diagnostics and codefix pipeline \u00b7 Issue #292 \u00b7 wieslawsoltes/SharpForge",
+          "url": "https://github.com/wieslawsoltes/SharpForge/issues/292",
+          "neutral_source_id": "S014"
+        },
+        {
+          "id": "c6",
+          "snippet": "<strong>When the agent has to rename a symbol or move a file, it intelligently recognizes the intent, selects the appropriate refactoring tool, and invokes it</strong>. The agent orchestrates the refactoring workflow while the IDE\u2019s language server helps validate ...",
+          "title": "Refactoring made right: how program analysis makes AI agents safe and reliable - Kiro",
+          "url": "https://kiro.dev/blog/refactoring-made-right/",
+          "neutral_source_id": "S015"
+        },
+        {
+          "id": "c2",
+          "snippet": "<strong>After applying an edit, OpenCode runs project formatters (Prettier, Black, Biome) to standardize whitespace on disk before the next turn</strong>. It then queries the Language Server Protocol for compiler diagnostics and sends any syntax errors back ...",
+          "title": "How Coding Agents Edit Files: Diffs, Snapshots, and Fast Apply | Kondasamy Jayaraman (Samy)",
+          "url": "https://kondasamy.com/blog/2026/how-ai-coding-agents-edit-code/",
+          "neutral_source_id": "S016"
+        },
+        {
+          "id": "c5",
+          "snippet": "Why This Matters This fusion unlocks capabilities that were previously impossible for AI agents: Safe, Project-Wide Refactoring: Rename a symbol across dozens of files with confidence. Deep Code Exploration: Navigate complex codebases by jumping to definitions and finding references instantly. Intelligent Analysis: Get diagnostics and hover information for any symbol, just like in an IDE.",
+          "title": "Supercharge Your AI Agent: A Deep Dive into Mizchi's TypeScript Refactoring MCP Server",
+          "url": "https://skywork.ai/skypage/en/ai-agent-typescript-refactoring/1980821689958838272",
+          "neutral_source_id": "S021"
+        },
+        {
+          "id": "c18",
+          "snippet": "<strong>Inside a session, the agent reads relevant files, may draft a plan, edits code, and runs commands when needed</strong>. Its Language Server Protocol (LSP) integration then feeds compiler and linter diagnostics back to the model so it can respond to type and syntax errors.",
+          "title": "What Is OpenCode? The Open-Source AI Coding Agent Explained | DataCamp",
+          "url": "https://www.datacamp.com/blog/what-is-opencode",
+          "neutral_source_id": "S024"
+        },
+        {
+          "id": "c3",
+          "snippet": "Advanced tools like GoCodeo or Cursor IDE utilize agentic frameworks where models interact with the file system, language servers, or other tools to maintain stateful context. These agents: Store breadcrumbs of reasoning in long-term memory \u00b7 Use planner-executor architecture to decide which files to read, refactor, or write to \u00b7 Interleave LLM reasoning with compiler or static analysis feedback",
+          "title": "How AI Coding Models Handle Context Switching and Multi-File Refactoring",
+          "url": "https://www.gocodeo.com/post/how-ai-coding-models-handle-context-switching-and-multi-file-refactoring",
+          "neutral_source_id": "S027"
+        },
+        {
+          "id": "c11",
+          "snippet": "Refactorings are documented alongside patches so \u00b7 reviewers can distinguish between functional fixes and structural improvements. E. Verifier Agent \u00b7 The Verifier Agent enforces repository policies. It runs the full suite of unit tests, regression checks, linters, and type analyzers. Only \u00b7 if all checks pass does it approve the patch; otherwise, it returns a structured rejection with failing test names or diagnostic reports.",
+          "title": "Evaluating Multi-Agent AI Systems for Automated Bug ...",
+          "url": "https://www.ijraset.com/best-journal/evaluating-multiagent-ai-systems-for-automated-bug-detection-and-code-refactoring",
+          "neutral_source_id": "S028"
+        }
+      ],
+      "exposed_task_and_pool": true
+    },
+    {
+      "id": "q8",
+      "purpose": "Distinguish flaky tests from regressions before an agent repairs code. Seek public technical documentation, implementations and research reading leads; distinguish visible evidence from unseen findings.",
+      "facets": [
+        {
+          "id": "q8_f1",
+          "description": "Failure classification"
+        },
+        {
+          "id": "q8_f2",
+          "description": "Reproduction and diagnosis"
+        },
+        {
+          "id": "q8_f3",
+          "description": "Repair validation"
+        }
+      ],
+      "critical_facets": [
+        "q8_f1",
+        "q8_f2",
+        "q8_f3"
+      ],
+      "complete_orders": {
+        "w0": [
+          "c8",
+          "c1",
+          "c4",
+          "c0",
+          "c18",
+          "c3",
+          "c6",
+          "c10",
+          "c20",
+          "c26",
+          "c21",
+          "c12",
+          "c17",
+          "c2",
+          "c9",
+          "c22",
+          "c16",
+          "c5",
+          "c19",
+          "c11",
+          "c15",
+          "c33",
+          "c13",
+          "c38",
+          "c7",
+          "c37",
+          "c14",
+          "c31",
+          "c32",
+          "c36",
+          "c27",
+          "c28",
+          "c29",
+          "c23",
+          "c24",
+          "c34",
+          "c25",
+          "c35",
+          "c39",
+          "c30"
+        ],
+        "candidate": [
+          "c18",
+          "c8",
+          "c5",
+          "c10",
+          "c12",
+          "c15",
+          "c0",
+          "c9",
+          "c6",
+          "c19",
+          "c7",
+          "c3",
+          "c1",
+          "c17",
+          "c11",
+          "c21",
+          "c4",
+          "c20",
+          "c2",
+          "c33",
+          "c14",
+          "c26",
+          "c13",
+          "c16",
+          "c27",
+          "c22",
+          "c38",
+          "c36",
+          "c28",
+          "c23",
+          "c24",
+          "c25",
+          "c30",
+          "c29",
+          "c37",
+          "c39",
+          "c34",
+          "c32",
+          "c31",
+          "c35"
+        ]
+      },
+      "presentation_orders": {
+        "w0": [
+          "c8",
+          "c1",
+          "c4",
+          "c0",
+          "c18",
+          "c3",
+          "c6",
+          "c10",
+          "c20",
+          "c26"
+        ],
+        "candidate": [
+          "c18",
+          "c8",
+          "c5",
+          "c10",
+          "c12",
+          "c15",
+          "c0",
+          "c9",
+          "c6",
+          "c19"
+        ]
+      },
+      "sources": [
+        {
+          "id": "c12",
+          "snippet": "FlakyDoctor and DexFix on subject ID flaky tests. Columns PF \u00b7 and PU indicate the number of previously fixed and unfixed ID \u00b7 tests. After the automated validation, we manually checked all the",
+          "title": "A Generic Approach to Fix Test Flakiness in Real-World Projects Yang Chen",
+          "url": "https://arxiv.org/pdf/2404.09398",
+          "neutral_source_id": "S004"
+        },
+        {
+          "id": "c0",
+          "snippet": "While CI tools identify the flakes, local workspaces that support AI agents allow for rapid reproduction and fixing of the underlying issues within a unified interface. Yes, agents can identify missing synchronization by analyzing the sequence of events in logs. They can propose fixes like using stronger assertions, implementing proper wait conditions, or refactoring code to avoid shared state between test cases.",
+          "title": "Hunting Flaky Tests With an AI Agent | Deska",
+          "url": "https://deska.dev/blog/agent-fixes-flaky-tests",
+          "neutral_source_id": "S006"
+        },
+        {
+          "id": "c1",
+          "snippet": "Over one week I pointed Claude Code at them with a reproduction harness instead of a &quot;please fix this&quot; prompt, and it fixed 58 of them for real, quarantined 5, and taught me a lot about what AI coding agents are actually good at. Spoiler: the bottleneck was never the fixing. It was the diagnosis.",
+          "title": "How I Killed 63 Flaky Tests in One Week With Claude Code: 5 Lessons - DEV Community",
+          "url": "https://dev.to/yureki_lab/how-i-killed-63-flaky-tests-in-one-week-with-claude-code-5-lessons-29m0",
+          "neutral_source_id": "S007"
+        },
+        {
+          "id": "c26",
+          "snippet": "We present Phoenix, a multi-agent LLM system that resolves GitHub issues from triage through pull-request creation, combining seven layered safety controls with a baseline-aware test evaluation strategy. Phoenix decomposes the work across six specialized agents. Planner, reproducer, coder, tester, failure analyst and Pull Request (PR) agent, all coordinated by a label-based GitHub webhook state machine. Every change is checked against a baseline test run before a pull request is opened. On a 24-",
+          "title": "Phoenix: Safe GitHub Issue Resolution via Multi-Agent LLMs",
+          "url": "https://doi.org/10.48550/arxiv.2606.20243",
+          "neutral_source_id": "S008"
+        },
+        {
+          "id": "c20",
+          "snippet": "When a repair agent runs a test and sees it pass, the result is treated as evidence about the reported defect. We measure how often that treatment is warranted. BSG-VA (buggy-state/candidate-state/gold-fix validation analysis) captures each validation command at its exact working-tree state, extracts a test-only patch, and replays the command on the original buggy code (B), the candidate state (S), and the developer gold fix (G). The captured outcome and the replay results assign every event an ",
+          "title": "Validation Evidence in LLM Repair Agents: How Much of What Passes Actually Tests the Bug?",
+          "url": "https://doi.org/10.48550/arxiv.2607.28871",
+          "neutral_source_id": "S009"
+        },
+        {
+          "id": "c19",
+          "snippet": "For a structural fix that scales, agentic testing platforms like Autonoma generate timing-aware, isolated tests directly from your codebase. Retries reduce the visible impact of flakiness but do not fix the underlying cause. A test that needs retries to pass is still a flaky test. Retries mask real regressions (the test might fail for a legitimate reason but pass on retry), waste CI compute, and give teams a false sense of reliability.",
+          "title": "Flaky Tests: Why They Happen and How to Fix Them for Good | Autonoma",
+          "url": "https://getautonoma.com/blog/flaky-tests",
+          "neutral_source_id": "S010"
+        },
+        {
+          "id": "c8",
+          "snippet": "<strong>a developer tool that automatically detects flaky tests in a Python test suite</strong>, gathers structured evidence about why they&#x27;re flaky through controlled perturbation experiments, classifies the likely root cause, and uses an AI agent to propose ...",
+          "title": "GitHub - anusha-saxena/repair-ai-agent: a developer tool that automatically detects flaky tests in a Python test suite, gathers structured evidence about why they're flaky through controlled perturbation experiments, classifies the likely root cause, and u",
+          "url": "https://github.com/anusha-saxena/repair-ai-agent",
+          "neutral_source_id": "S011"
+        },
+        {
+          "id": "c6",
+          "snippet": "- <strong>Agents can scan far more of the codebase and logs than a human can, and quickly \u2014 a better shot at finding a flaky test&#x27;s root cause. - Agents can babysit the validation of a fix for hours without intervention</strong>, which humans are terrible at.",
+          "title": "How We Used Agentic AI to Automate Fixes for Flaky Tests | Kong Inc.",
+          "url": "https://konghq.com/blog/engineering/how-we-used-agentic-ai-to-fix-kong-gateways-flakiest-tests",
+          "neutral_source_id": "S017"
+        },
+        {
+          "id": "c10",
+          "snippet": "Fix flaky tests with a reproduce-diagnose-fix loop, record/replay debugging, explicit waits, and AI triage to stabilize your CI/CD\u2026",
+          "title": "How to Fix Flaky Tests: Reproduce, Diagnose & Prevent in CI/CD | by QuarkAndCode | Medium",
+          "url": "https://medium.com/@QuarkAndCode/how-to-fix-flaky-tests-reproduce-diagnose-prevent-in-ci-cd-60f45226851f",
+          "neutral_source_id": "S018"
+        },
+        {
+          "id": "c18",
+          "snippet": "It supplies Docker-style compilation environments, scripts to reproduce failures, scripts to apply fixes and verify non-flakiness, and passing/failing execution logs, together with contribution guidelines and an analysis of reproduction challenges, fix locations, and category identification via error messages. Significance. If the reproducibility claims are substantiated, the dataset would provide a materially more usable resource than prior disjoint collections by enabling direct execution, fix verification, and controlled experiments on flaky-test repair.",
+          "title": "A Dataset of Reproducible Flaky-Test Failures \u00b7 Pith Review",
+          "url": "https://pith.science/paper/2605.21677",
+          "neutral_source_id": "S019"
+        },
+        {
+          "id": "c15",
+          "snippet": "Set TZ=UTC explicitly in your CI environment configuration and use timezone-aware datetime objects throughout your codebase. Mobile apps often render dates, currencies, addresses, phone numbers, and language strings based on device locale. If your test expects exact visible text, it may pass on one device and fail on another. For mobile regression tests, either set device locale/timezone explicitly or assert the behavior instead of hardcoding locale-sensitive copy.",
+          "title": "How to Fix Flaky Tests: The Complete Diagnosis Guide for Engineers in 2026 - Quash",
+          "url": "https://quashbugs.com/blog/how-to-fix-flaky-tests-complete-diagnosis-guide",
+          "neutral_source_id": "S020"
+        },
+        {
+          "id": "c4",
+          "snippet": "Start in advise mode where it only recommends, backtest on recent failures to confirm it would mask zero regressions, then enable auto-quarantine for non-critical proven flakes. ... A test-case agent that turns requirements into happy-path, edge, and negative cases with steps and expected results, flagging ambiguous specs instead of guessing. ... An AI bug-fix agent: reproduces an issue, finds root cause, writes a minimal fix plus tests, and opens a focused draft PR \u2014 sandboxed, small-diff, human-gated. ... An evidence-based code review agent for real PRs: security, correctness, concurrency, performance \u2014 with file:line findings, risk scores, and a human-escalation gate.",
+          "title": "Flaky Test Triage Agent | AI Agent Kit",
+          "url": "https://www.agent-kits.com/kit/flaky-test-triager",
+          "neutral_source_id": "S022"
+        },
+        {
+          "id": "c9",
+          "snippet": "I don\u2019t necessarily go through the tactics in a specific order but rather I use intuition and experience to decide which tactic to use next. The important thing is to <strong>treat the flaky test diagnosis as a distinct step which occurs after reproduction and before the application of the fix</strong>.",
+          "title": "How I fix flaky tests - Code with Jason",
+          "url": "https://www.codewithjason.com/how-i-fix-flaky-tests/",
+          "neutral_source_id": "S023"
+        },
+        {
+          "id": "c3",
+          "snippet": "Following context selection, FlakyGuard constructs a prompt for an autonomous LLM session. This prompt includes directives (modify only test code), error diagnostics (messages, stack traces, reproduction rates), and the selected context code.",
+          "title": "FlakyGuard: Test Repair & FL Robustness",
+          "url": "https://www.emergentmind.com/topics/flakyguard",
+          "neutral_source_id": "S025"
+        },
+        {
+          "id": "c5",
+          "snippet": "Labeling a true regression as a ... as a regression wastes engineering cycles. <strong>Robust classification requires multi-signal validation across code, environment, and execution context</strong>....",
+          "title": "How to Automatically Detect Flaky Tests in CI Pipelines",
+          "url": "https://www.getpanto.ai/blog/detect-flaky-tests",
+          "neutral_source_id": "S026"
+        }
+      ],
+      "exposed_task_and_pool": true
+    }
+  ],
+  "source_url_inventory": [
+    {
+      "neutral_source_id": "S001",
+      "url": "https://amirteymoori.com/lsp-language-server-protocol-ai-coding-tools/",
+      "title": "LSP: The Secret Weapon for AI Coding Tools | Amir Teymoori"
+    },
+    {
+      "neutral_source_id": "S002",
+      "url": "https://arxiv.org/html/2511.03153v1",
+      "title": "RefAgent: A Multi-agent LLM-based Framework for Automatic Software Refactoring"
+    },
+    {
+      "neutral_source_id": "S003",
+      "url": "https://arxiv.org/html/2609.04898v1",
+      "title": "RefactorPlatform: An Open-Source Harness for Controlled Evaluation of Repository-Scale Refactoring Agents"
+    },
+    {
+      "neutral_source_id": "S004",
+      "url": "https://arxiv.org/pdf/2404.09398",
+      "title": "A Generic Approach to Fix Test Flakiness in Real-World Projects Yang Chen"
+    },
+    {
+      "neutral_source_id": "S005",
+      "url": "https://arxiv.org/pdf/2510.22907",
+      "title": "Reinforcement Learning from Compiler and Language Server Feedback Yifan Zhang"
+    },
+    {
+      "neutral_source_id": "S006",
+      "url": "https://deska.dev/blog/agent-fixes-flaky-tests",
+      "title": "Hunting Flaky Tests With an AI Agent | Deska"
+    },
+    {
+      "neutral_source_id": "S007",
+      "url": "https://dev.to/yureki_lab/how-i-killed-63-flaky-tests-in-one-week-with-claude-code-5-lessons-29m0",
+      "title": "How I Killed 63 Flaky Tests in One Week With Claude Code: 5 Lessons - DEV Community"
+    },
+    {
+      "neutral_source_id": "S008",
+      "url": "https://doi.org/10.48550/arxiv.2606.20243",
+      "title": "Phoenix: Safe GitHub Issue Resolution via Multi-Agent LLMs"
+    },
+    {
+      "neutral_source_id": "S009",
+      "url": "https://doi.org/10.48550/arxiv.2607.28871",
+      "title": "Validation Evidence in LLM Repair Agents: How Much of What Passes Actually Tests the Bug?"
+    },
+    {
+      "neutral_source_id": "S010",
+      "url": "https://getautonoma.com/blog/flaky-tests",
+      "title": "Flaky Tests: Why They Happen and How to Fix Them for Good | Autonoma"
+    },
+    {
+      "neutral_source_id": "S011",
+      "url": "https://github.com/anusha-saxena/repair-ai-agent",
+      "title": "GitHub - anusha-saxena/repair-ai-agent: a developer tool that automatically detects flaky tests in a Python test suite, gathers structured evidence about why they're flaky through controlled perturbation experiments, classifies the likely root cause, and u"
+    },
+    {
+      "neutral_source_id": "S012",
+      "url": "https://github.com/blackwell-systems/agent-lsp",
+      "title": "GitHub - blackwell-systems/agent-lsp: MCP server that orchestrates language servers into agent-native workflows. 65 tools, 30 CI-verified languages. \u00b7 GitHub"
+    },
+    {
+      "neutral_source_id": "S013",
+      "url": "https://github.com/ptw1255/agentic-workflow-factory/issues/16",
+      "title": "[IDE Phase 4] Build the multi-file project compiler and source diagnostics \u00b7 Issue #16 \u00b7 ptw1255/agentic-workflow-factory"
+    },
+    {
+      "neutral_source_id": "S014",
+      "url": "https://github.com/wieslawsoltes/SharpForge/issues/292",
+      "title": "[SF-A21-T04] Implement diagnostics and codefix pipeline \u00b7 Issue #292 \u00b7 wieslawsoltes/SharpForge"
+    },
+    {
+      "neutral_source_id": "S015",
+      "url": "https://kiro.dev/blog/refactoring-made-right/",
+      "title": "Refactoring made right: how program analysis makes AI agents safe and reliable - Kiro"
+    },
+    {
+      "neutral_source_id": "S016",
+      "url": "https://kondasamy.com/blog/2026/how-ai-coding-agents-edit-code/",
+      "title": "How Coding Agents Edit Files: Diffs, Snapshots, and Fast Apply | Kondasamy Jayaraman (Samy)"
+    },
+    {
+      "neutral_source_id": "S017",
+      "url": "https://konghq.com/blog/engineering/how-we-used-agentic-ai-to-fix-kong-gateways-flakiest-tests",
+      "title": "How We Used Agentic AI to Automate Fixes for Flaky Tests | Kong Inc."
+    },
+    {
+      "neutral_source_id": "S018",
+      "url": "https://medium.com/@QuarkAndCode/how-to-fix-flaky-tests-reproduce-diagnose-prevent-in-ci-cd-60f45226851f",
+      "title": "How to Fix Flaky Tests: Reproduce, Diagnose & Prevent in CI/CD | by QuarkAndCode | Medium"
+    },
+    {
+      "neutral_source_id": "S019",
+      "url": "https://pith.science/paper/2605.21677",
+      "title": "A Dataset of Reproducible Flaky-Test Failures \u00b7 Pith Review"
+    },
+    {
+      "neutral_source_id": "S020",
+      "url": "https://quashbugs.com/blog/how-to-fix-flaky-tests-complete-diagnosis-guide",
+      "title": "How to Fix Flaky Tests: The Complete Diagnosis Guide for Engineers in 2026 - Quash"
+    },
+    {
+      "neutral_source_id": "S021",
+      "url": "https://skywork.ai/skypage/en/ai-agent-typescript-refactoring/1980821689958838272",
+      "title": "Supercharge Your AI Agent: A Deep Dive into Mizchi's TypeScript Refactoring MCP Server"
+    },
+    {
+      "neutral_source_id": "S022",
+      "url": "https://www.agent-kits.com/kit/flaky-test-triager",
+      "title": "Flaky Test Triage Agent | AI Agent Kit"
+    },
+    {
+      "neutral_source_id": "S023",
+      "url": "https://www.codewithjason.com/how-i-fix-flaky-tests/",
+      "title": "How I fix flaky tests - Code with Jason"
+    },
+    {
+      "neutral_source_id": "S024",
+      "url": "https://www.datacamp.com/blog/what-is-opencode",
+      "title": "What Is OpenCode? The Open-Source AI Coding Agent Explained | DataCamp"
+    },
+    {
+      "neutral_source_id": "S025",
+      "url": "https://www.emergentmind.com/topics/flakyguard",
+      "title": "FlakyGuard: Test Repair & FL Robustness"
+    },
+    {
+      "neutral_source_id": "S026",
+      "url": "https://www.getpanto.ai/blog/detect-flaky-tests",
+      "title": "How to Automatically Detect Flaky Tests in CI Pipelines"
+    },
+    {
+      "neutral_source_id": "S027",
+      "url": "https://www.gocodeo.com/post/how-ai-coding-models-handle-context-switching-and-multi-file-refactoring",
+      "title": "How AI Coding Models Handle Context Switching and Multi-File Refactoring"
+    },
+    {
+      "neutral_source_id": "S028",
+      "url": "https://www.ijraset.com/best-journal/evaluating-multiagent-ai-systems-for-automated-bug-detection-and-code-refactoring",
+      "title": "Evaluating Multi-Agent AI Systems for Automated Bug ..."
+    }
+  ],
+  "bounds": {
+    "source_api_calls": 28,
+    "health_preflight_calls": 1,
+    "owned_http_total_calls": 29,
+    "source_api_http_seconds": 45,
+    "source_request_timeout_ms": 30000,
+    "source_response_bytes": 2000000,
+    "capture_wall_seconds": 1800,
+    "capture_concurrency": 1,
+    "retries": 0,
+    "contexts_per_arm_sources": 5,
+    "presented_candidates_per_arm": 10,
+    "characters_per_source": 8000,
+    "jev_calls": 0,
+    "brave_search_calls": 0,
+    "search_calls": 0,
+    "source_assessor_turns": 2,
+    "answerer_turns": 4,
+    "answer_assessor_turns": 2,
+    "answerer_words": 800,
+    "agent_concurrency": 2
+  },
+  "generation": {
+    "requested_model": "gpt-6-luna",
+    "backend_checkpoint_revision": "not exposed by collaboration interface; unknown",
+    "reasoning_effort": "low",
+    "output_schema": "answer-output-schema.json",
+    "prompt_file": "answerer-prompt.txt",
+    "source_assessment_before_answer_generation": true,
+    "model_authority": "advisory utility-definition pilot only; no ranking adoption or production transfer claim",
+    "source_assessor_prompt": "source-assessor-prompt.txt",
+    "answer_assessor_prompt": "answer-assessor-prompt.txt",
+    "blind_packet_id_rule": "P plus first 8 hex characters of SHA256(taskID, NUL, arm), with no mapping in agent packets"
+  },
+  "capture_contract": {
+    "client": "unmodified installed GroktoCrawl CLI Client.scrape library, verified by SHA",
+    "target": "existing configured service, no endpoint or configuration replacement",
+    "health_requirements": [
+      "health ok",
+      "runtime revision present",
+      "model alias free"
+    ],
+    "request_options": {
+      "formats": [
+        "markdown"
+      ],
+      "only_main_content": true,
+      "timeout": 30000
+    },
+    "controller_retries": 0,
+    "internal_service_countermeasure_calls": "not controlled/fully counted by this client; report as unobserved, not zero",
+    "artifact_acceptance": "success and nonempty markdown, not barrier/refusal-marked; source assessors may still mark unusable",
+    "projection": "pinned SourceArtifact.to_document with default 8000 characters",
+    "selection": "shared frozen source availability; deduplicate URLs; prefer non-video then videos as fallback; first five accepted artifacts in each first-ten order",
+    "metadata_privacy": "only public requested URLs, timestamps, class/status and selected runtime identity fields; no API endpoint, credential, personal path or raw environment in public artifacts",
+    "raw_source_copyright": "full source responses private; public evidence bounded quotations/spans and hashes only"
+  },
+  "outcome": "not run",
+  "prompt_pins": {
+    "answerer-prompt.txt": "117bb672dd2162dfafbeefe8d62e56a1f0dbc37f728f202dc8e9baba86a52562",
+    "answer-output-schema.json": "adcf4757008eaf7a3a9481bb7feeb60551c09e8aae56f29e44372c10b36cbc28",
+    "source-assessor-prompt.txt": "5ba8c9b81d2415de0fe4ebe18e41c717763610c297ea93f757dd2b61af8dd766",
+    "answer-assessor-prompt.txt": "1ac7eea2e7606be827f97b4984417c6188b9216405d6275e9644b55681296f13"
+  }
+}
