@@ -1,0 +1,585 @@
+{
+  "q2-a-000": {
+    "card_sha256": "bd6fe2c75c861e2e34a5a2df4982dea84cd58eb403073cf1510e7cd722769d90",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The survey concerns software rejuvenation broadly; its title does not identify Java migration tooling or checks.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Future of Software Rejuvenation : Survey among practitioners"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q2-a-001": {
+    "card_sha256": "6ab693a187af73a4ab613fd481156a96b6c9612c08163203bdc1ba9c5d7dee97",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q2_f1",
+      "q2_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Tutorial directly migrates Java 8 to 17 with OpenRewrite, a close staging lead for the requested upgrade.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "automated migration from Java 8 to Java 17"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "snippet",
+          "quote": "automated migration from Java 8 to Java 17"
+        }
+      ],
+      "q2_f3": [
+        {
+          "field": "snippet",
+          "quote": "automated migration from Java 8 to Java 17"
+        }
+      ]
+    }
+  },
+  "q2-a-002": {
+    "card_sha256": "57a707abd589526fd95e6f192e5864faef3e64c24f3e0071e8b5f967224ab02c",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q2_f1"
+    ],
+    "uncertain": true,
+    "rationale": "The Java EE recipe collection is migration-adjacent, but no concrete transformation is visible.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Javaee8"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "title",
+          "quote": "Javaee8"
+        }
+      ]
+    }
+  },
+  "q2-a-003": {
+    "card_sha256": "fb93cb4175423727dca3822db2a0b8fa4b8ed939b6e4a0dc574935e6155786e8",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q2_f1"
+    ],
+    "uncertain": false,
+    "rationale": "This is the OpenRewrite Java migration recipe module and explicitly supports Maven and Gradle.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "recipes for migrating to newer versions of Java and Jakarta EE"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "snippet",
+          "quote": "recipes for migrating to newer versions of Java and Jakarta EE"
+        }
+      ]
+    }
+  },
+  "q2-a-004": {
+    "card_sha256": "f7cf694f44fca6b91ea55536f42eeb5c4a951158f9579690eecac6f8d1a8a913",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q2_f1",
+      "q2_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The specific Java 21 recipe updates plugins and dependencies to compatible versions.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Updates plugins and dependencies to version compatible with Java 21."
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "snippet",
+          "quote": "Updates plugins and dependencies to version compatible with Java 21."
+        }
+      ],
+      "q2_f2": [
+        {
+          "field": "snippet",
+          "quote": "Updates plugins and dependencies to version compatible with Java 21."
+        }
+      ]
+    }
+  },
+  "q2-a-005": {
+    "card_sha256": "62438a4d8d3b40270d1ae676bf5f2f45a01ee2aee3631e651a3e963ec4b47ae7",
+    "lead": 2,
+    "visible": 1,
+    "facets": [
+      "q2_f1"
+    ],
+    "uncertain": false,
+    "rationale": "The catalog visibly lists Java 21 build upgrades among composite recipes, but gives no procedure.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Upgrade build to Java 21"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "snippet",
+          "quote": "Upgrade build to Java 21"
+        }
+      ]
+    }
+  },
+  "q2-a-006": {
+    "card_sha256": "7d3bdf725e689dad00f5c7cd53d7beb566eb84d484e8722e0a849ab9529d99b1",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q2_f1"
+    ],
+    "uncertain": false,
+    "rationale": "The recipe explicitly changes build files to target/source Java 21.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Updates build files to use Java 21 as the target/source."
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "snippet",
+          "quote": "Updates build files to use Java 21 as the target/source."
+        }
+      ]
+    }
+  },
+  "q2-a-007": {
+    "card_sha256": "fc09d9bfe053278745d7c78936183a9e35df0680b7d26333828278a29e209b1c",
+    "lead": 2,
+    "visible": 1,
+    "facets": [
+      "q2_f3"
+    ],
+    "uncertain": true,
+    "rationale": "Recipe tests and Java 21 test migration appear in this catalog snippet, with little detail.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Migrate tests to Java 21"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f3": [
+        {
+          "field": "snippet",
+          "quote": "Migrate tests to Java 21"
+        }
+      ]
+    }
+  },
+  "q2-a-008": {
+    "card_sha256": "f37f4368588f6c2f25105aeae97082ddfaade63ed028b60fd718b618fc32de52",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q2_f3"
+    ],
+    "uncertain": false,
+    "rationale": "MigrationBench directly evaluates repository-level code migration from Java 8, but it is a benchmark lead.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "MigrationBench: Repository-Level Code Migration Benchmark from Java 8"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f3": [
+        {
+          "field": "title",
+          "quote": "MigrationBench: Repository-Level Code Migration Benchmark from Java 8"
+        }
+      ]
+    }
+  },
+  "q2-a-009": {
+    "card_sha256": "23df455880c5454902cd3307c5ee93fa60aa0cbbc751226859a393e3ac2296bd",
+    "lead": 2,
+    "visible": 1,
+    "facets": [
+      "q2_f1",
+      "q2_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The OpenRewrite entry concerns migrating tests to Java 21, relevant to test-suite updates.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Use Java 21 features in tests"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "snippet",
+          "quote": "Use Java 21 features in tests"
+        }
+      ],
+      "q2_f3": [
+        {
+          "field": "snippet",
+          "quote": "Use Java 21 features in tests"
+        }
+      ]
+    }
+  },
+  "q2-a-010": {
+    "card_sha256": "a74fc71baf83c818313fc4fc743fbdbf4b2b5dc62d8bebc4a43b1f1e08c35207",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q2_f1"
+    ],
+    "uncertain": false,
+    "rationale": "This recipe targets Java 25, beyond the requested target, and only signals migration capability.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Migrate to Java 25"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "title",
+          "quote": "Migrate to Java 25"
+        }
+      ]
+    }
+  },
+  "q2-a-011": {
+    "card_sha256": "f2cbc9e0ef6fa8b09000446f776a1b4ba2fb40b3416b0d294b0971ed673db665",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q2_f1"
+    ],
+    "uncertain": true,
+    "rationale": "Java EE 8 migration is a different migration; the card only signals recipe behavior.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Migrate to JavaEE8"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "title",
+          "quote": "Migrate to JavaEE8"
+        }
+      ]
+    }
+  },
+  "q2-a-012": {
+    "card_sha256": "cc52ee731b821d559eca4609c9c8a93921a4631947e808b16d84e74da78d21b3",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q2_f1"
+    ],
+    "uncertain": false,
+    "rationale": "This Java 8 upgrade recipe targets the source baseline rather than Java 21.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "upgrading to Java 8"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "snippet",
+          "quote": "upgrading to Java 8"
+        }
+      ]
+    }
+  },
+  "q2-a-013": {
+    "card_sha256": "0968d80a58e07df8210957240b9cef7551046b588d6713df216dce1cb02fe504",
+    "lead": 1,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "A generic Testing index provides no visible Java migration or validation details.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Testing"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q2-a-014": {
+    "card_sha256": "df7e333c161db9478f11dadcf2e010ce4390e61a3e489e8d53cfcf444db772c7",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q2_f1",
+      "q2_f2",
+      "q2_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The account reports rerunning an OpenRewrite migration from a Java 8 baseline and confirming tests pass.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "confirming the Spring Boot 2.7 / Java 8 baseline still builds"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "snippet",
+          "quote": "confirming the Spring Boot 2.7 / Java 8 baseline still builds"
+        }
+      ],
+      "q2_f2": [
+        {
+          "field": "snippet",
+          "quote": "confirming the Spring Boot 2.7 / Java 8 baseline still builds"
+        }
+      ],
+      "q2_f3": [
+        {
+          "field": "snippet",
+          "quote": "confirming the Spring Boot 2.7 / Java 8 baseline still builds"
+        }
+      ]
+    }
+  },
+  "q2-a-015": {
+    "card_sha256": "89f81ad0774a0a1d2cab4d851095cd1100be125f77b931bd581137f5c9a90d9a",
+    "lead": 2,
+    "visible": 1,
+    "facets": [
+      "q2_f1"
+    ],
+    "uncertain": false,
+    "rationale": "The docs index clearly lists a Java 21 migration recipe among many targets.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Migrate to Java 21"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "snippet",
+          "quote": "Migrate to Java 21"
+        }
+      ]
+    }
+  },
+  "q2-a-016": {
+    "card_sha256": "4d6143f1c3e22f46f004bf60cd4f68eee78076117a7106bde89f06c97c896d4e",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q2_f1"
+    ],
+    "uncertain": false,
+    "rationale": "The snippet provides a Gradle configuration activating the Java 21 OpenRewrite recipe.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "activeRecipe(&quot;org.openrewrite.java.migrate.UpgradeToJava21&quot;)"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "snippet",
+          "quote": "activeRecipe(&quot;org.openrewrite.java.migrate.UpgradeToJava21&quot;)"
+        }
+      ]
+    }
+  },
+  "q2-a-017": {
+    "card_sha256": "0c47e386be4604060ed9cc7c7ba361f14762ef3c1603f1282ad0055d047d6ac6",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q2_f1"
+    ],
+    "uncertain": true,
+    "rationale": "The V8 recipe index is only loosely related and contains no Java 21 procedure.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "V8"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "title",
+          "quote": "V8"
+        }
+      ]
+    }
+  },
+  "q2-a-018": {
+    "card_sha256": "6902f90de09a8275d6bb7a4bf829767c2ad54e2cd2e9ce1c4a0c5ec9a1749c67",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q2_f1",
+      "q2_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The Java 11 migration description highlights Java 8 compatibility changes for removed bundled libraries and deprecated APIs.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "built on Java 8, <strong>this recipe will update and add dependencies"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "snippet",
+          "quote": "built on Java 8, <strong>this recipe will update and add dependencies"
+        }
+      ],
+      "q2_f2": [
+        {
+          "field": "snippet",
+          "quote": "built on Java 8, <strong>this recipe will update and add dependencies"
+        }
+      ]
+    }
+  },
+  "q2-a-019": {
+    "card_sha256": "08ca7232dda4171326bcaf638f8451584c9bb611953d2c09e023fa2d5bb9a1b8",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q2_f1"
+    ],
+    "uncertain": true,
+    "rationale": "The generic migration index names OpenRewrite recipes but no relevant target or method.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Migrate"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "title",
+          "quote": "Migrate"
+        }
+      ]
+    }
+  },
+  "q2-a-020": {
+    "card_sha256": "4f2db9fc01d8708bdefee0be7473e41bc8da0c4f06a4442adad49935e64aa127",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q2_f2"
+    ],
+    "uncertain": true,
+    "rationale": "The paper discusses compile-time versus runtime checks in test frameworks, indirectly relevant to validation.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "reflection shifts key checks from compile time to run time"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f2": [
+        {
+          "field": "snippet",
+          "quote": "reflection shifts key checks from compile time to run time"
+        }
+      ]
+    }
+  },
+  "q2-a-021": {
+    "card_sha256": "8748bb263aa90d0770e18ff7be9ef064880ce567e9c365e598737c8f2649fab8",
+    "lead": 2,
+    "visible": 1,
+    "facets": [
+      "q2_f1"
+    ],
+    "uncertain": true,
+    "rationale": "A recipe-by-module catalog can lead to migration recipes, but no Java 21 detail is visible.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "All Recipes by Module"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "title",
+          "quote": "All Recipes by Module"
+        }
+      ]
+    }
+  },
+  "q2-a-022": {
+    "card_sha256": "cae37eaaf03ecacd4300e52a9253f58ebecf079eab6283a122c64fe305b312ef",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q2_f1",
+      "q2_f3"
+    ],
+    "uncertain": true,
+    "rationale": "The article covers the exact Java 8 to Java 21 transition using OpenRewrite, but visible validation detail is sparse.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Modernizing Legacy Microservices: Upgrading from Java 8 & Spring Boot 2 to Java 21 & Spring Boot 3.3.5 Using OpenRewrite"
+      }
+    ],
+    "facet_anchors": {
+      "q2_f1": [
+        {
+          "field": "title",
+          "quote": "Modernizing Legacy Microservices: Upgrading from Java 8 & Spring Boot 2 to Java 21 & Spring Boot 3.3.5 Using OpenRewrite"
+        }
+      ],
+      "q2_f3": [
+        {
+          "field": "title",
+          "quote": "Modernizing Legacy Microservices: Upgrading from Java 8 & Spring Boot 2 to Java 21 & Spring Boot 3.3.5 Using OpenRewrite"
+        }
+      ]
+    }
+  }
+}

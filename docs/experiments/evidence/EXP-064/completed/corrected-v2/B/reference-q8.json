@@ -1,0 +1,1130 @@
+{
+  "q8-b-000": {
+    "card_sha256": "db4e702731aee0585b10a4f1989e31ad4a614f8b83cc8bec1295621dff7593e5",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q8_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Guide promises reproduction and diagnosis, but visible details are brief.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Fix flaky tests with a reproduce-diagnose-fix loop, record/replay debugging, explicit waits, and AI triage to stabilize your CI/CD…"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Fix flaky tests with a reproduce-diagnose-fix loop, record/replay debugging, explicit waits, and AI triage to stabilize your CI/CD…"
+        }
+      ]
+    }
+  },
+  "q8-b-001": {
+    "card_sha256": "84837d2fac9d830541297d93d13261a6e8a8a678992778fab6f6a0abf1e73a94",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Explains intermittent failures, reproduction cost, and risk of hiding real regressions.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Each intermittent failure can trigger log reviews, reruns, environment checks, and manual reproduction attempts. They delay CI/CD pipelines. A flaky test can block a merge or "
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "Each intermittent failure can trigger log reviews, reruns, environment checks, and manual reproduction attempts. They delay CI/CD pipelines. A flaky test can block a merge or "
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Each intermittent failure can trigger log reviews, reruns, environment checks, and manual reproduction attempts. They delay CI/CD pipelines. A flaky test can block a merge or "
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "Each intermittent failure can trigger log reviews, reruns, environment checks, and manual reproduction attempts. They delay CI/CD pipelines. A flaky test can block a merge or "
+        }
+      ]
+    }
+  },
+  "q8-b-002": {
+    "card_sha256": "e34d4c238c2f993e7eaa30ddd912b935fb7d2bfc3758e0a36915d434267f4f81",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f1",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Agent issue repair system uses baseline-aware test evaluation.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "We present Phoenix, a multi-agent LLM system that resolves GitHub issues from triage through pull-request creation, combining seven layered safety controls with a baseline-awa"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "We present Phoenix, a multi-agent LLM system that resolves GitHub issues from triage through pull-request creation, combining seven layered safety controls with a baseline-awa"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "We present Phoenix, a multi-agent LLM system that resolves GitHub issues from triage through pull-request creation, combining seven layered safety controls with a baseline-awa"
+        }
+      ]
+    }
+  },
+  "q8-b-003": {
+    "card_sha256": "76e5fc9e8b91306aa37f779314f4281d803f99bc69ebea45325b17917eac6caf",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q8_f3"
+    ],
+    "uncertain": true,
+    "rationale": "Unit-test generation/correction evaluation is adjacent but no flakiness signal is visible.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "BenjiTest: An Agentic Framework for Evaluating LLM-Based Unit Test Generation and Correction"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f3": [
+        {
+          "field": "title",
+          "quote": "BenjiTest: An Agentic Framework for Evaluating LLM-Based Unit Test Generation and Correction"
+        }
+      ]
+    }
+  },
+  "q8-b-004": {
+    "card_sha256": "1e892fbcb2fe32f894ba5a8c73ea4debe85194d9a4961f2336eb02921a48716d",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q8_f2"
+    ],
+    "uncertain": true,
+    "rationale": "Neural-augmented fault localization is general diagnosis background.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Modern software development increasingly integrates neural models such as code completion engines, automated refactoring systems, and learned optimization modules into traditi"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Modern software development increasingly integrates neural models such as code completion engines, automated refactoring systems, and learned optimization modules into traditi"
+        }
+      ]
+    }
+  },
+  "q8-b-005": {
+    "card_sha256": "9eef08b4f2a43bfb29b760d1176b19b128f464ef095bf6cf4c6483431b064270",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f1",
+      "q8_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Explains reruns used to determine whether flaky failures are valid.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>Failures triggered by flaky tests force teams to rerun test suites to confirm the validity of a failure</strong>. This results in a slowed development process and dela"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Failures triggered by flaky tests force teams to rerun test suites to confirm the validity of a failure</strong>. This results in a slowed development process and dela"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "<strong>Failures triggered by flaky tests force teams to rerun test suites to confirm the validity of a failure</strong>. This results in a slowed development process and dela"
+        }
+      ]
+    }
+  },
+  "q8-b-006": {
+    "card_sha256": "814b96ce8dee382e472eef33ea9947618f8984c594a1f915c11d027f1b756b91",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q8_f2"
+    ],
+    "uncertain": true,
+    "rationale": "Event race detection may explain one source of nondeterminism but is not test flakiness guidance.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "The Node.js platform empowers a huge number of software systems programmed with JavaScript. Node.js employs an asynchronous execution model where event handlers are scheduled "
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "The Node.js platform empowers a huge number of software systems programmed with JavaScript. Node.js employs an asynchronous execution model where event handlers are scheduled "
+        }
+      ]
+    }
+  },
+  "q8-b-007": {
+    "card_sha256": "697b75a1fa3d39acad6ad02dc56471c71d04f29354df58b319724249f7f91689",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Tool uses controlled perturbations to classify flaky tests and propose repairs.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>a developer tool that automatically detects flaky tests in a Python test suite</strong>, gathers structured evidence about why they&#x27;re flaky through controlled pe"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "<strong>a developer tool that automatically detects flaky tests in a Python test suite</strong>, gathers structured evidence about why they&#x27;re flaky through controlled pe"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "<strong>a developer tool that automatically detects flaky tests in a Python test suite</strong>, gathers structured evidence about why they&#x27;re flaky through controlled pe"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "<strong>a developer tool that automatically detects flaky tests in a Python test suite</strong>, gathers structured evidence about why they&#x27;re flaky through controlled pe"
+        }
+      ]
+    }
+  },
+  "q8-b-008": {
+    "card_sha256": "5d52f24b76ebcef406fd0391838147c870301140491f9d1f0deada2f5565e3ab",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Diagnosis guide connects locale/timezone environment to intermittent failures.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Set TZ=UTC explicitly in your CI environment configuration and use timezone-aware datetime objects throughout your codebase. Mobile apps often render dates, currencies, addres"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "Set TZ=UTC explicitly in your CI environment configuration and use timezone-aware datetime objects throughout your codebase. Mobile apps often render dates, currencies, addres"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Set TZ=UTC explicitly in your CI environment configuration and use timezone-aware datetime objects throughout your codebase. Mobile apps often render dates, currencies, addres"
+        }
+      ]
+    }
+  },
+  "q8-b-009": {
+    "card_sha256": "dae42d1869f863245ac1cf508297800ea7a8660a4291c3ed4beee25e20bf4c78",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Automates reproduction and validation of reported GUI bugs, adjacent to flaky diagnosis.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Reproducing web GUI bugs from natural-language bug reports is critical for software maintenance, but remains difficult because reports often lack prerequisites such as depende"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Reproducing web GUI bugs from natural-language bug reports is critical for software maintenance, but remains difficult because reports often lack prerequisites such as depende"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "Reproducing web GUI bugs from natural-language bug reports is critical for software maintenance, but remains difficult because reports often lack prerequisites such as depende"
+        }
+      ]
+    }
+  },
+  "q8-b-010": {
+    "card_sha256": "707ad6d513afc07b54beb4cf7a95bc4b220424357f9668d07781aee7e1cae412",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Explains failure triage before repair for locator drift.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "<strong>It usually handles locator drift with self-healing locators and uses agent-driven diagnosis to triage failures before repair is proposed</strong>. A harmless button re"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "<strong>It usually handles locator drift with self-healing locators and uses agent-driven diagnosis to triage failures before repair is proposed</strong>. A harmless button re"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "<strong>It usually handles locator drift with self-healing locators and uses agent-driven diagnosis to triage failures before repair is proposed</strong>. A harmless button re"
+        }
+      ]
+    }
+  },
+  "q8-b-011": {
+    "card_sha256": "917c8a2a11ec22d5222a8be5826eb2a093a966bc5f91408e4f5dd1f94c376f98",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "General LLM software engineering survey is not about flaky tests.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "The recent advance in Large Language Models (LLMs) has shaped a new paradigm of AI agents, i.e., LLM-based agents. Compared to standalone LLMs, LLM-based agents substantially "
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q8-b-012": {
+    "card_sha256": "050c0ae03223402b8a4205021e83c2602c35ad094628b3d4234a3dda4d78ff40",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q8_f1",
+      "q8_f2"
+    ],
+    "uncertain": true,
+    "rationale": "Execution traces and taxonomy are general failure-feedback mechanisms, not test flakiness specifically.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "An agent system's execution traces record how it fails, and procedures that improve such a system without changing model weights (trajectory selection, prompt and workflow opt"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "An agent system's execution traces record how it fails, and procedures that improve such a system without changing model weights (trajectory selection, prompt and workflow opt"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "An agent system's execution traces record how it fails, and procedures that improve such a system without changing model weights (trajectory selection, prompt and workflow opt"
+        }
+      ]
+    }
+  },
+  "q8-b-013": {
+    "card_sha256": "bda96fe0d2434e1dbbcfb5fb192c78e151710283b475e1c5a5d61ab9e01fd994",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Explicitly separates reproducing a flaky failure, diagnosis, and repair.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "I don’t necessarily go through the tactics in a specific order but rather I use intuition and experience to decide which tactic to use next. The important thing is to <strong>"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "I don’t necessarily go through the tactics in a specific order but rather I use intuition and experience to decide which tactic to use next. The important thing is to <strong>"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "I don’t necessarily go through the tactics in a specific order but rather I use intuition and experience to decide which tactic to use next. The important thing is to <strong>"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "I don’t necessarily go through the tactics in a specific order but rather I use intuition and experience to decide which tactic to use next. The important thing is to <strong>"
+        }
+      ]
+    }
+  },
+  "q8-b-014": {
+    "card_sha256": "fe30b39cb826a2f5b22844b8d98f821807ad0f46ea0fc43029de4d6603e0d84b",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q8_f3"
+    ],
+    "uncertain": true,
+    "rationale": "Refactoring reliability is adjacent validation evidence but not flakiness.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "With the rapid advancement of Large Language Models (LLMs), there is growing interest in leveraging these models to automate software engineering tasks such as code refactorin"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "With the rapid advancement of Large Language Models (LLMs), there is growing interest in leveraging these models to automate software engineering tasks such as code refactorin"
+        }
+      ]
+    }
+  },
+  "q8-b-015": {
+    "card_sha256": "a86553315d8446f794ab62294b1b15c200f628dc125939f7e7a21bc45229df2f",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Agentic regression testing selects and repairs broken scripts; useful but broad.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "They <strong>select relevant tests based on code changes, heal broken scripts, prioritize execution by risk, and adapt validation strategies when applications behave unexpecte"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "They <strong>select relevant tests based on code changes, heal broken scripts, prioritize execution by risk, and adapt validation strategies when applications behave unexpecte"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "They <strong>select relevant tests based on code changes, heal broken scripts, prioritize execution by risk, and adapt validation strategies when applications behave unexpecte"
+        }
+      ]
+    }
+  },
+  "q8-b-016": {
+    "card_sha256": "4c969eb978cdc446eaaa228ebeb905042c4dccde77b1a64890da707c27c32a77",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Terminal training environments are unrelated to flaky-test triage.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "As terminal-based code agents become prevalent, agent trajectories have accumulated at scale, while realistic, executable environments remain scarce. However, environments are"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q8-b-017": {
+    "card_sha256": "acd7ebf637c97a038bbb4a5fbc5ced6f0a15275c55c9a71f33989ce7ecef6f3b",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Pipeline decomposes CI diagnosis into failure classification and repair.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Continuous Integration (CI) pipelines surface regressions early but also produce long, noisy logs. Diagnosing a failing GitHub Actions run and drafting a safe repair patch can"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "Continuous Integration (CI) pipelines surface regressions early but also produce long, noisy logs. Diagnosing a failing GitHub Actions run and drafting a safe repair patch can"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Continuous Integration (CI) pipelines surface regressions early but also produce long, noisy logs. Diagnosing a failing GitHub Actions run and drafting a safe repair patch can"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "Continuous Integration (CI) pipelines surface regressions early but also produce long, noisy logs. Diagnosing a failing GitHub Actions run and drafting a safe repair patch can"
+        }
+      ]
+    }
+  },
+  "q8-b-018": {
+    "card_sha256": "35d7c038fa5dba7e4ee20955aa762ea16b7eddc1e28a59536a01d9f4bfb68f40",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Dataset supplies scripts/logs for reproducing flakes and verifying fixes.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "It supplies Docker-style compilation environments, scripts to reproduce failures, scripts to apply fixes and verify non-flakiness, and passing/failing execution logs, together"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "It supplies Docker-style compilation environments, scripts to reproduce failures, scripts to apply fixes and verify non-flakiness, and passing/failing execution logs, together"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "It supplies Docker-style compilation environments, scripts to reproduce failures, scripts to apply fixes and verify non-flakiness, and passing/failing execution logs, together"
+        }
+      ]
+    }
+  },
+  "q8-b-019": {
+    "card_sha256": "be6ddd29c79edf21d2061a498cf9768cd97acc159aa178e6d9fe5ea5b9069f68",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "FlakyGuard uses diagnostics, stack traces and reproduction rates for test-only repair.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Following context selection, FlakyGuard constructs a prompt for an autonomous LLM session. This prompt includes directives (modify only test code), error diagnostics (messages"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Following context selection, FlakyGuard constructs a prompt for an autonomous LLM session. This prompt includes directives (modify only test code), error diagnostics (messages"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "Following context selection, FlakyGuard constructs a prompt for an autonomous LLM session. This prompt includes directives (modify only test code), error diagnostics (messages"
+        }
+      ]
+    }
+  },
+  "q8-b-020": {
+    "card_sha256": "c37ab97a006e6ea4b5afa949c84aada316d050ef15aa823e1b1e9d4089d903e5",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Discusses selector failures and diagnosis costs, but is a broad industry article.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "If your team merges 40 agent PRs per day and 10% of those touch at least one selector (a conservative estimate for agent-authored refactors), you have four selector-touch even"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "If your team merges 40 agent PRs per day and 10% of those touch at least one selector (a conservative estimate for agent-authored refactors), you have four selector-touch even"
+        }
+      ]
+    }
+  },
+  "q8-b-021": {
+    "card_sha256": "ea0d8fee7ba34f0ebeb9156cc1a68ba9fc91c136eb997c3450e743a6b256ea56",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "General agent survey is not focused on test flakes.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Recent advancements in large language models (LLMs) have significantly advanced the automation of software development tasks, including code synthesis, program repair, and tes"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q8-b-022": {
+    "card_sha256": "8b04c5dbef37def1bab00ae419f4125eaef92039c84c2f2902673fb46d267bf9",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q8_f1",
+      "q8_f2"
+    ],
+    "uncertain": true,
+    "rationale": "Trace-driven failure analysis is adjacent diagnosis, but exploit failures differ from flaky tests.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Exploits are widely used to check whether library vulnerabilities appear in different versions and to mark affected version ranges. Exploit-based checks sometimes fail because"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "Exploits are widely used to check whether library vulnerabilities appear in different versions and to mark affected version ranges. Exploit-based checks sometimes fail because"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Exploits are widely used to check whether library vulnerabilities appear in different versions and to mark affected version ranges. Exploit-based checks sometimes fail because"
+        }
+      ]
+    }
+  },
+  "q8-b-023": {
+    "card_sha256": "dd7c574f1f0e93d321263e0117b9313861585fb886ecfee5c5efeabe58aa1bf9",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q8_f3"
+    ],
+    "uncertain": true,
+    "rationale": "Assertions survey is general verification background.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Abstract Assertions are one of the most useful automated techniques for checking program’s behaviour and hence have been used for different verification and validation tasks. "
+      }
+    ],
+    "facet_anchors": {
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "Abstract Assertions are one of the most useful automated techniques for checking program’s behaviour and hence have been used for different verification and validation tasks. "
+        }
+      ]
+    }
+  },
+  "q8-b-024": {
+    "card_sha256": "fa323f7950eabe6d28176bc494232196dfb8783fff8eed716fc7cdd0666df427",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Distributed test infrastructure distinguishes genuine defects from infrastructure noise.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "A regression suite of 2,400 tests running on a single Selenium node required roughly 36 hours of wall-clock execution, and a trusted pass/fail verdict typically took most of a"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "A regression suite of 2,400 tests running on a single Selenium node required roughly 36 hours of wall-clock execution, and a trusted pass/fail verdict typically took most of a"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "A regression suite of 2,400 tests running on a single Selenium node required roughly 36 hours of wall-clock execution, and a trusted pass/fail verdict typically took most of a"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "A regression suite of 2,400 tests running on a single Selenium node required roughly 36 hours of wall-clock execution, and a trusted pass/fail verdict typically took most of a"
+        }
+      ]
+    }
+  },
+  "q8-b-025": {
+    "card_sha256": "44458d715418a7b7a5659841d13093eef0f39d4f51e431acf0347772f11733ef",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "General agent survey is not flakiness-specific.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Recent advancements in large language models (LLMs) have significantly advanced the automation of software development tasks, including code synthesis, program repair, and tes"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q8-b-026": {
+    "card_sha256": "e3e9a9e19072939f33df1c2758497f14bcf8e663fcd885e61db1e3d061d84d92",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Explains resilient intent-based locators to prevent markup-change flakes.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Steps describe intent, so a step says click the &quot;Checkout&quot; button, not a CSS path. <strong>The runner resolves that intent against the live page on every run, which "
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Steps describe intent, so a step says click the &quot;Checkout&quot; button, not a CSS path. <strong>The runner resolves that intent against the live page on every run, which "
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "Steps describe intent, so a step says click the &quot;Checkout&quot; button, not a CSS path. <strong>The runner resolves that intent against the live page on every run, which "
+        }
+      ]
+    }
+  },
+  "q8-b-027": {
+    "card_sha256": "12f719049b76355882be34ed60cb22e19ab626a1a50614203ceb21678da978b4",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Repairs async flakes by injecting synchronization barriers at runtime.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "critical point and barrier point if both are in their own code, not in · third-party libraries. In this case, developers can use FlakeSync’s · runtime framework to dynamically"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "critical point and barrier point if both are in their own code, not in · third-party libraries. In this case, developers can use FlakeSync’s · runtime framework to dynamically"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "critical point and barrier point if both are in their own code, not in · third-party libraries. In this case, developers can use FlakeSync’s · runtime framework to dynamically"
+        }
+      ]
+    }
+  },
+  "q8-b-028": {
+    "card_sha256": "051e3fdaab149500f6fa5179e9d1ac88c7c07b85080f3abee898e7b46db18c52",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Calls for multi-signal classification across code, environment and execution context.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Labeling a true regression as a ... as a regression wastes engineering cycles. <strong>Robust classification requires multi-signal validation across code, environment, and exe"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "Labeling a true regression as a ... as a regression wastes engineering cycles. <strong>Robust classification requires multi-signal validation across code, environment, and exe"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Labeling a true regression as a ... as a regression wastes engineering cycles. <strong>Robust classification requires multi-signal validation across code, environment, and exe"
+        }
+      ]
+    }
+  },
+  "q8-b-029": {
+    "card_sha256": "1c8d85a6cbf2bb45c8bd61f7f7eb0e33136350a83beeafc9beff10e0e9d6fd13",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Describes log-based reproduction and fixes for missing synchronization.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "While CI tools identify the flakes, local workspaces that support AI agents allow for rapid reproduction and fixing of the underlying issues within a unified interface. Yes, a"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "While CI tools identify the flakes, local workspaces that support AI agents allow for rapid reproduction and fixing of the underlying issues within a unified interface. Yes, a"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "While CI tools identify the flakes, local workspaces that support AI agents allow for rapid reproduction and fixing of the underlying issues within a unified interface. Yes, a"
+        }
+      ]
+    }
+  },
+  "q8-b-030": {
+    "card_sha256": "876e21e92d3e8ee984a7c464bf1878c264244a794472b5961ff8ec3f17fac871",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q8_f1"
+    ],
+    "uncertain": true,
+    "rationale": "General issue-resolution failure modes are adjacent, not test-flake specific.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Large Language Models (LLMs) are increasingly deployed to resolve real-world GitHub issues. However, despite their potential, the specific failure modes of these models in com"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "Large Language Models (LLMs) are increasingly deployed to resolve real-world GitHub issues. However, despite their potential, the specific failure modes of these models in com"
+        }
+      ]
+    }
+  },
+  "q8-b-031": {
+    "card_sha256": "f45b95a84938ce57ecbcaa1ca78403933228296a0a3ef82af8b3aa86cf628b7f",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Study reports automated validation and manual checks of flaky-test repairs.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "FlakyDoctor and DexFix on subject ID flaky tests. Columns PF · and PU indicate the number of previously fixed and unfixed ID · tests. After the automated validation, we manual"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "FlakyDoctor and DexFix on subject ID flaky tests. Columns PF · and PU indicate the number of previously fixed and unfixed ID · tests. After the automated validation, we manual"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "FlakyDoctor and DexFix on subject ID flaky tests. Columns PF · and PU indicate the number of previously fixed and unfixed ID · tests. After the automated validation, we manual"
+        }
+      ]
+    }
+  },
+  "q8-b-032": {
+    "card_sha256": "0612991eaef0e811712b392bfbc78b176ae61ad9dc906c75fbec4e286b9dacea",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Triage playbook recommends advise mode and backtesting to ensure no regressions are masked.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Start in advise mode where it only recommends, backtest on recent failures to confirm it would mask zero regressions, then enable auto-quarantine for non-critical proven flake"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "Start in advise mode where it only recommends, backtest on recent failures to confirm it would mask zero regressions, then enable auto-quarantine for non-critical proven flake"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Start in advise mode where it only recommends, backtest on recent failures to confirm it would mask zero regressions, then enable auto-quarantine for non-critical proven flake"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "Start in advise mode where it only recommends, backtest on recent failures to confirm it would mask zero regressions, then enable auto-quarantine for non-critical proven flake"
+        }
+      ]
+    }
+  },
+  "q8-b-033": {
+    "card_sha256": "c287a2bd84201e7d113768defc6c5d303c6e082f3d7e5be2cfe10cecc82b0d43",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Agent training across task categories is unrelated to flaky-test diagnosis.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Repository-level software engineering (SWE) comprises heterogeneous task categories, whose progress under pooled agentic reinforcement learning can be uneven: gains in some ca"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q8-b-034": {
+    "card_sha256": "5bef738cab8530ac6710a08a57fb269069bdb4a37bcc80791cd5c3da990346f1",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Warns retries mask regressions and discusses timing-aware isolated tests.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "For a structural fix that scales, agentic testing platforms like Autonoma generate timing-aware, isolated tests directly from your codebase. Retries reduce the visible impact "
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "For a structural fix that scales, agentic testing platforms like Autonoma generate timing-aware, isolated tests directly from your codebase. Retries reduce the visible impact "
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "For a structural fix that scales, agentic testing platforms like Autonoma generate timing-aware, isolated tests directly from your codebase. Retries reduce the visible impact "
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "For a structural fix that scales, agentic testing platforms like Autonoma generate timing-aware, isolated tests directly from your codebase. Retries reduce the visible impact "
+        }
+      ]
+    }
+  },
+  "q8-b-035": {
+    "card_sha256": "4091e977b11fcd07ea947d5ecf32d9602804b7c7972eb3d661fde3fba118f592",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Firsthand report emphasizes reproduction harness and diagnosis before fixing/quarantining.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Over one week I pointed Claude Code at them with a reproduction harness instead of a &quot;please fix this&quot; prompt, and it fixed 58 of them for real, quarantined 5, and t"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Over one week I pointed Claude Code at them with a reproduction harness instead of a &quot;please fix this&quot; prompt, and it fixed 58 of them for real, quarantined 5, and t"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "Over one week I pointed Claude Code at them with a reproduction harness instead of a &quot;please fix this&quot; prompt, and it fixed 58 of them for real, quarantined 5, and t"
+        }
+      ]
+    }
+  },
+  "q8-b-036": {
+    "card_sha256": "9f9ebb85d3fc9a3300aa43085c548a54c409cda1fb311a76b601856be328e265",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Agent memory benchmark is unrelated.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "DreamBench-SWE is a multi-session benchmark for software-agent memory hygiene in which later software tasks depend on non-inferable evidence from earlier sessions and are scor"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q8-b-037": {
+    "card_sha256": "a97793a4417273e88e9265a8b4cd6cf39390a2e63a5b884127b92ea44f0b70d5",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Validation replay checks whether passing repair commands actually test the bug.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "When a repair agent runs a test and sees it pass, the result is treated as evidence about the reported defect. We measure how often that treatment is warranted. BSG-VA (buggy-"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "When a repair agent runs a test and sees it pass, the result is treated as evidence about the reported defect. We measure how often that treatment is warranted. BSG-VA (buggy-"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "When a repair agent runs a test and sees it pass, the result is treated as evidence about the reported defect. We measure how often that treatment is warranted. BSG-VA (buggy-"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "When a repair agent runs a test and sees it pass, the result is treated as evidence about the reported defect. We measure how often that treatment is warranted. BSG-VA (buggy-"
+        }
+      ]
+    }
+  },
+  "q8-b-038": {
+    "card_sha256": "aaa735659f7973c48f3f3981a28ef46ca27504dbb970efb1375d954fc272460b",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Agent scans logs for root cause and babysits validation over time.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "- <strong>Agents can scan far more of the codebase and logs than a human can, and quickly — a better shot at finding a flaky test&#x27;s root cause. - Agents can babysit the v"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "- <strong>Agents can scan far more of the codebase and logs than a human can, and quickly — a better shot at finding a flaky test&#x27;s root cause. - Agents can babysit the v"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "- <strong>Agents can scan far more of the codebase and logs than a human can, and quickly — a better shot at finding a flaky test&#x27;s root cause. - Agents can babysit the v"
+        }
+      ]
+    }
+  },
+  "q8-b-039": {
+    "card_sha256": "72c438b4728f4455508480c94379b4e728e113f277f65d3ea1b460feaa647bc6",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Harness evolution paper is unrelated to flaky tests.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Large Language Models (LLMs) have enabled capable agents across diverse applications. Beyond the foundation model, the performance of an agent is governed by the surrounding a"
+      }
+    ],
+    "facet_anchors": {}
+  }
+}

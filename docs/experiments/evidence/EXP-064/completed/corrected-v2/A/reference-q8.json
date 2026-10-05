@@ -1,0 +1,1023 @@
+{
+  "q8-a-000": {
+    "card_sha256": "e8293314b51dcf697c67a6afd5e06791303731db949cf1e8a092a15f051d1d51",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The study tests whether repair-agent validation commands actually exercise the reported bug across source states.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Validation Evidence in LLM Repair Agents: How Much of What Passes Actually Tests the Bug?"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "title",
+          "quote": "Validation Evidence in LLM Repair Agents: How Much of What Passes Actually Tests the Bug?"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "title",
+          "quote": "Validation Evidence in LLM Repair Agents: How Much of What Passes Actually Tests the Bug?"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "title",
+          "quote": "Validation Evidence in LLM Repair Agents: How Much of What Passes Actually Tests the Bug?"
+        }
+      ]
+    }
+  },
+  "q8-a-001": {
+    "card_sha256": "b0e2f50a0ff853c56f46321c6f3897bc0c03f9bb6255f067fcc9c705d17699da",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": true,
+    "rationale": "FlakeSync uses runtime critical/barrier points for async flakes, a specialized reproduction approach.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "FlakeSync: Automatically Repairing Async Flaky Tests"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "title",
+          "quote": "FlakeSync: Automatically Repairing Async Flaky Tests"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "title",
+          "quote": "FlakeSync: Automatically Repairing Async Flaky Tests"
+        }
+      ]
+    }
+  },
+  "q8-a-002": {
+    "card_sha256": "2905ea3f761ea5240ce9d43f7a0adb8ddcd5649186f0c1108b92149d446c33f0",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The guide explicitly recommends reproduce-diagnose-fix and record/replay debugging.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "reproduce-diagnose-fix loop, record/replay debugging"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "reproduce-diagnose-fix loop, record/replay debugging"
+        }
+      ]
+    }
+  },
+  "q8-a-003": {
+    "card_sha256": "1265fd41e209349acc18e81174b5688b092b3b813e46970e14f26e01bf2dbacc",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f1",
+      "q8_f2"
+    ],
+    "uncertain": false,
+    "rationale": "It describes rerunning flaky failures to confirm whether they are valid.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "rerun test suites to confirm the validity of a failure"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "rerun test suites to confirm the validity of a failure"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "rerun test suites to confirm the validity of a failure"
+        }
+      ]
+    }
+  },
+  "q8-a-004": {
+    "card_sha256": "0d00f1789aecbbd788cc50781e6eaa34dff8bec7b394ec206b795f04ed6e4ad4",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Agent trace taxonomy research is unrelated to flaky test diagnosis.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Fantastic Adaptive Taxonomies and How to Use Them"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q8-a-005": {
+    "card_sha256": "f499e17ac9058306bc76d8437f6fdb84101ed72955a7c6a6442ab37c1df5a8f8",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The card directly calls for multi-signal classification across code, environment, and execution context.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Robust classification requires multi-signal validation"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "Robust classification requires multi-signal validation"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Robust classification requires multi-signal validation"
+        }
+      ]
+    }
+  },
+  "q8-a-006": {
+    "card_sha256": "9e7c2e1d82bb4dfd28437f52525204a9c2f8dd21d129959c0b97ee879ad7a182",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": true,
+    "rationale": "The firsthand report emphasizes reproduction harnesses and diagnosis before agent repair.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "How I Killed 63 Flaky Tests in One Week With Claude Code"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "title",
+          "quote": "How I Killed 63 Flaky Tests in One Week With Claude Code"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "title",
+          "quote": "How I Killed 63 Flaky Tests in One Week With Claude Code"
+        }
+      ]
+    }
+  },
+  "q8-a-007": {
+    "card_sha256": "0ead2cf8875c97f35c15a93fe0d360204f6c51697027ade2275a81b74ad3fadd",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q8_f3"
+    ],
+    "uncertain": true,
+    "rationale": "Refactoring reliability is adjacent validation context, not flaky-versus-regression diagnosis.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Evaluating and Improving the Reliability of LLM-Generated Code Refactorings"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f3": [
+        {
+          "field": "title",
+          "quote": "Evaluating and Improving the Reliability of LLM-Generated Code Refactorings"
+        }
+      ]
+    }
+  },
+  "q8-a-008": {
+    "card_sha256": "c7978c0c1672b29cf3890de387de5cd4bb9c07bc1b688315de8765d1a6130f02",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q8_f1"
+    ],
+    "uncertain": true,
+    "rationale": "Locator drift triage applies to UI automation failures, a narrower adjacent use case.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "self-healing locators and uses agent-driven diagnosis to triage failures"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "self-healing locators and uses agent-driven diagnosis to triage failures"
+        }
+      ]
+    }
+  },
+  "q8-a-009": {
+    "card_sha256": "b447a5e0f0d003f1598c98e8de030d6b5f2e0a58a6e526b4d57bb8e6ec3c6365",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": true,
+    "rationale": "The report describes root-cause investigation and prolonged validation of flaky-test fixes.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "finding a flaky test&#x27;s root cause"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "finding a flaky test&#x27;s root cause"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "finding a flaky test&#x27;s root cause"
+        }
+      ]
+    }
+  },
+  "q8-a-010": {
+    "card_sha256": "bd3b737f6c5ea24093861e678b90d3a656f36219d288f955085246df8dc7d9ef",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "FlakyGuard includes error diagnostics and reproduction rates in repair context.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "error diagnostics (messages, stack traces, reproduction rates)"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "error diagnostics (messages, stack traces, reproduction rates)"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "error diagnostics (messages, stack traces, reproduction rates)"
+        }
+      ]
+    }
+  },
+  "q8-a-011": {
+    "card_sha256": "8a41f0035e1085a6252b153eaf65aa2746fdb966d26c7565a90e8d1c6f93ebf2",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Agent RL category balancing has no relation to flaky tests.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "One to More, More to One: Category-Aware Iterative Expert Training"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q8-a-012": {
+    "card_sha256": "26194cdd776a891a54e3068654788762809f9a3c012deef4c56a1f3a95636ffe",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f1",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "It warns retries can mask genuine regressions and do not fix underlying flakiness.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Retries mask real regressions"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "Retries mask real regressions"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "Retries mask real regressions"
+        }
+      ]
+    }
+  },
+  "q8-a-013": {
+    "card_sha256": "4bc76691ab57066d808dec305cdee513c5fe96c94889a5239a0005c7a44e2075",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q8_f3"
+    ],
+    "uncertain": true,
+    "rationale": "General software-engineering agent survey is broad and not flake-specific.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Agentless: Demystifying LLM-based Software Engineering Agents"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f3": [
+        {
+          "field": "title",
+          "quote": "Agentless: Demystifying LLM-based Software Engineering Agents"
+        }
+      ]
+    }
+  },
+  "q8-a-014": {
+    "card_sha256": "21035d96125ac782b0ec1568cede1fbebc926df61e2c454685128faa47e2618d",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q8_f2"
+    ],
+    "uncertain": true,
+    "rationale": "Fault localization in neural-augmented code is adjacent diagnosis material.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Explainable Fault Localization in Neural-Augmented Codebases"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "title",
+          "quote": "Explainable Fault Localization in Neural-Augmented Codebases"
+        }
+      ]
+    }
+  },
+  "q8-a-015": {
+    "card_sha256": "b72f521423526b0c7e03d91dac82518a13fa6b0a179cf466abdc5b00f09ec18d",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Agent memory hygiene benchmark is unrelated to test failure classification.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "DreamBench-SWE: A Multi-Session Memory-Hygiene Benchmark"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q8-a-016": {
+    "card_sha256": "e86f18e6bb3b87dfa5c62c7a0c9d571f06f98ae6f1f51b7b3bd578466d10a77c",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The paper evaluates automated flake repair with a manual post-validation check.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "A Generic Approach to Fix Test Flakiness in Real-World Projects"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "title",
+          "quote": "A Generic Approach to Fix Test Flakiness in Real-World Projects"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "title",
+          "quote": "A Generic Approach to Fix Test Flakiness in Real-World Projects"
+        }
+      ]
+    }
+  },
+  "q8-a-017": {
+    "card_sha256": "68148b3d5b11309bd0b22b1a35ce992248a229d44472e9aec35075b6ba0ee161",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q8_f1"
+    ],
+    "uncertain": true,
+    "rationale": "The card concerns locator drift causing false UI-test failures, a specialized flakiness signal.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "removes the whole class of failures that a markup change causes"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "removes the whole class of failures that a markup change causes"
+        }
+      ]
+    }
+  },
+  "q8-a-018": {
+    "card_sha256": "84890b227affb0603686d067fbde914d8b026f066c8e950ffefb8690b8908783",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q8_f3"
+    ],
+    "uncertain": true,
+    "rationale": "Agentic unit-test generation/correction evaluation is adjacent but not specifically flake triage.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "BenjiTest: An Agentic Framework for Evaluating LLM-Based Unit Test Generation and Correction"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f3": [
+        {
+          "field": "title",
+          "quote": "BenjiTest: An Agentic Framework for Evaluating LLM-Based Unit Test Generation and Correction"
+        }
+      ]
+    }
+  },
+  "q8-a-019": {
+    "card_sha256": "141659b75bb842fa6564e8edb1c75fc1189fe743f0a3ba6437f62d49c89916bd",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The tool uses controlled perturbations to gather evidence, classify causes, and propose fixes.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "controlled perturbation experiments, classifies the likely root cause"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "controlled perturbation experiments, classifies the likely root cause"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "controlled perturbation experiments, classifies the likely root cause"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "controlled perturbation experiments, classifies the likely root cause"
+        }
+      ]
+    }
+  },
+  "q8-a-020": {
+    "card_sha256": "01fe2daff8b3bc3c5f3343e56d5cc6b554fe026b7d32b23e55a88d13dbc260b4",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Exploit-version failure analysis is unrelated to flaky test diagnosis.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "ATTAIN: Automated Exploit Failure Analysis"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q8-a-021": {
+    "card_sha256": "4b1ffa8a498a80eda5954530463ec174f72979ff3e3b1329b33034af459b64e0",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Terminal agent training environments are unrelated to flake/regression classification.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Terminal-Universe: Turning Agent Trajectories into Scalable Terminal Environments"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q8-a-022": {
+    "card_sha256": "89b86114925698ae8bcb99656534ce943c3da7cbc7fe0330794e0dd23bd0f965",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q8_f3"
+    ],
+    "uncertain": true,
+    "rationale": "The article concerns keeping regression coverage current, not classifying flaky failures.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Regression Testing for AI-Generated Code"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f3": [
+        {
+          "field": "title",
+          "quote": "Regression Testing for AI-Generated Code"
+        }
+      ]
+    }
+  },
+  "q8-a-023": {
+    "card_sha256": "2fc03508dd2f3407110e0292a272d5736e1c1ca5ac5f1a0b6617c04192fc62ff",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f3"
+    ],
+    "uncertain": true,
+    "rationale": "Phoenix uses baseline-aware test evaluation in an agent issue-resolution system.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "baseline-aware test evaluation strategy"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "baseline-aware test evaluation strategy"
+        }
+      ]
+    }
+  },
+  "q8-a-024": {
+    "card_sha256": "9d95d31bec0714b8fb493eee997398b2de4f81cf170a2a24392d49a28eaffcc0",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f1",
+      "q8_f2"
+    ],
+    "uncertain": false,
+    "rationale": "It describes intermittent failures, environment checks, and manual reproduction.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "environment checks, and manual reproduction attempts"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "environment checks, and manual reproduction attempts"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "environment checks, and manual reproduction attempts"
+        }
+      ]
+    }
+  },
+  "q8-a-025": {
+    "card_sha256": "2f8fabf86fbd641de786d3b54fdb41683df7a0d0bf82d6f036aaf180430431ae",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f1",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The triage agent backtests against recent failures to verify it masks zero regressions before quarantine.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "backtest on recent failures to confirm it would mask zero regressions"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "backtest on recent failures to confirm it would mask zero regressions"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "backtest on recent failures to confirm it would mask zero regressions"
+        }
+      ]
+    }
+  },
+  "q8-a-026": {
+    "card_sha256": "fda954681c985ffd2883f0c5ab90ce25c4d2d2f9b74f03e43780ae255b737951",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q8_f2"
+    ],
+    "uncertain": true,
+    "rationale": "GUI bug reproduction is adjacent reproduction research but not test flake triage.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "From Bug Reports to Browser-Executable Procedures"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "title",
+          "quote": "From Bug Reports to Browser-Executable Procedures"
+        }
+      ]
+    }
+  },
+  "q8-a-027": {
+    "card_sha256": "4a1dee7055f9dfc639c55c463d172d98df0216d3b9e9b873cf32116df960a665",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The dataset provides reproduction scripts, fix verification, and passing/failing logs.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "scripts to reproduce failures, scripts to apply fixes and verify non-flakiness"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "scripts to reproduce failures, scripts to apply fixes and verify non-flakiness"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "scripts to reproduce failures, scripts to apply fixes and verify non-flakiness"
+        }
+      ]
+    }
+  },
+  "q8-a-028": {
+    "card_sha256": "c4a631c736387ca25123d3805f6fad16ae33d8314bb34974fe425ab579d11b85",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q8_f2"
+    ],
+    "uncertain": true,
+    "rationale": "Node event-race detection offers a potential root-cause method for race-induced flakes.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "NodeRacer: Event Race Detection for Node.js Applications"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "title",
+          "quote": "NodeRacer: Event Race Detection for Node.js Applications"
+        }
+      ]
+    }
+  },
+  "q8-a-029": {
+    "card_sha256": "4eb1061b8b48db822c06324cd8597e033cf616cb9a26ac2cd05fed6662702699",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q8_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The advice explicitly separates flaky-test diagnosis after reproduction and before fixing.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "treat the flaky test diagnosis as a distinct step"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "treat the flaky test diagnosis as a distinct step"
+        }
+      ]
+    }
+  },
+  "q8-a-030": {
+    "card_sha256": "0645aacbe1dd0b45aed46ec1baae8d7fb38988d9123817a635b76e588f83a924",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q8_f3"
+    ],
+    "uncertain": true,
+    "rationale": "Agentic regression-testing guide is broad and offers no flake classification detail in the title.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Agentic regression testing: A guide to agentic AI’s role"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f3": [
+        {
+          "field": "title",
+          "quote": "Agentic regression testing: A guide to agentic AI’s role"
+        }
+      ]
+    }
+  },
+  "q8-a-031": {
+    "card_sha256": "9b0736f4e7ec8a0ff6a890bc4d22b3442a4c99168771715a3ddcde91a8fe19e4",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q8_f1"
+    ],
+    "uncertain": true,
+    "rationale": "General agent failure modes are relevant only as broad regression diagnosis background.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Characterizing the Failure Modes of LLMs in Resolving Real-World GitHub Issues"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "title",
+          "quote": "Characterizing the Failure Modes of LLMs in Resolving Real-World GitHub Issues"
+        }
+      ]
+    }
+  },
+  "q8-a-032": {
+    "card_sha256": "43207e559323ba66848cafbd95f3daeb0c92ef6db110b98b78ae6f18149c9175",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "General LLM coding-agent survey is not flake-focused.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Demystifying LLM-Based Software Engineering Agents"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q8-a-033": {
+    "card_sha256": "2e3b2d2ba5210e947892d597f7548a94932173cfc47febcb0cf6b67fbf8af656",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Agent-harness self-evolution is unrelated to flaky tests.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "HarnessBank: Semantic Gene-Bank Search with Gated Verification"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q8-a-034": {
+    "card_sha256": "595886fc431473905a589550046d37e21399e4a6a147566f4c97155597534a90",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f1",
+      "q8_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The CI repair paper distinguishes failure-type classification from log-based diagnosis and patching.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "coarse failure-type classification"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "coarse failure-type classification"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "coarse failure-type classification"
+        }
+      ]
+    }
+  },
+  "q8-a-035": {
+    "card_sha256": "5834fd270951da7022b52cbc5198b97387b1dd88b88b477a9a0dd3dc40c8787e",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f1",
+      "q8_f2"
+    ],
+    "uncertain": false,
+    "rationale": "It discusses separating genuine defects from infrastructure noise to restore trusted test verdicts.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "separated genuine defects from infrastructural noise"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "separated genuine defects from infrastructural noise"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "separated genuine defects from infrastructural noise"
+        }
+      ]
+    }
+  },
+  "q8-a-036": {
+    "card_sha256": "8ddbaf9b50ca5cd7c4881af23da0a855a2564a3a7a88884c86dcbb086c370ba2",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f2",
+      "q8_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The article describes rapid reproduction, identifying missing synchronization, and proposing fixes.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "rapid reproduction and fixing of the underlying issues"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "rapid reproduction and fixing of the underlying issues"
+        }
+      ],
+      "q8_f3": [
+        {
+          "field": "snippet",
+          "quote": "rapid reproduction and fixing of the underlying issues"
+        }
+      ]
+    }
+  },
+  "q8-a-037": {
+    "card_sha256": "5d236168d3fa3028bd2fd2b52843bea15bbf9ea5380abbfdeb374f3db7867595",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q8_f1",
+      "q8_f2"
+    ],
+    "uncertain": false,
+    "rationale": "It identifies timezone and locale as environmental sources of intermittent UI-test failures.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Set TZ=UTC explicitly in your CI environment configuration"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f1": [
+        {
+          "field": "snippet",
+          "quote": "Set TZ=UTC explicitly in your CI environment configuration"
+        }
+      ],
+      "q8_f2": [
+        {
+          "field": "snippet",
+          "quote": "Set TZ=UTC explicitly in your CI environment configuration"
+        }
+      ]
+    }
+  },
+  "q8-a-038": {
+    "card_sha256": "f805327800567355ba08188864fa7211de07d8c392098e4bbc67f7bf324370e9",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q8_f3"
+    ],
+    "uncertain": true,
+    "rationale": "General assertions survey is broad testing validation background, not flake classification.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Assertions in software testing: survey, landscape, and trends"
+      }
+    ],
+    "facet_anchors": {
+      "q8_f3": [
+        {
+          "field": "title",
+          "quote": "Assertions in software testing: survey, landscape, and trends"
+        }
+      ]
+    }
+  },
+  "q8-a-039": {
+    "card_sha256": "e4154968163c07d7ece03bbda6404156c4c2e33cd06cda963451937716dccad4",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "General software-engineering agent survey has no visible flaky-test relevance.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Large Language Model-Based Agents for Software Engineering: A Survey"
+      }
+    ],
+    "facet_anchors": {}
+  }
+}

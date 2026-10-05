@@ -1,0 +1,6851 @@
+{
+  "A": {
+    "q1": {
+      "c0": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q1_f1",
+          "q1_f2",
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The guide explicitly promises dependency graphs, affected selection, CI wiring, and failure diagnosis."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2",
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It names graph and reverse-dependency commands for identifying affected projects across tools."
+      },
+      "c2": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Nx project graphs and affected-task execution offer directly relevant selection background."
+      },
+      "c3": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It offers a decision criterion for adopting graph-aware tools, not test-selection instructions."
+      },
+      "c4": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The generic Bazel overview has no visible test-selection details."
+      },
+      "c5": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The card explicitly says dependency changes affect Bazel tests and CI selects affected tests."
+      },
+      "c6": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It exposes a scope limitation: the example does not model internal package dependency edges."
+      },
+      "c7": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The title and snippet identify a Bazel monorepo guide that discusses unit and integration test setup, a broad background lead; affected selection and dependency graphs are not visible."
+      },
+      "c8": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The snippet ties dependency relationships to triggering builds only in affected areas."
+      },
+      "c9": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The snippet explains incremental caching rebuilds only affected code, related to graph-based selection."
+      },
+      "c10": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Names Nx and Turborepo affected-file detection and project graphs; comparison is broad rather than agent-specific."
+      },
+      "c11": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The repository directly implements Bazel target diffing for test selection and selective building."
+      },
+      "c12": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q1_f3"
+        ],
+        "uncertain": true,
+        "rationale": "This is broad monorepo CI measurement and caching guidance, with little direct test-selection detail."
+      },
+      "c13": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a Bazel build example with only a GraphViz requirement visible."
+      },
+      "c14": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The issue directly targets dependency graph and build/test orchestration for affected tests."
+      },
+      "c15": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Graph-based execution selects affected nodes and dependents, a useful but brief mechanism signal."
+      },
+      "c16": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "A public Bazel example builds and tests a Python monorepo; implementation details are not shown."
+      },
+      "c17": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Bazel documentation signals large-codebase support, but gives no affected-test method here."
+      },
+      "c18": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Visible description directly links dependency graphs to selecting affected projects and tests."
+      },
+      "c19": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [
+          "q1_f2",
+          "q1_f3"
+        ],
+        "uncertain": true,
+        "rationale": "It discusses automatic test selection but the visible cache-hit description is too abbreviated to validate the method."
+      },
+      "c20": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Monorepo test governance is related context, but no selection mechanism is visible."
+      },
+      "c21": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Repository consolidation is unrelated to choosing affected tests for an agent change."
+      },
+      "c22": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The paper concerns monorepository architecture generally without visible affected-test guidance."
+      },
+      "c23": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The proposed graph represents components, tests, dependencies, and coverage edges for repository-aware agents."
+      },
+      "c24": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This concerns dependency version conflicts in monorepos, not affected-test selection."
+      },
+      "c25": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q1_f2",
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The research title and abstract directly concern pipeline-aware regression-test optimization at scale."
+      },
+      "c26": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1"
+        ],
+        "uncertain": true,
+        "rationale": "A repository knowledge graph for code agents is relevant to dependency understanding; affected tests are not explicit."
+      },
+      "c27": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Flaky-test repair context is adjacent to agent testing, but the card does not show affected-test selection."
+      },
+      "c28": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f2",
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The paper describes large-repository CI throughput and change-management requirements as relevant context."
+      }
+    },
+    "q2": {
+      "c0": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "The snippet provides a Gradle configuration activating the Java 21 OpenRewrite recipe."
+      },
+      "c1": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [
+          "q2_f1",
+          "q2_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The OpenRewrite entry concerns migrating tests to Java 21, relevant to test-suite updates."
+      },
+      "c2": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "This is the OpenRewrite Java migration recipe module and explicitly supports Maven and Gradle."
+      },
+      "c3": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "The docs index clearly lists a Java 21 migration recipe among many targets."
+      },
+      "c4": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q2_f1",
+          "q2_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Tutorial directly migrates Java 8 to 17 with OpenRewrite, a close staging lead for the requested upgrade."
+      },
+      "c5": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q2_f1",
+          "q2_f2",
+          "q2_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The account reports rerunning an OpenRewrite migration from a Java 8 baseline and confirming tests pass."
+      },
+      "c6": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "This Java 8 upgrade recipe targets the source baseline rather than Java 21."
+      },
+      "c7": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "The catalog visibly lists Java 21 build upgrades among composite recipes, but gives no procedure."
+      },
+      "c8": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [
+          "q2_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Recipe tests and Java 21 test migration appear in this catalog snippet, with little detail."
+      },
+      "c9": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q2_f1",
+          "q2_f3"
+        ],
+        "uncertain": true,
+        "rationale": "The article covers the exact Java 8 to Java 21 transition using OpenRewrite, but visible validation detail is sparse."
+      },
+      "c10": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q2_f1",
+          "q2_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The specific Java 21 recipe updates plugins and dependencies to compatible versions."
+      },
+      "c11": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q2_f1",
+          "q2_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The Java 11 migration description highlights Java 8 compatibility changes for removed bundled libraries and deprecated APIs."
+      },
+      "c12": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": true,
+        "rationale": "The generic migration index names OpenRewrite recipes but no relevant target or method."
+      },
+      "c13": {
+        "lead": 1,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "A generic Testing index provides no visible Java migration or validation details."
+      },
+      "c14": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": true,
+        "rationale": "Java EE 8 migration is a different migration; the card only signals recipe behavior."
+      },
+      "c15": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": true,
+        "rationale": "A recipe-by-module catalog can lead to migration recipes, but no Java 21 detail is visible."
+      },
+      "c16": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "The recipe explicitly changes build files to target/source Java 21."
+      },
+      "c17": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "This recipe targets Java 25, beyond the requested target, and only signals migration capability."
+      },
+      "c18": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": true,
+        "rationale": "The Java EE recipe collection is migration-adjacent, but no concrete transformation is visible."
+      },
+      "c19": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": true,
+        "rationale": "The V8 recipe index is only loosely related and contains no Java 21 procedure."
+      },
+      "c20": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q2_f3"
+        ],
+        "uncertain": false,
+        "rationale": "MigrationBench directly evaluates repository-level code migration from Java 8, but it is a benchmark lead."
+      },
+      "c21": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q2_f2"
+        ],
+        "uncertain": true,
+        "rationale": "The paper discusses compile-time versus runtime checks in test frameworks, indirectly relevant to validation."
+      },
+      "c22": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The survey concerns software rejuvenation broadly; its title does not identify Java migration tooling or checks."
+      }
+    },
+    "q3": {
+      "c0": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The card presents a license-scan workflow with blocking and review outcomes by risk category."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "FOSSA describes IP risks, guardrail limits, and snippet scanning for generated-code compliance."
+      },
+      "c2": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The card directly critiques post-generation detection and attribution-by-link reliability."
+      },
+      "c3": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The census argues commit-level distinction is unreliable and calls for standardized attribution metadata."
+      },
+      "c4": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Visible discussion says attribution is often absent and mentions detectable agent fingerprints as a separate signal."
+      },
+      "c5": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Tabnine docs describe a pre-apply provenance check and tools that show attribution and licensing."
+      },
+      "c6": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The guide recommends attribution comments on agent-authored code blocks and discusses vendoring/SBOM implications."
+      },
+      "c7": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The card contrasts explicit PR or commit markers with behavioral attribution and notes unknown agents evade detection."
+      },
+      "c8": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q3_f1",
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Study directly notes interleaved AI/human code and missing repository provenance records."
+      },
+      "c9": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Workflow fields capture agent, files, and evidence, but the visible text distinguishes this from detection and gives no license specifics."
+      },
+      "c10": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It directly claims traditional SCA misses similarity-based license violations and favors generation-time scanning."
+      },
+      "c11": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It names license obligations and says models do not track source provenance."
+      },
+      "c12": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The article directly proposes layered AI attribution and provenance using Git metadata."
+      },
+      "c13": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q3_f1",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The article directly says agentic platforms obscure external-code provenance, scope, and license obligations."
+      },
+      "c14": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The systematic review directly covers code-origin tracing through watermarking and authorship attribution."
+      },
+      "c15": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": false,
+        "rationale": "It states reused or generated code may lack license metadata needed to trace origins and attribution."
+      },
+      "c16": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The card warns code filters miss repeated code and recommends additional IP checks."
+      },
+      "c17": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [
+          "q3_f3"
+        ],
+        "uncertain": true,
+        "rationale": "This is a code-provenance tools roundup, but its visible claim is generic and vendor-oriented."
+      },
+      "c18": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The study reports documentation strategies including system records, AI purpose, chat links, risk, memory, and version control."
+      },
+      "c19": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The playbook identifies missing artifact and commit provenance for AI-assisted work."
+      },
+      "c20": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q3_f1"
+        ],
+        "uncertain": true,
+        "rationale": "Dataset licensing audit relates to training data transparency, not provenance in incorporated code."
+      },
+      "c21": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The benchmark evaluates AI-code detection and explicitly notes narrow existing datasets and settings."
+      },
+      "c22": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Merge-conflict dataset relevance to AI contributions does not address license provenance."
+      },
+      "c23": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": true,
+        "rationale": "The rights paper covers media licensing provenance, not software code incorporation."
+      },
+      "c24": {
+        "lead": 1,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The broad software lifecycle topic gives no visible license or provenance details."
+      },
+      "c25": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Broad agentic SDLC coverage shows no visible license attribution mechanism."
+      },
+      "c26": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The card is about multimodal task-solving and has no visible code licensing provenance link."
+      },
+      "c27": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q3_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Title signals limits and responsibility around provenance marks, but no details are visible."
+      },
+      "c28": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The comparative application-development overview does not show relevant provenance or licensing content."
+      },
+      "c29": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The card discusses governable agentic engineering and inspectability broadly, with no visible license provenance or attribution mechanism."
+      },
+      "c30": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q3_f2"
+        ],
+        "uncertain": true,
+        "rationale": "The title concerns AI-generated-content marking policy, but no code-specific mechanism is visible."
+      },
+      "c31": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The benchmark is about sustained coding-agent evaluation, not license or attribution provenance."
+      },
+      "c32": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Security-patch detection is unrelated to code-license provenance."
+      },
+      "c33": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Quantum code ethics is unrelated to retaining license provenance in incorporated code."
+      },
+      "c34": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The benchmark concerns security of generated code, without visible licensing provenance relevance."
+      },
+      "c35": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The title and snippet signal copyright concerns in coding assistants, but show no provenance-retention method or detection limitation for incorporated code."
+      },
+      "c36": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This benchmark concerns data-intensive agent tasks without visible licensing provenance relevance."
+      },
+      "c37": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The paper concerns physical-world agent intelligence, not code provenance."
+      },
+      "c38": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q3_f1"
+        ],
+        "uncertain": true,
+        "rationale": "AI bill-of-material provenance is about AI system lifecycle metadata, not incorporated source-code attribution."
+      },
+      "c39": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This survey is about agent architecture and has no visible code attribution or licensing focus."
+      }
+    },
+    "q4": {
+      "c0": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The card says generated assertions can encode actual behavior and miss bugs, a direct oracle limitation."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The guide describes repeated generated inputs and shrinking on failure."
+      },
+      "c2": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The article's contrasting-stream example shows how weak fixtures fail to expose behavior-specific bugs."
+      },
+      "c3": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f2",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It recommends metamorphic properties when exact expected outputs are unavailable and notes minimal reproductions."
+      },
+      "c4": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The article directly covers alternative shrinking choices and values."
+      },
+      "c5": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Kotest documentation defines shrinking as simplifying failing cases to a minimal reproduction."
+      },
+      "c6": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The entry advises machine-checkable oracles and property statements when exact expectations are unavailable."
+      },
+      "c7": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The card distinguishes metamorphic and property rules and cautions that passing does not prove correctness."
+      },
+      "c8": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f2",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It defines property rules over generated inputs and shrinking; title and snippet also address partial oracles."
+      },
+      "c9": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "ZIO docs explain shrinking as finding the smallest counterexample that exposes a failure."
+      },
+      "c10": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The snippet clearly defines shrinking as reducing a failing generated input to an easier counterexample."
+      },
+      "c11": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The tutorial directly explains how a shrinker generates simpler values from a failure."
+      },
+      "c12": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f2",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The card explains invariants, generated examples, and shrinking, directly covering core PBT practice."
+      },
+      "c13": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The card explains generated edge cases and warns that properties are only partial oracles."
+      },
+      "c14": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Kiro explicitly connects PBT shrinking with actionable minimal counterexamples."
+      },
+      "c15": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The article warns that syntactic test presence can hide oracle removal and semantic drift."
+      },
+      "c16": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": false,
+        "rationale": "The sorting example demonstrates a concrete invariant that can validate generated code."
+      },
+      "c17": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The paper challenges assumptions that passing verification signals mean work is done."
+      },
+      "c18": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The study directly examines agent performance when tests provide incomplete or misleading checks."
+      },
+      "c19": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": true,
+        "rationale": "The snippet describes a particular shrinking strategy but is incomplete and implementation-specific."
+      },
+      "c20": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f2",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The benchmark isolates agent PBT skill, including deriving properties, making it directly relevant."
+      },
+      "c21": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": true,
+        "rationale": "Property templates for agentic data-intensive computing offer relevant specification patterns in a specialized setting."
+      },
+      "c22": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The paper directly addresses superficial LLM-generated properties and adversarial refinement."
+      },
+      "c23": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Compiler type-error feedback is adjacent verification evidence, not property-test guidance."
+      },
+      "c24": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Code cleanliness and agent performance do not concern property-based test validation."
+      },
+      "c25": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Concolic testing and symbolic execution limits are adjacent oracle material, not PBT."
+      },
+      "c26": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": true,
+        "rationale": "The paper concerns limits of coding-agent rewards and verification signals, adjacent to oracle limitations."
+      },
+      "c27": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The diagnostic asks when verifier signals improve or harm LLM reasoning, relevant to oracle reliability."
+      },
+      "c28": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Property retrieval for LLM unit-test generation is relevant to designing tests from specifications."
+      },
+      "c29": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Repository context coherence is not a property-test design source."
+      },
+      "c30": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Human participation in agent research is not a property-testing mechanism."
+      },
+      "c31": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Metamorphic relations derive expected changes for policy tests, an oracle strategy in a specialized domain."
+      },
+      "c32": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Context compression is unrelated to property-based testing."
+      },
+      "c33": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Repository entropy and model requirements are unrelated to property-test validation."
+      },
+      "c34": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": true,
+        "rationale": "The feasibility study concerns feedback-based verification but does not show property-specific methods."
+      },
+      "c35": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": true,
+        "rationale": "ERC-20 contract properties are a domain-specific example of executable constraints."
+      },
+      "c36": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent harness reinforcement-learning analysis is unrelated to property-based tests."
+      },
+      "c37": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Fault localization is not property-based test design or diagnosis."
+      },
+      "c38": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Repository skill optimization is unrelated to property testing."
+      },
+      "c39": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Video game agent testing is outside code-property validation."
+      },
+      "c40": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The study directly examines agentic PBT for finding bugs across Python projects."
+      },
+      "c41": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": true,
+        "rationale": "The proof-theoretic account of property testing is relevant design research, though abstract."
+      },
+      "c42": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Symbolic explanations for coding agents are not property-based testing."
+      },
+      "c43": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Research on evolving Python examples into generated properties is a direct design lead."
+      },
+      "c44": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": true,
+        "rationale": "PBT for agent-based simulation offers specialized specification-testing examples."
+      },
+      "c45": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The study says execution feedback is only useful when tests encode requested behavior."
+      },
+      "c46": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Security benchmark uses reconstructed vulnerabilities, adjacent to validation but not PBT itself."
+      },
+      "c47": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Semantic REST test-oracle generation addresses stronger expected-behavior checks."
+      },
+      "c48": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The paper directly studies genetic algorithms as counterexample shrinkers."
+      },
+      "c49": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a low-priority testing lead about LLM-based logical REST testing; property-based design, shrinking, and oracle limits are not visible."
+      },
+      "c50": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": true,
+        "rationale": "A proof reconstruction treatment of PBT is a direct but theoretical design source."
+      },
+      "c51": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The study concerns LLM test-generation workflow and its risks, relevant to reliable properties."
+      },
+      "c52": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": true,
+        "rationale": "Property tests expressed as Lean challenges are relevant design research but not ordinary generated-code validation."
+      },
+      "c53": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The agent-framework testing paper uses an agentic oracle, a relevant oracle-construction lead."
+      },
+      "c54": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Model-based tests for robot control offer adjacent executable-property design examples."
+      },
+      "c55": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Model-based test-oracle generation for agent systems directly relates to oracle construction."
+      },
+      "c56": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Randomized specification testing for heap programs is a direct property-test implementation lead."
+      },
+      "c57": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Failure-based oracles for reported Android bugs are adjacent oracle research with a specific domain."
+      },
+      "c58": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Specification grounding and edge-case failures directly inform useful properties and oracle quality."
+      }
+    },
+    "q5": {
+      "c0": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The study addresses multiple valid solutions and whether models ask questions when requirements lack detail."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "ClarEval benchmarks code-agent clarification under missing goals, premises, and ambiguous terminology."
+      },
+      "c2": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The study explicitly evaluates detecting underspecification, asking targeted clarifications, and acting on answers."
+      },
+      "c3": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Spec-writing advice and plan mode can help turn intent into a usable specification."
+      },
+      "c4": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The card discusses repeated incorrect assumptions and when a coding assistant should clarify."
+      },
+      "c5": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1"
+        ],
+        "uncertain": false,
+        "rationale": "The study's example asks reviewers to identify vague terms and missing details."
+      },
+      "c6": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q5_f1"
+        ],
+        "uncertain": false,
+        "rationale": "The method detects anaphoric, coordination, and missing-condition ambiguity in functional requirements."
+      },
+      "c7": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": true,
+        "rationale": "The description points to detecting incomplete programming specifications and prompting for missing details."
+      },
+      "c8": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1"
+        ],
+        "uncertain": true,
+        "rationale": "It proposes classifying requirement ambiguity, including whether it is harmful or benign."
+      },
+      "c9": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "SpecFix repairs ambiguous requirements autonomously, relevant to specification interpretation but not human clarification."
+      },
+      "c10": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It offers BDD and RFC requirement patterns for machine-parseable specs."
+      },
+      "c11": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The card names contracts, invariants, allowed ambiguity, validation checks, and failure behavior."
+      },
+      "c12": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1"
+        ],
+        "uncertain": true,
+        "rationale": "The paper concerns detecting ambiguous software requirements, a relevant but broad lead."
+      },
+      "c13": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1"
+        ],
+        "uncertain": true,
+        "rationale": "This duplicate title signals analysis of ambiguity detection techniques; card visible text is brief."
+      },
+      "c14": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f2",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The benchmark evaluates clarifying ambiguous requirements for code generation and notes judge validity concerns."
+      },
+      "c15": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1"
+        ],
+        "uncertain": false,
+        "rationale": "The industrial study focuses on detecting and explaining ambiguity in requirements."
+      },
+      "c16": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "It proposes an end-to-end coding assistant that asks when a request is ambiguous or underspecified."
+      },
+      "c17": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Requirements validation and anomaly detection are useful adjacent tools, though not specifically clarification dialogue."
+      },
+      "c18": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Specification inference for vulnerability discovery is not user clarification of coding requirements."
+      },
+      "c19": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f2",
+          "q5_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Interactive clarification transforms natural language requirements into formal STL, a useful specialized workflow."
+      },
+      "c20": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The paper directly examines security risks introduced when agents seek clarification."
+      },
+      "c21": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The benchmark targets recurring ambiguity across user sessions and personalized clarification behavior."
+      },
+      "c22": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q5_f3"
+        ],
+        "uncertain": true,
+        "rationale": "The benchmark assesses delivered application requirements, an indirect specification-validation lead."
+      },
+      "c23": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "This duplicate study examines ambiguity in code-generation requirements and clarification behavior."
+      },
+      "c24": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q5_f1"
+        ],
+        "uncertain": true,
+        "rationale": "Requirements anomaly detection is broadly related but not visibly about ambiguity clarification."
+      },
+      "c25": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The study investigates late-emerging requirements and rework in coding-agent sessions."
+      },
+      "c26": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Verifiable literate programming addresses how humans validate generated code against intent."
+      },
+      "c27": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "A tri-agent framework explicitly evaluates and aligns question-clarification capability."
+      },
+      "c28": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The broad comparison of coding paradigms has no visible clarification workflow."
+      },
+      "c29": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f2",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The paper presents a benchmark and interactive agent for converting vague intent into structured specifications."
+      },
+      "c30": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q5_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Conversational product demand clarification is an adjacent interaction pattern outside software requirements."
+      },
+      "c31": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent harness architecture is unrelated to ambiguity clarification."
+      },
+      "c32": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Specification-level reasoning and expert review are central to this SWE-agent benchmark."
+      },
+      "c33": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Behavioral specifications compiled into executable tests offer a validation approach after clarification."
+      },
+      "c34": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": true,
+        "rationale": "It frames interactive candidate sourcing as an underdetermined requirements task, though outside coding."
+      },
+      "c35": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q5_f3"
+        ],
+        "uncertain": true,
+        "rationale": "It evaluates application platforms against requirements but does not visibly address ambiguity resolution."
+      },
+      "c36": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q5_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Proactive agent behavior is adjacent but no clarification method is visible."
+      }
+    },
+    "q6": {
+      "c0": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q6_f1",
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It directly argues LSP grounds edits in compiler logic and provides instant validation feedback."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It explains LSP rename/refactoring across files and compiler checks on AI-proposed edits."
+      },
+      "c2": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "OpenCode formats after edits then queries LSP for compiler diagnostics and returns errors to the model."
+      },
+      "c3": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The article describes multi-file planning and using language servers while editing."
+      },
+      "c4": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q6_f1",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The paper explicitly uses LSP diagnostics and compiler feedback for coding agents."
+      },
+      "c5": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The article describes project-wide rename, definition/reference navigation, diagnostics, and hover through an MCP server."
+      },
+      "c6": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It describes choosing IDE refactoring tools and using the language server to validate changes."
+      },
+      "c7": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The tool previews edits, checks diagnostic changes, applies or discards, then verifies builds and tests."
+      },
+      "c8": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f2"
+        ],
+        "uncertain": false,
+        "rationale": "It describes repository-wide rename and automatic dependency tracking, a practical multi-file refactor lead."
+      },
+      "c9": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The issue exposes a diagnostics pipeline weakness: one caught exception can mask later errors."
+      },
+      "c10": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The issue specifies cross-file rename/refactoring tests against real language-server fixtures and records support."
+      },
+      "c11": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The verifier runs tests, regression checks, linters, and type analyzers before accepting patches."
+      },
+      "c12": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f1",
+          "q6_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The issue concerns implementing diagnostics and code fixes in an LSP service."
+      },
+      "c13": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": true,
+        "rationale": "The card concerns benchmark filtration and validation, not refactoring feedback workflow."
+      },
+      "c14": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f1",
+          "q6_f3"
+        ],
+        "uncertain": true,
+        "rationale": "The issue describes a project compiler resolving resources and validating a graph, adjacent to multi-file diagnostics."
+      },
+      "c15": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Kiro documents code intelligence including symbol search, outlines, and definition lookup across languages."
+      },
+      "c16": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "RefactorPlatform targets behavior-preserving changes propagated across files."
+      },
+      "c17": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The framework sends compile status from a compiler agent before further tester validation."
+      },
+      "c18": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "OpenCode feeds compiler and linter diagnostics from its LSP integration back to the model."
+      },
+      "c19": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f1"
+        ],
+        "uncertain": false,
+        "rationale": "The VS Code guide explains that its example lacks cross-file and workspace diagnostics."
+      },
+      "c20": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The study evaluates whether LLM refactors preserve external behavior."
+      },
+      "c21": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Open-source harness directly evaluates repository-scale behavior-preserving refactoring agents."
+      },
+      "c22": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "JVM code cache performance is unrelated to source refactoring workflow."
+      },
+      "c23": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Broad vibe/agentic coding review has no visible compiler feedback procedure."
+      },
+      "c24": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The benchmark questions whether passing tests alone establish semantic reasoning, a correctness-check caveat."
+      },
+      "c25": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent architecture taxonomy is broad and not visibly focused on LSP feedback."
+      },
+      "c26": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Code retrieval research does not show refactoring or compiler/LSP feedback mechanics."
+      },
+      "c27": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Code as agent harness is a broad architecture topic without clear LSP refactor specifics."
+      },
+      "c28": {
+        "lead": 1,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Broad agentic lifecycle discussion gives no specific LSP refactor workflow."
+      },
+      "c29": {
+        "lead": 1,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Generic SDLC overview lacks visible compiler or refactoring detail."
+      },
+      "c30": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": true,
+        "rationale": "The survey mentions outcome validation broadly but not compiler-guided refactoring."
+      },
+      "c31": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Scientific-code evaluation highlights correctness beyond passing tests, but domain-specific."
+      },
+      "c32": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Repository knowledge skills are unrelated to compiler/LSP-guided refactoring."
+      },
+      "c33": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The paper studies coordinated multi-hunk repairs across disjoint code regions."
+      },
+      "c34": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Optimizing agent architectures is unrelated to compiler feedback for refactors."
+      },
+      "c35": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Mobile-app benchmark is unrelated to refactoring feedback mechanisms."
+      },
+      "c36": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": true,
+        "rationale": "SonarQube code-quality repair evaluation is adjacent, with no multi-file/LSP workflow shown."
+      },
+      "c37": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Long-horizon coding-task benchmark is only broadly related to evaluating refactors."
+      },
+      "c38": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": true,
+        "rationale": "General software-agent benchmark coverage is only indirectly useful for refactoring correctness."
+      },
+      "c39": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Cross-ISA migration benchmark is not about source refactoring, though build correctness is relevant."
+      }
+    },
+    "q7": {
+      "c0": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q7_f1",
+          "q7_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The tool computes and documents down plans with pre-migration checks, a direct migration planning/rollback lead."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The card explicitly recommends testing schema, data, code reverts, and forward fixes before release."
+      },
+      "c2": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The article distinguishes script execution from testing rollback data and old-code compatibility."
+      },
+      "c3": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q7_f1",
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The expand-contract strategy keeps schema changes backward compatible until validation is complete."
+      },
+      "c4": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q7_f1",
+          "q7_f3"
+        ],
+        "uncertain": true,
+        "rationale": "The article discusses database-specific constraints and data-type compatibility for migration agents, but details are sparse."
+      },
+      "c5": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "PlanetScale explains rollback of application code while schema remains backward compatible."
+      },
+      "c6": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It tests old application code against expanded schema after a rollback, directly exercising compatibility."
+      },
+      "c7": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent runtime/config rollback is unrelated to schema migration despite similar terminology."
+      },
+      "c8": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It recommends backward-compatible database changes before code updates to preserve rollback safety."
+      },
+      "c9": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q7_f1"
+        ],
+        "uncertain": true,
+        "rationale": "AI data migration advice is not clearly about database schema safety or reversible changes."
+      },
+      "c10": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q7_f1",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Additive schema and dual-write patterns are relevant planning and compatibility mechanisms."
+      },
+      "c11": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q7_f1",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Views and phased database changes are concrete compatibility-oriented migration planning advice."
+      },
+      "c12": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The guide uses expand-contract and says rollback tests validate compatibility assumptions before traffic moves."
+      },
+      "c13": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q7_f1",
+          "q7_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Nullable fields and upcasting preserve compatibility in event-based database evolution."
+      },
+      "c14": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f1",
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The deployment contract separates compatible ordering from later destructive cleanup and requires proof."
+      },
+      "c15": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The issue requests tests for each migration's forward and backward compatibility."
+      },
+      "c16": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The issue says rollback drills must cross the schema migration boundary to test the actual failure mode."
+      },
+      "c17": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Routing traffic across old and new code paths is relevant to staged compatibility."
+      },
+      "c18": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q7_f1",
+          "q7_f2"
+        ],
+        "uncertain": false,
+        "rationale": "It identifies the danger of forward-only migrations and demands a documented reversibility policy."
+      },
+      "c19": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The article says rollback commands and automated tests can validate Flyway migrations before release."
+      },
+      "c20": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q7_f1"
+        ],
+        "uncertain": true,
+        "rationale": "Cloud migration process modeling is only broadly related; target is database schema migration."
+      },
+      "c21": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent filesystem safety does not relate to schema migration."
+      },
+      "c22": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Vibe coding review is unrelated to database migrations."
+      },
+      "c23": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "SNMP protocol migration is a different domain from database schema migration."
+      },
+      "c24": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "AI agent stack governance is unrelated to schema rollback."
+      },
+      "c25": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent orchestration toolchain taxonomy is unrelated."
+      },
+      "c26": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The card describes distributed cloud-native test architecture generally; schema migration planning, rollback, and schema compatibility are not visible."
+      },
+      "c27": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Hybrid database security compliance does not address schema migration."
+      },
+      "c28": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "CRM architecture is unrelated to schema migration."
+      },
+      "c29": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "AI-ready data pipeline architecture is unrelated to database schema migration safety."
+      },
+      "c30": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Enterprise data and AI platform engineering is unrelated to schema migration safety."
+      },
+      "c31": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Insurance portal modernization is unrelated to database migration."
+      },
+      "c32": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Government compliance architecture is unrelated to database migrations."
+      },
+      "c33": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Model-native systems architecture is unrelated."
+      },
+      "c34": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Brownfield AI productivity framework is unrelated to database rollback constraints."
+      },
+      "c35": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Microservice architecture overview is not a schema migration source."
+      },
+      "c36": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The Python API framework is unrelated to database schema migrations."
+      },
+      "c37": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent communication security protocols are unrelated to database migrations."
+      },
+      "c38": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "EDMS installation automation does not concern database schema migration."
+      }
+    },
+    "q8": {
+      "c0": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The article describes rapid reproduction, identifying missing synchronization, and proposing fixes."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": true,
+        "rationale": "The firsthand report emphasizes reproduction harnesses and diagnosis before agent repair."
+      },
+      "c2": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q8_f1"
+        ],
+        "uncertain": true,
+        "rationale": "Locator drift triage applies to UI automation failures, a narrower adjacent use case."
+      },
+      "c3": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "FlakyGuard includes error diagnostics and reproduction rates in repair context."
+      },
+      "c4": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The triage agent backtests against recent failures to verify it masks zero regressions before quarantine."
+      },
+      "c5": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The card directly calls for multi-signal classification across code, environment, and execution context."
+      },
+      "c6": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": true,
+        "rationale": "The report describes root-cause investigation and prolonged validation of flaky-test fixes."
+      },
+      "c7": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f1",
+          "q8_f2"
+        ],
+        "uncertain": false,
+        "rationale": "It describes intermittent failures, environment checks, and manual reproduction."
+      },
+      "c8": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The tool uses controlled perturbations to gather evidence, classify causes, and propose fixes."
+      },
+      "c9": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The advice explicitly separates flaky-test diagnosis after reproduction and before fixing."
+      },
+      "c10": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The guide explicitly recommends reproduce-diagnose-fix and record/replay debugging."
+      },
+      "c11": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q8_f1"
+        ],
+        "uncertain": true,
+        "rationale": "The card concerns locator drift causing false UI-test failures, a specialized flakiness signal."
+      },
+      "c12": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The paper evaluates automated flake repair with a manual post-validation check."
+      },
+      "c13": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q8_f3"
+        ],
+        "uncertain": true,
+        "rationale": "The article concerns keeping regression coverage current, not classifying flaky failures."
+      },
+      "c14": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f1",
+          "q8_f2"
+        ],
+        "uncertain": false,
+        "rationale": "It describes rerunning flaky failures to confirm whether they are valid."
+      },
+      "c15": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f1",
+          "q8_f2"
+        ],
+        "uncertain": false,
+        "rationale": "It identifies timezone and locale as environmental sources of intermittent UI-test failures."
+      },
+      "c16": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q8_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Agentic regression-testing guide is broad and offers no flake classification detail in the title."
+      },
+      "c17": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": true,
+        "rationale": "FlakeSync uses runtime critical/barrier points for async flakes, a specialized reproduction approach."
+      },
+      "c18": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The dataset provides reproduction scripts, fix verification, and passing/failing logs."
+      },
+      "c19": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f1",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "It warns retries can mask genuine regressions and do not fix underlying flakiness."
+      },
+      "c20": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The study tests whether repair-agent validation commands actually exercise the reported bug across source states."
+      },
+      "c21": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f1",
+          "q8_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The CI repair paper distinguishes failure-type classification from log-based diagnosis and patching."
+      },
+      "c22": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q8_f2"
+        ],
+        "uncertain": true,
+        "rationale": "GUI bug reproduction is adjacent reproduction research but not test flake triage."
+      },
+      "c23": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "General LLM coding-agent survey is not flake-focused."
+      },
+      "c24": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q8_f3"
+        ],
+        "uncertain": true,
+        "rationale": "General software-engineering agent survey is broad and not flake-specific."
+      },
+      "c25": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q8_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Refactoring reliability is adjacent validation context, not flaky-versus-regression diagnosis."
+      },
+      "c26": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Phoenix uses baseline-aware test evaluation in an agent issue-resolution system."
+      },
+      "c27": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q8_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Agentic unit-test generation/correction evaluation is adjacent but not specifically flake triage."
+      },
+      "c28": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q8_f3"
+        ],
+        "uncertain": true,
+        "rationale": "General assertions survey is broad testing validation background, not flake classification."
+      },
+      "c29": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "General software-engineering agent survey has no visible flaky-test relevance."
+      },
+      "c30": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Exploit-version failure analysis is unrelated to flaky test diagnosis."
+      },
+      "c31": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Terminal agent training environments are unrelated to flake/regression classification."
+      },
+      "c32": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent-harness self-evolution is unrelated to flaky tests."
+      },
+      "c33": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f1",
+          "q8_f2"
+        ],
+        "uncertain": false,
+        "rationale": "It discusses separating genuine defects from infrastructure noise to restore trusted test verdicts."
+      },
+      "c34": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent RL category balancing has no relation to flaky tests."
+      },
+      "c35": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent memory hygiene benchmark is unrelated to test failure classification."
+      },
+      "c36": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q8_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Node event-race detection offers a potential root-cause method for race-induced flakes."
+      },
+      "c37": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent trace taxonomy research is unrelated to flaky test diagnosis."
+      },
+      "c38": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q8_f1"
+        ],
+        "uncertain": true,
+        "rationale": "General agent failure modes are relevant only as broad regression diagnosis background."
+      },
+      "c39": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q8_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Fault localization in neural-augmented code is adjacent diagnosis material."
+      }
+    },
+    "q9": {
+      "c0": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "The Aider-AI organization repository identifies the terminal pair-programming application itself."
+      },
+      "c1": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Aider Desk is a separate software-engineering platform."
+      },
+      "c2": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Aidermacs is an Emacs integration for Aider, not the upstream source."
+      },
+      "c3": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The API wraps several coding agents including Aider; it is not Aider source."
+      },
+      "c4": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is an MCP server for Aider, not the Aider source repository."
+      },
+      "c5": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The aide/aide repository is a different C-language project."
+      },
+      "c6": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent directives mention Aider support but are unrelated source."
+      },
+      "c7": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This VS Code extension integrates Aider rather than being its upstream repository."
+      },
+      "c8": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This Emacs integration works with Aider but is a client extension."
+      },
+      "c9": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Aider.nvim is a Neovim integration, not the official source."
+      },
+      "c10": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This Neovim integration is adjacent to Aider but not the source project."
+      },
+      "c11": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Community conventions for Aider are adjacent project material, not its source."
+      },
+      "c12": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Session search indexes Aider histories alongside other providers; it is not Aider itself."
+      },
+      "c13": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "AIDE Plus is unrelated to the Aider codebase."
+      },
+      "c14": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The repository is the Aider installer rather than the application source."
+      },
+      "c15": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is the benchmark harness used to evaluate Aider, not the official application repository."
+      },
+      "c16": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This VS Code extension is an Aider client integration."
+      },
+      "c17": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is an API gateway that mentions Aider as a supported client, not its source repository."
+      },
+      "c18": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a curated directory containing Aider among many coding agents."
+      },
+      "c19": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "AIDE Plus is a different Java repository, unrelated to the Aider project."
+      }
+    },
+    "q10": {
+      "c0": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a simple Continue-based RAG assistant, not Continue itself."
+      },
+      "c1": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a Kotlin assistant using LLaMA 2 and explicitly asks users to choose Continue.dev, so it is not Continue."
+      },
+      "c2": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a separate assistant-building platform, not the Continue source repository."
+      },
+      "c3": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a separate assistant-building project with matching description, not Continue source."
+      },
+      "c4": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The profile identifies Continue as an open-source code assistant but is a third-party API profile, not source."
+      },
+      "c5": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The Cat assistant is inspired by Continue but is a separate TypeScript project."
+      },
+      "c6": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This local-first memory project supports Continue among multiple clients, not the Continue repository."
+      },
+      "c7": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The portfolio compares other coding tools but shows no official Continue source."
+      },
+      "c8": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The repository snippet is generic GitHub navigation and merge text with no visible connection to Continue."
+      }
+    },
+    "q11": {
+      "c0": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is an official Spring recipes module, not the core source."
+      },
+      "c1": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This official Maven plugin is source code in the OpenRewrite organization but not the core engine."
+      },
+      "c2": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is an official OpenRewrite Java migration module, related source but not the core repository."
+      },
+      "c3": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This official repository contains Java testing migration recipes rather than OpenRewrite core."
+      },
+      "c4": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This official Gradle plugin repository is OpenRewrite code but not the core engine."
+      },
+      "c5": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This official static-analysis recipes module is not the core source repository."
+      },
+      "c6": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This official repository stores documentation rather than application source."
+      },
+      "c7": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is an official logging migration recipe module, not core source."
+      },
+      "c8": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This official repository provides Kotlin support, not the core engine."
+      },
+      "c9": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is an official JavaScript recipes module, not the OpenRewrite core repository."
+      },
+      "c10": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is an official Apache recipes module, not the core project."
+      },
+      "c11": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This official repository manages Java dependency recipes, not the core source."
+      },
+      "c12": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is an official OpenAPI recipes project, not the core."
+      },
+      "c13": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is an official Hibernate recipe module, not the core source."
+      },
+      "c14": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is the Python recipes module, not the OpenRewrite core repository."
+      },
+      "c15": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is an official Jenkins modernization recipe module, not the core."
+      },
+      "c16": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This official analysis recipes module is adjacent to OpenRewrite core."
+      },
+      "c17": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This official OpenRewrite organization repository contains Quarkus recipes, not the core source project."
+      },
+      "c18": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This official module provides generative-AI recipes, not the OpenRewrite core."
+      },
+      "c19": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is an official Micronaut recipes module, not the core source."
+      }
+    },
+    "q12": {
+      "c0": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "The HypothesisWorks organization and repository description identify the Python property-based testing library itself."
+      },
+      "c1": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Proptest is a distinct Rust property-testing library."
+      },
+      "c2": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a Rust library built on Hypothesis, not the official source repository."
+      },
+      "c3": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a Hypothesis tutorial repository, not the source."
+      },
+      "c4": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a Java feasibility prototype inspired by QuickCheck, not Hypothesis itself."
+      },
+      "c5": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a shared property-testing protocol built on Hypothesis, not its source library."
+      },
+      "c6": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This TypeScript library is built on Hypothesis but is not the official source."
+      },
+      "c7": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a separate OCaml library built on Hypothesis, not the official Hypothesis source."
+      },
+      "c8": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a Java library built on Hypothesis, not the official source."
+      },
+      "c9": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a separate C++ library built on Hypothesis."
+      },
+      "c10": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The repository is workshop material using Hypothesis, not the library source."
+      },
+      "c11": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This repository provides Hypothesis strategies for Ethereum, not the library itself."
+      },
+      "c12": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The repository discusses Hypothesis in a Python property-testing benefits notebook, not the library source."
+      },
+      "c13": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a Haskell implementation built on Hypothesis, not the official project."
+      },
+      "c14": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a talk repository about Hypothesis, not its source."
+      },
+      "c15": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a Rust property-testing and fuzzing library, not Hypothesis."
+      },
+      "c16": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a distinct TypeScript property-testing library inspired by Hypothesis."
+      },
+      "c17": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a Lean library built on Hypothesis, not the core project."
+      },
+      "c18": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is an agent skill teaching property testing, not the Hypothesis source."
+      },
+      "c19": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is an experiment using Hypothesis, not the source repository."
+      }
+    },
+    "q13": {
+      "c0": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "The ast-grep organization repository names the CLI and describes its structural search, lint, and rewrite function."
+      },
+      "c1": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is the ast-grep website repository, not the source implementation."
+      },
+      "c2": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a Python grep-ast utility, a related but distinct project."
+      },
+      "c3": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This repository is an MCP integration for ast-grep, not its CLI source."
+      },
+      "c4": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is the official organization's VS Code extension, not the main CLI source."
+      },
+      "c5": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This repository is a community collection of ast-grep rules, not the implementation."
+      },
+      "c6": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This codemod CLI supports ast-grep but is a separate project."
+      },
+      "c7": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a Telescope picker for ast-grep, not the source repository."
+      },
+      "c8": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This TypeScript grep-ast CLI is a separate AST-pattern search tool."
+      },
+      "c9": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a Python AST grep tool, not ast-grep."
+      },
+      "c10": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a faithful port of ast-grep tools for a different coding agent."
+      },
+      "c11": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This Ruby AST search tool is distinct from ast-grep."
+      },
+      "c12": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a Zed editor extension for ast-grep."
+      },
+      "c13": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Semble is an independent code-search tool with AST chunking, not ast-grep."
+      },
+      "c14": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "XRAY uses ast-grep for code intelligence but is a separate MCP project."
+      },
+      "c15": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This skill wraps ast-grep for coding agents; it is not the implementation."
+      },
+      "c16": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "AstroGrep is a different C# application with a similar name."
+      },
+      "c17": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This is a file-search skill using ast-grep as one component."
+      },
+      "c18": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "AstroGrep is a different C# repository, despite its similar name."
+      },
+      "c19": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This Vue macros CLI uses ast-grep for rewriting but is not its source."
+      }
+    }
+  },
+  "B": {
+    "q1": {
+      "c0": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q1_f1",
+          "q1_f2",
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Guide promises graph, affected-selection algorithms, CI wiring, and failure diagnosis."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Names graph and reverse-dependency commands for affected target selection."
+      },
+      "c2": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Describes Nx project graph and running only affected tasks."
+      },
+      "c3": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Gives readiness criteria and warns there is no universal threshold."
+      },
+      "c4": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "General Bazel advocacy offers no visible affected-test method."
+      },
+      "c5": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q1_f2",
+          "q1_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Explains CI runs tests affected by code and dependency updates."
+      },
+      "c6": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The example explicitly excludes modeling inter-package dependencies, a useful scope limitation."
+      },
+      "c7": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Bazel monorepo background; visible excerpt does not explain affected selection."
+      },
+      "c8": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Explains dependency graphs and affected rebuilds; useful background, little test-selection detail."
+      },
+      "c9": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Bazel caching selects affected rebuild parts; it is relevant but framed around builds."
+      },
+      "c10": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Names graph analysis and affected-file detection, though it is a broad tool roundup."
+      },
+      "c11": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Repository directly implements Bazel target diffing for test selection."
+      },
+      "c12": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Discusses measuring build performance and deterministic incremental builds, indirect to test selection."
+      },
+      "c13": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Example pipeline builds and tests a Python monorepo; snippet mentions BEP output."
+      },
+      "c14": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Issue directly proposes Bazel for dependency graph and affected-test orchestration."
+      },
+      "c15": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Graph-based execution selects affected nodes, though snippet is abbreviated."
+      },
+      "c16": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Runnable Python Bazel pipeline example includes build and tests."
+      },
+      "c17": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Official Bazel scale description gives little task-specific selection detail."
+      },
+      "c18": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q1_f1",
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Visible Nx graph analysis directly links dependencies to affected projects and tests."
+      },
+      "c19": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f2",
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Discusses automated test selection and the error-proneness of manual mappings."
+      },
+      "c20": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Focuses on governance for shared automated-test codebases, but no selection method shown."
+      },
+      "c21": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Monorepo migration thesis offers broad background, no test-selection detail visible."
+      },
+      "c22": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q1_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Monorepo architecture research is related background; no affected-test mechanism visible."
+      },
+      "c23": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q1_f1",
+          "q1_f2",
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "RIG explicitly models dependencies, tests, coverage edges, and evidence-backed structure."
+      },
+      "c24": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Dependency-version conflict study is adjacent context, not affected-test selection."
+      },
+      "c25": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f2",
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Pipeline-aware regression-test optimization directly concerns test selection at scale."
+      },
+      "c26": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Repository knowledge graphs for code generation are adjacent to recovering architecture, not testing."
+      },
+      "c27": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Flaky-test repair study is about test reliability, not selecting affected tests."
+      },
+      "c28": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q1_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Large-repository change-management requirements are relevant validation context, not selection mechanism."
+      }
+    },
+    "q2": {
+      "c0": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Official recipe page names UpgradeToJava21 and a concrete dependency/configuration."
+      },
+      "c1": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q2_f1",
+          "q2_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Java 21 test migration recipe indicates using Java 21 features in tests."
+      },
+      "c2": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Official repository states Java-version migration recipes and Maven/Gradle support."
+      },
+      "c3": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Catalog visibly includes Java 21 and other migration recipes."
+      },
+      "c4": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q2_f1",
+          "q2_f2"
+        ],
+        "uncertain": false,
+        "rationale": "OpenRewrite walkthrough explicitly automates Java 8 to 17; useful adjacent upgrade path."
+      },
+      "c5": {
+        "lead": 2,
+        "visible": 3,
+        "facets": [
+          "q2_f2",
+          "q2_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Reports rerunning migration and verifying baseline and upgraded tests; target extends past Java 21."
+      },
+      "c6": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Upgrade-to-Java-8 recipe is opposite-direction/legacy migration."
+      },
+      "c7": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q2_f1",
+          "q2_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Composite recipe list includes Java 21 build upgrade, but appears mixed-version and broad."
+      },
+      "c8": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q2_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Recipe test cases are a potentially useful validation source, but the card is a broad recipe listing."
+      },
+      "c9": {
+        "lead": 2,
+        "visible": 3,
+        "facets": [
+          "q2_f1",
+          "q2_f2",
+          "q2_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Case describes automated Java 8 to Java 21 migration and build verification."
+      },
+      "c10": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q2_f1",
+          "q2_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Java 21 plugin recipe updates plugins and dependencies for compatibility."
+      },
+      "c11": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q2_f1",
+          "q2_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Java 8-to-11 recipe covers removed J2EE libraries and deprecated API replacements."
+      },
+      "c12": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Generic migrate landing page names OpenRewrite recipes without target or checks."
+      },
+      "c13": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Testing landing card redirects readers to a recipe catalog; no migration checks visible."
+      },
+      "c14": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q2_f1",
+          "q2_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Java EE 8 migration recipes are adjacent compatibility work."
+      },
+      "c15": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Module catalog identifies migration modules, but provides little visible detail."
+      },
+      "c16": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q2_f1",
+          "q2_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Recipe updates build files to target/source Java 21."
+      },
+      "c17": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Java 25 recipe is adjacent migration material, not the requested Java 21 target."
+      },
+      "c18": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q2_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Java EE 8 recipe is a component migration, not Java 21."
+      },
+      "c19": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "V8 recipes refer to a different project migration."
+      },
+      "c20": {
+        "lead": 2,
+        "visible": 3,
+        "facets": [
+          "q2_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Repository-level benchmark directly evaluates code migration from Java 8."
+      },
+      "c21": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q2_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Testing framework implementation paper gives static-checking motivation, not application migration."
+      },
+      "c22": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q2_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Practitioner survey on software rejuvenation is broad migration-process background."
+      }
+    },
+    "q3": {
+      "c0": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Shows a risk triage workflow for agent code, including ambiguous provenance review."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Provides AI-code license risk and snippet-scanning workflow leads."
+      },
+      "c2": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f3",
+          "q3_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Reviews limits of filtering and attribution links and lack of explainable traceability."
+      },
+      "c3": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Argues for standardized AI attribution metadata and discusses code detection limits."
+      },
+      "c4": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f1",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Discusses attribution metadata practices and difficulty distinguishing human/tool authorship."
+      },
+      "c5": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Describes pre-apply provenance checks and license attribution/rejection behavior."
+      },
+      "c6": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Describes SBOM/license implications and a concrete attribution-comment mechanism."
+      },
+      "c7": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Attribution study distinguishes explicit markers from behavioral fingerprinting and notes closed-set limits."
+      },
+      "c8": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f1",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Study describes interleaved code and missing repository history attribution."
+      },
+      "c9": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f1",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Workflow records task, model, files and review evidence and distinguishes provenance from detection."
+      },
+      "c10": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Says similarity-based license violations evade traditional SCA and advocates generation-time scanning."
+      },
+      "c11": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f1",
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Explicitly identifies license obligations and lack of model provenance tracking."
+      },
+      "c12": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Proposes git-metadata-based attribution for AI-written code."
+      },
+      "c13": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f1",
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Directly concerns agentic license contamination and hard-to-track provenance obligations."
+      },
+      "c14": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f1",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Systematic review covers active watermarking and passive authorship attribution."
+      },
+      "c15": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Highlights absent license metadata for reused or AI-generated snippets."
+      },
+      "c16": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Explains filtering limits and the need for additional checks and attribution."
+      },
+      "c17": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f2",
+          "q3_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Tool roundup hints at license scanning, but evidence is promotional and details limited."
+      },
+      "c18": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Survey reports documentation strategies including chat links and version control, while noting limits."
+      },
+      "c19": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Calls for provenance at artifact and commit layers and notes spoofable git attribution."
+      },
+      "c20": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Dataset licensing audit traces source, creators, licenses and reuse."
+      },
+      "c21": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "AI-code detector benchmark addresses attribution detection, not license tracking."
+      },
+      "c22": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Merge-conflict dataset does not address licensing."
+      },
+      "c23": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f1",
+          "q3_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Digital-rights paper surveys provenance and attribution in creative-industry licensing."
+      },
+      "c24": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This excerpt describes agentic coding and SDLC changes, but shows no provenance-capture mechanism."
+      },
+      "c25": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This duplicate lifecycle article gives broad agentic-coding context but no visible license-provenance mechanism."
+      },
+      "c26": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Multimodal task-solving paper is unrelated to code license provenance."
+      },
+      "c27": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q3_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Watermarking/legal responsibility title is adjacent; no mechanism detail visible."
+      },
+      "c28": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "General AI versus manual coding study is not task-specific."
+      },
+      "c29": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f1",
+          "q3_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Case study centers on inspectable and correctable AI-mediated engineering, but the excerpt is broad."
+      },
+      "c30": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q3_f2"
+        ],
+        "uncertain": true,
+        "rationale": "AI Act transparency card is broad and has no visible code-specific mechanism."
+      },
+      "c31": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Long-horizon agent benchmark does not address licensing or attribution."
+      },
+      "c32": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Security-patch detection benchmark is unrelated to license attribution."
+      },
+      "c33": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The title and excerpt concern ethical considerations in LLM-generated quantum code; they show no attribution mechanism for incorporated code."
+      },
+      "c34": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The card is only a citation for a security benchmark and exposes no content about licensing provenance or detection limits."
+      },
+      "c35": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q3_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Security-assistant discussion includes copyright risk, but not a provenance mechanism."
+      },
+      "c36": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Data-intensive agent benchmark is not about code provenance."
+      },
+      "c37": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Robotics-focused coding-agent paper does not address code licensing."
+      },
+      "c38": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q3_f1"
+        ],
+        "uncertain": false,
+        "rationale": "AIBOM schema addresses provenance and lifecycle assurance, though not specifically incorporated code."
+      },
+      "c39": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agentic-AI survey is unrelated to license provenance."
+      }
+    },
+    "q4": {
+      "c0": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Reports self-authored assertions may encode behavior rather than expected behavior and coverage is weak evidence."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Explains repeated generation and shrinking after failures."
+      },
+      "c2": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f2",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Concrete warning about weak fixtures and guidance on generators, oracles and counterexample diagnosis."
+      },
+      "c3": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f2",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Recommends metamorphic properties and explains edge cases and minimal reproduction without exact oracle."
+      },
+      "c4": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Discusses implementation choices for internal shrinking and value shrinking."
+      },
+      "c5": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Framework documentation describes shrinking and minimal reproducible cases."
+      },
+      "c6": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Gives concrete partial-oracle properties for agent workflows."
+      },
+      "c7": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Explains metamorphic and property oracles and warns passing tests do not prove correctness."
+      },
+      "c8": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Defines generated-input rules and shrinking of failing inputs."
+      },
+      "c9": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Explains smallest counterexample as root-cause clue."
+      },
+      "c10": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Explains shrinking as simplifying a failing input for diagnosis."
+      },
+      "c11": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Shows generated shrink candidates for values; practical tutorial."
+      },
+      "c12": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Explains invariants, generated examples, and shrinking."
+      },
+      "c13": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Explains generated edge cases and properties as partial oracles."
+      },
+      "c14": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Documents actionable minimal counterexamples from PBT shrinking."
+      },
+      "c15": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Warns same-session agent tests are weak evidence and require oracle isolation."
+      },
+      "c16": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Shows how invariants like sorted output replace exact expected outputs."
+      },
+      "c17": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Shows agents may optimize behavioral test oracles instead of requested artifact."
+      },
+      "c18": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Empirical paper shows weaknesses persist even with behavioral oracles."
+      },
+      "c19": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Technical shrinking detail for a property-testing framework."
+      },
+      "c20": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Benchmark isolates deriving semantic invariants and generators for agents."
+      },
+      "c21": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Pairs candidate properties with proof and implementation checks for generated code."
+      },
+      "c22": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Directly studies weak LLM-generated properties and adversarial refinement."
+      },
+      "c23": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Compiler diagnostics can help agents diagnose errors, indirect to PBT."
+      },
+      "c24": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Code cleanliness and agent navigation do not address property-based testing."
+      },
+      "c25": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": true,
+        "rationale": "LLM discovery oracle for concolic testing addresses limitations but is not PBT-centered."
+      },
+      "c26": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Directly focuses on limitations of verifying coding-agent rewards."
+      },
+      "c27": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Oracle signal study is broadly relevant to test reliability, not code properties specifically."
+      },
+      "c28": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Retrieves properties for LLM test generation while identifying coverage-quality tradeoffs."
+      },
+      "c29": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Repository context study is not about test properties."
+      },
+      "c30": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Human supervision of coding agents is broad and not specific to PBT."
+      },
+      "c31": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Metamorphic relations offer oracles for learned action policies."
+      },
+      "c32": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Context compression for agents is unrelated to testing."
+      },
+      "c33": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Canonical code generation is not PBT."
+      },
+      "c34": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Studies feedback verification of generated code without human inspection."
+      },
+      "c35": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Applies PBT to smart-contract behaviors, a domain-specific example."
+      },
+      "c36": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "RL credit assignment and portability are not PBT."
+      },
+      "c37": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Actionable fault localization is useful diagnosis context, but not PBT."
+      },
+      "c38": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Repository SKILL optimization is not a testing source."
+      },
+      "c39": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Video-game tester agents are not coding agents or PBT."
+      },
+      "c40": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Directly concerns agentic PBT across Python packages."
+      },
+      "c41": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Formal reconstruction of PBT over relational specifications is relevant theory."
+      },
+      "c42": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Symbolic code explanations are only generally related to agent verification."
+      },
+      "c43": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Research on converting fixed tests into generated-input properties is directly relevant."
+      },
+      "c44": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Uses PBT to test agent-based simulations against specifications."
+      },
+      "c45": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Connects repair quality to whether agent-generated tests capture requested behavior."
+      },
+      "c46": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Security benchmark is adjacent to generated-code evaluation, not PBT."
+      },
+      "c47": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Generates semantic REST API oracles beyond status and schema checks."
+      },
+      "c48": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Genetic shrinkers directly target counterexample reduction, though it is a Coq-specific paper."
+      },
+      "c49": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Tests REST logical behavior beyond crashes/status codes with multi-agent approach."
+      },
+      "c50": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Formal account of PBT for relational specifications."
+      },
+      "c51": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Studies test-generation workflow and reliability of generated tests."
+      },
+      "c52": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Evaluates models on real-world property tests and formal verification challenges."
+      },
+      "c53": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Agentic oracle tests semantic faults in LLM frameworks, though not necessarily PBT."
+      },
+      "c54": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": true,
+        "rationale": "Model-based robot control testing is agent-related but not coding-agent validation."
+      },
+      "c55": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Model-based oracle generation for agent systems is a direct reading lead, but the card shows only citation metadata."
+      },
+      "c56": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Randomized specification testing for heap-manipulating programs."
+      },
+      "c57": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q4_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Generates failure-based oracles to reproduce and localize reported app bugs."
+      },
+      "c58": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q4_f1",
+          "q4_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Studies specification grounding and weaknesses of self-generated tests."
+      }
+    },
+    "q5": {
+      "c0": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Studies multiple-valid-solution ambiguity and coding clarification benchmarks."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Benchmark measures elicitation of missing goals, premises and ambiguous terms."
+      },
+      "c2": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Evaluates detecting underspecification, asking targeted questions and using answers."
+      },
+      "c3": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f2",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Practical guidance recommends asking users to clarify ambiguities during planning."
+      },
+      "c4": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Studies recurring ambiguity and adaptation in coding assistants across sessions."
+      },
+      "c5": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Industrial study asks detection and explanation of vague or missing requirement details."
+      },
+      "c6": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Detects specific ambiguity types in functional requirements and validates on dataset."
+      },
+      "c7": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "ClarifyCoder detects incomplete programming specifications and prompts for missing details."
+      },
+      "c8": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Detects and classifies harmful versus harmless ambiguity in requirements."
+      },
+      "c9": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Autonomously repairs ambiguous requirements, adjacent to human clarification and useful for specification quality."
+      },
+      "c10": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Offers structured BDD and RFC-style specification-writing guidance."
+      },
+      "c11": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Calls out contracts, invariants, validation and failure behavior for agent boundaries."
+      },
+      "c12": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Automated detection of ambiguous software requirements is a relevant lead."
+      },
+      "c13": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Explains semantic and pragmatic ambiguity types."
+      },
+      "c14": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f2",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Benchmark evaluates questions for ambiguous requirements and notes LLM-judge validity risk."
+      },
+      "c15": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1"
+        ],
+        "uncertain": false,
+        "rationale": "Industrial study excerpt shows context-dependent terminology ambiguity."
+      },
+      "c16": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Proposes coding assistant that asks clarification questions when input is ambiguous."
+      },
+      "c17": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Validates natural-language software requirements with structured agents and standards."
+      },
+      "c18": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Specification inference for security auditing is adjacent, not user clarification."
+      },
+      "c19": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Clarifies requirements for formal signal logic, a domain-specific adjacent method."
+      },
+      "c20": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Shows clarification-seeking can expose agents to prompt injection."
+      },
+      "c21": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Studies personalized ambiguity and use of resolved prior sessions."
+      },
+      "c22": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q5_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Evaluates delivered applications against specifications, indirect to clarification."
+      },
+      "c23": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Research directly studies code generation under ambiguous requirements."
+      },
+      "c24": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Detects ambiguity, non-testability, incompleteness and inconsistency in requirements."
+      },
+      "c25": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f2",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Studies requirements changing after implementation begins and resulting rework."
+      },
+      "c26": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Human validation of generated code depends on faithful implementation of user intent."
+      },
+      "c27": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f2",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Framework evaluates question clarification for ambiguous or underspecified queries."
+      },
+      "c28": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q5_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Broad review mentions conversational human-in-loop coding but not targeted clarification method."
+      },
+      "c29": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f2",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Benchmark targets translating vague intent into executable specifications through user dialogue."
+      },
+      "c30": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q5_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Product search clarification workflow is a useful analogy, but outside coding."
+      },
+      "c31": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent harness essay does not address ambiguity clarification."
+      },
+      "c32": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q5_f1",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Specification-level reasoning source examines requirements review beyond code generation."
+      },
+      "c33": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Compiles behavioral specifications into executable tests and iterates to compliance."
+      },
+      "c34": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q5_f1",
+          "q5_f2",
+          "q5_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Requirement-driven sourcing frames underspecification as elicitation, validation and verification."
+      },
+      "c35": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q5_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Benchmarks understanding business requirements in application-building platforms."
+      },
+      "c36": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Proactivity in agents is broad and unrelated to clarification of requirements."
+      }
+    },
+    "q6": {
+      "c0": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Explains LSP grounding and compiler-accurate feedback in agent editing loop."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The LSP guide describes rename-across-files and refactoring/code actions that respect scope."
+      },
+      "c2": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The excerpt says edits trigger formatting and LSP compiler diagnostics before the next turn."
+      },
+      "c3": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The excerpt discusses context switching and multi-file refactoring through language-server and filesystem tools."
+      },
+      "c4": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The study directly examines compiler and language-server feedback for coding agents."
+      },
+      "c5": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f2"
+        ],
+        "uncertain": false,
+        "rationale": "The TypeScript MCP deep dive describes safe project-wide symbol refactoring and code exploration."
+      },
+      "c6": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Explains symbol/file refactoring through IDE tools and language-server workflow."
+      },
+      "c7": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The server previews edits, checks diagnostic changes, then applies or discards them."
+      },
+      "c8": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Concrete multi-file refactor steps enumerate renames, imports, paths, docs, config and tests."
+      },
+      "c9": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Issue identifies single-error diagnostics and requests multiple severities, directly matching compiler feedback."
+      },
+      "c10": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The issue directly specifies cross-file rename and refactoring through language-server fixtures, with supported-operation coverage to validate behavior."
+      },
+      "c11": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Verifier agent runs full tests after refactoring; useful workflow signal."
+      },
+      "c12": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The issue explicitly requests a diagnostics and code-fix pipeline under language services, LSP and refactoring."
+      },
+      "c13": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Refactor benchmark emphasizes evaluation but excerpt offers little multi-file feedback detail."
+      },
+      "c14": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f1",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Issue describes project compiler and diagnostics across parsed resources and graph validation."
+      },
+      "c15": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The code-intelligence overview is broad and its visible excerpt does not address compiler diagnostics or refactoring feedback."
+      },
+      "c16": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Repository-scale refactoring harness focuses on behavior-preserving edits across files."
+      },
+      "c17": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "RefAgent runs Maven compilation and advances to testing only after successful compilation."
+      },
+      "c18": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f1",
+          "q6_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Describes LSP integration feeding compiler and linter diagnostics back to model after edits."
+      },
+      "c19": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f1",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The extension guide distinguishes per-document validation from workspace-wide diagnostics."
+      },
+      "c20": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The study directly evaluates reliability of LLM-generated refactorings, while the excerpt gives limited workflow detail."
+      },
+      "c21": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The harness directly studies repository-scale changes across interdependent files while preserving behavior."
+      },
+      "c22": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "JVM code-cache optimization is unrelated to agent-guided repository refactoring."
+      },
+      "c23": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The review contrasts coding paradigms but the excerpt shows no multi-file refactoring feedback mechanism."
+      },
+      "c24": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The execution-verified semantic benchmark is a useful correctness-evaluation lead, though it does not describe a refactoring workflow."
+      },
+      "c25": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Coding-agent architecture taxonomy is broad."
+      },
+      "c26": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "The card discusses retrieval of code and documentation for agents, which is broad context rather than compiler feedback."
+      },
+      "c27": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent-harness overview is broad; no compiler feedback mechanism visible."
+      },
+      "c28": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The SDLC article is broad agentic-coding context without visible compiler or refactoring details."
+      },
+      "c29": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "This SDLC article provides broad context but no visible multi-file feedback mechanism."
+      },
+      "c30": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The vibe-coding survey is broad and does not show the requested refactoring workflow."
+      },
+      "c31": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Evaluates generated scientific code beyond functional correctness."
+      },
+      "c32": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The card concerns repository skill optimization, not multi-file refactoring or compiler feedback."
+      },
+      "c33": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f2",
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "The study concerns coordinated changes across disjoint code regions, relevant to multi-file correctness."
+      },
+      "c34": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Optimizes multi-agent architecture unrelated to refactoring feedback."
+      },
+      "c35": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The mobile coding benchmark is unrelated to compiler or language-server feedback for a refactor."
+      },
+      "c36": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q6_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Evaluates automated code-quality fixes, a useful correctness-check lead."
+      },
+      "c37": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Long-horizon coding benchmark is broad task evaluation."
+      },
+      "c38": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The general coding-task agent framework is not specifically about multi-file refactoring or compiler feedback."
+      },
+      "c39": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "ISA migration benchmark is unrelated to multi-file feedback."
+      }
+    },
+    "q7": {
+      "c0": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f1",
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Atlas down-plan and pre-migration checks are directly relevant to rollback/review evidence."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Directly calls for testing compatibility, data semantics, code reverts and forward fixes."
+      },
+      "c2": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Explains rollback safety depends on post-migration data and old-code compatibility."
+      },
+      "c3": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f1",
+          "q7_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Explains expand-contract until schema validated and ready."
+      },
+      "c4": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q7_f1",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Highlights database-specific transaction, foreign-key and type constraints for migration agents."
+      },
+      "c5": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f1",
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Explains backward-compatible schema allows application rollback."
+      },
+      "c6": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Specifically tests old application against expanded schema after rollback."
+      },
+      "c7": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent runtime migration guide concerns memory/config, not database schema."
+      },
+      "c8": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f1",
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Explains backward-compatible schema changes before code updates to support rollback."
+      },
+      "c9": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q7_f1",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "AI data-migration guide warns about truncation and requires testing mappings."
+      },
+      "c10": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q7_f1",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Mentions additive changes and dual-write patterns for compatibility and data integrity."
+      },
+      "c11": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f1",
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Practical database changes guide advocates phased rollout and views."
+      },
+      "c12": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f1",
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Explains expand-contract ordering and rollback tests before traffic shifts."
+      },
+      "c13": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q7_f1",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Nullable fields and runtime upcasting preserve backward compatibility."
+      },
+      "c14": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f1",
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Issue requires compatible deployment order and proof before destructive cleanup."
+      },
+      "c15": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Issue calls for testing forward and backward compatibility for every migration."
+      },
+      "c16": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Issue identifies tests must cross migration boundary to exercise rollback failure mode."
+      },
+      "c17": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q7_f1",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Canary traffic routing preserves old behavior while introducing a new implementation."
+      },
+      "c18": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q7_f1",
+          "q7_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Issue frames forward-only versus reversible migration policy and rollback compatibility."
+      },
+      "c19": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q7_f2",
+          "q7_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Flyway CI example includes rollback commands or automated migration tests."
+      },
+      "c20": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Generic cloud migration model is unrelated to database schema safety."
+      },
+      "c21": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q7_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Agent filesystem data-loss study is indirect safety context."
+      },
+      "c22": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Vibe coding review is broad."
+      },
+      "c23": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "SNMP security migration is unrelated."
+      },
+      "c24": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "General agent architecture is unrelated to database migrations."
+      },
+      "c25": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "LLM toolchain taxonomy is unrelated."
+      },
+      "c26": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Cloud-native test architecture is not migration-specific."
+      },
+      "c27": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q7_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Continuous compliance pipeline for hybrid databases is adjacent, not schema migration focused."
+      },
+      "c28": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "CRM architecture is broad and not schema migration guidance."
+      },
+      "c29": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Data platform review is not migration safety."
+      },
+      "c30": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Enterprise data/AI platform guide is broad."
+      },
+      "c31": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Insurance portal modernization lacks schema migration safety details."
+      },
+      "c32": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Government LCNC architecture does not address DB migration."
+      },
+      "c33": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "General computing architecture is unrelated."
+      },
+      "c34": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Brownfield AI productivity framework is only broad context."
+      },
+      "c35": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Microservice architecture survey is general background."
+      },
+      "c36": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Python API framework is unrelated."
+      },
+      "c37": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent communication security is unrelated."
+      },
+      "c38": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q7_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Installation verification is general platform testing, not database schema changes."
+      }
+    },
+    "q8": {
+      "c0": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Describes log-based reproduction and fixes for missing synchronization."
+      },
+      "c1": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Firsthand report emphasizes reproduction harness and diagnosis before fixing/quarantining."
+      },
+      "c2": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Explains failure triage before repair for locator drift."
+      },
+      "c3": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "FlakyGuard uses diagnostics, stack traces and reproduction rates for test-only repair."
+      },
+      "c4": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Triage playbook recommends advise mode and backtesting to ensure no regressions are masked."
+      },
+      "c5": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Calls for multi-signal classification across code, environment and execution context."
+      },
+      "c6": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Agent scans logs for root cause and babysits validation over time."
+      },
+      "c7": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Explains intermittent failures, reproduction cost, and risk of hiding real regressions."
+      },
+      "c8": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Tool uses controlled perturbations to classify flaky tests and propose repairs."
+      },
+      "c9": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Explicitly separates reproducing a flaky failure, diagnosis, and repair."
+      },
+      "c10": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [
+          "q8_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Guide promises reproduction and diagnosis, but visible details are brief."
+      },
+      "c11": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Explains resilient intent-based locators to prevent markup-change flakes."
+      },
+      "c12": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Study reports automated validation and manual checks of flaky-test repairs."
+      },
+      "c13": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Discusses selector failures and diagnosis costs, but is a broad industry article."
+      },
+      "c14": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f1",
+          "q8_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Explains reruns used to determine whether flaky failures are valid."
+      },
+      "c15": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f2"
+        ],
+        "uncertain": false,
+        "rationale": "Diagnosis guide connects locale/timezone environment to intermittent failures."
+      },
+      "c16": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Agentic regression testing selects and repairs broken scripts; useful but broad."
+      },
+      "c17": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Repairs async flakes by injecting synchronization barriers at runtime."
+      },
+      "c18": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Dataset supplies scripts/logs for reproducing flakes and verifying fixes."
+      },
+      "c19": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Warns retries mask regressions and discusses timing-aware isolated tests."
+      },
+      "c20": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Validation replay checks whether passing repair commands actually test the bug."
+      },
+      "c21": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Pipeline decomposes CI diagnosis into failure classification and repair."
+      },
+      "c22": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Automates reproduction and validation of reported GUI bugs, adjacent to flaky diagnosis."
+      },
+      "c23": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "General agent survey is not flakiness-specific."
+      },
+      "c24": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "General agent survey is not focused on test flakes."
+      },
+      "c25": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q8_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Refactoring reliability is adjacent validation evidence but not flakiness."
+      },
+      "c26": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [
+          "q8_f1",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Agent issue repair system uses baseline-aware test evaluation."
+      },
+      "c27": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q8_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Unit-test generation/correction evaluation is adjacent but no flakiness signal is visible."
+      },
+      "c28": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q8_f3"
+        ],
+        "uncertain": true,
+        "rationale": "Assertions survey is general verification background."
+      },
+      "c29": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "General LLM software engineering survey is not about flaky tests."
+      },
+      "c30": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q8_f1",
+          "q8_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Trace-driven failure analysis is adjacent diagnosis, but exploit failures differ from flaky tests."
+      },
+      "c31": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Terminal training environments are unrelated to flaky-test triage."
+      },
+      "c32": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Harness evolution paper is unrelated to flaky tests."
+      },
+      "c33": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [
+          "q8_f1",
+          "q8_f2",
+          "q8_f3"
+        ],
+        "uncertain": false,
+        "rationale": "Distributed test infrastructure distinguishes genuine defects from infrastructure noise."
+      },
+      "c34": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent training across task categories is unrelated to flaky-test diagnosis."
+      },
+      "c35": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Agent memory benchmark is unrelated."
+      },
+      "c36": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q8_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Event race detection may explain one source of nondeterminism but is not test flakiness guidance."
+      },
+      "c37": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q8_f1",
+          "q8_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Execution traces and taxonomy are general failure-feedback mechanisms, not test flakiness specifically."
+      },
+      "c38": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [
+          "q8_f1"
+        ],
+        "uncertain": true,
+        "rationale": "General issue-resolution failure modes are adjacent, not test-flake specific."
+      },
+      "c39": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [
+          "q8_f2"
+        ],
+        "uncertain": true,
+        "rationale": "Neural-augmented fault localization is general diagnosis background."
+      }
+    },
+    "q9": {
+      "c0": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Aider-AI/aider is the named project repository and describes the terminal pair programmer."
+      },
+      "c1": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Aider Desk is a platform, not the named source repository."
+      },
+      "c2": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Emacs Aider integration is adjacent, not Aider itself."
+      },
+      "c3": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Agent API exposes Aider alongside several agents."
+      },
+      "c4": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "MCP server specifically wraps Aider."
+      },
+      "c5": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The aide/aide source name is distinct from Aider."
+      },
+      "c6": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Directives target Aider among several agents."
+      },
+      "c7": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "VS Code extension for Aider."
+      },
+      "c8": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Emacs integration for Aider."
+      },
+      "c9": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Neovim integration is adjacent."
+      },
+      "c10": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Neovim integration for Aider."
+      },
+      "c11": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Conventions are for Aider, not its source."
+      },
+      "c12": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Indexes sessions from Aider and other agents."
+      },
+      "c13": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "AIDE+ Java repository has no visible Aider relation."
+      },
+      "c14": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Installer is Aider-specific but not the source project."
+      },
+      "c15": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Benchmark harness is Aider-specific but is not the application source."
+      },
+      "c16": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "VS Code extension is an integration repository."
+      },
+      "c17": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Gateway supports Aider among several clients."
+      },
+      "c18": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Directory lists Aider among many agents."
+      },
+      "c19": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "AIDE+ source is unrelated to the Aider project."
+      }
+    },
+    "q10": {
+      "c0": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Continue-like product description, but repository owner differs from official project namespace."
+      },
+      "c1": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "LLaMA assistant is unrelated despite the snippet mentioning Continue.dev."
+      },
+      "c2": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The repository name includes Continue, but the generic assistant description does not establish official project identity."
+      },
+      "c3": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Continue-style product description matches the project, but repository owner differs from the expected official namespace."
+      },
+      "c4": {
+        "lead": 2,
+        "visible": 3,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The card explicitly labels itself an independent third-party profile and describes Continue, making it a useful secondary lead with visible detail."
+      },
+      "c5": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "The card says this separate code assistant was inspired by Continue.dev, which indicates relation but not official ownership."
+      },
+      "c6": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Third-party profile describes Continue but is not its source repository."
+      },
+      "c7": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "The portfolio only compares coding assistants and mentions Continue in that comparison; it does not indicate an official source repository."
+      },
+      "c8": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Large unrelated commit excerpt; no Continue signal."
+      }
+    },
+    "q11": {
+      "c0": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for Spring recipes."
+      },
+      "c1": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official Maven plugin repository; tooling module, sparse detail."
+      },
+      "c2": {
+        "lead": 3,
+        "visible": 2,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository explicitly provides recipes for newer Java versions."
+      },
+      "c3": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for testing migration recipes."
+      },
+      "c4": {
+        "lead": 2,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official OpenRewrite Gradle plugin repository; tooling module, sparse detail."
+      },
+      "c5": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for static-analysis recipes."
+      },
+      "c6": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official docs source repository, not migration engine."
+      },
+      "c7": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for logging migration recipes."
+      },
+      "c8": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for Kotlin support."
+      },
+      "c9": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for JavaScript recipes."
+      },
+      "c10": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for Apache recipes."
+      },
+      "c11": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for Java dependency recipes."
+      },
+      "c12": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for OpenAPI recipes."
+      },
+      "c13": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for Hibernate recipes."
+      },
+      "c14": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for Python recipes."
+      },
+      "c15": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for Jenkins recipes."
+      },
+      "c16": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for data-flow analysis recipes."
+      },
+      "c17": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for Quarkus recipes."
+      },
+      "c18": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official organization repository for generative-AI recipes."
+      },
+      "c19": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": true,
+        "rationale": "Official OpenRewrite organization repository for Micronaut recipes, a specific module."
+      }
+    },
+    "q12": {
+      "c0": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "HypothesisWorks/hypothesis directly names the Python property-based testing library."
+      },
+      "c1": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Hypothesis-like Rust alternative, explicitly a different project."
+      },
+      "c2": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Hegel Rust is a separate implementation built on Hypothesis."
+      },
+      "c3": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Tutorial about property testing using Hypothesis, not project source."
+      },
+      "c4": {
+        "lead": 2,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Official owner namespace and Java port name provide a lead, but the card calls it a feasibility prototype."
+      },
+      "c5": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Hegel protocol describes itself as built on Hypothesis."
+      },
+      "c6": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Hegel TypeScript is separate and built on Hypothesis."
+      },
+      "c7": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Hegel OCaml is separate and built on Hypothesis."
+      },
+      "c8": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Hegel Java is a separate implementation built on Hypothesis."
+      },
+      "c9": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Hegel C++ is separate and built on Hypothesis."
+      },
+      "c10": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Workshop materials use Hypothesis; not library source."
+      },
+      "c11": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Domain-specific strategies built using Hypothesis, not source."
+      },
+      "c12": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Article about benefits of using Hypothesis, not source."
+      },
+      "c13": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Separate Haskell library says built on Hypothesis."
+      },
+      "c14": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Talk about Hypothesis, not source repository."
+      },
+      "c15": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Rust library uses related property-testing concepts; not Hypothesis source."
+      },
+      "c16": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Separate TypeScript property-testing library is merely inspired by Hypothesis."
+      },
+      "c17": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Hegel Lean is separate and built on Hypothesis."
+      },
+      "c18": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Skill references Hypothesis but is not the library source."
+      },
+      "c19": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Personal experiment mentions Hypothesis, not the official project."
+      }
+    },
+    "q13": {
+      "c0": {
+        "lead": 3,
+        "visible": 3,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "ast-grep/ast-grep is the named organization repository and describes the CLI core functionality."
+      },
+      "c1": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Official-looking ast-grep org website repository, not tool source."
+      },
+      "c2": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Aider grep-ast is a different named tool."
+      },
+      "c3": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Official organization MCP integration, not core source."
+      },
+      "c4": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Official organization VS Code extension, not core source."
+      },
+      "c5": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Community rules collection, not tool source."
+      },
+      "c6": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Codemod CLI includes first-class ast-grep support, but is a separate project."
+      },
+      "c7": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Telescope picker for ast-grep, not source."
+      },
+      "c8": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Separate grep-ast tool uses AST patterns."
+      },
+      "c9": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Separate Python AST XPath utility."
+      },
+      "c10": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Agent extension ports ast-grep tools; not core project."
+      },
+      "c11": {
+        "lead": 0,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Separate AST search and refactor tool."
+      },
+      "c12": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Zed extension for ast-grep, not source."
+      },
+      "c13": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Agent code-search tool uses Tree-sitter and dependency analysis; no direct ast-grep source identity."
+      },
+      "c14": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "MCP code-intelligence tool uses ast-grep, not source."
+      },
+      "c15": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Skill wraps ast-grep; separate integration."
+      },
+      "c16": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "AstroGrep naming is not evidence of ast-grep project identity."
+      },
+      "c17": {
+        "lead": 1,
+        "visible": 1,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Search skill includes ast-grep among several utilities."
+      },
+      "c18": {
+        "lead": 0,
+        "visible": 0,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "AstroGrep name alone does not identify ast-grep."
+      },
+      "c19": {
+        "lead": 1,
+        "visible": 2,
+        "facets": [],
+        "uncertain": false,
+        "rationale": "Vue tool says powered by ast-grep; separate consumer."
+      }
+    }
+  }
+}

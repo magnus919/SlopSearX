@@ -1,0 +1,745 @@
+{
+  "q1-a-000": {
+    "card_sha256": "fb3fba3606ec1965f3059f449c0559b6a0b009ee7e9547ee371ab8a3d4351968",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Flaky-test repair context is adjacent to agent testing, but the card does not show affected-test selection.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "FlakyGuard: Automatically Fixing Flaky Tests at Industry Scale"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q1-a-001": {
+    "card_sha256": "e830acbb844425e108aadfbc5afe91de3c1cb8347e798cd881b0a41f74f8db81",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Names Nx and Turborepo affected-file detection and project graphs; comparison is broad rather than agent-specific.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "built-in support for affected file detection and project graph analysis"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "built-in support for affected file detection and project graph analysis"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "built-in support for affected file detection and project graph analysis"
+        }
+      ]
+    }
+  },
+  "q1-a-002": {
+    "card_sha256": "85eb6b96a39e5ad2b874a5d91339b0c0e4162833eb3aead700d6d280a8f0352c",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Visible description directly links dependency graphs to selecting affected projects and tests.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Nx can precisely determine which projects are affected by changes"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "Nx can precisely determine which projects are affected by changes"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "Nx can precisely determine which projects are affected by changes"
+        }
+      ]
+    }
+  },
+  "q1-a-003": {
+    "card_sha256": "f6bc719c14ca6bbfd61c0b28d40cd9890d432ada42b1139bbc17a5097e85f390",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Monorepo test governance is related context, but no selection mechanism is visible.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Monorepo governance rules for multi-team test codebases"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q1-a-004": {
+    "card_sha256": "e3abba27c16c825628377eb31750099cd1ab440de3a627d0b8a8ef2373c8dd64",
+    "lead": 2,
+    "visible": 1,
+    "facets": [
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "A public Bazel example builds and tests a Python monorepo; implementation details are not shown.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "builds and tests a Python monorepo using Bazel"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "builds and tests a Python monorepo using Bazel"
+        }
+      ]
+    }
+  },
+  "q1-a-005": {
+    "card_sha256": "9836ce49fdd7abf0d9780582c8f48243bc18105bd60881479da1562cc6d246e7",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The paper concerns monorepository architecture generally without visible affected-test guidance.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Monorepository-Driven Design of Information Systems and Software Complexes"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q1-a-006": {
+    "card_sha256": "de6c93294c31dad9b09a11056c7686d77908034b1d3164a475ac1a9406e79afe",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q1_f1",
+      "q1_f2",
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The guide explicitly promises dependency graphs, affected selection, CI wiring, and failure diagnosis.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "algorithms for affected selection, CI wiring patterns, failure diagnosis when selection is wrong"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "algorithms for affected selection, CI wiring patterns, failure diagnosis when selection is wrong"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "algorithms for affected selection, CI wiring patterns, failure diagnosis when selection is wrong"
+        }
+      ],
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "algorithms for affected selection, CI wiring patterns, failure diagnosis when selection is wrong"
+        }
+      ]
+    }
+  },
+  "q1-a-007": {
+    "card_sha256": "d94d9402ae41e74c2dbbc8c813b5bc6c8b51dfccd4e7d0e922a62e882f859d5a",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Graph-based execution selects affected nodes and dependents, a useful but brief mechanism signal.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "CI only rebuilds affected nodes and their dependents"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "CI only rebuilds affected nodes and their dependents"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "CI only rebuilds affected nodes and their dependents"
+        }
+      ]
+    }
+  },
+  "q1-a-008": {
+    "card_sha256": "485dacd5f521441cf229833efa7a5f7d864fe7a99221c6b12a074395551e048b",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "It offers a decision criterion for adopting graph-aware tools, not test-selection instructions.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "There is no universal threshold of projects, developers, or CI minutes"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "There is no universal threshold of projects, developers, or CI minutes"
+        }
+      ]
+    }
+  },
+  "q1-a-009": {
+    "card_sha256": "b959dca46fdbed1aa6f93320ea5fe82042788b31e0feb791f7a0b019f0e4976b",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q1_f3"
+    ],
+    "uncertain": true,
+    "rationale": "This is broad monorepo CI measurement and caching guidance, with little direct test-selection detail.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "how to measure where time actually goes"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "how to measure where time actually goes"
+        }
+      ]
+    }
+  },
+  "q1-a-010": {
+    "card_sha256": "8394c2e8aa13b57fbd596f9a117c5d2afe4452f948e36780298a60400907ef94",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q1_f2",
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The research title and abstract directly concern pipeline-aware regression-test optimization at scale.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Practical Pipeline-Aware Regression Test Optimization for Continuous Integration"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f2": [
+        {
+          "field": "title",
+          "quote": "Practical Pipeline-Aware Regression Test Optimization for Continuous Integration"
+        }
+      ],
+      "q1_f3": [
+        {
+          "field": "title",
+          "quote": "Practical Pipeline-Aware Regression Test Optimization for Continuous Integration"
+        }
+      ]
+    }
+  },
+  "q1-a-011": {
+    "card_sha256": "069e33ef77f7a0122058cedf1e7181928dd05f780c0a08b823d3d4a7d1acf129",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2",
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "It names graph and reverse-dependency commands for identifying affected projects across tools.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Pants can list dependencies and transitive dependents"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "Pants can list dependencies and transitive dependents"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "Pants can list dependencies and transitive dependents"
+        }
+      ],
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "Pants can list dependencies and transitive dependents"
+        }
+      ]
+    }
+  },
+  "q1-a-012": {
+    "card_sha256": "7b4f309a1ae030ae68277c5f3dc523984e5a585801cf067aacaa11e9047fbf2c",
+    "lead": 2,
+    "visible": 1,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": true,
+    "rationale": "Bazel monorepo build and test setup is relevant background, but the snippet lacks selection detail.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Building a Monorepo with Bazel - Earthly Blog"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "title",
+          "quote": "Building a Monorepo with Bazel - Earthly Blog"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "title",
+          "quote": "Building a Monorepo with Bazel - Earthly Blog"
+        }
+      ]
+    }
+  },
+  "q1-a-013": {
+    "card_sha256": "b8855cbefda659ce77ade3cce630f9e5f4ad0a72fb72101f72db74a8182951e2",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f1"
+    ],
+    "uncertain": true,
+    "rationale": "A repository knowledge graph for code agents is relevant to dependency understanding; affected tests are not explicit.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "absence of explicit, queryable representations of repository"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "absence of explicit, queryable representations of repository"
+        }
+      ]
+    }
+  },
+  "q1-a-014": {
+    "card_sha256": "a8c827a4e1266fcd8372595ca4aaccbed412d44e1b4a4f9f0baeb469ed4243ef",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The card explicitly says dependency changes affect Bazel tests and CI selects affected tests.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "CI only runs the tests affected by your change"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "CI only runs the tests affected by your change"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "CI only runs the tests affected by your change"
+        }
+      ]
+    }
+  },
+  "q1-a-015": {
+    "card_sha256": "5ba7201d3fd97edd8738bba1d681580e9f46b847cf0cdd740b8d0b14139b8a27",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The proposed graph represents components, tests, dependencies, and coverage edges for repository-aware agents.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "explicit dependency and coverage edges"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "explicit dependency and coverage edges"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "explicit dependency and coverage edges"
+        }
+      ]
+    }
+  },
+  "q1-a-016": {
+    "card_sha256": "31bf4a0e49930e98930cea3dba86c6fe409486b15ca7531fd6dd0d04aa3a1f2c",
+    "lead": 2,
+    "visible": 1,
+    "facets": [
+      "q1_f2",
+      "q1_f3"
+    ],
+    "uncertain": true,
+    "rationale": "It discusses automatic test selection but the visible cache-hit description is too abbreviated to validate the method.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Bazel gives automatic test selection"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "Bazel gives automatic test selection"
+        }
+      ],
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "Bazel gives automatic test selection"
+        }
+      ]
+    }
+  },
+  "q1-a-017": {
+    "card_sha256": "e70894ce5b8ff6c7712f67cbdfe5d30b95138a79ba4bd212d70a514eba521211",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Nx project graphs and affected-task execution offer directly relevant selection background.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "builds a project graph from your source, runs only affected tasks"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "builds a project graph from your source, runs only affected tasks"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "builds a project graph from your source, runs only affected tasks"
+        }
+      ]
+    }
+  },
+  "q1-a-018": {
+    "card_sha256": "b753c903c4721d34dc0f6722c71f302a35c8380bcc31f3070c58c930b4f7e3f3",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "This is a Bazel build example with only a GraphViz requirement visible.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Requires GraphViz"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q1-a-019": {
+    "card_sha256": "6398df5f2f54fba85533c8d0343db085b8d65bcbd9e87a66e64d907c09ad029b",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The snippet ties dependency relationships to triggering builds only in affected areas.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "changes in one module trigger rebuilds only in affected areas"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "changes in one module trigger rebuilds only in affected areas"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "changes in one module trigger rebuilds only in affected areas"
+        }
+      ]
+    }
+  },
+  "q1-a-020": {
+    "card_sha256": "cb1cb8983881238a301441955756470fd50d2d0aaadbe6e61fb35f817f15d618",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The issue directly targets dependency graph and build/test orchestration for affected tests.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "dependency graph and build/test orchestration layer"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "dependency graph and build/test orchestration layer"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "dependency graph and build/test orchestration layer"
+        }
+      ]
+    }
+  },
+  "q1-a-021": {
+    "card_sha256": "c8b718f590cea1dcf0ede5627feb9e92c7b80afa11bab1d3809b568ada9a5f78",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "This concerns dependency version conflicts in monorepos, not affected-test selection.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Dependency Management Strategies in Scalable Monorepositories"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q1-a-022": {
+    "card_sha256": "dcc07af851e67d4b5e569f537ceebf7701a247f317998e0b4082e5c6624d8c6e",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f2",
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The paper describes large-repository CI throughput and change-management requirements as relevant context.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "always green master, high throughput, and low commit turnaround time"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "always green master, high throughput, and low commit turnaround time"
+        }
+      ],
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "always green master, high throughput, and low commit turnaround time"
+        }
+      ]
+    }
+  },
+  "q1-a-023": {
+    "card_sha256": "449bcc9fb888d892062d511da15ad2f7eb7b5b25bdb093a9e035592769b16f54",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The repository directly implements Bazel target diffing for test selection and selective building.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Test Target Selection and Selective Building"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "Test Target Selection and Selective Building"
+        }
+      ]
+    }
+  },
+  "q1-a-024": {
+    "card_sha256": "ab0564ef5b5c4cc1da37b52d94e5ccb8e26290eb1164f420394ab77f131930e4",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Bazel documentation signals large-codebase support, but gives no affected-test method here.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Bazel handles codebases of any size"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q1-a-025": {
+    "card_sha256": "46dc09878374367c586946d98380ddf139a09f49fa9d612be63496b19bc0f12b",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q1_f1",
+      "q1_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The snippet explains incremental caching rebuilds only affected code, related to graph-based selection.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "only the affected parts of the code are recompiled"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f1": [
+        {
+          "field": "snippet",
+          "quote": "only the affected parts of the code are recompiled"
+        }
+      ],
+      "q1_f2": [
+        {
+          "field": "snippet",
+          "quote": "only the affected parts of the code are recompiled"
+        }
+      ]
+    }
+  },
+  "q1-a-026": {
+    "card_sha256": "a3df364793e31667cb5e6bc47df0ce8aaa0fed94d606622f3dbad66be7738600",
+    "lead": 1,
+    "visible": 2,
+    "facets": [
+      "q1_f3"
+    ],
+    "uncertain": false,
+    "rationale": "It exposes a scope limitation: the example does not model internal package dependency edges.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "What I was NOT trying to do here is model the internal dependency graph"
+      }
+    ],
+    "facet_anchors": {
+      "q1_f3": [
+        {
+          "field": "snippet",
+          "quote": "What I was NOT trying to do here is model the internal dependency graph"
+        }
+      ]
+    }
+  },
+  "q1-a-027": {
+    "card_sha256": "64c22cffb7484dfb36a59c27e045f0f182428ebe6abdb80817fe1ce49d0a3f98",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Repository consolidation is unrelated to choosing affected tests for an agent change.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Designing an Architecture for Transitioning Existing Codebases to a Monorepo"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q1-a-028": {
+    "card_sha256": "32b9370689175148893a1163822087cfddeafca5fff9efdf5f649f6dc8e42f07",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The generic Bazel overview has no visible test-selection details.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "smart build systems aren’t a luxury"
+      }
+    ],
+    "facet_anchors": {}
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "q10-b-000": {
+    "card_sha256": "ed22af782b976eb4043b5a6a68ad120a8e9fc5d4678aa0c9cdbca6918aa6389c",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Large unrelated commit excerpt; no Continue signal.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Sfedfcv/redesigned-pancake"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q10-b-001": {
+    "card_sha256": "3e20cc7844031c5b956561b2b4bdb592de6c3336e13e2f067566b96d0d305bf4",
+    "lead": 0,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "LLaMA assistant is unrelated despite the snippet mentioning Continue.dev.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "jellyterra/ideallama"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q10-b-002": {
+    "card_sha256": "870c191562b9d8430b0c89c17fc9052905600946b00300b1013a407dcf454ef7",
+    "lead": 2,
+    "visible": 2,
+    "facets": [],
+    "uncertain": false,
+    "rationale": "Continue-style product description matches the project, but repository owner differs from the expected official namespace.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "berrycube/continue_1.0"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q10-b-003": {
+    "card_sha256": "58a07718d8c1bfafac9be5cef6ad2935ce4aac4b62c45030c321658ea0bd7244",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The portfolio only compares coding assistants and mentions Continue in that comparison; it does not indicate an official source repository.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "lobbenedesign/ai-coding-tools-portfolio"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q10-b-004": {
+    "card_sha256": "8fc535e87aa025ae88cd47a51dab7bbd0bdd4467caaa0c88d79d6a91bf1943af",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": false,
+    "rationale": "The card says this separate code assistant was inspired by Continue.dev, which indicates relation but not official ownership.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "waltyou/cat"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q10-b-005": {
+    "card_sha256": "9cdc46b474351e973f14cc00d93de45aa8ac499ad5d71953f30e099299779fcd",
+    "lead": 2,
+    "visible": 3,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The card explicitly labels itself an independent third-party profile and describes Continue, making it a useful secondary lead with visible detail.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "api-evangelist/continue-dev"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q10-b-006": {
+    "card_sha256": "380eca8c117d944d7deb09ba50fb6dece0f27b778fb8de3338b5673baed68f10",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Third-party profile describes Continue but is not its source repository.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "antonio-amore-akiki/amore"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q10-b-007": {
+    "card_sha256": "1eb8472a8985cbc48e9b6b9f380c4daa22d29543d7fe7164117e8888070883cd",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The repository name includes Continue, but the generic assistant description does not establish official project identity.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "yh-zhu18thu/continue-codeaware"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q10-b-008": {
+    "card_sha256": "28af030db21fa3226c1bd4211a26e70a08920c5f677d521390ac184512007fef",
+    "lead": 1,
+    "visible": 2,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Continue-like product description, but repository owner differs from official project namespace.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "meg217/Continue.dev-Repo-Aware-Assistant"
+      }
+    ],
+    "facet_anchors": {}
+  }
+}
