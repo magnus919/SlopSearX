@@ -1,0 +1,309 @@
+{
+  "model": "jev-1.13.0",
+  "inputs": {
+    "docs/experiments/evidence/EXP-060/fresh-acquisition.json": "69f72e2895031d4804733f7cdb38197a2d2c43d7cddaa8589abc9a43397d1882",
+    "docs/experiments/evidence/EXP-060/queries.json": "010a418d7e37e9df198d6cb313b4612d82e76ba8bef4cc2a9502f2074bf85836",
+    "docs/experiments/evidence/EXP-039/source-selection-contract.json": "0cdf759b83ab96bad92666bbeabbb5d232aa81876712a314f931645082291c1b",
+    "docs/experiments/evidence/EXP-064/completed/metric-reference-view.json": "99625962fd078543d3dbf7630fc445dcfaff7fe55ab9289ef7c6f8a6ffb4afd9",
+    "docs/experiments/evidence/EXP-064/completed/source-bound-references.json": "1b2be2e0556f3f1fd39237456917b0daa0a9795d1297822a4c43b8ea211f8f05",
+    "docs/experiments/evidence/EXP-064/completed/semantic-correction-audit-final.json": "9622c053eba6f6979aef36b75e46fed038dcfd6f2837b6c08d474903a0ff42b1",
+    "docs/experiments/evidence/EXP-072/protocol.json": "8b39478ae79cc6b74b07428554559d7d8a9d5deb1e9e827a6f6dd57c4dcf675d"
+  },
+  "primary_cases": [
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "q5",
+    "q6",
+    "q7",
+    "q8"
+  ],
+  "rotation": "Rotate native acquisition order left by20 modulo pool length, preserving all globalIDs/cardbytes. W0 remaps native prefix to productionlocalIDs and back for output. Purposearms canonicalpool unchanged. Record provenance_order_ids peroperation.",
+  "dataset": "Exposed EXP-060 public pools and frozen EXP-064 independent references; development only, never untouched confirmation",
+  "schema": "exp075-single-transaction-dual-score-fusion/1",
+  "status": "prospective_registration_no_provider_calls_or_quality_computation",
+  "schedule": [
+    {
+      "case": "q1",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q1",
+      "variant": "repeat",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q1",
+      "variant": "rotate",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q2",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q3",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q4",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q4",
+      "variant": "repeat",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q4",
+      "variant": "rotate",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q5",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q6",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q7",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q7",
+      "variant": "repeat",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q7",
+      "variant": "rotate",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q8",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q8",
+      "variant": "repeat",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q8",
+      "variant": "rotate",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q9",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q10",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q11",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q12",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q13",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    }
+  ],
+  "gates": {
+    "quality": "Under BOTH independent references candidate-W0 primary mean nDCG@10 >=0.05 and query-bootstrap95percent lower >0 (10000 draws seed6501); per-case loss no worse than -0.03; per-case bound applies separately under both A and B",
+    "retention": "Useful lead>=2 top10 count no lower than W0; all W0 useful facet coverage retained for every primary case",
+    "stability": "candidate repeat/rotate top10 overlap>=0.8 for q1/q4/q7/q8",
+    "navigation": "Required: every official target actually present in q9-q13 stays top1. Report absent q10/q11 targets as unmet acquisition recall, not ranking recovery; no adoption credit from absence.",
+    "membership": "Exact full permutation, no dropped/unknown/duplicate IDs; any candidate failure atomically preserves full pre-Jev ordinary/native incumbent. Independent W0 control is comparison evidence, not an extra production fallback call.",
+    "latency": "Fresh W0 is an independent evaluation control outside the candidate replacement phase, with durable control phase <=1000ms. Candidate phase starts BEFORE actual composite request construction, canonicalization/namespacing and JSON serialization, then includes pending receipt, one owned exchange, both-family parsing, exact fusion and durable final candidate/failure receipt <=1000ms. Preflight previews do not replace measured reconstruction. Record both phases and combined paired wall. This measures a proposed one-transaction purpose-capable replacement, not a current deployed contract or the failed two-transaction additive mechanism; EXP073/074 outcomes are unchanged.",
+    "tail_evidence": "report natural>40 stratum; current one natural long pool cannot establish general tail benefit or replace fresh confirmation"
+  },
+  "bounds": {
+    "cards": 80,
+    "facets": 4,
+    "questions": 120,
+    "request_bytes": 384000,
+    "state_bytes": 128000,
+    "response_bytes": 2000000,
+    "calls": 44,
+    "reported_input_tokens": 3000000,
+    "reported_output_tokens": 160000,
+    "wall_seconds": 7200,
+    "concurrency": 1,
+    "retries": 0,
+    "legacy_control_request_bytes": 128000
+  },
+  "wire": {
+    "endpoint": "https://api.typesafe.ai/v1/systemone",
+    "model": "jev-1.13.0",
+    "baseline": "Byte-identical EXP-072 W0 body, production first40 native query-only Scores and unchanged native tail; fetched independently before candidate.",
+    "candidate_state": "Copy W0 state exactly, then add caller_context={purpose: original caller purpose, requested_facets: original ordered facet objects}. This deliberately shared context is a new mechanism, not proven isolation or byte-identical component semantics.",
+    "query_questions": "Copy each W0 question byte-for-byte as an object; dictionary key w0:<localID>. Existing instructions still refer to the original localID in the unchanged candidates list. Map answers through frozen local-to-global mapping. At most40 questions.",
+    "purpose_questions": "Canonical full pool, one Score question per globalID, key purpose:<globalID>. instructions={candidate: original full card, question: purpose_question_prefix + EXP-072 instructions}; criteria copy EXP-072 four levels exactly. purpose_question_prefix is frozen below. At most80 questions.",
+    "purpose_question_prefix": "For this question, use `caller_context.purpose` and `caller_context.requested_facets` as the task context. ",
+    "component_orders": "joint_query: descending query Score with stable first40 input-position ties c0..c39 (or existing prefix length), then append original native tail untouched. Map local IDs back to frozen global IDs. joint_purpose: descending purpose Score with canonical UTF8 tuple(url,title,snippet,id) ties. Both are exact full permutations.",
+    "fusion": "Equal weights Fraction(1,60+query_rank)+Fraction(1,60+purpose_rank); descending exact rational sum then canonical UTF8 tuple(url,title,snippet,id). No raw-score addition, confidence tuning or changed weights."
+  },
+  "policy": {
+    "transport": "Fresh async httpx client per call; one event loop; serial control then candidate; trust_env false; no redirects, retries or pooled reuse.",
+    "response": "Exact complete namespaced ID map, reject extra/missing/duplicate keys, matching model, Score types, finite numeric scores; query range0..9 and purpose0..3; require known nonnegative integer usage. Retain raw probability/confidence/legend fields as observations; no gating or grading derived from confidence alone.",
+    "failure": "Any baseline failure stops without inventing valid baseline. Any candidate admission/transport/parser/phase failure retains the complete pre-Jev ordinary incumbent (native acquisition/provenance order in this corpus), not an unavailable fresh query-only model result; the separately measured W0 comparator remains available only as evaluation evidence. No partial joint-query rescue. Unknown usage is retained and terminates remaining calls. No timeout retry or run replay.",
+    "capacity": "Synthetic80 full cards,40query+80purpose questions; independent W0 then one composite request; must pass exact answer/shape/range/usage/membership and both durable deadlines before research schedule. Vendor multiquestion support is not proof of120question acceptance or context fit.",
+    "provider_context": "Current provider docs report64k combined input and32k state+longest question. No verified local tokenizer is assumed. Reject locally oversized byte envelopes; provider context rejection is terminal evidence, not authorization to trim/drop cards or retry.",
+    "quality": "Analyze only complete44-attempt schedule with successful capacity and all21operations. Preserve both-reference quality, noninferiority, useful/facet retention, stability and navigation gates. Missing q10/q11 targets remain unmet acquisition recall; no adoption. Prefix cannot be graded.",
+    "untouched": "These tasks and pools are exposed; any supported development requires genuinely untouched NEW tasks AND pools plus the full production acceptance checklist before implementation.",
+    "admission": "Committed exact source/dependency qualification required before durable exclusive identity lease, DNS and lazy key read. The lease binds protocol/registration/input bytes and is retained on subsequent setup failure; qualification changes cannot reset identity.",
+    "searches": "Zero new search dispatches in this comparison. Brave remains8/10 used; remaining two not consumed.",
+    "caller_context_source": "The frozen evaluator supplies explicit original case.purpose and ordered case.facets, never inference from query/category/subquery. Current SearchRequest and research dispatch do not receive these fields. This study tests the proposed explicit-purpose contract only; production acceptance requires adding normalized fields and propagating original caller context through HTTP/MCP/portal/X direct/research/sync/SSE/worker/replay, including cache/singleflight/artifact identity. No claim of a reachable currently shipped purpose path.",
+    "capability_and_byte_bounds": "Explicit candidate capability has a newly declared384000-byte request envelope (128000-byte shared state); the independent legacy control retains production128000-byte request bound. This explicit capability/interface and larger request budget are part of the new candidate mechanism, not proof of deployable fit in current JevReranker or permission to widen ordinary query-only limits. Full acceptance must implement/test bounded opt-in capability, provider identity, resource/cancellation behavior and unchanged legacy limits before any rollout.",
+    "timed_request_construction": "Preflight may preview every deterministic request for admission/immutable hashes. During each measured candidate phase reconstruct its actual request from frozen case/cards/variant, including canonical projection/namespacing, copies and serialization; byte-match the preview before dispatch. No prepared/serialized composite body may be substituted into measured work. Preserve both build and exchange timings and whole durable endpoint."
+  },
+  "primary_sources": [
+    {
+      "url": "https://docs.typesafe.ai/api",
+      "checked": "2026-10-05",
+      "supports": "Structured per-question instructions and ordered2..10 Score criteria; association IDs are not inference."
+    },
+    {
+      "url": "https://docs.typesafe.ai/primitives/score",
+      "checked": "2026-10-05",
+      "supports": "Vendor documents multiple independent Score questions per request and combination in code; no120-question or ranking-quality proof."
+    },
+    {
+      "url": "https://docs.typesafe.ai/models",
+      "checked": "2026-10-05",
+      "supports": "Jev1.13.0 shared state,64k total input and32k state+longestquestion; limits must not be inferred from byte caps."
+    }
+  ],
+  "motivation": {
+    "EXP-074": "Terminal14-attempt combined deadline failure after capacity and five research operations; no quality analysis. Not retried or reinterpreted.",
+    "new_mechanism": "Single transaction replaces query-only ranking with jointly requested separate query and caller-purpose Scores plus fixed rank fusion. Shared context changes judgment input; development empirically tests resulting selection against independent byte-identical W0.",
+    "prior_work": "EXP018/043/045 batch other primitives/roles; EXP034/040 use one scoring rubric. Audit found no identical one-transaction query+purpose dual-Score ranking study."
+  }
+}
