@@ -1,0 +1,22 @@
+import importlib.machinery
+import importlib.util
+from pathlib import Path
+import unittest
+loader=importlib.machinery.SourceFileLoader('fusion',str(Path(__file__).with_name('fusion.py.txt')));spec=importlib.util.spec_from_loader(loader.name,loader);m=importlib.util.module_from_spec(spec);loader.exec_module(m)
+
+class FusionTests(unittest.TestCase):
+    def setUp(self):self.cards=[{'id':str(i),'url':f'https://example.org/{i:02}','title':'t','snippet':'s'} for i in range(80)]
+    def test_full_tail_and_exact_ties(self):
+        ids=[c['id'] for c in self.cards];d=m.fuse(self.cards,ids,list(reversed(ids)))
+        self.assertEqual(set(d['order_ids']),set(ids));self.assertEqual(len(d['order_ids']),80)
+        self.assertEqual(d['rational_scores']['0'],d['rational_scores']['79'])
+        self.assertLess(d['order_ids'].index('0'),d['order_ids'].index('79'))
+    def test_identical_inputs_preserve_order(self):
+        ids=[c['id'] for c in self.cards];self.assertEqual(m.fuse(self.cards,ids,ids)['order_ids'],ids)
+    def test_reject_omission_unknown_duplicate(self):
+        ids=[c['id'] for c in self.cards]
+        for bad in [ids[:-1],ids[:-1]+['unknown'],ids[:-1]+[ids[0]]]:
+            with self.assertRaises(ValueError):m.fuse(self.cards,ids,bad)
+        with self.assertRaises(ValueError):m.fuse(self.cards+[self.cards[0]],ids,ids)
+
+if __name__=='__main__':unittest.main()
