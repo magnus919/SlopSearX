@@ -1,6 +1,6 @@
 """EXP-074 inert-by-default async runner; fixture calls are local-only."""
 from __future__ import annotations
-import argparse, asyncio, hashlib, importlib.machinery, importlib.metadata, importlib.util, json, math, os, platform, socket, sys, time, urllib.parse
+import argparse, asyncio, hashlib, importlib.machinery, importlib.metadata, importlib.util, json, math, os, platform, socket, subprocess, sys, time, urllib.parse
 from pathlib import Path
 import httpx
 
@@ -42,6 +42,9 @@ def sync_pending(path,value):
     sync_directory(Path(path).parent)
 def digest(raw):return hashlib.sha256(raw).hexdigest()
 def committed(path,revision):return P.committed(path,revision)
+def committed_head(path):
+    revision=subprocess.run(['git','rev-parse','HEAD'],cwd=REPO,check=True,capture_output=True,text=True).stdout.strip()
+    return P.committed(path,revision)
 
 
 def study_identity(protocol_raw,registration_raw,input_bytes):
@@ -59,7 +62,7 @@ def live_gate(input_bytes,input_revision):
     qpath=HERE/'qualification-integrity.json'
     if qpath.is_symlink() or not qpath.is_file():raise ValueError('runner-not-qualified')
     qraw=qpath.read_bytes()
-    if committed('docs/experiments/evidence/EXP-074/qualification-integrity.json','HEAD')!=qraw:raise ValueError('uncommitted-qualification')
+    if committed_head('docs/experiments/evidence/EXP-074/qualification-integrity.json')!=qraw:raise ValueError('uncommitted-qualification')
     q=P.strict_json(qraw)
     keys={'schema','qualified','qualified_source_revision','files','source_pins','dependencies','environment','protocol_sha256','registration_sha256'}
     if type(q)is not dict or set(q)!=keys or q['schema']!='exp074-qualification-integrity/1' or q['qualified'] is not True:
@@ -145,6 +148,9 @@ def fixture_client_factory(mode='neutral',stats=None):
             payload=P.strict_json(body);payload.pop('usage',None)
             return httpx.Response(200,content=P.wire(payload))
         if mode=='overflow':return httpx.Response(200,content=b'x'*(T.MAX_RESPONSE_BYTES+10))
+        if mode=='compressed-overflow':
+            import gzip
+            return httpx.Response(200,headers={'Content-Encoding':'gzip'},content=gzip.compress(b'x'*(T.MAX_RESPONSE_BYTES+10)))
         if mode=='partial-timeout':
             class DelayedStream(httpx.AsyncByteStream):
                 async def __aiter__(self):

@@ -19,6 +19,10 @@ def data():
     return acquisition,queries,proof
 
 class RequestAndPreflightTests(unittest.TestCase):
+    def test_committed_head_helper_resolves_symbolic_head_to_a_revision(self):
+        expected=(HERE/'protocol.json').read_bytes()
+        self.assertEqual(N.committed_head('docs/experiments/evidence/EXP-074/protocol.json'),expected)
+
     def test_registered_request_bytes_match_exact_pinned_exp073_adapter(self):
         acq,queries,_=data();byid={q['id']:q for q in queries}
         self.assertEqual(len(P.PROTOCOL['schedule']),21)
@@ -64,6 +68,24 @@ class AsyncTransportTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(call['transport']['client_closed']);self.assertEqual(call['failure']['code'],'http-status')
         self.assertEqual(result['operations'],[])
 
+    async def test_pending_receipt_deadline_before_purpose_dispatch_counts_no_second_call(self):
+        acq,queries,proof=data();stats={'clients':0,'requests':0,'closed':0}
+        real_sync=N.sync_pending
+        def delayed_second_pending(path,value):
+            real_sync(path,value)
+            if Path(path).name=='call-01.json':N.time.sleep(1.05)
+        with tempfile.TemporaryDirectory() as tmp,patch.object(N,'sync_pending',side_effect=delayed_second_pending):
+            out=Path(tmp)/'run'
+            result=await N.run(acq,queries,out,offline=True,source_integrity=proof,prebuilt=[],
+                               client_factory=N.fixture_client_factory('neutral',stats))
+            first=json.loads((out/'receipts'/'call-00.json').read_bytes())
+            second=json.loads((out/'receipts'/'call-01.json').read_bytes())
+        self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],1)
+        self.assertEqual(stats['requests'],1);self.assertTrue(first['dispatched'])
+        self.assertFalse(second['dispatched']);self.assertEqual(second['usage_status'],'not_dispatched')
+        self.assertEqual(second['failure']['code'],'whole-phase-deadline')
+        self.assertEqual(result['operations'],[])
+
     async def test_redirect_is_not_followed_and_stops_before_second_call(self):
         acq,queries,proof=data();stats={'clients':0,'requests':0,'closed':0}
         with tempfile.TemporaryDirectory() as tmp:
@@ -104,5 +126,46 @@ class AsyncTransportTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(call['response_complete']);self.assertEqual(call['usage_status'],'unknown')
         self.assertGreater(call['timings']['stream_ms'],0);self.assertTrue(call['transport']['client_closed'])
         self.assertEqual(stats['requests'],1);self.assertEqual(stats['clients'],stats['closed'])
+
+    async def test_decoded_response_overflow_is_terminal_and_bounded(self):
+        acq,queries,proof=data();stats={'clients':0,'requests':0,'closed':0}
+        with tempfile.TemporaryDirectory() as tmp:
+            out=Path(tmp)/'run'
+            result=await N.run(acq,queries,out,offline=True,source_integrity=proof,prebuilt=[],
+                               client_factory=N.fixture_client_factory('compressed-overflow',stats))
+            call=json.loads((out/'receipts'/'call-00.json').read_bytes())
+        self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],1)
+        self.assertEqual(stats['requests'],1);self.assertEqual(stats['clients'],stats['closed'])
+        self.assertEqual(call['failure']['code'],'response-too-large')
+        self.assertEqual(call['response_bytes'],T.MAX_RESPONSE_BYTES+1)
+        self.assertFalse(call['response_complete']);self.assertEqual(call['usage_status'],'unknown')
+
+    async def test_credential_echo_is_suppressed_before_receipt_and_usage_unknown(self):
+        acq,queries,proof=data();stats={'clients':0,'requests':0,'closed':0}
+        with tempfile.TemporaryDirectory() as tmp:
+            out=Path(tmp)/'run'
+            result=await N.run(acq,queries,out,offline=True,source_integrity=proof,prebuilt=[],
+                               client_factory=N.fixture_client_factory('credential-echo',stats))
+            call=json.loads((out/'receipts'/'call-00.json').read_bytes())
+        self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],1)
+        self.assertIsNone(call['raw_response_hex']);self.assertIsNone(call['response_body_sha256'])
+        self.assertEqual(call['response_bytes'],0);self.assertEqual(call['usage_status'],'unknown')
+        self.assertEqual(call['failure']['code'],'credential-echo-suppressed')
+        self.assertTrue(call['transport']['client_closed']);self.assertEqual(stats['requests'],1)
+
+    async def test_external_cancellation_closes_client_and_preserves_partial_timing(self):
+        stats={'clients':0,'requests':0,'closed':0}
+        owned=N.AsyncOwned(offline=True,client_factory=N.fixture_client_factory('partial-timeout',stats))
+        case,cards=P.synthetic_case();request=P.wire(P.build_requests(case,cards)['w0'])
+        task=asyncio.create_task(owned(request,timeout_s=1.0))
+        for _ in range(100):
+            if stats['requests']:break
+            await asyncio.sleep(0.001)
+        self.assertEqual(stats['requests'],1)
+        task.cancel()
+        with self.assertRaises(asyncio.CancelledError):await task
+        self.assertTrue(owned.last_attempt['dispatched']);self.assertTrue(owned.last_attempt['client_closed'])
+        self.assertTrue(owned.last_attempt['raw']);self.assertGreater(owned.last_attempt['timings']['stream_ms'],0)
+        self.assertEqual(stats['clients'],stats['closed']);self.assertTrue(stats['stream_closed'])
 
 if __name__=='__main__':unittest.main()

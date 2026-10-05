@@ -91,6 +91,10 @@ class AsyncHTTPTransport:
             attempt('cancelled')
             raise
         except Exception as error:
+            task=asyncio.current_task()
+            if task is not None and task.cancelling():
+                attempt('cancelled')
+                raise asyncio.CancelledError() from None
             timings,retained=attempt('transport-error')
             raise TransportFailure('transport-error',retained,status,complete,timings,dispatched) from None
         timings,retained=attempt()
