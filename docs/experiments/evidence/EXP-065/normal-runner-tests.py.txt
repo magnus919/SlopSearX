@@ -48,6 +48,11 @@ class PrepareTests(unittest.TestCase):
         with self.assertRaises(ValueError):P.validate_response(b" "*2_000_001,b["shared"],b["ids"])
         bad=json.loads(response(b["shared"]));bad["answers"]["id0"]["score"]=10
         with self.assertRaises(ValueError):P.validate_response(json.dumps(bad).encode(),b["shared"],b["ids"])
+    def test_real_provider_score_metadata_is_accepted(self):
+        b=P.bodies(case(),[card(0),card(1)])
+        data=json.loads(response(b["shared"]))
+        for answer in data["answers"].values():answer.update(confidence=.52,legend={"0":"none"},probabilities={"0":.1})
+        self.assertEqual(P.validate_response(json.dumps(data).encode(),b["shared"],b["ids"])["scores"],{"id0":5.0,"id1":5.0})
     def test_unknown_usage_is_not_fabricated(self):
         b=P.bodies(case(),[card(0),card(1)])
         self.assertIsNone(P.validate_response(response(b["shared"],usage=False),b["shared"],b["ids"])["usage"])

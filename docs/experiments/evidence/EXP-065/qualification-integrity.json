@@ -2,9 +2,9 @@
   "schema": "exp065-qualification/1",
   "qualified": true,
   "files": {
-    "prepare.py.txt": "c51717f2739471ba39e1a06cc20b6e4f27ea6ee56417c4f2ddf9fe4f3b9ace11",
-    "normal-runner.py.txt": "05f38f4daab9e67e54ebb3c066f19856b6639bd1b85ea296a30a32cc701bdb33",
-    "normal-runner-tests.py.txt": "1b6ca14e02f3c4e21a4ad0e5624b8d7b31ba878719b5afc46a1bbef6c1ee0f3c",
+    "prepare.py.txt": "afe5cdd1a43d435f0f6e4e2336962604369332c5f23af8edbe7c41990fcf7760",
+    "normal-runner.py.txt": "8858078ee1c5acdd728443b3669bdfc592d4be1b4b6c0bb3722e06698f920f43",
+    "normal-runner-tests.py.txt": "a902ccc9e7e63442505de7c33871183689d79cd2785fd79ebeac41af3c4d3265",
     "http-wrapper.py.txt": "8a426f2702d48f30197433ad819adc6689587902a26d9e677302bde78bae2dbe",
     "analyze.py.txt": "7fe2d3d040cdbf2ad8a390948ed05e9dde66637e3d839bef93f5aaaa4bfd360c",
     "analysis-tests.py.txt": "21f97e12d78529c7420156ac9227e4414be102aee78e66699934ab5ae096374b"
@@ -16,12 +16,14 @@
     "docs/experiments/evidence/EXP-039/source-selection-contract.json": "0cdf759b83ab96bad92666bbeabbb5d232aa81876712a314f931645082291c1b"
   },
   "offline_tests": {
-    "runner": 14,
+    "runner": 15,
     "analysis": 8,
     "synthetic_operations": 21,
     "synthetic_calls": 63
   },
-  "provider_calls": 0,
+  "provider_calls": 1,
   "search_calls": 0,
-  "review": "qualification.md"
+  "review": "qualification.md",
+  "status": "qualified metadata-compatible second invocation",
+  "invocation_registration_sha256": "091d5c6e9459e0e6c92539a178daa3846822d4adc552a821aba64ed0682513e5"
 }

@@ -11,3 +11,7 @@ The qualification manifest pins all six owned evidence sources and four reused d
 Upstream catch-up: [PR #512](https://github.com/magnus919/SlopSearX/pull/512) already tested whole pools and card-local questions. Batch score fusion was unstable; lower card-local drift did not establish quality uplift. [PR #594](https://github.com/magnus919/SlopSearX/pull/594) reconciled shipped safeguards. EXP-065 tests original caller purpose with question-local versus shared context; it does not repeat acquisition or authorize runtime adoption. Only one frozen pool exceeds forty, and missing navigation targets remain acquisition failures.
 
 No provider or search calls were made during qualification. Brave remains at eight of ten authorized attempts. No runtime, default behavior, deployment, or Hermes configuration changes are included.
+
+## Metadata-compatible second invocation
+
+The first invocation failed on the harness exact-field check; its known usage and raw response are preserved. The corrected parser follows the shipped client and retains all score/model/membership and usage checks. Fifteen runner tests pass, including provider metadata acceptance. The new committed invocation registration is qualification-pinned and included in the one-shot lease identity, preserving the original lease and prohibiting retries within the new invocation. The original protocol, inputs, metrics, schedule and finite per-invocation budget are unchanged.

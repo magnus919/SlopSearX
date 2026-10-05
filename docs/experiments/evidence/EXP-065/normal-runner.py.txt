@@ -99,13 +99,17 @@ def live_gate(acq_raw,query_raw,revision):
     for relative,digest in pins.items():
         path=REPO/relative
         if Path(relative).is_absolute() or ".." in Path(relative).parts or path.is_symlink() or not path.is_file() or not re.fullmatch(r"[0-9a-f]{64}",str(digest)) or hashlib.sha256(path.read_bytes()).hexdigest()!=digest:raise ValueError("qualification-source-pin")
+    amendment_path=HERE/"invocation-registration.json"
+    amendment_raw=amendment_path.read_bytes()
+    committed_amendment=subprocess.run(["git","show","HEAD:docs/experiments/evidence/EXP-065/invocation-registration.json"],cwd=REPO,check=True,capture_output=True).stdout
+    if committed_amendment!=amendment_raw or hashlib.sha256(amendment_raw).hexdigest()!=qualification.get("invocation_registration_sha256"):raise ValueError("invocation-registration-pin")
     # DNS preflight precedes credential inspection and one-shot lease creation.
     socket.getaddrinfo("api.typesafe.ai",443,type=socket.SOCK_STREAM)
     if not os.environ.get("TYPESAFE_API_KEY"):raise ValueError("missing-credential")
-    identity=hashlib.sha256(protocol_raw+acq_raw+query_raw).hexdigest()
+    identity=hashlib.sha256(protocol_raw+acq_raw+query_raw+amendment_raw).hexdigest()
     lease=Path(tempfile.gettempdir())/("exp065-lease-"+identity)
     create_lease(lease,identity)
-    return {"input_revision":revision,"runner_revision":subprocess.run(["git","rev-parse","HEAD"],cwd=REPO,check=True,capture_output=True,text=True).stdout.strip(),"qualification_sha256":hashlib.sha256(qpath.read_bytes()).hexdigest(),"source_pins":pins,"runner_files":files,"protocol_sha256":hashlib.sha256(protocol_raw).hexdigest(),"acquisition_sha256":hashlib.sha256(acq_raw).hexdigest(),"queries_sha256":hashlib.sha256(query_raw).hexdigest()}
+    return {"invocation_registration_sha256":hashlib.sha256(amendment_raw).hexdigest(),"input_revision":revision,"runner_revision":subprocess.run(["git","rev-parse","HEAD"],cwd=REPO,check=True,capture_output=True,text=True).stdout.strip(),"qualification_sha256":hashlib.sha256(qpath.read_bytes()).hexdigest(),"source_pins":pins,"runner_files":files,"protocol_sha256":hashlib.sha256(protocol_raw).hexdigest(),"acquisition_sha256":hashlib.sha256(acq_raw).hexdigest(),"queries_sha256":hashlib.sha256(query_raw).hexdigest()}
 def run(acquisition,queries,outdir,offline=True,source_integrity=None):
     outdir.mkdir(parents=True,exist_ok=False);receipt_dir=outdir/"receipts";receipt_dir.mkdir()
     if source_integrity is not None:
