@@ -1,0 +1,116 @@
+"""Offline-only analysis tests; all runner exchanges use an injected MockTransport."""
+import asyncio
+import copy
+import importlib.machinery
+import importlib.util
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE=Path(__file__).resolve().parent
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path))
+    spec=importlib.util.spec_from_loader(loader.name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+N=load("exp075_analysis_test_runner",HERE/"normal-runner.py.txt")
+A=load("exp075_analysis_test_analyzer",HERE/"analyze.py.txt")
+V=load("exp075_analysis_test_verifier",HERE/"verify-raw-receipts.py.txt")
+P=N.P
+
+
+class OfflineAnalysisTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.inputs={name:(N.REPO/name).read_bytes() for name in P.PINS}
+        cls.acquisition,cls.queries=P.source_data(cls.inputs)
+        cls.references=P.strict_json(cls.inputs["docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"])
+        cls.protocol_bytes=(HERE/"protocol.json").read_bytes()
+        cls.registration_bytes=(HERE/"registration-integrity.json").read_bytes()
+        cls.protocol=P.strict_json(cls.protocol_bytes)
+        cls.tmp=tempfile.TemporaryDirectory()
+        cls.out=Path(cls.tmp.name)/"complete"
+        cls.packet=asyncio.run(N.run(cls.acquisition,cls.queries,cls.out,offline=True,
+                                     client_factory=N.fixture_client_factory()))
+        cls.analysis=A.analyze(cls.packet,cls.acquisition,cls.references,cls.queries,cls.protocol,
+                               cls.inputs,cls.protocol_bytes,cls.registration_bytes)
+        (cls.out/"analysis.json").write_bytes(P.wire(cls.analysis))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def test_full_fixture_is_structurally_recomputed_but_never_quality(self):
+        self.assertEqual(self.packet["status"],"complete")
+        self.assertEqual(self.packet["budget"]["attempts"],44)
+        self.assertEqual(len(self.packet["operations"]),21)
+        self.assertEqual(self.analysis["outcome"],"synthetic_fixture_only")
+        self.assertFalse(self.analysis["quality_analysis_performed"])
+        self.assertFalse(self.analysis["adoption_eligible"])
+        self.assertEqual(self.analysis["structural_failures"],[])
+        report=V.verify(self.out)
+        self.assertEqual(report["raw_calls_checked"],44)
+        self.assertEqual(report["analysis_policy"],"synthetic_fixture_only")
+
+    def test_joint_raw_score_mutation_is_structurally_rejected(self):
+        run=copy.deepcopy(self.packet)
+        answers=run["operations"][0]["arms"]["joint_query"]["raw_answers"]
+        answers[next(iter(answers))]["score"] ^= 1
+        result=A.analyze(run,self.acquisition,self.references,self.queries,self.protocol,
+                         self.inputs,self.protocol_bytes,self.registration_bytes)
+        self.assertTrue(result["structural_failures"])
+        self.assertFalse(result["quality_analysis_performed"])
+
+    def test_candidate_order_and_exact_rational_mutations_are_rejected(self):
+        for field,value in (("order_ids",list(reversed(self.packet["operations"][0]["arms"]["candidate"]["order_ids"]))),
+                            ("rational_scores",{"q1-c0":[1,1]})):
+            run=copy.deepcopy(self.packet)
+            run["operations"][0]["arms"]["candidate"][field]=value
+            result=A.analyze(run,self.acquisition,self.references,self.queries,self.protocol,
+                             self.inputs,self.protocol_bytes,self.registration_bytes)
+            self.assertTrue(result["structural_failures"],field)
+            self.assertFalse(result["quality_analysis_performed"])
+
+    def test_incomplete_receipt_never_runs_quality_gates(self):
+        run=copy.deepcopy(self.packet)
+        run["status"]="incomplete"
+        result=A.analyze(run,self.acquisition,self.references,self.queries,self.protocol,
+                         self.inputs,self.protocol_bytes,self.registration_bytes)
+        self.assertEqual(result["outcome"],"incomplete")
+        self.assertFalse(result["quality_analysis_performed"])
+        self.assertFalse(result["adoption_eligible"])
+
+    def test_neutral_w0_failure_has_terminal_receipt_without_candidate_receipt(self):
+        with tempfile.TemporaryDirectory() as temp:
+            out=Path(temp)/"failed"
+            packet=asyncio.run(N.run(self.acquisition,self.queries,out,offline=True,
+                                     client_factory=N.fixture_client_factory("http-error")))
+            self.assertEqual(packet["status"],"incomplete")
+            self.assertEqual(packet["budget"]["attempts"],1)
+            self.assertTrue(packet["neutral"]["baseline_receipt"])
+            self.assertIsNone(packet["neutral"]["final_receipt"])
+            result=A.analyze(packet,self.acquisition,self.references,self.queries,self.protocol,
+                             self.inputs,self.protocol_bytes,self.registration_bytes)
+            self.assertEqual(result["outcome"],"incomplete")
+            self.assertNotIn("neutral-durable-receipts",result["structural_failures"])
+            self.assertFalse(result["quality_analysis_performed"])
+
+    def test_a_and_b_reference_gates_are_independent(self):
+        cards=[{"id":f"c{i}","title":f"title {i}","url":f"https://x/{i}","snippet":"s"} for i in range(80)]
+        baseline=[c["id"] for c in cards]
+        candidate=["c1","c0"]+[c["id"] for c in cards[2:]]
+        orders={(f"q{i}","base","w0"):baseline for i in range(1,9)}
+        orders.update({(f"q{i}","base","candidate"):candidate for i in range(1,9)})
+        refs={"A":{},"B":{}}
+        for q in (f"q{i}" for i in range(1,9)):
+            refs["A"][q]={c["id"]:{"lead":3 if c["id"]=="c0" else 0,
+                                   "facets":["a"] if c["id"]=="c0" else []} for c in cards}
+            refs["B"][q]={c["id"]:{"lead":3 if c["id"]=="c1" else 0,
+                                   "facets":["b"] if c["id"]=="c1" else []} for c in cards}
+        gates=A.reference_quality_gates(orders,refs,[f"q{i}" for i in range(1,9)])
+        self.assertFalse(gates["A"]["quality_gate_passed"])
+        self.assertTrue(gates["B"]["quality_gate_passed"])
+
+
+if __name__=="__main__":
+    unittest.main()

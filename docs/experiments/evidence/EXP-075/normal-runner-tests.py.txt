@@ -1,0 +1,375 @@
+"""Focused offline EXP-075 construction, transport, receipt and deadline checks."""
+import asyncio
+import importlib.machinery
+import importlib.util
+import json
+import os
+import pathlib
+import platform
+import tempfile
+import time
+import unittest
+from unittest import mock
+
+HERE = pathlib.Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp075_normal_runner", str(HERE / "normal-runner.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+N = importlib.util.module_from_spec(spec)
+loader.exec_module(N)
+P = N.P
+
+
+class RunnerTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        inputs = {name: (P.REPO / name).read_bytes() for name in P.PINS}
+        cls.acquisition, cls.queries = P.source_data(inputs)
+        cls.prepared = P.prebuild(cls.acquisition, cls.queries)
+
+    def test_control_request_is_byte_identical_to_exp072_for_every_registered_operation(self):
+        for item, case, cards, control, _joint, control_raw, _joint_raw in self.prepared:
+            old = P.BASE.bodies(case, cards, item["variant"])
+            self.assertEqual(control_raw, P.wire(old["w0"]))
+            self.assertEqual(control["provenance_order_ids"], old["provenance_order_ids"])
+
+    def test_joint_contains_40_query_prefix_and_full_purpose_namespace(self):
+        case, cards = P.synthetic_case()
+        control = P.build_control(case, cards)
+        joint = P.build_joint(case, cards)
+        body = joint["joint"]
+        self.assertEqual(len(body["questions"]), 120)
+        self.assertEqual(list(body["questions"])[0], "w0:c0")
+        self.assertEqual(list(body["questions"])[39], "w0:c39")
+        self.assertEqual(list(body["questions"])[40], "purpose:neutral-0")
+        self.assertEqual(len(control["tail_ids"]), 40)
+        self.assertEqual(body["state"]["caller_context"]["requested_facets"], case["facets"])
+
+    def test_joint_parser_produces_complete_permutations_and_exact_fraction_fusion(self):
+        case, cards = P.synthetic_case()
+        built = P.build_joint(case, cards)
+        raw = P.response_fixture(built["joint"], query_score=9, purpose_score=0)
+        parsed = P.parse_joint(raw, built)
+        expected = P.FUSE.fuse(built["cards"], parsed["joint_query"]["order_ids"], parsed["joint_purpose"]["order_ids"])
+        self.assertEqual(parsed["candidate"], expected)
+        self.assertEqual(parsed["joint_query"]["order_ids"], built["provenance_order_ids"])
+        self.assertEqual(parsed["joint_purpose"]["order_ids"], [card["id"] for card in built["cards"]])
+        self.assertEqual(set(parsed["joint_query"]["order_ids"]), {card["id"] for card in cards})
+        self.assertEqual(set(parsed["joint_purpose"]["order_ids"]), {card["id"] for card in cards})
+
+    def test_joint_parser_rejects_membership_range_duplicate_nonfinite_and_bad_usage(self):
+        case, cards = P.synthetic_case()
+        built = P.build_joint(case, cards)
+        valid = json.loads(P.response_fixture(built["joint"]))
+
+        missing = json.loads(json.dumps(valid));missing["answers"].pop(next(iter(missing["answers"])))
+        extra = json.loads(json.dumps(valid));extra["answers"]["purpose:unknown"] = {"type":"score","score":1}
+        bad_query_range = json.loads(json.dumps(valid));bad_query_range["answers"]["w0:c0"]["score"] = 10
+        bad_purpose_range = json.loads(json.dumps(valid));bad_purpose_range["answers"]["purpose:neutral-0"]["score"] = 4
+        bad_usage = json.loads(json.dumps(valid));bad_usage["usage"]["input_tokens"] = -1
+        float_usage = json.loads(json.dumps(valid));float_usage["usage"]["input_tokens"] = 1.0
+
+        for payload in (missing, extra, bad_query_range, bad_purpose_range, bad_usage, float_usage):
+            with self.subTest(payload=payload["usage"] if "usage" in payload else "scores/membership"):
+                with self.assertRaises(ValueError):
+                    P.parse_joint(P.wire(payload), built)
+
+        raw = P.response_fixture(built["joint"]).decode("utf-8")
+        with self.assertRaisesRegex(ValueError, "duplicate-json-key"):
+            P.parse_joint(raw.replace("{", '{"model":"duplicate",', 1).encode(), built)
+        nonfinite = raw.replace('"score":5', '"score":NaN', 1).encode()
+        with self.assertRaisesRegex(ValueError, "nonfinite-json"):
+            P.parse_joint(nonfinite, built)
+
+    def test_default_offline_path_is_fixture_only_and_records_44_calls_without_quality_credit(self):
+        escaped = []
+
+        async def forbid_network(_transport, _request):
+            escaped.append(True)
+            raise AssertionError("offline-run-attempted-network")
+
+        with tempfile.TemporaryDirectory() as temp:
+            with mock.patch.object(N.httpx.AsyncHTTPTransport, "handle_async_request", forbid_network):
+                output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
+                                           offline=True, prebuilt=self.prepared))
+        self.assertEqual(output["status"], "complete")
+        self.assertEqual(output["budget"]["attempts"], 44)
+        self.assertEqual(len(output["operations"]), 21)
+        self.assertEqual(escaped, [])
+        self.assertFalse(output["quality_credit"])
+        self.assertFalse(output["adoption_eligible"])
+        for op in output["operations"]:
+            self.assertIsNotNone(op["baseline_parse_ms"])
+            self.assertTrue(op["phase_endpoint_after_fsync"])
+            self.assertGreaterEqual(op["baseline_phase_ms"],
+                                    op["calls"][0]["elapsed_ms"] + op["baseline_parse_ms"])
+            self.assertGreater(op["calls"][0]["timings"]["response_receipt_fsync_ms"], 0)
+            self.assertGreater(op["calls"][1]["timings"]["response_receipt_fsync_ms"], 0)
+
+    def test_live_run_api_rejects_caller_supplied_proof_key_and_fixture_client_without_capability(self):
+        escaped = []
+
+        async def forbid_network(_transport, _request):
+            escaped.append(True)
+            raise AssertionError("live-admission-bypass-network")
+
+        inputs = {name: (P.REPO / name).read_bytes() for name in P.PINS}
+        proof = N.validate_inputs(inputs)
+        with tempfile.TemporaryDirectory() as temp:
+            outdir = pathlib.Path(temp) / "run"
+            with mock.patch.object(N.httpx.AsyncHTTPTransport, "handle_async_request", forbid_network):
+                with self.assertRaisesRegex(ValueError, "live-admission-required"):
+                    asyncio.run(N.run(self.acquisition, self.queries, outdir, offline=False,
+                                      source_integrity=proof, prebuilt=self.prepared,
+                                      client_factory=N.fixture_client_factory(), api_key="offline-fixture-non-secret",
+                                      qualification_bytes=b"{}", input_bytes=inputs))
+                identity = N.study_identity((N.HERE / "protocol.json").read_bytes(),
+                                            (N.HERE / "registration-integrity.json").read_bytes(), inputs)
+                forged = N._LiveAdmission(identity, b"{}", proof, pathlib.Path(temp) / "forged", "fixture-only")
+                with self.assertRaisesRegex(ValueError, "live-admission-required"):
+                    asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "forged",
+                                      offline=False, source_integrity=proof, prebuilt=self.prepared,
+                                      client_factory=N.fixture_client_factory(), qualification_bytes=b"{}",
+                                      admission=forged, input_bytes=inputs))
+        self.assertEqual(escaped, [])
+
+    def test_usage_admission_reserves_full_next_call_at_exact_and_insufficient_boundaries(self):
+        bounds = P.PROTOCOL["bounds"]
+        allowed = {"input_tokens": bounds["reported_input_tokens"] - 64_000,
+                   "output_tokens": bounds["reported_output_tokens"] - 32_000}
+        self.assertTrue(N.usage_admissible(allowed, bounds))
+        self.assertFalse(N.usage_admissible({**allowed, "input_tokens": allowed["input_tokens"] + 1}, bounds))
+        self.assertFalse(N.usage_admissible({**allowed, "output_tokens": allowed["output_tokens"] + 1}, bounds))
+
+    def test_timed_build_overrun_never_dispatches_joint_and_keeps_native_incumbent(self):
+        original = P.build_joint
+        calls = {"count": 0}
+
+        def delayed_once(case, cards, variant="base"):
+            calls["count"] += 1
+            if calls["count"] == 1:
+                time.sleep(1.05)
+            return original(case, cards, variant)
+
+        stats = {"clients": 0, "requests": 0, "closed": 0}
+        with tempfile.TemporaryDirectory() as temp:
+            output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
+                                       offline=True, prebuilt=self.prepared,
+                                       client_factory=N.fixture_client_factory(stats=stats),
+                                       build_joint_fn=delayed_once))
+        self.assertEqual(output["status"], "incomplete")
+        self.assertEqual(output["budget"]["attempts"], 1)
+        self.assertEqual(stats["requests"], 1)
+        self.assertEqual(output["neutral"]["calls"][0]["arm"], "w0")
+        self.assertEqual(output["neutral"]["arms"]["candidate"]["order_ids"],
+                         output["neutral"]["provenance_order_ids"])
+        self.assertTrue(output["neutral"]["final_receipt"])
+        self.assertTrue(all(op["calls"] == [] for op in output["operations"]))
+        self.assertEqual(output["budget"]["input_tokens"], 17)
+        self.assertEqual(output["budget"]["output_tokens"], 6)
+
+    def test_malformed_valid_usage_response_keeps_physical_call_receipt_and_stops(self):
+        stats = {"clients": 0, "requests": 0, "closed": 0}
+        factory = N.fixture_client_factory()
+
+        async def malformed(request):
+            stats["requests"] += 1
+            payload = json.loads(P.response_fixture(json.loads(request.content)))
+            payload["answers"].pop(next(iter(payload["answers"])))
+            return N.httpx.Response(200, content=P.wire(payload))
+
+        def malformed_factory(**kwargs):
+            stats["clients"] += 1
+            return N.httpx.AsyncClient(transport=N.httpx.MockTransport(malformed), **kwargs)
+
+        with tempfile.TemporaryDirectory() as temp:
+            output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
+                                       offline=True, prebuilt=self.prepared, client_factory=malformed_factory))
+        self.assertEqual(output["status"], "incomplete")
+        self.assertEqual(output["budget"]["attempts"], 1)
+        self.assertEqual(stats["requests"], 1)
+        self.assertEqual(len(output["neutral"]["calls"]), 1)
+        self.assertTrue(output["neutral"]["calls"][0]["dispatched"])
+        self.assertEqual(output["neutral"]["calls"][0]["usage_status"], "known")
+        self.assertTrue(all(not op["calls"] for op in output["operations"]))
+
+    def test_fixture_unknown_usage_stops_after_first_physical_call(self):
+        stats = {"clients": 0, "requests": 0, "closed": 0}
+        with tempfile.TemporaryDirectory() as temp:
+            output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
+                                       offline=True, prebuilt=self.prepared,
+                                       client_factory=N.fixture_client_factory("missing-usage", stats)))
+        self.assertEqual(output["budget"]["attempts"], 1)
+        self.assertTrue(output["budget"]["unknown_usage"])
+        self.assertEqual(output["neutral"]["calls"][0]["usage_status"], "unknown")
+        self.assertTrue(all(not op["calls"] for op in output["operations"]))
+
+    def test_http_503_retains_complete_raw_body_and_does_not_retry(self):
+        stats = {"clients": 0, "requests": 0, "closed": 0}
+        with tempfile.TemporaryDirectory() as temp:
+            output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
+                                       offline=True, prebuilt=self.prepared,
+                                       client_factory=N.fixture_client_factory("http-error", stats)))
+        call = output["neutral"]["calls"][0]
+        self.assertEqual(output["budget"]["attempts"], 1)
+        self.assertEqual(stats["requests"], 1)
+        self.assertEqual(call["http_status"], 503)
+        self.assertTrue(call["response_complete"])
+        self.assertTrue(call["raw_response_hex"])
+        self.assertEqual(call["usage_status"], "known")
+        self.assertTrue(output["neutral"]["arms"]["candidate"]["order_ids"] ==
+                        output["neutral"]["provenance_order_ids"])
+        self.assertEqual(output["neutral"]["arms"]["candidate"]["status"], "failed-fallback")
+        self.assertTrue(output["neutral"]["phase_endpoint_after_fsync"])
+        self.assertGreaterEqual(output["neutral"]["baseline_phase_ms"],
+                                output["neutral"]["baseline_receipt"]["fsync_ms"])
+
+    def test_credential_echo_is_suppressed_from_retained_receipt(self):
+        stats = {"clients": 0, "requests": 0, "closed": 0}
+        with tempfile.TemporaryDirectory() as temp:
+            output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
+                                       offline=True, prebuilt=self.prepared,
+                                       client_factory=N.fixture_client_factory("credential-echo", stats)))
+        call = output["neutral"]["calls"][0]
+        self.assertEqual(output["budget"]["attempts"], 1)
+        self.assertEqual(stats["requests"], 1)
+        self.assertIsNone(call["raw_response_hex"])
+        self.assertIsNone(call["response_body_sha256"])
+        self.assertTrue(output["budget"]["unknown_usage"])
+        self.assertTrue(all(not op["calls"] for op in output["operations"]))
+
+    def _fake_qualified_checkout(self, root):
+        root = pathlib.Path(root)
+        for name in N.OWNED_FILES:
+            destination = root / name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            source = N.HERE / name
+            destination.write_bytes(source.read_bytes() if source.is_file() else b"synthetic analyzer-owned fixture\n")
+        for name in ("protocol.json", "registration-integrity.json"):
+            (root / name).write_bytes((N.HERE / name).read_bytes())
+        source_pins = {name: N.digest((N.REPO / name).read_bytes()) for name in N.SOURCE_FILES}
+        manifest = {
+            "schema": "exp075-qualification-integrity/1", "qualified": True,
+            "qualified_source_revision": "a" * 40,
+            "files": {name: N.digest((root / name).read_bytes()) for name in N.OWNED_FILES},
+            "source_pins": source_pins,
+            "dependencies": {name: N.importlib.metadata.version(name) for name in N.DEPENDENCIES},
+            "environment": {"python_implementation": platform.python_implementation(),
+                            "python_version": platform.python_version()},
+            "protocol_sha256": N.digest((root / "protocol.json").read_bytes()),
+            "registration_sha256": N.digest((root / "registration-integrity.json").read_bytes()),
+        }
+        qpath = root / "qualification-integrity.json"
+        qpath.write_bytes(json.dumps(manifest, separators=(",", ":")).encode())
+        inputs = {name: (N.REPO / name).read_bytes() for name in P.PINS}
+        real_committed = P.committed
+
+        def committed(path, revision=None):
+            if revision is None:
+                revision = P.REGISTRATION_REVISION
+            prefix = "docs/experiments/evidence/EXP-075/"
+            if path.startswith(prefix) and path[len(prefix):] in N.OWNED_FILES:
+                return (root / path[len(prefix):]).read_bytes()
+            if path in {"docs/experiments/evidence/EXP-075/protocol.json",
+                        "docs/experiments/evidence/EXP-075/registration-integrity.json"}:
+                return (root / pathlib.Path(path).name).read_bytes()
+            if path in N.SOURCE_FILES:
+                return (N.REPO / path).read_bytes()
+            return real_committed(path, revision)
+
+        return root, qpath, inputs, committed
+
+    def _with_fake_qualification(self, root, action):
+        root, qpath, inputs, committed = self._fake_qualified_checkout(root)
+        patchers = [mock.patch.object(N, "HERE", root),
+                    mock.patch.object(N, "committed", committed),
+                    mock.patch.object(N, "committed_head", lambda _path: qpath.read_bytes()),
+                    mock.patch.object(P, "committed", committed)]
+        try:
+            for patcher in patchers:
+                patcher.start()
+            return action(root, qpath, inputs)
+        finally:
+            for patcher in reversed(patchers):
+                patcher.stop()
+
+    def test_qualification_closure_precedes_lease_dns_and_key_and_changed_manifest_cannot_reset_lease(self):
+        def exercise(root, qpath, inputs):
+            lease_root = root / ".local" / "state"
+            identity = N.study_identity((root / "protocol.json").read_bytes(),
+                                        (root / "registration-integrity.json").read_bytes(), inputs)
+            lease = lease_root / "exp075" / ("study-" + identity)
+            events = []
+            original = dict(os.environ)
+            test_case = self
+
+            class EnvSentinel(dict):
+                def get(self, key, default=None):
+                    if key == "TYPESAFE_API_KEY":
+                        events.append("key")
+                        test_case.assertTrue(lease.is_file(), "key-before-lease")
+                    return super().get(key, default)
+
+            def dns(*_args, **_kwargs):
+                events.append("dns")
+                self.assertTrue(lease.is_file(), "dns-before-lease")
+                return []
+
+            env = EnvSentinel(original)
+            env["TYPESAFE_API_KEY"] = "fixture-only-non-secret"
+            with mock.patch.object(N.Path, "home", return_value=root), mock.patch.object(N.os, "environ", env), mock.patch.object(N.socket, "getaddrinfo", dns):
+                proof, first_raw, admission = N.live_gate(inputs, output_path=root / "run-output")
+            self.assertEqual(events, ["dns", "key"])
+            self.assertEqual(admission.api_key, "fixture-only-non-secret")
+            self.assertEqual(proof["lease_identity"], identity)
+            self.assertFalse(admission.used)
+            self.assertEqual(lease.stat().st_mode & 0o777, 0o600)
+            self.assertEqual(lease.parent.stat().st_mode & 0o777, 0o700)
+            self.assertTrue(first_raw == qpath.read_bytes())
+
+            # A byte-different qualification manifest with identical study
+            # protocol, registration and input identity cannot consume again.
+            second_manifest = json.loads(first_raw)
+            qpath.write_bytes(json.dumps(second_manifest, indent=2).encode())
+            events.clear()
+
+            def forbidden_dns(*_args, **_kwargs):
+                events.append("dns")
+                raise AssertionError("dns-before-existing-lease-rejection")
+
+            try:
+                with mock.patch.object(N.Path, "home", return_value=root), mock.patch.object(N.os, "environ", env), mock.patch.object(N.socket, "getaddrinfo", forbidden_dns):
+                    N.live_gate(inputs, output_path=root / "run-output")
+            except ValueError as error:
+                self.assertEqual(str(error), "study-already-consumed")
+            else:
+                self.fail("changed-qualification-reran-study")
+            self.assertEqual(events, [])
+        
+        with tempfile.TemporaryDirectory() as temp:
+            self._with_fake_qualification(pathlib.Path(temp) / "qualified", exercise)
+
+    def test_mutated_qualified_file_rejects_before_lease_dns_or_key(self):
+        def exercise(root, _qpath, inputs):
+            lease_root = root / ".local" / "state"
+            (root / "normal-runner.py.txt").write_bytes((root / "normal-runner.py.txt").read_bytes() + b"mutated")
+            events = []
+            original = dict(os.environ)
+
+            class EnvSentinel(dict):
+                def get(self, key, default=None):
+                    if key == "TYPESAFE_API_KEY": events.append("key")
+                    return super().get(key, default)
+
+            def dns(*_args, **_kwargs): events.append("dns");raise AssertionError("dns-before-source-closure")
+            env = EnvSentinel(original)
+            with mock.patch.object(N.Path, "home", return_value=root), mock.patch.object(N.os, "environ", env), mock.patch.object(N.socket, "getaddrinfo", dns):
+                with self.assertRaisesRegex(ValueError, "qualification-file-pin"):
+                    N.live_gate(inputs, output_path=root / "run-output")
+            self.assertEqual(events, [])
+            self.assertFalse(lease_root.exists())
+        with tempfile.TemporaryDirectory() as temp:
+            self._with_fake_qualification(pathlib.Path(temp) / "qualified", exercise)
+
+
+if __name__ == "__main__":
+    unittest.main()

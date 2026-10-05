@@ -1,0 +1,468 @@
+"""EXP-075 inert-by-default dual-score runner. Offline runs use local fixtures."""
+from __future__ import annotations
+import argparse, asyncio, hashlib, importlib.machinery, importlib.metadata, importlib.util
+import json, os, platform, socket, subprocess, sys, time, urllib.parse
+from pathlib import Path
+import httpx
+
+HERE=Path(__file__).resolve().parent;REPO=HERE.parents[3]
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+P=load('exp075_prepare',HERE/'prepare.py.txt');T=load('exp075_http_transport',HERE/'http-transport.py.txt');FUSE=P.FUSE
+REGISTRATION_REVISION=P.REGISTRATION_REVISION
+OWNED_FILES={'prepare.py.txt','http-transport.py.txt','normal-runner.py.txt','normal-runner-tests.py.txt',
+             'analyze.py.txt','analysis-tests.py.txt','verify-raw-receipts.py.txt','verifier-tests.py.txt'}
+SOURCE_FILES=set(P.PINS)|{
+    'docs/experiments/EXP-075-single-transaction-dual-score-fusion.md',
+    'docs/experiments/evidence/EXP-075/protocol.json','docs/experiments/evidence/EXP-075/registration-integrity.json',
+    'docs/experiments/evidence/EXP-072/protocol.json','docs/experiments/evidence/EXP-072/prepare.py.txt',
+    'docs/experiments/evidence/EXP-073/protocol.json','docs/experiments/evidence/EXP-073/registration-integrity.json',
+    'docs/experiments/evidence/EXP-073/registration-correction.json','docs/experiments/evidence/EXP-073/prepare.py.txt',
+    'docs/experiments/evidence/EXP-073/fusion.py.txt','docs/experiments/evidence/EXP-073/fusion-tests.py.txt',
+    'docs/experiments/evidence/EXP-074/http-transport.py.txt',
+    'docs/experiments/evidence/EXP-039/source-selection-contract.json',
+    'docs/experiments/evidence/EXP-059/http-wrapper.py.txt','slopsearx/rerank.py','slopsearx/service.py'}
+DEPENDENCIES=('httpx','httpcore','anyio')
+_ADMISSION_SEAL=object()
+_ISSUED_ADMISSIONS={}
+
+class _LiveAdmission:
+    __slots__=('seal','input_identity','qualification_raw','proof_raw','output_path','api_key','used')
+    def __init__(self,input_identity,qualification_raw,proof,output_path,api_key):
+        self.seal=_ADMISSION_SEAL;self.input_identity=input_identity;self.qualification_raw=bytes(qualification_raw)
+        self.proof_raw=json.dumps(proof,sort_keys=True,separators=(',',':')).encode()
+        self.output_path=str(Path(output_path).resolve());self.api_key=api_key;self.used=False
+
+def digest(raw):return hashlib.sha256(raw).hexdigest()
+def atomic(path,value):
+    path=Path(path);raw=value if type(value)is bytes else json.dumps(value,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()
+    tmp=path.with_name(path.name+'.tmp')
+    with tmp.open('xb') as stream:stream.write(raw);stream.flush();os.fsync(stream.fileno())
+    os.replace(tmp,path);sync_directory(path.parent)
+def sync_pending(path,value):
+    raw=json.dumps(value,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()
+    with Path(path).open('xb') as stream:stream.write(raw);stream.flush();os.fsync(stream.fileno())
+    sync_directory(Path(path).parent)
+def sync_directory(path):
+    fd=os.open(path,os.O_RDONLY)
+    try:os.fsync(fd)
+    finally:os.close(fd)
+def durable_mkdirs(path):
+    path=Path(path);missing=[];probe=path
+    while not probe.exists():missing.append(probe);probe=probe.parent
+    path.mkdir(parents=True,exist_ok=True,mode=0o700)
+    for directory in missing:sync_directory(directory);sync_directory(directory.parent)
+def committed(path,revision):return P.committed(path,revision)
+def committed_head(path):
+    revision=subprocess.run(['git','rev-parse','HEAD'],cwd=REPO,check=True,capture_output=True,text=True).stdout.strip()
+    return P.committed(path,revision)
+
+def study_identity(protocol_raw,registration_raw,input_bytes):
+    if type(protocol_raw)is not bytes or type(registration_raw)is not bytes or type(input_bytes)is not dict or set(input_bytes)!=set(P.PINS):
+        raise ValueError('study-identity-inputs')
+    if any(type(value)is not bytes for value in input_bytes.values()):raise ValueError('study-identity-inputs')
+    return digest(protocol_raw+registration_raw+b''.join(name.encode()+b'\0'+input_bytes[name] for name in sorted(input_bytes)))
+
+def usage_admissible(budget,bounds):
+    return (budget['input_tokens']+64_000<=bounds['reported_input_tokens']
+            and budget['output_tokens']+32_000<=bounds['reported_output_tokens'])
+
+def validate_inputs(input_bytes,input_revision=REGISTRATION_REVISION):return P.validate_inputs(input_bytes,input_revision)
+
+def live_gate(input_bytes,input_revision=REGISTRATION_REVISION,output_path=None):
+    proof=validate_inputs(input_bytes,input_revision)
+    qpath=HERE/'qualification-integrity.json'
+    if qpath.is_symlink() or not qpath.is_file():raise ValueError('runner-not-qualified')
+    qraw=qpath.read_bytes()
+    if committed_head('docs/experiments/evidence/EXP-075/qualification-integrity.json')!=qraw:raise ValueError('uncommitted-qualification')
+    q=P.strict_json(qraw)
+    keys={'schema','qualified','qualified_source_revision','files','source_pins','dependencies','environment','protocol_sha256','registration_sha256'}
+    if type(q)is not dict or set(q)!=keys or q['schema']!='exp075-qualification-integrity/1' or q['qualified'] is not True:
+        raise ValueError('runner-not-qualified')
+    revision=q['qualified_source_revision']
+    if type(revision)is not str or len(revision)!=40 or any(c not in '0123456789abcdef' for c in revision):raise ValueError('qualification-revision')
+    if type(q['files'])is not dict or set(q['files'])!=OWNED_FILES:raise ValueError('qualification-files')
+    if type(q['source_pins'])is not dict or set(q['source_pins'])!=SOURCE_FILES:raise ValueError('qualification-source-files')
+    for name,want in q['files'].items():
+        path=HERE/name
+        if path.is_symlink() or not path.is_file() or digest(path.read_bytes())!=want or committed('docs/experiments/evidence/EXP-075/'+name,revision)!=path.read_bytes():
+            raise ValueError('qualification-file-pin')
+    for name,want in q['source_pins'].items():
+        path=REPO/name
+        if path.is_symlink() or not path.is_file() or digest(path.read_bytes())!=want or committed(name,revision)!=path.read_bytes():
+            raise ValueError('qualification-source-pin')
+    if type(q['dependencies'])is not dict or set(q['dependencies'])!=set(DEPENDENCIES):raise ValueError('qualification-dependencies')
+    for name in DEPENDENCIES:
+        if importlib.metadata.version(name)!=q['dependencies'][name]:raise ValueError('qualification-dependency-pin')
+    env=q['environment']
+    if type(env)is not dict or set(env)!={'python_implementation','python_version'} or env['python_implementation']!=platform.python_implementation() or env['python_version']!=platform.python_version():
+        raise ValueError('qualification-python-pin')
+    if q['protocol_sha256']!=proof['protocol_sha256'] or q['registration_sha256']!=proof['registration_sha256']:
+        raise ValueError('qualification-registration-pin')
+    if (output_path is None or Path(output_path).exists() or Path(output_path).is_symlink()
+            or not Path(output_path).parent.is_dir() or not os.access(Path(output_path).parent,os.W_OK)):
+        raise ValueError('output-path')
+    bounds=P.PROTOCOL['bounds']
+    if bounds['calls']!=44 or bounds['retries']!=0 or bounds['concurrency']!=1:raise ValueError('usage-admission-contract')
+    # A setup failure after this durable exclusive create burns the run identity.
+    identity=study_identity((HERE/'protocol.json').read_bytes(),(HERE/'registration-integrity.json').read_bytes(),input_bytes)
+    lease_dir=Path.home()/'.local/state/exp075';durable_mkdirs(lease_dir)
+    if lease_dir.is_symlink() or not lease_dir.is_dir():raise ValueError('lease-directory')
+    lease=lease_dir/('study-'+identity)
+    try:fd=os.open(lease,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
+    except FileExistsError:raise ValueError('study-already-consumed') from None
+    with os.fdopen(fd,'w') as stream:stream.write(identity+'\n');stream.flush();os.fsync(stream.fileno())
+    sync_directory(lease.parent)
+    socket.getaddrinfo(urllib.parse.urlsplit(P.PROTOCOL['wire']['endpoint']).hostname,443,type=socket.SOCK_STREAM)
+    api_key=os.environ.get('TYPESAFE_API_KEY','')
+    if not api_key:raise ValueError('missing-credential')
+    proof.update({'qualification_sha256':digest(qraw),'lease_identity':identity,'qualified_source_revision':revision,
+                  'environment':dict(env),'dependencies':dict(q['dependencies'])})
+    admission=_LiveAdmission(identity,qraw,proof,output_path,api_key)
+    _ISSUED_ADMISSIONS[id(admission)]=admission
+    return proof,qraw,admission
+
+def fixture_client_factory(mode='scores',stats=None):
+    stats=stats if stats is not None else {'clients':0,'requests':0,'closed':0}
+    class CountingAsyncClient(httpx.AsyncClient):
+        async def aclose(self):
+            if not getattr(self,'_exp075_closed_counted',False):self._exp075_closed_counted=True;stats['closed']+=1
+            await super().aclose()
+    async def handler(request):
+        stats['requests']+=1
+        parsed=P.strict_json(request.content)
+        if mode=='redirect':return httpx.Response(302,headers={'Location':'https://fixture.invalid/redirect'},content=b'')
+        if mode=='http-error':return httpx.Response(503,content=P.response_fixture(parsed))
+        if mode=='missing-usage':
+            payload=P.strict_json(P.response_fixture(parsed));payload.pop('usage',None);return httpx.Response(200,content=P.wire(payload))
+        if mode=='overflow':return httpx.Response(200,content=b'x'*(T.MAX_RESPONSE_BYTES+10))
+        if mode=='credential-echo':return httpx.Response(200,content=request.headers['authorization'].encode())
+        if mode=='slow-joint' and any(k.startswith('purpose:') for k in parsed['questions']):
+            await asyncio.sleep(2)
+        score_by_id=None
+        if mode=='mixed':score_by_id={key:(9 if key.startswith('w0:') else 3) for key in parsed['questions']}
+        return httpx.Response(200,content=P.response_fixture(parsed,score_by_id=score_by_id))
+    def factory(**kwargs):
+        stats['clients']+=1
+        return CountingAsyncClient(transport=httpx.MockTransport(handler),**kwargs)
+    factory.stats=stats
+    return factory
+
+def empty_arm(status='uninvoked'):
+    return {'status':status,'order_ids':[],'scores':{},'raw_answers':{},'rational_scores':{},'usage':None,'elapsed_ms':None}
+def _uninvoked(item,case,cards,control,joint):
+    return {'id':item['case']+'-'+item['variant'],'case':item['case'],'variant':item['variant'],
+            'cards':cards,'provenance_order_ids':list(control['provenance_order_ids']),
+            'arms':{key:empty_arm() for key in P.ARMS},'calls':[],
+            'baseline_phase_ms':None,'candidate_phase_ms':None,'paired_wall_ms':None,
+            'phase_endpoint_after_fsync':False,'failure':None}
+
+class CallFailure(Exception):
+    def __init__(self,record,code):super().__init__(code);self.record=record;self.code=code
+
+async def run(acquisition,queries,outdir,offline=True,source_integrity=None,prebuilt=None,client_factory=None,
+              api_key=None,qualification_bytes=None,build_joint_fn=None,admission=None,input_bytes=None):
+    prepared=prebuilt if prebuilt is not None else P.prebuild(acquisition,queries)
+    if type(source_integrity)is not dict:
+        source_integrity={'input_pins':dict(P.PINS),'input_revision':REGISTRATION_REVISION,
+            'protocol_sha256':digest((HERE/'protocol.json').read_bytes()),
+            'registration_sha256':digest((HERE/'registration-integrity.json').read_bytes())}
+    outdir=Path(outdir)
+    if outdir.exists() or outdir.is_symlink():raise ValueError('output-exists')
+    if not outdir.parent.is_dir() or not os.access(outdir.parent,os.W_OK):raise ValueError('output-parent')
+    if offline:
+        if admission is not None:raise ValueError('offline-admission-not-allowed')
+        api_key='offline-fixture-non-secret'
+    else:
+        if (not isinstance(admission,_LiveAdmission) or admission.seal is not _ADMISSION_SEAL or admission.used
+                or _ISSUED_ADMISSIONS.get(id(admission)) is not admission
+                or type(input_bytes)is not dict or type(qualification_bytes)is not bytes):raise ValueError('live-admission-required')
+        admission.used=True;_ISSUED_ADMISSIONS.pop(id(admission),None)
+        identity=study_identity((HERE/'protocol.json').read_bytes(),(HERE/'registration-integrity.json').read_bytes(),input_bytes)
+        proof_raw=json.dumps(source_integrity,sort_keys=True,separators=(',',':')).encode()
+        if (identity!=admission.input_identity or digest(qualification_bytes)!=digest(admission.qualification_raw)
+                or proof_raw!=admission.proof_raw or str(outdir.resolve())!=admission.output_path
+                or source_integrity.get('qualification_sha256')!=digest(qualification_bytes)
+                or client_factory is not None or build_joint_fn is not None):
+            raise ValueError('live-admission-binding')
+        expected_acquisition,expected_queries=P.source_data(input_bytes)
+        expected_prepared=P.prebuild(expected_acquisition,expected_queries)
+        if acquisition!=expected_acquisition or queries!=expected_queries or prepared!=expected_prepared:
+            raise ValueError('live-input-object-mismatch')
+        api_key=admission.api_key
+    outdir.mkdir();receipts=outdir/'receipts';receipts.mkdir()
+    if not offline:atomic(outdir/'qualification-integrity.json',qualification_bytes)
+    if offline and client_factory is None:client_factory=fixture_client_factory()
+    owner=T.AsyncHTTPTransport(client_factory=client_factory)
+    budget={'attempts':0,'input_tokens':0,'output_tokens':0,'unknown_usage':False}
+    start=time.perf_counter();call_index=0;stopped=False;bounds=P.PROTOCOL['bounds'];endpoint=P.PROTOCOL['wire']['endpoint']
+    result={'schema':'exp075-run/1','status':'running','synthetic':offline,'quality_credit':False,'adoption_eligible':False,
+            'input_pins':dict(P.PINS),'input_revision':source_integrity.get('input_revision',REGISTRATION_REVISION),
+            'source_integrity':source_integrity,'neutral':None,'operations':[],'budget':dict(budget),'wall_seconds':0.0}
+    def checkpoint():
+        result['budget']=dict(budget);result['wall_seconds']=time.perf_counter()-start;atomic(outdir/'run.json',result)
+
+    async def physical_call(body_or_factory,opid,arm,phase_deadline,usage_cap,preview_sha=None):
+        nonlocal call_index
+        index=call_index;call_index+=1;path=receipts/('call-%02d.json'%index)
+        base={'status':'pending','dispatched':False,'operation':opid,'arm':arm,'request_hex':None,
+              'request_sha256':preview_sha,'raw_response_hex':None,'response_body_sha256':None,'response_bytes':0,
+              'response_complete':False,'http_status':None,'usage':None,'usage_status':'not_dispatched',
+              'elapsed_ms':None,'timings':{},'transport':{'kind':'inprocess-async-httpx','trust_env':False,
+              'follow_redirects':False,'retries':0,'concurrency':1,'response_limit_bytes':T.MAX_RESPONSE_BYTES,
+              'request_sha256':preview_sha,'response_sha256':None,'client_closed':False},'failure':None}
+        pending_ns=time.perf_counter_ns();sync_pending(path,base);pending_ms=(time.perf_counter_ns()-pending_ns)/1e6
+        build_ms=serialization_ms=0.0
+        try:
+            if type(body_or_factory)is bytes:
+                raw_request=body_or_factory
+            else:
+                bstart=time.perf_counter_ns();body=body_or_factory();build_ms=(time.perf_counter_ns()-bstart)/1e6
+                sstart=time.perf_counter_ns();raw_request=P.wire(body);serialization_ms=(time.perf_counter_ns()-sstart)/1e6
+            request_sha=digest(raw_request)
+            if preview_sha is not None and request_sha!=preview_sha:raise ValueError('preview-byte-mismatch')
+            if len(raw_request)>bounds['legacy_control_request_bytes'] and arm=='w0':raise ValueError('control-request-bound')
+            if len(raw_request)>bounds['request_bytes']:raise ValueError('candidate-request-bound')
+            base.update(request_hex=raw_request.hex(),request_sha256=request_sha)
+            base['transport'].update(request_sha256=request_sha)
+            base['timings'].update({'pending_receipt_fsync_ms':pending_ms,'build_ms':build_ms,'serialization_ms':serialization_ms})
+            atomic(path,base)
+            if phase_deadline-time.perf_counter()<=0:raise TimeoutError('whole-phase-deadline')
+            if budget['attempts']>=bounds['calls']:raise ValueError('call-count')
+            if not usage_admissible(budget,bounds):
+                raise ValueError('total-usage-admission')
+            timeout_s=min(1.0,phase_deadline-time.perf_counter())
+            call_start=time.perf_counter_ns()
+            def dispatch():
+                if phase_deadline-time.perf_counter()<=0:raise T.DispatchDenied()
+                fsync_start=time.perf_counter_ns();base['dispatched']=True;base['usage_status']='unknown';budget['attempts']+=1
+                atomic(path,base);dispatch_fsync=(time.perf_counter_ns()-fsync_start)/1e6
+                if phase_deadline-time.perf_counter()<=0:
+                    base['dispatched']=False;base['usage_status']='not_dispatched';budget['attempts']-=1
+                    base.update(status='failed',failure={'type':'DispatchDenied','code':'whole-phase-deadline'})
+                    atomic(path,base);raise T.DispatchDenied()
+                base['timings']['dispatch_receipt_fsync_ms']=dispatch_fsync
+            try:
+                if type(api_key)is not str or not api_key:raise ValueError('missing-credential')
+                raw,status,complete,transport_timings=await owner.exchange(raw_request,api_key,timeout_s,endpoint,on_dispatch=dispatch)
+                rec=owner.last_attempt or {};usage=P.usage_from_raw(raw)
+                base.update(status='returned',raw_response_hex=raw.hex(),response_body_sha256=digest(raw),response_bytes=len(raw),
+                            response_complete=complete,http_status=status,usage=usage,usage_status='known' if usage is not None else 'unknown')
+                if usage:
+                    budget['input_tokens']+=usage['input_tokens'];budget['output_tokens']+=usage['output_tokens']
+                else:budget['unknown_usage']=True
+                base['transport'].update(response_sha256=digest(raw),client_closed=bool(rec.get('client_closed')))
+                base['timings'].update(transport_timings)
+                base['elapsed_ms']=(time.perf_counter_ns()-call_start)/1e6
+                if status!=200:raise CallFailure(base,'http-status')
+                if not complete:raise CallFailure(base,'incomplete-response')
+                if usage is None:raise CallFailure(base,'unknown-usage')
+                if usage['input_tokens']>64_000 or usage['output_tokens']>32_000:raise CallFailure(base,'per-call-usage')
+                if budget['input_tokens']>bounds['reported_input_tokens'] or budget['output_tokens']>bounds['reported_output_tokens']:
+                    raise CallFailure(base,'total-usage')
+            except T.TransportFailure as error:
+                rec=owner.last_attempt or {};raw=error.raw;usage=P.usage_from_raw(raw) if raw is not None else None
+                base.update(status='failed',http_status=error.http_status,response_complete=error.response_complete,
+                            usage=usage,usage_status='known' if usage is not None else ('unknown' if error.dispatched else 'not_dispatched'),
+                            failure={'type':'TransportFailure','code':error.code},elapsed_ms=(time.perf_counter_ns()-call_start)/1e6)
+                if raw is not None and (raw or error.response_complete):
+                    base.update(raw_response_hex=raw.hex(),response_body_sha256=digest(raw),response_bytes=len(raw))
+                    base['transport']['response_sha256']=digest(raw)
+                if usage is not None:
+                    budget['input_tokens']+=usage['input_tokens'];budget['output_tokens']+=usage['output_tokens']
+                elif error.dispatched:budget['unknown_usage']=True
+                base['transport']['client_closed']=bool(rec.get('client_closed'));base['timings'].update(error.timings)
+                raise CallFailure(base,error.code) from None
+            except T.DispatchDenied:
+                rec=owner.last_attempt or {};base.update(status='failed',usage_status='not_dispatched',
+                    failure={'type':'DispatchDenied','code':'timeout'},elapsed_ms=None)
+                base['transport']['client_closed']=bool(rec.get('client_closed'));base['timings'].update(rec.get('timings',{}))
+                raise CallFailure(base,'whole-phase-deadline') from None
+            except CallFailure:
+                raise
+            except BaseException as error:
+                if isinstance(error,asyncio.CancelledError):
+                    rec=owner.last_attempt or {};base.update(status='failed',usage_status='unknown' if base['dispatched'] else 'not_dispatched',
+                         failure={'type':'CancelledError','code':'cancelled'},elapsed_ms=(time.perf_counter_ns()-call_start)/1e6)
+                    if base['dispatched']:
+                        raw=rec.get('raw');base['raw_response_hex']=raw.hex() if type(raw)is bytes else None
+                        base['response_body_sha256']=digest(raw) if type(raw)is bytes else None
+                        base['response_bytes']=len(raw) if type(raw)is bytes else 0
+                        base['transport']['response_sha256']=base['response_body_sha256'];budget['unknown_usage']=True
+                    base['transport']['client_closed']=bool(rec.get('client_closed'));base['timings'].update(rec.get('timings',{}))
+                else:
+                    code=('timeout' if isinstance(error,(TimeoutError,asyncio.TimeoutError)) else
+                          str(error) if str(error).replace('-','').isalnum() else type(error).__name__.lower())
+                    base.update(status='failed',usage_status='not_dispatched' if not base['dispatched'] else 'unknown',
+                                failure={'type':type(error).__name__,'code':code},
+                                elapsed_ms=(time.perf_counter_ns()-call_start)/1e6 if base['dispatched'] else None)
+                    if base['dispatched'] and base['usage'] is None:budget['unknown_usage']=True
+                raise CallFailure(base,base['failure']['code']) from None
+            fsync_start=time.perf_counter_ns();atomic(path,base)
+            base['timings']['response_receipt_fsync_ms']=(time.perf_counter_ns()-fsync_start)/1e6
+            atomic(path,base)
+            return raw,base
+        except CallFailure as error:
+            if error.record is not base:base=error.record
+            if base.get('status')=='pending':base.update(status='failed',usage_status='not_dispatched',
+                failure={'type':type(error).__name__,'code':error.code})
+            fsync_start=time.perf_counter_ns();atomic(path,base);receipt_ms=(time.perf_counter_ns()-fsync_start)/1e6
+            base['timings']['response_receipt_fsync_ms']=receipt_ms
+            atomic(path,base)
+            error.record=base
+            raise
+        except BaseException as error:
+            if isinstance(error,CallFailure):raise
+            base.update(status='failed',usage_status='not_dispatched',failure={'type':type(error).__name__,'code':type(error).__name__.lower()})
+            fsync_start=time.perf_counter_ns();atomic(path,base);base['timings']['response_receipt_fsync_ms']=(time.perf_counter_ns()-fsync_start)/1e6
+            atomic(path,base);raise CallFailure(base,base['failure']['code']) from None
+
+    def blank_operation(item,case,cards,control):
+        return {'id':item['case']+'-'+item['variant'],'case':item['case'],'variant':item['variant'],
+                'cards':[dict(c) for c in cards],'provenance_order_ids':list(control['provenance_order_ids']),
+                'arms':{name:empty_arm() for name in P.ARMS},'calls':[],
+                'baseline_phase_ms':None,'candidate_phase_ms':None,'paired_wall_ms':None,
+                'candidate_build_ms':None,'candidate_serialization_ms':None,'phase_endpoint_after_fsync':False,
+                'baseline_receipt':None,'candidate_body_receipt':None,'final_receipt':None,'failure':None}
+
+    async def operation(item,case,cards,control,joint,control_raw,joint_raw):
+        paired_start=time.perf_counter();opid=item['case']+'-'+item['variant'];op=blank_operation(item,case,cards,control)
+        # Independent fresh W0 control phase.
+        phase_start=time.perf_counter();deadline=phase_start+1.0
+        try:
+            raw,rec=await physical_call(control_raw,opid,'w0',deadline,bounds['legacy_control_request_bytes'],digest(control_raw))
+            op['calls'].append(rec)
+            parse_start=time.perf_counter_ns();parsed=P.parse_control(raw,control)
+            op['arms']['w0']={'status':'valid','order_ids':parsed['order_ids'],'scores':parsed['scores'],
+                'raw_answers':parsed['raw_answers'],'rational_scores':{},'usage':parsed['usage'],'elapsed_ms':rec['elapsed_ms']}
+            parse_ms=(time.perf_counter_ns()-parse_start)/1e6
+            sidecar=receipts/(opid+'-baseline.json')
+            fsync_start=time.perf_counter_ns();atomic(sidecar,{'receipt_status':'baseline-valid','operation':op});fsync_ms=(time.perf_counter_ns()-fsync_start)/1e6
+            op['baseline_receipt']={'path':sidecar.name,'sha256':digest(sidecar.read_bytes()),'fsync_ms':fsync_ms}
+            op['baseline_parse_ms']=parse_ms
+            op['baseline_phase_ms']=(time.perf_counter()-phase_start)*1000
+            if op['baseline_phase_ms']>1000 or time.perf_counter()-start>bounds['wall_seconds']:
+                raise ValueError('baseline-phase-deadline' if op['baseline_phase_ms']>1000 else 'wall-budget')
+        except BaseException as error:
+            if isinstance(error,CallFailure):
+                if error.record not in op['calls']:op['calls'].append(error.record)
+                op['arms']['w0'].update(status='failed',usage=error.record.get('usage'),elapsed_ms=error.record.get('elapsed_ms'))
+                op['failure']={'type':'CallFailure','code':error.code}
+            else:op['failure']={'type':type(error).__name__,'code':str(error) if str(error).replace('-','').isalnum() else type(error).__name__.lower()}
+            op['arms']['candidate']={'status':'failed-fallback','order_ids':list(op['provenance_order_ids']),
+                'scores':{},'raw_answers':{},'rational_scores':{},'usage':None,'elapsed_ms':None}
+            op['baseline_phase_ms']=(time.perf_counter()-phase_start)*1000
+            sidecar=receipts/(opid+'-baseline-failure.json');fsync_start=time.perf_counter_ns()
+            atomic(sidecar,{'receipt_status':'baseline-failed','operation':op});fsync_ms=(time.perf_counter_ns()-fsync_start)/1e6
+            op['baseline_receipt']={'path':sidecar.name,'sha256':digest(sidecar.read_bytes()),'fsync_ms':fsync_ms}
+            op['phase_endpoint_after_fsync']=True;op['baseline_phase_ms']=(time.perf_counter()-phase_start)*1000
+            op['paired_wall_ms']=(time.perf_counter()-paired_start)*1000
+            return op,False
+        # Candidate phase begins before pending receipt, reconstruction, namespacing and serialization.
+        candidate_start=time.perf_counter();candidate_deadline=candidate_start+1.0
+        preview_sha=digest(joint_raw)
+        def measured_build():
+            build_variant='base' if item['case']=='neutral' else item['variant']
+            builder=build_joint_fn or P.build_joint
+            built=builder(case,cards,build_variant)
+            return built['joint']
+        try:
+            raw,rec=await physical_call(measured_build,opid,'joint',candidate_deadline,bounds['request_bytes'],preview_sha)
+            op['calls'].append(rec)
+            op['candidate_build_ms']=rec['timings'].get('build_ms')
+            op['candidate_serialization_ms']=rec['timings'].get('serialization_ms')
+            parse_start=time.perf_counter_ns();parsed=P.parse_joint(raw,joint)
+            parse_ms=(time.perf_counter_ns()-parse_start)/1e6;op['candidate_parse_ms']=parse_ms
+            usage=parsed['usage']
+            for name in ('joint_query','joint_purpose'):
+                component=parsed[name]
+                op['arms'][name]={'status':'valid','order_ids':component['order_ids'],'scores':component['scores'],
+                    'raw_answers':component['raw_answers'],'rational_scores':{},'usage':usage,'elapsed_ms':rec['elapsed_ms']}
+            fusion=parsed['candidate']
+            op['arms']['candidate']={'status':'candidate-body-durable','order_ids':fusion['order_ids'],
+                'scores':{},'raw_answers':{},'rational_scores':fusion['rational_scores'],'usage':usage,'elapsed_ms':None}
+            candidate_path=receipts/(opid+'-candidate-body.json')
+            fsync_start=time.perf_counter_ns();atomic(candidate_path,{'receipt_status':'candidate-proposal','operation':op});fsync_ms=(time.perf_counter_ns()-fsync_start)/1e6
+            op['candidate_body_receipt']={'path':candidate_path.name,'sha256':digest(candidate_path.read_bytes()),'fsync_ms':fsync_ms}
+            op['arms']['candidate']['elapsed_ms']=(time.perf_counter()-candidate_start)*1000
+            op['candidate_phase_ms']=(time.perf_counter()-candidate_start)*1000
+            op['phase_endpoint_after_fsync']=True
+            if op['candidate_phase_ms']>1000 or time.perf_counter()-start>bounds['wall_seconds']:
+                raise ValueError('candidate-phase-deadline' if op['candidate_phase_ms']>1000 else 'wall-budget')
+            op['arms']['candidate']['status']='valid'
+            final_path=candidate_path
+            success=True
+        except BaseException as error:
+            if isinstance(error,CallFailure):
+                if error.record not in op['calls']:op['calls'].append(error.record)
+                failed_arm=error.record.get('arm')
+                op['failure']={'type':'CallFailure','code':error.code}
+                if failed_arm=='joint':
+                    op['arms']['joint_query'].update(status='failed',usage=error.record.get('usage'),elapsed_ms=error.record.get('elapsed_ms'))
+                    op['arms']['joint_purpose'].update(status='failed',usage=error.record.get('usage'),elapsed_ms=error.record.get('elapsed_ms'))
+                    op['candidate_build_ms']=error.record.get('timings',{}).get('build_ms')
+                    op['candidate_serialization_ms']=error.record.get('timings',{}).get('serialization_ms')
+            else:op['failure']={'type':type(error).__name__,'code':str(error) if str(error).replace('-','').isalnum() else type(error).__name__.lower()}
+            if op['arms']['candidate']['status']=='candidate-body-durable':
+                op['arms']['candidate'].update(status='failed-fallback',order_ids=list(op['provenance_order_ids']),rational_scores={})
+            else:
+                op['arms']['candidate']={'status':'failed-fallback','order_ids':list(op['provenance_order_ids']),
+                    'scores':{},'raw_answers':{},'rational_scores':{},'usage':None,'elapsed_ms':None}
+            op['candidate_phase_ms']=(time.perf_counter()-candidate_start)*1000
+            op['phase_endpoint_after_fsync']=False
+            failure_path=receipts/(opid+'-failure.json');fsync_start=time.perf_counter_ns()
+            atomic(failure_path,{'receipt_status':'candidate-failed-fallback','operation':op});fsync_ms=(time.perf_counter_ns()-fsync_start)/1e6
+            op['phase_endpoint_after_fsync']=True;op['candidate_phase_ms']=(time.perf_counter()-candidate_start)*1000
+            op['final_receipt']={'path':failure_path.name,'sha256':digest(failure_path.read_bytes()),'fsync_ms':fsync_ms}
+            op['paired_wall_ms']=(time.perf_counter()-paired_start)*1000
+            return op,False
+        op['final_receipt']={'path':final_path.name,'sha256':digest(final_path.read_bytes()),'fsync_ms':fsync_ms}
+        op['paired_wall_ms']=(time.perf_counter()-paired_start)*1000
+        return op,success
+
+    case,cards=P.synthetic_case();nc=P.build_control(case,cards);nj=P.build_joint(case,cards)
+    ncontrol=P.request_bytes(nc['w0']);njoint=P.request_bytes(nj['joint']);P.enforce_request_bounds(ncontrol,njoint,nc,nj)
+    neutral_item={'case':'neutral','variant':'neutral'}
+    # Synthetic fixture is not part of the registered 21-operation schedule.
+    neutral,neutral_ok=await operation(neutral_item,case,cards,nc,nj,ncontrol,njoint)
+    neutral.update({'status':'fixture_only' if neutral_ok else 'failed','synthetic_input':True,'quality_credit':False})
+    result['neutral']=neutral;checkpoint()
+    if not neutral_ok:stopped=True;result['status']='incomplete'
+    for item,case,cards,control,joint,control_raw,joint_raw in prepared:
+        if stopped:
+            result['operations'].append(_uninvoked(item,case,cards,control,joint));continue
+        op,ok=await operation(item,case,cards,control,joint,control_raw,joint_raw)
+        result['operations'].append(op)
+        if not ok:stopped=True;result['status']='incomplete'
+        checkpoint()
+    if not stopped:result['status']='complete'
+    checkpoint();return result
+
+def main():
+    ap=argparse.ArgumentParser();ap.add_argument('--mode',choices=('offline','live'),default='offline')
+    ap.add_argument('--acquisition',type=Path,default=REPO/'docs/experiments/evidence/EXP-060/fresh-acquisition.json')
+    ap.add_argument('--queries',type=Path,default=REPO/'docs/experiments/evidence/EXP-060/queries.json')
+    ap.add_argument('--outdir',type=Path,required=True);ap.add_argument('--input-revision',default=REGISTRATION_REVISION)
+    ap.add_argument('--offline-fixture',choices=('scores','mixed','http-error','missing-usage','redirect','overflow','credential-echo','slow-joint'),default='scores')
+    args=ap.parse_args();key=None
+    try:
+        input_bytes={name:(args.acquisition.read_bytes() if name=='docs/experiments/evidence/EXP-060/fresh-acquisition.json' else args.queries.read_bytes() if name=='docs/experiments/evidence/EXP-060/queries.json' else (REPO/name).read_bytes()) for name in P.PINS}
+        proof=validate_inputs(input_bytes,args.input_revision)
+        acquisition,queries=P.source_data(input_bytes);prepared=P.prebuild(acquisition,queries)
+        if args.outdir.exists() or args.outdir.is_symlink():raise ValueError('output-exists')
+        if not args.outdir.parent.is_dir() or not os.access(args.outdir.parent,os.W_OK):raise ValueError('output-parent')
+        qraw=None;factory=fixture_client_factory(args.offline_fixture) if args.mode=='offline' else None
+        admission=None
+        if args.mode=='live':
+            if args.outdir.exists() or args.outdir.is_symlink() or not args.outdir.parent.is_dir() or not os.access(args.outdir.parent,os.W_OK):
+                raise ValueError('output-path')
+            proof,qraw,admission=live_gate(input_bytes,args.input_revision,args.outdir)
+        result=asyncio.run(run(acquisition,queries,args.outdir,args.mode=='offline',proof,prepared,factory,None,qraw,
+                              admission=admission,input_bytes=input_bytes if args.mode=='live' else None))
+        print(json.dumps({'status':result['status'],'attempts':result['budget']['attempts'],
+                          'operations':len(result['operations']),'synthetic':result['synthetic']}))
+        return 0 if result['status']=='complete' else 2
+    except Exception as error:
+        print('exp075-setup-'+type(error).__name__,file=sys.stderr);return 2
+if __name__=='__main__':raise SystemExit(main())
