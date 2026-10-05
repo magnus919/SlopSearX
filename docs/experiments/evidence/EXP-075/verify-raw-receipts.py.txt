@@ -197,10 +197,12 @@ def verify(outdir,require_analysis=True):
         return record_call(embedded,sidecar,opid,arm,request,counters)
 
     case,cards=P.synthetic_case();control=P.build_control(case,cards,"base");joint=P.build_joint(case,cards,"base")
+    P.enforce_request_bounds(P.wire(control["w0"]),P.wire(joint["joint"]),control,joint)
     neutral=run.get("neutral")
     need(type(neutral)is dict and neutral.get("id")=="neutral-neutral" and neutral.get("cards")==cards
          and neutral.get("provenance_order_ids")==[c["id"] for c in cards],"neutral-input")
     neutral_calls=neutral.get("calls",[])
+    need(type(neutral_calls)is list and len(neutral_calls)>=1,"neutral-call-required")
     terminal=False
     neutral0=next_call(neutral_calls[0],"neutral-neutral","w0",control["w0"]) if neutral_calls else None
     parsed0=parse_control(neutral0,control) if neutral0 is not None and neutral_calls[0].get("status")=="returned" else None
@@ -208,8 +210,19 @@ def verify(outdir,require_analysis=True):
         row=neutral["arms"]["w0"]
         need(row.get("status")=="valid" and row.get("order_ids")==parsed0["order_ids"] and row.get("scores")==parsed0["scores"]
              and row.get("raw_answers")==parsed0["raw_answers"] and row.get("usage")==parsed0["usage"],"neutral-control-arm")
-    else:need(neutral.get("arms",{}).get("w0",{}).get("status")=="failed","neutral-control-failure")
+    else:
+        need(neutral.get("arms",{}).get("w0",{}).get("status")=="failed","neutral-control-failure")
+        durable(outdir,neutral.get("baseline_receipt"),"neutral-neutral-baseline-failure.json",{"baseline-failed"})
+    if parsed0 is None:
+        need(len(neutral_calls)==1 and run.get("status")=="incomplete"
+             and neutral["arms"]["candidate"].get("status")=="failed-fallback"
+             and neutral["arms"]["candidate"].get("order_ids")==[c["id"] for c in cards],"neutral-control-terminal")
+        durable(outdir,neutral.get("baseline_receipt"),"neutral-neutral-baseline-failure.json",{"baseline-failed"})
+        terminal=True
+    else:
+        durable(outdir,neutral.get("baseline_receipt"),"neutral-neutral-baseline.json",{"baseline-valid"})
     if len(neutral_calls)>1:
+        need(parsed0 is not None,"neutral-joint-after-control-failure")
         raw1=next_call(neutral_calls[1],"neutral-neutral","joint",joint["joint"])
         if raw1 is not None and neutral_calls[1].get("status")=="returned":
             qrow,prow=parse_joint(raw1,joint)
@@ -219,17 +232,14 @@ def verify(outdir,require_analysis=True):
             fused=exact_fusion(cards,qrow["order_ids"],prow["order_ids"]);cand=neutral["arms"]["candidate"]
             need(cand.get("status")=="valid" and cand.get("order_ids")==fused["order_ids"]
                  and cand.get("rational_scores")==fused["rational_scores"],"neutral-fusion")
-            durable(outdir,neutral.get("baseline_receipt"),"neutral-neutral-baseline.json",{"baseline-valid"})
             durable(outdir,neutral.get("candidate_body_receipt"),"neutral-neutral-candidate-body.json",{"candidate-proposal"})
             durable(outdir,neutral.get("final_receipt"),"neutral-neutral-candidate-body.json",{"candidate-proposal"})
         else:
             terminal=True
             need(run.get("status")=="incomplete" and neutral["arms"]["candidate"].get("order_ids")==[c["id"] for c in cards],"neutral-native-fallback")
-            ref=neutral.get("final_receipt")
-            if ref: durable(outdir,ref,ref.get("path"),{"candidate-failed-fallback","baseline-failed"})
+            durable(outdir,neutral.get("final_receipt"),"neutral-neutral-failure.json",{"candidate-failed-fallback"})
     else:
-        terminal=True
-        need(run.get("status")=="incomplete","neutral-missing-joint")
+        need(parsed0 is None,"neutral-joint-call-missing")
 
     built_rows=P.prebuild(acq,queries)
     need(len(built_rows)==21 and len(run.get("operations",[]))==21,"registered-operation-count")
