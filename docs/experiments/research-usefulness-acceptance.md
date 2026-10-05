@@ -21,8 +21,10 @@ It cannot be regraded, rerun or taken directly to confirmation under this decisi
 
 ## Requirements that remain
 
-Both-reference mean ranking gain >=.05 with positive confidence lower bounds,
-per-case noninferiority, useful-source counts, declared facet retention, repeated
+The separately approved [bounded release decision](research-usefulness-release-decision.md)
+prospectively requires both-reference mean ranking gain >=.02 with positive
+confidence lower bounds and explicit paired task-completion gains.
+Per-case noninferiority, useful-source counts, declared facet retention, repeated
 and rotated stability, exact navigation targets, acquisition completeness,
 complete eligible membership, resource/latency limits and atomic native-order
 fallback remain. A future study must freeze its exact numerical contract before
