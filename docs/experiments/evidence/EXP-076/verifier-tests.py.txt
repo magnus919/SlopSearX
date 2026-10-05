@@ -1,0 +1,231 @@
+"""Offline verifier/analyzer integration tests for EXP-076. Uses MockTransport only."""
+import asyncio
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import platform
+import subprocess
+import tempfile
+import time
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+N = load("exp076_it_runner", HERE / "normal-runner.py.txt")
+V = load("exp076_it_verifier", HERE / "verify-raw-receipts.py.txt")
+A = load("exp076_it_analyzer", HERE / "analyze.py.txt")
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def fixture(out, mode="scores"):
+    input_bytes = {name: (REPO / name).read_bytes() for name in N.P.PINS}
+    acquisition, queries = N.P.source_data(input_bytes)
+    result = asyncio.run(N.run(acquisition, queries, out, offline=True,
+                               client_factory=N.fixture_client_factory(mode)))
+    return result
+
+
+def json_write(path, value):
+    Path(path).write_bytes(N.P.wire(value))
+
+
+def make_qualified_test_packet(out):
+    run = fixture(out)
+    assert run["status"] == "complete" and run["budget"]["attempts"] == 44
+    protocol_raw = (HERE / "protocol.json").read_bytes()
+    registration_raw = (HERE / "registration-integrity.json").read_bytes()
+    input_bytes = {name: (REPO / name).read_bytes() for name in N.P.PINS}
+    revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO, check=True,
+                              capture_output=True, text=True).stdout.strip()
+    files = {name: sha((HERE / name).read_bytes()) for name in N.OWNED_FILES}
+    source_pins = {name: sha((REPO / name).read_bytes()) for name in N.SOURCE_FILES}
+    q = {"schema": "exp076-qualification-integrity/1", "qualified": True,
+         "qualified_source_revision": revision, "files": files, "source_pins": source_pins,
+         "dependencies": {name: __import__("importlib.metadata", fromlist=["version"]).version(name)
+                          for name in N.DEPENDENCIES},
+         "environment": {"python_implementation": platform.python_implementation(),
+                         "python_version": platform.python_version()},
+         "protocol_sha256": sha(protocol_raw), "registration_sha256": sha(registration_raw)}
+    qraw = N.P.wire(q)
+    (out / "qualification-integrity.json").write_bytes(qraw)
+    run["synthetic"] = False  # Test metadata only; calls still used local MockTransport.
+    src = run["source_integrity"]
+    src.update({"synthetic": False, "qualification_sha256": sha(qraw),
+                "lease_identity": N.study_identity(protocol_raw, registration_raw, input_bytes),
+                "qualified_source_revision": revision, "environment": q["environment"],
+                "dependencies": q["dependencies"]})
+    json_write(out / "run.json", run)
+    return run
+
+
+def test_complete_nonsynthetic_shaped_packet_exercises_closure_and_both_assessors():
+    with tempfile.TemporaryDirectory() as temp:
+        out = Path(temp) / "packet"
+        run = make_qualified_test_packet(out)
+        verified = V.verify(out, test_fixture=True)
+        assert verified["valid"] and verified["source_closure_verified"]
+        assert verified["attempts"] == 44
+        report = A.analyze_directory(out, test_fixture=True)
+        assert report["quality_analysis_performed"] is True
+        assert report["outcome"] == "fixture_test_only"
+        assert set(report["assessors"]) == {"A", "B"}
+        for assessor in ("A", "B"):
+            assert len(report["assessors"][assessor]["cases"]) == 8
+            assert all("w0" in row and "candidate" in row for row in report["assessors"][assessor]["cases"])
+        assert report["quality_credit"] is False and report["adoption_eligible"] is False
+        assert run["synthetic"] is False
+
+
+def test_neutral_w0_failure_verifies_incomplete_without_quality():
+    with tempfile.TemporaryDirectory() as temp:
+        out = Path(temp) / "packet"
+        run = fixture(out, "w0-error")
+        verified = V.verify(out)
+        assert run["status"] == verified["status"] == "incomplete"
+        assert verified["attempts"] == 1
+        fallback = run["neutral"]["arms"]["candidate"]
+        assert fallback["status"] == "failed-fallback"
+        assert fallback["order_ids"] == run["neutral"]["provenance_order_ids"]
+
+
+def test_candidate_http_failure_binds_known_usage_and_native_fallback():
+    with tempfile.TemporaryDirectory() as temp:
+        out = Path(temp) / "packet"
+        run = fixture(out, "http-error-known-usage")
+        verified = V.verify(out)
+        assert verified["status"] == "incomplete" and verified["attempts"] == 2
+        op = run["neutral"]
+        assert op["calls"][1]["usage_status"] == "known"
+        assert op["arms"]["candidate"]["order_ids"] == op["provenance_order_ids"]
+        assert V._read_json(out / "receipts" / op["calls"][1]["sidecar_path"]) == op["calls"][1]
+
+
+def test_candidate_overflow_retains_one_byte_oversize_receipt():
+    with tempfile.TemporaryDirectory() as temp:
+        out = Path(temp) / "packet"
+        run = fixture(out, "overflow")
+        verified = V.verify(out)
+        call = run["neutral"]["calls"][1]
+        raw = bytes.fromhex(call["raw_response_hex"])
+        assert verified["status"] == "incomplete"
+        assert call["failure"]["code"] == "response-too-large"
+        assert call["response_complete"] is False
+        assert len(raw) == N.T.MAX_RESPONSE_BYTES + 1
+
+
+def test_candidate_build_overrun_is_a_bound_predispatch_call_record():
+    input_bytes = {name: (REPO / name).read_bytes() for name in N.P.PINS}
+    acquisition, queries = N.P.source_data(input_bytes)
+    with tempfile.TemporaryDirectory() as temp:
+        out = Path(temp) / "packet"
+        def delayed(case, cards, variant="base"):
+            time.sleep(1.03)
+            return N.P.build_candidate(case, cards, variant)
+        run = asyncio.run(N.run(acquisition, queries, out, offline=True,
+                                client_factory=N.fixture_client_factory(), build_candidate_fn=delayed))
+        verified = V.verify(out)
+        neutral = run["neutral"]
+        candidate_call = neutral["calls"][1]
+        assert verified["status"] == run["status"] == "incomplete"
+        assert candidate_call["dispatched"] is False
+        assert candidate_call["usage_status"] == "not_dispatched"
+        assert neutral["final_receipt"] is not None
+
+
+def test_deadline_after_candidate_body_fsync_keeps_proposed_receipt_and_native_fallback():
+    input_bytes = {name: (REPO / name).read_bytes() for name in N.P.PINS}
+    acquisition, queries = N.P.source_data(input_bytes)
+    original_durable = N.durable
+    delayed = {"done": False}
+    def slow_final(path, value, exclusive=False):
+        result = original_durable(path, value, exclusive)
+        if Path(path).name == "neutral-final.json" and not delayed["done"]:
+            delayed["done"] = True
+            time.sleep(1.02)
+        return result
+    with tempfile.TemporaryDirectory() as temp:
+        N.durable = slow_final
+        try:
+            out = Path(temp) / "packet"
+            run = asyncio.run(N.run(acquisition, queries, out, offline=True,
+                                    client_factory=N.fixture_client_factory()))
+        finally:
+            N.durable = original_durable
+        verified = V.verify(out)
+        neutral = run["neutral"]
+        assert verified["status"] == run["status"] == "incomplete"
+        assert neutral["failure"]["code"] == "candidate-deadline"
+        assert neutral["candidate_body_receipt"] is not None
+        assert neutral["arms"]["candidate"]["order_ids"] == neutral["provenance_order_ids"]
+
+
+def test_known_usage_overrun_is_retained_as_terminal_failure():
+    with tempfile.TemporaryDirectory() as temp:
+        out = Path(temp) / "packet"
+        run = fixture(out, "over-usage")
+        verified = V.verify(out)
+        call = run["neutral"]["calls"][1]
+        assert verified["status"] == "incomplete"
+        assert call["usage_status"] == "known"
+        assert call["failure"]["code"] == "usage-bound"
+        assert call["usage"]["input_tokens"] == 64001
+
+
+def test_call_sidecar_mutation_is_rejected_when_run_and_final_are_unchanged():
+    with tempfile.TemporaryDirectory() as temp:
+        out = Path(temp) / "packet"
+        fixture(out)
+        call_path = out / "receipts" / "call-00.json"
+        call = V._read_json(call_path)
+        call["request_hex"] = (b"{}" ).hex()
+        call_path.write_bytes(N.P.wire(call))
+        try:
+            V.verify(out)
+        except V.ReceiptError:
+            pass
+        else:
+            raise AssertionError("mutated physical call sidecar was accepted")
+
+
+def test_qualification_source_closure_tampering_is_rejected():
+    with tempfile.TemporaryDirectory() as temp:
+        out = Path(temp) / "packet"
+        make_qualified_test_packet(out)
+        qpath = out / "qualification-integrity.json"
+        q = N.P.strict_json(qpath.read_bytes())
+        source = sorted(q["source_pins"])[0]
+        q["source_pins"][source] = "0" * 64
+        qraw = N.P.wire(q)
+        qpath.write_bytes(qraw)
+        run_path = out / "run.json"
+        run = N.P.strict_json(run_path.read_bytes())
+        run["source_integrity"]["qualification_sha256"] = sha(qraw)
+        json_write(run_path, run)
+        try:
+            V.verify(out, test_fixture=True)
+        except V.ReceiptError as exc:
+            assert "qualified-dependency-source" in str(exc)
+        else:
+            raise AssertionError("tampered qualified source pin was accepted")
+
+
+if __name__ == "__main__":
+    tests = [value for name, value in sorted(globals().items())
+             if name.startswith("test_") and callable(value)]
+    for test in tests:
+        test()
+    print(f"{len(tests)} EXP-076 verifier tests passed")
