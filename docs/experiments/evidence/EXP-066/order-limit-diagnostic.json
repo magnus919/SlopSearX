@@ -1,0 +1,113 @@
+{
+  "schema": "exp066-order-limit-diagnostic/1",
+  "not_quality_evidence": true,
+  "basis": "EXP065 historical W0, unchanged EXP064 grades; optimistically allows any ten positive IDs preserving W0 order, ignoring shared A/B choices, classification ability, facet retention, neutrality and fresh-baseline variation",
+  "assessors": {
+    "A": {
+      "cases": [
+        {
+          "case": "q1",
+          "w0_ndcg": 0.8384347571115263,
+          "oracle_stable_subsequence_ndcg": 0.9893646664180291,
+          "maximum_delta": 0.1509299093065029
+        },
+        {
+          "case": "q2",
+          "w0_ndcg": 1.0,
+          "oracle_stable_subsequence_ndcg": 1.0,
+          "maximum_delta": 0.0
+        },
+        {
+          "case": "q3",
+          "w0_ndcg": 0.7185939444384468,
+          "oracle_stable_subsequence_ndcg": 1.0000000000000002,
+          "maximum_delta": 0.28140605556155335
+        },
+        {
+          "case": "q4",
+          "w0_ndcg": 0.7457982688608856,
+          "oracle_stable_subsequence_ndcg": 1.0000000000000002,
+          "maximum_delta": 0.25420173113911454
+        },
+        {
+          "case": "q5",
+          "w0_ndcg": 0.777295885287742,
+          "oracle_stable_subsequence_ndcg": 1.0000000000000002,
+          "maximum_delta": 0.22270411471225818
+        },
+        {
+          "case": "q6",
+          "w0_ndcg": 0.9173414328953918,
+          "oracle_stable_subsequence_ndcg": 1.0000000000000002,
+          "maximum_delta": 0.0826585671046083
+        },
+        {
+          "case": "q7",
+          "w0_ndcg": 1.0,
+          "oracle_stable_subsequence_ndcg": 1.0000000000000002,
+          "maximum_delta": 1.1170328981693607e-16
+        },
+        {
+          "case": "q8",
+          "w0_ndcg": 0.8660534229009715,
+          "oracle_stable_subsequence_ndcg": 1.0000000000000002,
+          "maximum_delta": 0.13394657709902857
+        }
+      ],
+      "mean_maximum_delta": 0.14073086936538323
+    },
+    "B": {
+      "cases": [
+        {
+          "case": "q1",
+          "w0_ndcg": 0.8895165074463061,
+          "oracle_stable_subsequence_ndcg": 1.0000000000000002,
+          "maximum_delta": 0.1104834925536941
+        },
+        {
+          "case": "q2",
+          "w0_ndcg": 0.8590414989816955,
+          "oracle_stable_subsequence_ndcg": 0.9806992196617756,
+          "maximum_delta": 0.12165772068008017
+        },
+        {
+          "case": "q3",
+          "w0_ndcg": 0.8423730547589335,
+          "oracle_stable_subsequence_ndcg": 1.0000000000000002,
+          "maximum_delta": 0.15762694524106655
+        },
+        {
+          "case": "q4",
+          "w0_ndcg": 0.8323110352014628,
+          "oracle_stable_subsequence_ndcg": 1.0000000000000002,
+          "maximum_delta": 0.16768896479853737
+        },
+        {
+          "case": "q5",
+          "w0_ndcg": 0.8232273618633383,
+          "oracle_stable_subsequence_ndcg": 1.0000000000000002,
+          "maximum_delta": 0.17677263813666177
+        },
+        {
+          "case": "q6",
+          "w0_ndcg": 0.9173414328953918,
+          "oracle_stable_subsequence_ndcg": 1.0000000000000002,
+          "maximum_delta": 0.0826585671046083
+        },
+        {
+          "case": "q7",
+          "w0_ndcg": 1.0,
+          "oracle_stable_subsequence_ndcg": 1.0000000000000002,
+          "maximum_delta": 1.1170328981693607e-16
+        },
+        {
+          "case": "q8",
+          "w0_ndcg": 0.9173414328953918,
+          "oracle_stable_subsequence_ndcg": 1.0000000000000002,
+          "maximum_delta": 0.0826585671046083
+        }
+      ],
+      "mean_maximum_delta": 0.11244336195240709
+    }
+  }
+}
