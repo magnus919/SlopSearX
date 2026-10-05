@@ -131,6 +131,7 @@ def fixture_client_factory(mode='scores',stats=None):
   stats['requests']+=1;body=P.strict_json(req.content)
   joint=any(k.startswith(('query:','purpose:')) for k in body['questions'])
   if mode=='redirect' and joint:return httpx.Response(302,headers={'Location':'https://fixture.invalid/redirect'})
+  if mode=='w0-error' and not joint:return httpx.Response(503,content=b'fixture-control-error')
   if mode=='http-error' and joint:return httpx.Response(503,content=b'fixture-http-error')
   if mode=='http-error-known-usage' and joint:
    payload=P.strict_json(P.response_fixture(body));return httpx.Response(503,content=P.wire(payload))
@@ -191,7 +192,6 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,clie
  owner=T.AsyncHTTPTransport(client_factory=client_factory);bounds=P.PROTOCOL['bounds'];budget={'attempts':0,'input_tokens':0,'output_tokens':0,'unknown_usage':False}
  start=time.perf_counter();run_deadline=start+bounds['wall_seconds'];result={'schema':'exp076-run/1','status':'running','synthetic':bool(offline),'quality_credit':False,'adoption_eligible':False,
   'input_pins':dict(P.PINS),'input_revision':source_integrity.get('input_revision',REGISTRATION_REVISION),'source_integrity':source_integrity,
-  'qualification_sha256':source_integrity.get('qualification_sha256'),'lease_identity':source_integrity.get('lease_identity'),
   'neutral':None,'operations':[],'budget':dict(budget),'wall_seconds':0.0}
  def checkpoint():
   result['budget']=dict(budget);result['wall_seconds']=time.perf_counter()-start;durable(out/'run.json',result)
@@ -278,7 +278,9 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,clie
    fail={'schema':'exp076-receipt/1','operation':opid,'receipt_status':'baseline-failed','failure':op['failure'],'order_ids':list(op['provenance_order_ids']),
          'call_receipt':call_ref(op['calls'][-1]) if op['calls'] else None}
    op['final_receipt']=durable(receipts/(opid+'-final.json'),fail);op['phase_endpoint_after_fsync']=True;op['baseline_phase_ms']=(time.perf_counter()-baseline_start)*1000;op['candidate_phase_ms']=None;op['paired_wall_ms']=(time.perf_counter()-phase)*1000
-   for arm in ('joint_query','joint_purpose','candidate'):op['arms'][arm]=_empty_arm('uninvoked')
+   op['arms']['w0']=_empty_arm('failed')
+   for arm in ('joint_query','joint_purpose'):op['arms'][arm]=_empty_arm('uninvoked')
+   op['arms']['candidate']=_empty_arm('failed-fallback');op['arms']['candidate']['order_ids']=list(op['provenance_order_ids'])
    return op,False
   candidate_start=time.perf_counter();deadline=candidate_start+1.0
   try:

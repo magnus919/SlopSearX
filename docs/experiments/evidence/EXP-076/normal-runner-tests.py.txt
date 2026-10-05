@@ -63,6 +63,15 @@ class Exp076Tests(unittest.TestCase):
    self.assertEqual(op['arms']['candidate']['order_ids'],op['provenance_order_ids']);self.assertEqual(len(result['operations']),21)
    self.assertTrue(all(not later['calls'] and later['arms']['candidate']['status']=='uninvoked' for later in result['operations']))
    self.assertEqual(op['calls'][1]['failure']['code'],'response-too-large');self.assertEqual(op['calls'][1]['usage_status'],'unknown')
+ def test_baseline_failure_stops_before_candidate_and_records_native_fallback(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   factory=N.fixture_client_factory('w0-error');result=asyncio.run(N.run(self.acq,self.queries,pathlib.Path(tmp)/'out',client_factory=factory))
+   op=result['neutral'];self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],1)
+   self.assertEqual(factory.stats['requests'],1);self.assertEqual(len(op['calls']),1);self.assertEqual(op['arms']['w0']['status'],'failed')
+   self.assertEqual(op['arms']['candidate']['order_ids'],op['provenance_order_ids']);self.assertEqual(op['arms']['candidate']['status'],'failed-fallback')
+   self.assertTrue(all(not x['calls'] for x in result['operations']))
+   receipt=json.loads((pathlib.Path(tmp)/'out'/'receipts'/op['final_receipt']['path']).read_bytes())
+   self.assertEqual(receipt['call_receipt']['sha256'],P.digest((pathlib.Path(tmp)/'out'/'receipts'/receipt['call_receipt']['path']).read_bytes()))
  def test_joint_request_build_crossing_deadline_does_not_dispatch(self):
   case,cards=P.synthetic_case();delayed=lambda c,cs,v:(time.sleep(1.02) or P.build_candidate(c,cs,v))
   ctrl=P.build_control(case,cards);cand=P.build_candidate(case,cards);raw=P.wire(ctrl['w0'])
@@ -78,6 +87,18 @@ class Exp076Tests(unittest.TestCase):
    self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],1)
    self.assertEqual(op['calls'][-1]['dispatched'],False);self.assertEqual(op['arms']['candidate']['order_ids'],op['provenance_order_ids'])
    self.assertEqual(op['final_receipt']['path'],'neutral-final.json')
+ def test_deadline_includes_candidate_final_receipt_fsync_and_uses_native_fallback(self):
+  original=N.durable
+  def delayed(path,data,exclusive=False):
+   if pathlib.Path(path).name=='neutral-final.json' and data.get('receipt_status')=='complete':time.sleep(1.02)
+   return original(path,data,exclusive)
+  with tempfile.TemporaryDirectory() as tmp,mock.patch.object(N,'durable',delayed):
+   result=asyncio.run(N.run(self.acq,self.queries,pathlib.Path(tmp)/'out',client_factory=N.fixture_client_factory()));op=result['neutral']
+   self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],2)
+   self.assertGreater(op['candidate_phase_ms'],1000);self.assertEqual(op['arms']['candidate']['status'],'failed-fallback')
+   self.assertEqual(op['arms']['candidate']['order_ids'],op['provenance_order_ids'])
+   final=json.loads((pathlib.Path(tmp)/'out'/'receipts'/op['final_receipt']['path']).read_bytes())
+   self.assertEqual(final['receipt_status'],'candidate-failed-fallback');self.assertIn('proposed_body_sha256',final)
  def test_transport_failures_never_redirect_retry_or_use_environment_proxy(self):
   for mode in ('redirect','http-error','http-error-known-usage','missing-usage','credential-echo','over-usage'):
    with self.subTest(mode=mode),tempfile.TemporaryDirectory() as tmp:
@@ -175,6 +196,7 @@ class Exp076Tests(unittest.TestCase):
     self.assertEqual(events,['lease','dns','credential']);self.assertIsNone(got[2]);self.assertTrue((pathlib.Path(tmp)/'lease'/('study-'+N.study_identity((HERE/'protocol.json').read_bytes(),(HERE/'registration-integrity.json').read_bytes(),self.inputs))).is_file())
     # Existing identity is rejected before either external sentinel; changing
     # qualification revisions does not change this protocol/input identity.
+    q['qualified_source_revision']='b'*40;qraw=P.wire(q)
     events.clear();hooks['dns']=lambda:self.fail('DNS reached with existing lease');hooks['credential']=lambda:self.fail('key reached with existing lease')
     with mock.patch.object(pathlib.Path,'is_file',is_file),mock.patch.object(pathlib.Path,'read_bytes',read_bytes),\
          mock.patch.object(N,'committed_head',lambda path:(qraw,'a'*40)),mock.patch.object(P,'committed',committed),\
