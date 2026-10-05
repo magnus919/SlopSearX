@@ -1,0 +1,250 @@
+{
+  "schema": "exp065-question-local-source-priority/1",
+  "status": "registered",
+  "dataset": "EXP-060 exposed public pools; prospective EXP-064 A-v2/B-v3 references; not untouched confirmation",
+  "model": "jev-1.13.0",
+  "arms": [
+    "w0",
+    "shared",
+    "local"
+  ],
+  "context": "Both purpose arms receive identical original caller purpose and requested facet definitions. Shared keeps complete canonical cards in state; local puts exactly one card in each structured Score question. Exact source-selection instruction and ten ordinal criteria unchanged, replacing candidate ID reference with local candidate binding only. W0 retains original query, native first40 scored prefix and full unscored tail.",
+  "ordering": "All purpose arms use complete pool sorted UTF8 URL/title/snippet/id; ordinal descending scores, canonical stable ties. Preserve native acquisition provenance separately. No facet reservation, selection swaps, score fusion, truncation or unseen-source inference.",
+  "schedule": [
+    {
+      "case": "q1",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q1",
+      "variant": "repeat",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q1",
+      "variant": "rotate",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q2",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q3",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q4",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q4",
+      "variant": "repeat",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q4",
+      "variant": "rotate",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q5",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q6",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q7",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q7",
+      "variant": "repeat",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q7",
+      "variant": "rotate",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q8",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q8",
+      "variant": "repeat",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q8",
+      "variant": "rotate",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q9",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q10",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q11",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q12",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    },
+    {
+      "case": "q13",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "shared",
+        "local"
+      ]
+    }
+  ],
+  "candidate": "local only; shared comparator isolates question-local mechanism, never retrospectively substituted as selected candidate",
+  "primary_cases": [
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "q5",
+    "q6",
+    "q7",
+    "q8"
+  ],
+  "gates": {
+    "quality": "Under BOTH independent references local-W0 primary mean nDCG@10 >=0.05 and query-bootstrap95percent lower >0 (10000 draws seed6501); per-case loss no worse than -0.03",
+    "retention": "Useful lead>=2 top10 count no lower than W0; all W0 useful facet coverage retained for every primary case",
+    "stability": "local repeat/rotate top10 overlap>=0.8 for q1/q4/q7/q8",
+    "navigation": "q10-q13 report actual official-target presence and top1 retention where present; missing acquisition targets remain unmet recall evidence",
+    "membership": "exact full permutation, no dropped/unknown/duplicate IDs; any failure full incumbent fallback",
+    "latency": "each arm owned HTTP <=1000ms including response reading; child process ceiling60s only outer guard; any candidate timeout is failure, not quality success",
+    "tail_evidence": "report natural>40 stratum; current one natural long pool cannot establish general tail benefit or replace fresh confirmation"
+  },
+  "bounds": {
+    "cards": 80,
+    "facets": 4,
+    "questions": 80,
+    "request_bytes": 384000,
+    "state_bytes": 128000,
+    "response_bytes": 2000000,
+    "calls": 63,
+    "reported_input_tokens": 3000000,
+    "reported_output_tokens": 160000,
+    "wall_seconds": 7200,
+    "concurrency": 1,
+    "retries": 0
+  },
+  "failure_policy": "persist pending receipt before each dispatch, preserve complete typed/raw diagnostics; no automatic retries; invalid model/membership/type/nonfinite/out-of-range/usage/deadline fail-stop; mark incomplete and retain native incumbent fallback, never impute success. One O_EXCL fsynced invocation lease; DNS preflight before key/lease; committed exact input/runner/qualification pins required before live.",
+  "provider_calls_before_qualification": 0,
+  "search_calls": 0,
+  "brave_calls": 0,
+  "inputs": {
+    "docs/experiments/evidence/EXP-060/fresh-acquisition.json": "69f72e2895031d4804733f7cdb38197a2d2c43d7cddaa8589abc9a43397d1882",
+    "docs/experiments/evidence/EXP-060/queries.json": "010a418d7e37e9df198d6cb313b4612d82e76ba8bef4cc2a9502f2074bf85836",
+    "docs/experiments/evidence/EXP-039/source-selection-contract.json": "0cdf759b83ab96bad92666bbeabbb5d232aa81876712a314f931645082291c1b",
+    "docs/experiments/evidence/EXP-064/completed/metric-reference-view.json": "99625962fd078543d3dbf7630fc445dcfaff7fe55ab9289ef7c6f8a6ffb4afd9",
+    "docs/experiments/evidence/EXP-064/completed/source-bound-references.json": "1b2be2e0556f3f1fd39237456917b0daa0a9795d1297822a4c43b8ea211f8f05",
+    "docs/experiments/evidence/EXP-064/completed/semantic-correction-audit-final.json": "9622c053eba6f6979aef36b75e46fed038dcfd6f2837b6c08d474903a0ff42b1"
+  }
+}
