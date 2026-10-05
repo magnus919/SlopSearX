@@ -53,6 +53,12 @@ evidence catalog. Check bounds, text/hash/ID identity and arm delivery
 deterministically. Offsets establish attribution only, never entailment,
 applicability, independence or factual truth.
 
+Future model outputs should select immutable catalog evidence IDs. A separately
+frozen deterministic hydrator resolves known IDs into expanded integrity
+records; models need not copy hashes, offsets or whole passages. Preserve raw
+output and reject unknown IDs without semantic repair. The inert validator
+prototype checks expanded envelopes, not a qualified model-facing adapter.
+
 Require closed schemas and exactly the registered task/arm/facet rows for each
 independent assessor. Reject duplicate, extra or missing identities and fields.
 `unsupported_claim_indices` and other required arrays must appear explicitly,
