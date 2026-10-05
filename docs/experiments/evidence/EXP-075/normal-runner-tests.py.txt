@@ -128,6 +128,36 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(output["neutral"]["calls"][0]["usage_status"], "unknown")
         self.assertTrue(all(not op["calls"] for op in output["operations"]))
 
+    def test_http_503_retains_complete_raw_body_and_does_not_retry(self):
+        stats = {"clients": 0, "requests": 0, "closed": 0}
+        with tempfile.TemporaryDirectory() as temp:
+            output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
+                                       offline=True, prebuilt=self.prepared,
+                                       client_factory=N.fixture_client_factory("http-error", stats)))
+        call = output["neutral"]["calls"][0]
+        self.assertEqual(output["budget"]["attempts"], 1)
+        self.assertEqual(stats["requests"], 1)
+        self.assertEqual(call["http_status"], 503)
+        self.assertTrue(call["response_complete"])
+        self.assertTrue(call["raw_response_hex"])
+        self.assertEqual(call["usage_status"], "known")
+        self.assertTrue(output["neutral"]["arms"]["candidate"]["order_ids"] ==
+                        output["neutral"]["provenance_order_ids"])
+
+    def test_credential_echo_is_suppressed_from_retained_receipt(self):
+        stats = {"clients": 0, "requests": 0, "closed": 0}
+        with tempfile.TemporaryDirectory() as temp:
+            output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
+                                       offline=True, prebuilt=self.prepared,
+                                       client_factory=N.fixture_client_factory("credential-echo", stats)))
+        call = output["neutral"]["calls"][0]
+        self.assertEqual(output["budget"]["attempts"], 1)
+        self.assertEqual(stats["requests"], 1)
+        self.assertIsNone(call["raw_response_hex"])
+        self.assertIsNone(call["response_body_sha256"])
+        self.assertTrue(output["budget"]["unknown_usage"])
+        self.assertTrue(all(not op["calls"] for op in output["operations"]))
+
 
 if __name__ == "__main__":
     unittest.main()
