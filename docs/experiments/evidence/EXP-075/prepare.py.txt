@@ -85,7 +85,14 @@ def build_control(case,cards,variant='base'):
             'provenance_order_ids':[card['id'] for card in native]}
 
 def build_joint(case,cards,variant='base'):
-    built=BASE.bodies(case,cards,variant)
+    # Build only the registered W0 control and joint candidate. EXP072's
+    # generic bodies() also constructs two unused full-pool score requests;
+    # their unrelated admission checks must not affect this experiment.
+    control=build_control(case,cards,variant)
+    canonical=BASE.canonical(cards)
+    built={'w0':control['w0'],'cards':canonical,'ids':control['ids'],
+           'w0_local_to_pool':control['w0_local_to_pool'],'tail_ids':control['tail_ids'],
+           'provenance_order_ids':control['provenance_order_ids']}
     # Deep-copy the W0 state/questions so existing query instructions and card
     # values remain unchanged; only question keys receive a namespace.
     state=json.loads(wire(built['w0']['state']))
