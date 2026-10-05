@@ -71,3 +71,18 @@ grades agree for every frozen ID. The identity regression needs strengthening
 to hold useful count and facets constant while displacing more than one useful
 source, without a silent early return. The complete receipt/source-closure
 integration regression remains mandatory.
+
+## Stable runner checkpoint
+
+Root integrated the first committed runner checkpoint as
+`9e8a3e0d8628af04e2c7856127cc3c790808ff3d` and independently passed all nine
+offline MockTransport tests. They include the exact registered neutral body,
+complete 44-call schedule, parser/fusion ties, construction timeout without
+dispatch, overflow/native fallback, cancellation/unknown usage, split-marker
+echo suppression, transport failure behavior and direct live-run denial.
+The earlier run overlapping an edit to the tie assertion is superseded for
+test verification by this stable checkpoint; it was never qualification.
+
+The checkpoint is explicitly live-disabled. Source-closure/lease admission,
+independent raw verifier and complete evaluator integration are not yet
+qualified. A substantive source review of the stable runner is underway.
