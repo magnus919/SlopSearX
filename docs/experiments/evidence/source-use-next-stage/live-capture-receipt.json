@@ -1,0 +1,354 @@
+{
+  "schema": "source-use-live-capture-receipt/1",
+  "status": "capture_complete_assessment_pending",
+  "qualification_source_revision": "f0e6dddf6545424bc89c811805019e6341d5ae01",
+  "runtime_identity": {
+    "status": "ok",
+    "model": "free",
+    "revision": "68ece0cfb50684a5637185048d0db15049bb9d56"
+  },
+  "owned_http_calls": 29,
+  "source_attempts": 28,
+  "accepted": 22,
+  "failed": 6,
+  "internal_service_countermeasure_calls": "unobserved",
+  "source_model_calls": "not fully observable; no controller model calls during capture",
+  "capture_sha256": "62429e3f045c5ffe60cd4047c3b22d58c318e5b555e8feb957eaf9e9a662c28b",
+  "transport_receipt_sha256": "5d6c01f2ae9a9ffcec5b2bc92dc23babd9ed979472d671a7bfaa360b844ee30e",
+  "response_status_counts": {
+    "200": 23,
+    "502": 6
+  },
+  "qualification_integrity": {
+    "manifest_sha256": "1a2beae40b71d3cf9003a251234bb098e3538414387980ef610b1b100ce6f324",
+    "cli_sha256": "c954eebc4e25a4bca2d12e1a670cdac492ca63a741ba242244c0d95a2b25bb99",
+    "consumer_revision": "3612affba3b51e7240a0e60d079499739052c0b1",
+    "consumer_source_sha256": {
+      "agent-svc/agent/research/sources.py": "051e8c575d165703898547fc1892b521adeb64974e5ecd0a5d61b3c9dc25195d",
+      "common/url.py": "9ad7655f0995930765987442112ed9887eb0b09eef1e346ad9a367e1b9dc1774",
+      "agent-svc/agent/research/discovery.py": "b35ac59adf43bab290e70c49335f531ecff9e551f6f9ce54c9a9bbf9a0d03342",
+      "agent-svc/agent/models.py": "f0cff4bc05b1a3d02e61688bff9a29b04595d80c30ba1bf0b3be91ef84371dd2"
+    },
+    "qualification_sha256": "24f504dba39fee388d13296a10b64c60ec732e98a1061b7d5f41f468183ee585",
+    "qualification_schema": "source-use-capture-qualification/1"
+  },
+  "sources": [
+    {
+      "source_id": "S001",
+      "url": "https://amirteymoori.com/lsp-language-server-protocol-ai-coding-tools/",
+      "status": "success",
+      "accepted": true,
+      "bytes": 12983,
+      "response_sha256": "261b799bf575be18a671bae7a458501c57ae42a31d39172b81ecdc50c7c60f68",
+      "fetched_at": "2026-10-05T05:47:58.409735+00:00",
+      "document_sha256": "e515af8c83497887586bd81f5d81ba01ed4c4750b5670a6aa74d32fdc2deee78"
+    },
+    {
+      "source_id": "S002",
+      "url": "https://arxiv.org/html/2511.03153v1",
+      "status": "success",
+      "accepted": true,
+      "bytes": 20535,
+      "response_sha256": "d580a9b381910e61b66016b225f008288b65f1ce567c39ddaa13fefd09b17410",
+      "fetched_at": "2026-10-05T05:47:58.657374+00:00",
+      "document_sha256": "dbf48ee35c13cab392bc86fcc4f515ee949d646f308d17c021334b25d7247533"
+    },
+    {
+      "source_id": "S003",
+      "url": "https://arxiv.org/html/2609.04898v1",
+      "status": "error",
+      "accepted": false,
+      "error_class": "ApiError"
+    },
+    {
+      "source_id": "S004",
+      "url": "https://arxiv.org/pdf/2404.09398",
+      "status": "error",
+      "accepted": false,
+      "error_class": "ApiError"
+    },
+    {
+      "source_id": "S005",
+      "url": "https://arxiv.org/pdf/2510.22907",
+      "status": "error",
+      "accepted": false,
+      "error_class": "ApiError"
+    },
+    {
+      "source_id": "S006",
+      "url": "https://deska.dev/blog/agent-fixes-flaky-tests",
+      "status": "error",
+      "accepted": false,
+      "error_class": "ApiError"
+    },
+    {
+      "source_id": "S007",
+      "url": "https://dev.to/yureki_lab/how-i-killed-63-flaky-tests-in-one-week-with-claude-code-5-lessons-29m0",
+      "status": "success",
+      "accepted": true,
+      "bytes": 11701,
+      "response_sha256": "4444a5e42ca3c2dc9fafd30c5e38780fede045d979e4f8dab2293ba50efe076c",
+      "fetched_at": "2026-10-05T05:48:30.091923+00:00",
+      "document_sha256": "0666d1181faf8bc3d40eac441169a5e9bb85ffd454bedc8c68a26e3a2c0d9a5a"
+    },
+    {
+      "source_id": "S008",
+      "url": "https://doi.org/10.48550/arxiv.2606.20243",
+      "status": "success",
+      "accepted": true,
+      "bytes": 6949,
+      "response_sha256": "d04e663b5024006ca004bef9f3684f8428a723e7fe2fadfe1c5a2068c884cbc7",
+      "fetched_at": "2026-10-05T05:48:30.271582+00:00",
+      "document_sha256": "6401aa575f1fee58389a4bac9d08ea6c7326eac6c04e54be870b7380945a1dd4"
+    },
+    {
+      "source_id": "S009",
+      "url": "https://doi.org/10.48550/arxiv.2607.28871",
+      "status": "success",
+      "accepted": true,
+      "bytes": 2228,
+      "response_sha256": "92ac84c6c7839d1ba8def857b4d48ce28efbd793f9e41222f51d4908f4436278",
+      "fetched_at": "2026-10-05T05:48:30.401555+00:00",
+      "document_sha256": "7d6e8c6fee8d17c3d6834225cfd9263aa514e3d204a65bd43533aadd42d43c5c"
+    },
+    {
+      "source_id": "S010",
+      "url": "https://getautonoma.com/blog/flaky-tests",
+      "status": "success",
+      "accepted": true,
+      "bytes": 33834,
+      "response_sha256": "fec957e7934a82d98854b4bf7a46d103189e2024dffa6c9bd5af5559f0354702",
+      "fetched_at": "2026-10-05T05:48:30.684407+00:00",
+      "document_sha256": "9952a25852fc8418b6da92424d7bd64b4c1743e8c0b1346f80de63812fb1491f"
+    },
+    {
+      "source_id": "S011",
+      "url": "https://github.com/anusha-saxena/repair-ai-agent",
+      "status": "success",
+      "accepted": true,
+      "bytes": 8643,
+      "response_sha256": "6f89848ebd7061d60a01e3752ff92e2a8a32ac8a21e7a00b99b89a26e49d081b",
+      "fetched_at": "2026-10-05T05:48:31.114604+00:00",
+      "document_sha256": "82d40f1f4e873014faa1943dd959a235c6c5509e956d3603d4c3ec764f8a54ef"
+    },
+    {
+      "source_id": "S012",
+      "url": "https://github.com/blackwell-systems/agent-lsp",
+      "status": "success",
+      "accepted": true,
+      "bytes": 27643,
+      "response_sha256": "c4c30c9293231a9536c734fab7fa6f91cf224348cf3c8fc5c8370b9d977483da",
+      "fetched_at": "2026-10-05T05:48:31.581966+00:00",
+      "document_sha256": "5f90a3440d1a08bbd7be5536b5b4dcb5119afbb61696e48eaae33fe815626806"
+    },
+    {
+      "source_id": "S013",
+      "url": "https://github.com/ptw1255/agentic-workflow-factory/issues/16",
+      "status": "success",
+      "accepted": true,
+      "bytes": 7143,
+      "response_sha256": "f8d4da35b51a074a9a73f50a55141e7586c80c190ac5db5da3296afe6f335677",
+      "fetched_at": "2026-10-05T05:48:32.231192+00:00",
+      "document_sha256": "8f44bf5e72558a93d9a4d44071f3c877c430f6ed02fa59f11ae380816335eee0"
+    },
+    {
+      "source_id": "S014",
+      "url": "https://github.com/wieslawsoltes/SharpForge/issues/292",
+      "status": "success",
+      "accepted": true,
+      "bytes": 4248,
+      "response_sha256": "ec8611152598d8af71f10a9082dd73facf9f5320b093bafb8c7d84b081736058",
+      "fetched_at": "2026-10-05T05:48:32.640334+00:00",
+      "document_sha256": "60302ba7d5def5c563c11c4c364797a7dc456314c9dc80e5990d5e862c932837"
+    },
+    {
+      "source_id": "S015",
+      "url": "https://kiro.dev/blog/refactoring-made-right/",
+      "status": "success",
+      "accepted": true,
+      "bytes": 11376,
+      "response_sha256": "82dfa2eb644b543593aeb2575bdd8da4bad4ecd24ed6d61f76ad1eb30ad91020",
+      "fetched_at": "2026-10-05T05:48:32.859180+00:00",
+      "document_sha256": "2d3866fe08d07760cfdb120ddfd7fff2aa5181e39cf3a0b16636a6ad32a336cb"
+    },
+    {
+      "source_id": "S016",
+      "url": "https://kondasamy.com/blog/2026/how-ai-coding-agents-edit-code/",
+      "status": "success",
+      "accepted": true,
+      "bytes": 16800,
+      "response_sha256": "191bb86a6856a97f256add23d27305f4f187cb5dd564e528b53a4020bcd64667",
+      "fetched_at": "2026-10-05T05:48:33.084282+00:00",
+      "document_sha256": "438fa653833f4ee68b62d81d0d11e3a07826907f1efd78677d101753637648bb"
+    },
+    {
+      "source_id": "S017",
+      "url": "https://konghq.com/blog/engineering/how-we-used-agentic-ai-to-fix-kong-gateways-flakiest-tests",
+      "status": "success",
+      "accepted": true,
+      "bytes": 24629,
+      "response_sha256": "bbabaaa2ef87c5d597a487da2e511183941562705e1a1fac202b8d7065392b95",
+      "fetched_at": "2026-10-05T05:48:33.309526+00:00",
+      "document_sha256": "c3ccd2fb927793636637f3420a424b292569c2dace196369997a25f9a1c5dd84"
+    },
+    {
+      "source_id": "S018",
+      "url": "https://medium.com/@QuarkAndCode/how-to-fix-flaky-tests-reproduce-diagnose-prevent-in-ci-cd-60f45226851f",
+      "status": "success",
+      "accepted": true,
+      "bytes": 6079,
+      "response_sha256": "4ef4b5a13befe2178b19129dad61381828274f7dbc9e32718f64a4b57faac859",
+      "fetched_at": "2026-10-05T05:48:34.949728+00:00",
+      "document_sha256": "0d38217899c22d20779b6191a4e03a3b5993b8478b4ad768f9666dcd47130da5"
+    },
+    {
+      "source_id": "S019",
+      "url": "https://pith.science/paper/2605.21677",
+      "status": "success",
+      "accepted": true,
+      "bytes": 37899,
+      "response_sha256": "14fdcca3e3eabfbd18dd4d1a857ce3186f042a0fd21ca08a8ce793ac3f909649",
+      "fetched_at": "2026-10-05T05:48:36.252671+00:00",
+      "document_sha256": "9054e2b1c8978dc6b620e383343fc2cc9fc03a603385b3fbc0027a5011bb1e6b"
+    },
+    {
+      "source_id": "S020",
+      "url": "https://quashbugs.com/blog/how-to-fix-flaky-tests-complete-diagnosis-guide",
+      "status": "error",
+      "accepted": false,
+      "error_class": "ApiError"
+    },
+    {
+      "source_id": "S021",
+      "url": "https://skywork.ai/skypage/en/ai-agent-typescript-refactoring/1980821689958838272",
+      "status": "success",
+      "accepted": true,
+      "bytes": 30011,
+      "response_sha256": "be46b2e148af9d8299fa11d2402becc59b94dae4e2a436c504e9a45451b11709",
+      "fetched_at": "2026-10-05T05:48:37.244033+00:00",
+      "document_sha256": "92f5721d63350f1d8a5e39ffff16d799f69bde3da92e23823097252d08bbd8f0"
+    },
+    {
+      "source_id": "S022",
+      "url": "https://www.agent-kits.com/kit/flaky-test-triager",
+      "status": "success",
+      "accepted": true,
+      "bytes": 7189,
+      "response_sha256": "42c7bf647d5a1d9358d35bb0621b9edea874501ac91a7e523d75839380f82e24",
+      "fetched_at": "2026-10-05T05:48:37.478442+00:00",
+      "document_sha256": "e0397cd5ece2ae7f00880192017f3f672e4f8ba0ea74560d33a5839f4a1b431d"
+    },
+    {
+      "source_id": "S023",
+      "url": "https://www.codewithjason.com/how-i-fix-flaky-tests/",
+      "status": "success",
+      "accepted": true,
+      "bytes": 20751,
+      "response_sha256": "adf7f1c6ab8e39e1d623e2853d25ac929c364e73b7e77878b66f3396233bdd3c",
+      "fetched_at": "2026-10-05T05:48:38.252038+00:00",
+      "document_sha256": "7dc6c6d0ff7966f55cee3368a95f788952372813ddfcbde2cb899f280785308c"
+    },
+    {
+      "source_id": "S024",
+      "url": "https://www.datacamp.com/blog/what-is-opencode",
+      "status": "success",
+      "accepted": true,
+      "bytes": 25546,
+      "response_sha256": "2d69fe90c6a0b530c620e2dc16f83fbb07c51d6121386048fab0186b85eed406",
+      "fetched_at": "2026-10-05T05:48:39.555314+00:00",
+      "document_sha256": "c655000f9ac72f484c6c8dc12b9ae69ce183fcd50d9ed7aff48e6f6c9a49f740"
+    },
+    {
+      "source_id": "S025",
+      "url": "https://www.emergentmind.com/topics/flakyguard",
+      "status": "success",
+      "accepted": true,
+      "bytes": 10386,
+      "response_sha256": "aa224cc77df2ea67db42519e0659a639a39f5c2ff05bc71ddd1b13e9f3375391",
+      "fetched_at": "2026-10-05T05:48:39.714634+00:00",
+      "document_sha256": "0ff929d3bde4c4922c1593ff77be285f9066c32d7d1f765a0dbb7f95d33fdaab"
+    },
+    {
+      "source_id": "S026",
+      "url": "https://www.getpanto.ai/blog/detect-flaky-tests",
+      "status": "success",
+      "accepted": true,
+      "bytes": 25477,
+      "response_sha256": "86806d0f3348348fc95e1ee97361fcafd0be199e5637c4a78b26e78d66920eba",
+      "fetched_at": "2026-10-05T05:48:43.000131+00:00",
+      "document_sha256": "4ad3187f812566b055431ada65b34f7ad01c31aff85b4abb822cf5799f4fb211"
+    },
+    {
+      "source_id": "S027",
+      "url": "https://www.gocodeo.com/post/how-ai-coding-models-handle-context-switching-and-multi-file-refactoring",
+      "status": "success",
+      "accepted": true,
+      "bytes": 12310,
+      "response_sha256": "6b9c1b5fe2bfab0f2ba90e072da7532b8a641b91cd5aaf022b216cfc8bde813b",
+      "fetched_at": "2026-10-05T05:48:43.143641+00:00",
+      "document_sha256": "aedd02708ef52144f5791e9c208197d89a15ac9cffca3a887c7e8c6939a78ef2"
+    },
+    {
+      "source_id": "S028",
+      "url": "https://www.ijraset.com/best-journal/evaluating-multiagent-ai-systems-for-automated-bug-detection-and-code-refactoring",
+      "status": "error",
+      "accepted": false,
+      "error_class": "ApiError"
+    }
+  ],
+  "selected_source_ids": {
+    "q6": {
+      "w0": [
+        "S012",
+        "S001",
+        "S021",
+        "S015",
+        "S027"
+      ],
+      "candidate": [
+        "S012",
+        "S002",
+        "S015",
+        "S021",
+        "S027"
+      ]
+    },
+    "q8": {
+      "w0": [
+        "S011",
+        "S007",
+        "S022",
+        "S019",
+        "S025"
+      ],
+      "candidate": [
+        "S019",
+        "S011",
+        "S026",
+        "S018",
+        "S023"
+      ]
+    }
+  },
+  "root_verification": {
+    "all_29_raw_body_hashes_and_sizes_match": true,
+    "source_union_counts": [
+      13,
+      15
+    ],
+    "answer_sources_per_variant": [
+      5,
+      5,
+      5,
+      5
+    ],
+    "shared_context_bytes_match": true,
+    "individual_packet_distribution_verified": true
+  },
+  "credit": "Captured-source diagnostic only; no selector qualification or production improvement claim",
+  "privacy": "Full bodies and model packets retained privately; public receipt allowlists public source URLs, status/class, hashes, timing and runtime alias/revision only.",
+  "controller_search_calls": 0,
+  "controller_brave_calls": 0,
+  "controller_jev_calls": 0,
+  "status_scope": "Capture-time snapshot; subsequent completed assessments are recorded in pilot-outcome.json."
+}
