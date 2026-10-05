@@ -1,0 +1,143 @@
+"""Synthetic-only tests; no model, network, credential, lease, or quality claim."""
+import copy
+import hashlib
+import importlib.machinery
+import json
+import pathlib
+import unittest
+
+
+ROOT = pathlib.Path(__file__).parent
+
+
+def load(name, path):
+    module = importlib.machinery.SourceFileLoader(name, str(path)).load_module()
+    return module
+
+
+H = load('hydrate', ROOT / 'hydrate.py.txt')
+V = load('validator', ROOT / 'validate.py.txt')
+C = load('catalog', ROOT.parent / 'source-use-next-stage' / 'evidence-catalog.py.txt')
+VT = load('validator_fixtures', ROOT / 'validate-tests.py.txt')
+
+
+def catalog_hash(catalog):
+    return hashlib.sha256(json.dumps(catalog, ensure_ascii=False, sort_keys=True,
+                                     separators=(',', ':')).encode()).hexdigest()
+
+
+def model_packet(packet, catalog):
+    out = copy.deepcopy(packet)
+    def walk(node):
+        if isinstance(node, dict):
+            for key, value in list(node.items()):
+                if key == 'references':
+                    ids = []
+                    for ref in value:
+                        match = next(eid for eid, row in catalog['passages'].items()
+                                     if row['source_id'] == ref['source_id'] and
+                                     row['start'] <= ref['start'] and row['end'] >= ref['end'])
+                        ids.append(match)
+                    node['evidence_ids'] = ids
+                    del node[key]
+                else:
+                    walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+    walk(out)
+    return json.dumps(out, ensure_ascii=False, separators=(',', ':')).encode()
+
+
+class HydratorTests(unittest.TestCase):
+    def setUp(self):
+        self.registry, self.contexts, self.source, self.answer = VT.fixtures()
+        self.pool_catalog = C.build([{'source_id': sid, 'context': text}
+                                     for sid, text in self.contexts.items()], max_chars=14)
+        self.arm_contexts = {'S-A': self.contexts['S-A']}
+        self.arm_catalog = C.build([{'source_id': sid, 'context': text}
+                                   for sid, text in self.arm_contexts.items()], max_chars=14)
+
+    def hydrate(self, raw, kind, catalog, contexts):
+        return H.hydrate(raw, packet_kind=kind, catalog=catalog, contexts=contexts,
+                         assigned_source_ids=list(contexts), expected_catalog_sha256=catalog_hash(catalog))
+
+    def test_unicode_id_expands_to_exact_character_offsets_and_validator_accepts(self):
+        raw = model_packet(self.answer, self.arm_catalog)
+        result = self.hydrate(raw, 'answer_arm', self.arm_catalog, self.arm_contexts)
+        self.assertEqual(result['raw_model_sha256'], hashlib.sha256(raw).hexdigest())
+        ref = result['expanded_envelope']['tasks'][0]['arms'][0]['facet_assessments'][0]['claims'][0]['references'][0]
+        self.assertTrue(ref['quote'].startswith('Rénovation 🚀'))
+        self.assertEqual(self.contexts['S-A'][ref['start']:ref['end']], ref['quote'])
+        self.assertEqual(ref['end'] - ref['start'], len(ref['quote']))
+        self.assertNotEqual(len(ref['quote']), len(ref['quote'].encode('utf-8')))
+        self.assertEqual(V.validate(result['expanded_envelope'], self.registry)['structurally_valid'], True)
+        self.assertEqual(result['hydration']['semantic_completion'], 'not_claimed')
+
+    def test_semantic_fields_and_claim_text_are_unchanged(self):
+        raw = model_packet(self.answer, self.arm_catalog)
+        result = self.hydrate(raw, 'answer_arm', self.arm_catalog, self.arm_contexts)
+        expected = copy.deepcopy(self.answer)
+        actual = copy.deepcopy(result['expanded_envelope'])
+        def remove_refs(packet):
+            def walk(node):
+                if isinstance(node, dict):
+                    for key, value in list(node.items()):
+                        if key == 'references':
+                            del node[key]
+                        else:
+                            walk(value)
+                elif isinstance(node, list):
+                    for value in node:
+                        walk(value)
+            walk(packet)
+        remove_refs(expected)
+        remove_refs(actual)
+        self.assertEqual(actual, expected)
+        self.assertEqual(result['raw_model_sha256'], hashlib.sha256(raw).hexdigest())
+
+    def test_source_packet_requires_explicit_pool_catalog_and_validates(self):
+        raw = model_packet(self.source, self.pool_catalog)
+        result = self.hydrate(raw, 'source_pool', self.pool_catalog, self.contexts)
+        self.assertTrue(V.validate(result['expanded_envelope'], self.registry)['structurally_valid'])
+        with self.assertRaisesRegex(H.HydrationError, 'kind/schema'):
+            self.hydrate(raw, 'answer_arm', self.pool_catalog, self.contexts)
+
+    def test_unknown_or_cross_arm_evidence_id_rejects_without_repair(self):
+        packet = json.loads(model_packet(self.answer, self.arm_catalog))
+        packet['tasks'][0]['arms'][0]['facet_assessments'][0]['claims'][0]['evidence_ids'] = ['f' * 64]
+        with self.assertRaisesRegex(H.HydrationError, 'unknown evidence'):
+            self.hydrate(json.dumps(packet).encode(), 'answer_arm', self.arm_catalog, self.arm_contexts)
+        # A pool ID for S-B is not present in the separately selected S-A arm catalog.
+        foreign = next(eid for eid, row in self.pool_catalog['passages'].items() if row['source_id'] == 'S-B')
+        packet['tasks'][0]['arms'][0]['facet_assessments'][0]['claims'][0]['evidence_ids'] = [foreign]
+        with self.assertRaisesRegex(H.HydrationError, 'unknown evidence'):
+            self.hydrate(json.dumps(packet).encode(), 'answer_arm', self.arm_catalog, self.arm_contexts)
+
+    def test_catalog_mutation_and_context_or_unicode_offset_mutation_reject(self):
+        catalog = copy.deepcopy(self.arm_catalog)
+        catalog['passages'][next(iter(catalog['passages']))]['text'] += 'x'
+        raw = model_packet(self.answer, self.arm_catalog)
+        with self.assertRaisesRegex(H.HydrationError, 'catalog (hash|passage)'):
+            self.hydrate(raw, 'answer_arm', catalog, self.arm_contexts)
+        wrong_context = {'S-A': self.arm_contexts['S-A'] + 'x'}
+        with self.assertRaisesRegex(H.HydrationError, 'catalog|context'):
+            self.hydrate(raw, 'answer_arm', self.arm_catalog, wrong_context)
+        forged = copy.deepcopy(self.arm_catalog)
+        eid, row = next(iter(forged['passages'].items()))
+        row['start'] += 1
+        with self.assertRaisesRegex(H.HydrationError, 'catalog (hash|passage)'):
+            self.hydrate(raw, 'answer_arm', forged, self.arm_contexts)
+
+    def test_model_authored_expanded_coordinates_duplicate_keys_and_unknown_ids_reject(self):
+        raw = model_packet(self.answer, self.arm_catalog)
+        packet = json.loads(raw)
+        packet['tasks'][0]['arms'][0]['facet_assessments'][0]['claims'][0]['start'] = 0
+        with self.assertRaisesRegex(H.HydrationError, 'model-authored'):
+            self.hydrate(json.dumps(packet).encode(), 'answer_arm', self.arm_catalog, self.arm_contexts)
+        with self.assertRaisesRegex(H.HydrationError, 'duplicate JSON'):
+            self.hydrate(b'{"schema":"x","schema":"y"}', 'answer_arm', self.arm_catalog, self.arm_contexts)
+
+
+if __name__ == '__main__':
+    unittest.main()

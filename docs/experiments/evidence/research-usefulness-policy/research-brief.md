@@ -50,3 +50,11 @@ Sources inspected 2026-10-05: [live result](../EXP-076/completed/readout.md),
 [diagnosis](../EXP-076/source-retention-diagnosis.md),
 [pilot](../source-use-next-stage/pilot-outcome.md),
 [reference comparison](../evidence-id-ablation/readout.md).
+
+## Measurement design continuation
+
+The [offline measurement contract](../../research-usefulness-measurement-contract.md)
+turns retained pilot limitations into explicit stage/state and closed-packet
+requirements. It is design work, not a registered comparison or empirical
+improvement. Deterministic validator coverage and the saved-evidence audit
+remain in progress; all earlier open candidate/statistical questions remain.
