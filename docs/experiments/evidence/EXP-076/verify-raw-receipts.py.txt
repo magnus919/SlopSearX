@@ -513,6 +513,7 @@ def _verify_one(outdir, op, opid, case, cards, variant, calls_by_number, cursor,
     return cursor, attempts, totals, unknown, {
         "baseline_valid": baseline_valid,
         "candidate_valid": candidate_valid,
+        "candidate_body_expected": candidate_body_expected,
         "orders": {"w0": parsed_w0["order_ids"] if baseline_valid else expected_provenance,
                    "candidate": parsed_joint["candidate"]["order_ids"] if candidate_valid else expected_provenance},
     }
