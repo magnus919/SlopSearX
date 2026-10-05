@@ -24,3 +24,27 @@ The earlier synthetic builder failure is retained separately.
 All material findings require fixes, affected offline tests and a bounded
 follow-up before qualification. The full production acceptance checklist and
 untouched task/pool confirmation remain open.
+
+## Bounded runner follow-up
+
+At `751d162dbe86a617fd8e61939c1f473ee2b3851a`, independent review
+confirmed the original admission, fixed lease location, usage-reservation and
+service source-closure fixes. Root independently ran all 13 runner tests under
+CPython 3.14.7; all passed.
+
+At `f68e2f045648d91817b0a831748c34b9c321655c`, follow-up confirmed frozen
+input reconstruction and rejection of injected live builders/clients. The
+private admission constructor still self-assigned its seal; an issued-object
+registry and constructor-forgery regression are required before qualification.
+This is a same-process misuse guard, not a security boundary against hostile
+Python code with process/module access.
+
+Analyzer and raw-receipt verifier review/tests remain pending. No provider
+acceptance, quality improvement or production readiness is established.
+
+At `d0f1ee293122afc3ae9bc4b34f1bf66baf0497c`, independent review confirmed
+that only gate-issued object identities enter the admission registry and that
+run consumes the entry. The direct-constructor regression rejects before
+transport. Root independently reran all 13 runner tests successfully. No
+unresolved material runner finding remains in this bounded follow-up; full
+analyzer/verifier qualification is still pending.
