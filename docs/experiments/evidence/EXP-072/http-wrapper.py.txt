@@ -1,0 +1,63 @@
+"""Owned EXP-072 HTTP adapter; delegates bounded exchange to frozen EXP-059."""
+import argparse,hashlib,importlib.machinery,importlib.util,json,os,sys,urllib.request
+from pathlib import Path
+HERE=Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+sys.path.insert(0,str(REPO))
+P=importlib.machinery.SourceFileLoader("exp072_prepare",str(HERE/"prepare.py.txt"))
+SPEC=importlib.util.spec_from_loader(P.name,P);PREP=importlib.util.module_from_spec(SPEC);P.exec_module(PREP)
+L=importlib.machinery.SourceFileLoader("exp072_exp059_http",str(REPO/"docs/experiments/evidence/EXP-059/http-wrapper.py.txt"))
+S=importlib.util.spec_from_loader(L.name,L);HTTP=importlib.util.module_from_spec(S);L.exec_module(HTTP)
+# Reuse EXP-059's NoRedirect, one-second remote_deadline, bounded read, and
+# secret-echo suppression. Only the request-shape validator changes for W0 Score.
+HTTP.validate_request=PREP.validate_request
+
+class FixtureResponse:
+    status=200
+    def __init__(self,body):self.body=body
+    def __enter__(self):return self
+    def __exit__(self,*_):return False
+    def read(self,n=-1):
+        if not self.body:return b""
+        n=len(self.body) if n<0 else n
+        out,self.body=self.body[:n],self.body[n:]
+        return out
+
+class FixtureOpener:
+    def __init__(self,mode):self.mode=mode
+    def open(self,request,timeout):
+        if request.full_url!=HTTP.ENDPOINT or request.method!="POST" or timeout!=1:raise ValueError("fixture-envelope")
+        data=PREP.validate_request(request.data)
+        if self.mode=="http-error":raise ValueError("fixture-http-error")
+        answers={}
+        for cid,q in data["questions"].items():
+            score=2 if len(q["criteria"])==4 else 5
+            answers[cid]={"type":"score","score":score,"confidence":.8,"legend":"fixture metadata","probabilities":{"low":.1,"high":.9}}
+        usage={"input_tokens":1,"output_tokens":1}
+        if self.mode=="missing-usage":usage=None
+        result={"model":PREP.MODEL,"answers":answers}
+        if usage is not None:result["usage"]=usage
+        return FixtureResponse(json.dumps(result,allow_nan=False).encode())
+
+def main():
+    parser=argparse.ArgumentParser();parser.add_argument("--offline-fixture",choices=("neutral","http-error","missing-usage"));args=parser.parse_args()
+    raw=sys.stdin.buffer.read(384001)
+    try:
+        PREP.validate_request(raw)
+        if args.offline_fixture:
+            token="offline-fixture-non-secret";opener=FixtureOpener(args.offline_fixture)
+        else:
+            token=os.environ.get("TYPESAFE_API_KEY","")
+            if not token:raise ValueError("missing-credential")
+            opener=urllib.request.build_opener(HTTP.NoRedirect())
+        timing={}
+        response=HTTP.exchange(raw,token,opener,timing=timing)
+        env={"request_sha256":hashlib.sha256(raw).hexdigest(),"response_sha256":hashlib.sha256(response).hexdigest(),"remote_http_ms":timing["remote_http_ms"]}
+        sys.stdout.buffer.write(response);print(json.dumps(env),file=sys.stderr);return 0
+    except HTTP.HTTPFailure as error:
+        sys.stdout.buffer.write(error.raw)
+        print(json.dumps({"http_status":error.status,"request_sha256":hashlib.sha256(raw).hexdigest(),"response_sha256":hashlib.sha256(error.raw).hexdigest(),"remote_http_ms":error.elapsed}),file=sys.stderr);return 2
+    except Exception as error:
+        # Never log request content, authorization, endpoint, token, or exception text.
+        print("owned-http-"+type(error).__name__,file=sys.stderr);return 2
+if __name__=="__main__":sys.exit(main())

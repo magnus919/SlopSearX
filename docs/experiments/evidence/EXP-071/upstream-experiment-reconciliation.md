@@ -37,3 +37,19 @@ It fails both quality/retention gates and does not justify another identical reg
 ## Remaining production work
 
 The [full acceptance checklist](../../complete-pool-production-acceptance.md) remains unchanged: choose a genuinely qualified frozen candidate, obtain untouched confirmation, then implement opt-in complete eligible-pool selection and original caller-context propagation through service/cache/singleflight/HTTP/MCP/portal/snapshots and X direct/research/sync/SSE/worker/replay paths. Ordinary behavior, sensitive guards, review and required CI must pass. No deployment or default changes are authorized by this audit.
+
+
+## Follow-up catch-up audit (2026-10-05)
+
+At the maintainer's request, a Luna reviewer rechecked the recent PR history and underlying readouts. Root refreshed GitHub PR metadata through #631; the reviewer independently inspected local history and artifacts, but its own GitHub connection failed. The inspected v0.6.0-to-#631 diff contains no changes to `slopsearx/`, `tests/` or `pyproject.toml`. Recent experiment merges must not be reported as shipped ranking behavior.
+
+Concrete findings refine the table above:
+
+- EXP-034 had only two natural pools above 40 (44/45 cards). Whole-request mean nDCG change was -0.0026; scores drifted by up to 2.11 across batch contexts. Naive batch fusion harmed one query.
+- EXP-035's source-local questions reduced observed score drift to 0.41/0.45 and had good overlap, but did not establish superiority. One measured query regressed by 0.0497.
+- EXP-036's seven valid paired original queries averaged +0.0104 under A and +0.0327 under B, below the fixed +0.05 gate. Its sole natural long pool, cardiac health, promoted a sparse title-only JACC lead but lost one useful top-ten card: useful count 10 to 9, nDCG changes -0.1287/-0.1104. These are visible-card reference judgments, not a medical-publication quality assessment.
+- EXP-038 generic task-fit Score failed. EXP-039 explicit-purpose Score improved aggregate ranking but failed useful-card identity retention. EXP-040 lost a research-grounding facet. EXP-065's unchanged source-local EXP-039 rubric averaged +0.00651/+0.04182, below the gate. Absolute-purpose Score is not an untested approach.
+- EXP-043 reservations made no insertions; EXP-046 selected KEEP throughout. EXP-059 passed its exposed screen, but all eight primary rankings were identical to inherited D; its three swaps were confined to extended research cases. These mechanisms cannot claim incremental primary-query benefit from the aggregate alone.
+- The now reproducible pure-Noul sort in #630 is retrospective and failed quality/retention. It supersedes any earlier claim that this ordering was unexamined, but does not qualify a selector.
+
+EXP-072 is a separate constraint-priority rubric comparison, with the unchanged old rubric retained as a descriptive control. It uses one source-local Score per candidate and no sibling counts, cross-batch fusion or probability cutoff. The audit does not identify a duplicate identical run or a conflicting shipped feature. It remains an exposed-development screen: qualification mechanics, fixed quality gates, untouched confirmation and the full production checklist still apply. No additional acquisition or model call was needed for this audit.

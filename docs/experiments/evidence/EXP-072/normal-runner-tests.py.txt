@@ -1,0 +1,210 @@
+"""Offline request, admission, deadline, and three-arm runner tests for EXP-072."""
+from pathlib import Path
+import hashlib,importlib.machinery,importlib.util,json,math,os,shutil,tempfile,types,unittest
+from unittest.mock import patch
+HERE=Path(__file__).resolve().parent
+def load(name,path):
+ l=importlib.machinery.SourceFileLoader(name,str(path));s=importlib.util.spec_from_loader(l.name,l);m=importlib.util.module_from_spec(s);l.exec_module(m);return m
+P=load("exp072_test_prepare",HERE/"prepare.py.txt");N=load("exp072_test_runner",HERE/"normal-runner.py.txt");A=load("exp072_test_analysis",HERE/"analyze.py.txt");OLD=load("exp065_control_reference",HERE.parent/"EXP-065"/"prepare.py.txt")
+def card(i):return {"id":"x%02d"%i,"url":"https://example.test/%02d"%i,"title":"Example source %02d"%i,"snippet":"A bounded public metadata excerpt %02d."%i}
+def case(q="ordinary query"):return {"id":"q1","query":q,"purpose":"Find strong public reading leads for this task.","facets":[{"id":"f1","description":"implementation"},{"id":"f2","description":"validation"}]}
+def response(request,score=None,usage=True,metadata=True,model=None):
+ answers={}
+ for cid,q in request["questions"].items():
+  maximum=3 if len(q["criteria"])==4 else 9
+  value=maximum if score is None else score
+  answers[cid]={"type":"score","score":value,**({"confidence":.8,"legend":"test metadata","probabilities":{"low":.1,"high":.9},"ignored":"retained"} if metadata else {})}
+ obj={"model":P.MODEL if model is None else model,"answers":answers}
+ if usage:obj["usage"]={"input_tokens":11,"output_tokens":3}
+ return json.dumps(obj,allow_nan=False,separators=(",",":")).encode()
+
+def corpus():
+ acq=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes());queries=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes());refs=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-064/completed/metric-reference-view.json").read_bytes())
+ return acq,queries,refs
+def raw_inputs():return {relative:(N.REPO/relative).read_bytes() for relative in P.PROTOCOL["inputs"]}
+class PrepareTests(unittest.TestCase):
+ def test_all_21_w0_and_absolute_control_bodies_are_byte_identical_to_frozen_baselines(self):
+  acq,queries,_=corpus();byid={q["id"]:q for q in queries}
+  for item in P.PROTOCOL["schedule"]:
+   old=OLD.bodies(byid[item["case"]],acq["pools"][item["case"]]["cards"],item["variant"])
+   new=P.bodies(byid[item["case"]],acq["pools"][item["case"]]["cards"],item["variant"])
+   self.assertEqual(P.wire(new["w0"]),OLD.wire(old["w0"]),item)
+   self.assertEqual(P.wire(new["absolute_control"]),OLD.wire(old["local"]),item)
+   self.assertEqual(new["candidate"]["state"],old["local"]["state"])
+ def test_candidate_exact_prompt_state_ids_and_canonical_pool_rotation(self):
+  cards=[card(i) for i in range(59)];base=P.bodies(case(),cards);rot=P.bodies(case(),cards,"rotate")
+  self.assertEqual(base["candidate"],rot["candidate"]);self.assertEqual(base["absolute_control"],rot["absolute_control"])
+  self.assertEqual(base["candidate"]["state"]["query"],base["candidate"]["state"]["purpose"])
+  self.assertEqual(list(base["candidate"]["questions"]),base["ids"])
+  for cid,q in base["candidate"]["questions"].items():
+   self.assertEqual(q,{"type":"score","instructions":{"candidate":next(c for c in base["cards"] if c["id"]==cid),"question":P.PROTOCOL["instructions"]},"criteria":list(P.PROTOCOL["criteria"])})
+  self.assertEqual(rot["provenance_order_ids"],base["provenance_order_ids"][20:]+base["provenance_order_ids"][:20])
+  self.assertEqual(rot["tail_ids"],[c["id"] for c in (cards[20:]+cards[:20])[40:]])
+  self.assertEqual(len(base["w0"]["questions"]),40);self.assertEqual(base["w0"]["state"]["query"],case()["query"])
+ def test_validator_requires_state_query_purpose_equality_and_single_arm_binding(self):
+  b=P.bodies(case(),[card(0),card(1)])
+  for arm in ("candidate","absolute_control"):
+   req=json.loads(P.wire(b[arm]));req["state"]["query"]="different"
+   with self.assertRaises(ValueError):P.validate_request(P.wire(req))
+   req=json.loads(P.wire(b[arm]));cid=next(iter(req["questions"]));req["questions"][cid]["instructions"]["candidate"]["id"]="wrong-id"
+   with self.assertRaises(ValueError):P.validate_request(P.wire(req))
+  req=json.loads(P.wire(b["candidate"]));cid=next(iter(req["questions"]));req["questions"][cid]["criteria"]=list(P.CONTRACT["criteria"])
+  with self.assertRaises(ValueError):P.validate_request(P.wire(req))
+ def test_score_response_bounds_metadata_and_strict_json_membership(self):
+  b=P.bodies(case(),[card(0),card(1)])
+  for arm,maximum in (("candidate",3),("absolute_control",9),("w0",9)):
+   body=b[arm];ids=list(body["questions"]);parsed=P.validate_score_response(response(body,maximum),body,ids,maximum)
+   self.assertEqual(parsed["scores"][ids[0]],maximum);self.assertEqual(parsed["raw_answers"][ids[0]]["legend"],"test metadata")
+   for invalid in (maximum+.1,True,-.1):
+    raw=response(body,invalid)
+    with self.subTest(arm=arm,score=invalid),self.assertRaises(ValueError):P.validate_score_response(raw,body,ids,maximum)
+   with self.assertRaises(ValueError):P.validate_score_response(response(body,maximum,model="wrong"),body,ids,maximum)
+   changed=json.loads(response(body,maximum));changed["answers"].pop(ids[0])
+   with self.assertRaises(ValueError):P.validate_score_response(json.dumps(changed).encode(),body,ids,maximum)
+   changed=json.loads(response(body,maximum));changed["answers"]["unexpected-id"]=next(iter(changed["answers"].values()))
+   with self.assertRaises(ValueError):P.validate_score_response(json.dumps(changed).encode(),body,ids,maximum)
+   with self.assertRaisesRegex(ValueError,"duplicate-json-key"):P.validate_score_response(b'{"model":"jev-1.13.0","model":"jev-1.13.0","answers":{}}',body,ids,maximum)
+   with self.assertRaisesRegex(ValueError,"nonfinite-json"):P.validate_score_response(response(body,maximum).replace((b'"score":'+str(maximum).encode()),b'"score":NaN',1),body,ids,maximum)
+   with self.assertRaisesRegex(ValueError,"nonfinite-json"):P.validate_score_response(response(body,maximum).replace(b'"ignored":"retained"',b'"ignored":1e999',1),body,ids,maximum)
+ def test_score_order_descending_and_canonical_ties(self):
+  ids=["first","second","third"]
+  self.assertEqual(P.order_scores({"first":2,"second":3,"third":3},ids,3),["second","third","first"])
+  with self.assertRaises(ValueError):P.order_scores({"first":4,"second":3,"third":2},ids,3)
+class RunnerTests(unittest.TestCase):
+ def test_wrapper_fixture_accepts_all_three_protocol_bodies_and_no_redirect(self):
+  W=load("exp072_wrapper_test",HERE/"http-wrapper.py.txt");b=P.bodies(case(),[card(0),card(1)])
+  for arm in ("w0","absolute_control","candidate"):self.assertEqual(W.PREP.validate_request(P.wire(b[arm])),b[arm])
+  self.assertIsNone(W.HTTP.NoRedirect().redirect_request(None,None,302,"redirect",{},"https://other.test"))
+ def test_full_prebuild_bad_last_pool_stops_before_gate_outdir_or_child(self):
+  acq,queries,refs=corpus();acq["pools"]["q13"]["cards"][0]["title"]="x"*257
+  with tempfile.TemporaryDirectory() as tmp:
+   root=Path(tmp);paths=[root/n for n in ("acq.json","queries.json","refs.json")];out=root/"out"
+   for path,value in zip(paths,(acq,queries,refs)):path.write_text(json.dumps(value))
+   argv=["normal-runner.py.txt","--mode","live","--acquisition",str(paths[0]),"--queries",str(paths[1]),"--references",str(paths[2]),"--outdir",str(out)]
+   with patch("sys.argv",argv),patch.object(N,"live_gate",side_effect=AssertionError("gate before complete prebuild")) as gate,patch.object(N,"Owned",side_effect=AssertionError("child before complete prebuild")) as child:
+    self.assertEqual(N.main(),2);gate.assert_not_called();child.assert_not_called()
+   self.assertFalse(out.exists())
+ def test_existing_output_collision_stops_before_gate_or_side_effects(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   out=Path(tmp)/"already-there";out.mkdir()
+   argv=["normal-runner.py.txt","--mode","live","--outdir",str(out)]
+   with patch("sys.argv",argv),patch.object(N,"live_gate",side_effect=AssertionError("gate before output collision")) as gate,patch.object(N,"Owned",side_effect=AssertionError("child before output collision")) as child:
+    self.assertEqual(N.main(),2);gate.assert_not_called();child.assert_not_called()
+   self.assertTrue(out.is_dir());self.assertEqual(list(out.iterdir()),[])
+ def test_registered_or_qualification_pin_tampering_precedes_dns_key_lease_and_child(self):
+  class SpyEnv(dict):
+   reads=0
+   def get(self,key,*args):self.reads+=1;return super().get(key,*args)
+  spy=SpyEnv();fake_os=types.SimpleNamespace(environ=spy)
+  with tempfile.TemporaryDirectory() as tmp:
+   here=Path(tmp);reg=json.loads((HERE/"registration-integrity.json").read_bytes());reg["pins"]["docs/experiments/EXP-072-constraint-specific-reading-scale.md"]="0"*64
+   (here/"registration-integrity.json").write_text(json.dumps(reg));(here/"protocol.json").write_bytes((HERE/"protocol.json").read_bytes())
+   reg_raw=(here/"registration-integrity.json").read_bytes();protocol_raw=(here/"protocol.json").read_bytes()
+   def committed(path,rev):return reg_raw if path.endswith("registration-integrity.json") else protocol_raw
+   with patch.object(N,"HERE",here),patch.object(N,"committed",side_effect=committed),patch.object(N,"os",fake_os),patch.object(N.socket,"getaddrinfo",side_effect=AssertionError("DNS before pin validation")),patch.object(N,"create_lease",side_effect=AssertionError("lease before pin validation")),patch.object(N,"Owned",side_effect=AssertionError("child before pin validation")):
+    with self.assertRaisesRegex(ValueError,"registration-pin-mismatch"):N.live_gate({},"a"*40)
+   self.assertEqual(spy.reads,0)
+ def test_mocked_positive_live_gate_accepts_all_registration_inputs_and_source_pins(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   root=Path(tmp);here=root/"EXP-072";here.mkdir();lease=root/"leases";lease.mkdir()
+   for name in N.OWNED_FILES:shutil.copy2(HERE/name,here/name)
+   for name in ("protocol.json","registration-integrity.json"):shutil.copy2(HERE/name,here/name)
+   reg=(HERE/"registration-integrity.json").read_bytes();protocol=(HERE/"protocol.json").read_bytes();inputs={k:(N.REPO/k).read_bytes() for k in P.PROTOCOL["inputs"]}
+   qual={"schema":"exp072-qualification-integrity/1","qualified":True,"files":{n:hashlib.sha256((here/n).read_bytes()).hexdigest() for n in N.OWNED_FILES},"source_pins":{n:hashlib.sha256((N.REPO/n).read_bytes()).hexdigest() for n in N.SOURCE_FILES},"protocol_sha256":hashlib.sha256(protocol).hexdigest(),"registration_sha256":hashlib.sha256(reg).hexdigest()}
+   qraw=json.dumps(qual,separators=(",",":")).encode();(here/"qualification-integrity.json").write_bytes(qraw)
+   def committed(path,revision):
+    if path.endswith("registration-integrity.json"):return reg
+    if path.endswith("protocol.json"):return protocol
+    if path.endswith("qualification-integrity.json"):return qraw
+    if path in inputs:return inputs[path]
+    return (N.REPO/path).read_bytes()
+   with patch.object(N,"HERE",here),patch.object(N,"committed",side_effect=committed),patch.object(N.socket,"getaddrinfo",return_value=[]) as dns,patch.dict(os.environ,{"TYPESAFE_API_KEY":"fixture-only"}),patch("tempfile.gettempdir",return_value=str(lease)):
+    got=N.live_gate(inputs,"a"*40,protocol,reg);self.assertEqual(got["inputs"],P.PROTOCOL["inputs"]);dns.assert_called_once();self.assertEqual(len(list(lease.iterdir())),1)
+ def test_64_call_complete_fixture_has_exact_arm_schema_and_analyzer_accepts(self):
+  acq,queries,refs=corpus()
+  with tempfile.TemporaryDirectory() as tmp:
+   out=Path(tmp)/"run";run=N.run(acq,queries,out,True);analysis=A.analyze(run,acq,refs,queries,P.PROTOCOL,raw_inputs(),(HERE/"protocol.json").read_bytes(),(HERE/"registration-integrity.json").read_bytes())
+   self.assertEqual((run["status"],run["budget"]["attempts"]),("complete",64));self.assertEqual(run["input_pins"],P.PROTOCOL["inputs"])
+   self.assertEqual(run["neutral"]["status"],"valid");self.assertEqual(len(run["neutral"]["raw_answers"]),80)
+   self.assertEqual(analysis["outcome"],"synthetic_fixture_only");self.assertFalse(analysis["structural_failures"],analysis["structural_failures"])
+   for op in run["operations"]:
+    self.assertEqual(set(op["arms"]),{"w0","absolute_control","candidate"})
+    self.assertEqual(set(op["arms"]["candidate"]["raw_answers"]),set(op["provenance_order_ids"]))
+    self.assertLessEqual(op["candidate_phase_ms"],1000)
+    self.assertIn("legend",next(iter(op["arms"]["candidate"]["raw_answers"].values())))
+   self.assertEqual(len(list((out/"receipts").glob("call-*.json"))),64)
+ def test_known_bad_candidate_fails_stops_and_falls_back_to_fresh_w0(self):
+  acq,queries,_=corpus()
+  class Fake:
+   n=0
+   def __init__(self,*_):self.last_raw=None
+   def __call__(self,body,timeout_s=60):
+    Fake.n+=1;req=P.strict_json(body)
+    score=8
+    if len(req["questions"])==80:score=2
+    elif "purpose" in req["state"]:
+     score=4 if len(next(iter(req["questions"].values()))["criteria"])==4 else 5
+    self.last_raw=response(req,score=score);return self.last_raw,.1
+  with tempfile.TemporaryDirectory() as tmp,patch.object(N,"Owned",Fake):
+   out=Path(tmp)/"run";run=N.run(acq,queries,out,True);op=run["operations"][0]
+   self.assertEqual((run["status"],Fake.n),("incomplete",4))
+   self.assertEqual(op["arms"]["candidate"]["status"],"failed")
+   self.assertEqual(op["arms"]["candidate"]["order_ids"],op["arms"]["w0"]["order_ids"])
+   self.assertEqual(run["operations"][1]["arms"]["w0"]["status"],"uninvoked")
+ def test_unknown_usage_candidate_fails_stops_and_preserves_raw_receipt(self):
+  acq,queries,_=corpus()
+  class Fake:
+   n=0
+   def __init__(self,*_):self.last_raw=None
+   def __call__(self,body,timeout_s=60):
+    Fake.n+=1;req=P.strict_json(body);self.last_raw=response(req,score=2,usage=Fake.n!=4);return self.last_raw,.1
+  with tempfile.TemporaryDirectory() as tmp,patch.object(N,"Owned",Fake):
+   out=Path(tmp)/"run";run=N.run(acq,queries,out,True)
+   self.assertEqual((run["status"],Fake.n),("incomplete",4));self.assertTrue(run["budget"]["unknown_usage"])
+   self.assertEqual(run["budget"]["input_tokens"],33)
+   rec=P.strict_json((out/"receipts"/"call-03.json").read_bytes());self.assertIsNone(rec["usage"]);self.assertIsNotNone(rec["raw_response"])
+ def test_candidate_child_timeout_is_remaining_phase_and_other_arms_keep_outer_timeout(self):
+  acq,queries,_=corpus()
+  class Fake:
+   timeouts=[]
+   def __init__(self,*_):self.last_raw=None
+   def __call__(self,body,timeout_s=60):
+    Fake.timeouts.append(timeout_s);req=P.strict_json(body);self.last_raw=response(req,score=2);return self.last_raw,.1
+  with tempfile.TemporaryDirectory() as tmp,patch.object(N,"Owned",Fake):run=N.run(acq,queries,Path(tmp)/"run",True)
+  self.assertEqual(run["status"],"complete");self.assertEqual(len(Fake.timeouts),64)
+  self.assertLessEqual(Fake.timeouts[0],1);self.assertEqual(Fake.timeouts[1:3],[60,60])
+  for i in range(1,len(Fake.timeouts),3):self.assertEqual(Fake.timeouts[i:i+2],[60,60]);self.assertGreater(Fake.timeouts[i+2],0);self.assertLessEqual(Fake.timeouts[i+2],1)
+ def test_final_candidate_receipt_fsync_overrun_fails_stops_and_uses_w0(self):
+  acq,queries,_=corpus();clock=[0.0]
+  def mono():clock[0]+=.001;return clock[0]
+  original=N.atomic
+  def atomic(path,value):
+   if Path(path).name=="call-03.json" and value.get("status")=="valid":clock[0]+=1.01
+   return original(path,value)
+  class Fake:
+   n=0
+   def __init__(self,*_):self.last_raw=None
+   def __call__(self,body,timeout_s=60):Fake.n+=1;req=P.strict_json(body);self.last_raw=response(req,score=2);return self.last_raw,.1
+  with tempfile.TemporaryDirectory() as tmp,patch.object(N,"Owned",Fake),patch.object(N.time,"monotonic",side_effect=mono),patch.object(N,"atomic",side_effect=atomic):
+   out=Path(tmp)/"run";run=N.run(acq,queries,out,True);receipt_raw=(out/"receipts"/"call-03.json").read_bytes()
+  self.assertEqual((run["status"],Fake.n),("incomplete",4));op=run["operations"][0]
+  self.assertGreater(op["candidate_phase_ms"],1000);self.assertEqual(op["arms"]["candidate"]["status"],"failed")
+  self.assertEqual(op["arms"]["candidate"]["order_ids"],op["arms"]["w0"]["order_ids"])
+  rec=P.strict_json(receipt_raw);self.assertEqual(rec["status"],"failed")
+ def test_final_neutral_receipt_fsync_overrun_stops_before_schedule(self):
+  acq,queries,_=corpus();clock=[0.0]
+  def mono():clock[0]+=.001;return clock[0]
+  original=N.atomic
+  def atomic(path,value):
+   if Path(path).name=="call-00.json" and value.get("status")=="valid":clock[0]+=1.01
+   return original(path,value)
+  class Fake:
+   n=0
+   def __init__(self,*_):self.last_raw=None
+   def __call__(self,body,timeout_s=60):Fake.n+=1;req=P.strict_json(body);self.last_raw=response(req,score=2);return self.last_raw,.1
+  with tempfile.TemporaryDirectory() as tmp,patch.object(N,"Owned",Fake),patch.object(N.time,"monotonic",side_effect=mono),patch.object(N,"atomic",side_effect=atomic):
+   out=Path(tmp)/"run";run=N.run(acq,queries,out,True);receipt_raw=(out/"receipts"/"call-00.json").read_bytes()
+  self.assertEqual((run["status"],Fake.n),("incomplete",1));self.assertGreater(run["neutral"]["candidate_phase_ms"],1000)
+  self.assertEqual(run["neutral"]["status"],"failed");self.assertTrue(all(op["arms"]["w0"]["status"]=="uninvoked" for op in run["operations"]))
+  self.assertEqual(P.strict_json(receipt_raw)["status"],"failed")
+if __name__=="__main__":unittest.main()

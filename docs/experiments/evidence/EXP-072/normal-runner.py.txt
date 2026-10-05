@@ -1,0 +1,275 @@
+"""Inert EXP-072 runner; offline by default and qualification-gated for live."""
+from pathlib import Path
+import argparse,hashlib,importlib.machinery,importlib.util,json,math,os,re,socket,subprocess,sys,tempfile,time
+HERE=Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+REGISTRATION_REVISION="bd59504b64853b0c437617f92070e03e575b3d7b"
+OWNED_FILES={"prepare.py.txt","http-wrapper.py.txt","normal-runner.py.txt","normal-runner-tests.py.txt","analyze.py.txt","analysis-tests.py.txt"}
+SOURCE_FILES={"docs/experiments/evidence/EXP-059/transport.py.txt","docs/experiments/evidence/EXP-059/http-wrapper.py.txt","slopsearx/rerank.py","docs/experiments/evidence/EXP-039/source-selection-contract.json"}
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader);mod=importlib.util.module_from_spec(spec);loader.exec_module(mod);return mod
+P=load("exp072_prepare",HERE/"prepare.py.txt")
+T=load("exp072_transport",REPO/"docs/experiments/evidence/EXP-059/transport.py.txt")
+
+def jsonable(value):
+    if type(value)is bytes:return value.hex()
+    if type(value)is dict:return {k:jsonable(v) for k,v in value.items()}
+    if type(value)is list:return [jsonable(v) for v in value]
+    return value
+
+def atomic(path,value):
+    raw=json.dumps(jsonable(value),ensure_ascii=False,indent=2).encode("utf-8")
+    fd,tmp=tempfile.mkstemp(prefix=".exp072-",dir=path.parent)
+    try:
+        with os.fdopen(fd,"wb") as stream:stream.write(raw);stream.flush();os.fsync(stream.fileno())
+        os.replace(tmp,path);sync_directory(path.parent)
+    finally:
+        if os.path.exists(tmp):os.unlink(tmp)
+
+def sync_directory(path):
+    fd=os.open(str(path),os.O_RDONLY)
+    try:os.fsync(fd)
+    finally:os.close(fd)
+
+def create_lease(path,identity):
+    with path.open("x",encoding="ascii") as stream:stream.write(identity);stream.flush();os.fsync(stream.fileno())
+    sync_directory(path.parent)
+
+class Receipts(list):
+    def __init__(self,path):super().__init__();self.path=path
+    def append(self,item):
+        super().append(item);atomic(self.path/("call-%02d.json"%(len(self)-1)),item)
+    def update_last(self):atomic(self.path/("call-%02d.json"%(len(self)-1)),self[-1])
+
+class Owned:
+    def __init__(self,path,offline):
+        child_path=path/"transport";child_path.mkdir(exist_ok=True)
+        command=[sys.executable,str(HERE/"http-wrapper.py.txt")]
+        if offline:command += ["--offline-fixture","neutral"]
+        self.child=T.ChildTransport(command,http_timing=False);self.child.receipts=Receipts(child_path);self.last_raw=None
+    def __call__(self,body,timeout_s=60):
+        before=len(self.child.receipts);self.last_raw=None
+        try:
+            raw,_=self.child(body,timeout_s=timeout_s)
+            receipt=self.child.receipts[-1]
+            env=P.strict_json(receipt["stderr"])
+            if type(env)is not dict or set(env)!={"request_sha256","response_sha256","remote_http_ms"} or env["request_sha256"]!=hashlib.sha256(body).hexdigest() or env["response_sha256"]!=hashlib.sha256(raw).hexdigest():raise ValueError("http-timing-binding")
+            elapsed=env["remote_http_ms"]
+            if type(elapsed)not in (int,float) or not math.isfinite(elapsed) or not 0<=elapsed<=1000:raise ValueError("http-deadline")
+            self.last_raw=raw
+            return raw,float(elapsed)
+        except BaseException:
+            if len(self.child.receipts)>before:
+                receipt=self.child.receipts[-1]
+                if receipt.get("stdout_complete") and type(receipt.get("stdout"))is bytes:self.last_raw=receipt["stdout"]
+            raise
+        finally:
+            if len(self.child.receipts)>before:self.child.receipts.update_last()
+
+def committed(relative,revision):
+    if revision=="HEAD":
+        revision=subprocess.run(["git","rev-parse","HEAD"],cwd=REPO,check=True,capture_output=True,text=True).stdout.strip()
+    if type(revision)is not str or not re.fullmatch(r"[0-9a-f]{40}",revision):raise ValueError("input-revision")
+    if Path(relative).is_absolute() or ".." in Path(relative).parts:raise ValueError("unsafe-source-path")
+    return subprocess.run(["git","show",revision+":"+relative],cwd=REPO,check=True,capture_output=True).stdout
+
+def live_gate(input_bytes,revision,protocol_bytes=None,registration_bytes=None):
+    # All source/content/qualification pins are checked before DNS, key access,
+    # lease consumption, output creation, or child-process dispatch.
+    reg_raw=committed("docs/experiments/evidence/EXP-072/registration-integrity.json",REGISTRATION_REVISION)
+    protocol_raw=committed("docs/experiments/evidence/EXP-072/protocol.json",REGISTRATION_REVISION)
+    local_reg=(HERE/"registration-integrity.json").read_bytes()
+    local_protocol=(HERE/"protocol.json").read_bytes()
+    if registration_bytes is not None and registration_bytes!=local_reg:raise ValueError("registration-bytes")
+    if protocol_bytes is not None and protocol_bytes!=local_protocol:raise ValueError("protocol-bytes")
+    if reg_raw!=local_reg or protocol_raw!=local_protocol:raise ValueError("registration-pin")
+    reg=P.strict_json(reg_raw);protocol=P.strict_json(protocol_raw)
+    if reg.get("schema")!="exp072-registration/1" or reg.get("provider_calls")!=0 or reg.get("search_calls")!=0:raise ValueError("registration-contract")
+    if protocol.get("schema")!="exp072-constraint-specific-reading-scale/1" or protocol.get("status")!="registered before implementation and provider calls":raise ValueError("protocol-contract")
+    pins=reg.get("pins")
+    if type(pins)is not dict or set(pins)!={"docs/experiments/EXP-072-constraint-specific-reading-scale.md","docs/experiments/evidence/EXP-072/protocol.json"}:raise ValueError("registration-pins")
+    for relative,want in pins.items():
+        path=REPO/relative
+        if path.is_symlink() or not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest()!=want:raise ValueError("registration-pin-mismatch")
+        if committed(relative,REGISTRATION_REVISION)!=path.read_bytes():raise ValueError("registration-source-mismatch")
+    expected_inputs=protocol.get("inputs")
+    if type(expected_inputs)is not dict or set(input_bytes)!=set(expected_inputs):raise ValueError("input-contract")
+    supplied=dict(input_bytes)
+    for relative,want in expected_inputs.items():
+        path=REPO/relative
+        if path.is_symlink() or not path.is_file() or hashlib.sha256(supplied[relative]).hexdigest()!=want:raise ValueError("input-pin")
+        if committed(relative,revision)!=supplied[relative]:raise ValueError("input-revision")
+    qpath=HERE/"qualification-integrity.json"
+    if not qpath.is_file() or qpath.is_symlink():raise ValueError("runner-not-qualified")
+    qualification_raw=committed("docs/experiments/evidence/EXP-072/qualification-integrity.json","HEAD")
+    if qualification_raw!=qpath.read_bytes():raise ValueError("uncommitted-qualification")
+    qualification=P.strict_json(qualification_raw)
+    if qualification.get("schema")!="exp072-qualification-integrity/1" or qualification.get("qualified")is not True:raise ValueError("runner-not-qualified")
+    files=qualification.get("files");source_pins=qualification.get("source_pins")
+    if type(files)is not dict or set(files)!=OWNED_FILES:raise ValueError("qualification-files")
+    if type(source_pins)is not dict or set(source_pins)!=SOURCE_FILES:raise ValueError("qualification-source-files")
+    for relative,want in files.items():
+        path=HERE/relative
+        if path.is_symlink() or not path.is_file() or not re.fullmatch(r"[0-9a-f]{64}",str(want)) or hashlib.sha256(path.read_bytes()).hexdigest()!=want:raise ValueError("qualification-file-pin")
+    for relative,want in source_pins.items():
+        path=REPO/relative
+        if path.is_symlink() or not path.is_file() or not re.fullmatch(r"[0-9a-f]{64}",str(want)) or hashlib.sha256(path.read_bytes()).hexdigest()!=want:raise ValueError("qualification-source-pin")
+    if qualification.get("protocol_sha256")!=hashlib.sha256(protocol_raw).hexdigest() or qualification.get("registration_sha256")!=hashlib.sha256(reg_raw).hexdigest():raise ValueError("qualification-registration-pin")
+    socket.getaddrinfo("api.typesafe.ai",443,type=socket.SOCK_STREAM)
+    if not os.environ.get("TYPESAFE_API_KEY"):raise ValueError("missing-credential")
+    identity_raw=protocol_raw+reg_raw+b"".join(expected_inputs[k].encode()+b"\0"+supplied[k] for k in sorted(expected_inputs))+qualification_raw
+    identity=hashlib.sha256(identity_raw).hexdigest();lease=Path(tempfile.gettempdir())/("exp072-lease-"+identity)
+    create_lease(lease,identity)
+    return {"input_revision":revision,"qualification_sha256":hashlib.sha256(qualification_raw).hexdigest(),"identity":identity,
+            "protocol_sha256":hashlib.sha256(protocol_raw).hexdigest(),"registration_sha256":hashlib.sha256(reg_raw).hexdigest(),
+            "pins":pins,"source_pins":source_pins,"inputs":expected_inputs}
+
+def neutral_case():
+    return {"id":"neutral","query":"neutral fixture query","purpose":"neutral relative Choice acceptance","facets":[{"id":"nf0","description":"neutral facet 0"},{"id":"nf1","description":"neutral facet 1"},{"id":"nf2","description":"neutral facet 2"},{"id":"nf3","description":"neutral facet 3"}]}
+
+def neutral_cards():
+    return [{"id":"neutral-%02d"%i,"url":"https://neutral.example/%02d"%i,"title":"Synthetic source %02d"%i,"snippet":"Synthetic neutral card %02d; no real source or quality evidence."%i} for i in range(80)]
+
+def prebuild(acquisition,queries):
+    protocol=P.PROTOCOL;query_by_id={q["id"]:q for q in queries}
+    if len(query_by_id)!=len(queries):raise ValueError("query-ids")
+    pools=acquisition.get("pools")
+    if type(pools)is not dict or set(pools)!=set(query_by_id):raise ValueError("pool-inventory")
+    prepared=[]
+    for item in protocol["schedule"]:
+        if type(item)is not dict or set(item)!={"case","variant","arms"} or item["case"] not in query_by_id or item["case"] not in pools or item["arms"]!=["w0","absolute_control","candidate"]:raise ValueError("schedule-entry")
+        prepared.append((item,P.bodies(query_by_id[item["case"]],pools[item["case"]]["cards"],item["variant"])))
+    if len(prepared)!=21:raise ValueError("schedule-count")
+    neutral_body=P.bodies(neutral_case(),neutral_cards())["candidate"]
+    return prepared,neutral_body
+
+def _uninvoked(item,acquisition):
+    native=[c["id"] for c in acquisition["pools"][item["case"]]["cards"]]
+    if item["variant"]=="rotate" and native:
+        offset=20%len(native);native=native[offset:]+native[:offset]
+    row={"id":item["case"]+"-"+item["variant"],"case":item["case"],"variant":item["variant"],"provenance_order_ids":native,"candidate_phase_ms":None,"arms":{}}
+    for arm in ("w0","absolute_control","candidate"):
+        row["arms"][arm]={"status":"uninvoked","order_ids":list(native),"scores":{},"raw_answers":{},"usage":None,"elapsed_ms":None}
+    return row
+
+def run(acquisition,queries,outdir,offline=True,source_integrity=None,prebuilt=None):
+    prepared,neutral_body=prebuilt if prebuilt is not None else prebuild(acquisition,queries)
+    outdir.mkdir(parents=True,exist_ok=False);receipts=outdir/"receipts";receipts.mkdir()
+    if source_integrity is not None:atomic(outdir/"source-integrity.json",source_integrity)
+    operations=[];budget={"attempts":0,"input_tokens":0,"output_tokens":0,"unknown_usage":False};started=time.monotonic();owned=Owned(receipts,offline)
+    result={"schema":"exp072-run/1","status":"running","operations":operations,"synthetic":bool(offline),"input_pins":dict(P.PROTOCOL["inputs"]),"neutral":{"status":"pending","questions":80,"synthetic_input":True,"scores":{},"raw_answers":{},"usage":None,"elapsed_ms":None,"candidate_phase_ms":None},"budget":budget}
+    def checkpoint():
+        result["budget"]=dict(budget);result["wall_seconds"]=time.monotonic()-started;atomic(outdir/"run.json",result)
+    stop=False
+    def call(body,arm,op_id,body_request,expected_ids,maximum,phase_deadline=None):
+        if time.monotonic()-started>=7200:raise ValueError("wall-budget")
+        if budget["input_tokens"]+64000>3000000 or budget["output_tokens"]+64000>160000:raise ValueError("usage-reservation")
+        if budget["attempts"]>=64:raise ValueError("call-count")
+        cap=128000 if arm=="w0" else 384000
+        if len(body)>cap:raise ValueError("request-bound")
+        if phase_deadline is not None and phase_deadline-time.monotonic()<=0:raise ValueError("candidate-phase-deadline")
+        index=budget["attempts"];path=receipts/("call-%02d.json"%index)
+        pending={"status":"pending","operation":op_id,"arm":arm,"request":body.hex(),"request_sha256":hashlib.sha256(body).hexdigest(),"raw_response":None,"usage":None,"elapsed_ms":None,"failure":None}
+        with path.open("x",encoding="utf-8")as stream:json.dump(pending,stream);stream.flush();os.fsync(stream.fileno())
+        sync_directory(receipts)
+        timeout_s=60 if phase_deadline is None else min(60,phase_deadline-time.monotonic())
+        if timeout_s<=0:
+            pending.update(status="failed",failure="candidate-phase-deadline");atomic(path,pending);raise ValueError("candidate-phase-deadline")
+        budget["attempts"]+=1;raw=None;usage=None;elapsed=None
+        try:
+            try:raw,elapsed=owned(body,timeout_s=timeout_s)
+            except BaseException:
+                raw=owned.last_raw
+                if type(raw)is bytes:usage=P.usage_from_raw(raw)
+                if usage is None:budget["unknown_usage"]=True
+                else:budget["input_tokens"]+=usage["input_tokens"];budget["output_tokens"]+=usage["output_tokens"]
+                pending.update(status="failed",raw_response=raw.hex() if type(raw)is bytes else None,usage=usage,failure="transport");raise
+            usage=P.usage_from_raw(raw)
+            if usage is None:budget["unknown_usage"]=True
+            else:budget["input_tokens"]+=usage["input_tokens"];budget["output_tokens"]+=usage["output_tokens"]
+            pending.update(status="returned",raw_response=raw.hex(),usage=usage,elapsed_ms=elapsed)
+            if usage is None:raise ValueError("unknown-usage")
+            if usage["input_tokens"]>64000 or usage["output_tokens"]>64000:raise ValueError("per-call-usage")
+            if budget["input_tokens"]>3000000 or budget["output_tokens"]>160000:raise ValueError("total-usage")
+            validated=P.validate_score_response(raw,body_request,expected_ids,maximum)
+            if validated["usage"] is None:raise ValueError("invalid-usage")
+            pending.update(status="validated",raw_response=raw.hex(),usage=usage,elapsed_ms=elapsed);atomic(path,pending)
+            return validated,elapsed,usage
+        except BaseException as error:
+            pending["status"]="failed";pending["raw_response"]=raw.hex() if type(raw)is bytes else None;pending["usage"]=usage;pending["elapsed_ms"]=elapsed
+            code=str(error) if re.fullmatch(r"[a-z0-9-]{1,64}",str(error)) else "unclassified"
+            pending["failure"]={"type":type(error).__name__,"code":code};atomic(path,pending);raise
+    # Full 80-question candidate-shape neutral call; no quality credit.
+    neutral_start=None;neutral_receipt=None
+    try:
+        body=P.wire(neutral_body);ids=list(neutral_body["questions"]);neutral_start=time.monotonic()
+        accepted,elapsed,usage=call(body,"candidate","neutral",neutral_body,ids,3,neutral_start+1.0)
+        result["neutral"].update(status="valid",scores=accepted["scores"],raw_answers=accepted["raw_answers"],usage=usage,elapsed_ms=elapsed,questions=len(ids))
+        neutral_receipt=receipts/"call-00.json"
+        atomic(neutral_receipt,{**P.strict_json(neutral_receipt.read_bytes()),"status":"valid"})
+        phase=(time.monotonic()-neutral_start)*1000;result["neutral"]["candidate_phase_ms"]=phase
+        if phase>1000:raise ValueError("candidate-phase-deadline")
+    except BaseException as error:
+        if neutral_start is not None:result["neutral"]["candidate_phase_ms"]=(time.monotonic()-neutral_start)*1000
+        if neutral_receipt is not None:
+            saved=P.strict_json(neutral_receipt.read_bytes());saved.update(status="failed",failure={"type":type(error).__name__,"code":"candidate-phase-deadline" if str(error)=="candidate-phase-deadline" else "candidate-validation"});atomic(neutral_receipt,saved)
+        result["neutral"].update(status="failed",failure=type(error).__name__);stop=True;result["status"]="incomplete"
+    checkpoint()
+    for item,built in prepared:
+        if stop:operations.append(_uninvoked(item,acquisition));continue
+        op={"id":item["case"]+"-"+item["variant"],"case":item["case"],"variant":item["variant"],"provenance_order_ids":built["provenance_order_ids"],"candidate_phase_ms":None,"arms":{}}
+        operations.append(op);incumbent=list(built["provenance_order_ids"])
+        for arm in item["arms"]:
+            output={"status":"uninvoked","order_ids":list(incumbent),"scores":{},"raw_answers":{},"usage":None,"elapsed_ms":None};op["arms"][arm]=output
+            request=built[arm];expected_ids=list(request["questions"]);maximum=9 if arm in ("w0","absolute_control") else 3
+            phase_start=None;receipt=None;attempts_before=budget["attempts"]
+            try:
+                if arm=="candidate":phase_start=time.monotonic()
+                deadline=None if phase_start is None else phase_start+1.0
+                validated,elapsed,usage=call(P.wire(request),arm,op["id"],request,expected_ids,maximum,deadline)
+                if arm=="w0":
+                    local_scores=validated["scores"];prefix=list(built["w0_local_to_pool"])
+                    order_local=P.order_scores(local_scores,prefix,9);order=[built["w0_local_to_pool"][k] for k in order_local]+built["tail_ids"]
+                    scores={built["w0_local_to_pool"][k]:v for k,v in local_scores.items()};raw_answers={built["w0_local_to_pool"][k]:v for k,v in validated["raw_answers"].items()}
+                else:
+                    order=P.order_scores(validated["scores"],built["ids"],maximum);scores=validated["scores"];raw_answers=validated["raw_answers"]
+                output.update(status="valid",order_ids=order,scores=scores,raw_answers=raw_answers,usage=usage,elapsed_ms=elapsed)
+                if arm=="w0":incumbent=order
+                index=budget["attempts"]-1;receipt=receipts/("call-%02d.json"%index);saved=P.strict_json(receipt.read_bytes());saved.update(status="valid");atomic(receipt,saved)
+                if arm=="candidate":
+                    phase=(time.monotonic()-phase_start)*1000;op["candidate_phase_ms"]=phase
+                    if phase>1000:raise ValueError("candidate-phase-deadline")
+            except BaseException as error:
+                raw=owned.last_raw if budget["attempts"]>attempts_before else None
+                usage=P.usage_from_raw(raw) if type(raw)is bytes else None
+                phase=(time.monotonic()-phase_start)*1000 if phase_start is not None else None
+                if arm=="candidate":op["candidate_phase_ms"]=phase
+                if receipt is not None:
+                    saved=P.strict_json(receipt.read_bytes());saved.update(status="failed",failure={"type":type(error).__name__,"code":"candidate-phase-deadline" if str(error)=="candidate-phase-deadline" else "candidate-validation"});atomic(receipt,saved)
+                output.update(status="failed",order_ids=list(incumbent),scores={},raw_answers={},usage=usage,elapsed_ms=None,failure=type(error).__name__)
+                stop=True;result["status"]="incomplete"
+                for remaining in item["arms"][item["arms"].index(arm)+1:]:op["arms"][remaining]={"status":"uninvoked","order_ids":list(incumbent),"scores":{},"raw_answers":{},"usage":None,"elapsed_ms":None}
+                break
+        checkpoint()
+    if not stop:result["status"]="complete"
+    elif result["status"]=="running":result["status"]="incomplete"
+    result["budget"]=dict(budget);result["wall_seconds"]=time.monotonic()-started;checkpoint();return result
+
+def main():
+    parser=argparse.ArgumentParser();parser.add_argument("--mode",choices=("offline","live"),default="offline");parser.add_argument("--acquisition",type=Path,default=REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json");parser.add_argument("--queries",type=Path,default=REPO/"docs/experiments/evidence/EXP-060/queries.json");parser.add_argument("--references",type=Path,default=REPO/"docs/experiments/evidence/EXP-064/completed/metric-reference-view.json");parser.add_argument("--outdir",type=Path,required=True);parser.add_argument("--input-revision");args=parser.parse_args()
+    try:
+        input_bytes={relative:(REPO/relative).read_bytes() for relative in P.PROTOCOL["inputs"]};input_bytes["docs/experiments/evidence/EXP-060/fresh-acquisition.json"]=args.acquisition.read_bytes();input_bytes["docs/experiments/evidence/EXP-060/queries.json"]=args.queries.read_bytes();input_bytes["docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"]=args.references.read_bytes()
+        protocol_bytes=(HERE/"protocol.json").read_bytes();registration_bytes=(HERE/"registration-integrity.json").read_bytes()
+        acquisition=P.strict_json(input_bytes["docs/experiments/evidence/EXP-060/fresh-acquisition.json"]);queries=P.strict_json(input_bytes["docs/experiments/evidence/EXP-060/queries.json"]);references=P.strict_json(input_bytes["docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"])
+        prepared=prebuild(acquisition,queries)
+        if args.outdir.exists() or args.outdir.is_symlink():raise ValueError("output-exists")
+        if not args.outdir.parent.is_dir() or not os.access(args.outdir.parent,os.W_OK):raise ValueError("output-parent")
+        integrity=live_gate(input_bytes,args.input_revision or "",protocol_bytes,registration_bytes) if args.mode=="live" else None
+        result=run(acquisition,queries,args.outdir,args.mode=="offline",integrity,prepared)
+        analysis=load("exp072_analysis",HERE/"analyze.py.txt").analyze(result,acquisition,references,queries,P.PROTOCOL,input_bytes,protocol_bytes,registration_bytes)
+        atomic(args.outdir/"analysis.json",analysis)
+        print(json.dumps({"status":result["status"],"operations":len(result["operations"]),"attempts":result["budget"]["attempts"],"synthetic":result["synthetic"],"analysis":analysis["outcome"]}))
+        return 0 if result["status"]=="complete" else 2
+    except Exception as error:
+        print("exp072-setup-"+type(error).__name__,file=sys.stderr);return 2
+if __name__=="__main__":sys.exit(main())
