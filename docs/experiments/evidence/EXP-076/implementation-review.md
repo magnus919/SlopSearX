@@ -103,3 +103,23 @@ digest for dispatched failure paths, with explicit absence for pre-dispatch
 failures. The independent verifier must reject a changed failed-call sidecar
 when the run manifest and final receipt remain unchanged. These are findings
 from the completed bounded review pass; fixes and regressions are pending.
+
+## Failure receipt and admission corrections
+
+Root integrated the two follow-up runner commits and independently passed all
+twelve offline tests at `f6db4a6`. Known usage on failed HTTP responses remains
+known and counted once; final failure receipts bind the durable call sidecar.
+The added regressions also cover a baseline failure before candidate dispatch
+and a candidate deadline reached during final receipt fsync. These resolve the
+runner findings from the bounded substantive review.
+
+The admission tests use temporary fixture leases and DNS/key sentinels; they
+do not touch the real study lease, credentials or provider. Actual committed
+source qualification and independent verifier integration remain pending.
+
+Root inspected the unfinished verifier and found a circular manifest check:
+it expected the qualification manifest at the qualified code revision, before
+that manifest could have been generated. The manifest must be checked against
+its committed current tree while source closure remains bound to the qualified
+code revision. This draft finding was sent to the owner; the integrated unmocked
+check is required before admission.
