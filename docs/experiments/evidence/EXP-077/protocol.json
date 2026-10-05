@@ -101,6 +101,7 @@
     "answer_api_concurrency": 1,
     "answer_calls_basis": "16 task/arm answers plus 2 declared neutral readiness checks",
     "answer_max_output_tokens_requested": 8192,
+    "answer_provider_surface": "Existing explicitly configured OpenAI-compatible HTTP/HTTPS origin or /v1 base; normalized to one /v1/chat/completions path. Endpoint/key remain private runtime configuration read only after qualified admission.",
     "answer_words_maximum": 800,
     "answerer_alias": "free",
     "card_and_source_and_answer_assessors": "GPT-6 Luna, independent anonymous packets; not human gold",
@@ -152,7 +153,7 @@
     "development",
     "confirmation"
   ],
-  "status": "design_draft_harness_unqualified",
+  "status": "registered",
   "stop": "any failing/inconclusive stage ends this fixed study; no automatic tuning/replacement invocation; retain all partial evidence",
   "task_use": {
     "abstention_counts_as_completion": false,

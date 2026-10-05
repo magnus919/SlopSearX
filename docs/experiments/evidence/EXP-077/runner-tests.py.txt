@@ -51,6 +51,24 @@ def assignments():
 
 
 class RunnerTests(unittest.TestCase):
+    def test_provider_credential_echo_is_not_persisted(self):
+        import httpx
+        from datetime import datetime,timedelta,timezone
+        key='nonsecret-echo-fixture-value'
+        def respond(request):return httpx.Response(200,json={'model':'free','choices':[{'message':{'content':key}}]})
+        with tempfile.TemporaryDirectory() as temp:
+            out=Path(temp)/'output';out.mkdir()
+            clock={'stage_deadline_utc':(datetime.now(timezone.utc)+timedelta(seconds=60)).isoformat(),'stage_clock_digest':'0'*64}
+            with self.assertRaisesRegex(ValueError,'credential-echo'):
+                answer.run_answers([], 'fixture prompt', answer.validate_schema((HERE/'answerer.schema.json').read_bytes()),'http://provider.example.test/v1',key,out,clock,transport=httpx.MockTransport(respond))
+            self.assertFalse(any(key.encode() in f.read_bytes() for f in out.rglob('*') if f.is_file()))
+
+    def test_configured_provider_origin_or_v1_base_uses_one_v1_path(self):
+        expected='http://provider.example.test/v1/chat/completions'
+        for base in ('http://provider.example.test','http://provider.example.test/v1','http://provider.example.test/v1/chat/completions'):
+            self.assertEqual(answer.chat_completion_url(base),expected)
+        with self.assertRaises(ValueError):answer.chat_completion_url('https://user:password@provider.example.test')
+
     def test_exact_pinned_consumer_barrier_policy(self):
         accepted,_,flags=capture.capture_acceptance({'success':True,'data':{'markdown':'Please verify you are a human'}})
         self.assertFalse(accepted);self.assertTrue(flags['markdown_challenge'])

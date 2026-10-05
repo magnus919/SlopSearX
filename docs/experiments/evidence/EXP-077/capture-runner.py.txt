@@ -425,6 +425,11 @@ def live_capture(inventory: list[dict], cli_path: Path, outdir: Path,
                     raise RuntimeError("owned-response-byte-cap")
                 chunks.append(chunk)
             body = b"".join(chunks)
+            headers=kwargs.get('headers') or {}
+            auth=headers.get('Authorization') or headers.get('authorization') or ''
+            bearer=auth.removeprefix('Bearer ') if isinstance(auth,str) else ''
+            if bearer and bearer != auth and bearer.encode() in body:
+                raise ValueError('capture-credential-echo-suppressed')
             response._content, response._content_consumed = body, True
             response.close()
             receipt.update(status="completed", status_code=int(response.status_code),

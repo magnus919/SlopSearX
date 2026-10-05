@@ -316,12 +316,23 @@ def offline_fixture(outdir: Path) -> dict:
     return result
 
 
+def chat_completion_url(base):
+    """Use the explicit configured OpenAI-compatible origin, /v1 base, or endpoint."""
+    parsed=urlsplit(base)
+    if parsed.scheme not in ('http','https') or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise ValueError('answer-endpoint-invalid')
+    base=base.rstrip('/')
+    if base.endswith('/chat/completions'):return base
+    if base.endswith('/v1'):return base+'/chat/completions'
+    return base+'/v1/chat/completions'
+
+
 def run_answers(tasks: list[dict], prompt: str, schema: dict, endpoint: str,
                 api_key: str, outdir: Path, stage_clock: dict, *, transport=None) -> dict:
     """Send two neutral readiness and sixteen task calls, serially, no retry."""
     import httpx
     parsed = urlsplit(endpoint)
-    if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
         raise ValueError("answer-endpoint-invalid")
     if not api_key or "\n" in api_key or "\r" in api_key:
         raise ValueError("answer-key-invalid")
@@ -336,7 +347,7 @@ def run_answers(tasks: list[dict], prompt: str, schema: dict, endpoint: str,
             "body": {"model": "free", "messages": [
                 {"role": "system", "content": "Return exactly the JSON object {\"ready\":true}."},
                 {"role": "user", "content": "This is a synthetic endpoint readiness check, not study evidence."}],
-                "max_tokens": 32, "temperature": 0, "response_format": {"type": "json_object"}}})
+                "max_tokens": 8192, "temperature": 0, "response_format": {"type": "json_object"}}})
     for assignment in tasks:
         task_data = assignment["model_input"]["task"]
         model_input = {"task_id": task_data["task_id"], "kind": task_data["kind"],
@@ -373,7 +384,7 @@ def run_answers(tasks: list[dict], prompt: str, schema: dict, endpoint: str,
             durable(outdir / "call-receipts.json", calls)
             try:
                 response_chunks, response_size = [], 0
-                with client.stream("POST", endpoint.rstrip("/") + "/v1/chat/completions",
+                with client.stream("POST", chat_completion_url(endpoint),
                         content=body_raw, headers={"Authorization": "Bearer " + api_key,
                             "Content-Type": "application/json"}, timeout=min(30.0, remaining_seconds)) as response:
                     response_status = response.status_code
@@ -386,6 +397,8 @@ def run_answers(tasks: list[dict], prompt: str, schema: dict, endpoint: str,
                             raise ValueError("answer-response-byte-cap")
                         response_chunks.append(chunk)
                 raw = b"".join(response_chunks)
+                if api_key.encode() in raw:
+                    raise ValueError("answer-credential-echo-suppressed")
             except Exception as exc:
                 if call.get("status") == "in_flight":
                     call.update(status="transport_error", error_class=type(exc).__name__, usage_status="unknown")

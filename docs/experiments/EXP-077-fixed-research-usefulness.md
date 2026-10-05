@@ -1,6 +1,6 @@
 # EXP-077 — fixed candidate, fresh research-usefulness decision
 
-Status: design draft; no acquisition, capture, selector or answer invocation.
+Status: design and source ready to seal; no acquisition, capture, selector or answer invocation.
 Baseline source: `15b2410770d4bdf1dfcf6ad4f2da27ec1904c337`.
 Issue: [#516](https://github.com/magnus919/SlopSearX/issues/516).
 
