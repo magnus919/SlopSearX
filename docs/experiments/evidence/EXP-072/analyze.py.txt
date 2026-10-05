@@ -1,4 +1,6 @@
 """Offline EXP-072 analyzer. Exposed development is never production adoption."""
+import hashlib
+import json
 import math
 import random
 import statistics
@@ -120,7 +122,85 @@ def _metrics(order, rows):
             "covered_facets": sorted(covered(order, rows))}
 
 
-def analyze(run, acquisition, references, queries, protocol):
+class _DuplicateKey(ValueError):
+    pass
+
+
+def _strict_json(raw):
+    if type(raw) is not bytes:
+        raise ValueError("raw input must be bytes")
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise _DuplicateKey("duplicate JSON key")
+            result[key] = value
+        return result
+    def bad_constant(_):
+        raise ValueError("nonfinite JSON constant")
+    value = json.loads(raw.decode("utf-8"), object_pairs_hook=pairs, parse_constant=bad_constant)
+    if not _json_finite(value):
+        raise ValueError("nonfinite JSON value")
+    return value
+
+
+def _input_integrity_errors(acquisition, references, queries, protocol,
+                            input_bytes, protocol_bytes, registration_bytes):
+    errors = []
+    if type(input_bytes) is not dict or type(protocol_bytes) is not bytes or type(registration_bytes) is not bytes:
+        return ["input-integrity-missing"]
+    pins = protocol.get("inputs") if type(protocol) is dict else None
+    if type(pins) is not dict or set(input_bytes) != set(pins):
+        errors.append("pinned-input-inventory")
+        return errors
+    parsed = {}
+    for path, expected in pins.items():
+        raw = input_bytes.get(path)
+        if type(raw) is not bytes:
+            errors.append("input-bytes-" + path)
+            continue
+        if hashlib.sha256(raw).hexdigest() != expected:
+            errors.append("input-hash-" + path)
+            continue
+        try:
+            parsed[path] = _strict_json(raw)
+        except (UnicodeDecodeError, ValueError, json.JSONDecodeError):
+            errors.append("input-json-" + path)
+    object_bindings = {
+        "docs/experiments/evidence/EXP-060/fresh-acquisition.json": acquisition,
+        "docs/experiments/evidence/EXP-060/queries.json": queries,
+        "docs/experiments/evidence/EXP-064/completed/metric-reference-view.json": references,
+    }
+    for path, supplied in object_bindings.items():
+        if path not in parsed or parsed[path] != supplied:
+            errors.append("analyzed-object-mismatch-" + path)
+    try:
+        registered_protocol = _strict_json(protocol_bytes)
+    except (UnicodeDecodeError, ValueError, json.JSONDecodeError):
+        errors.append("protocol-bytes-invalid")
+        registered_protocol = None
+    if registered_protocol != protocol:
+        errors.append("protocol-object-mismatch")
+    try:
+        registration = _strict_json(registration_bytes)
+    except (UnicodeDecodeError, ValueError, json.JSONDecodeError):
+        errors.append("registration-bytes-invalid")
+        registration = None
+    if type(registration) is not dict or registration.get("schema") != "exp072-registration/1":
+        errors.append("registration-schema")
+    else:
+        reg_pins = registration.get("pins")
+        protocol_path = "docs/experiments/evidence/EXP-072/protocol.json"
+        if (type(reg_pins) is not dict or protocol_path not in reg_pins
+                or hashlib.sha256(protocol_bytes).hexdigest() != reg_pins.get(protocol_path)):
+            errors.append("registration-protocol-binding")
+        if registration.get("provider_calls") != 0 or registration.get("search_calls") != 0:
+            errors.append("registration-call-inventory")
+    return errors
+
+
+def analyze(run, acquisition, references, queries, protocol,
+            input_bytes=None, protocol_bytes=None, registration_bytes=None):
     errors = []
     schedule = protocol.get("schedule", [])
     operations = run.get("operations", []) if type(run) is dict else []
@@ -141,6 +221,8 @@ def analyze(run, acquisition, references, queries, protocol):
         errors.append("protocol-schema")
     if protocol.get("primary_cases") != [f"q{i}" for i in range(1, 9)]:
         errors.append("primary-case-inventory")
+    errors.extend(_input_integrity_errors(acquisition, references, queries, protocol,
+                                          input_bytes, protocol_bytes, registration_bytes))
     if run.get("input_pins") != protocol.get("inputs"):
         errors.append("input-pins")
     if run.get("status") != "complete":
