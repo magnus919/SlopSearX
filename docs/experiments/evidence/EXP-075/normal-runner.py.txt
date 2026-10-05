@@ -276,7 +276,7 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,preb
                 raise CallFailure(base,error.code) from None
             except T.DispatchDenied:
                 rec=owner.last_attempt or {};base.update(status='failed',usage_status='not_dispatched',
-                    failure={'type':'DispatchDenied','code':'whole-phase-deadline'},elapsed_ms=(time.perf_counter_ns()-call_start)/1e6)
+                    failure={'type':'DispatchDenied','code':'timeout'},elapsed_ms=None)
                 base['transport']['client_closed']=bool(rec.get('client_closed'));base['timings'].update(rec.get('timings',{}))
                 raise CallFailure(base,'whole-phase-deadline') from None
             except CallFailure:
@@ -292,9 +292,11 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,preb
                         base['transport']['response_sha256']=base['response_body_sha256'];budget['unknown_usage']=True
                     base['transport']['client_closed']=bool(rec.get('client_closed'));base['timings'].update(rec.get('timings',{}))
                 else:
+                    code=('timeout' if isinstance(error,(TimeoutError,asyncio.TimeoutError)) else
+                          str(error) if str(error).replace('-','').isalnum() else type(error).__name__.lower())
                     base.update(status='failed',usage_status='not_dispatched' if not base['dispatched'] else 'unknown',
-                                failure={'type':type(error).__name__,'code':str(error) if str(error).replace('-','').isalnum() else type(error).__name__.lower()},
-                                elapsed_ms=(time.perf_counter_ns()-call_start)/1e6)
+                                failure={'type':type(error).__name__,'code':code},
+                                elapsed_ms=(time.perf_counter_ns()-call_start)/1e6 if base['dispatched'] else None)
                     if base['dispatched'] and base['usage'] is None:budget['unknown_usage']=True
                 raise CallFailure(base,base['failure']['code']) from None
             fsync_start=time.perf_counter_ns();atomic(path,base)
@@ -399,6 +401,8 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,preb
                 if failed_arm=='joint':
                     op['arms']['joint_query'].update(status='failed',usage=error.record.get('usage'),elapsed_ms=error.record.get('elapsed_ms'))
                     op['arms']['joint_purpose'].update(status='failed',usage=error.record.get('usage'),elapsed_ms=error.record.get('elapsed_ms'))
+                    op['candidate_build_ms']=error.record.get('timings',{}).get('build_ms')
+                    op['candidate_serialization_ms']=error.record.get('timings',{}).get('serialization_ms')
             else:op['failure']={'type':type(error).__name__,'code':str(error) if str(error).replace('-','').isalnum() else type(error).__name__.lower()}
             if op['arms']['candidate']['status']=='candidate-body-durable':
                 op['arms']['candidate'].update(status='failed-fallback',order_ids=list(op['provenance_order_ids']),rational_scores={})
