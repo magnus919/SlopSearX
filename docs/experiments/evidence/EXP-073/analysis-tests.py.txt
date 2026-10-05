@@ -1,0 +1,222 @@
+import copy
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import pathlib
+import unittest
+
+ROOT = pathlib.Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("analysis073", str(ROOT / "analyze.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+A = importlib.util.module_from_spec(spec)
+loader.exec_module(A)
+
+
+def pack(value):
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+
+
+def answer(value):
+    return {"type": "score", "score": value, "confidence": .7,
+            "legend": {"0": "no fit", "1": "adjacent", "2": "partial", "3": "direct"}}
+
+
+def scored_arm(cards, scores, order, elapsed=100):
+    ids = list(scores)
+    return {"status": "valid", "scores": scores, "order_ids": order,
+            "raw_answers": {cid: answer(scores[cid]) for cid in ids},
+            "usage": {"input_tokens": 100, "output_tokens": 100}, "elapsed_ms": elapsed}
+
+
+def fixture():
+    protocol = json.loads((ROOT / "protocol.json").read_text())
+    acquisition, references, queries = {"pools": {}}, {"A": {}, "B": {}}, []
+    for n in range(1, 14):
+        q = f"q{n}"
+        cards = [{"id": f"c{i:02}", "title": f"Title {i:02}",
+                  "url": f"https://example.org/{i:02}", "snippet": f"snippet {i:02}"}
+                 for i in range(80)]
+        acquisition["pools"][q] = {"cards": cards}
+        target = "https://example.org/00" if n in (9, 12, 13) else "https://target.example/missing"
+        queries.append({"id": q, "kind": "navigation" if n >= 9 else "research", "target_url": target})
+        # Synthetic labels intentionally give no quality signal to the analyzer.
+        labels = {c["id"]: {"lead": 0, "facets": []} for c in cards}
+        references["A"][q] = copy.deepcopy(labels)
+        references["B"][q] = copy.deepcopy(labels)
+
+    input_bytes = {
+        "docs/experiments/evidence/EXP-060/fresh-acquisition.json": pack(acquisition),
+        "docs/experiments/evidence/EXP-060/queries.json": pack(queries),
+        "docs/experiments/evidence/EXP-039/source-selection-contract.json": b'{"fixture":"contract"}',
+        "docs/experiments/evidence/EXP-064/completed/metric-reference-view.json": pack(references),
+        "docs/experiments/evidence/EXP-064/completed/source-bound-references.json": b'{"fixture":"source-bound"}',
+        "docs/experiments/evidence/EXP-064/completed/semantic-correction-audit-final.json": b'{"fixture":"audit"}',
+        "docs/experiments/evidence/EXP-072/protocol.json": b'{"fixture":"exp072 protocol pin"}',
+    }
+    protocol["inputs"] = {path: hashlib.sha256(raw).hexdigest() for path, raw in input_bytes.items()}
+    protocol_bytes = pack(protocol)
+    registration = pack({"schema": "exp073-registration/1", "provider_calls": 0, "search_calls": 0,
+                         "pins": {"docs/experiments/EXP-073-fixed-query-purpose-rank-fusion.md": "a" * 64,
+                                  "docs/experiments/evidence/EXP-073/protocol.json": hashlib.sha256(protocol_bytes).hexdigest()}})
+
+    neutral_cards = [{"id": f"neutral-{i:02}", "title": f"Neutral {i:02}",
+                      "url": f"https://neutral.example/{i:02}", "snippet": f"neutral {i:02}"} for i in range(80)]
+    neutral_ids = [c["id"] for c in neutral_cards]
+    neutral_scores = {cid: float(80 - i) / 80 for i, cid in enumerate(neutral_ids)}
+    neutral_order = sorted(neutral_ids, key=lambda cid: (-neutral_scores[cid], neutral_ids.index(cid)))
+    neutral_component = scored_arm(neutral_cards, neutral_scores, neutral_order)
+    neutral = {"status": "fixture_only", "synthetic_input": True, "cards": neutral_cards,
+               "arms": {"w0": copy.deepcopy(neutral_component),
+                        "purpose_component": copy.deepcopy(neutral_component),
+                        "candidate": {"status": "valid", "order_ids": neutral_order,
+                                      "rational_scores": {}, "usage": {"input_tokens": 200, "output_tokens": 200},
+                                      "elapsed_ms": 5}}, "candidate_phase_ms": 205}
+    operations = []
+    for plan in protocol["schedule"]:
+        q, variant = plan["case"], plan["variant"]
+        native_cards = acquisition["pools"][q]["cards"]
+        native = [c["id"] for c in native_cards]
+        provenance = native
+        if variant == "rotate":
+            provenance = native[20:] + native[:20]
+        by_id = {c["id"]: c for c in native_cards}
+        cards = [by_id[cid] for cid in provenance]
+        canonical = A.canonical_ids(cards)
+        w0_scores = {cid: float(len(provenance[:40]) - i) / len(provenance[:40]) * 9
+                     for i, cid in enumerate(provenance[:40])}
+        w0_prefix = sorted(provenance[:40], key=lambda cid: (-w0_scores[cid], provenance[:40].index(cid)))
+        w0_order = w0_prefix + provenance[40:]
+        purpose_scores = {cid: float(len(canonical) - i) / len(canonical) * 3 for i, cid in enumerate(canonical)}
+        purpose_order = sorted(canonical, key=lambda cid: (-purpose_scores[cid], canonical.index(cid)))
+        wrow = scored_arm(cards, w0_scores, w0_order)
+        prow = scored_arm(cards, purpose_scores, purpose_order)
+        fused_order, rational = A._expected_fusion(cards, w0_order, purpose_order)
+        usage = {"input_tokens": 200, "output_tokens": 200}
+        operations.append({"id": f"{q}-{variant}", "case": q, "variant": variant,
+                           "provenance_order_ids": provenance, "cards": cards,
+                           "candidate_phase_ms": 205,
+                           "arms": {"w0": wrow, "purpose_component": prow,
+                                    "candidate": {"status": "valid", "order_ids": fused_order,
+                                                  "rational_scores": rational, "usage": usage, "elapsed_ms": 5}}})
+    run = {"schema": "exp073-run/1", "status": "complete", "synthetic": True,
+           "input_pins": copy.deepcopy(protocol["inputs"]), "input_revision": "synthetic-fixture",
+           "budget": {"attempts": 44, "input_tokens": 4_400, "output_tokens": 4_400, "unknown_usage": False},
+           "wall_seconds": 12, "neutral": neutral, "operations": operations}
+    return [run, acquisition, references, queries, protocol, input_bytes, protocol_bytes, registration]
+
+
+class AnalyzerTests(unittest.TestCase):
+    def test_synthetic_fixture_has_no_quality_or_adoption_credit(self):
+        result = A.analyze(*fixture())
+        self.assertEqual(result["structural_failures"], [])
+        self.assertFalse(result["quality_analysis_performed"])
+        self.assertFalse(result["development_quality_passed"])
+        self.assertFalse(result["adoption_eligible"])
+        self.assertEqual(result["outcome"], "synthetic_fixture_only")
+        self.assertEqual(result["natural_long_pools"], 13)
+        self.assertEqual(len(result["assessors"]["A"]["cases"]), 8)
+
+    def test_both_independent_reference_gates_are_required(self):
+        x = fixture()
+        # Both assessor views independently reject this deliberately unfavorable synthetic cohort.
+        for assessor in ("A", "B"):
+            for q in x[2][assessor]:
+                for row in x[2][assessor][q].values():
+                    row["lead"] = 0
+                    row["facets"] = []
+        # Rebind only the synthetic reference fixture in its pinned bytes.
+        path = "docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"
+        x[5][path] = pack(x[2])
+        x[4]["inputs"][path] = hashlib.sha256(x[5][path]).hexdigest()
+        x[0]["input_pins"] = copy.deepcopy(x[4]["inputs"])
+        x[6] = pack(x[4])
+        registration = json.loads(x[7])
+        registration["pins"]["docs/experiments/evidence/EXP-073/protocol.json"] = hashlib.sha256(x[6]).hexdigest()
+        x[7] = pack(registration)
+        result = A.analyze(*x)
+        self.assertEqual(result["structural_failures"], [])
+        self.assertFalse(result["assessors"]["A"]["quality_gate_passed"])
+        self.assertFalse(result["assessors"]["B"]["quality_gate_passed"])
+        self.assertFalse(result["quality_analysis_performed"])
+
+    def test_raw_component_score_must_match_model_answer(self):
+        x = fixture()
+        row = x[0]["operations"][0]["arms"]["purpose_component"]
+        cid = next(iter(row["scores"]))
+        row["raw_answers"][cid]["score"] -= 1
+        self.assertIn("q1-base-purpose_component-raw-score-mismatch", A.analyze(*x)["structural_failures"])
+
+    def test_purpose_component_order_is_recomputed_from_canonical_raw_scores(self):
+        x = fixture()
+        x[0]["operations"][0]["arms"]["purpose_component"]["order_ids"].reverse()
+        self.assertIn("q1-base-purpose_component-canonical-order", A.analyze(*x)["structural_failures"])
+
+    def test_candidate_order_and_exact_rational_scores_are_recomputed(self):
+        x = fixture()
+        row = x[0]["operations"][0]["arms"]["candidate"]
+        row["order_ids"].reverse()
+        self.assertIn("q1-base-candidate-order-tamper", A.analyze(*x)["structural_failures"])
+        x = fixture()
+        row = x[0]["operations"][0]["arms"]["candidate"]
+        cid = next(iter(row["rational_scores"]))
+        row["rational_scores"][cid] = [1, 999]
+        self.assertIn("q1-base-candidate-rational-tamper", A.analyze(*x)["structural_failures"])
+        x = fixture()
+        row = x[0]["operations"][0]["arms"]["candidate"]
+        cid = next(iter(row["rational_scores"]))
+        row["rational_scores"][cid][0] = float(row["rational_scores"][cid][0])
+        self.assertIn("q1-base-candidate-rational-tamper", A.analyze(*x)["structural_failures"])
+
+    def test_candidate_must_not_contain_model_scores_or_answers(self):
+        x = fixture()
+        x[0]["operations"][0]["arms"]["candidate"]["raw_answers"] = {}
+        self.assertIn("q1-base-candidate-model-output", A.analyze(*x)["structural_failures"])
+
+    def test_usage_call_inventory_binding_and_unknown_usage_fail_closed(self):
+        x = fixture()
+        x[0]["budget"]["attempts"] = 43
+        self.assertIn("physical-call-inventory", A.analyze(*x)["structural_failures"])
+        x = fixture()
+        x[0]["budget"]["unknown_usage"] = True
+        self.assertIn("unknown-usage", A.analyze(*x)["structural_failures"])
+        x = fixture()
+        x[0]["operations"][0]["arms"]["candidate"]["usage"]["input_tokens"] += 1
+        self.assertIn("q1-base-candidate-usage-binding", A.analyze(*x)["structural_failures"])
+
+    def test_component_http_and_combined_phase_deadlines_include_both_requests(self):
+        x = fixture()
+        x[0]["operations"][0]["arms"]["purpose_component"]["elapsed_ms"] = 1001
+        self.assertIn("q1-base-purpose_component-http-deadline", A.analyze(*x)["structural_failures"])
+        x = fixture()
+        x[0]["operations"][0]["candidate_phase_ms"] = 150
+        self.assertIn("q1-base-combined-phase", A.analyze(*x)["structural_failures"])
+        x = fixture()
+        x[0]["operations"][0]["candidate_phase_ms"] = 201
+        self.assertIn("q1-base-combined-phase", A.analyze(*x)["structural_failures"])
+        x = fixture()
+        x[0]["neutral"]["candidate_phase_ms"] = 150
+        self.assertIn("neutral-combined-phase", A.analyze(*x)["structural_failures"])
+
+    def test_membership_and_rotated_native_tail_are_checked(self):
+        x = fixture()
+        row = x[0]["operations"][0]["arms"]["candidate"]
+        row["order_ids"][0] = "unknown-id"
+        self.assertIn("q1-base-candidate-membership", A.analyze(*x)["structural_failures"])
+        x = fixture()
+        op = next(o for o in x[0]["operations"] if (o["case"], o["variant"]) == ("q4", "rotate"))
+        op["arms"]["w0"]["order_ids"][40:] = op["provenance_order_ids"][40:][::-1]
+        self.assertIn("q4-rotate-w0-prefix-tail-order", A.analyze(*x)["structural_failures"])
+
+    def test_registration_input_hash_and_finite_tampering_fail_before_quality(self):
+        x = fixture()
+        raw = x[5]["docs/experiments/evidence/EXP-060/queries.json"]
+        x[5]["docs/experiments/evidence/EXP-060/queries.json"] = raw + b" "
+        self.assertTrue(any(e.startswith("input-hash-") for e in A.analyze(*x)["structural_failures"]))
+        x = fixture()
+        x[7] = b'{"schema":"exp073-registration/1","provider_calls":3,"search_calls":0,"pins":{}}'
+        self.assertIn("registration-call-inventory", A.analyze(*x)["structural_failures"])
+
+
+if __name__ == "__main__":
+    unittest.main()
