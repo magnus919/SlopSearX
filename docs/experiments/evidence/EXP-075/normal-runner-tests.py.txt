@@ -1,0 +1,133 @@
+"""Focused offline EXP-075 construction, transport, receipt and deadline checks."""
+import asyncio
+import importlib.machinery
+import importlib.util
+import json
+import pathlib
+import tempfile
+import time
+import unittest
+
+HERE = pathlib.Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp075_normal_runner", str(HERE / "normal-runner.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+N = importlib.util.module_from_spec(spec)
+loader.exec_module(N)
+P = N.P
+
+
+class RunnerTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        inputs = {name: (P.REPO / name).read_bytes() for name in P.PINS}
+        cls.acquisition, cls.queries = P.source_data(inputs)
+        cls.prepared = P.prebuild(cls.acquisition, cls.queries)
+
+    def test_control_request_is_byte_identical_to_exp072_for_every_registered_operation(self):
+        for item, case, cards, control, _joint, control_raw, _joint_raw in self.prepared:
+            old = P.BASE.bodies(case, cards, item["variant"])
+            self.assertEqual(control_raw, P.wire(old["w0"]))
+            self.assertEqual(control["provenance_order_ids"], old["provenance_order_ids"])
+
+    def test_joint_contains_40_query_prefix_and_full_purpose_namespace(self):
+        case, cards = P.synthetic_case()
+        control = P.build_control(case, cards)
+        joint = P.build_joint(case, cards)
+        body = joint["joint"]
+        self.assertEqual(len(body["questions"]), 120)
+        self.assertEqual(list(body["questions"])[0], "w0:c0")
+        self.assertEqual(list(body["questions"])[39], "w0:c39")
+        self.assertEqual(list(body["questions"])[40], "purpose:neutral-0")
+        self.assertEqual(len(control["tail_ids"]), 40)
+        self.assertEqual(body["state"]["caller_context"]["requested_facets"], case["facets"])
+
+    def test_joint_parser_produces_complete_permutations_and_exact_fraction_fusion(self):
+        case, cards = P.synthetic_case()
+        built = P.build_joint(case, cards)
+        raw = P.response_fixture(built["joint"], query_score=9, purpose_score=0)
+        parsed = P.parse_joint(raw, built)
+        expected = P.FUSE.fuse(built["cards"], parsed["joint_query"]["order_ids"], parsed["joint_purpose"]["order_ids"])
+        self.assertEqual(parsed["candidate"], expected)
+        self.assertEqual(set(parsed["joint_query"]["order_ids"]), {card["id"] for card in cards})
+        self.assertEqual(set(parsed["joint_purpose"]["order_ids"]), {card["id"] for card in cards})
+
+    def test_default_offline_path_is_fixture_only_and_records_44_calls_without_quality_credit(self):
+        stats = {"clients": 0, "requests": 0, "closed": 0}
+        factory = N.fixture_client_factory(stats=stats)
+        with tempfile.TemporaryDirectory() as temp:
+            output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
+                                       offline=True, prebuilt=self.prepared, client_factory=factory))
+        self.assertEqual(output["status"], "complete")
+        self.assertEqual(output["budget"]["attempts"], 44)
+        self.assertEqual(len(output["operations"]), 21)
+        self.assertEqual(stats["requests"], 44)
+        self.assertEqual(stats["clients"], stats["closed"])
+        self.assertFalse(output["quality_credit"])
+        self.assertFalse(output["adoption_eligible"])
+
+    def test_timed_build_overrun_never_dispatches_joint_and_keeps_native_incumbent(self):
+        original = P.build_joint
+        calls = {"count": 0}
+
+        def delayed_once(case, cards, variant="base"):
+            calls["count"] += 1
+            if calls["count"] == 1:
+                time.sleep(1.05)
+            return original(case, cards, variant)
+
+        stats = {"clients": 0, "requests": 0, "closed": 0}
+        with tempfile.TemporaryDirectory() as temp:
+            output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
+                                       offline=True, prebuilt=self.prepared,
+                                       client_factory=N.fixture_client_factory(stats=stats),
+                                       build_joint_fn=delayed_once))
+        self.assertEqual(output["status"], "incomplete")
+        self.assertEqual(output["budget"]["attempts"], 1)
+        self.assertEqual(stats["requests"], 1)
+        self.assertEqual(output["neutral"]["calls"][0]["arm"], "w0")
+        self.assertEqual(output["neutral"]["arms"]["candidate"]["order_ids"],
+                         output["neutral"]["provenance_order_ids"])
+        self.assertTrue(output["neutral"]["final_receipt"])
+        self.assertTrue(all(op["calls"] == [] for op in output["operations"]))
+        self.assertEqual(output["budget"]["input_tokens"], 17)
+        self.assertEqual(output["budget"]["output_tokens"], 6)
+
+    def test_malformed_valid_usage_response_keeps_physical_call_receipt_and_stops(self):
+        stats = {"clients": 0, "requests": 0, "closed": 0}
+        factory = N.fixture_client_factory()
+
+        async def malformed(request):
+            stats["requests"] += 1
+            payload = json.loads(P.response_fixture(json.loads(request.content)))
+            payload["answers"].pop(next(iter(payload["answers"])))
+            return N.httpx.Response(200, content=P.wire(payload))
+
+        def malformed_factory(**kwargs):
+            stats["clients"] += 1
+            return N.httpx.AsyncClient(transport=N.httpx.MockTransport(malformed), **kwargs)
+
+        with tempfile.TemporaryDirectory() as temp:
+            output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
+                                       offline=True, prebuilt=self.prepared, client_factory=malformed_factory))
+        self.assertEqual(output["status"], "incomplete")
+        self.assertEqual(output["budget"]["attempts"], 1)
+        self.assertEqual(stats["requests"], 1)
+        self.assertEqual(len(output["neutral"]["calls"]), 1)
+        self.assertTrue(output["neutral"]["calls"][0]["dispatched"])
+        self.assertEqual(output["neutral"]["calls"][0]["usage_status"], "known")
+        self.assertTrue(all(not op["calls"] for op in output["operations"]))
+
+    def test_fixture_unknown_usage_stops_after_first_physical_call(self):
+        stats = {"clients": 0, "requests": 0, "closed": 0}
+        with tempfile.TemporaryDirectory() as temp:
+            output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
+                                       offline=True, prebuilt=self.prepared,
+                                       client_factory=N.fixture_client_factory("missing-usage", stats)))
+        self.assertEqual(output["budget"]["attempts"], 1)
+        self.assertTrue(output["budget"]["unknown_usage"])
+        self.assertEqual(output["neutral"]["calls"][0]["usage_status"], "unknown")
+        self.assertTrue(all(not op["calls"] for op in output["operations"]))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,210 @@
+"""Pinned EXP-075 request builders and strict mixed-response parser."""
+from __future__ import annotations
+import hashlib, importlib.machinery, importlib.util, json, math, subprocess
+from pathlib import Path
+
+HERE=Path(__file__).resolve().parent;REPO=HERE.parents[3]
+REGISTRATION_REVISION='82dd49b6f38442cfd0d3d1f202b98396f82c30ec'
+EXP073_REVISION='e90534bcad9aff3daa34b34399293bfbbec76088'
+PROTOCOL=json.loads((HERE/'protocol.json').read_bytes())
+REGISTRATION=json.loads((HERE/'registration-integrity.json').read_bytes())
+PINS=PROTOCOL['inputs'];ARMS=('w0','joint_query','joint_purpose','candidate')
+EXP072_PREP='docs/experiments/evidence/EXP-072/prepare.py.txt'
+EXP073_FUSION='docs/experiments/evidence/EXP-073/fusion.py.txt'
+
+def digest(raw):return hashlib.sha256(raw).hexdigest()
+def wire(value):return json.dumps(value,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode('utf-8')
+def strict_json(raw):
+    def pairs(items):
+        out={}
+        for key,value in items:
+            if key in out:raise ValueError('duplicate-json-key')
+            out[key]=value
+        return out
+    def constant(_):raise ValueError('nonfinite-json')
+    def number(text):
+        value=float(text)
+        if not math.isfinite(value):raise ValueError('nonfinite-json')
+        return value
+    return json.loads(raw,object_pairs_hook=pairs,parse_constant=constant,parse_float=number)
+
+def committed(path,revision=REGISTRATION_REVISION):
+    if type(revision)is not str or len(revision)!=40 or any(char not in '0123456789abcdef' for char in revision):raise ValueError('input-revision')
+    part=Path(path)
+    if part.is_absolute() or '..' in part.parts:raise ValueError('unsafe-source-path')
+    return subprocess.run(['git','show',revision+':'+path],cwd=REPO,check=True,capture_output=True).stdout
+
+def _load(path,name):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+
+def _pinned_builder(path,revision,name):
+    expected=committed(path,revision);source=REPO/path
+    if source.is_symlink() or not source.is_file() or source.read_bytes()!=expected:raise ValueError('builder-pin')
+    return _load(source,name),digest(expected)
+
+BASE,EXP072_PREP_SHA256=_pinned_builder(EXP072_PREP,EXP073_REVISION,'exp075_pinned_exp072_prepare')
+FUSE,EXP073_FUSION_SHA256=_pinned_builder(EXP073_FUSION,EXP073_REVISION,'exp075_pinned_exp073_fusion')
+MODEL=BASE.MODEL
+
+def validate_inputs(input_bytes,input_revision=REGISTRATION_REVISION):
+    if type(input_bytes)is not dict or set(input_bytes)!=set(PINS):raise ValueError('input-contract')
+    for path,want in PINS.items():
+        data=input_bytes[path];source=REPO/path
+        if type(data)is not bytes or digest(data)!=want:raise ValueError('input-pin')
+        if source.is_symlink() or not source.is_file() or source.read_bytes()!=data or committed(path,input_revision)!=data:
+            raise ValueError('input-source-mismatch')
+    protocol_raw=(HERE/'protocol.json').read_bytes();registration_raw=(HERE/'registration-integrity.json').read_bytes()
+    if committed('docs/experiments/evidence/EXP-075/protocol.json')!=protocol_raw:raise ValueError('protocol-source-mismatch')
+    if committed('docs/experiments/evidence/EXP-075/registration-integrity.json')!=registration_raw:raise ValueError('registration-source-mismatch')
+    reg=strict_json(registration_raw)
+    if reg!=REGISTRATION or reg.get('schema')!='exp075-registration/1' or reg.get('provider_calls')!=0 or reg.get('search_calls')!=0:
+        raise ValueError('registration-contract')
+    for path,want in reg['pins'].items():
+        raw=committed(path)
+        current=REPO/path
+        if current.is_symlink() or not current.is_file() or digest(raw)!=want or digest(current.read_bytes())!=want:
+            raise ValueError('registration-source-pin')
+    return {'input_pins':dict(PINS),'input_revision':input_revision,
+            'protocol_sha256':digest(protocol_raw),'registration_sha256':digest(registration_raw)}
+
+def build_control(case,cards,variant='base'):
+    query,_,_=BASE.validate_context(case)
+    native=[dict(card) for card in cards]
+    if variant=='rotate' and native:
+        offset=20%len(native);native=native[offset:]+native[:offset]
+    elif variant not in ('base','repeat','rotate'):raise ValueError('variant')
+    canonical=BASE.canonical(cards);prefix=native[:40]
+    from slopsearx.rerank import INSTRUCTIONS,LEVELS
+    local_to_pool={'c'+str(index):card['id'] for index,card in enumerate(prefix)}
+    body={'model':MODEL,'state':{'query':query,'candidates':[{**dict(card),'id':'c'+str(index)} for index,card in enumerate(prefix)]},
+          'questions':{'c'+str(index):{'type':'score','instructions':INSTRUCTIONS.format(id='c'+str(index)),
+                                      'criteria':list(LEVELS)} for index in range(len(prefix))}}
+    return {'w0':body,'cards':canonical,'ids':[card['id'] for card in canonical],
+            'tail_ids':[card['id'] for card in native[40:]],'w0_local_to_pool':local_to_pool,
+            'provenance_order_ids':[card['id'] for card in native]}
+
+def build_joint(case,cards,variant='base'):
+    built=BASE.bodies(case,cards,variant)
+    # Deep-copy the W0 state/questions so existing query instructions and card
+    # values remain unchanged; only question keys receive a namespace.
+    state=json.loads(wire(built['w0']['state']))
+    _,purpose,facets=BASE.validate_context(case)
+    state['caller_context']={'purpose':purpose,'requested_facets':[dict(f) for f in facets]}
+    questions={}
+    for local_id,question in built['w0']['questions'].items():
+        questions['w0:'+local_id]=json.loads(wire(question))
+    for card in built['cards']:
+        global_id=card['id']
+        questions['purpose:'+global_id]={
+            'type':'score',
+            'instructions':{'candidate':dict(card),'question':PROTOCOL['wire']['purpose_question_prefix']+BASE.PROTOCOL['instructions']},
+            'criteria':list(BASE.PROTOCOL['criteria'])}
+    body={'model':MODEL,'state':state,'questions':questions}
+    return {**built,'joint':body,'joint_query_ids':['w0:'+key for key in built['w0']['questions']],
+            'joint_purpose_ids':['purpose:'+card['id'] for card in built['cards']]}
+
+def request_bytes(body):return wire(body)
+
+def enforce_request_bounds(control_raw,joint_raw,control,joint):
+    bounds=PROTOCOL['bounds']
+    if len(control_raw)>bounds['legacy_control_request_bytes']:raise ValueError('control-request-bound')
+    if len(wire(control['w0']['state']))>bounds['state_bytes']:raise ValueError('control-state-bound')
+    if len(joint_raw)>bounds['request_bytes']:raise ValueError('candidate-request-bound')
+    if len(wire(joint['joint']['state']))>bounds['state_bytes']:raise ValueError('candidate-state-bound')
+    if len(joint['joint']['questions'])>bounds['questions'] or len(joint['joint']['questions'])!=len(control['w0']['questions'])+len(joint['cards']):
+        raise ValueError('candidate-question-count')
+
+def prebuild(acquisition,queries):
+    byid={q['id']:q for q in queries}
+    if len(byid)!=len(queries) or set(acquisition.get('pools',{}))!=set(byid):raise ValueError('pool-inventory')
+    if len(PROTOCOL['schedule'])!=21:raise ValueError('schedule-count')
+    prepared=[]
+    for item in PROTOCOL['schedule']:
+        if type(item)is not dict or set(item)!={'case','variant','arms'} or item['case'] not in byid or item['arms']!=list(ARMS):
+            raise ValueError('schedule-entry')
+        case=byid[item['case']];cards=acquisition['pools'][item['case']]['cards']
+        control=build_control(case,cards,item['variant']);joint=build_joint(case,cards,item['variant'])
+        control_raw=request_bytes(control['w0']);joint_raw=request_bytes(joint['joint'])
+        enforce_request_bounds(control_raw,joint_raw,control,joint)
+        prepared.append((dict(item),case,cards,control,joint,control_raw,joint_raw))
+    return prepared
+
+def valid_usage(value):
+    if type(value)is not dict or set(value)!={'input_tokens','output_tokens'} or any(type(v)is not int or v<0 for v in value.values()):return None
+    return dict(value)
+
+def usage_from_raw(raw):
+    try:
+        data=strict_json(raw);return valid_usage(data.get('usage')) if type(data)is dict else None
+    except (ValueError,TypeError,UnicodeDecodeError):return None
+
+def _parse_subset(raw,request,ids,maximum):
+    data=strict_json(raw)
+    if type(data)is not dict or set(data)!={'model','answers','usage'} or data['model']!=MODEL or type(data['answers'])is not dict:
+        raise ValueError('response-envelope')
+    if set(data['answers'])!=set(ids):raise ValueError('answer-membership')
+    if valid_usage(data['usage']) is None:raise ValueError('unknown-usage')
+    subset={'model':data['model'],'answers':data['answers'],'usage':data['usage']}
+    return BASE.validate_score_response(wire(subset),request,ids,maximum)
+
+def parse_control(raw,built):
+    ids=list(built['w0']['questions'])
+    parsed=_parse_subset(raw,{'questions':built['w0']['questions']},ids,9)
+    local_order=BASE.order_scores(parsed['scores'],ids,9)
+    order=[built['w0_local_to_pool'][key] for key in local_order]+list(built['tail_ids'])
+    scores={built['w0_local_to_pool'][key]:score for key,score in parsed['scores'].items()}
+    answers={built['w0_local_to_pool'][key]:answer for key,answer in parsed['raw_answers'].items()}
+    if len(order)!=len(built['ids']) or set(order)!=set(built['ids']):raise ValueError('control-permutation')
+    return {'order_ids':order,'scores':scores,'raw_answers':answers,'usage':parsed['usage']}
+
+def parse_joint(raw,built):
+    data=strict_json(raw)
+    if type(data)is not dict or set(data)!={'model','answers','usage'} or data['model']!=MODEL or type(data['answers'])is not dict:
+        raise ValueError('response-envelope')
+    if set(data['answers'])!=set(built['joint']['questions']):raise ValueError('answer-membership')
+    if valid_usage(data['usage']) is None:raise ValueError('unknown-usage')
+    query_ids=list(built['joint_query_ids']);purpose_ids=list(built['joint_purpose_ids'])
+    query_req={'questions':{key:built['joint']['questions'][key] for key in query_ids}}
+    purpose_req={'questions':{key:built['joint']['questions'][key] for key in purpose_ids}}
+    query=_parse_subset(wire({'model':data['model'],'answers':{key:data['answers'][key] for key in query_ids},'usage':data['usage']}),query_req,query_ids,9)
+    purpose=_parse_subset(wire({'model':data['model'],'answers':{key:data['answers'][key] for key in purpose_ids},'usage':data['usage']}),purpose_req,purpose_ids,3)
+    local_ids=list(built['w0']['questions'])
+    qorder=BASE.order_scores({key[3:]:query['scores'][key] for key in query_ids},local_ids,9)
+    query_order=[built['w0_local_to_pool'][key] for key in qorder]+list(built['tail_ids'])
+    q_scores={built['w0_local_to_pool'][key[3:]]:query['scores'][key] for key in query_ids}
+    q_answers={built['w0_local_to_pool'][key[3:]]:query['raw_answers'][key] for key in query_ids}
+    purpose_score_ids=[key[len('purpose:'):] for key in purpose_ids]
+    purpose_order=BASE.order_scores({key[len('purpose:'):]:purpose['scores'][key] for key in purpose_ids},
+                                    [card['id'] for card in built['cards']],3)
+    p_scores={key[len('purpose:'):]:purpose['scores'][key] for key in purpose_ids}
+    p_answers={key[len('purpose:'):]:purpose['raw_answers'][key] for key in purpose_ids}
+    if len(query_order)!=len(built['ids']) or set(query_order)!=set(built['ids']) or len(purpose_order)!=len(built['ids']) or set(purpose_order)!=set(built['ids']):
+        raise ValueError('component-permutation')
+    fused=FUSE.fuse(built['cards'],query_order,purpose_order)
+    return {'joint_query':{'order_ids':query_order,'scores':q_scores,'raw_answers':q_answers},
+            'joint_purpose':{'order_ids':purpose_order,'scores':p_scores,'raw_answers':p_answers},
+            'candidate':{'order_ids':fused['order_ids'],'rational_scores':fused['rational_scores']},
+            'usage':data['usage']}
+
+def response_fixture(request,query_score=5,purpose_score=2,usage=None,score_by_id=None):
+    answers={}
+    for key in request['questions']:
+        if key.startswith('w0:'):score=query_score
+        elif key.startswith('purpose:'):score=purpose_score
+        else:score=query_score if len(request['questions'][key]['criteria'])==10 else purpose_score
+        if score_by_id and key in score_by_id:score=score_by_id[key]
+        answers[key]={'type':'score','score':score,'confidence':0.75,'legend':'synthetic fixture metadata'}
+    return wire({'model':MODEL,'answers':answers,'usage':usage or {'input_tokens':17,'output_tokens':6}})
+
+def source_data(input_bytes):
+    acquisition=strict_json(input_bytes['docs/experiments/evidence/EXP-060/fresh-acquisition.json'])
+    queries=strict_json(input_bytes['docs/experiments/evidence/EXP-060/queries.json'])
+    return acquisition,queries
+
+def synthetic_case():
+    case={'id':'neutral','query':'synthetic neutral query','purpose':'synthetic neutral purpose',
+          'facets':[{'id':'facet-'+str(i),'description':'synthetic facet '+str(i)} for i in range(4)]}
+    cards=[{'id':'neutral-'+str(i),'url':'https://fixture.invalid/'+str(i),'title':'Synthetic card '+str(i),
+            'snippet':'No real evidence; fixture only.'} for i in range(80)]
+    return case,cards
