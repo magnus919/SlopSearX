@@ -1,0 +1,229 @@
+"""Synthetic packet-preparation tests only; no model/search/network/credential/lease."""
+import importlib.machinery
+import json
+import pathlib
+import unittest
+
+
+M = importlib.machinery.SourceFileLoader('exp077_model_packets', str(pathlib.Path(__file__).with_name('model-packets.py.txt'))).load_module()
+
+
+class ModelPacketTests(unittest.TestCase):
+    def test_card_assignments_bind_visible_card_bytes_and_independent_graders(self):
+        cards = [{'title': 'Système 🚀', 'url': 'https://example.test/a', 'snippet': 'Résumé'}]
+        rows = M.card_assignments('d1', cards, ['d1_f1', 'd1_f2'])
+        self.assertEqual([r['assessor_id'] for r in rows], ['R1', 'R2'])
+        self.assertEqual(rows[0]['cards'][0]['card_sha256'], rows[1]['cards'][0]['card_sha256'])
+        self.assertNotEqual(rows[0]['assignment_id'], rows[1]['assignment_id'])
+        self.assertEqual(rows[0]['schema']['properties']['records']['items']['properties']['facets']['items']['enum'],
+                         ['d1_f1', 'd1_f2'])
+        model_input = M.card_model_input(rows[0])
+        self.assertNotIn('assessor_id', model_input)
+        card = rows[0]['cards'][0]
+        response = {'records': [{'card_sha256': card['card_sha256'], 'lead': 2, 'visible': 1,
+                                 'facets': ['d1_f1'], 'uncertain': [], 'rationale': 'Direct lead.',
+                                 'anchors': [{'field': 'title', 'quote': 'Système'}],
+                                 'facet_anchors': {'d1_f1': [{'field': 'title', 'quote': 'Système'}]}}]}
+        self.assertEqual(M.verify_card_response(rows[0], response)['coverage'], 'complete')
+        response['records'][0]['anchors'][0]['quote'] = 'absent'
+        with self.assertRaisesRegex(M.PacketError, 'exact bounded substring'):
+            M.verify_card_response(rows[0], response)
+
+    def test_source_chunks_cover_full_inventory_for_each_assessor_without_dropping_unknown_states(self):
+        sources = [{'source_id': f's{i}', 'state': 'success', 'context': f'Context {i} 🚀'}
+                   for i in range(40)]
+        sources.extend([{'source_id': 'missed', 'state': 'not_acquired'},
+                        {'source_id': 'future', 'state': 'adapter_partial_unknown'}])
+        packet = M.source_chunk_assignments('d1', sources, ['d1_f1', 'd1_f2'])
+        self.assertEqual(packet['inventory_source_ids'], [r['source_id'] for r in sources])
+        self.assertTrue(packet['inventory_complete'])
+        self.assertEqual(len(packet['chunks']), 6)
+        for assessor in ('R1', 'R2'):
+            chunks = [c for c in packet['chunks'] if c['assessor_id'] == assessor]
+            seen = [sid for chunk in chunks for sid in chunk['source_ids']]
+            self.assertEqual(seen, packet['inventory_source_ids'])
+            self.assertTrue(all(len(c['sources']) <= 20 for c in chunks))
+            missing = next(row for c in chunks for row in c['source_inventory'] if row['source_id'] == 'missed')
+            unknown = next(row for c in chunks for row in c['source_inventory'] if row['source_id'] == 'future')
+            self.assertEqual(missing['state'], 'not_acquired')
+            self.assertEqual(unknown['state'], 'adapter_partial_unknown')
+            self.assertNotIn('context', missing)
+            self.assertNotIn('context', unknown)
+            self.assertNotIn('missed', [row['source_id'] for c in chunks for row in c['sources']])
+        self.assertEqual(packet['chunks'][0]['catalog_kind'], 'source_pool')
+        task_input = M.source_model_input({'id': 'd1', 'query': 'Q', 'purpose': 'P',
+                                           'critical_checks': [{'id': 'f1', 'check': 'check'}]},
+                                          packet['chunks'][0])
+        self.assertNotIn('pool_catalog', task_input)
+        self.assertEqual(len(task_input['sources']), 20)
+
+    def test_source_chunk_output_coverage_is_exact_separate_and_catalog_bound(self):
+        sources = [{'source_id': f's{i}', 'state': 'success', 'context': f'Context {i}'} for i in range(21)]
+        sources.append({'source_id': 'missing', 'state': 'not_acquired'})
+        plan = M.source_chunk_assignments('d1', sources, ['d1_f1'])
+        outputs = []
+        for chunk in plan['chunks']:
+            assessments = []
+            for source in chunk['sources']:
+                eid = source['evidence_ids'][0]
+                assessments.append({'source_id': source['source_id'], 'facets': [
+                    {'facet_id': 'd1_f1', 'disposition': 'evidence_available', 'scope_match': 'match',
+                     'entailment': 'supports', 'applicability': 'applicable', 'not_assessable_reason': '',
+                     'evidence_ids': [eid], 'reason': '', 'limitations': []}]})
+            outputs.append({'assignment_id': chunk['assignment_id'], 'task_id': 'd1',
+                            'assessor_id': chunk['assessor_id'], 'source_assessments': assessments})
+        coverage = M.verify_source_chunk_coverage(plan, outputs)
+        self.assertFalse(coverage['assessors_joined'])
+        self.assertEqual(coverage['assessors']['R1']['source_ids'], plan['inventory_source_ids'])
+        outputs.pop()
+        with self.assertRaisesRegex(M.PacketError, 'incomplete'):
+            M.verify_source_chunk_coverage(plan, outputs)
+
+    def test_unavailable_only_source_chunk_preserves_inventory_without_model_submission(self):
+        plan = M.source_chunk_assignments('d1', [{'source_id': 's1', 'state': 'timeout'}], ['f1'])
+        chunk = plan['chunks'][0]
+        self.assertFalse(chunk['model_call_required'])
+        self.assertEqual(M.source_model_input({'id': 'd1', 'query': 'Q', 'purpose': 'P',
+                                               'critical_checks': [{'id': 'f1', 'check': 'C'}]}, chunk)['sources'], [])
+        summary = M.verify_source_chunk_coverage(plan, [])
+        self.assertEqual(summary['assessors']['R1']['source_ids'], ['s1'])
+        self.assertEqual(summary['assessors']['R2']['source_ids'], ['s1'])
+
+    def test_projection_stops_at_fixed_top10_and_first_five_successes_with_unicode_char_cap(self):
+        order = [f'c{i}' for i in range(10)]
+        opens = []
+        for i, card_id in enumerate(order):
+            if i in (1, 4, 8):
+                opens.append({'card_id': card_id, 'source_id': f's{i}', 'state': 'timeout'})
+            else:
+                text = 'é🚀' * 5000 if i == 0 else f'Article {i}'
+                opens.append({'card_id': card_id, 'source_id': f's{i}', 'state': 'success', 'context': text})
+        projection = M.answer_projection(order, opens, arm_id='base')
+        self.assertEqual(len(projection['opening_outcomes']), 10)
+        self.assertEqual(len(projection['delivered_sources']), 5)
+        first = projection['delivered_sources'][0]
+        self.assertEqual(first['characters'], 8000)
+        self.assertEqual(len(first['context']), 8000)
+        self.assertTrue(first['truncated'])
+        self.assertEqual([x['state'] for x in projection['opening_outcomes'] if x['state'] != 'success'],
+                         ['timeout', 'timeout', 'timeout'])
+        self.assertEqual(projection['catalog_kind'], 'answer_arm')
+        self.assertEqual(projection['assigned_source_ids'], [f's{i}' for i in (0, 2, 3, 5, 6)])
+
+    def test_success_without_context_or_missing_top10_attempt_is_rejected(self):
+        with self.assertRaisesRegex(M.PacketError, 'exact order'):
+            M.answer_projection(['a', 'b'], [{'card_id': 'a', 'state': 'success', 'source_id': 's', 'context': 'x'}], arm_id='base')
+        with self.assertRaisesRegex(M.PacketError, 'exact context'):
+            M.answer_projection(['a'], [{'card_id': 'a', 'state': 'success', 'source_id': 's'}], arm_id='base')
+
+    def test_answerer_assignment_keeps_only_explicit_task_and_arm_projection(self):
+        task = {'id': 'd1', 'kind': 'research', 'query': 'topic', 'purpose': 'purpose'}
+        projection = {'arm_id': 'candidate', 'card_order_top10': ['c1'],
+                      'opening_outcomes': [{'card_id': 'c1', 'state': 'success', 'delivered': True}],
+                      'delivered_sources': [{'source_id': 's1', 'context': 'Exact 🚀', 'evidence_ids': ['e' * 64]}],
+                      'catalog': {'version': 1, 'sources': {}, 'passages': {}},
+                      'catalog_sha256': '0' * 64, 'assigned_source_ids': ['s1']}
+        checks = [{'id': 'd1_f1', 'check': 'Check'}]
+        assignment = M.answerer_assignment(task, projection, checks)
+        self.assertNotIn('arm_id', assignment['model_input'])
+        self.assertEqual(assignment['private_binding']['arm_id'], 'candidate')
+        self.assertEqual(assignment['model_input']['delivered_sources'][0]['context'], 'Exact 🚀')
+        self.assertEqual(assignment['model_input']['task']['critical_checks'], checks)
+        self.assertEqual(assignment['model_input']['output_schema']['properties']['facets']['items']['properties']['facet_id'],
+                         {'enum': ['d1_f1']})
+
+    def test_answer_assessor_assignment_is_individual_and_arm_scoped(self):
+        template = M.answer_assessor_template('p1', 'R1', 'd1', 'candidate', ['d1_f1'],
+                                              {'d1_f1': [{'claim_id': 'C1', 'text': 'A claim.'}]},
+                                              ['s1', 's2'],
+                                              {'arm_id': 'candidate', 'assigned_source_ids': ['s1'],
+                                               'opening_outcomes': [], 'delivered_sources': [],
+                                               'catalog': {'version': 1, 'sources': {}, 'passages': {}},
+                                               'catalog_sha256': '0' * 64},
+                                              [{'facet_id': 'd1_f1'}],
+                                              {'packet_kind': 'source', 'assessor_id': 'R1',
+                                               'tasks': [{'task_id': 'd1'}]})
+        self.assertEqual(template['assessor_id'], 'R1')
+        self.assertEqual(template['arm_id'], 'candidate')
+        self.assertEqual(template['catalog_kind'], 'answer_arm')
+        self.assertEqual(template['facet_claims']['d1_f1'][0]['evidence_ids'], [])
+        self.assertEqual(template['own_source_assessment']['assessor_id'], 'R1')
+        self.assertEqual(template['own_source_assessment']['tasks'], [{'task_id': 'd1'}])
+        self.assertEqual(template['output_schema']['$defs']['answerArm']['properties']['arm_id'], {'const': 'candidate'})
+        self.assertEqual(template['output_schema']['$defs']['answerFacet']['properties']['evidence_dispositions']['maxItems'], 2)
+        with self.assertRaisesRegex(M.PacketError, 'assignment'):
+            M.answer_assessor_template('p1', 'R3', 'd1', 'candidate', ['d1_f1'], {'d1_f1': []},
+                                       ['s1'], {'arm_id': 'candidate', 'assigned_source_ids': ['s1']},
+                                       [{'facet_id': 'd1_f1'}], {'packet_kind': 'source', 'assessor_id': 'R3', 'tasks': []})
+        with self.assertRaisesRegex(M.PacketError, 'same-assessor'):
+            M.answer_assessor_template('p1', 'R1', 'd1', 'candidate', ['d1_f1'],
+                                       {'d1_f1': [{'claim_id': 'C1', 'text': 'A claim.'}]},
+                                       ['s1'], {'arm_id': 'candidate', 'assigned_source_ids': ['s1']},
+                                       [{'facet_id': 'd1_f1'}],
+                                       {'packet_kind': 'source', 'assessor_id': 'R2', 'tasks': [{'task_id': 'd1'}]})
+
+    def test_answer_claim_ids_are_frozen_without_changing_text_or_evidence_ids(self):
+        output = {'facets': [{'facet_id': 'd1_f1', 'conclusion': 'K',
+                              'claims': [{'text': 'Claim 🚀', 'evidence_ids': ['a' * 64]}]}]}
+        frozen = M.freeze_answer_claims([{'id': 'd1_f1'}], output)
+        self.assertEqual(frozen['d1_f1'][0]['claim_id'], 'd1_f1:C001')
+        self.assertEqual(frozen['d1_f1'][0]['text'], 'Claim 🚀')
+        self.assertEqual(frozen['d1_f1'][0]['evidence_ids'], ['a' * 64])
+        with self.assertRaisesRegex(M.PacketError, 'coverage/order'):
+            M.freeze_answer_claims([{'id': 'd1_f1'}, {'id': 'd1_f2'}], output)
+
+    def test_exported_answer_assessor_schema_uses_ids_not_expanded_references(self):
+        claim = M.ANSWER_ASSESSOR_SCHEMA['$defs']['claim']
+        self.assertIn('evidence_ids', claim['properties'])
+        self.assertNotIn('references', claim['properties'])
+        self.assertIn('unsupported_claim_indices', M.ANSWER_ASSESSOR_SCHEMA['$defs']['answerFacet']['required'])
+
+    def test_exported_schema_files_match_module_and_validate_as_json_schema(self):
+        import jsonschema
+        for filename, schema in M.OUTPUT_SCHEMAS.items():
+            with self.subTest(filename=filename):
+                exported = json.loads(pathlib.Path(__file__).with_name(filename).read_text())
+                self.assertEqual(exported, schema)
+                jsonschema.Draft202012Validator.check_schema(exported)
+
+    def test_hydrate_and_validate_wrapper_uses_existing_pipeline_without_completion_claim(self):
+        measurement = pathlib.Path(__file__).resolve().parent.parent / 'research-usefulness-measurement'
+        fixtures = importlib.machinery.SourceFileLoader('exp077_validator_fixtures',
+                                                        str(measurement / 'validate-tests.py.txt')).load_module()
+        registry, contexts, _, answer = fixtures.fixtures()
+        arm_contexts = {'S-A': contexts['S-A']}
+        catalog = M.C.build([{'source_id': sid, 'context': text} for sid, text in arm_contexts.items()])
+        raw_packet = answer.copy()
+        import copy, hashlib, json
+        raw_packet = copy.deepcopy(answer)
+        def replace(node):
+            if isinstance(node, dict):
+                for key, value in list(node.items()):
+                    if key == 'references':
+                        ids = []
+                        for ref in value:
+                            eid = next(eid for eid, passage in catalog['passages'].items()
+                                       if passage['source_id'] == ref['source_id'] and
+                                       passage['start'] <= ref['start'] and passage['end'] >= ref['end'])
+                            ids.append(eid)
+                        node['evidence_ids'] = ids
+                        del node[key]
+                    else:
+                        replace(value)
+            elif isinstance(node, list):
+                for value in node:
+                    replace(value)
+        replace(raw_packet)
+        payload = json.dumps(raw_packet, ensure_ascii=False, separators=(',', ':')).encode()
+        catalog_sha = hashlib.sha256(json.dumps(catalog, ensure_ascii=False, sort_keys=True,
+                                               separators=(',', ':')).encode()).hexdigest()
+        result = M.hydrate_and_validate_packet(payload, catalog_kind='answer_arm', catalog=catalog,
+                                               contexts=arm_contexts, assigned_source_ids=['S-A'],
+                                               expected_catalog_sha256=catalog_sha, registry=registry)
+        self.assertTrue(result['validation']['structurally_valid'])
+        self.assertEqual(result['semantic_completion'], 'not_claimed')
+        self.assertEqual(result['raw_model_sha256'], hashlib.sha256(payload).hexdigest())
+
+
+if __name__ == '__main__':
+    unittest.main()
