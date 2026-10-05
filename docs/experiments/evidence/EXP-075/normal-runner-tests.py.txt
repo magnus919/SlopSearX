@@ -56,6 +56,30 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(set(parsed["joint_query"]["order_ids"]), {card["id"] for card in cards})
         self.assertEqual(set(parsed["joint_purpose"]["order_ids"]), {card["id"] for card in cards})
 
+    def test_joint_parser_rejects_membership_range_duplicate_nonfinite_and_bad_usage(self):
+        case, cards = P.synthetic_case()
+        built = P.build_joint(case, cards)
+        valid = json.loads(P.response_fixture(built["joint"]))
+
+        missing = json.loads(json.dumps(valid));missing["answers"].pop(next(iter(missing["answers"])))
+        extra = json.loads(json.dumps(valid));extra["answers"]["purpose:unknown"] = {"type":"score","score":1}
+        bad_query_range = json.loads(json.dumps(valid));bad_query_range["answers"]["w0:c0"]["score"] = 10
+        bad_purpose_range = json.loads(json.dumps(valid));bad_purpose_range["answers"]["purpose:neutral-0"]["score"] = 4
+        bad_usage = json.loads(json.dumps(valid));bad_usage["usage"]["input_tokens"] = -1
+        float_usage = json.loads(json.dumps(valid));float_usage["usage"]["input_tokens"] = 1.0
+
+        for payload in (missing, extra, bad_query_range, bad_purpose_range, bad_usage, float_usage):
+            with self.subTest(payload=payload["usage"] if "usage" in payload else "scores/membership"):
+                with self.assertRaises(ValueError):
+                    P.parse_joint(P.wire(payload), built)
+
+        raw = P.response_fixture(built["joint"]).decode("utf-8")
+        with self.assertRaisesRegex(ValueError, "duplicate-json-key"):
+            P.parse_joint(raw.replace("{", '{"model":"duplicate",', 1).encode(), built)
+        nonfinite = raw.replace('"score":5', '"score":NaN', 1).encode()
+        with self.assertRaisesRegex(ValueError, "nonfinite-json"):
+            P.parse_joint(nonfinite, built)
+
     def test_default_offline_path_is_fixture_only_and_records_44_calls_without_quality_credit(self):
         escaped = []
 
