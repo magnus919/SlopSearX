@@ -153,3 +153,13 @@ then failed on the complete nonsynthetic-shaped local packet with
 root's committed integration; the committed result is authoritative. The owner
 is resolving expected versus retained receipt membership without relaxing exact
 inventory checks. This checkpoint is unqualified and made no provider calls.
+
+## Final disposition
+
+The corrected receipt inventory and transport-edge regressions pass on the
+integrated qualified source revision `d39910541fa85ac07efd73a885f66803ceecabaa`.
+Root independently passed 13 runner, four analysis and ten verifier tests.
+All material findings from the bounded reviews are addressed. The committed
+source admission smoke uses unmocked source/manifest checks, a temporary lease
+and dummy DNS/key callbacks; it issues no dispatch capability and rejects
+duplicate admission before callbacks. See qualification.md for scope and limits.
