@@ -1,0 +1,160 @@
+"""Inert EXP-067 relative-score request construction and deterministic policy."""
+from __future__ import annotations
+import hashlib
+import json
+import math
+import sys
+from pathlib import Path
+
+HERE=Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+if str(REPO) not in sys.path: sys.path.insert(0,str(REPO))
+PROTOCOL=json.loads((HERE/"protocol.json").read_bytes())
+MODEL=PROTOCOL["model"]
+
+def wire(value):
+    return json.dumps(value,ensure_ascii=False,separators=(",",":" )).encode("utf-8")
+
+def digest(raw): return hashlib.sha256(raw).hexdigest()
+
+def strict_json(raw):
+    def pairs(items):
+        out={}
+        for key,value in items:
+            if key in out: raise ValueError("duplicate-json-key")
+            out[key]=value
+        return out
+    def constant(_): raise ValueError("nonfinite-json")
+    return json.loads(raw,object_pairs_hook=pairs,parse_constant=constant)
+
+def canonical(cards):
+    if type(cards)is not list or not 2<=len(cards)<=80: raise ValueError("card-inventory")
+    seen=set();out=[]
+    for source in cards:
+        if type(source)is not dict or set(source)!={"id","url","title","snippet"}: raise ValueError("card-shape")
+        card=dict(source)
+        if any(type(v)is not str for v in card.values()) or not card["id"] or not card["url"]: raise ValueError("card-field")
+        bounds={"id":80,"title":256,"url":512,"snippet":1200}
+        if any(len(card[k].encode("utf-8"))>bounds[k] for k in bounds): raise ValueError("card-field-bound")
+        if card["id"] in seen: raise ValueError("duplicate-card-id")
+        seen.add(card["id"]);out.append(card)
+    return sorted(out,key=lambda c:tuple(c[k].encode("utf-8") for k in ("url","title","snippet","id")))
+
+def context(case):
+    purpose=case.get("purpose")
+    if type(purpose)is not str or not purpose or len(purpose.encode("utf-8"))>4096: raise ValueError("purpose")
+    query=case.get("query")
+    if type(query)is not str or not query or len(query.encode("utf-8"))>4096: raise ValueError("query")
+    facets=case.get("facets")
+    if type(facets)is not list or len(facets)>4: raise ValueError("facet-inventory")
+    result=[];seen=set()
+    for facet in facets:
+        if type(facet)is not dict or set(facet)!={"id","description"}: raise ValueError("facet-shape")
+        if any(type(facet[k])is not str or not facet[k] for k in facet): raise ValueError("facet-field")
+        if len(facet["id"].encode("utf-8"))>80 or len(facet["description"].encode("utf-8"))>256: raise ValueError("facet-bound")
+        if facet["id"] in seen: raise ValueError("duplicate-facet")
+        seen.add(facet["id"]);result.append(dict(facet))
+    return query,purpose,result
+
+def bodies(case,cards,variant="base"):
+    query,purpose,facets=context(case)
+    native=[dict(c) for c in cards]
+    if variant=="rotate" and native:
+        offset=20%len(native);native=native[offset:]+native[:offset]
+    elif variant not in ("base","repeat","rotate"): raise ValueError("variant")
+    pool=canonical(cards);ids=[c["id"] for c in pool]
+    facets=[{"id":f["id"],"description":f["description"]} for f in facets]
+    relative={"model":MODEL,"state":{"purpose":purpose,"requested_facets":facets,"candidates":pool},"questions":{}}
+    for card in pool:
+        relative["questions"][card["id"]]={"type":"score","instructions":PROTOCOL["instructions"].format(id=card["id"]),"criteria":list(PROTOCOL["criteria"])}
+    from slopsearx.rerank import INSTRUCTIONS,LEVELS
+    prefix=native[:40]
+    local_to_pool={"c"+str(i):card["id"] for i,card in enumerate(prefix)}
+    w0={"model":MODEL,"state":{"query":query,"candidates":[{**card,"id":"c"+str(i)} for i,card in enumerate(prefix)]},
+        "questions":{"c"+str(i):{"type":"score","instructions":INSTRUCTIONS.format(id="c"+str(i)),"criteria":list(LEVELS)} for i in range(len(prefix))}}
+    for arm,body,cap in (("w0",w0,128000),("relative",relative,384000)):
+        if len(wire(body))>cap or len(wire(body["state"]))>128000: raise ValueError(arm+"-request-bound")
+    return {"w0":w0,"relative":relative,"ids":ids,"cards":pool,"w0_local_to_pool":local_to_pool,
+            "tail_ids":[c["id"] for c in native[40:]],"provenance_order_ids":[c["id"] for c in native]}
+
+def validate_relative_response(raw,request,expected_ids):
+    if type(raw)is not bytes or len(raw)>2_000_000: raise ValueError("response-bound")
+    data=strict_json(raw)
+    if type(data)is not dict or not {"model","answers"}.issubset(data) or set(data)-{"model","answers","usage"} or data.get("model")!=MODEL or type(data.get("answers"))is not dict: raise ValueError("response-envelope")
+    answers=data["answers"];qids=list(request["questions"])
+    if set(answers)!=set(qids) or type(expected_ids)is not list or len(expected_ids)!=len(set(expected_ids)): raise ValueError("answer-membership")
+    scores={}
+    for key,answer in answers.items():
+        if type(answer)is not dict or answer.get("type")!="score" or "score" not in answer or type(answer["score"])not in (int,float): raise ValueError("relative-score-type")
+        value=answer["score"]
+        if not math.isfinite(value) or not 0<=value<=4: raise ValueError("relative-score-range")
+        scores[key]=float(value)
+    if set(scores)!=set(expected_ids): raise ValueError("relative-score-membership")
+    usage=valid_usage(data.get("usage"))
+    return {"scores":scores,"usage":usage}
+
+def validate_score_response(raw,request,expected_ids):
+    if type(raw)is not bytes or len(raw)>2_000_000: raise ValueError("response-bound")
+    data=strict_json(raw)
+    if type(data)is not dict or not {"model","answers"}.issubset(data) or set(data)-{"model","answers","usage"} or data.get("model")!=MODEL or type(data.get("answers"))is not dict: raise ValueError("response-envelope")
+    answers=data["answers"]
+    if set(answers)!=set(request["questions"]) or set(answers)!=set(expected_ids): raise ValueError("answer-membership")
+    scores={}
+    for key,answer in answers.items():
+        if type(answer)is not dict or answer.get("type")!="score" or "score" not in answer or type(answer["score"])not in (int,float): raise ValueError("score-type")
+        value=answer["score"]
+        if not math.isfinite(value) or not 0<=value<=9: raise ValueError("score-range")
+        scores[key]=float(value)
+    return {"scores":scores,"usage":valid_usage(data.get("usage"))}
+
+def valid_usage(value):
+    if type(value)is not dict or set(value)!={"input_tokens","output_tokens"} or any(type(v)is not int or v<0 for v in value.values()): return None
+    return dict(value)
+
+def usage_from_raw(raw):
+    try:
+        if type(raw)is not bytes or len(raw)>2_000_000:return None
+        value=strict_json(raw)
+        return valid_usage(value.get("usage")) if type(value)is dict else None
+    except (ValueError,TypeError,UnicodeDecodeError): return None
+
+def order_scores(scores,ids):
+    if type(scores)is not dict or set(scores)!=set(ids): raise ValueError("score-membership")
+    return sorted(ids,key=lambda cid:(-scores[cid],ids.index(cid)))
+
+def relative_order(scores,ids):
+    if type(ids)is not list or len(ids)!=len(set(ids)) or type(scores)is not dict or set(scores)!=set(ids) or any(type(v)not in (int,float) or not math.isfinite(v) or not 0<=v<=4 for v in scores.values()): raise ValueError("relative-score-membership")
+    return sorted(ids,key=lambda cid:-scores[cid])
+
+def validate_request(raw):
+    if type(raw)is not bytes or len(raw)>384000: raise ValueError("request-bound")
+    data=strict_json(raw)
+    if type(data)is not dict or set(data)!={"model","state","questions"} or data["model"]!=MODEL or type(data["questions"])is not dict: raise ValueError("request-envelope")
+    state=data["state"];questions=data["questions"]
+    if type(state)is not dict: raise ValueError("state-shape")
+    if "purpose" in state:
+        if set(state)!={"purpose","requested_facets","candidates"} or type(state["purpose"])is not str or not state["purpose"] or len(state["purpose"].encode())>4096: raise ValueError("relative-state")
+        facets=state["requested_facets"]
+        if type(facets)is not list or len(facets)>4 or any(type(f)is not dict or set(f)!={"id","description"} or any(type(v)is not str or not v for v in f.values()) or len(f["id"].encode())>80 or len(f["description"].encode())>256 for f in facets) or len({f["id"] for f in facets})!=len(facets): raise ValueError("facet-shape")
+        cards=canonical(state["candidates"])
+        if not 2<=len(questions)<=80 or state["candidates"]!=cards: raise ValueError("relative-question-count-or-order")
+        if list(questions)!=[c["id"] for c in cards]: raise ValueError("relative-id-order")
+        for cid,q in questions.items():
+            if q!={"type":"score","instructions":PROTOCOL["instructions"].format(id=cid),"criteria":list(PROTOCOL["criteria"])}: raise ValueError("relative-question-contract")
+        if len(wire(state))>128000: raise ValueError("state-bound")
+    else:
+        if set(state)!={"query","candidates"} or type(state["query"])is not str or not state["query"] or len(state["query"].encode())>4096: raise ValueError("w0-state")
+        cards=state["candidates"]
+        if type(cards)is not list or not 2<=len(cards)<=40 or len(questions)!=len(cards): raise ValueError("w0-inventory")
+        ids=[]
+        for i,card in enumerate(cards):
+            if type(card)is not dict or set(card)!={"id","url","title","snippet"} or card["id"]!="c"+str(i) or any(type(v)is not str for v in card.values()): raise ValueError("w0-card")
+            bounds={"id":80,"url":512,"title":256,"snippet":1200}
+            if not card["url"] or any(len(card[k].encode("utf-8"))>bounds[k] for k in bounds): raise ValueError("w0-card-bound")
+            ids.append(card["id"])
+            q=questions.get(card["id"])
+            from slopsearx.rerank import INSTRUCTIONS,LEVELS
+            if q!={"type":"score","instructions":INSTRUCTIONS.format(id=card["id"]),"criteria":list(LEVELS)}: raise ValueError("w0-question-contract")
+        if set(questions)!=set(ids): raise ValueError("w0-membership")
+        if len(wire(state))>128000: raise ValueError("state-bound")
+    return data
