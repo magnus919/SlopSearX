@@ -1,0 +1,24 @@
+{
+  "status": "prospective_task_check_design_not_registered_model_comparison",
+  "original_pilot_unchanged": true,
+  "source_of_checks": "Observed ambiguity in completed diagnostic; not independent gold",
+  "refactoring_checks": [
+    "Identify the required LSP or compiler capability and its applicable language/tool/version.",
+    "Distinguish preview code actions from persisted workspace edits; describe how diagnostics are obtained after applying an edit.",
+    "Describe comparing resulting diagnostics with a baseline and checking affected-file or project scope.",
+    "Separate compiler/diagnostic validation, targeted tests and broader regression validation; state any unsupported assurance."
+  ],
+  "flaky_test_checks": [
+    "Distinguish nondeterministic failure evidence from a reproducible regression without treating a single passing rerun as proof.",
+    "Bind reproduction and factor isolation to a documented mechanism, preserving sample and environment limitations.",
+    "Verify the repair checks exercise the original failure; distinguish before/after reproduction from broader regression coverage.",
+    "Preserve quarantine or suppression safeguards and state when available evidence cannot support them."
+  ],
+  "rules": [
+    "Evidence IDs establish attribution only; assess claim entailment and target applicability separately.",
+    "Record not acquired, acquired unusable, available not delivered, delivered unused and used unsupported separately.",
+    "Freeze exact checks and reference instructions before source acquisition or model output in any new task/pool study.",
+    "Do not relabel exposed reference A/B, repair the completed pilot, or count these checks as untouched confirmation.",
+    "No new model or acquisition calls authorized by this artifact alone; a bounded registration and reviewed qualified runner must precede execution."
+  ]
+}
