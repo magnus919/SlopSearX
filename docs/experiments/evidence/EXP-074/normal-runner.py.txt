@@ -1,0 +1,444 @@
+"""EXP-074 inert-by-default async runner; fixture calls are local-only."""
+from __future__ import annotations
+import argparse, asyncio, hashlib, importlib.machinery, importlib.metadata, importlib.util, json, math, os, platform, socket, subprocess, sys, time, urllib.parse
+from pathlib import Path
+import httpx
+
+HERE=Path(__file__).resolve().parent; REPO=HERE.parents[3]
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+P=load('exp074_prepare',HERE/'prepare.py.txt')
+FUSE=P.FUSE
+T=load('exp074_http_transport',HERE/'http-transport.py.txt')
+REGISTRATION_REVISION=P.REGISTRATION_REVISION
+OWNED_FILES={'prepare.py.txt','http-transport.py.txt','normal-runner.py.txt','normal-runner-tests.py.txt',
+              'analyze.py.txt','analysis-tests.py.txt',
+              'verify-raw-receipts.py.txt','verifier-tests.py.txt'}
+SOURCE_FILES=set(P.PINS)|{
+    'docs/experiments/evidence/EXP-074/protocol.json','docs/experiments/evidence/EXP-074/registration-integrity.json',
+    'docs/experiments/EXP-074-service-style-query-purpose-rank-fusion.md',
+    'docs/experiments/evidence/EXP-072/protocol.json','docs/experiments/evidence/EXP-072/prepare.py.txt',
+    'docs/experiments/evidence/EXP-073/protocol.json','docs/experiments/evidence/EXP-073/registration-integrity.json',
+    'docs/experiments/evidence/EXP-073/registration-correction.json','docs/experiments/evidence/EXP-073/prepare.py.txt',
+    'docs/experiments/evidence/EXP-073/fusion.py.txt','docs/experiments/evidence/EXP-073/fusion-tests.py.txt',
+    'docs/experiments/evidence/EXP-039/source-selection-contract.json',
+    'docs/experiments/evidence/EXP-059/http-wrapper.py.txt','slopsearx/rerank.py'}
+DEPENDENCIES=('httpx','httpcore','anyio')
+
+
+def atomic(path,value):
+    path=Path(path);temp=path.with_name(path.name+'.tmp')
+    raw=value if isinstance(value,bytes) else json.dumps(value,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()
+    with temp.open('xb') as f:f.write(raw);f.flush();os.fsync(f.fileno())
+    os.replace(temp,path);sync_directory(path.parent)
+def sync_directory(path):
+    fd=os.open(path,os.O_RDONLY)
+    try:os.fsync(fd)
+    finally:os.close(fd)
+def sync_pending(path,value):
+    raw=json.dumps(value,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()
+    with Path(path).open('xb') as f:f.write(raw);f.flush();os.fsync(f.fileno())
+    sync_directory(Path(path).parent)
+def digest(raw):return hashlib.sha256(raw).hexdigest()
+def committed(path,revision):return P.committed(path,revision)
+def committed_head(path):
+    revision=subprocess.run(['git','rev-parse','HEAD'],cwd=REPO,check=True,capture_output=True,text=True).stdout.strip()
+    return P.committed(path,revision)
+
+
+def study_identity(protocol_raw,registration_raw,input_bytes):
+    if type(protocol_raw)is not bytes or type(registration_raw)is not bytes or type(input_bytes)is not dict or set(input_bytes)!=set(P.PINS):raise ValueError('study-identity-inputs')
+    if any(type(v)is not bytes for v in input_bytes.values()):raise ValueError('study-identity-inputs')
+    return hashlib.sha256(protocol_raw+registration_raw+b''.join(k.encode()+b'\0'+input_bytes[k] for k in sorted(input_bytes))).hexdigest()
+
+
+def validate_inputs(input_bytes,input_revision):return P.validate_inputs(input_bytes,input_revision)
+
+
+def live_gate(input_bytes,input_revision):
+    """Close unless the exact committed 074 qualification closure exists; no 073 lease reuse."""
+    proof=validate_inputs(input_bytes,input_revision)
+    qpath=HERE/'qualification-integrity.json'
+    if qpath.is_symlink() or not qpath.is_file():raise ValueError('runner-not-qualified')
+    qraw=qpath.read_bytes()
+    if committed_head('docs/experiments/evidence/EXP-074/qualification-integrity.json')!=qraw:raise ValueError('uncommitted-qualification')
+    q=P.strict_json(qraw)
+    keys={'schema','qualified','qualified_source_revision','files','source_pins','dependencies','environment','protocol_sha256','registration_sha256'}
+    if type(q)is not dict or set(q)!=keys or q['schema']!='exp074-qualification-integrity/1' or q['qualified'] is not True:
+        raise ValueError('runner-not-qualified')
+    revision=q['qualified_source_revision']
+    if type(revision)is not str or len(revision)!=40 or any(c not in '0123456789abcdef' for c in revision):raise ValueError('qualification-revision')
+    if type(q['files'])is not dict or set(q['files'])!=OWNED_FILES:raise ValueError('qualification-files')
+    if type(q['source_pins'])is not dict or set(q['source_pins'])!=SOURCE_FILES:raise ValueError('qualification-source-files')
+    for name,want in q['files'].items():
+        path=HERE/name
+        if path.is_symlink() or not path.is_file() or digest(path.read_bytes())!=want or committed('docs/experiments/evidence/EXP-074/'+name,revision)!=path.read_bytes():
+            raise ValueError('qualification-file-pin')
+    for name,want in q['source_pins'].items():
+        path=REPO/name
+        if path.is_symlink() or not path.is_file() or digest(path.read_bytes())!=want or committed(name,revision)!=path.read_bytes():
+            raise ValueError('qualification-source-pin')
+    if type(q['dependencies'])is not dict or set(q['dependencies'])!=set(DEPENDENCIES):raise ValueError('qualification-dependencies')
+    for name in DEPENDENCIES:
+        actual=importlib.metadata.version(name)
+        if q['dependencies'][name]!=actual:raise ValueError('qualification-dependency-pin')
+    env=q['environment']
+    if type(env)is not dict or set(env)!={'python_implementation','python_version'} or env['python_implementation']!=platform.python_implementation() or env['python_version']!=platform.python_version():
+        raise ValueError('qualification-python-pin')
+    if q['protocol_sha256']!=proof['protocol_sha256'] or q['registration_sha256']!=proof['registration_sha256']:
+        raise ValueError('qualification-registration-pin')
+    bounds=P.PROTOCOL['bounds']
+    if bounds['calls']!=44 or bounds['reported_input_tokens']!=3_000_000 or bounds['reported_output_tokens']!=160_000 or bounds['retries']!=0 or bounds['concurrency']!=1:
+        raise ValueError('usage-admission-contract')
+    # Burn the one-shot identity before any DNS or credential access. Later
+    # failures keep the lease, preventing accidental replays of this study.
+    identity=study_identity((HERE/'protocol.json').read_bytes(),(HERE/'registration-integrity.json').read_bytes(),input_bytes)
+    lease=Path(os.getenv('TMPDIR','/tmp'))/('exp074-lease-'+identity)
+    try:fd=os.open(lease,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
+    except FileExistsError:raise ValueError('study-already-consumed') from None
+    with os.fdopen(fd,'w') as f:f.write(identity+'\n');f.flush();os.fsync(f.fileno())
+    sync_directory(lease.parent)
+    socket.getaddrinfo(urllib.parse.urlsplit(T.ENDPOINT).hostname,443,type=socket.SOCK_STREAM)
+    api_key=os.environ.get('TYPESAFE_API_KEY','')
+    if not api_key:raise ValueError('missing-credential')
+    proof.update({'qualification_sha256':digest(qraw),'lease_identity':identity,
+                  'qualified_source_revision':revision,'environment':dict(env),
+                  'dependencies':dict(q['dependencies'])})
+    return proof,api_key,qraw
+
+
+class AsyncOwned:
+    def __init__(self,offline=True,client_factory=None,api_key=None):
+        self.offline=offline;self.api_key=('offline-fixture-non-secret' if offline else api_key)
+        if type(self.api_key)is not str or (not offline and not self.api_key):raise ValueError('missing-credential')
+        self.transport=T.AsyncHTTPTransport(client_factory=client_factory)
+        self.last_attempt=None
+    async def __call__(self,body,timeout_s=1.0,on_dispatch=None):
+        try:
+            raw,status,complete,timings=await self.transport.exchange(body,self.api_key,timeout_s,on_dispatch)
+            self.last_attempt={**self.transport.last_attempt,'status':'returned'}
+            return raw,status,complete,timings
+        except T.TransportFailure as error:
+            self.last_attempt={**self.transport.last_attempt,'status':'failed'}
+            raise
+        except T.DispatchDenied:
+            self.last_attempt={**self.transport.last_attempt,'status':'not_dispatched'}
+            raise
+        except asyncio.CancelledError:
+            self.last_attempt={**self.transport.last_attempt,'status':'cancelled'}
+            raise
+
+
+def fixture_client_factory(mode='neutral',stats=None):
+    """Return a fresh MockTransport client per call; handler never reaches the network."""
+    stats=stats if stats is not None else {'clients':0,'requests':0,'closed':0}
+    class CountingAsyncClient(httpx.AsyncClient):
+        async def aclose(self):
+            if not getattr(self,'_exp074_counted_closed',False):
+                self._exp074_counted_closed=True;stats['closed']+=1
+            await super().aclose()
+    async def handler(request):
+        stats['requests']+=1
+        parsed=P.BASE.BASE.validate_request(request.content)
+        if mode=='redirect':return httpx.Response(302,headers={'Location':'https://fixture.invalid/redirect'},content=b'')
+        if mode=='http-error':
+            body=P.response_fixture(parsed,score=2,usage={'input_tokens':11,'output_tokens':3})
+            return httpx.Response(503,content=body)
+        if mode=='missing-usage':
+            body=P.response_fixture(parsed,score=2,usage={'input_tokens':11,'output_tokens':3})
+            payload=P.strict_json(body);payload.pop('usage',None)
+            return httpx.Response(200,content=P.wire(payload))
+        if mode=='overflow':return httpx.Response(200,content=b'x'*(T.MAX_RESPONSE_BYTES+10))
+        if mode=='compressed-overflow':
+            import gzip
+            return httpx.Response(200,headers={'Content-Encoding':'gzip'},content=gzip.compress(b'x'*(T.MAX_RESPONSE_BYTES+10)))
+        if mode=='partial-timeout':
+            class DelayedStream(httpx.AsyncByteStream):
+                async def __aiter__(self):
+                    yield b'{"model":"jev-1.13.0","answers":'
+                    await asyncio.sleep(2)
+                    yield b'{}'
+                async def aclose(self):stats['stream_closed']=True
+            return httpx.Response(200,stream=DelayedStream())
+        if mode=='credential-echo':return httpx.Response(200,content=request.headers['authorization'].encode())
+        return httpx.Response(200,content=P.response_fixture(parsed,score=2,usage={'input_tokens':11,'output_tokens':3}))
+    def factory(**kwargs):
+        stats['clients']+=1
+        return CountingAsyncClient(transport=httpx.MockTransport(handler),**kwargs)
+    factory.stats=stats
+    return factory
+
+
+def _uninvoked(item,b):
+    return {'id':item['case']+'-'+item['variant'],'case':item['case'],'variant':item['variant'],
+            'provenance_order_ids':list(b['provenance_order_ids']),'cards':b['cards'],'candidate_phase_ms':None,
+            'phase_endpoint_after_fsync':False,'calls':[],
+            'arms':{name:{'status':'uninvoked','order_ids':[],'scores':{},'raw_answers':{},'rational_scores':{},'usage':None,'elapsed_ms':None} for name in P.ARMS}}
+
+
+async def run(acquisition,queries,outdir,offline=True,source_integrity=None,fixture='neutral',prebuilt=None,
+              client_factory=None,api_key=None,qualification_bytes=None):
+    prepared=prebuilt if prebuilt is not None else P.prebuild(acquisition,queries)
+    if type(source_integrity)is not dict:
+        source_integrity={'input_pins':dict(P.PINS),'input_revision':REGISTRATION_REVISION,
+            'protocol_sha256':digest((HERE/'protocol.json').read_bytes()),'registration_sha256':digest((HERE/'registration-integrity.json').read_bytes())}
+    outdir=Path(outdir)
+    if outdir.exists() or outdir.is_symlink():raise ValueError('output-exists')
+    if not outdir.parent.is_dir() or not os.access(outdir.parent,os.W_OK):raise ValueError('output-parent')
+    if not offline:
+        if type(qualification_bytes)is not bytes or source_integrity.get('qualification_sha256')!=digest(qualification_bytes):
+            raise ValueError('qualification-output-binding')
+    outdir.mkdir();receipt_dir=outdir/'receipts';receipt_dir.mkdir()
+    if not offline:
+        atomic(outdir/'qualification-integrity.json',qualification_bytes)
+    started=time.perf_counter();budget={'attempts':0,'input_tokens':0,'output_tokens':0,'unknown_usage':False}
+    if offline and client_factory is None:
+        client_factory=fixture_client_factory(fixture)
+    owned=AsyncOwned(offline,client_factory,api_key)
+    result={'schema':'exp074-run/1','status':'running','operations':[],'synthetic':offline,
+        'quality_credit':False,'adoption_eligible':False,
+        'input_pins':dict(P.PINS),'input_revision':source_integrity.get('input_revision',REGISTRATION_REVISION),
+        'source_integrity':source_integrity,'neutral':None,'budget':dict(budget),'wall_seconds':0.0}
+    call_index=0;stopped=False
+    bounds=P.PROTOCOL['bounds']
+    def checkpoint():
+        result['budget']=dict(budget);result['wall_seconds']=time.perf_counter()-started
+        atomic(outdir/'run.json',result)
+
+    async def call(body,request,expected,maximum,opid,arm,phase_deadline):
+        nonlocal call_index
+        index=call_index;call_index+=1;path=receipt_dir/('call-%02d.json'%index)
+        raw_body=P.wire(body);req_sha=digest(raw_body)
+        if len(raw_body)>bounds['request_bytes']:raise ValueError('request-bound')
+        if budget['attempts']>=bounds['calls']:raise ValueError('call-count')
+        if budget['input_tokens']+64_000>bounds['reported_input_tokens'] or budget['output_tokens']+64_000>bounds['reported_output_tokens']:
+            raise ValueError('usage-reservation')
+        if time.perf_counter()-started>=bounds['wall_seconds']:raise ValueError('wall-budget')
+        base={'status':'pending','dispatched':False,'operation':opid,'arm':arm,'request_hex':raw_body.hex(),'request_sha256':req_sha,
+            'raw_response_hex':None,'response_body_sha256':None,'response_bytes':0,'response_complete':False,
+            'http_status':None,'usage':None,'usage_status':'not_dispatched','elapsed_ms':None,'timings':{},
+            'transport':{'kind':'inprocess-async-httpx','trust_env':False,'follow_redirects':False,
+                         'retries':0,'concurrency':1,'response_limit_bytes':T.MAX_RESPONSE_BYTES,
+                         'request_sha256':req_sha,'response_sha256':None,'client_closed':False},'failure':None}
+        sync0=time.perf_counter_ns();sync_pending(path,base);pending_ms=(time.perf_counter_ns()-sync0)/1e6
+        remaining=phase_deadline-time.perf_counter()
+        if remaining<=0 or time.perf_counter()-started>=bounds['wall_seconds']:
+            stop_code='whole-phase-deadline' if remaining<=0 else 'wall-budget'
+            base.update(status='failed',usage_status='not_dispatched',failure={'type':'TimeoutError','code':stop_code},
+                        timings={'pending_receipt_fsync_ms':pending_ms})
+            base['transport']['client_closed']=False;atomic(path,base);raise CallFailure(base,stop_code)
+        local_timeout=min(1.0,remaining)
+        started_call=time.perf_counter_ns();transport_result=None
+        def mark_dispatched():
+            if phase_deadline-time.perf_counter()<=0:raise T.DispatchDenied()
+            sync_start=time.perf_counter_ns();base['dispatched']=True;budget['attempts']+=1
+            atomic(path,base);dispatch_fsync=(time.perf_counter_ns()-sync_start)/1e6
+            if phase_deadline-time.perf_counter()<=0:
+                base['dispatched']=False;budget['attempts']-=1
+                base.update(status='failed',usage_status='not_dispatched',failure={'type':'DispatchDenied','code':'whole-phase-deadline'})
+                atomic(path,base);raise T.DispatchDenied()
+            base.setdefault('timings',{})['dispatch_receipt_fsync_ms']=dispatch_fsync
+        try:
+            raw,status,complete,transport_result=await owned(raw_body,timeout_s=local_timeout,on_dispatch=mark_dispatched)
+            usage=P.usage_from_raw(raw)
+            base.update(status='returned',raw_response_hex=raw.hex(),response_body_sha256=digest(raw),response_bytes=len(raw),
+                        response_complete=complete,http_status=status,usage=usage,usage_status='known' if usage is not None else 'unknown',
+                        elapsed_ms=(time.perf_counter_ns()-started_call)/1e6)
+            base['timings']={**transport_result,'pending_receipt_fsync_ms':pending_ms,'validation_ms':None,
+                             'dispatch_receipt_fsync_ms':base.get('timings',{}).get('dispatch_receipt_fsync_ms'),
+                             'response_receipt_fsync_ms':None}
+            base['dispatched']=bool((owned.last_attempt or {}).get('dispatched',True))
+            base['transport'].update(response_sha256=digest(raw),client_closed=bool((owned.last_attempt or {}).get('client_closed',False)))
+            if usage is not None:
+                budget['input_tokens']+=usage['input_tokens'];budget['output_tokens']+=usage['output_tokens']
+            else:budget['unknown_usage']=True
+            if status!=200:raise CallFailure(base,'http-status')
+            if not complete:raise CallFailure(base,'incomplete-response')
+            if usage is None:raise CallFailure(base,'unknown-usage')
+            if usage['input_tokens']>64_000 or usage['output_tokens']>64_000:raise CallFailure(base,'per-call-usage')
+            if budget['input_tokens']>bounds['reported_input_tokens'] or budget['output_tokens']>bounds['reported_output_tokens']:
+                raise CallFailure(base,'total-usage')
+            validate_start=time.perf_counter_ns()
+            parsed=P.validate_score_response(raw,body,expected,maximum)
+            if parsed['usage'] is None:raise CallFailure(base,'invalid-usage')
+            base['timings']['validation_ms']=(time.perf_counter_ns()-validate_start)/1e6
+            base['status']='validated'
+            sync0=time.perf_counter_ns();atomic(path,base);base['timings']['response_receipt_fsync_ms']=(time.perf_counter_ns()-sync0)/1e6
+            # Bind the fsync timing into a second durable receipt; this is included in the phase endpoint.
+            atomic(path,base)
+            return parsed,usage,base
+        except BaseException as error:
+            if isinstance(error,CallFailure):failure_code=error.code
+            elif isinstance(error,T.TransportFailure):failure_code=error.code
+            elif isinstance(error,asyncio.CancelledError):failure_code='cancelled'
+            elif isinstance(error,T.DispatchDenied):failure_code='whole-phase-deadline'
+            else:failure_code=type(error).__name__.lower()
+            attempt=owned.last_attempt or {}
+            raw=attempt.get('raw')
+            if type(raw)is bytes and base['raw_response_hex'] is None and (raw or attempt.get('response_complete')):
+                base['raw_response_hex']=raw.hex();base['response_body_sha256']=digest(raw);base['response_bytes']=len(raw)
+            if attempt.get('http_status') is not None:base['http_status']=attempt.get('http_status')
+            if attempt.get('response_complete'):base['response_complete']=True
+            if type(error)is T.TransportFailure:
+                base['timings']={**error.timings,'pending_receipt_fsync_ms':pending_ms,'validation_ms':None,'response_receipt_fsync_ms':None}
+                base['dispatched']=error.dispatched
+                base['transport']['client_closed']=attempt.get('client_closed',False)
+                usage=P.usage_from_raw(error.raw) if error.dispatched else None
+                if usage is not None and base['usage'] is None:
+                    base['usage']=usage;base['usage_status']='known';budget['input_tokens']+=usage['input_tokens'];budget['output_tokens']+=usage['output_tokens']
+                elif usage is None:
+                    base['usage_status']='unknown' if error.dispatched else 'not_dispatched'
+                    if error.dispatched:budget['unknown_usage']=True
+                base['transport'].update(response_sha256=digest(error.raw) if error.raw is not None and (error.raw or error.response_complete) else None,
+                                         client_closed=attempt.get('client_closed',False))
+            elif type(error)is asyncio.CancelledError:
+                base['timings']={**attempt.get('timings',{}),'pending_receipt_fsync_ms':pending_ms}
+                base['dispatched']=bool(attempt.get('dispatched',False))
+                base['transport'].update(response_sha256=digest(raw) if type(raw)is bytes and raw else None,client_closed=True)
+                base['usage']=P.usage_from_raw(raw) if type(raw)is bytes and base['dispatched'] else None
+                base['usage_status']='known' if base['usage'] is not None else ('unknown' if base['dispatched'] else 'not_dispatched')
+                if base['usage'] is None and base['dispatched']:budget['unknown_usage']=True
+                elif base['usage'] is not None:
+                    budget['input_tokens']+=base['usage']['input_tokens'];budget['output_tokens']+=base['usage']['output_tokens']
+            elif isinstance(error,T.DispatchDenied):
+                attempt=owned.last_attempt or {}
+                base['dispatched']=False;base['usage_status']='not_dispatched';base['transport']['client_closed']=attempt.get('client_closed',False)
+                base['timings']={**attempt.get('timings',{}),'pending_receipt_fsync_ms':pending_ms}
+            elif isinstance(error,CallFailure):
+                base=error.record
+            base.update(status='failed',failure={'type':type(error).__name__,'code':failure_code},
+                        elapsed_ms=(time.perf_counter_ns()-started_call)/1e6)
+            sync0=time.perf_counter_ns();atomic(path,base);base['timings']['response_receipt_fsync_ms']=(time.perf_counter_ns()-sync0)/1e6
+            atomic(path,base)
+            if isinstance(error,asyncio.CancelledError):raise CallFailure(base,'cancelled') from None
+            raise CallFailure(base,failure_code) from None
+
+    class CallFailure(Exception):
+        def __init__(self,record,code):super().__init__(code);self.record=record;self.code=code
+
+    async def run_operation(item,b,neutral=False):
+        phase_start=time.perf_counter();phase_deadline=phase_start+1.0
+        opid='neutral' if neutral else item['case']+'-'+item['variant']
+        op={'id':opid,'case':'neutral' if neutral else item['case'],'variant':'neutral' if neutral else item['variant'],
+            'provenance_order_ids':list(b['provenance_order_ids']),'cards':b['cards'],'candidate_phase_ms':None,
+            'phase_endpoint_after_fsync':False,'calls':[],'arms':{}}
+        incumbent=[];w_usage=None;p_usage=None;successful=False
+        try:
+            wreq=b['w0'];w_expected=list(wreq['questions'])
+            wparsed,w_usage,wrec=await call(wreq,wreq,w_expected,9,opid,'w0',phase_deadline);op['calls'].append(wrec)
+            local_order=P.order_scores(wparsed['scores'],w_expected,9)
+            worder=[b['w0_local_to_pool'][key] for key in local_order]+list(b['tail_ids'])
+            wscores={b['w0_local_to_pool'][key]:value for key,value in wparsed['scores'].items()}
+            wraw={b['w0_local_to_pool'][key]:value for key,value in wparsed['raw_answers'].items()}
+            incumbent=worder
+            op['arms']['w0']={'status':'valid','order_ids':worder,'scores':wscores,'raw_answers':wraw,
+                              'rational_scores':{},'usage':w_usage,'elapsed_ms':wrec['elapsed_ms']}
+            preq=b['purpose_component'];p_expected=list(preq['questions'])
+            pparsed,p_usage,prec=await call(preq,preq,p_expected,3,opid,'purpose_component',phase_deadline);op['calls'].append(prec)
+            porder=P.order_scores(pparsed['scores'],p_expected,3)
+            op['arms']['purpose_component']={'status':'valid','order_ids':porder,'scores':pparsed['scores'],
+                'raw_answers':pparsed['raw_answers'],'rational_scores':{},'usage':p_usage,'elapsed_ms':prec['elapsed_ms']}
+            fusion_start=time.perf_counter_ns();fused=FUSE.fuse(b['cards'],worder,porder)
+            aggregate={'input_tokens':w_usage['input_tokens']+p_usage['input_tokens'],
+                       'output_tokens':w_usage['output_tokens']+p_usage['output_tokens']}
+            op['arms']['candidate']={'status':'candidate_body_durable','order_ids':fused['order_ids'],'scores':{},'raw_answers':{},
+                'rational_scores':fused['rational_scores'],'usage':aggregate,'elapsed_ms':None}
+            final_path=receipt_dir/(opid.replace('/','-')+'-final.json')
+            body_receipt={'receipt_status':'durable-candidate-body','operation':op}
+            sync0=time.perf_counter_ns();atomic(final_path,body_receipt);final_fsync_ms=(time.perf_counter_ns()-sync0)/1e6
+            op['candidate_body_receipt']={'path':final_path.name,'sha256':digest(final_path.read_bytes()),'fsync_ms':final_fsync_ms}
+            endpoint=time.perf_counter();op['candidate_phase_ms']=(endpoint-phase_start)*1000
+            op['arms']['candidate']['elapsed_ms']=(time.perf_counter_ns()-fusion_start)/1e6
+            op['phase_endpoint_after_fsync']=True
+            op['final_receipt']={'path':final_path.name,'sha256':digest(final_path.read_bytes()),'fsync_ms':final_fsync_ms}
+            if op['candidate_phase_ms']>1000 or time.perf_counter()-started>bounds['wall_seconds']:
+                raise ValueError('candidate-phase-deadline' if op['candidate_phase_ms']>1000 else 'wall-budget')
+            op['arms']['candidate']['status']='valid';successful=True
+        except BaseException as error:
+            if isinstance(error,CallFailure) and error.record not in op['calls']:
+                op['calls'].append(error.record)
+            elif isinstance(error,asyncio.CancelledError) and owned.last_attempt is not None:
+                # Call() persists the cancelled receipt before propagating cancellation.
+                pending=list(receipt_dir.glob('call-*.json'))
+                if pending:
+                    last=max(pending,key=lambda p:p.stat().st_mtime_ns)
+                    record=P.strict_json(last.read_bytes())
+                    if record.get('operation')==opid:op['calls'].append(record)
+            # Preserve the valid W0 as complete incumbent fallback whenever available.
+            failed_record=error.record if isinstance(error,CallFailure) else None
+            if 'w0' not in op['arms']:
+                op['arms']['w0']={'status':'failed','order_ids':[],'scores':{},'raw_answers':{},'rational_scores':{},'usage':None,'elapsed_ms':None}
+            if 'purpose_component' not in op['arms']:
+                failed_purpose=failed_record is not None and failed_record.get('arm')=='purpose_component'
+                op['arms']['purpose_component']={'status':'failed' if failed_purpose else 'uninvoked',
+                    'order_ids':[],'scores':{},'raw_answers':{},'rational_scores':{},
+                    'usage':failed_record.get('usage') if failed_purpose else None,
+                    'elapsed_ms':failed_record.get('elapsed_ms') if failed_purpose else None}
+            if 'candidate' not in op['arms']:
+                known_calls=[x for x in op['calls'] if x.get('dispatched')]
+                candidate_usage=None if any(x.get('usage') is None for x in known_calls) else {
+                    'input_tokens':sum(x['usage']['input_tokens'] for x in known_calls),
+                    'output_tokens':sum(x['usage']['output_tokens'] for x in known_calls)}
+                op['arms']['candidate']={'status':'failed_fallback' if incumbent else 'failed','order_ids':list(incumbent),
+                    'scores':{},'raw_answers':{},'rational_scores':{},'usage':candidate_usage,
+                    'elapsed_ms':None}
+            elif op['arms']['candidate']['status']=='candidate_body_durable':
+                op['arms']['candidate']['status']='failed_fallback';op['arms']['candidate']['order_ids']=list(incumbent)
+                op['arms']['candidate']['rational_scores']={}
+            if failed_record is not None:
+                name='w0' if failed_record.get('arm')=='w0' else 'purpose_component'
+                if name=='w0' and op['arms']['w0']['status']!='valid':
+                    op['arms']['w0'].update(usage=failed_record.get('usage'),elapsed_ms=failed_record.get('elapsed_ms'))
+                elif name=='purpose_component' and op['arms']['purpose_component']['status']!='valid':
+                    op['arms']['purpose_component'].update(usage=failed_record.get('usage'),elapsed_ms=failed_record.get('elapsed_ms'))
+            failure_code=error.code if isinstance(error,CallFailure) else ('cancelled' if isinstance(error,asyncio.CancelledError) else str(error) if str(error).replace('-','').isalnum() else type(error).__name__.lower())
+            op['failure']={'type':type(error).__name__,'code':failure_code}
+            failure_path=receipt_dir/(opid.replace('/','-')+'-failure.json')
+            sync0=time.perf_counter_ns();atomic(failure_path,{'receipt_status':'failed','operation':op});failure_fsync_ms=(time.perf_counter_ns()-sync0)/1e6
+            endpoint=time.perf_counter();op['candidate_phase_ms']=(endpoint-phase_start)*1000
+            op['phase_endpoint_after_fsync']=True
+            op['final_receipt']={'path':failure_path.name,'sha256':digest(failure_path.read_bytes()),'fsync_ms':failure_fsync_ms}
+            successful=False
+        # Candidate phase endpoint is after body or failure sidecar and parent-dir fsync.
+        return op,successful
+
+    neutral_case,neutral_cards=P.synthetic_case();neutral_built=P.build_requests(neutral_case,neutral_cards)
+    neutral,neutral_ok=await run_operation({'case':'neutral','variant':'neutral'},neutral_built,True)
+    neutral.update({'status':'fixture_only' if neutral_ok else 'failed','synthetic_input':True,'quality_credit':False})
+    result['neutral']=neutral;checkpoint()
+    if not neutral_ok:stopped=True;result['status']='incomplete'
+    for item,built in prepared:
+        if stopped:
+            result['operations'].append(_uninvoked(item,built));continue
+        op,ok=await run_operation(item,built,False);result['operations'].append(op)
+        if not ok:stopped=True;result['status']='incomplete'
+        checkpoint()
+    if not stopped:result['status']='complete'
+    checkpoint()
+    return result
+
+
+def main():
+    ap=argparse.ArgumentParser();ap.add_argument('--mode',choices=('offline','live'),default='offline')
+    ap.add_argument('--acquisition',type=Path,default=REPO/'docs/experiments/evidence/EXP-060/fresh-acquisition.json')
+    ap.add_argument('--queries',type=Path,default=REPO/'docs/experiments/evidence/EXP-060/queries.json')
+    ap.add_argument('--outdir',type=Path,required=True);ap.add_argument('--input-revision',default=REGISTRATION_REVISION)
+    ap.add_argument('--offline-fixture',choices=('neutral','http-error','missing-usage','redirect','overflow','partial-timeout'),default='neutral')
+    args=ap.parse_args();live_key=None
+    try:
+        input_bytes={name:(args.acquisition.read_bytes() if name=='docs/experiments/evidence/EXP-060/fresh-acquisition.json' else args.queries.read_bytes() if name=='docs/experiments/evidence/EXP-060/queries.json' else (REPO/name).read_bytes()) for name in P.PINS}
+        proof=validate_inputs(input_bytes,args.input_revision)
+        acq,queries=P.source_data(input_bytes);prepared=P.prebuild(acq,queries)
+        if args.outdir.exists() or args.outdir.is_symlink():raise ValueError('output-exists')
+        if not args.outdir.parent.is_dir() or not os.access(args.outdir.parent,os.W_OK):raise ValueError('output-parent')
+        qualification_bytes=None
+        if args.mode=='live':proof,live_key,qualification_bytes=live_gate(input_bytes,args.input_revision)
+        result=asyncio.run(run(acq,queries,args.outdir,args.mode=='offline',proof,args.offline_fixture,prepared,
+                               api_key=live_key,qualification_bytes=qualification_bytes))
+        print(json.dumps({'status':result['status'],'operations':len(result['operations']),
+                          'attempts':result['budget']['attempts'],'synthetic':result['synthetic']}))
+        return 0 if result['status']=='complete' else 2
+    except Exception as error:
+        print('exp074-setup-'+type(error).__name__,file=sys.stderr);return 2
+if __name__=='__main__':raise SystemExit(main())

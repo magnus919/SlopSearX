@@ -1,0 +1,30 @@
+{
+  "schema": "exp074-offline-qualification-incident/1",
+  "status": "retained-before-qualification",
+  "stage": "unqualified draft integration test",
+  "invocation": "python3 docs/experiments/evidence/EXP-074/analysis-tests.py.txt",
+  "test": "test_actual_frozen_inputs_run_offline_and_stop_before_quality",
+  "observed": {
+    "returned_run_status": "incomplete",
+    "raw_run_and_receipts_retained": false,
+    "raw_http_status": null,
+    "owned_attempt_count": null,
+    "provider_received_request": null,
+    "provider_usage": null
+  },
+  "known_from_source_control_flow": {
+    "offline_true_without_client_factory_constructed_real_httpx_client": true,
+    "authorization_marker": "offline-fixture-non-secret",
+    "secret_key_read": false,
+    "caller_supplied_real_key": false
+  },
+  "unknowns": [
+    "Exact attempted HTTP count and whether any request reached the provider",
+    "HTTP status, raw response and any reported usage",
+    "Exact elapsed timings and uncommitted pre-fix draft source hashes"
+  ],
+  "artifact_loss": "TemporaryDirectory context and test cleanup removed run.json and call receipts; no replacement observations are fabricated. Intended neutral-first flow is not proof of an observed HTTP request.",
+  "correction_commit": "e198ae0561b19fe2eb45c5ac385087248c208c88",
+  "correction": "Offline default now selects local MockTransport. Qualification requires a regression test that rejects any real AsyncHTTPTransport request, plus independent integration review.",
+  "interpretation": "This was an unintended attempt path in an unqualified offline test, not an admitted EXP-074 live comparison. It earns zero quality or confirmation credit. No real API credential was read or supplied; zero provider attempts or zero cost are not asserted."
+}

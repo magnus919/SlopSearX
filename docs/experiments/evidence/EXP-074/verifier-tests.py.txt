@@ -1,0 +1,292 @@
+"""Offline contract tests for EXP-074 raw receipt verification."""
+import asyncio
+import copy
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import platform
+import importlib.metadata
+import pathlib
+import shutil
+import tempfile
+import types
+import unittest
+
+HERE = pathlib.Path(__file__).resolve().parent
+
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+P = load("exp074_test_prepare", HERE / "prepare.py.txt")
+N = load("exp074_test_runner", HERE / "normal-runner.py.txt")
+V = load("exp074_test_verifier", HERE / "verify-raw-receipts.py.txt")
+A = load("exp074_test_analyzer", HERE / "analyze.py.txt")
+
+
+class RawReceiptVerifierTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.temp = tempfile.TemporaryDirectory(prefix="exp074-receipts-")
+        cls.root = pathlib.Path(cls.temp.name)
+        cls.inputs = {path: (V.REPO / path).read_bytes() for path in P.PINS}
+        cls.acquisition, cls.queries = P.source_data(cls.inputs)
+        cls.references = P.strict_json(cls.inputs["docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"])
+        cls.protocol = P.PROTOCOL
+        cls.protocol_raw = (HERE / "protocol.json").read_bytes()
+        cls.registration_raw = (HERE / "registration-integrity.json").read_bytes()
+        cls.proof = P.validate_inputs(cls.inputs, P.REGISTRATION_REVISION)
+        cls.complete = cls.run_fixture("complete", "neutral")
+        cls.interrupted = cls.run_fixture("interrupted", "http-error")
+        cls.unknown_usage = cls.run_fixture("unknown-usage", "missing-usage")
+        cls.partial = cls.run_fixture("partial", "partial-timeout")
+        cls.purpose_failure = cls.run_fixture("purpose-failure", "neutral", cls.fail_second_factory())
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.temp.cleanup()
+
+    @classmethod
+    def run_fixture(cls, name, mode, client_factory=None):
+        out = cls.root / name
+        run = asyncio.run(N.run(cls.acquisition, cls.queries, out, offline=True,
+                                source_integrity=cls.proof, fixture=mode,
+                                client_factory=client_factory or N.fixture_client_factory(mode)))
+        analysis = A.analyze(run, cls.acquisition, cls.references, cls.queries, cls.protocol,
+                             cls.inputs, cls.protocol_raw, cls.registration_raw)
+        (out / "analysis.json").write_text(json.dumps(analysis, ensure_ascii=False,
+                            separators=(",", ":"), allow_nan=False))
+        return out
+
+    @classmethod
+    def fail_second_factory(cls):
+        counter = {"calls": 0}
+        async def handler(request):
+            counter["calls"] += 1
+            body = P.response_fixture(request.content, score=2, usage={"input_tokens": 11, "output_tokens": 3})
+            return N.httpx.Response(200 if counter["calls"] == 1 else 503, content=body)
+        def factory(**kwargs):
+            return N.httpx.AsyncClient(transport=N.httpx.MockTransport(handler), **kwargs)
+        return factory
+
+    def clone(self, name, source=None):
+        out = self.root / name
+        shutil.copytree(source or self.complete, out)
+        return out
+
+    def mutate_json(self, path, mutate):
+        value = json.loads(path.read_text())
+        mutate(value)
+        path.write_text(json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False))
+
+    def test_offline_complete_run_verifies_full_44_call_schedule_without_quality_credit(self):
+        report = V.verify(self.complete)
+        self.assertEqual((report["status"], report["physical_attempts"], report["raw_calls_checked"]),
+                         ("complete", 44, 44))
+        self.assertEqual(report["analysis"]["outcome"], "synthetic_fixture_only")
+        self.assertFalse(report["analysis"]["quality_analysis_performed"])
+
+    def test_http_error_with_usage_is_retained_and_stops_before_real_schedule(self):
+        report = V.verify(self.interrupted)
+        self.assertEqual((report["status"], report["physical_attempts"], report["known_usage"]),
+                         ("incomplete", 1, {"input_tokens": 11, "output_tokens": 3}))
+        run = json.loads((self.interrupted / "run.json").read_text())
+        self.assertEqual(run["neutral"]["arms"]["w0"]["status"], "failed")
+        self.assertTrue(all(not op["calls"] and all(arm["status"] == "uninvoked"
+                        for arm in op["arms"].values()) for op in run["operations"]))
+        self.assertFalse(report["analysis"]["quality_analysis_performed"])
+
+    def test_purpose_failure_retains_full_fresh_w0_fallback_and_stops(self):
+        report = V.verify(self.purpose_failure)
+        run = json.loads((self.purpose_failure / "run.json").read_text())
+        neutral = run["neutral"]
+        self.assertEqual(len(neutral["calls"]), 2)
+        self.assertEqual(neutral["arms"]["w0"]["status"], "valid")
+        self.assertEqual(neutral["arms"]["purpose_component"]["status"], "failed")
+        self.assertEqual(neutral["arms"]["candidate"]["status"], "failed_fallback")
+        self.assertEqual(neutral["arms"]["candidate"]["order_ids"], neutral["arms"]["w0"]["order_ids"])
+        self.assertEqual(report["physical_attempts"], 2)
+        self.assertFalse(report["analysis"]["quality_analysis_performed"])
+
+    def test_missing_usage_stops_with_unknown_accounting_without_estimated_zero(self):
+        report = V.verify(self.unknown_usage)
+        self.assertTrue(report["unknown_usage"])
+        self.assertEqual(report["known_usage"], {"input_tokens": 0, "output_tokens": 0})
+        run = json.loads((self.unknown_usage / "run.json").read_text())
+        call = run["neutral"]["calls"][0]
+        self.assertIsNone(call["usage"])
+        self.assertEqual(run["neutral"]["arms"]["candidate"]["usage"], None)
+
+    def test_partial_body_timeout_retains_bytes_and_unknown_usage(self):
+        report = V.verify(self.partial)
+        self.assertTrue(report["unknown_usage"])
+        run = json.loads((self.partial / "run.json").read_text())
+        call = run["neutral"]["calls"][0]
+        self.assertTrue(call["dispatched"])
+        self.assertFalse(call["response_complete"])
+        self.assertGreater(call["response_bytes"], 0)
+        self.assertEqual(call["response_body_sha256"], hashlib.sha256(bytes.fromhex(call["raw_response_hex"])).hexdigest())
+
+    def test_raw_response_hash_tampering_is_rejected(self):
+        out = self.clone("tamper-response")
+        callpath = out / "receipts" / "call-00.json"
+        self.mutate_json(callpath, lambda call: call.update(raw_response_hex=(call["raw_response_hex"][:-2] + "00")))
+        self.mutate_json(out / "run.json", lambda run: run["neutral"]["calls"].__setitem__(
+            0, json.loads(callpath.read_text())))
+        with self.assertRaisesRegex(ValueError, "response-hash"):
+            V.verify(out, require_analysis=False)
+
+    def test_request_hash_and_request_bytes_are_recomputed(self):
+        out = self.clone("tamper-request")
+        callpath = out / "receipts" / "call-00.json"
+        self.mutate_json(callpath, lambda call: call.update(request_hex="00"))
+        self.mutate_json(out / "run.json", lambda run: run["neutral"]["calls"].__setitem__(
+            0, json.loads(callpath.read_text())))
+        with self.assertRaisesRegex(ValueError, "request-binding"):
+            V.verify(out, require_analysis=False)
+
+    def test_component_or_candidate_order_tampering_is_rejected(self):
+        out = self.clone("tamper-order")
+        self.mutate_json(out / "run.json", lambda run: run["operations"][0]["arms"]["candidate"]["order_ids"].reverse())
+        with self.assertRaisesRegex(ValueError, "candidate-fusion|analysis-binding"):
+            V.verify(out, require_analysis=False)
+
+    def test_exact_rational_score_mutation_is_rejected(self):
+        out = self.clone("tamper-rational")
+        def mutate(run):
+            candidate = run["operations"][0]["arms"]["candidate"]
+            card_id = next(iter(candidate["rational_scores"]))
+            candidate["rational_scores"][card_id] = [1, 999]
+        self.mutate_json(out / "run.json", mutate)
+        with self.assertRaisesRegex(ValueError, "candidate-fusion|analysis-binding"):
+            V.verify(out, require_analysis=False)
+
+    def test_full_pool_membership_tampering_is_rejected(self):
+        out = self.clone("tamper-membership")
+        self.mutate_json(out / "run.json", lambda run: run["operations"][0]["cards"][0].update(id="foreign-card"))
+        with self.assertRaisesRegex(ValueError, "operation-membership"):
+            V.verify(out, require_analysis=False)
+
+    def test_usage_cannot_be_rewritten_independently_of_raw_response(self):
+        out = self.clone("tamper-usage")
+        def mutate(call):
+            call["usage"]["input_tokens"] += 1
+        path = out / "receipts" / "call-00.json"
+        self.mutate_json(path, mutate)
+        self.mutate_json(out / "run.json", lambda run: run["neutral"]["calls"].__setitem__(
+            0, json.loads(path.read_text())))
+        with self.assertRaisesRegex(ValueError, "usage-binding"):
+            V.verify(out, require_analysis=False)
+
+    def test_transport_timing_above_one_second_is_rejected(self):
+        out = self.clone("tamper-timing")
+        def mutate(run):
+            run["neutral"]["calls"][0]["timings"]["exchange_ms"] = 1000.1
+            run["neutral"]["calls"][0]["elapsed_ms"] = 1000.2
+            path = out / "receipts" / "call-00.json"
+            path.write_text(json.dumps(run["neutral"]["calls"][0], separators=(",", ":")))
+        self.mutate_json(out / "run.json", mutate)
+        with self.assertRaisesRegex(ValueError, "exchange-deadline|http-deadline"):
+            V.verify(out, require_analysis=False)
+
+    def test_inprocess_receipt_must_not_claim_subprocess_output_telemetry(self):
+        out = self.clone("fake-stdio")
+        callpath = out / "receipts" / "call-00.json"
+        def mutate(call):
+            call["transport"]["stderr_sha256"] = "0" * 64
+        self.mutate_json(callpath, mutate)
+        self.mutate_json(out / "run.json", lambda run: run["neutral"]["calls"].__setitem__(
+            0, json.loads(callpath.read_text())))
+        with self.assertRaisesRegex(ValueError, "subprocess-telemetry-claim"):
+            V.verify(out, require_analysis=False)
+
+    def test_durable_endpoint_hash_and_fsync_receipt_are_bound(self):
+        out = self.clone("tamper-final")
+        ref = json.loads((out / "run.json").read_text())["neutral"]["final_receipt"]
+        path = out / "receipts" / ref["path"]
+        path.write_bytes(path.read_bytes() + b" ")
+        with self.assertRaisesRegex(ValueError, "final-receipt-hash"):
+            V.verify(out, require_analysis=False)
+
+    def test_unqualified_nonsynthetic_failure_has_no_live_verification(self):
+        out = self.clone("unqualified-real", self.interrupted)
+        self.mutate_json(out / "run.json", lambda run: run.update(synthetic=False))
+        (out / "qualification-integrity.json").write_text("{}")
+        with self.assertRaisesRegex(ValueError, "qualification-schema|qualification-binding"):
+            V.verify(out, require_analysis=False)
+
+    def test_qualification_resolves_head_and_source_closure_without_literal_head_revision(self):
+        # Exercise the nonsynthetic qualification path with mocked, read-only
+        # committed bytes. This verifies that HEAD is resolved by the helper
+        # designed for it, while every pinned source is checked at a 40-hex SHA.
+        owned = sorted(N.OWNED_FILES)
+        sources = sorted(N.SOURCE_FILES)
+        qualified_revision = "a" * 40
+        protocol_raw = (HERE / "protocol.json").read_bytes()
+        registration_raw = (HERE / "registration-integrity.json").read_bytes()
+        file_bytes = {name: (HERE / name).read_bytes() for name in owned}
+        source_bytes = {name: (V.REPO / name).read_bytes() for name in sources}
+        qualification_path = "docs/experiments/evidence/EXP-074/qualification-integrity.json"
+        qualification_bytes = json.dumps({
+            "schema": "exp074-qualification-integrity/1",
+            "qualified": True,
+            "qualified_source_revision": qualified_revision,
+            "files": {name: hashlib.sha256(raw).hexdigest() for name, raw in file_bytes.items()},
+            "source_pins": {name: hashlib.sha256(raw).hexdigest() for name, raw in source_bytes.items()},
+            "dependencies": {name: importlib.metadata.version(name) for name in ("httpx", "httpcore", "anyio")},
+            "environment": {"python_implementation": platform.python_implementation(),
+                            "python_version": platform.python_version()},
+            "protocol_sha256": hashlib.sha256(protocol_raw).hexdigest(),
+            "registration_sha256": hashlib.sha256(registration_raw).hexdigest(),
+        }, sort_keys=True, separators=(",", ":")).encode()
+        run = {"source_integrity": {
+            "qualification_sha256": hashlib.sha256(qualification_bytes).hexdigest(),
+            "qualified_source_revision": qualified_revision,
+            "lease_identity": "fixture-only-lease",
+            "environment": {"python_implementation": platform.python_implementation(),
+                            "python_version": platform.python_version()},
+            "dependencies": {name: importlib.metadata.version(name) for name in ("httpx", "httpcore", "anyio")},
+        }}
+        original_run = N.subprocess.run
+        calls = []
+        try:
+            def committed(path, revision):
+                calls.append((revision, path))
+                self.assertRegex(revision, r"^[0-9a-f]{40}$")
+                self.assertNotEqual(revision, "HEAD")
+                if path == qualification_path:
+                    return qualification_bytes
+                if path == "docs/experiments/evidence/EXP-074/protocol.json":
+                    return protocol_raw
+                if path == "docs/experiments/evidence/EXP-074/registration-integrity.json":
+                    return registration_raw
+                if path.startswith("docs/experiments/evidence/EXP-074/"):
+                    name = path.rsplit("/", 1)[1]
+                    return file_bytes[name]
+                return source_bytes[path]
+            def fake_run(argv, **kwargs):
+                if argv == ["git", "rev-parse", "HEAD"]:
+                    return types.SimpleNamespace(stdout=qualified_revision + "\n")
+                self.assertEqual(argv[:2], ["git", "show"])
+                revision, path = argv[2].split(":", 1)
+                return types.SimpleNamespace(stdout=committed(path, revision))
+            N.subprocess.run = fake_run
+            self.assertEqual(V._verify_qualification(qualification_bytes, run, protocol_raw, registration_raw),
+                             qualification_bytes)
+        finally:
+            N.subprocess.run = original_run
+        self.assertIn((qualified_revision, qualification_path), calls)
+        self.assertEqual(sum(revision == qualified_revision and path != qualification_path
+                             for revision, path in calls), len(owned) + len(sources))
+        with self.assertRaises(ValueError):
+            N.committed("docs/experiments/evidence/EXP-074/qualification-integrity.json", "HEAD")
+
+
+if __name__ == "__main__":
+    unittest.main()
