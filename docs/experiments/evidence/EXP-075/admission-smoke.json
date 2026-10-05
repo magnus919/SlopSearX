@@ -1,0 +1,14 @@
+{
+  "schema": "exp075-committed-admission-smoke/1",
+  "qualification_commit": "055c4b37b41aec52339d38554b32dc3ea25d13df",
+  "qualification_sha256": "f020ce69238a2b695d415b6e46fb7704eda605cebd94005135297e11449c2edc",
+  "committed_source_admission": "passed",
+  "isolated_temporary_home": true,
+  "exclusive_temporary_lease_count": 1,
+  "dns_sentinel_calls": 1,
+  "credential_reads": 0,
+  "repeat_rejected_before_io": true,
+  "provider_calls": 0,
+  "real_study_lease_created": false,
+  "interpretation": "Committed closure validated before temporary one-shot lease and DNS sentinel. No credential or actual network access; temporary state removed after test."
+}
