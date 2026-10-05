@@ -86,3 +86,12 @@ test verification by this stable checkpoint; it was never qualification.
 The checkpoint is explicitly live-disabled. Source-closure/lease admission,
 independent raw verifier and complete evaluator integration are not yet
 qualified. A substantive source review of the stable runner is underway.
+
+Root reproduced a usage-status inconsistency on that stable checkpoint with
+an offline HTTP 503 response containing valid usage (17 input, 6 output).
+The receipt retained that usage and the aggregate counted it with
+`unknown_usage=false`, but the outer failure handler overwrote the call's
+`usage_status` to `unknown`. Known usage must remain known on unsuccessful HTTP
+or usage-bound responses; unknown applies only to a dispatched call lacking
+valid usage. The owner was asked to fix this and add both regressions. No real
+provider request occurred.
