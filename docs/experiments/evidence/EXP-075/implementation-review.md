@@ -77,3 +77,10 @@ build overrun before dispatch carried a physical elapsed time. The committed
 fix keeps physical elapsed null, retains build/serialization diagnostics and
 reports the timeout without fabricating an HTTP attempt. Root reran all 14
 runner tests successfully after that correction.
+
+At `f31a06d39853bb113afbe68846a368d4b51ac34c`, bounded follow-up
+confirmed phase-specific analyzer receipts and the production A/B helper.
+Root ran six analyzer tests, reran 14 verifier tests after that correction, and
+ran three inherited fusion tests successfully. No unresolved material finding
+remains from these review passes. This qualifies neither ranking quality nor
+production adoption.
