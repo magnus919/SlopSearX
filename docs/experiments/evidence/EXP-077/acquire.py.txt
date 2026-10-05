@@ -1,0 +1,1054 @@
+"""Inert EXP-077 source acquisition harness using the production SearchService.
+
+No engine is instantiated until ``run_stage`` passes its source and one-shot
+admission checks. Synthetic qualification requires explicitly injected
+MockTransport; live mode constructs its own zero-retry HTTP transport only
+after committed source closure validation and durable lease acquisition.
+
+The service executes exactly the frozen native scope: arXiv, OpenAlex, GitHub,
+and Wikipedia for research tasks; GitHub alone for navigation. Cache, Jev,
+suggestions, routers, and semantic reranking are absent from AppContext. Results
+are the full SearchService presence-ranked, post-publication-grouping response;
+the runner does not slice or repair a pool.
+"""
+from __future__ import annotations
+
+import asyncio
+import dataclasses
+import hashlib
+import importlib.metadata
+import json
+import os
+import pathlib
+import platform
+import subprocess
+import time
+import uuid
+from datetime import datetime, timezone
+from typing import Any, Awaitable, Callable
+from urllib.parse import urljoin, urlsplit
+
+import httpx
+
+from engines.arxiv import ArxivAdapter
+from engines.github import GitHubAdapter
+from engines.openalex import OpenAlexAdapter
+from engines.wikipedia import WikipediaAdapter
+from slopsearx.adapter import EngineAdapter, SearchResult, sanitize_url
+from slopsearx.service import AppContext, SearchRequest, SearchService
+
+
+class AcquisitionError(RuntimeError):
+    """A frozen-input, transport-budget, or immutable-receipt guard failed."""
+
+
+# Fixed per-user state root; never derived from output paths or environment.
+# Offline tests patch this constant to a private TemporaryDirectory.
+LEASE_ROOT = pathlib.Path.home() / ".local" / "state" / "exp077" / "acquisition-leases"
+
+
+def digest(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def canonical_json(value: Any) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                       allow_nan=False) + "\n").encode("utf-8")
+
+
+def _json_value(value: Any) -> Any:
+    if dataclasses.is_dataclass(value):
+        return _json_value(dataclasses.asdict(value))
+    if isinstance(value, dict):
+        return {str(k): _json_value(v) for k, v in value.items()}
+    if isinstance(value, (set, frozenset)):
+        return sorted(_json_value(v) for v in value)
+    if isinstance(value, (list, tuple)):
+        return [_json_value(v) for v in value]
+    if isinstance(value, (datetime,)):
+        return value.isoformat()
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    raise TypeError(f"unsupported receipt value: {type(value).__name__}")
+
+
+def _fsync_directory(path: pathlib.Path) -> None:
+    fd = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def _write_once(path: pathlib.Path, data: bytes, mode: int = 0o600) -> None:
+    """Create one immutable file and fsync it and its containing directory."""
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode)
+    try:
+        with os.fdopen(fd, "wb", closefd=False) as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+    finally:
+        os.close(fd)
+    _fsync_directory(path.parent)
+
+
+def _burn_stage_lease(stage: str, registration_sha: str, stage_manifest_sha: str) -> str:
+    """Burn a fixed one-shot identity for this registration and stage."""
+    identity = digest((registration_sha + "\0" + stage).encode("ascii"))
+    root = LEASE_ROOT
+    root.mkdir(mode=0o700, parents=True, exist_ok=True)
+    _fsync_directory(root.parent)
+    lease = {"schema": "exp077-acquisition-lease/1", "identity": identity,
+             "stage": stage, "registration_sha256": registration_sha,
+             "stage_manifest_sha256": stage_manifest_sha, "status": "burned"}
+    try:
+        _write_once(root / f"{identity}.json", canonical_json(lease))
+    except FileExistsError as exc:
+        raise AcquisitionError("one-shot acquisition identity was already consumed") from exc
+    return identity
+
+
+def _validate_live_input_paths(repo_root: pathlib.Path, stage: str, protocol_path: pathlib.Path,
+                               cohorts_path: pathlib.Path, static_path: pathlib.Path,
+                               registration_path: pathlib.Path,
+                               qualification_path: pathlib.Path) -> None:
+    base = repo_root / "docs/experiments/evidence/EXP-077"
+    expected = {
+        protocol_path: base / "protocol.json",
+        cohorts_path: base / "cohorts.json",
+        static_path: base / f"stage-{stage}-manifest.json",
+        registration_path: base / "registration-integrity.json",
+        qualification_path: base / "qualification-integrity.json",
+    }
+    for supplied, required in expected.items():
+        if supplied.resolve() != required.resolve():
+            raise AcquisitionError("live acquisition input path is not the fixed registered artifact")
+
+
+class _ObservedBody(httpx.AsyncByteStream):
+    def __init__(self, stream: httpx.AsyncByteStream, record: dict[str, Any], recorder: "Recorder") -> None:
+        self._stream = stream
+        self._record = record
+        self._recorder = recorder
+        self._kept = bytearray()
+        self._observed = 0
+        self._finished = False
+
+    async def __aiter__(self):
+        try:
+            async for chunk in self._stream:
+                self._observed += len(chunk)
+                limit = self._recorder.response_limit
+                if len(self._kept) < limit:
+                    self._kept.extend(chunk[:limit - len(self._kept)])
+                if self._observed > limit:
+                    self._record["failure"] = "response_body_limit_exceeded"
+                    self._recorder.fatal = "response_body_limit_exceeded"
+                    raise AcquisitionError("response body exceeded frozen per-call cap")
+                yield chunk
+            self._record["body_complete"] = True
+        except BaseException as exc:
+            self._record.setdefault("failure", type(exc).__name__)
+            raise
+        finally:
+            await self._finish()
+
+    async def aclose(self) -> None:
+        try:
+            await self._stream.aclose()
+        finally:
+            await self._finish()
+
+    async def _finish(self) -> None:
+        if self._finished:
+            return
+        self._finished = True
+        await self._recorder.finish_call(self._record, bytes(self._kept), self._observed)
+
+
+class Recorder:
+    """Serial physical-HTTP budget, redirect/retry guard, and receipt writer."""
+
+    def __init__(self, root: pathlib.Path, max_calls: int, response_limit: int) -> None:
+        self.root = root
+        self.max_calls = max_calls
+        self.response_limit = response_limit
+        self.calls: list[dict[str, Any]] = []
+        self.guards: list[dict[str, Any]] = []
+        self.fatal: str | None = None
+        self.active_query: str | None = None
+        self._last_response: dict[tuple[str, str], dict[str, Any]] = {}
+        self._redirect_count: dict[tuple[str, str], int] = {}
+        self._seen: set[tuple[str, str, str, str]] = set()
+        self._active = 0
+        self.max_active = 0
+        self.stage_id: str | None = None
+        self.stage_manifest_sha256: str | None = None
+        self.stage_clock_digest: str | None = None
+        self.qualification_sha256: str | None = None
+
+    def bind_stage_clock(self, stage_id: str, stage_manifest_sha256: str,
+                         stage_clock_digest: str, qualification_sha256: str) -> None:
+        self.stage_id = stage_id
+        self.stage_manifest_sha256 = stage_manifest_sha256
+        self.stage_clock_digest = stage_clock_digest
+        self.qualification_sha256 = qualification_sha256
+
+    def begin_query(self, query_id: str) -> None:
+        if self.active_query is not None or self._active:
+            raise AcquisitionError("overlapping logical searches are forbidden")
+        self.active_query = query_id
+        self._last_response.clear()
+        self._seen.clear()
+        self._redirect_count.clear()
+
+    def end_query(self) -> None:
+        if self._active:
+            raise AcquisitionError("logical search ended with an active HTTP body")
+        self.active_query = None
+
+    def _deny(self, engine: str, reason: str, url: str) -> None:
+        self.guards.append({"query_id": self.active_query, "engine": engine,
+                            "reason": reason, "url": sanitize_url(url), "dispatched": False})
+        if self.fatal is None:
+            self.fatal = reason
+        raise AcquisitionError(reason)
+
+    def start_call(self, engine: str, request: httpx.Request) -> dict[str, Any]:
+        if self.fatal:
+            self._deny(engine, "terminal_safety_stop", str(request.url))
+        if self.active_query is None:
+            self._deny(engine, "request_outside_logical_search", str(request.url))
+        url = str(request.url)
+        parsed_url = urlsplit(url)
+        allowed_hosts = {"arxiv": {"export.arxiv.org"}, "openalex": {"api.openalex.org"},
+                         "github": {"api.github.com"}, "wikipedia": {"en.wikipedia.org"}}
+        if (parsed_url.scheme != "https" or parsed_url.hostname not in allowed_hosts.get(engine, set()) or
+            parsed_url.port not in (None, 443)):
+            self._deny(engine, "request_host_scope_violation", url)
+        last = self._last_response.get((self.active_query, engine))
+        if last and last.get("status_code") is not None and 300 <= last["status_code"] < 400:
+            target = urlsplit(url)
+            source = urlsplit(last["url"])
+            if (engine != "arxiv" or last.get("arxiv_redirect_count", 0) != 0 or
+                target.scheme != "https" or target.hostname != source.hostname or target.port != source.port):
+                self._deny(engine, "redirect_policy_violation", url)
+            last["arxiv_redirect_count"] = 1
+        key = (self.active_query, engine, request.method.upper(), url)
+        if key in self._seen:
+            self._deny(engine, "retry_or_duplicate_physical_request", url)
+        if len(self.calls) >= self.max_calls:
+            self._deny(engine, "physical_http_budget_exhausted", url)
+        self._seen.add(key)
+        self._active += 1
+        self.max_active = max(self.max_active, self._active)
+        started = time.monotonic()
+        try:
+            body = request.content
+        except httpx.RequestNotRead:
+            body = b""
+        number = len(self.calls) + 1
+        record = {
+            "call_index": number,
+            "stage_id": self.stage_id,
+            "stage_manifest_sha256": self.stage_manifest_sha256,
+            "stage_clock_digest": self.stage_clock_digest,
+            "qualification_sha256": self.qualification_sha256,
+            "query_id": self.active_query,
+            "engine": engine,
+            "method": request.method.upper(),
+            "url": sanitize_url(url),
+            "url_sha256": digest(url.encode("utf-8")),
+            "request_body_bytes": len(body),
+            "request_body_sha256": digest(body),
+            "request_headers": {k.lower(): request.headers[k] for k in ("accept", "user-agent", "content-type")
+                                if k in request.headers},
+            "started_monotonic": started,
+            "status_code": None,
+            "response_headers": {},
+            "response_body_bytes": None,
+            "response_body_sha256": None,
+            "body_complete": False,
+            "redirect": False,
+            "elapsed_ms": None,
+            "dispatched": True,
+            "failure": None,
+        }
+        record["arxiv_redirect_count"] = self._redirect_count.get((self.active_query, engine), 0)
+        self.calls.append(record)
+        return record
+
+    async def finish_call(self, record: dict[str, Any], body: bytes, observed_bytes: int) -> None:
+        if record.get("_persisted"):
+            return
+        record["_persisted"] = True
+        record["response_body_bytes"] = observed_bytes
+        record["retained_body_bytes"] = len(body)
+        record["body_truncated"] = observed_bytes > len(body)
+        record["retained_body_sha256"] = digest(body) if body else digest(b"")
+        record["response_body_sha256"] = record["retained_body_sha256"] if record["body_complete"] else None
+        record["elapsed_ms"] = round((time.monotonic() - record["started_monotonic"]) * 1000, 3)
+        record.pop("started_monotonic", None)
+        index = record["call_index"]
+        try:
+            body_path = self.root / f"http-{index:03d}.body"
+            meta_path = self.root / f"http-{index:03d}.json"
+            _write_once(body_path, body)
+            record["body_path"] = body_path.name
+            record["sidecar_path"] = meta_path.name
+            public = {k: v for k, v in record.items() if not k.startswith("_")}
+            meta_bytes = canonical_json(_json_value(public))
+            _write_once(meta_path, meta_bytes)
+            record["sidecar_sha256"] = digest(meta_bytes)
+        except BaseException:
+            self.fatal = "receipt_write_failed"
+            raise
+        finally:
+            self._active = max(0, self._active - 1)
+
+    def snapshot(self) -> dict[str, Any]:
+        current = [r for r in self.calls if r["query_id"] == self.active_query]
+        return {"physical_http_calls": len(current), "stage_physical_http_calls": len(self.calls), "http_calls": [
+                    {k: v for k, v in r.items() if not k.startswith("_")} for r in current],
+                "guard_events": list(self.guards), "max_parallel_http_calls": self.max_active,
+                "fatal_stop": self.fatal, "stage_id": self.stage_id,
+                "stage_manifest_sha256": self.stage_manifest_sha256,
+                "stage_clock_digest": self.stage_clock_digest,
+                "qualification_sha256": self.qualification_sha256}
+
+
+class AuditedTransport(httpx.AsyncBaseTransport):
+    """Observe one adapter's real HTTP calls while delegating to an injected transport."""
+
+    def __init__(self, engine: str, inner: httpx.AsyncBaseTransport, recorder: Recorder) -> None:
+        self.engine = engine
+        self.inner = inner
+        self.recorder = recorder
+
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        record = self.recorder.start_call(self.engine, request)
+        try:
+            response = await self.inner.handle_async_request(request)
+        except BaseException as exc:
+            record["failure"] = type(exc).__name__
+            await self.recorder.finish_call(record, b"", 0)
+            raise
+        record["status_code"] = response.status_code
+        record["response_headers"] = {
+            key: response.headers[key] for key in ("content-type", "content-length") if key in response.headers
+        }
+        if 300 <= response.status_code < 400:
+            record["redirect"] = True
+            previous = self.recorder._last_response.get((self.recorder.active_query, self.engine), {})
+            count = self.recorder._redirect_count.get((self.recorder.active_query, self.engine), 0)
+            location = response.headers.get("location")
+            redirect_to = urljoin(str(request.url), location) if location else ""
+            src = urlsplit(str(request.url))
+            dst = urlsplit(redirect_to) if redirect_to else urlsplit("")
+            permitted = (self.engine == "arxiv" and count == 0 and dst.scheme == "https" and
+                         dst.hostname == src.hostname and dst.port == src.port)
+            record["redirect_to"] = sanitize_url(redirect_to) if redirect_to else None
+            record["arxiv_redirect_count"] = count
+            if not permitted:
+                self.recorder.fatal = "redirect_policy_violation"
+            else:
+                self.recorder._redirect_count[(self.recorder.active_query, self.engine)] = count + 1
+            self.recorder._last_response[(self.recorder.active_query, self.engine)] = {
+                "status_code": response.status_code, "url": str(request.url),
+                "arxiv_redirect_count": count,
+            }
+        else:
+            self.recorder._last_response[(self.recorder.active_query, self.engine)] = {
+                "status_code": response.status_code, "url": str(request.url), "arxiv_redirect_count": 0,
+            }
+        buffered = getattr(response, "_content", None)
+        if buffered is not None:
+            record["body_complete"] = len(buffered) <= self.recorder.response_limit
+            if len(buffered) > self.recorder.response_limit:
+                record["failure"] = "response_body_limit_exceeded"
+            retained = buffered[:self.recorder.response_limit]
+            await self.recorder.finish_call(record, retained, len(buffered))
+            if len(buffered) > self.recorder.response_limit:
+                self.recorder.fatal = "response_body_limit_exceeded"
+                raise AcquisitionError("response body exceeded frozen per-call cap")
+        else:
+            response.stream = _ObservedBody(response.stream, record, self.recorder)
+        return response
+
+    async def aclose(self) -> None:
+        # Called only by runner teardown; ordinary adapter request clients borrow it.
+        await self.inner.aclose()
+
+
+async def make_adapters(transport_factory: Callable[[str], httpx.AsyncBaseTransport], recorder: Recorder,
+                        protocol: dict[str, Any], *, synthetic_only: bool = True) -> dict[str, EngineAdapter]:
+    """Build only the four explicitly keyless adapters with mandatory injection."""
+    if not callable(transport_factory):
+        raise AcquisitionError("an explicit transport factory is required; network defaults are disabled")
+    policy = protocol["acquisition"]
+    timeout_ms = int(policy["http_timeout_seconds"] * 1000)
+    max_results = policy["max_results_per_engine"]
+    classes = {"arxiv": ArxivAdapter, "openalex": OpenAlexAdapter,
+               "github": GitHubAdapter, "wikipedia": WikipediaAdapter}
+    base_urls = {
+        "arxiv": "https://export.arxiv.org/api/query",
+        "openalex": "https://api.openalex.org",
+        "github": "https://api.github.com",
+        "wikipedia": "https://en.wikipedia.org/w/api.php",
+    }
+    result: dict[str, EngineAdapter] = {}
+    try:
+        for name, adapter_class in classes.items():
+            config = {"base_url": base_urls[name], "timeout_ms": timeout_ms,
+                      "max_results": max_results, "api_key": ""}
+            adapter = adapter_class(config=config, rate_limiter=None)
+            transport = transport_factory(name)
+            allowed_transport = isinstance(transport, httpx.MockTransport) if synthetic_only else isinstance(
+                transport, httpx.AsyncHTTPTransport)
+            if not allowed_transport:
+                if isinstance(transport, httpx.AsyncBaseTransport):
+                    await transport.aclose()
+                raise AcquisitionError("transport does not match the selected gated execution mode")
+            adapter.set_http_transport(AuditedTransport(name, transport, recorder))
+            result[name] = adapter
+    except BaseException:
+        if result:
+            await close_adapters(result)
+        raise
+    return result
+
+
+async def close_adapters(adapters: dict[str, EngineAdapter]) -> None:
+    outcomes = await asyncio.gather(*(adapter._http_transport.aclose() for adapter in adapters.values()),
+                                    return_exceptions=True)
+    if any(isinstance(item, BaseException) for item in outcomes):
+        raise AcquisitionError("transport cleanup failed")
+
+
+def _input_json(path: pathlib.Path) -> tuple[dict[str, Any], str, bytes]:
+    raw = path.read_bytes()
+    try:
+        value = json.loads(raw)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise AcquisitionError(f"invalid frozen input {path.name}") from exc
+    if not isinstance(value, dict):
+        raise AcquisitionError(f"frozen input {path.name} must be an object")
+    return value, digest(raw), raw
+
+
+def _validate_stage_design(stage: str, tasks: list[dict[str, Any]], protocol_sha: str,
+                          cohorts_sha: str, static_path: pathlib.Path,
+                          registration_path: pathlib.Path,
+                          repo_root: pathlib.Path, *, synthetic_fixture: bool
+                          ) -> tuple[dict[str, Any], str, str, str, bytes, bytes]:
+    """Bind the static stage design to the registration's exact committed bytes."""
+    try:
+        raw = static_path.read_bytes()
+        registration, registration_sha, registration_raw = _input_json(registration_path)
+        static = json.loads(raw)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise AcquisitionError("registered static stage design or registration is unavailable") from exc
+    if not isinstance(static, dict) or static.get("schema") != "exp077-stage-design/1":
+        raise AcquisitionError("unsupported static stage design schema")
+    static_sha = digest(raw)
+    required_registration = {"schema", "status", "registered_source_revision", "pins", "stage_manifest_sha256"}
+    if not required_registration.issubset(registration):
+        raise AcquisitionError("registration is missing required integrity fields")
+    if registration.get("schema") != "exp077-registration/1" or registration.get("status") != "registered":
+        raise AcquisitionError("registration is not in the registered state")
+    if not synthetic_fixture:
+        for path, raw_bytes, label in (
+            (static_path, raw, "static stage manifest"),
+            (registration_path, registration_raw, "registration metadata"),
+        ):
+            try:
+                committed = subprocess.run(
+                    ["git", "show", f"HEAD:{path.relative_to(repo_root).as_posix()}"],
+                    cwd=repo_root, check=True, capture_output=True, timeout=3,
+                ).stdout
+            except (ValueError, OSError, subprocess.SubprocessError) as exc:
+                raise AcquisitionError(f"cannot verify committed {label}") from exc
+            if committed != raw_bytes:
+                raise AcquisitionError(f"{label} is not committed at current HEAD")
+    registered = registration.get("stage_manifest_sha256", {}).get(stage)
+    if registered != static_sha:
+        raise AcquisitionError("static stage design bytes do not match registration pin")
+    source_revision = registration.get("registered_source_revision")
+    if not isinstance(source_revision, str) or len(source_revision) != 40 or any(
+        ch not in "0123456789abcdef" for ch in source_revision
+    ):
+        raise AcquisitionError("registration lacks a committed source revision")
+    registration_pins = registration.get("pins")
+    if not isinstance(registration_pins, dict) or not registration_pins or any(
+        not isinstance(path, str) or not isinstance(value, str) or len(value) != 64 or
+        any(ch not in "0123456789abcdef" for ch in value)
+        for path, value in registration_pins.items()
+    ):
+        raise AcquisitionError("registration source pins are malformed")
+    expected_pins = {"protocol.json": protocol_sha, "cohorts.json": cohorts_sha,
+                     f"stage-{stage}-manifest.json": static_sha}
+    for filename, expected in expected_pins.items():
+        matches = [value for path, value in registration_pins.items()
+                   if pathlib.PurePosixPath(path).name == filename]
+        if matches != [expected]:
+            raise AcquisitionError(f"registration does not pin the expected {filename} bytes")
+    for relative, expected in registration_pins.items():
+        if pathlib.PurePosixPath(relative).name in expected_pins:
+            if not synthetic_fixture:
+                path = _exp077_repo_path(repo_root, relative, exp077_relative=True)
+                try:
+                    current = path.read_bytes()
+                    committed = subprocess.run(
+                        ["git", "show", f"{source_revision}:{path.relative_to(repo_root).as_posix()}"],
+                        cwd=repo_root, check=True, capture_output=True, timeout=3,
+                    ).stdout
+                except (OSError, subprocess.SubprocessError) as exc:
+                    raise AcquisitionError("cannot verify registered input bytes at source revision") from exc
+                if digest(current) != expected or digest(committed) != expected:
+                    raise AcquisitionError(f"registered input differs from committed bytes: {relative}")
+            continue
+        path = _exp077_repo_path(repo_root, relative, exp077_relative=True)
+        try:
+            current = path.read_bytes()
+            committed = subprocess.run(
+                ["git", "show", f"{source_revision}:{path.relative_to(repo_root).as_posix()}"],
+                cwd=repo_root, check=True, capture_output=True, timeout=3,
+            ).stdout
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise AcquisitionError("cannot verify registered design/source pin") from exc
+        if digest(current) != expected or digest(committed) != expected:
+            raise AcquisitionError(f"registered design/source pin differs from committed bytes: {relative}")
+    ids = [task["id"] for task in tasks]
+    checks = {
+        "stage": stage,
+        "protocol_sha256": protocol_sha,
+        "cohorts_sha256": cohorts_sha,
+        "ordered_task_ids": ids,
+    }
+    for key, expected in checks.items():
+        if static.get(key) != expected:
+            raise AcquisitionError(f"static stage design {key} does not match frozen inputs")
+    for pin_key in ("files", "candidate_source_pins"):
+        pins = static.get(pin_key)
+        if not isinstance(pins, dict) or any(
+            not isinstance(path, str) or not isinstance(value, str) or len(value) != 64 or
+            any(ch not in "0123456789abcdef" for ch in value)
+            for path, value in pins.items()
+        ):
+            raise AcquisitionError(f"static stage design {pin_key} is malformed")
+    files = static["files"]
+    candidate_pins = static["candidate_source_pins"]
+    if not candidate_pins or any(files.get(path) != value for path, value in candidate_pins.items()):
+        raise AcquisitionError("candidate source pins must be an exact subset of stage file pins")
+    for relative, expected_sha in files.items():
+        rel = pathlib.PurePosixPath(relative)
+        if rel.is_absolute() or ".." in rel.parts or "\\" in relative:
+            raise AcquisitionError("static source pin path is not repository-relative")
+        candidate = repo_root.joinpath(*rel.parts)
+        try:
+            cursor = repo_root
+            symlinked = False
+            for part in rel.parts:
+                cursor = cursor / part
+                symlinked = symlinked or cursor.is_symlink()
+            if (symlinked or not candidate.is_file() or
+                not candidate.resolve().is_relative_to(repo_root.resolve())):
+                raise AcquisitionError("static source pin is missing, symlinked, or non-file")
+            current = candidate.read_bytes()
+            committed = subprocess.run(
+                ["git", "show", f"{source_revision}:{relative}"], cwd=repo_root,
+                check=True, capture_output=True, timeout=3,
+            ).stdout
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise AcquisitionError("cannot verify committed static source pin") from exc
+        if digest(current) != expected_sha or digest(committed) != expected_sha:
+            raise AcquisitionError(f"static source pin differs from current and committed bytes: {relative}")
+    return static, static_sha, registration_sha, source_revision, raw, registration_raw
+
+
+def _exp077_repo_path(repo_root: pathlib.Path, relative: str, *, exp077_relative: bool) -> pathlib.Path:
+    rel = pathlib.PurePosixPath(relative)
+    if rel.is_absolute() or ".." in rel.parts or "\\" in relative:
+        raise AcquisitionError("qualification file path is not repository-relative")
+    if exp077_relative and (not rel.parts or rel.parts[0] != "docs"):
+        rel = pathlib.PurePosixPath("docs/experiments/evidence/EXP-077") / rel
+    candidate = repo_root.joinpath(*rel.parts)
+    cursor = repo_root
+    for part in rel.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise AcquisitionError("qualification file path contains a symlink")
+    if not candidate.resolve().is_relative_to(repo_root.resolve()) or not candidate.is_file():
+        raise AcquisitionError("qualification file pin is missing or escapes the repository")
+    return candidate
+
+
+def _validate_qualification(*, qualification_path: pathlib.Path, repo_root: pathlib.Path,
+                            protocol_sha: str, registration_sha: str,
+                            stage: str, stage_manifest_sha: str,
+                            synthetic_fixture: bool) -> tuple[dict[str, Any], str, str, bytes]:
+    try:
+        raw = qualification_path.read_bytes()
+        qualification = json.loads(raw)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise AcquisitionError("qualification integrity metadata is unavailable") from exc
+    required = {"schema", "qualified", "qualified_source_revision", "files", "source_pins",
+                "dependencies", "environment", "protocol_sha256", "registration_sha256",
+                "stage_manifest_sha256"}
+    if (not isinstance(qualification, dict) or not required.issubset(qualification) or
+        qualification.get("schema") != "exp077-qualification-integrity/1" or
+        qualification.get("qualified") is not True):
+        raise AcquisitionError("qualification metadata is not a qualified EXP-077 source closure")
+    source_revision = qualification.get("qualified_source_revision")
+    if not isinstance(source_revision, str) or len(source_revision) != 40 or any(
+        ch not in "0123456789abcdef" for ch in source_revision
+    ):
+        raise AcquisitionError("qualification lacks a committed source revision")
+    if qualification.get("protocol_sha256") != protocol_sha:
+        raise AcquisitionError("qualification protocol hash differs from frozen input")
+    if qualification.get("registration_sha256") != registration_sha:
+        raise AcquisitionError("qualification registration hash differs from committed input")
+    if qualification.get("stage_manifest_sha256", {}).get(stage) != stage_manifest_sha:
+        raise AcquisitionError("qualification stage manifest hash differs from registration")
+    files = qualification.get("files")
+    source_pins = qualification.get("source_pins")
+    dependencies = qualification.get("dependencies")
+    environment = qualification.get("environment")
+    if not isinstance(files, dict) or not files or not isinstance(source_pins, dict) or not source_pins:
+        raise AcquisitionError("qualification closure file maps are missing")
+    if not isinstance(dependencies, dict) or not isinstance(environment, dict):
+        raise AcquisitionError("qualification runtime pins are missing")
+    for relative, expected in files.items():
+        if not isinstance(relative, str) or not isinstance(expected, str) or len(expected) != 64:
+            raise AcquisitionError("qualification artifact pin is malformed")
+        path = _exp077_repo_path(repo_root, relative, exp077_relative=True)
+        if digest(path.read_bytes()) != expected:
+            raise AcquisitionError(f"current qualification artifact changed: {relative}")
+        if not synthetic_fixture:
+            for revision in (source_revision, "HEAD"):
+                committed = subprocess.run(
+                    ["git", "show", f"{revision}:{path.relative_to(repo_root).as_posix()}"], cwd=repo_root,
+                    check=True, capture_output=True, timeout=3,
+                ).stdout
+                if digest(committed) != expected:
+                    raise AcquisitionError(f"qualification artifact is not pinned at {revision}: {relative}")
+    for relative, expected in source_pins.items():
+        if not isinstance(relative, str) or not isinstance(expected, str) or len(expected) != 64:
+            raise AcquisitionError("qualification dependency pin is malformed")
+        path = _exp077_repo_path(repo_root, relative, exp077_relative=False)
+        current = path.read_bytes()
+        if digest(current) != expected:
+            raise AcquisitionError(f"reused source dependency changed: {relative}")
+        if not synthetic_fixture:
+            committed = subprocess.run(
+                ["git", "show", f"{source_revision}:{path.relative_to(repo_root).as_posix()}"], cwd=repo_root,
+                check=True, capture_output=True, timeout=3,
+            ).stdout
+            if digest(committed) != expected:
+                raise AcquisitionError(f"reused source dependency is not pinned at qualification revision: {relative}")
+    actual_env = {"python_implementation": platform.python_implementation(),
+                  "python_version": platform.python_version()}
+    if environment != actual_env:
+        raise AcquisitionError("qualification Python environment differs from current runtime")
+    for name, expected in dependencies.items():
+        if not isinstance(name, str) or not isinstance(expected, str):
+            raise AcquisitionError("qualification dependency version is malformed")
+        try:
+            actual = importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError as exc:
+            raise AcquisitionError(f"qualified dependency is not installed: {name}") from exc
+        if actual != expected:
+            raise AcquisitionError(f"qualified dependency version differs: {name}")
+    if not synthetic_fixture:
+        committed = subprocess.run(
+            ["git", "show", f"HEAD:{qualification_path.relative_to(repo_root).as_posix()}"], cwd=repo_root,
+            check=True, capture_output=True, timeout=3,
+        ).stdout
+        if committed != raw:
+            raise AcquisitionError("qualification metadata is not committed at current HEAD")
+    return qualification, digest(raw), source_revision, raw
+
+
+def _validate_frozen(protocol: dict[str, Any], cohorts: dict[str, Any], stage: str) -> list[dict[str, Any]]:
+    if protocol.get("schema") != "exp077-fixed-usefulness-study/1":
+        raise AcquisitionError("unsupported EXP-077 protocol schema")
+    if protocol.get("status") != "design_draft_harness_unqualified":
+        raise AcquisitionError("unexpected protocol status; acquisition runner remains unqualified")
+    policy = protocol.get("acquisition", {})
+    if (policy.get("brave_calls") != 0 or policy.get("retries") != 0 or
+        policy.get("maximum_physical_http_calls_per_stage") != 53 or
+        policy.get("response_bytes_per_http_call") != 2_000_000 or
+        policy.get("http_timeout_seconds") != 10 or policy.get("query_pacing_seconds") != 7 or
+        policy.get("engine_semaphore") != 1 or policy.get("max_results_per_engine") != 20 or
+        policy.get("category") != "reference" or policy.get("ranking_strategy") != "presence" or
+        protocol.get("stage_wall_seconds_maximum") != 28_800 or
+        protocol.get("candidate", {}).get("maximum_cards") != 80):
+        raise AcquisitionError("registered acquisition or stage limits changed")
+    if stage not in protocol.get("stages", []):
+        raise AcquisitionError("unknown study stage")
+    rows = cohorts.get("cohorts", {}).get(stage)
+    if not isinstance(rows, list) or not rows:
+        raise AcquisitionError("stage cohort is missing")
+    ids = [row.get("id") for row in rows if isinstance(row, dict)]
+    if len(ids) != len(rows) or any(not isinstance(x, str) for x in ids) or len(set(ids)) != len(ids):
+        raise AcquisitionError("cohort task IDs are invalid or duplicated")
+    required_engines = protocol["acquisition"]["research_engines"]
+    if required_engines != ["arxiv", "openalex", "github", "wikipedia"]:
+        raise AcquisitionError("frozen research engine set changed")
+    if protocol["acquisition"]["navigation_engines"] != ["github"]:
+        raise AcquisitionError("frozen navigation engine set changed")
+    if len(rows) != 13:
+        raise AcquisitionError("registered stage must contain exactly thirteen cohorts")
+    prefix = "d" if stage == "development" else "c"
+    expected_ids = [f"{prefix}{n}" for n in range(1, 14)]
+    if ids != expected_ids:
+        raise AcquisitionError("cohort IDs or order differ from the frozen stage schedule")
+    if [row["kind"] for row in rows] != (["research"] * 8 + ["navigation"] * 5):
+        raise AcquisitionError("cohort kinds differ from the frozen eight-research/five-navigation schedule")
+    for row in rows:
+        if (row.get("kind") not in {"research", "navigation"} or
+            not isinstance(row.get("query"), str) or not row["query"].strip() or
+            not isinstance(row.get("purpose"), str) or not row["purpose"].strip()):
+            raise AcquisitionError("cohort task missing kind, query, or purpose")
+        if row["kind"] == "research" and not isinstance(row.get("critical_checks"), list):
+            raise AcquisitionError("research task critical checks are missing")
+        if row["kind"] == "navigation" and not row.get("target_url"):
+            raise AcquisitionError("navigation target is missing")
+    return rows
+
+
+def _result_receipt(result: SearchResult) -> dict[str, Any]:
+    value = _json_value(result)
+    value["url"] = sanitize_url(value["url"])
+    if value.get("engines") is not None:
+        value["engines"] = sorted(value["engines"])
+    return value
+
+
+def _logical_receipt(task: dict[str, Any], response: Any, recorder: Recorder,
+                     started: float, stage_clock_digest: str,
+                     stage_manifest_sha: str, qualification_sha: str) -> dict[str, Any]:
+    return {
+        "stage_clock_digest": stage_clock_digest,
+        "stage_manifest_sha256": stage_manifest_sha,
+        "qualification_sha256": qualification_sha,
+        "task_id": task["id"], "kind": task["kind"], "query": task["query"],
+        "purpose": task["purpose"], "target_url": task.get("target_url"),
+        "selected_engines": list(response.scope.selected_engines),
+        "scope_rule": response.scope.routing_rule,
+        "results": [_result_receipt(row) for row in response.results],
+        "engine_outcomes": [{"engine": o.engine, "status": o.status,
+                             "result_count": o.result_count, "latency_ms": o.latency_ms}
+                            for o in response.engine_outcomes],
+        "partial": response.partial, "all_unresponsive": response.all_unresponsive,
+        "deadline_exceeded": response.deadline_exceeded,
+        "cached": response.cached, "suggestions": list(response.suggestions),
+        "ranking_explanation": response.ranking_explanation,
+        "post_group_pool_count": len(response.results),
+        "logical_elapsed_ms": round((time.monotonic() - started) * 1000, 3),
+        **recorder.snapshot(),
+    }
+
+
+def _canonical_target(url: str) -> str:
+    parsed = urlsplit(url)
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.hostname:
+        return ""
+    port = parsed.port
+    default = (parsed.scheme.lower() == "https" and port in (None, 443)) or (
+        parsed.scheme.lower() == "http" and port in (None, 80))
+    authority = parsed.hostname.lower() if default else f"{parsed.hostname.lower()}:{port}"
+    return f"{parsed.scheme.lower()}://{authority}{parsed.path.rstrip('/')}"
+
+
+def evaluate_acquisition_eligibility(tasks: list[dict[str, Any]], receipts: list[dict[str, Any]],
+                                     protocol: dict[str, Any]) -> dict[str, Any]:
+    """Conservative preflight; never repairs or substitutes an ineligible pool."""
+    by_id = {row.get("task_id"): row for row in receipts}
+    reasons: list[str] = []
+    minimum_two = 0
+    natural_41_80 = 0
+    oversized: list[str] = []
+    navigation_targets_missing: list[str] = []
+    engine_failures: list[str] = []
+    for task in tasks:
+        row = by_id.get(task["id"])
+        if row is None:
+            reasons.append(f"missing_acquisition:{task['id']}")
+            continue
+        count = row["post_group_pool_count"]
+        failed_engines = [outcome.get("engine") for outcome in row.get("engine_outcomes", [])
+                          if outcome.get("status") != "ok"]
+        if failed_engines or row.get("partial") or row.get("all_unresponsive"):
+            details = ",".join(str(name) for name in failed_engines) or "partial_response"
+            engine_failures.append(f"{task['id']}:{details}")
+            reasons.append(f"incomplete_engine_acquisition:{task['id']}:{details}")
+        if count < 2:
+            reasons.append(f"empty_or_singleton_pool:{task['id']}")
+        else:
+            minimum_two += 1
+        if count > protocol["candidate"]["maximum_cards"]:
+            oversized.append(task["id"])
+            reasons.append(f"pool_exceeds_candidate_capacity:{task['id']}")
+        if task["kind"] == "research" and 41 <= count <= 80:
+            natural_41_80 += 1
+        if task["kind"] == "navigation":
+            urls = [_canonical_target(result.get("url", "")) for result in row.get("results", [])]
+            if _canonical_target(task.get("target_url", "")) not in urls:
+                navigation_targets_missing.append(task["id"])
+                reasons.append(f"navigation_target_not_acquired:{task['id']}")
+    minimum = protocol["quality"]["natural_primary_pools_41_to_80_minimum"]
+    if natural_41_80 < minimum:
+        reasons.append(f"insufficient_natural_41_to_80_pools:{natural_41_80}<{minimum}")
+    eligible = not reasons and len(receipts) == len(tasks)
+    return {
+        "schema": "exp077-acquisition-eligibility/1",
+        "eligible_for_next_stage": eligible,
+        "status": "eligible_for_next_stage" if eligible else "inconclusive",
+        "logical_searches_required": len(tasks), "logical_searches_retained": len(receipts),
+        "pools_with_at_least_two_cards": minimum_two,
+        "research_pools_41_to_80": natural_41_80,
+        "required_research_pools_41_to_80": minimum,
+        "oversized_pools_retained_without_trimming": oversized,
+        "navigation_targets_missing": navigation_targets_missing,
+        "engine_failures": engine_failures,
+        "reasons": reasons,
+        "capture_or_model_calls_authorized_by_this_result": False,
+    }
+
+
+async def run_stage(*, stage: str, protocol_path: pathlib.Path, cohorts_path: pathlib.Path,
+                    output_dir: pathlib.Path,
+                    static_manifest_path: pathlib.Path | None = None,
+                    registration_path: pathlib.Path | None = None,
+                    qualification_path: pathlib.Path | None = None,
+                    synthetic_fixture: bool = False,
+                    transport_factory: Callable[[str], httpx.AsyncBaseTransport] | None = None,
+                    sleep_fn: Callable[[float], Awaitable[None]] = asyncio.sleep,
+                    clock: Callable[[], float] = time.monotonic) -> dict[str, Any]:
+    """Acquire one fixed stage after committed-source admission.
+
+    Synthetic execution requires an explicit MockTransport factory. Live
+    execution accepts no caller transport factory and constructs its own
+    zero-retry HTTP transports only after closure validation and the durable
+    one-shot lease. Importing this inert .py.txt file never acquires anything.
+    """
+    if synthetic_fixture and transport_factory is None:
+        raise AcquisitionError("synthetic execution requires an explicit MockTransport factory")
+    if not synthetic_fixture and transport_factory is not None:
+        raise AcquisitionError("live transport is owned by the admitted runner")
+    if output_dir.exists():
+        raise AcquisitionError("output directory already exists; receipts are immutable")
+    protocol, protocol_sha, protocol_raw = _input_json(protocol_path)
+    cohorts, cohorts_sha, cohorts_raw = _input_json(cohorts_path)
+    tasks = _validate_frozen(protocol, cohorts, stage)
+    repo_root = pathlib.Path(__file__).resolve().parents[4]
+    static_manifest_path = static_manifest_path or protocol_path.parent / f"stage-{stage}-manifest.json"
+    registration_path = registration_path or protocol_path.parent / "registration-integrity.json"
+    qualification_path = qualification_path or protocol_path.parent / "qualification-integrity.json"
+    if not synthetic_fixture:
+        _validate_live_input_paths(repo_root, stage, protocol_path, cohorts_path,
+                                   static_manifest_path, registration_path, qualification_path)
+    (_static_manifest, stage_manifest_sha, registration_sha, registered_source_revision,
+     static_raw, registration_raw) = _validate_stage_design(
+        stage, tasks, protocol_sha, cohorts_sha, static_manifest_path, registration_path, repo_root,
+        synthetic_fixture=synthetic_fixture)
+    qualification, qualification_sha, qualified_source_revision, qualification_raw = _validate_qualification(
+        qualification_path=qualification_path, repo_root=repo_root, protocol_sha=protocol_sha,
+        registration_sha=registration_sha, stage=stage, stage_manifest_sha=stage_manifest_sha,
+        synthetic_fixture=synthetic_fixture)
+    source_revision = qualified_source_revision
+    lease_identity = _burn_stage_lease(stage, registration_sha, stage_manifest_sha)
+    output_dir.mkdir(mode=0o700, parents=True, exist_ok=False)
+    _fsync_directory(output_dir.parent)
+    _write_once(output_dir / "protocol.json", protocol_raw)
+    _write_once(output_dir / "cohorts.json", cohorts_raw)
+    _write_once(output_dir / "registration-integrity.json", registration_raw)
+    _write_once(output_dir / f"stage-{stage}-manifest.json", static_raw)
+    _write_once(output_dir / "qualification-integrity.json", qualification_raw)
+    http_dir = output_dir / "http"
+    http_dir.mkdir(mode=0o700)
+    task_ids = [task["id"] for task in tasks]
+    stage_id = str(uuid.uuid4())
+    _write_once(output_dir / "stage-start.json", canonical_json({
+        "schema": "exp077-acquisition-start/1", "stage": stage, "stage_id": stage_id,
+        "protocol_sha256": protocol_sha, "cohorts_sha256": cohorts_sha,
+        "stage_manifest_sha256": stage_manifest_sha, "registration_sha256": registration_sha,
+        "qualification_sha256": qualification_sha,
+        "lease_identity": lease_identity,
+        "task_ids_in_order": task_ids,
+        "research_engines": list(protocol["acquisition"]["research_engines"]),
+        "navigation_engines": list(protocol["acquisition"]["navigation_engines"]),
+        "physical_http_budget": protocol["acquisition"]["maximum_physical_http_calls_per_stage"],
+        "response_body_limit_per_call": protocol["acquisition"]["response_bytes_per_http_call"],
+        "query_pacing_seconds": protocol["acquisition"]["query_pacing_seconds"],
+        "retry_limit": 0, "synthetic": synthetic_fixture, "status": "started",
+    }))
+    recorder = Recorder(http_dir,
+                        protocol["acquisition"]["maximum_physical_http_calls_per_stage"],
+                        protocol["acquisition"]["response_bytes_per_http_call"])
+    try:
+        if synthetic_fixture:
+            assert transport_factory is not None
+            selected_factory = transport_factory
+        else:
+            # No environment proxies or retry adapter are configured. Engine
+            # clients receive this owned transport directly, so httpx cannot
+            # silently select trust_env proxy settings.
+            selected_factory = lambda _engine: httpx.AsyncHTTPTransport(retries=0)
+        adapters = await make_adapters(selected_factory, recorder, protocol,
+                                        synthetic_only=synthetic_fixture)
+    except BaseException as exc:
+        _write_once(output_dir / "stage-final.json", canonical_json({
+            "schema": "exp077-acquisition-run/1", "stage": stage, "status": "incomplete",
+            "synthetic": synthetic_fixture, "quality_credit": False, "adoption_eligible": False,
+            "stage_id": stage_id,
+            "protocol_sha256": protocol_sha, "cohorts_sha256": cohorts_sha,
+            "stage_manifest_sha256": stage_manifest_sha,
+            "qualification_sha256": qualification_sha,
+            "lease_identity": lease_identity,
+            "source_revision": source_revision,
+            "cohort_task_count": len(tasks), "completed_logical_searches": 0,
+            "physical_http_calls": 0, "fatal_stop": type(exc).__name__,
+            "ended_utc": datetime.now(timezone.utc).isoformat(),
+        }))
+        raise
+    context = AppContext(
+        active_engines=adapters,
+        cache=None,
+        rate_limiter=None,
+        router=None,
+        suggestion_service=None,
+        stats_tracker=None,
+        audit_logger=None,
+        engine_semaphore=asyncio.Semaphore(protocol["acquisition"]["engine_semaphore"]),
+        tier1_engines=set(adapters),
+        sensitive_engines=set(),
+        catalog=None,
+        routing_budget=None,
+        ranking_strategy="presence",
+        jev_router=None,
+        rerank_provider=None,
+    )
+    service = SearchService(context)
+    stage_clock_digest: str | None = None
+    stage_clock: dict[str, Any] | None = None
+    receipts: list[dict[str, Any]] = []
+    terminal_error: str | None = None
+    # The shared clock starts immediately before the first SearchService call.
+    started = clock()
+    started_utc = datetime.now(timezone.utc)
+    deadline_utc = started_utc.timestamp() + protocol["stage_wall_seconds_maximum"]
+    clock_body = {
+        "schema": "exp077-stage-clock/1", "stage_id": stage_id, "stage": stage,
+        "stage_started_utc": started_utc.isoformat().replace("+00:00", "Z"),
+        "stage_deadline_utc": datetime.fromtimestamp(deadline_utc, timezone.utc).isoformat().replace("+00:00", "Z"),
+        "stage_manifest_sha256": stage_manifest_sha,
+        "protocol_sha256": protocol_sha, "cohorts_sha256": cohorts_sha,
+        "source_revision": source_revision, "ordered_task_ids": task_ids,
+    }
+    stage_clock = clock_body
+    stage_clock_bytes = canonical_json(stage_clock)
+    stage_clock_digest = digest(stage_clock_bytes)
+    _write_once(output_dir / "stage-clock.json", stage_clock_bytes)
+    recorder.bind_stage_clock(stage_id, stage_manifest_sha, stage_clock_digest, qualification_sha)
+    try:
+        for index, task in enumerate(tasks):
+            elapsed = clock() - started
+            if elapsed > protocol["stage_wall_seconds_maximum"]:
+                terminal_error = "stage_wall_budget_exhausted"
+                break
+            if index:
+                await sleep_fn(protocol["acquisition"]["query_pacing_seconds"])
+            if clock() - started > protocol["stage_wall_seconds_maximum"]:
+                terminal_error = "stage_wall_budget_exhausted"
+                break
+            query_id = task["id"]
+            recorder.begin_query(query_id)
+            engine_names = (protocol["acquisition"]["research_engines"] if task["kind"] == "research"
+                            else protocol["acquisition"]["navigation_engines"])
+            request = SearchRequest(
+                query=task["query"], categories=[protocol["acquisition"]["category"]],
+                engines=list(engine_names), language=protocol["acquisition"]["language"],
+                page=protocol["acquisition"]["page"], max_results=None,
+                include={"results", "engine_status", "diagnostics"}, freshness="no_preference",
+                client_identifier="exp077-offline-acquisition", generate_suggestions=False,
+                execution_isolation_key=f"exp077:{stage}:{task['id']}",
+            )
+            call_started = clock()
+            try:
+                response = await service.search(request)
+                receipt = _logical_receipt(task, response, recorder, call_started,
+                                           stage_clock_digest, stage_manifest_sha, qualification_sha)
+                receipts.append(receipt)
+                _write_once(output_dir / f"query-{index + 1:02d}-{task['id']}.json", canonical_json(receipt))
+            except BaseException as exc:
+                terminal_error = type(exc).__name__
+                raise
+            finally:
+                recorder.end_query()
+            if recorder.fatal:
+                terminal_error = recorder.fatal
+                break
+            if clock() - started > protocol["stage_wall_seconds_maximum"]:
+                terminal_error = "stage_wall_budget_exhausted"
+                break
+        await close_adapters(adapters)
+        eligibility = evaluate_acquisition_eligibility(tasks, receipts, protocol)
+        eligibility["stage_manifest_sha256"] = stage_manifest_sha
+        eligibility["stage_clock_digest"] = stage_clock_digest
+        _write_once(output_dir / "preflight-eligibility.json", canonical_json(eligibility))
+        final = {
+            "schema": "exp077-acquisition-run/1", "stage": stage, "stage_id": stage_id,
+            "stage_clock_digest": stage_clock_digest,
+            "stage_clock": stage_clock,
+            "stage_manifest_sha256": stage_manifest_sha,
+            "registration_sha256": registration_sha,
+            "qualification_sha256": qualification_sha,
+            "lease_identity": lease_identity,
+            "source_revision": source_revision,
+            "status": "complete" if len(receipts) == len(tasks) and terminal_error is None else "incomplete",
+            "synthetic": synthetic_fixture, "quality_credit": False, "adoption_eligible": False,
+            "protocol_sha256": protocol_sha, "cohorts_sha256": cohorts_sha,
+            "cohort_task_count": len(tasks), "completed_logical_searches": len(receipts),
+            "physical_http_calls": len(recorder.calls), "max_parallel_http_calls": recorder.max_active,
+            "http_budget": protocol["acquisition"]["maximum_physical_http_calls_per_stage"],
+            "response_body_limit_per_call": recorder.response_limit,
+            "fatal_stop": terminal_error or recorder.fatal,
+            "eligibility": eligibility,
+            "guard_events": list(recorder.guards), "ended_utc": datetime.now(timezone.utc).isoformat(),
+        }
+        _write_once(output_dir / "stage-final.json", canonical_json(final))
+        return final
+    except BaseException:
+        try:
+            await close_adapters(adapters)
+        except BaseException:
+            recorder.fatal = recorder.fatal or "transport_cleanup_failed"
+        if not (output_dir / "stage-final.json").exists():
+            if not (output_dir / "preflight-eligibility.json").exists():
+                eligibility = evaluate_acquisition_eligibility(tasks, receipts, protocol)
+                eligibility["stage_manifest_sha256"] = stage_manifest_sha
+                eligibility["stage_clock_digest"] = stage_clock_digest
+                _write_once(output_dir / "preflight-eligibility.json", canonical_json(eligibility))
+            final = {
+                "schema": "exp077-acquisition-run/1", "stage": stage, "status": "incomplete",
+                "synthetic": synthetic_fixture, "quality_credit": False, "adoption_eligible": False,
+                "stage_id": stage_id, "stage_clock_digest": stage_clock_digest,
+                "stage_clock": stage_clock,
+                "stage_manifest_sha256": stage_manifest_sha,
+                "protocol_sha256": protocol_sha, "cohorts_sha256": cohorts_sha,
+                "registration_sha256": registration_sha,
+                "qualification_sha256": qualification_sha,
+                "lease_identity": lease_identity,
+                "cohort_task_count": len(tasks), "completed_logical_searches": len(receipts),
+                "physical_http_calls": len(recorder.calls), "max_parallel_http_calls": recorder.max_active,
+                "http_budget": protocol["acquisition"]["maximum_physical_http_calls_per_stage"],
+                "response_body_limit_per_call": recorder.response_limit,
+                "fatal_stop": terminal_error or recorder.fatal or "runner_exception",
+                "eligibility": evaluate_acquisition_eligibility(tasks, receipts, protocol),
+                "guard_events": list(recorder.guards), "ended_utc": datetime.now(timezone.utc).isoformat(),
+            }
+            _write_once(output_dir / "stage-final.json", canonical_json(final))
+        raise

@@ -1,0 +1,441 @@
+"""Offline qualification tests for EXP-077 acquisition; no external HTTP transport."""
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import importlib.metadata
+import importlib.machinery
+import importlib.util
+import json
+import os
+import platform
+import pathlib
+import subprocess
+import sys
+import tempfile
+import unittest
+from unittest import mock
+from urllib.parse import parse_qs, urlsplit
+
+import httpx
+
+ROOT = pathlib.Path(__file__).resolve().parents[4]
+sys.path.insert(0, str(ROOT))
+SOURCE = pathlib.Path(__file__).with_name("acquire.py.txt")
+loader = importlib.machinery.SourceFileLoader("exp077_acquire", str(SOURCE))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+A = importlib.util.module_from_spec(spec)
+loader.exec_module(A)
+BASE = ROOT / "docs/experiments/evidence/EXP-077"
+PROTOCOL = pathlib.Path(os.environ.get("EXP077_PROTOCOL_PATH", BASE / "protocol.json"))
+COHORTS = pathlib.Path(os.environ.get("EXP077_COHORTS_PATH", BASE / "cohorts.json"))
+
+
+def fixture_response(request: httpx.Request, *, task_rows: list[dict], failures: set[str] = set(),
+                     oversized: bool = False) -> httpx.Response:
+    host = request.url.host
+    if host == "export.arxiv.org":
+        if oversized:
+            return httpx.Response(200, content=b"x" * 2_000_001, request=request)
+        qid = parse_qs(request.url.query.decode()).get("search_query", [""])[0]
+        entries = []
+        for i in range(20):
+            doi = f"10.48550/arXiv.077{i // 10}.{i:04d}"
+            entries.append(
+                f"<entry><id>https://arxiv.org/abs/077{i // 10}.{i:04d}</id>"
+                f"<title>Paper {i} for {qid}</title><summary>Abstract {i}</summary>"
+                f"<published>2026-01-01T00:00:00Z</published><arxiv:doi>{doi}</arxiv:doi></entry>"
+            )
+        body = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom" '
+                'xmlns:arxiv="http://arxiv.org/schemas/atom">' + "".join(entries) + "</feed>")
+        return httpx.Response(200, text=body, headers={"content-type": "application/atom+xml"}, request=request)
+    if host == "api.openalex.org":
+        rows = []
+        for i in range(20):
+            rows.append({"doi": f"https://doi.org/10.48550/arxiv.077{i // 10}.{i:04d}",
+                         "title": f"Paper {i}", "relevance_score": 0.5, "publication_date": "2026-01-01"})
+        return httpx.Response(200, json={"results": rows}, request=request)
+    if host == "api.github.com":
+        query = parse_qs(request.url.query.decode()).get("q", [""])[0]
+        task = next((row for row in task_rows if row["query"] == query), None)
+        if task and task["id"] in failures:
+            return httpx.Response(503, json={"message": "fixture upstream failure"}, request=request)
+        items = []
+        for i in range(20):
+            if task and task["kind"] == "navigation" and i == 4:
+                target = task["target_url"].rstrip("/")
+                path = urlsplit(target).path.strip("/")
+                full_name = path
+                url = target
+            else:
+                full_name = f"fixture/{task['id'] if task else 'unknown'}-{i}"
+                url = f"https://github.com/{full_name}"
+            items.append({"full_name": full_name, "html_url": url, "description": f"fixture {i}",
+                          "language": "Python", "stargazers_count": 20-i, "topics": []})
+        return httpx.Response(200, json={"total_count": len(items), "items": items}, request=request)
+    if host == "en.wikipedia.org":
+        params = parse_qs(request.url.query.decode())
+        if params.get("action") == ["opensearch"]:
+            titles = [f"Fixture {i}" for i in range(20)]
+            return httpx.Response(200, json=["q", titles, [""] * 20, ["" ] * 20], request=request)
+        pages = {str(i+1): {"pageid": i+1, "title": f"Fixture {i}",
+                            "extract": f"Fixture encyclopedia entry {i}"} for i in range(20)}
+        return httpx.Response(200, json={"query": {"pages": pages}}, request=request)
+    raise AssertionError(f"unexpected fixture host: {host}")
+
+
+class AcquisitionTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self.temp.name)
+        self.previous_lease_root = A.LEASE_ROOT
+        A.LEASE_ROOT = self.root / "leases"
+        self.protocol = json.loads(PROTOCOL.read_text())
+        self.cohorts = json.loads(COHORTS.read_text())
+        self.rows = self.cohorts["cohorts"]["development"]
+        self.calls: list[tuple[str, str]] = []
+        self.delays: list[float] = []
+        protocol_sha = A.digest(PROTOCOL.read_bytes())
+        cohorts_sha = A.digest(COHORTS.read_bytes())
+        source_revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, check=True,
+                                         capture_output=True, text=True).stdout.strip()
+        source_file = ROOT / "slopsearx/service.py"
+        source_pin = A.digest(source_file.read_bytes())
+        static = {"schema": "exp077-stage-design/1", "stage": "development",
+                  "protocol_sha256": protocol_sha, "cohorts_sha256": cohorts_sha,
+                  "ordered_task_ids": [row["id"] for row in self.rows],
+                  "files": {"slopsearx/service.py": source_pin},
+                  "candidate_source_pins": {"slopsearx/service.py": source_pin}}
+        self.static_path = self.root / "stage-development-manifest.json"
+        self.static_path.write_bytes(A.canonical_json(static))
+        static_sha = A.digest(self.static_path.read_bytes())
+        registration = {"schema": "exp077-registration/1", "status": "registered",
+                        "stage_manifest_sha256": {"development": static_sha},
+                        "registered_source_revision": source_revision,
+                        "pins": {"stage-development-manifest.json": static_sha,
+                                 "protocol.json": protocol_sha, "cohorts.json": cohorts_sha}}
+        self.registration_path = self.root / "registration.json"
+        registration_bytes = A.canonical_json(registration)
+        self.registration_path.write_bytes(registration_bytes)
+        qualification = {
+            "schema": "exp077-qualification-integrity/1", "qualified": True,
+            "qualified_source_revision": source_revision,
+            "files": {
+                "acquire.py.txt": A.digest(SOURCE.read_bytes()),
+                "acquire-tests.py.txt": A.digest(pathlib.Path(__file__).read_bytes()),
+            },
+            "source_pins": {"slopsearx/service.py": source_pin},
+            "dependencies": {name: importlib.metadata.version(name) for name in ("httpx", "httpcore", "anyio")},
+            "environment": {"python_implementation": platform.python_implementation(),
+                            "python_version": platform.python_version()},
+            "protocol_sha256": protocol_sha,
+            "registration_sha256": A.digest(registration_bytes),
+            "stage_manifest_sha256": {"development": static_sha},
+        }
+        self.qualification_path = self.root / "qualification-integrity.json"
+        self.qualification_path.write_bytes(A.canonical_json(qualification))
+
+    def tearDown(self):
+        A.LEASE_ROOT = self.previous_lease_root
+        self.temp.cleanup()
+
+    def factory(self, *, failures: set[str] | None = None, oversized: bool = False):
+        failures = failures or set()
+        def make(engine: str):
+            def handler(request: httpx.Request):
+                if "authorization" in request.headers:
+                    raise AssertionError("keyless acquisition fixture received an Authorization header")
+                self.calls.append((engine, str(request.url)))
+                return fixture_response(request, task_rows=self.rows, failures=failures, oversized=oversized)
+            return httpx.MockTransport(handler)
+        return make
+
+    async def no_sleep(self, seconds: float):
+        self.delays.append(seconds)
+
+    def run_stage(self, **kwargs):
+        output_dir = kwargs.pop("output_dir", self.root / "run")
+        return asyncio.run(A.run_stage(stage="development", protocol_path=PROTOCOL,
+                                       cohorts_path=COHORTS, output_dir=output_dir,
+                                       static_manifest_path=self.static_path,
+                                       registration_path=self.registration_path,
+                                       qualification_path=self.qualification_path,
+                                       synthetic_fixture=True,
+                                       sleep_fn=self.no_sleep, **kwargs))
+
+    def test_complete_stage_uses_searchservice_full_grouped_pools_and_shared_clock(self):
+        final = self.run_stage(transport_factory=self.factory())
+        self.assertEqual(final["status"], "complete")
+        self.assertTrue(final["synthetic"])
+        self.assertFalse(final["quality_credit"])
+        self.assertFalse(final["adoption_eligible"])
+        self.assertEqual(final["completed_logical_searches"], 13)
+        self.assertEqual(final["physical_http_calls"], 45)  # Wikipedia is two HTTP calls per logical research search.
+        self.assertEqual(final["max_parallel_http_calls"], 1)
+        self.assertEqual(self.delays, [7.0] * 12)
+        self.assertTrue(final["eligibility"]["eligible_for_next_stage"])
+        self.assertEqual(final["lease_identity"],
+                         A.digest((A.digest(self.registration_path.read_bytes()) + "\0development").encode("ascii")))
+        stage_clock = json.loads((self.root / "run/stage-clock.json").read_text())
+        start = A.datetime.fromisoformat(stage_clock["stage_started_utc"].replace("Z", "+00:00"))
+        deadline = A.datetime.fromisoformat(stage_clock["stage_deadline_utc"].replace("Z", "+00:00"))
+        self.assertEqual((deadline - start).total_seconds(), 28_800)
+        stage_clock_digest = hashlib.sha256((self.root / "run/stage-clock.json").read_bytes()).hexdigest()
+        self.assertNotIn("digest", stage_clock)
+        self.assertEqual(stage_clock["stage_manifest_sha256"], A.digest(self.static_path.read_bytes()))
+        self.assertEqual(final["stage_clock_digest"], stage_clock_digest)
+        self.assertEqual(final["stage_manifest_sha256"], stage_clock["stage_manifest_sha256"])
+        self.assertEqual(final["qualification_sha256"], A.digest(self.qualification_path.read_bytes()))
+        self.assertEqual((self.root / "run/qualification-integrity.json").read_bytes(),
+                         self.qualification_path.read_bytes())
+        query_receipts = sorted((self.root / "run").glob("query-*.json"))
+        self.assertEqual(len(query_receipts), 13)
+        pools = [json.loads(path.read_text()) for path in query_receipts]
+        self.assertTrue(all(item["stage_clock_digest"] == stage_clock_digest for item in pools))
+        self.assertTrue(all(item["post_group_pool_count"] == 60 for item in pools[:8]))
+        self.assertTrue(all(item["suggestions"] == [] for item in pools))
+        self.assertTrue(all(item["ranking_explanation"] for item in pools))
+        # The target is intentionally only the fifth native GitHub result; acquisition
+        # eligibility checks presence anywhere in the complete pool, not native top-1.
+        nav = pools[-1]
+        target = self.rows[-1]["target_url"]
+        self.assertNotEqual(nav["results"][0]["url"], target)
+        self.assertIn(target, [item["url"] for item in nav["results"]])
+        self.assertEqual(len(list((self.root / "run/http").glob("http-*.json"))), 45)
+        for call in (row for pool in pools for row in pool["http_calls"]):
+            sidecar = self.root / "run/http" / call["sidecar_path"]
+            self.assertEqual(call["sidecar_sha256"], A.digest(sidecar.read_bytes()))
+        self.assertTrue(all("authorization" not in json.dumps(json.loads(p.read_text())).lower()
+                            for p in (self.root / "run/http").glob("http-*.json")))
+
+    def test_engine_error_is_retained_and_later_fixed_pools_are_still_acquired(self):
+        final = self.run_stage(transport_factory=self.factory(failures={"d2"}))
+        self.assertEqual(final["status"], "complete")
+        self.assertEqual(final["completed_logical_searches"], 13)
+        self.assertFalse(final["eligibility"]["eligible_for_next_stage"])
+        self.assertIn("incomplete_engine_acquisition:d2:github", final["eligibility"]["reasons"])
+        d2 = json.loads((self.root / "run/query-02-d2.json").read_text())
+        outcome = next(row for row in d2["engine_outcomes"] if row["engine"] == "github")
+        self.assertEqual(outcome["status"], "error")
+        self.assertTrue((self.root / "run/query-13-d13.json").exists())
+
+    def test_registration_stage_identity_is_one_shot_across_output_directories(self):
+        self.run_stage(transport_factory=self.factory())
+        first_call_count = len(self.calls)
+        with self.assertRaises(A.AcquisitionError):
+            self.run_stage(output_dir=self.root / "run-again", transport_factory=self.factory())
+        self.assertEqual(len(self.calls), first_call_count)
+        self.assertFalse((self.root / "run-again").exists())
+
+    def test_injected_mock_transport_is_mandatory_and_existing_output_is_rejected(self):
+        with self.assertRaises(A.AcquisitionError):
+            self.run_stage()
+        self.assertFalse((self.root / "run").exists())
+        (self.root / "run").mkdir()
+        with self.assertRaises(A.AcquisitionError):
+            self.run_stage(transport_factory=self.factory())
+        self.assertEqual(self.calls, [])
+
+    def test_static_stage_manifest_mutation_fails_before_output_or_transport(self):
+        wrong = json.loads(self.static_path.read_text())
+        wrong["protocol_sha256"] = "0" * 64
+        self.static_path.write_bytes(A.canonical_json(wrong))
+        with self.assertRaises(A.AcquisitionError):
+            self.run_stage(transport_factory=self.factory())
+        self.assertEqual(self.calls, [])
+        self.assertFalse((self.root / "run").exists())
+
+    def test_static_committed_source_hash_mismatch_fails_before_dispatch(self):
+        changed = json.loads(self.static_path.read_text())
+        changed["files"]["slopsearx/service.py"] = "0" * 64
+        changed["candidate_source_pins"]["slopsearx/service.py"] = "0" * 64
+        self.static_path.write_bytes(A.canonical_json(changed))
+        registration = json.loads(self.registration_path.read_text())
+        registration["stage_manifest_sha256"]["development"] = A.digest(self.static_path.read_bytes())
+        self.registration_path.write_bytes(A.canonical_json(registration))
+        with self.assertRaises(A.AcquisitionError):
+            self.run_stage(transport_factory=self.factory())
+        self.assertEqual(self.calls, [])
+        self.assertFalse((self.root / "run").exists())
+
+    def test_qualification_hash_mismatch_fails_before_output_or_transport(self):
+        changed = json.loads(self.qualification_path.read_text())
+        changed["protocol_sha256"] = "f" * 64
+        self.qualification_path.write_bytes(A.canonical_json(changed))
+        with self.assertRaises(A.AcquisitionError):
+            self.run_stage(transport_factory=self.factory())
+        self.assertEqual(self.calls, [])
+        self.assertFalse((self.root / "run").exists())
+
+    def test_live_mode_rejects_caller_transport_before_lease_or_dispatch(self):
+        with self.assertRaises(A.AcquisitionError):
+            asyncio.run(A.run_stage(
+                stage="development", protocol_path=PROTOCOL, cohorts_path=COHORTS,
+                output_dir=self.root / "live-run", static_manifest_path=self.static_path,
+                registration_path=self.registration_path, qualification_path=self.qualification_path,
+                synthetic_fixture=False, transport_factory=self.factory()))
+        self.assertFalse(list(A.LEASE_ROOT.glob("*.json")))
+        self.assertEqual(self.calls, [])
+        self.assertFalse((self.root / "live-run").exists())
+
+    def test_qualified_live_admission_burns_lease_before_owned_transport_setup(self):
+        # Gate outputs are fixture metadata here; validators are replaced only
+        # to isolate ordering. No owned transport is constructed and no request
+        # or DNS lookup can occur in this test.
+        reg_raw = self.registration_path.read_bytes()
+        reg_sha = A.digest(reg_raw)
+        static_raw = self.static_path.read_bytes()
+        static_sha = A.digest(static_raw)
+        qualification_raw = self.qualification_path.read_bytes()
+        qualification = json.loads(qualification_raw)
+        qualification_sha = A.digest(qualification_raw)
+        registered = json.loads(reg_raw)["registered_source_revision"]
+        qualified = qualification["qualified_source_revision"]
+        stage_result = (json.loads(static_raw), static_sha, reg_sha, registered, static_raw, reg_raw)
+        qualification_result = (qualification, qualification_sha, qualified, qualification_raw)
+        observed = {}
+
+        async def stop_before_transport(factory, recorder, protocol, *, synthetic_only=True):
+            observed["factory_was_live_owned"] = synthetic_only is False
+            observed["leases"] = list(A.LEASE_ROOT.glob("*.json"))
+            observed["caller_factory"] = factory
+            raise A.AcquisitionError("test stopped before transport construction")
+
+        with mock.patch.object(A, "_validate_live_input_paths"), \
+             mock.patch.object(A, "_validate_stage_design", return_value=stage_result), \
+             mock.patch.object(A, "_validate_qualification", return_value=qualification_result), \
+             mock.patch.object(A, "make_adapters", side_effect=stop_before_transport):
+            with self.assertRaises(A.AcquisitionError):
+                asyncio.run(A.run_stage(
+                    stage="development", protocol_path=PROTOCOL, cohorts_path=COHORTS,
+                    output_dir=self.root / "live-admitted", static_manifest_path=self.static_path,
+                    registration_path=self.registration_path, qualification_path=self.qualification_path,
+                    synthetic_fixture=False))
+        self.assertTrue(observed["factory_was_live_owned"])
+        self.assertEqual(len(observed["leases"]), 1)
+        self.assertTrue(callable(observed["caller_factory"]))
+        self.assertEqual(self.calls, [])
+
+    def test_shared_deadline_is_rechecked_after_pacing_before_next_dispatch(self):
+        ticks = iter([0.0, 0.0, 0.0, 0.0, 0.0, 28_801.0])
+        def fake_clock():
+            return next(ticks, 28_801.0)
+        final = self.run_stage(transport_factory=self.factory(), clock=fake_clock)
+        self.assertEqual(final["status"], "incomplete")
+        self.assertEqual(final["fatal_stop"], "stage_wall_budget_exhausted")
+        self.assertEqual(final["completed_logical_searches"], 1)
+        self.assertEqual({engine for engine, _ in self.calls}, {"arxiv", "openalex", "github", "wikipedia"})
+        self.assertTrue((self.root / "run/query-01-d1.json").exists())
+        self.assertFalse((self.root / "run/query-02-d2.json").exists())
+
+    def test_non_mock_transport_is_rejected_before_http_dispatch(self):
+        def invalid(_engine):
+            return httpx.AsyncHTTPTransport(retries=0)
+        with self.assertRaises(A.AcquisitionError):
+            self.run_stage(transport_factory=invalid)
+        self.assertEqual(self.calls, [])
+
+    def test_physical_call_budget_guard_does_not_dispatch_over_budget(self):
+        rec = A.Recorder(self.root, 1, 1024)
+        rec.begin_query("d1")
+        rec.start_call("github", httpx.Request("GET", "https://api.github.com/one"))
+        with self.assertRaises(A.AcquisitionError):
+            rec.start_call("github", httpx.Request("GET", "https://api.github.com/two"))
+        self.assertEqual(len(rec.calls), 1)
+        self.assertFalse(rec.guards[-1]["dispatched"])
+        self.assertEqual(rec.fatal, "physical_http_budget_exhausted")
+
+    def test_duplicate_physical_request_is_rejected_as_retry(self):
+        async def scenario():
+            rec = A.Recorder(self.root, 3, 1024)
+            rec.begin_query("d1")
+            request = httpx.Request("GET", "https://api.github.com/same")
+            rec.start_call("github", request)
+            with self.assertRaises(A.AcquisitionError):
+                rec.start_call("github", request)
+            self.assertEqual(len(rec.calls), 1)
+            self.assertEqual(rec.guards[-1]["reason"], "retry_or_duplicate_physical_request")
+            await rec.finish_call(rec.calls[0], b"ok", 2)
+            rec.end_query()
+        asyncio.run(scenario())
+
+    def test_response_overflow_records_partial_bytes_and_stops_future_searches(self):
+        # A single oversized response is enough to trigger the hard per-call cap;
+        # the runner retains all prior tasks and never dispatches later tasks.
+        async def scenario():
+            task = self.rows[0]
+            rec = A.Recorder(self.root, 1, 32)
+            rec.begin_query(task["id"])
+            adapters = await A.make_adapters(
+                lambda engine: httpx.MockTransport(lambda req: httpx.Response(200, content=b"x"*33, request=req)),
+                rec, self.protocol)
+            adapter = adapters["arxiv"]
+            await adapter.search(task["query"])
+            await A.close_adapters(adapters)
+            rec.end_query()
+            meta = json.loads((self.root / "http-001.json").read_text())
+            body = (self.root / "http-001.body").read_bytes()
+            self.assertEqual(meta["failure"], "response_body_limit_exceeded")
+            self.assertEqual(meta["response_body_bytes"], 33)
+            self.assertEqual(len(body), 32)
+            self.assertTrue(meta["body_truncated"])
+            self.assertIsNone(meta["response_body_sha256"])
+            self.assertEqual(rec.fatal, "response_body_limit_exceeded")
+        asyncio.run(scenario())
+
+    def test_stage_response_overflow_is_terminal_and_preserves_uninvoked_suffix(self):
+        final = self.run_stage(transport_factory=self.factory(oversized=True))
+        self.assertEqual(final["status"], "incomplete")
+        self.assertEqual(final["fatal_stop"], "response_body_limit_exceeded")
+        self.assertEqual(final["physical_http_calls"], 1)
+        self.assertEqual(final["completed_logical_searches"], 1)
+        self.assertFalse((self.root / "run/query-02-d2.json").exists())
+        guards = final["guard_events"]
+        self.assertTrue(guards)
+        self.assertTrue(all(not item["dispatched"] for item in guards))
+        call_meta = json.loads((self.root / "run/http/http-001.json").read_text())
+        self.assertEqual(call_meta["response_body_bytes"], 2_000_001)
+        self.assertEqual(call_meta["retained_body_bytes"], 2_000_000)
+        self.assertIsNone(call_meta["response_body_sha256"])
+        self.assertEqual(len((self.root / "run/http/http-001.body").read_bytes()), 2_000_000)
+
+    def test_arxiv_one_same_host_https_redirect_is_counted(self):
+        async def scenario():
+            rec = A.Recorder(self.root, 53, 2_000_000)
+            rec.begin_query("d1")
+            count = 0
+            def handler(request):
+                nonlocal count
+                count += 1
+                if count == 1:
+                    return httpx.Response(302, headers={"location": "/api/query-v2"}, request=request)
+                return fixture_response(request, task_rows=self.rows)
+            adapters = await A.make_adapters(lambda _engine: httpx.MockTransport(handler), rec, self.protocol)
+            await adapters["arxiv"].search(self.rows[0]["query"])
+            await A.close_adapters(adapters)
+            rec.end_query()
+            self.assertEqual(count, 2)
+            self.assertEqual(rec.calls[0]["arxiv_redirect_count"], 0)
+            self.assertEqual(rec.calls[1]["arxiv_redirect_count"], 1)
+        asyncio.run(scenario())
+
+    def test_non_arxiv_redirect_is_terminal_and_never_followed(self):
+        async def scenario():
+            rec = A.Recorder(self.root, 53, 2_000_000)
+            rec.begin_query("d9")
+            adapters = await A.make_adapters(
+                lambda _engine: httpx.MockTransport(lambda req: httpx.Response(
+                    302, headers={"location": "https://elsewhere.invalid/next"}, content=b"{}", request=req)),
+                rec, self.protocol)
+            await adapters["github"].search("repository")
+            await A.close_adapters(adapters)
+            rec.end_query()
+            self.assertEqual(len(rec.calls), 1)
+            self.assertTrue(rec.calls[0]["redirect"])
+            self.assertEqual(rec.fatal, "redirect_policy_violation")
+            self.assertEqual(rec.calls[0]["redirect_to"], "https://elsewhere.invalid/next")
+        asyncio.run(scenario())
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
