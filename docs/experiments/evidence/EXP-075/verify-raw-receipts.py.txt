@@ -1,0 +1,338 @@
+"""Independent verifier for EXP-075 source, transport, fusion, and receipts."""
+from __future__ import annotations
+import hashlib, importlib.machinery, importlib.util, importlib.metadata, json, math, platform
+from fractions import Fraction
+from pathlib import Path
+
+HERE=Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path))
+    spec=importlib.util.spec_from_loader(loader.name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+P=load("exp075_verify_prepare",HERE/"prepare.py.txt")
+N=load("exp075_verify_runner",HERE/"normal-runner.py.txt")
+A=load("exp075_verify_analyzer",HERE/"analyze.py.txt")
+
+def need(ok,code):
+    if not ok: raise ValueError("receipt-"+code)
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+def read(path): return P.strict_json(Path(path).read_bytes())
+def finite(x,high=1_000_000): return type(x) in (int,float) and math.isfinite(x) and 0<=x<=high
+def usage_from_raw(raw):
+    if type(raw) is not bytes: return None
+    try:
+        obj=P.strict_json(raw)
+        return P.valid_usage(obj.get("usage")) if type(obj)is dict else None
+    except (ValueError,TypeError,UnicodeDecodeError,json.JSONDecodeError): return None
+
+def verify_qualification(raw,run,protocol_raw,registration_raw,inputs):
+    q=P.strict_json(raw);source=run.get("source_integrity")
+    keys={"schema","qualified","qualified_source_revision","files","source_pins","dependencies","environment","protocol_sha256","registration_sha256"}
+    need(type(q)is dict and set(q)==keys and q.get("schema")=="exp075-qualification-integrity/1" and q.get("qualified") is True,"qualification-schema")
+    need(type(source)is dict and source.get("qualification_sha256")==sha(raw)
+         and source.get("qualified_source_revision")==q.get("qualified_source_revision")
+         and type(source.get("lease_identity"))is str and source.get("lease_identity"),"qualification-binding")
+    need(source.get("environment")==q.get("environment") and source.get("dependencies")==q.get("dependencies"),"qualification-runtime-binding")
+    need(q.get("protocol_sha256")==sha(protocol_raw) and q.get("registration_sha256")==sha(registration_raw),"qualification-protocol-binding")
+    environment={"python_implementation":platform.python_implementation(),"python_version":platform.python_version()}
+    dependencies={name:importlib.metadata.version(name) for name in ("httpx","httpcore","anyio")}
+    need(q["environment"]==environment and q["dependencies"]==dependencies,"qualification-runtime")
+    need(source["lease_identity"]==N.study_identity(protocol_raw,registration_raw,inputs),"lease-identity")
+    need(N.committed_head("docs/experiments/evidence/EXP-075/qualification-integrity.json")==raw,"qualification-not-committed")
+    rev=q["qualified_source_revision"]
+    need(type(rev)is str and len(rev)==40 and all(c in "0123456789abcdef" for c in rev),"qualification-revision")
+    need(set(q.get("files",{}))==N.OWNED_FILES and set(q.get("source_pins",{}))==N.SOURCE_FILES,"qualification-closure-inventory")
+    for name,digest in q["files"].items():
+        path=HERE/name;repo_path="docs/experiments/evidence/EXP-075/"+name
+        need(path.is_file() and not path.is_symlink() and sha(path.read_bytes())==digest
+             and N.committed(repo_path,rev)==path.read_bytes(),"qualified-file-source")
+    for name,digest in q["source_pins"].items():
+        path=REPO/name
+        need(path.is_file() and not path.is_symlink() and sha(path.read_bytes())==digest
+             and N.committed(name,rev)==path.read_bytes(),"qualified-dependency-source")
+    proof=P.validate_inputs(inputs,run.get("input_revision"))
+    need(q["protocol_sha256"]==proof["protocol_sha256"] and q["registration_sha256"]==proof["registration_sha256"],"qualification-pins")
+    return raw
+
+def exact_fusion(cards,qorder,porder):
+    ids=[c["id"] for c in cards]
+    need(len(ids)==len(set(ids)) and len(qorder)==len(ids) and set(qorder)==set(ids)
+         and len(porder)==len(ids) and set(porder)==set(ids),"fusion-membership")
+    qr={x:i+1 for i,x in enumerate(qorder)};pr={x:i+1 for i,x in enumerate(porder)}
+    values={x:Fraction(1,60+qr[x])+Fraction(1,60+pr[x]) for x in ids}
+    ties={c["id"]:tuple(c[k].encode("utf-8") for k in ("url","title","snippet","id")) for c in cards}
+    order=sorted(ids,key=lambda x:(-values[x],ties[x]))
+    return {"order_ids":order,"rational_scores":{x:[v.numerator,v.denominator] for x,v in values.items()}}
+
+def inputs_and_data():
+    inputs={path:(REPO/path).read_bytes() for path in P.PINS}
+    acq,queries=P.source_data(inputs)
+    refs=P.strict_json(inputs["docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"])
+    return inputs,acq,queries,refs,(HERE/"protocol.json").read_bytes(),(HERE/"registration-integrity.json").read_bytes()
+
+def record_call(record,sidecar,opid,arm,request,counters):
+    need(type(record)is dict and record==sidecar and record.get("operation")==opid and record.get("arm")==arm,"call-binding")
+    req=P.wire(request)
+    need(record.get("request_hex")==req.hex() and record.get("request_sha256")==sha(req),"request-binding")
+    tr=record.get("transport")
+    need(type(tr)is dict and tr.get("kind")=="inprocess-async-httpx" and tr.get("trust_env") is False
+         and tr.get("follow_redirects") is False and tr.get("retries")==0 and tr.get("concurrency")==1
+         and tr.get("response_limit_bytes")==P.PROTOCOL["bounds"]["response_bytes"]
+         and tr.get("request_sha256")==record.get("request_sha256"),"transport-policy")
+    need(not ({"stdout","stderr","stdout_hex","stderr_hex","stdout_sha256","stderr_sha256"}&set(tr)),"subprocess-telemetry-claim")
+    hx=record.get("raw_response_hex")
+    if hx is None: raw=None
+    else:
+        need(type(hx)is str,"response-encoding")
+        try: raw=bytes.fromhex(hx)
+        except ValueError: raise ValueError("receipt-response-encoding") from None
+    nbytes=0 if raw is None else len(raw)
+    need(record.get("response_bytes")==nbytes and (raw is None or nbytes<=P.PROTOCOL["bounds"]["response_bytes"]),"response-length")
+    digest=None if raw is None else sha(raw)
+    need(record.get("response_body_sha256")==digest and tr.get("response_sha256")==digest,"response-hash")
+    need(type(record.get("response_complete"))is bool and type(record.get("dispatched"))is bool,"response-dispatch-state")
+    timing=record.get("timings");need(type(timing)is dict and "pending_receipt_fsync_ms" in timing,"timing-fields")
+    for value in timing.values():
+        if value is not None: need(finite(value),"timing-value")
+    if record.get("elapsed_ms") is not None:
+        need(finite(record["elapsed_ms"]),"call-elapsed")
+        if record["elapsed_ms"]>1000:need(record.get("status")=="failed" and record.get("failure",{}).get("code")=="timeout","call-deadline")
+    if record["dispatched"]:
+        counters["attempts"]+=1;need(counters["attempts"]<=P.PROTOCOL["bounds"]["calls"],"call-cap")
+        need(tr.get("client_closed") is True,"client-close")
+        if record.get("status")=="returned":
+            need(record.get("http_status")==200 and record.get("response_complete") is True and raw is not None,"returned-response")
+        else:
+            need(record.get("status")=="failed" and type(record.get("failure"))is dict,"failed-call-record")
+        expected=usage_from_raw(raw)
+        need(record.get("usage")==expected and record.get("usage_status")==("known" if expected is not None else "unknown"),"usage-binding")
+        if expected is None:counters["unknown"]=True
+        else:
+            need(not counters["unknown"],"post-unknown-call")
+            need(expected["input_tokens"]<=64000 and expected["output_tokens"]<=32000,"per-call-usage")
+            for k in counters["usage"]:counters["usage"][k]+=expected[k]
+            need(counters["usage"]["input_tokens"]<=3000000 and counters["usage"]["output_tokens"]<=160000,"usage-cap")
+    else:
+        need(record.get("status")=="failed" and record.get("usage") is None and record.get("usage_status")=="not_dispatched"
+             and raw is None and record.get("http_status") is None and tr.get("client_closed") is False,"predispatch-record")
+    return raw
+
+def parse_control(raw,built):
+    need(type(raw)is bytes,"control-response")
+    data=P.strict_json(raw);questions=built["w0"]["questions"];ids=list(questions)
+    need(type(data)is dict and set(data)=={"model","answers","usage"} and data.get("model")==P.MODEL
+         and type(data.get("answers"))is dict and set(data["answers"])==set(ids)
+         and P.valid_usage(data.get("usage")) is not None,"control-envelope")
+    parsed=P.BASE.validate_score_response(raw,{"questions":questions},ids,9)
+    sorted_local=P.BASE.order_scores(parsed["scores"],ids,9)
+    order=[built["w0_local_to_pool"][key] for key in sorted_local]+list(built["tail_ids"])
+    return {"order_ids":order,"scores":{built["w0_local_to_pool"][k]:v for k,v in parsed["scores"].items()},
+            "raw_answers":{built["w0_local_to_pool"][k]:v for k,v in parsed["raw_answers"].items()},"usage":parsed["usage"]}
+
+def parse_joint(raw,built):
+    need(type(raw)is bytes,"joint-response")
+    data=P.strict_json(raw);questions=built["joint"]["questions"]
+    need(type(data)is dict and set(data)=={"model","answers","usage"} and data.get("model")==P.MODEL
+         and type(data.get("answers"))is dict and set(data["answers"])==set(questions)
+         and P.valid_usage(data.get("usage")) is not None,"joint-envelope")
+    qids=list(built["joint_query_ids"]);pids=list(built["joint_purpose_ids"])
+    need(not(set(qids)&set(pids)) and set(qids)|set(pids)==set(questions),"joint-namespace-inventory")
+    def validate(keys,high):
+        req={key:questions[key] for key in keys}
+        payload=P.wire({"model":data["model"],"answers":{key:data["answers"][key] for key in keys},"usage":data["usage"]})
+        return P.BASE.validate_score_response(payload,{"questions":req},keys,high)
+    q=validate(qids,9);p=validate(pids,3)
+    native=built["provenance_order_ids"];prefix=native[:40]
+    qs={};qa={}
+    for key in qids:
+        need(key.startswith("w0:") and key[3:] in built["w0_local_to_pool"],"query-namespace-id")
+        cid=built["w0_local_to_pool"][key[3:]];qs[cid]=q["scores"][key];qa[cid]=q["raw_answers"][key]
+    qprefix=sorted(prefix,key=lambda cid:(-qs[cid],prefix.index(cid)))
+    qorder=qprefix+native[40:]
+    ps={};pa={}
+    for key in pids:
+        need(key.startswith("purpose:"),"purpose-namespace-id")
+        cid=key[len("purpose:"):];ps[cid]=p["scores"][key];pa[cid]=p["raw_answers"][key]
+    canonical=[card["id"] for card in built["cards"]]
+    porder=sorted(canonical,key=lambda cid:(-ps[cid],canonical.index(cid)))
+    usage=data["usage"]
+    return ({"status":"valid","order_ids":qorder,"scores":qs,"raw_answers":qa,"rational_scores":{},"usage":usage},
+            {"status":"valid","order_ids":porder,"scores":ps,"raw_answers":pa,"rational_scores":{},"usage":usage})
+
+def durable(outdir,ref,name,statuses):
+    need(type(ref)is dict and ref.get("path")==name and finite(ref.get("fsync_ms")),"receipt-reference")
+    path=outdir/"receipts"/name
+    need(path.is_file() and not path.is_symlink() and sha(path.read_bytes())==ref.get("sha256"),"receipt-hash")
+    body=read(path)
+    need(type(body)is dict and body.get("receipt_status") in statuses and type(body.get("operation"))is dict,"receipt-body")
+    return body
+
+def verify(outdir,require_analysis=True):
+    outdir=Path(outdir);run=read(outdir/"run.json")
+    inputs,acq,queries,refs,protocol_raw,reg_raw=inputs_and_data();protocol=P.strict_json(protocol_raw)
+    need(run.get("schema")=="exp075-run/1" and run.get("status") in ("complete","incomplete"),"run-schema")
+    need(type(run.get("synthetic"))is bool and run.get("input_pins")==P.PINS,"input-identity")
+    proof=P.validate_inputs(inputs,run.get("input_revision"));source=run.get("source_integrity")
+    need(type(source)is dict and source.get("input_pins")==proof["input_pins"] and source.get("input_revision")==proof["input_revision"]
+         and source.get("protocol_sha256")==proof["protocol_sha256"] and source.get("registration_sha256")==proof["registration_sha256"],"source-integrity")
+    qpath=outdir/"qualification-integrity.json";qbytes=None
+    if run["synthetic"]:need(not qpath.exists(),"synthetic-qualification-sidecar")
+    else:
+        need(qpath.is_file() and not qpath.is_symlink(),"qualification-sidecar")
+        qbytes=verify_qualification(qpath.read_bytes(),run,protocol_raw,reg_raw,inputs)
+
+    receipt_dir=outdir/"receipts"
+    call_paths=sorted(receipt_dir.glob("call-*.json"),key=lambda p:int(p.stem.split("-")[1]))
+    need(len(call_paths)<=44,"call-receipt-cap")
+    sidecars=[read(path) for path in call_paths]
+    counters={"attempts":0,"usage":{"input_tokens":0,"output_tokens":0},"unknown":False}
+    cursor=0
+
+    def next_call(embedded,opid,arm,request):
+        nonlocal cursor
+        need(cursor<len(sidecars),"missing-call-sidecar")
+        path=call_paths[cursor];sidecar=sidecars[cursor];cursor+=1
+        need(path.read_bytes()==P.wire(sidecar),"call-sidecar-durable")
+        return record_call(embedded,sidecar,opid,arm,request,counters)
+
+    case,cards=P.synthetic_case();control=P.build_control(case,cards,"base");joint=P.build_joint(case,cards,"base")
+    neutral=run.get("neutral")
+    need(type(neutral)is dict and neutral.get("id")=="neutral-neutral" and neutral.get("cards")==cards
+         and neutral.get("provenance_order_ids")==[c["id"] for c in cards],"neutral-input")
+    neutral_calls=neutral.get("calls",[])
+    terminal=False
+    neutral0=next_call(neutral_calls[0],"neutral-neutral","w0",control["w0"]) if neutral_calls else None
+    parsed0=parse_control(neutral0,control) if neutral0 is not None and neutral_calls[0].get("status")=="returned" else None
+    if parsed0 is not None:
+        row=neutral["arms"]["w0"]
+        need(row.get("status")=="valid" and row.get("order_ids")==parsed0["order_ids"] and row.get("scores")==parsed0["scores"]
+             and row.get("raw_answers")==parsed0["raw_answers"] and row.get("usage")==parsed0["usage"],"neutral-control-arm")
+    else:need(neutral.get("arms",{}).get("w0",{}).get("status")=="failed","neutral-control-failure")
+    if len(neutral_calls)>1:
+        raw1=next_call(neutral_calls[1],"neutral-neutral","joint",joint["joint"])
+        if raw1 is not None and neutral_calls[1].get("status")=="returned":
+            qrow,prow=parse_joint(raw1,joint)
+            for name,expected in (("joint_query",qrow),("joint_purpose",prow)):
+                actual=neutral["arms"][name]
+                need(actual.get("status")=="valid" and all(actual.get(k)==expected[k] for k in ("order_ids","scores","raw_answers","usage")),"neutral-joint-arm")
+            fused=exact_fusion(cards,qrow["order_ids"],prow["order_ids"]);cand=neutral["arms"]["candidate"]
+            need(cand.get("status")=="valid" and cand.get("order_ids")==fused["order_ids"]
+                 and cand.get("rational_scores")==fused["rational_scores"],"neutral-fusion")
+            durable(outdir,neutral.get("baseline_receipt"),"neutral-neutral-baseline.json",{"baseline-valid"})
+            durable(outdir,neutral.get("candidate_body_receipt"),"neutral-neutral-candidate-body.json",{"candidate-proposal"})
+            durable(outdir,neutral.get("final_receipt"),"neutral-neutral-candidate-body.json",{"candidate-proposal"})
+        else:
+            terminal=True
+            need(run.get("status")=="incomplete" and neutral["arms"]["candidate"].get("order_ids")==[c["id"] for c in cards],"neutral-native-fallback")
+            ref=neutral.get("final_receipt")
+            if ref: durable(outdir,ref,ref.get("path"),{"candidate-failed-fallback","baseline-failed"})
+    else:
+        terminal=True
+        need(run.get("status")=="incomplete","neutral-missing-joint")
+
+    built_rows=P.prebuild(acq,queries)
+    need(len(built_rows)==21 and len(run.get("operations",[]))==21,"registered-operation-count")
+    for position,((spec,query,poolcards,control,joint,control_raw,joint_raw),op) in enumerate(zip(built_rows,run["operations"])):
+        need(spec==protocol["schedule"][position],"schedule-binding")
+        P.enforce_request_bounds(control_raw,joint_raw,control,joint)
+        opid=spec["case"]+"-"+spec["variant"];native=control["provenance_order_ids"]
+        need(type(op)is dict and op.get("id")==opid and op.get("cards")==poolcards
+             and op.get("provenance_order_ids")==native,"operation-input-binding")
+        arms=op.get("arms",{});records=op.get("calls",[])
+        need(type(arms)is dict and set(arms)==set(P.ARMS) and type(records)is list,"operation-schema")
+        if terminal:
+            need(not records and all(arms[name].get("status")=="uninvoked" for name in P.ARMS),"post-stop-uninvoked")
+            continue
+        if not records:
+            need(all(arms[name].get("status")=="uninvoked" for name in P.ARMS),"uninvoked-state")
+            terminal=True;continue
+        raw0=next_call(records[0],opid,"w0",control["w0"])
+        parsed0=parse_control(raw0,control) if raw0 is not None and records[0].get("status")=="returned" else None
+        if parsed0 is None:
+            need(arms["w0"].get("status")=="failed" and arms["candidate"].get("status")=="failed-fallback"
+                 and arms["candidate"].get("order_ids")==native,"baseline-failure-native-fallback")
+            durable(outdir,op.get("baseline_receipt"),op.get("baseline_receipt",{}).get("path"),{"baseline-failed"})
+            terminal=True
+            continue
+        wrow=arms["w0"]
+        need(wrow.get("status")=="valid" and all(wrow.get(k)==parsed0[k] for k in ("order_ids","scores","raw_answers","usage")),"control-arm-recompute")
+        durable(outdir,op.get("baseline_receipt"),opid+"-baseline.json",{"baseline-valid"})
+        if len(records)<2:
+            need(run.get("status")=="incomplete" and arms["candidate"].get("status")=="failed-fallback"
+                 and arms["candidate"].get("order_ids")==native,"joint-predispatch-fallback")
+            terminal=True;continue
+        raw1=next_call(records[1],opid,"joint",joint["joint"])
+        if raw1 is None or records[1].get("status")!="returned":
+            need(run.get("status")=="incomplete" and arms["candidate"].get("status")=="failed-fallback"
+                 and arms["candidate"].get("order_ids")==native,"joint-failure-native-fallback")
+            ref=op.get("final_receipt")
+            durable(outdir,ref,opid+"-failure.json",{"candidate-failed-fallback"})
+            terminal=True;continue
+        qrow,prow=parse_joint(raw1,joint)
+        for name,expected in (("joint_query",qrow),("joint_purpose",prow)):
+            actual=arms[name]
+            need(actual.get("status")=="valid" and all(actual.get(k)==expected[k] for k in ("order_ids","scores","raw_answers","usage")),"joint-component-recompute")
+        fused=exact_fusion(poolcards,qrow["order_ids"],prow["order_ids"])
+        candidate=arms["candidate"]
+        if candidate.get("status")=="failed-fallback":
+            need(run.get("status")=="incomplete" and candidate.get("order_ids")==native and candidate.get("rational_scores")=={},"candidate-failure-fallback")
+            if op.get("candidate_body_receipt"):
+                body=durable(outdir,op["candidate_body_receipt"],opid+"-candidate-body.json",{"candidate-proposal"})
+                proposed=body["operation"]["arms"]["candidate"]
+                need(proposed.get("order_ids")==fused["order_ids"] and proposed.get("rational_scores")==fused["rational_scores"],"proposal-retention")
+            durable(outdir,op.get("final_receipt"),opid+"-failure.json",{"candidate-failed-fallback"})
+            terminal=True;continue
+        need(candidate.get("status")=="valid" and candidate.get("order_ids")==fused["order_ids"]
+             and candidate.get("rational_scores")==fused["rational_scores"] and candidate.get("scores")=={}
+             and candidate.get("raw_answers")=={} and candidate.get("usage")==qrow["usage"],"candidate-fusion")
+        body=durable(outdir,op.get("candidate_body_receipt"),opid+"-candidate-body.json",{"candidate-proposal"})
+        need(body["operation"].get("cards")==poolcards and body["operation"].get("arms",{}).get("candidate",{}).get("order_ids")==fused["order_ids"]
+             and body["operation"].get("arms",{}).get("candidate",{}).get("rational_scores")==fused["rational_scores"],"candidate-body-binding")
+        final=durable(outdir,op.get("final_receipt"),opid+"-candidate-body.json",{"candidate-proposal"})
+        need(final==body,"final-candidate-binding")
+        need(op.get("phase_endpoint_after_fsync") is True,"phase-endpoint")
+        for name in ("baseline_phase_ms","candidate_phase_ms"):need(finite(op.get(name),1000),"phase-deadline")
+        need(finite(op.get("paired_wall_ms"),2100) and op["paired_wall_ms"]+1>=op["baseline_phase_ms"]+op["candidate_phase_ms"],"paired-wall")
+        for name in ("candidate_build_ms","candidate_serialization_ms","candidate_parse_ms","baseline_parse_ms"):need(finite(op.get(name)),"phase-components")
+        joint_t=records[1].get("timings",{});base_t=records[0].get("timings",{})
+        need(op["candidate_build_ms"]==joint_t.get("build_ms") and op["candidate_serialization_ms"]==joint_t.get("serialization_ms"),"measured-reconstruction")
+        candidate_floor=op["candidate_build_ms"]+op["candidate_serialization_ms"]+op["candidate_parse_ms"]+records[1].get("elapsed_ms",0)+joint_t.get("response_receipt_fsync_ms",0)+op["candidate_body_receipt"].get("fsync_ms",0)
+        need(op["candidate_phase_ms"]+1e-3>=candidate_floor,"candidate-phase-lower-bound")
+        base_floor=records[0].get("elapsed_ms",0)+base_t.get("response_receipt_fsync_ms",0)+op["baseline_parse_ms"]+op["baseline_receipt"].get("fsync_ms",0)
+        need(op["baseline_phase_ms"]+1e-3>=base_floor,"baseline-phase-lower-bound")
+
+    need(cursor==len(sidecars),"extra-call-sidecars")
+    budget=run.get("budget",{})
+    need(counters["attempts"]==budget.get("attempts") and counters["usage"]["input_tokens"]==budget.get("input_tokens")
+         and counters["usage"]["output_tokens"]==budget.get("output_tokens") and counters["unknown"]==budget.get("unknown_usage"),"budget-binding")
+    if run["status"]=="complete":need(not terminal and counters["attempts"]==44 and counters["unknown"] is False,"complete-inventory")
+    else:need(terminal,"incomplete-stop")
+    return finish(run,outdir,acq,queries,refs,protocol,inputs,protocol_raw,reg_raw,qbytes,counters,require_analysis)
+
+def finish(run,outdir,acq,queries,refs,protocol,inputs,protocol_raw,reg_raw,qbytes,counters,require_analysis):
+    need(finite(run.get("wall_seconds"),7200),"wall-clock")
+    if run["status"]=="complete":
+        phases=[v for op in [run.get("neutral"),*run.get("operations",[])] if type(op)is dict
+                for v in (op.get("baseline_phase_ms"),op.get("candidate_phase_ms"))]
+        need(len(phases)==44 and all(finite(v,1000) for v in phases)
+             and run["wall_seconds"]*1000+1>=sum(phases),"wall-phase-bound")
+    analysis=A.analyze(run,acq,refs,queries,protocol,inputs,protocol_raw,reg_raw,qualification_bytes=qbytes)
+    apath=outdir/"analysis.json"
+    if require_analysis: need(apath.is_file() and read(apath)==analysis,"analysis-binding")
+    if run["status"]=="complete" and run["synthetic"]:
+        need(analysis.get("outcome")=="synthetic_fixture_only" and analysis.get("quality_analysis_performed") is False
+             and analysis.get("adoption_eligible") is False,"synthetic-no-quality")
+    elif run["status"]=="complete":
+        need(analysis.get("quality_analysis_performed") is True and analysis.get("adoption_eligible") is False,"complete-analysis-policy")
+    else:
+        need(analysis.get("outcome")=="incomplete" and analysis.get("quality_analysis_performed") is False
+             and analysis.get("adoption_eligible") is False,"incomplete-no-quality")
+    return {"schema":"exp075-raw-verification/1","verified":True,"status":run["status"],"synthetic":run["synthetic"],
+            "physical_attempts":counters["attempts"],"known_usage":counters["usage"],"unknown_usage":counters["unknown"],
+            "raw_calls_checked":counters["attempts"],"analysis_policy":analysis["outcome"],"analysis":analysis}
+
+if __name__=="__main__":
+    import argparse
+    ap=argparse.ArgumentParser();ap.add_argument("run_dir",type=Path);args=ap.parse_args()
+    print(json.dumps(verify(args.run_dir),separators=(",",":")))
