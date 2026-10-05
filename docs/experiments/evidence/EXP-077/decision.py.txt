@@ -51,10 +51,12 @@ def answer_endpoint(arm):
 
 def task_use_endpoint(pairs):
     if len(pairs)!=8:raise ValueError('eight paired tasks required')
-    wins=losses=ties=0;unknown=[];hazards=[]
+    wins=losses=ties=0;unknown=[];hazards=[];paired_deltas=[];w0_completed=candidate_completed=0
     for task_id,w0,candidate in pairs:
         a,b=answer_endpoint(w0),answer_endpoint(candidate)
         if a['unknown_critical_facets'] or b['unknown_critical_facets']:unknown.append(task_id)
         if b['material_failures']:hazards.append({'task_id':task_id,'failures':b['material_failures']})
         wins+=int(b['complete'] and not a['complete']);losses+=int(a['complete'] and not b['complete']);ties+=int(a['complete']==b['complete'])
-    return {'wins':wins,'ties':ties,'losses':losses,'additional_completed':wins-losses,'unknown_tasks':unknown,'candidate_material_failures':hazards,'passes':wins-losses>=2 and losses==0 and not unknown and not hazards}
+        w0_completed+=int(a['complete']);candidate_completed+=int(b['complete']);paired_deltas.append(int(b['complete'])-int(a['complete']))
+    rng=random.Random(7701);samples=sorted(sum(rng.choices(paired_deltas,k=8)) for _ in range(10000))
+    return {'w0_completed':w0_completed,'candidate_completed':candidate_completed,'additional_completed_bootstrap95_diagnostic':[samples[249],samples[9749]],'uncertainty_method':'paired task bootstrap,10000 draws,seed7701; descriptive only, no added gate','wins':wins,'ties':ties,'losses':losses,'additional_completed':wins-losses,'unknown_tasks':unknown,'candidate_material_failures':hazards,'passes':wins-losses>=2 and losses==0 and not unknown and not hazards}

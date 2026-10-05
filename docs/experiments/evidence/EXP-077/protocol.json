@@ -55,7 +55,8 @@
     "raw_content_publication": "private evidence storage; public sanitized hashes/aggregates only",
     "research_only": true,
     "response_bytes": 2000000,
-    "shared_snapshot_for_both_arms": true
+    "shared_snapshot_for_both_arms": true,
+    "source_url_admission": "Use pinned public retrieval URL validator; reject userinfo, private/local/numeric-private destinations before dispatch. HTTPS-only capture follows the prior source-use capture contract; unsupported URLs remain recorded unavailable, never rewritten or replaced. Hostname DNS aliases additionally depend on candidate scraper SSRF controls."
   },
   "cohorts_file": "cohorts.json",
   "confirmation_requires_development_pass": true,
@@ -165,6 +166,7 @@
     ],
     "required_endpoint_unknown_or_invalid": "inconclusive, retained; never imputed/repaired",
     "source_unavailability": "recorded in denominators; not-acquired is an observed state, not automatically a structural packet error",
+    "uncertainty_report": "Paired task bootstrap of completion-count difference, 10000 draws, seed7701; descriptive only, no additional significance gate.",
     "w0_completed_to_candidate_incomplete_allowed": 0
   }
 }
