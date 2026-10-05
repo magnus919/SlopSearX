@@ -4,6 +4,12 @@ Implementation acceptance plan inspected against SlopSearX `3d5e8bac38b619aec1bd
 
 The cross-service boundary follows accepted X ADR-0082: GroktoCrawl owns the caller's question, constraints, evidence sufficiency and completion; SlopSearX owns bounded search dispatch, merge/ranking and immutable result snapshots. Keep the SlopSearX ordinary HTTP behavior unchanged when the option is absent. The proposed ADR-0093 provenance work is not an accepted substitute for candidate quality evidence.
 
+## Current evidence and next action (2026-10-05)
+
+The [recent upstream experiment audit](evidence/EXP-071/upstream-experiment-reconciliation.md) found no shipped caller-purpose/facet complete-pool selector. [EXP-072](EXP-072-constraint-specific-reading-scale.md) completed 64 calls and retained useful counts/facets, but failed the fixed two-reference development quality gate; [PR #633](https://github.com/magnus919/SlopSearX/pull/633) preserves the rejected outcome and diagnosis. There is still no candidate eligible for implementation or final confirmation. No checklist item below is complete merely because the harness or this evidence is merged.
+
+The [next evidence stage](source-use-utility-next-stage.md) is a small, disclosed source-use/target-check pilot, followed by a materially justified development investigation and genuinely untouched confirmation. It adds actual task-use evidence without replacing existing gates. Current consumer budgets and a zero-search non-Brave source inventory are recorded; Brave remains 8/10 used. This is unfinished experimental research, separate from mainline/Hermes and deployment.
+
 ## 0. Adoption gate before implementation
 
 - [ ] A single final selector contract is selected only after the registered development and untouched fresh-confirmation gates pass. Record the candidate's exact instructions, fields, grouping/candidate unit, full-pool bound, provider/model identity, byte/time limits, fallback, and interpretation in the implementation plan.
