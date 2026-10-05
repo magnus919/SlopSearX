@@ -16,3 +16,12 @@ validated local variable is `usage`. The finding was sent to the owning agent;
 successful full candidate parsing must have an offline regression that reaches
 the actual return path. This draft observation is not a test failure or a
 qualification result. Final review must bind the corrected committed source.
+
+Root then ran a credential-free synthetic build/parse smoke against the draft.
+Imports and pinned dependencies loaded, but `build_candidate()` raised
+`KeyError: 'purpose_question_prefix'`: it looked for the prefix in EXP-076's
+protocol rather than the exact pinned EXP-075 source designated by the sealed
+wire contract and capacity preview. Correct the implementation source lookup,
+not the immutable registration. The smoke dispatched no request and never
+reached parsing. Complete build/parse and preview-byte regression coverage is
+required before source qualification.
