@@ -10,6 +10,7 @@ ARMS = ("w0", "purpose_component", "candidate")
 TOKEN_CAPS = {"input_tokens": 3_000_000, "output_tokens": 160_000}
 PER_CALL_CAP = 64_000
 PHASE_TOLERANCE_MS = 1e-6
+WALL_TOLERANCE_MS = 1.0
 INPUT_BINDINGS = {
     "docs/experiments/evidence/EXP-060/fresh-acquisition.json": "acquisition",
     "docs/experiments/evidence/EXP-060/queries.json": "queries",
@@ -191,6 +192,13 @@ def _same_rationals(actual, expected):
     return True
 
 
+def _phase_lower_bound(rows):
+    elapsed = [row.get("elapsed_ms") if type(row) is dict else None for row in rows]
+    if not all(finite_number(value, 0, 1000) for value in elapsed):
+        return None
+    return sum(elapsed)
+
+
 def _neutral(neutral, errors):
     if type(neutral) is not dict:
         errors.append("neutral-schema")
@@ -246,9 +254,12 @@ def _neutral(neutral, errors):
     if type(candidate) is dict and set(candidate) != {"status", "order_ids", "scores", "raw_answers", "rational_scores", "usage", "elapsed_ms"}:
         errors.append("neutral-candidate-fields")
     if type(candidate) is dict:
+        wrow, prow = arms.get("w0"), arms.get("purpose_component")
         try:
+            if type(wrow) is not dict or type(prow) is not dict:
+                raise ValueError("missing component arm")
             expected_order, expected_rationals = _expected_fusion(
-                cards, arms["w0"].get("order_ids"), arms["purpose_component"].get("order_ids"))
+                cards, wrow.get("order_ids"), prow.get("order_ids"))
             if candidate.get("order_ids") != expected_order:
                 errors.append("neutral-candidate-order")
             if not _same_rationals(candidate.get("rational_scores"), expected_rationals):
@@ -259,14 +270,20 @@ def _neutral(neutral, errors):
             errors.append("neutral-candidate-model-output")
     candidate_usage = _usage(candidate, errors, "neutral-candidate")
     if candidate_usage is not None:
-        expected_usage = {key: arms["w0"].get("usage", {}).get(key, -1)
-                          + arms["purpose_component"].get("usage", {}).get(key, -1)
-                          for key in TOKEN_CAPS}
-        if candidate_usage != expected_usage:
+        component_usage = [arms.get(name, {}).get("usage") if type(arms.get(name)) is dict else None
+                           for name in ("w0", "purpose_component")]
+        if any(type(usage) is not dict or set(usage) != set(TOKEN_CAPS)
+               or any(type(usage.get(key)) is not int or usage[key] < 0 for key in TOKEN_CAPS)
+               for usage in component_usage):
             errors.append("neutral-candidate-usage-binding")
+        else:
+            expected_usage = {key: sum(usage[key] for usage in component_usage) for key in TOKEN_CAPS}
+            if candidate_usage != expected_usage:
+                errors.append("neutral-candidate-usage-binding")
     phase = neutral.get("candidate_phase_ms")
-    phase_lower_bound = sum(arms[n].get("elapsed_ms", math.inf) for n in ARMS if type(arms[n]) is dict)
-    if not finite_number(phase, 0, 1000) or phase + PHASE_TOLERANCE_MS < phase_lower_bound:
+    phase_lower_bound = _phase_lower_bound([arms.get(name) for name in ARMS])
+    if (not finite_number(phase, 0, 1000) or phase_lower_bound is None
+            or phase + PHASE_TOLERANCE_MS < phase_lower_bound):
         errors.append("neutral-combined-phase")
 
 
@@ -368,7 +385,22 @@ def analyze(run, acquisition, references, queries, protocol,
     _neutral(run.get("neutral"), errors)
 
     pool_rows = acquisition.get("pools", {}) if type(acquisition) is dict else {}
+    bounds = protocol.get("bounds") if type(protocol.get("bounds")) is dict else {}
+    card_limit = bounds.get("cards")
+    expected_pool_ids = {f"q{i}" for i in range(1, 14)}
+    if type(card_limit) is not int or card_limit != 80:
+        errors.append("registered-card-limit")
+    if type(pool_rows) is not dict or set(pool_rows) != expected_pool_ids:
+        errors.append("pool-inventory")
+    elif type(card_limit) is int:
+        for pool_id, pool in pool_rows.items():
+            cards = pool.get("cards") if type(pool) is dict else None
+            if type(cards) is not list:
+                errors.append(pool_id + "-pool-schema")
+            elif len(cards) > card_limit:
+                errors.append(pool_id + "-pool-limit")
     orders, receipts = {}, []
+    operation_ids = set()
     neutral = run.get("neutral")
     if type(neutral) is dict and type(neutral.get("arms")) is dict:
         receipts.extend([neutral["arms"].get("w0"), neutral["arms"].get("purpose_component")])
@@ -379,6 +411,11 @@ def analyze(run, acquisition, references, queries, protocol,
         case, variant = op.get("case"), op.get("variant")
         if set(op) != {"id", "case", "variant", "provenance_order_ids", "cards", "candidate_phase_ms", "arms"}:
             errors.append("operation-fields")
+        expected_op_id = str(case) + "-" + str(variant)
+        if op.get("id") != expected_op_id or op.get("id") in operation_ids:
+            errors.append("operation-id")
+        if type(op.get("id")) is str:
+            operation_ids.add(op["id"])
         if type(case) is not str or case not in pool_rows:
             errors.append("unknown-operation-case")
             continue
@@ -465,8 +502,9 @@ def analyze(run, acquisition, references, queries, protocol,
                 if component_sum != c_usage:
                     errors.append(case + "-" + str(variant) + "-candidate-usage-binding")
             phase = op.get("candidate_phase_ms")
-            phase_lower_bound = sum(x.get("elapsed_ms", math.inf) for x in (wrow, prow, crow))
-            if not finite_number(phase, 0, 1000) or phase + PHASE_TOLERANCE_MS < phase_lower_bound:
+            phase_lower_bound = _phase_lower_bound([wrow, prow, crow])
+            if (not finite_number(phase, 0, 1000) or phase_lower_bound is None
+                    or phase + PHASE_TOLERANCE_MS < phase_lower_bound):
                 errors.append(case + "-" + str(variant) + "-combined-phase")
             if not finite_number(run.get("wall_seconds"), 0, 7200):
                 errors.append(case + "-wall")
@@ -484,6 +522,13 @@ def analyze(run, acquisition, references, queries, protocol,
             totals[key] += usage[key]
     if any(totals[k] != budget.get(k) for k in totals):
         errors.append("usage-sum")
+    neutral_phase = neutral.get("candidate_phase_ms") if type(neutral) is dict else None
+    operation_phases = [op.get("candidate_phase_ms") for op in operations if type(op) is dict]
+    serial_phases = [neutral_phase, *operation_phases]
+    if (len(serial_phases) == 22 and all(finite_number(x, 0, 1000) for x in serial_phases)
+            and finite_number(run.get("wall_seconds"), 0, 7200)
+            and run["wall_seconds"] * 1000 + WALL_TOLERANCE_MS < sum(serial_phases)):
+        errors.append("wall-phase-sum")
 
     if errors:
         return {"schema": "exp073-analysis/1", "dataset": "exposed public pools; prospective references; not untouched confirmation",

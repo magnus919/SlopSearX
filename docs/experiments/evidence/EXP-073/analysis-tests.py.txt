@@ -127,6 +127,34 @@ def fixture():
 
 
 class AnalyzerTests(unittest.TestCase):
+    def test_neutral_first_failure_with_null_timing_is_incomplete_without_crash(self):
+        run, acquisition, references, queries, protocol, input_bytes, protocol_bytes, registration = fixture()
+        run["status"] = "incomplete"
+        run["neutral"]["arms"]["w0"] = {
+            "status": "failed", "elapsed_ms": None, "usage": None, "error": "fixture timeout"}
+        run["neutral"]["arms"]["purpose_component"] = None
+        run["neutral"]["arms"]["candidate"] = None
+        run["neutral"]["candidate_phase_ms"] = None
+        result = A.analyze(run, acquisition, references, queries, protocol,
+                           input_bytes, protocol_bytes, registration)
+        self.assertEqual(result["outcome"], "incomplete")
+        self.assertIn("neutral-w0-schema", result["structural_failures"])
+        self.assertFalse(result["quality_analysis_performed"])
+
+    def test_first_real_operation_failure_with_null_timing_is_incomplete_without_crash(self):
+        run, acquisition, references, queries, protocol, input_bytes, protocol_bytes, registration = fixture()
+        run["status"] = "incomplete"
+        run["operations"][0]["arms"]["w0"] = {
+            "status": "failed", "elapsed_ms": None, "usage": None, "error": "fixture timeout"}
+        run["operations"][0]["arms"]["purpose_component"] = None
+        run["operations"][0]["arms"]["candidate"] = None
+        run["operations"][0]["candidate_phase_ms"] = None
+        result = A.analyze(run, acquisition, references, queries, protocol,
+                           input_bytes, protocol_bytes, registration)
+        self.assertEqual(result["outcome"], "incomplete")
+        self.assertIn("incomplete-run", result["structural_failures"])
+        self.assertFalse(result["quality_analysis_performed"])
+
     def test_actual_frozen_inputs_run_offline_and_stop_before_quality(self):
         runner_loader = importlib.machinery.SourceFileLoader("runner073_frozen", str(ROOT / "normal-runner.py.txt"))
         runner_spec = importlib.util.spec_from_loader(runner_loader.name, runner_loader)
@@ -321,6 +349,41 @@ class AnalyzerTests(unittest.TestCase):
         x = fixture()
         x[0]["neutral"]["candidate_phase_ms"] = 150
         self.assertIn("neutral-combined-phase", A.analyze(*x)["structural_failures"])
+
+    def test_total_wall_boundary_covers_all_serial_candidate_phases(self):
+        x = fixture()
+        total_ms = x[0]["neutral"]["candidate_phase_ms"] + sum(
+            op["candidate_phase_ms"] for op in x[0]["operations"])
+        x[0]["wall_seconds"] = total_ms / 1000
+        self.assertEqual(A.analyze(*x)["structural_failures"], [])
+        x[0]["wall_seconds"] -= .002
+        self.assertIn("wall-phase-sum", A.analyze(*x)["structural_failures"])
+
+    def test_operation_ids_must_match_case_variant_and_be_unique(self):
+        x = fixture()
+        x[0]["operations"][0]["id"] = "wrong-operation-id"
+        self.assertIn("operation-id", A.analyze(*x)["structural_failures"])
+        x = fixture()
+        x[0]["operations"][1]["id"] = x[0]["operations"][0]["id"]
+        self.assertIn("operation-id", A.analyze(*x)["structural_failures"])
+
+    def test_source_pool_at_80_is_valid_and_over_80_is_rejected(self):
+        x = fixture()
+        self.assertEqual(A.analyze(*x)["structural_failures"], [])
+        path = "docs/experiments/evidence/EXP-060/fresh-acquisition.json"
+        card = {"id": "c80", "title": "Title 80", "url": "https://example.org/80", "snippet": "snippet 80"}
+        x[1]["pools"]["q1"]["cards"].append(card)
+        x[5][path] = pack(x[1])
+        x[4]["inputs"][path] = hashlib.sha256(x[5][path]).hexdigest()
+        x[0]["input_pins"] = copy.deepcopy(x[4]["inputs"])
+        x[6] = pack(x[4])
+        registration = json.loads(x[7])
+        registration["pins"]["docs/experiments/evidence/EXP-073/protocol.json"] = hashlib.sha256(x[6]).hexdigest()
+        x[7] = pack(registration)
+        x[0]["source_integrity"]["input_pins"] = copy.deepcopy(x[4]["inputs"])
+        x[0]["source_integrity"]["protocol_sha256"] = hashlib.sha256(x[6]).hexdigest()
+        x[0]["source_integrity"]["registration_sha256"] = hashlib.sha256(x[7]).hexdigest()
+        self.assertIn("q1-pool-limit", A.analyze(*x)["structural_failures"])
 
     def test_membership_and_rotated_native_tail_are_checked(self):
         x = fixture()
