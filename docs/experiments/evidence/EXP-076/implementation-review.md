@@ -60,3 +60,14 @@ requirements before a usable checkpoint or qualification:
 
 These findings were sent to the source owner. Final regression and exact-source
 review must establish their disposition before live admission.
+
+## Initial evaluator unit checks
+
+Root independently ran all four drafted metric tests: both reference case
+assembly, synthetic quality suppression, identity displacement and pinned-input
+tamper rejection passed. This bypasses the not-yet-built raw verifier and is
+unit evidence only. Root also checked that source-bound and metric-view lead
+grades agree for every frozen ID. The identity regression needs strengthening
+to hold useful count and facets constant while displacing more than one useful
+source, without a silent early return. The complete receipt/source-closure
+integration regression remains mandatory.
