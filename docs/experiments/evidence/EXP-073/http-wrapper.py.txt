@@ -1,5 +1,5 @@
 """Bounded EXP-073 adapter. Offline fixtures are default; live requires runner admission."""
-import hashlib, importlib.machinery, importlib.util, json, os, sys, urllib.request
+import hashlib, importlib.machinery, importlib.util, io, json, os, sys, urllib.error, urllib.request
 from pathlib import Path
 HERE=Path(__file__).resolve().parent; REPO=HERE.parents[3]
 sys.path.insert(0,str(REPO))
@@ -9,19 +9,14 @@ H=importlib.machinery.SourceFileLoader('exp073_transport',str(REPO/'docs/experim
 S=importlib.util.spec_from_loader(H.name,H); HTTP=importlib.util.module_from_spec(S); H.exec_module(HTTP)
 HTTP.validate_request=P.BASE.validate_request
 
-class FixtureResponse:
+class FixtureResponse(io.BytesIO):
     status=200
-    def __init__(self,body): self.body=body
-    def __enter__(self): return self
-    def __exit__(self,*_): return False
-    def read(self,n=-1):
-        n=len(self.body) if n<0 else n; out,self.body=self.body[:n],self.body[n:]; return out
 class FixtureOpener:
     def __init__(self,mode='neutral'): self.mode=mode
     def open(self,request,timeout):
         if request.method!='POST' or timeout!=1: raise ValueError('fixture-envelope')
         parsed=P.BASE.validate_request(request.data)
-        if self.mode=='http-error': raise ValueError('fixture-http-error')
+        if self.mode=='http-error': raise urllib.error.HTTPError(HTTP.ENDPOINT,503,'offline fixture',{},FixtureResponse(b'{"error":"synthetic fixture error","usage":{"input_tokens":11,"output_tokens":3}}'))
         raw=P.response_fixture(parsed,score=2,usage={'input_tokens':11,'output_tokens':3})
         if self.mode=='missing-usage':
             payload=P.strict_json(raw);payload.pop('usage',None);raw=P.wire(payload)

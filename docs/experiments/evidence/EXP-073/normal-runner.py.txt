@@ -8,7 +8,7 @@ S=importlib.util.spec_from_loader(L.name,L); P=importlib.util.module_from_spec(S
 F=importlib.machinery.SourceFileLoader('exp073_fusion',str(HERE/'fusion.py.txt'))
 S=importlib.util.spec_from_loader(F.name,F); FUSE=importlib.util.module_from_spec(S); F.exec_module(FUSE)
 REGISTRATION_REVISION=P.REGISTRATION_REVISION
-OWNED_FILES={'prepare.py.txt','http-wrapper.py.txt','normal-runner.py.txt','normal-runner-tests.py.txt','analyze.py.txt','analysis-tests.py.txt','fusion.py.txt','fusion-tests.py.txt'}
+OWNED_FILES={'prepare.py.txt','http-wrapper.py.txt','normal-runner.py.txt','normal-runner-tests.py.txt','analyze.py.txt','analysis-tests.py.txt','fusion.py.txt','fusion-tests.py.txt','verify-raw-receipts.py.txt','verifier-tests.py.txt'}
 SOURCE_FILES=set(P.PINS)|{'docs/experiments/evidence/EXP-072/prepare.py.txt','docs/experiments/evidence/EXP-059/http-wrapper.py.txt','docs/experiments/evidence/EXP-073/protocol.json','docs/experiments/evidence/EXP-073/registration-integrity.json','docs/experiments/evidence/EXP-073/registration-correction.json','docs/experiments/evidence/EXP-073/fusion.py.txt','slopsearx/rerank.py'}
 
 def atomic(path,value):
@@ -27,24 +27,24 @@ class Owned:
         self.offline=offline;self.fixture=fixture;self.last_raw=None;self.last_transport=None
     def __call__(self,body,timeout_s=1):
         request_sha=hashlib.sha256(body).hexdigest();start=time.monotonic()
-        if self.offline:
+        if self.offline and self.fixture!='http-error':
             request=P.BASE.validate_request(body)
             self.last_raw=P.response_fixture(request,score=2,usage={'input_tokens':11,'output_tokens':3})
             if self.fixture=='missing-usage':
                 payload=P.strict_json(self.last_raw);payload.pop('usage',None);self.last_raw=P.wire(payload)
-            self.last_transport={'status':'offline-fixture','request_sha256':request_sha,'response_sha256':hashlib.sha256(self.last_raw).hexdigest(),'stdout_sha256':hashlib.sha256(self.last_raw).hexdigest(),'stderr_sha256':hashlib.sha256(b'').hexdigest(),'remote_http_ms':(time.monotonic()-start)*1000}
-            if self.fixture=='http-error':
-                self.last_raw=b'{"error":"synthetic fixture error"}';self.last_transport.update(status='offline-fixture-error',response_sha256=hashlib.sha256(self.last_raw).hexdigest(),stdout_sha256=hashlib.sha256(self.last_raw).hexdigest());raise ValueError('fixture-http-error')
+            self.last_transport={'status':'offline-fixture','request_sha256':request_sha,'response_sha256':hashlib.sha256(self.last_raw).hexdigest(),'stdout_sha256':hashlib.sha256(self.last_raw).hexdigest(),'stderr_sha256':hashlib.sha256(b'').hexdigest(),'stderr_hex':'','remote_http_ms':(time.monotonic()-start)*1000}
             return self.last_raw,self.last_transport['remote_http_ms']
+        command=[sys.executable,str(HERE/'http-wrapper.py.txt')]
+        if self.offline: command.extend(['--offline-fixture',self.fixture])
         try:
-            result=subprocess.run([sys.executable,str(HERE/'http-wrapper.py.txt')],input=body,capture_output=True,timeout=max(0.001,timeout_s),check=False)
+            result=subprocess.run(command,input=body,capture_output=True,timeout=max(0.001,timeout_s),check=False)
         except subprocess.TimeoutExpired as e:
             self.last_raw=e.stdout if type(e.stdout)is bytes else None
             stderr=e.stderr if type(e.stderr)is bytes else b''
-            self.last_transport={'status':'timeout','request_sha256':request_sha,'response_sha256':hashlib.sha256(self.last_raw or b'').hexdigest(),'stdout_sha256':hashlib.sha256(self.last_raw or b'').hexdigest(),'stderr_sha256':hashlib.sha256(stderr).hexdigest(),'remote_http_ms':None}
+            self.last_transport={'status':'timeout','request_sha256':request_sha,'response_sha256':hashlib.sha256(self.last_raw or b'').hexdigest(),'stdout_sha256':hashlib.sha256(self.last_raw or b'').hexdigest(),'stderr_sha256':hashlib.sha256(stderr).hexdigest(),'stderr_hex':stderr.hex(),'remote_http_ms':None}
             raise TimeoutError('transport-timeout')
         self.last_raw=result.stdout;stderr=result.stderr
-        transport={'status':'wrapper-error' if result.returncode else 'returned','request_sha256':request_sha,'response_sha256':hashlib.sha256(result.stdout).hexdigest(),'stdout_sha256':hashlib.sha256(result.stdout).hexdigest(),'stderr_sha256':hashlib.sha256(stderr).hexdigest(),'remote_http_ms':None}
+        transport={'status':'offline-fixture-http-error' if self.offline and result.returncode else ('wrapper-error' if result.returncode else 'returned'),'request_sha256':request_sha,'response_sha256':hashlib.sha256(result.stdout).hexdigest(),'stdout_sha256':hashlib.sha256(result.stdout).hexdigest(),'stderr_sha256':hashlib.sha256(stderr).hexdigest(),'stderr_hex':stderr.hex(),'remote_http_ms':None}
         self.last_transport=transport
         try:
             # Wrapper stderr is one JSON telemetry envelope and contains no request or credential values.
@@ -124,7 +124,7 @@ def _uninvoked(item,b):
 def run(acq,queries,outdir,offline=True,source_integrity=None,fixture='neutral',prebuilt=None):
     prepared=prebuilt if prebuilt is not None else prebuild(acq,queries)
     if type(source_integrity)is not dict:
-        source_integrity={'input_revision':REGISTRATION_REVISION,'protocol_sha256':P.digest((HERE/'protocol.json').read_bytes()),'registration_sha256':P.digest((HERE/'registration-integrity.json').read_bytes())}
+        source_integrity={'input_pins':dict(P.PINS),'input_revision':REGISTRATION_REVISION,'protocol_sha256':P.digest((HERE/'protocol.json').read_bytes()),'registration_sha256':P.digest((HERE/'registration-integrity.json').read_bytes())}
     if outdir.exists() or outdir.is_symlink(): raise ValueError('output-exists')
     if not outdir.parent.is_dir() or not os.access(outdir.parent,os.W_OK): raise ValueError('output-parent')
     outdir.mkdir();receipts=outdir/'receipts';receipts.mkdir()

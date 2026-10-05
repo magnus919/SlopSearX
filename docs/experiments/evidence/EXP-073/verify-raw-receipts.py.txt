@@ -1,0 +1,204 @@
+"""Independent offline audit of EXP-073 raw call and durable body receipts.
+
+This verifier proves byte bindings and recomputes candidate orders from saved
+responses. Timing is only independently bound where wrapper stderr telemetry is
+retained; a hash of an absent telemetry record is not timing evidence.
+"""
+from __future__ import annotations
+import hashlib, importlib.machinery, importlib.util, json, math
+from fractions import Fraction
+from pathlib import Path
+
+HERE=Path(__file__).resolve().parent; REPO=HERE.parents[3]
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader);mod=importlib.util.module_from_spec(spec);loader.exec_module(mod);return mod
+P=load('exp073_verify_prepare',HERE/'prepare.py.txt')
+N=load('exp073_verify_runner',HERE/'normal-runner.py.txt')
+A=load('exp073_verify_analyzer',HERE/'analyze.py.txt')
+
+def _need(ok,code):
+    if not ok: raise ValueError('receipt-'+code)
+def _sha(raw): return hashlib.sha256(raw).hexdigest()
+def _read(path): return P.strict_json(Path(path).read_bytes())
+def _rank_fusion(cards,incumbent,purpose):
+    ids=[c['id'] for c in cards]
+    _need(len(ids)==len(set(ids)) and len(incumbent)==len(ids) and set(incumbent)==set(ids) and len(purpose)==len(ids) and set(purpose)==set(ids),'fusion-membership')
+    r0={sid:i+1 for i,sid in enumerate(incumbent)};rp={sid:i+1 for i,sid in enumerate(purpose)}
+    scores={sid:Fraction(1,60+r0[sid])+Fraction(1,60+rp[sid]) for sid in ids}
+    keys={c['id']:tuple(c[k].encode('utf-8') for k in ('url','title','snippet','id')) for c in cards}
+    order=sorted(ids,key=lambda sid:(-scores[sid],keys[sid]))
+    rows={sid:[v.numerator,v.denominator] for sid,v in scores.items()}
+    return {'order_ids':order,'rational_scores':rows}
+
+def _analysis_inputs():
+    inputs={k:(REPO/k).read_bytes() for k in P.PINS}
+    acq,queries=N.source_data(inputs)
+    refs=P.strict_json((REPO/'docs/experiments/evidence/EXP-064/completed/metric-reference-view.json').read_bytes())
+    protocol_raw=(HERE/'protocol.json').read_bytes();reg_raw=(HERE/'registration-integrity.json').read_bytes()
+    return inputs,acq,queries,refs,protocol_raw,reg_raw
+
+def verify(outdir,require_analysis=True):
+    outdir=Path(outdir); run=_read(outdir/'run.json'); receipts=outdir/'receipts'
+    inputs,acq,queries,refs,protocol_raw,reg_raw=_analysis_inputs(); protocol=P.strict_json(protocol_raw)
+    _need(run.get('schema')=='exp073-run/1','schema')
+    _need(run.get('input_pins')==P.PINS,'input-pins')
+    _need(run.get('source_integrity',{}).get('protocol_sha256')==_sha(protocol_raw),'protocol-pin')
+    _need(run.get('source_integrity',{}).get('registration_sha256')==_sha(reg_raw),'registration-pin')
+    P.validate_inputs(inputs,run.get('input_revision'))
+    schedule=[('neutral',N.synthetic_case()[0],N.synthetic_case()[1],P.bodies(*N.synthetic_case()))]
+    byid={q['id']:q for q in queries}
+    for item in protocol['schedule']:
+        built=P.bodies(byid[item['case']],acq['pools'][item['case']]['cards'],item['variant'])
+        schedule.append((item['case']+'-'+item['variant'],byid[item['case']],built['cards'],built))
+    paths=sorted(receipts.glob('call-*.json'),key=lambda p:int(p.stem.split('-')[1]))
+    _need(len(paths)<=44,'call-cap')
+    call_rows=[_read(p) for p in paths]
+    attempts=0; known_in=known_out=0; unknown=False; cursor=0; computed={}; fusion_expected={}; expected_calls=[]
+    for opid,case,cards,built in schedule:
+        op=run['neutral'] if opid=='neutral' else next((x for x in run['operations'] if x.get('id')==opid),None)
+        _need(type(op)is dict,'operation-missing')
+        if opid=='neutral':
+            _need(op.get('cards')==cards,'neutral-membership')
+            recorded={'id':'neutral','case':'neutral','variant':'neutral','cards':cards,'provenance_order_ids':built['provenance_order_ids'],'arms':op.get('arms'), 'candidate_phase_ms':op.get('candidate_phase_ms')}
+        else:
+            recorded=op
+            _need(recorded.get('cards')==cards and recorded.get('provenance_order_ids')==built['provenance_order_ids'],'operation-membership')
+        op_receipts=[]
+        for arm in ('w0','purpose_component'):
+            if cursor>=len(call_rows): break
+            rec=call_rows[cursor]; cursor+=1
+            _need(rec.get('operation')==opid and rec.get('arm')==arm,'attempt-order')
+            expected=P.wire(built[arm]);_need(bytes.fromhex(rec['request_hex'])==expected,'request-bytes')
+            _need(rec.get('request_sha256')==_sha(expected),'request-hash')
+            transport=rec.get('transport')
+            raw=bytes.fromhex(rec['raw_response_hex']) if type(rec.get('raw_response_hex'))is str else None
+            if raw is not None:
+                _need(rec.get('response_body_sha256')==_sha(raw),'response-hash')
+            if type(transport)is dict:
+                _need(transport.get('request_sha256')==rec['request_sha256'],'transport-request-hash')
+                if raw is not None: _need(transport.get('response_sha256')==rec.get('response_body_sha256'),'transport-response-hash')
+                else: _need(rec.get('response_body_sha256') is None and transport.get('response_sha256')==_sha(b''),'empty-response-hash')
+                _need(transport.get('stdout_sha256')==transport.get('response_sha256'),'stdout-hash')
+                stderr=bytes.fromhex(transport.get('stderr_hex',''))
+                _need(transport.get('stderr_sha256')==_sha(stderr),'stderr-hash')
+                remote=transport.get('remote_http_ms')
+                if stderr:
+                    envelope=P.strict_json(stderr)
+                    _need(envelope.get('request_sha256')==rec['request_sha256'],'telemetry-request')
+                    _need(envelope.get('response_sha256')==rec.get('response_body_sha256'),'telemetry-response')
+                    _need(type(remote)in (int,float) and not isinstance(remote,bool) and math.isfinite(remote) and 0<=remote<=1000,'telemetry-time')
+                    _need(envelope.get('remote_http_ms')==remote,'telemetry-time-binding')
+                    _need(rec.get('elapsed_ms')==remote,'elapsed-time-binding')
+                else:
+                    _need(run.get('synthetic') is True and transport.get('status') in ('offline-fixture','timeout'),'unmeasured-live-time')
+            else:
+                _need(rec.get('status')=='pending' or (rec.get('status')=='failed' and rec.get('failure') in ('candidate-phase-deadline','wall-budget')),'transport-missing')
+            attempted=type(transport)is dict or rec.get('status') in ('returned','validated')
+            usage=P.BASE.usage_from_raw(raw) if raw is not None else None
+            _need(rec.get('usage')==usage,'usage-binding')
+            if attempted:
+                _need(not unknown,'unknown-usage-admission')
+                _need(known_in+64000<=3000000 and known_out+64000<=160000,'usage-admission')
+                attempts+=1
+                _need(attempts<=44,'attempt-cap')
+                if usage is None: unknown=True
+                else:
+                    known_in+=usage['input_tokens'];known_out+=usage['output_tokens']
+                    _need(usage['input_tokens']<=64000 and usage['output_tokens']<=64000,'per-call-usage')
+            op_receipts.append((arm,rec,raw,usage))
+            expected_calls.append((opid,arm))
+            if rec.get('status')!='validated': break
+        computed[opid]=op_receipts
+        if not op_receipts and all(x.get('status')=='uninvoked' for x in recorded.get('arms',{}).values()): continue
+        phase=recorded.get('candidate_phase_ms')
+        _need(type(phase)in (int,float) and not isinstance(phase,bool) and math.isfinite(phase) and phase>=0,'phase-number')
+        arms_now=recorded.get('arms',{})
+        elapsed=[arms_now.get(n,{}).get('elapsed_ms') for n in ('w0','purpose_component','candidate')]
+        elapsed=[x for x in elapsed if type(x)in (int,float) and not isinstance(x,bool) and math.isfinite(x) and x>=0]
+        _need(phase+1e-6>=sum(elapsed),'phase-lower-bound')
+        if all(arms_now.get(n,{}).get('status')=='valid' for n in ('w0','purpose_component','candidate')):
+            _need(phase<=1000,'successful-phase-deadline')
+        if len(op_receipts)==2 and all(r[1].get('status')=='validated' for r in op_receipts):
+            wraw=op_receipts[0][2]; praw=op_receipts[1][2]
+            wparsed=P.validate_score_response(wraw,built['w0'],list(built['w0']['questions']),9)
+            pparsed=P.validate_score_response(praw,built['purpose_component'],list(built['purpose_component']['questions']),3)
+            local=P.order_scores(wparsed['scores'],list(built['w0']['questions']),9)
+            worder=[built['w0_local_to_pool'][x] for x in local]+list(built['tail_ids'])
+            porder=P.order_scores(pparsed['scores'],list(built['purpose_component']['questions']),3)
+            fused=_rank_fusion(cards,worder,porder)
+            registered=N.FUSE.fuse(cards,worder,porder)
+            _need(fused==registered,'registered-fusion-implementation')
+            exact_order=fused['order_ids'];exact_rows=fused['rational_scores'];fusion_expected[opid]=fused
+            arms=recorded.get('arms',{})
+            _need(arms.get('w0',{}).get('order_ids')==worder,'w0-order')
+            _need(arms.get('w0',{}).get('scores')=={built['w0_local_to_pool'][k]:v for k,v in wparsed['scores'].items()},'w0-scores')
+            _need(arms.get('purpose_component',{}).get('order_ids')==porder,'purpose-order')
+            _need(arms.get('purpose_component',{}).get('scores')==pparsed['scores'],'purpose-scores')
+            cand=arms.get('candidate',{})
+            if cand.get('status')=='valid':
+                _need(cand.get('order_ids')==exact_order and cand.get('rational_scores')==exact_rows,'fusion')
+            else:
+                _need(cand.get('status')=='failed' and cand.get('order_ids')==worder and cand.get('rational_scores')=={},'failure-fallback')
+                failure_path=receipts/(opid+'-failure.json')
+                _need(failure_path.is_file(),'failure-receipt-missing')
+                failure=_read(failure_path)
+                _need(failure.get('receipt_status')=='failed' and failure.get('operation',{}).get('id')==opid,'failure-receipt-binding')
+            u0,u1=op_receipts[0][3],op_receipts[1][3]
+            aggregate={'input_tokens':u0['input_tokens']+u1['input_tokens'],'output_tokens':u0['output_tokens']+u1['output_tokens']}
+            _need(cand.get('usage')==aggregate,'aggregate-usage')
+            _need(arms['w0'].get('raw_answers')=={built['w0_local_to_pool'][k]:v for k,v in wparsed['raw_answers'].items()},'w0-raw-answers')
+            _need(arms['purpose_component'].get('raw_answers')==pparsed['raw_answers'],'purpose-raw-answers')
+        elif op_receipts:
+            # An interrupted operation retains the fresh incumbent when available.
+            _need(op_receipts[-1][1].get('status')!='validated','partial-operation')
+            if op_receipts[0][1].get('arm')=='w0' and op_receipts[0][1].get('status')=='validated':
+                wparsed=P.validate_score_response(op_receipts[0][2],built['w0'],list(built['w0']['questions']),9)
+                local=P.order_scores(wparsed['scores'],list(built['w0']['questions']),9)
+                incumbent=[built['w0_local_to_pool'][x] for x in local]+list(built['tail_ids'])
+                _need(recorded['arms']['w0'].get('order_ids')==incumbent,'interrupted-w0')
+                _need(recorded['arms']['candidate'].get('order_ids')==incumbent and recorded['arms']['candidate'].get('rational_scores')=={},'interrupted-fallback')
+            break
+    _need(cursor==len(call_rows),'receipt-order')
+    budget=run.get('budget',{})
+    _need(budget.get('attempts')==attempts,'attempt-count')
+    _need(budget.get('input_tokens')==known_in and budget.get('output_tokens')==known_out,'budget-totals')
+    _need(budget.get('unknown_usage')==unknown,'unknown-usage')
+    _need(known_in<=3_000_000 and known_out<=160_000,'budget-cap')
+    # Validate final body receipts against independently recomputed fusion fields.
+    for opid,case,cards,built in schedule:
+        if opid!='neutral' and not any(x.get('id')==opid for x in run['operations']): continue
+        op=run['neutral'] if opid=='neutral' else next(x for x in run['operations'] if x['id']==opid)
+        final=receipts/(opid+'-final.json')
+        op_calls=computed.get(opid,[])
+        has_two_valid= len(op_calls)==2 and all(row[1].get('status')=='validated' for row in op_calls)
+        _need(not has_two_valid or final.is_file(),'durable-final-missing')
+        if final.exists():
+            body=_read(final);_need(body.get('receipt_status')=='durable-candidate-body' and body.get('operation',{}).get('id')==opid,'final-body')
+            _need(body['operation'].get('cards')==cards,'final-membership-cards');_need(body['operation'].get('provenance_order_ids')==built['provenance_order_ids'],'final-membership-order')
+            cand=body['operation'].get('arms',{}).get('candidate',{})
+            run_cand=op.get('arms',{}).get('candidate',{})
+            if has_two_valid:
+                proposed=fusion_expected[opid]
+                _need(cand.get('order_ids')==proposed['order_ids'] and cand.get('rational_scores')==proposed['rational_scores'],'final-proposed-fusion')
+                if run_cand.get('status')=='valid':
+                    _need(cand.get('order_ids')==run_cand.get('order_ids') and cand.get('rational_scores')==run_cand.get('rational_scores'),'final-candidate-binding')
+    analyzer=A.analyze(run,acq,refs,queries,protocol,inputs,protocol_raw,reg_raw)
+    analysis_path=outdir/'analysis.json'
+    if require_analysis:
+        _need(analysis_path.is_file(),'analysis-missing')
+        _need(_read(analysis_path)==analyzer,'analysis-binding')
+    _need(analyzer.get('quality_analysis_performed') is False if run.get('synthetic') else True,'synthetic-quality-credit')
+    report={'schema':'exp073-raw-verification/1','verified':True,'status':run['status'],'synthetic':run['synthetic'],'physical_attempts':attempts,
+            'known_usage':{'input_tokens':known_in,'output_tokens':known_out},'unknown_usage':unknown,
+            'raw_calls_checked':len(call_rows),'wrapper_telemetry_checked':sum(bool((r.get('transport') or {}).get('stderr_hex')) for r in call_rows),
+            'timing_limitation':'Wrapper timings are independently checked only when raw stderr telemetry is retained and parsed. In-process synthetic fixtures have locally measured elapsed values but no independent remote clock evidence.',
+            'analysis':analyzer}
+    return report
+
+if __name__=='__main__':
+    import argparse
+    ap=argparse.ArgumentParser();ap.add_argument('run_dir',type=Path);ap.add_argument('--output',type=Path)
+    args=ap.parse_args(); report=verify(args.run_dir)
+    raw=json.dumps(report,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()
+    if args.output: args.output.write_bytes(raw)
+    print(json.dumps({'verified':report['verified'],'status':report['status'],'physical_attempts':report['physical_attempts'],'wrapper_telemetry_checked':report['wrapper_telemetry_checked']}))

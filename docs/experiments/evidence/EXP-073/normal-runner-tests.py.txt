@@ -68,7 +68,7 @@ class RunnerTests(unittest.TestCase):
                 final=json.loads(next((Path(d)/'run'/'receipts').glob(op['id']+'-final.json')).read_bytes())
                 self.assertEqual(final['receipt_status'],'durable-candidate-body')
             call_receipt=json.loads((Path(d)/'run'/'receipts'/'call-00.json').read_bytes())
-            self.assertEqual(set(call_receipt['transport']),{'status','request_sha256','response_sha256','stdout_sha256','stderr_sha256','remote_http_ms'})
+            self.assertEqual(set(call_receipt['transport']),{'status','request_sha256','response_sha256','stdout_sha256','stderr_sha256','stderr_hex','remote_http_ms'})
             self.assertEqual(call_receipt['request_sha256'],call_receipt['transport']['request_sha256'])
             self.assertEqual(call_receipt['response_body_sha256'],call_receipt['transport']['response_sha256'])
     def test_malformed_purpose_response_keeps_fresh_w0_then_stops(self):
@@ -111,8 +111,31 @@ class RunnerTests(unittest.TestCase):
         acq,queries=data();built=P.bodies(queries[0],acq['pools'][queries[0]['id']]['cards'])
         body=P.wire(built['w0']);request=SimpleNamespace(method='POST',data=body)
         response=W.FixtureOpener('missing-usage').open(request,1)
-        payload=P.strict_json(response.body)
+        payload=P.strict_json(response.read())
         self.assertNotIn('usage',payload)
+    def test_real_wrapper_http503_fixture_binds_telemetry_and_runner_keeps_known_usage(self):
+        W=load('exp073_http_503_wrapper_test',HERE/'http-wrapper.py.txt')
+        acq,queries=data();built=P.bodies(queries[0],acq['pools'][queries[0]['id']]['cards']);body=P.wire(built['w0'])
+        timing={}
+        with self.assertRaises(W.HTTP.HTTPFailure) as caught:
+            W.HTTP.exchange(body,'offline-fixture-non-secret',W.FixtureOpener('http-error'),timing=timing)
+        self.assertEqual(caught.exception.status,503);self.assertEqual(timing,{})
+        error_body=P.strict_json(caught.exception.raw)
+        self.assertEqual(error_body['usage'],{'input_tokens':11,'output_tokens':3})
+        with tempfile.TemporaryDirectory() as d:
+            out=Path(d)/'run';run=N.run(acq,queries,out,offline=True,fixture='http-error')
+            receipt=json.loads((out/'receipts'/'call-00.json').read_bytes())
+        self.assertEqual((run['status'],run['budget']['attempts']),('incomplete',1))
+        self.assertEqual(run['budget']['input_tokens'],11);self.assertEqual(run['budget']['output_tokens'],3)
+        self.assertFalse(run['budget']['unknown_usage']);self.assertEqual(receipt['status'],'failed')
+        self.assertEqual(receipt['transport']['status'],'offline-fixture-http-error')
+        self.assertEqual(receipt['transport']['http_status'],503)
+        raw=bytes.fromhex(receipt['raw_response_hex']);stderr=bytes.fromhex(receipt['transport']['stderr_hex'])
+        envelope=P.strict_json(stderr)
+        self.assertEqual(receipt['transport']['request_sha256'],receipt['request_sha256'])
+        self.assertEqual(envelope['request_sha256'],receipt['request_sha256'])
+        self.assertEqual(envelope['response_sha256'],__import__('hashlib').sha256(raw).hexdigest())
+        self.assertEqual(receipt['transport']['stderr_sha256'],__import__('hashlib').sha256(stderr).hexdigest())
     def test_transport_timeout_preserves_available_raw_body_and_known_usage_without_retry(self):
         acq,queries=data()
         class Timeout:

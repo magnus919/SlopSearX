@@ -1,0 +1,107 @@
+"""Negative tests for the independent EXP-073 receipt verifier; entirely offline."""
+import copy,hashlib,json,tempfile,unittest
+from unittest.mock import patch
+from pathlib import Path
+HERE=Path(__file__).resolve().parent
+V=__import__('importlib.machinery').machinery.SourceFileLoader('exp073_raw_verifier_tests',str(HERE/'verify-raw-receipts.py.txt'))
+S=__import__('importlib.util').util.spec_from_loader(V.name,V);M=__import__('importlib.util').util.module_from_spec(S);V.exec_module(M)
+N=M.N;P=M.P;A=M.A;ORIGINAL_OWNED=N.Owned
+
+class RawReceiptVerifierTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp=tempfile.TemporaryDirectory(); cls.root=Path(cls.tmp.name)
+        inputs={k:(N.REPO/k).read_bytes() for k in P.PINS}; acq,queries=N.source_data(inputs)
+        cls.complete=cls.root/'complete';N.run(acq,queries,cls.complete,offline=True)
+        cls._bind_analysis(cls.complete)
+        cls.interrupted=cls.root/'interrupted'
+        class AfterNeutral:
+            def __init__(self,*_): self.count=0;self.good=ORIGINAL_OWNED(True,'neutral');self.bad=ORIGINAL_OWNED(True,'http-error');self.last_raw=None;self.last_transport=None
+            def __call__(self,body,timeout_s=1):
+                target=self.good if self.count<2 else self.bad;self.count+=1
+                try: return target(body,timeout_s)
+                finally: self.last_raw=target.last_raw;self.last_transport=target.last_transport
+        with patch.object(N,'Owned',AfterNeutral): N.run(acq,queries,cls.interrupted,offline=True)
+        cls._bind_analysis(cls.interrupted)
+    @classmethod
+    def tearDownClass(cls): cls.tmp.cleanup()
+    @classmethod
+    def _bind_analysis(cls,path):
+        run=json.loads((path/'run.json').read_bytes());inputs,acq,queries,refs,protoraw,regr=M._analysis_inputs()
+        value=A.analyze(run,acq,refs,queries,P.strict_json(protoraw),inputs,protoraw,regr)
+        (path/'analysis.json').write_bytes(json.dumps(value,separators=(',',':'),allow_nan=False).encode())
+    def clone(self,source):
+        dest=self.root/('copy-'+str(len(list(self.root.glob('copy-*')))))
+        import shutil;shutil.copytree(source,dest);return dest
+    def test_complete_44_call_run_recomputes_fusion_and_analyzer(self):
+        result=M.verify(self.complete)
+        self.assertTrue(result['verified']);self.assertEqual(result['physical_attempts'],44)
+        self.assertEqual(result['raw_calls_checked'],44);self.assertEqual(result['analysis']['outcome'],'synthetic_fixture_only')
+        self.assertFalse(result['analysis']['quality_analysis_performed'])
+    def test_interrupted_503_retains_raw_telemetry_and_is_verifiable_without_44_calls(self):
+        result=M.verify(self.interrupted)
+        self.assertEqual((result['status'],result['physical_attempts'],result['wrapper_telemetry_checked']),('incomplete',3,1))
+        self.assertEqual(result['known_usage'],{'input_tokens':33,'output_tokens':9})
+    def test_altered_raw_response_fails_hash_binding(self):
+        d=self.clone(self.complete); p=d/'receipts'/'call-00.json';r=json.loads(p.read_bytes());raw=bytearray.fromhex(r['raw_response_hex']);raw[-2]^=1;r['raw_response_hex']=raw.hex();p.write_text(json.dumps(r,separators=(',',':')))
+        with self.assertRaisesRegex(ValueError,'response-hash'): M.verify(d,require_analysis=False)
+    def test_altered_order_fails_independent_response_recomputation(self):
+        d=self.clone(self.complete);p=d/'run.json';r=json.loads(p.read_bytes());r['operations'][0]['arms']['w0']['order_ids'].reverse();p.write_text(json.dumps(r,separators=(',',':')))
+        with self.assertRaisesRegex(ValueError,'w0-order'): M.verify(d,require_analysis=False)
+    def test_altered_usage_fails_raw_usage_comparison(self):
+        d=self.clone(self.complete);p=d/'receipts'/'call-00.json';r=json.loads(p.read_bytes());r['usage']['input_tokens']+=1;p.write_text(json.dumps(r,separators=(',',':')))
+        with self.assertRaisesRegex(ValueError,'usage-binding'): M.verify(d,require_analysis=False)
+    def test_mutated_pool_membership_fails_before_receipt_acceptance(self):
+        d=self.clone(self.complete);p=d/'run.json';r=json.loads(p.read_bytes());r['operations'][0]['cards'][0]['id']='foreign-card';p.write_text(json.dumps(r,separators=(',',':')))
+        with self.assertRaisesRegex(ValueError,'operation-membership|w0-order|fusion'): M.verify(d,require_analysis=False)
+    def test_analysis_must_match_current_analyzer_result(self):
+        d=self.clone(self.complete);p=d/'analysis.json';v=json.loads(p.read_bytes());v['outcome']='quality_improved';p.write_text(json.dumps(v,separators=(',',':')))
+        with self.assertRaisesRegex(ValueError,'analysis-binding'): M.verify(d)
+    def test_transport_timeout_with_unknown_usage_is_a_single_attempt_and_stops(self):
+        inputs={k:(N.REPO/k).read_bytes() for k in P.PINS};acq,queries=N.source_data(inputs);out=self.root/'timeout'
+        class Timeout:
+            def __init__(self,*_): self.last_raw=None;self.last_transport=None
+            def __call__(self,body,timeout_s=1):
+                sha=hashlib.sha256(body).hexdigest();empty=hashlib.sha256(b'').hexdigest()
+                self.last_transport={'status':'timeout','request_sha256':sha,'response_sha256':empty,'stdout_sha256':empty,'stderr_sha256':empty,'stderr_hex':'','remote_http_ms':None}
+                raise TimeoutError('transport-timeout')
+        with patch.object(N,'Owned',Timeout): N.run(acq,queries,out,offline=True)
+        self._bind_analysis(out);r=M.verify(out)
+        self.assertEqual((r['physical_attempts'],r['unknown_usage'],r['raw_calls_checked']),(1,True,1))
+    def test_pre_dispatch_deadline_receipt_is_retained_without_consuming_attempt(self):
+        inputs={k:(N.REPO/k).read_bytes() for k in P.PINS};acq,queries=N.source_data(inputs);out=self.root/'predispatch';clock=[0.0]
+        def mono(): clock[0]+=.001;return clock[0]
+        original_sync=N.sync_directory
+        def slow_pending(path):
+            result=original_sync(path)
+            if Path(path).name=='receipts': clock[0]+=1.01
+            return result
+        class Spy:
+            calls=0
+            def __init__(self,*_): pass
+            def __call__(self,*_,**__): Spy.calls+=1;raise AssertionError('transport after predispatch deadline')
+        with patch.object(N,'Owned',Spy),patch.object(N.time,'monotonic',side_effect=mono),patch.object(N,'sync_directory',side_effect=slow_pending): N.run(acq,queries,out,offline=True)
+        self.assertEqual(Spy.calls,0);self._bind_analysis(out);r=M.verify(out)
+        self.assertEqual((r['physical_attempts'],r['raw_calls_checked']),(0,1))
+    def test_deadline_after_both_responses_retains_proposed_body_and_falls_back(self):
+        inputs={k:(N.REPO/k).read_bytes() for k in P.PINS};acq,queries=N.source_data(inputs);out=self.root/'postbody';clock=[0.0]
+        def mono(): clock[0]+=.001;return clock[0]
+        original=N.atomic
+        def slow_final(path,value):
+            op=value.get('operation',{})
+            if Path(path).name=='q1-base-final.json' and op.get('arms',{}).get('candidate',{}).get('status')=='body_durable_pending_deadline': clock[0]+=1.01
+            return original(path,value)
+        class Good:
+            calls=0
+            def __init__(self,*_): self.last_raw=None;self.last_transport=None
+            def __call__(self,body,timeout_s=1):
+                Good.calls+=1;req=P.BASE.strict_json(body);self.last_raw=P.response_fixture(req,usage={'input_tokens':10,'output_tokens':2});
+                sha=hashlib.sha256(body).hexdigest();response=hashlib.sha256(self.last_raw).hexdigest();empty=hashlib.sha256(b'').hexdigest()
+                self.last_transport={'status':'offline-fixture','request_sha256':sha,'response_sha256':response,'stdout_sha256':response,'stderr_sha256':empty,'stderr_hex':'','remote_http_ms':.01}
+                return self.last_raw,.01
+        with patch.object(N,'Owned',Good),patch.object(N.time,'monotonic',side_effect=mono),patch.object(N,'atomic',side_effect=slow_final): N.run(acq,queries,out,offline=True)
+        self.assertEqual(Good.calls,4);self._bind_analysis(out);r=M.verify(out)
+        self.assertEqual((r['status'],r['physical_attempts']),('incomplete',4))
+        run=json.loads((out/'run.json').read_bytes());self.assertEqual(run['operations'][0]['arms']['candidate']['order_ids'],run['operations'][0]['arms']['w0']['order_ids'])
+
+if __name__=='__main__': unittest.main()
