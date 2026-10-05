@@ -1,0 +1,9 @@
+# Source-use pilot registration notes
+
+PR #635 froze the initial task/pool/prompt inputs before any source capture or answer generation. A substantive independent Luna review then identified broad facet labels without operational target checks and reversibly derived packet names. Both were corrected before capture: the manifest now records explicit expected evidence and boundary checks for the unchanged q6/q8 purposes/facets, random opaque packet IDs with a private controller mapping, and randomized union-source presentation to source assessors.
+
+The target checks are newly operationalized before opening pages; they were not present in the original EXP-060 reference labels and must not be described as original gold. They cannot qualify the rejected selector or create untouched confirmation.
+
+Fresh fork-none agents receive assigned packets only, excluding registration, complete ranking orders, scores, old assessments and mappings. Public source content can inherently identify sources; this is operational blinding, not cryptographic anonymity. Selected answer contexts retain ranked order because order is part of the consumer treatment. Randomizing answer context order would instead measure a different mechanism. Source assessment precedes answer generation; each reviewer preserves its own assessment and disagreements are retained.
+
+The exact-span verifier validates complete source/facet membership and bounded verbatim quotations against supplied contexts, recording character spans and hashes without copying source text to its receipt. It provides no entailment, authority, source-truth or task-completion credit. Nine meaningful offline tests pass. Capture-helper qualification and live execution remain pending.

@@ -1,0 +1,78 @@
+"""Verify exact captured-context links; never infer entailment or source truth.
+
+Input packet: {cases: [{id, facets:[{id}], sources:[{source_id, context}]}]}.
+Assessment: source assessor's {sources:[...]} JSON. Full contexts stay private.
+"""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+
+
+def verify(packet, assessment):
+    sources = {}
+    for case in packet['cases']:
+        facets = {f['id'] for f in case['facets']}
+        for source in case['sources']:
+            key = (case['id'], source['source_id'])
+            if key in sources:
+                raise ValueError('duplicate packet source')
+            sources[key] = (source.get('context', ''), facets)
+    seen = set()
+    links = []
+    for source in assessment['sources']:
+        key = (source['task_id'], source['source_id'])
+        if key not in sources or key in seen:
+            raise ValueError('unknown or duplicate assessment source')
+        seen.add(key)
+        context, facets = sources[key]
+        facet_seen = set()
+        for judgment in source['facet_assessments']:
+            facet = judgment['facet_id']
+            if facet not in facets or facet in facet_seen:
+                raise ValueError('unknown or duplicate facet')
+            facet_seen.add(facet)
+            status = judgment['status']
+            quote, role = judgment['quote'], judgment['role']
+            if status == 'evidence_available':
+                if role not in {'support', 'contradict', 'qualify'}:
+                    raise ValueError('invalid evidence role')
+                if not quote or len(quote.split()) > 25 or quote not in context:
+                    raise ValueError('unmatched or over-budget quotation')
+                start = context.index(quote)
+                links.append({'task_id': key[0], 'source_id': key[1],
+                              'facet_id': facet, 'start': start,
+                              'end': start + len(quote),
+                              'context_sha256': hashlib.sha256(context.encode()).hexdigest(),
+                              'quote_sha256': hashlib.sha256(quote.encode()).hexdigest()})
+            elif status in {'not_acquired', 'opened_unusable'}:
+                if quote or role != 'none':
+                    raise ValueError('non-evidence state has quotation or role')
+                if status == 'not_acquired' and context:
+                    raise ValueError('captured source labeled not acquired')
+            else:
+                raise ValueError('invalid evidence state')
+        if facet_seen != facets:
+            raise ValueError('missing facet assessment')
+    if seen != set(sources):
+        raise ValueError('missing source assessment')
+    return {'status': 'exact_span_links_verified', 'entailment_verified': False,
+            'source_truth_verified': False, 'links': links}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--packet', type=Path, required=True)
+    parser.add_argument('--assessment', type=Path, required=True)
+    parser.add_argument('--output', type=Path, required=True)
+    args = parser.parse_args()
+    if args.output.exists() or args.output.is_symlink():
+        raise ValueError('output already exists')
+    result = verify(json.loads(args.packet.read_text()), json.loads(args.assessment.read_text()))
+    with args.output.open('x') as out:
+        json.dump(result, out, indent=2)
+        out.write('\n')
+
+
+if __name__ == '__main__':
+    main()
