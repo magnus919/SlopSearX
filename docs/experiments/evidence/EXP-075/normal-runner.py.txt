@@ -253,6 +253,9 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,preb
                                 elapsed_ms=(time.perf_counter_ns()-call_start)/1e6)
                     if base['dispatched'] and base['usage'] is None:budget['unknown_usage']=True
                 raise CallFailure(base,base['failure']['code']) from None
+            fsync_start=time.perf_counter_ns();atomic(path,base)
+            base['timings']['response_receipt_fsync_ms']=(time.perf_counter_ns()-fsync_start)/1e6
+            atomic(path,base)
             return raw,base
         except CallFailure as error:
             if error.record is not base:base=error.record
@@ -284,7 +287,7 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,preb
         try:
             raw,rec=await physical_call(control_raw,opid,'w0',deadline,bounds['legacy_control_request_bytes'],digest(control_raw))
             op['calls'].append(rec)
-            parsed=P.parse_control(raw,control);parse_start=time.perf_counter_ns()
+            parse_start=time.perf_counter_ns();parsed=P.parse_control(raw,control)
             op['arms']['w0']={'status':'valid','order_ids':parsed['order_ids'],'scores':parsed['scores'],
                 'raw_answers':parsed['raw_answers'],'rational_scores':{},'usage':parsed['usage'],'elapsed_ms':rec['elapsed_ms']}
             parse_ms=(time.perf_counter_ns()-parse_start)/1e6
@@ -307,7 +310,8 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,preb
             sidecar=receipts/(opid+'-baseline-failure.json');fsync_start=time.perf_counter_ns()
             atomic(sidecar,{'receipt_status':'baseline-failed','operation':op});fsync_ms=(time.perf_counter_ns()-fsync_start)/1e6
             op['baseline_receipt']={'path':sidecar.name,'sha256':digest(sidecar.read_bytes()),'fsync_ms':fsync_ms}
-            op['phase_endpoint_after_fsync']=True;op['paired_wall_ms']=(time.perf_counter()-paired_start)*1000
+            op['phase_endpoint_after_fsync']=True;op['baseline_phase_ms']=(time.perf_counter()-phase_start)*1000
+            op['paired_wall_ms']=(time.perf_counter()-paired_start)*1000
             return op,False
         # Candidate phase begins before pending receipt, reconstruction, namespacing and serialization.
         candidate_start=time.perf_counter();candidate_deadline=candidate_start+1.0
@@ -355,7 +359,7 @@ async def run(acquisition,queries,outdir,offline=True,source_integrity=None,preb
             if op['arms']['candidate']['status']=='candidate-body-durable':
                 op['arms']['candidate'].update(status='failed-fallback',order_ids=list(op['provenance_order_ids']),rational_scores={})
             else:
-                op['arms']['candidate']={'status':'failed_fallback','order_ids':list(op['provenance_order_ids']),
+                op['arms']['candidate']={'status':'failed-fallback','order_ids':list(op['provenance_order_ids']),
                     'scores':{},'raw_answers':{},'rational_scores':{},'usage':None,'elapsed_ms':None}
             op['candidate_phase_ms']=(time.perf_counter()-candidate_start)*1000
             op['phase_endpoint_after_fsync']=False

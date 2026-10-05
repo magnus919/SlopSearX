@@ -71,6 +71,13 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(escaped, [])
         self.assertFalse(output["quality_credit"])
         self.assertFalse(output["adoption_eligible"])
+        for op in output["operations"]:
+            self.assertIsNotNone(op["baseline_parse_ms"])
+            self.assertTrue(op["phase_endpoint_after_fsync"])
+            self.assertGreaterEqual(op["baseline_phase_ms"],
+                                    op["calls"][0]["elapsed_ms"] + op["baseline_parse_ms"])
+            self.assertGreater(op["calls"][0]["timings"]["response_receipt_fsync_ms"], 0)
+            self.assertGreater(op["calls"][1]["timings"]["response_receipt_fsync_ms"], 0)
 
     def test_timed_build_overrun_never_dispatches_joint_and_keeps_native_incumbent(self):
         original = P.build_joint
@@ -150,6 +157,10 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(call["usage_status"], "known")
         self.assertTrue(output["neutral"]["arms"]["candidate"]["order_ids"] ==
                         output["neutral"]["provenance_order_ids"])
+        self.assertEqual(output["neutral"]["arms"]["candidate"]["status"], "failed-fallback")
+        self.assertTrue(output["neutral"]["phase_endpoint_after_fsync"])
+        self.assertGreaterEqual(output["neutral"]["baseline_phase_ms"],
+                                output["neutral"]["baseline_receipt"]["fsync_ms"])
 
     def test_credential_echo_is_suppressed_from_retained_receipt(self):
         stats = {"clients": 0, "requests": 0, "closed": 0}
