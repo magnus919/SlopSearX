@@ -1,0 +1,159 @@
+"""Produce a separate post-run analysis using an explicitly patched evaluator.
+
+This utility never changes the run, receipts, qualification manifest, or any of
+the qualified source files. It addresses one known evaluator defect: validated
+W0 orders were not inserted into the metrics lookup before A/B comparison.
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+import subprocess
+from pathlib import Path
+import types
+
+HERE=Path(__file__).resolve().parent
+
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path))
+    spec=importlib.util.spec_from_loader(loader.name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+
+P=load("exp075_postrun_prepare",HERE/"prepare.py.txt")
+N=load("exp075_postrun_runner",HERE/"normal-runner.py.txt")
+V=load("exp075_postrun_verifier",HERE/"verify-raw-receipts.py.txt")
+
+OLD_LINE=b'                orders[(case, variant, "candidate")] = expected_order\n'
+NEW_LINES=(b'                orders[(case, variant, "w0")] = arms["w0"]["order_ids"]\n'
+           +OLD_LINE)
+
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+
+def corrected_module(original_raw,qualified_sha):
+    if type(original_raw)is not bytes or sha(original_raw)!=qualified_sha:
+        raise ValueError("postrun-qualified-analyzer-hash")
+    if original_raw.count(OLD_LINE)!=1:
+        raise ValueError("postrun-patch-count")
+    revised=original_raw.replace(OLD_LINE,NEW_LINES)
+    module=types.ModuleType("exp075_postrun_corrected_analyzer")
+    module.__file__=str(HERE/"analyze.py.txt")
+    exec(compile(revised,module.__file__,"exec"),module.__dict__)
+    return module,revised
+
+def _write_new(path,raw):
+    fd=os.open(path,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
+    try:
+        with os.fdopen(fd,"wb") as stream:
+            stream.write(raw);stream.flush();os.fsync(stream.fileno())
+    except BaseException:
+        try:os.unlink(path)
+        except OSError:pass
+        raise
+
+def _sync_directory(path):
+    fd=os.open(path,os.O_RDONLY)
+    try:os.fsync(fd)
+    finally:os.close(fd)
+
+def _evaluator_identity():
+    relative="docs/experiments/evidence/EXP-075/postrun-analyze.py.txt"
+    revision=subprocess.run(["git","rev-parse","HEAD"],cwd=N.REPO,check=True,
+                            capture_output=True,text=True).stdout.strip()
+    raw=Path(__file__).read_bytes()
+    if N.committed(relative,revision)!=raw:
+        raise ValueError("postrun-evaluator-not-committed")
+    return {"path":relative,"source_revision":revision,"file_sha256":sha(raw),
+            "committed_byte_binding":True}
+
+def analyze_preserved_run(outdir,artifact_dir):
+    """Verify raw evidence and write distinct post-run analysis/report files."""
+    outdir=Path(outdir)
+    artifact_dir=Path(artifact_dir)
+    resolved_run=outdir.resolve();resolved_artifacts=artifact_dir.resolve()
+    if resolved_artifacts==resolved_run or resolved_run in resolved_artifacts.parents:
+        raise ValueError("postrun-artifacts-must-be-separate")
+    if not artifact_dir.parent.is_dir():
+        raise ValueError("postrun-artifact-parent-missing")
+    run_raw=(outdir/"run.json").read_bytes();run=P.strict_json(run_raw)
+    if run.get("schema")!="exp075-run/1" or run.get("status")!="complete" or run.get("synthetic") is not False:
+        raise ValueError("postrun-requires-complete-nonsynthetic-run")
+    qualification_raw=(outdir/"qualification-integrity.json").read_bytes()
+    qualification=P.strict_json(qualification_raw)
+    qualified_sha=qualification.get("files",{}).get("analyze.py.txt")
+    original_path=HERE/"analyze.py.txt"
+    original_raw=original_path.read_bytes()
+    if sha(original_raw)!=qualified_sha:
+        raise ValueError("postrun-qualified-source-mismatch")
+    if run.get("source_integrity",{}).get("qualified_source_revision")!=qualification.get("qualified_source_revision"):
+        raise ValueError("postrun-qualified-revision-mismatch")
+    analyzer,patched_raw=corrected_module(original_raw,qualified_sha)
+    evaluator_identity=_evaluator_identity()
+
+    # The verifier still checks original committed source bytes and the exact
+    # retained qualification. Only its in-memory evaluator reference changes.
+    V.A=analyzer
+    verified=V.verify(outdir,require_analysis=False)
+    analysis=verified.get("analysis")
+    if type(analysis)is not dict or analysis.get("quality_analysis_performed") is not True:
+        raise ValueError("postrun-quality-analysis-not-produced")
+    analysis_raw=P.wire(analysis)
+    evaluator={
+        "kind":"postrun-in-memory-one-line-correction",
+        "postrun_evaluator":evaluator_identity,
+        "qualified_source_path":"docs/experiments/evidence/EXP-075/analyze.py.txt",
+        "qualified_source_sha256":qualified_sha,
+        "qualified_source_revision":qualification["qualified_source_revision"],
+        "qualified_file_closure":qualification["files"],
+        "qualified_source_pins":qualification.get("source_pins"),
+        "postrun_evaluator_sha256":sha(patched_raw),
+        "correction_sha256":sha(NEW_LINES),
+        "correction":"record the already-recomputed and validated W0 order for reference comparison",
+    }
+    report={
+        "schema":"exp075-postrun-verification/1",
+        "raw_receipts_verified_with_postrun_evaluator":verified.get("verified") is True,
+        "original_qualified_evaluator_full_verification":"failed before metrics; retained separately",
+        "original_run_sha256":sha(run_raw),
+        "qualification_manifest_sha256":sha(qualification_raw),
+        "qualified_source_revision":qualification["qualified_source_revision"],
+        "evaluator":evaluator,
+        "raw_verification":{"status":verified.get("status"),
+            "synthetic":verified.get("synthetic"),"physical_attempts":verified.get("physical_attempts"),
+            "known_usage":verified.get("known_usage"),"unknown_usage":verified.get("unknown_usage")},
+        "analysis_sha256":sha(analysis_raw),
+        "analysis_file":"analysis-postrun.json",
+        "artifact_directory":artifact_dir.name,
+        "quality_analysis_performed":analysis["quality_analysis_performed"],
+        "adoption_eligible":analysis.get("adoption_eligible"),
+    }
+    report_raw=P.wire(report)
+    if artifact_dir.exists() or artifact_dir.is_symlink():
+        raise FileExistsError("postrun-artifact-directory-exists")
+    artifact_dir.mkdir()
+    _sync_directory(artifact_dir.parent)
+    analysis_path=artifact_dir/"analysis-postrun.json"
+    report_path=artifact_dir/"verification-postrun.json"
+    try:
+        _write_new(analysis_path,analysis_raw)
+        _write_new(report_path,report_raw)
+        _sync_directory(artifact_dir)
+    except BaseException:
+        analysis_path.unlink(missing_ok=True)
+        report_path.unlink(missing_ok=True)
+        try:_sync_directory(artifact_dir)
+        except OSError:pass
+        artifact_dir.rmdir()
+        _sync_directory(artifact_dir.parent)
+        raise
+    return report
+
+if __name__=="__main__":
+    import argparse
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("run_dir",type=Path)
+    parser.add_argument("artifact_dir",type=Path)
+    args=parser.parse_args()
+    print(json.dumps(analyze_preserved_run(args.run_dir,args.artifact_dir),separators=(",",":")))
