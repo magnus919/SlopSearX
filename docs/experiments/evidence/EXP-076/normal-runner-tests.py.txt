@@ -1,0 +1,130 @@
+"""Offline-only EXP-076 runner regression tests; every HTTP exchange is MockTransport."""
+import asyncio,importlib.machinery,importlib.util,json,pathlib,tempfile,time,unittest
+
+HERE=pathlib.Path(__file__).resolve().parent
+def load(name,path):
+ l=importlib.machinery.SourceFileLoader(name,str(path));s=importlib.util.spec_from_loader(name,l);m=importlib.util.module_from_spec(s);l.exec_module(m);return m
+N=load('exp076_test_runner',HERE/'normal-runner.py.txt');P=N.P
+
+class Exp076Tests(unittest.TestCase):
+ @classmethod
+ def setUpClass(cls):
+  cls.inputs={p:(P.REPO/p).read_bytes() for p in P.PINS};cls.acq,cls.queries=P.source_data(cls.inputs)
+ def test_candidate_bytes_match_registered_capacity_projection_and_permutations(self):
+  cap=load('exp076_capacity_test',HERE/'capacity-preview.py.txt')
+  for case in self.queries:
+   cards=self.acq['pools'][case['id']]['cards'];expected,_=cap.project_body(case,cards)
+   expected_raw=cap.wire(expected);mapping=[c['id'] for c in P.build_candidate(case,cards)['cards']]
+   for permuted in (cards,list(reversed(cards)),cards[20:]+cards[:20]):
+    built=P.build_candidate(case,permuted)
+    self.assertEqual(P.wire(built['joint']),expected_raw)
+    self.assertEqual([c['id'] for c in built['cards']],mapping)
+  case,cards=P.synthetic_case();body=P.build_candidate(case,cards)['joint']
+  self.assertEqual(len(body['questions']),160);self.assertEqual(len(P.wire(body)),270847);self.assertEqual(len(P.wire(body['state'])),10462)
+ def test_full_offline_schedule_records_44_calls_and_exact_phase_receipts(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   factory=N.fixture_client_factory();result=asyncio.run(N.run(self.acq,self.queries,pathlib.Path(tmp)/'out',client_factory=factory))
+   self.assertEqual(result['status'],'complete');self.assertEqual(result['budget']['attempts'],44);self.assertEqual(len(result['operations']),21)
+   self.assertEqual(factory.stats['requests'],44);self.assertEqual(factory.stats['clients'],factory.stats['closed'])
+   for op in [result['neutral'],*result['operations']]:
+    self.assertEqual([c['arm'] for c in op['calls']],['w0','candidate'])
+    self.assertTrue(op['phase_endpoint_after_fsync']);self.assertLessEqual(op['baseline_phase_ms'],1000);self.assertLessEqual(op['candidate_phase_ms'],1000)
+    self.assertTrue(op['baseline_receipt']['sha256']);self.assertTrue(op['final_receipt']['sha256'])
+   self.assertFalse(result['quality_credit']);self.assertFalse(result['adoption_eligible']);self.assertEqual(result['neutral']['arms']['candidate']['status'],'valid')
+ def test_query_and_purpose_ranges_and_exact_tie_stability(self):
+  case,cards=P.synthetic_case();built=P.build_candidate(case,cards);answers={}
+  for key,q in built['joint']['questions'].items():answers[key]={'type':'score','score':3 if key.startswith('query:') else 1}
+  raw=P.wire({'model':P.MODEL,'answers':answers,'usage':{'input_tokens':1,'output_tokens':1}})
+  parsed=P.parse_candidate(raw,built)
+  self.assertEqual(parsed['joint_query']['order_ids'],built['ids']);self.assertEqual(parsed['joint_purpose']['order_ids'],built['ids'])
+  self.assertEqual(parsed['candidate']['order_ids'],built['ids']);self.assertEqual(parsed['candidate']['rational_scores']['neutral-0'],[2,61])
+  answers['purpose:neutral-0']['score']=4
+  with self.assertRaises(ValueError):P.parse_candidate(P.wire({'model':P.MODEL,'answers':answers,'usage':{'input_tokens':1,'output_tokens':1}}),built)
+  answers.pop('purpose:neutral-0');
+  with self.assertRaises(ValueError):P.parse_candidate(P.wire({'model':P.MODEL,'answers':answers,'usage':{'input_tokens':1,'output_tokens':1}}),built)
+ def test_overflow_stops_and_falls_back_to_complete_native_order(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   factory=N.fixture_client_factory('overflow');result=asyncio.run(N.run(self.acq,self.queries,pathlib.Path(tmp)/'out',client_factory=factory))
+   op=result['neutral'];self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],2)
+   self.assertEqual(factory.stats['requests'],2);self.assertEqual(op['arms']['candidate']['status'],'failed-fallback')
+   self.assertEqual(op['arms']['candidate']['order_ids'],op['provenance_order_ids']);self.assertEqual(len(result['operations']),0)
+   self.assertEqual(op['calls'][1]['failure']['code'],'response-too-large');self.assertEqual(op['calls'][1]['usage_status'],'unknown')
+ def test_joint_request_build_crossing_deadline_does_not_dispatch(self):
+  case,cards=P.synthetic_case();delayed=lambda c,cs,v:(time.sleep(1.02) or P.build_candidate(c,cs,v))
+  ctrl=P.build_control(case,cards);cand=P.build_candidate(case,cards);raw=P.wire(ctrl['w0'])
+  with tempfile.TemporaryDirectory() as tmp:
+   out=pathlib.Path(tmp)/'out';(out.parent).mkdir(exist_ok=True)
+   # Reuse the single operation path explicitly so the delayed build cannot dispatch candidate HTTP.
+   async def one():
+    out.mkdir();N.durable(out/'dummy',{'fixture':True});receipts=out/'receipts';receipts.mkdir()
+    original_out=out
+    # Exercise full run through hook on its first neutral operation.
+    return await N.run(self.acq,self.queries,pathlib.Path(tmp)/'run',client_factory=N.fixture_client_factory(),build_candidate_fn=delayed)
+   result=asyncio.run(one());op=result['neutral']
+   self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],1)
+   self.assertEqual(op['calls'][-1]['dispatched'],False);self.assertEqual(op['arms']['candidate']['order_ids'],op['provenance_order_ids'])
+   self.assertEqual(op['final_receipt']['path'],'neutral-final.json')
+ def test_transport_failures_never_redirect_retry_or_use_environment_proxy(self):
+  for mode in ('redirect','http-error','missing-usage','credential-echo'):
+   with self.subTest(mode=mode),tempfile.TemporaryDirectory() as tmp:
+    factory=N.fixture_client_factory(mode);result=asyncio.run(N.run(self.acq,self.queries,pathlib.Path(tmp)/'out',client_factory=factory))
+    self.assertEqual(result['status'],'incomplete');self.assertEqual(result['budget']['attempts'],2)
+    self.assertEqual(factory.stats['requests'],2);self.assertEqual(factory.stats['clients'],factory.stats['closed'])
+    candidate=result['neutral']['calls'][-1];self.assertEqual(candidate['transport']['trust_env'],False);self.assertFalse(candidate['transport']['follow_redirects'])
+    if mode=='redirect':self.assertEqual(candidate['http_status'],302)
+    if mode=='credential-echo':self.assertIsNone(candidate['raw_response_hex']);self.assertNotIn('offline-fixture-non-secret',json.dumps(candidate))
+ def test_credential_echo_split_across_response_chunks_is_suppressed(self):
+  stats={'clients':0,'requests':0,'closed':0};marker=b'Bearer offline-fixture-non-secret'
+  class Split(N.httpx.AsyncByteStream):
+   async def __aiter__(self):
+    yield b'prefix-Bearer offline-fixture-';yield b'non-secret-suffix'
+   async def aclose(self):pass
+  def factory(**kwargs):
+   stats['clients']+=1
+   class Counted(N.httpx.AsyncClient):
+    async def aclose(self):
+     if not getattr(self,'_closed_once',False):self._closed_once=True;stats['closed']+=1
+     await super().aclose()
+   async def handler(req):
+    stats['requests']+=1;body=P.strict_json(req.content)
+    if any(k.startswith('query:') for k in body['questions']):return N.httpx.Response(200,stream=Split())
+    return N.httpx.Response(200,content=P.response_fixture(body))
+   return Counted(transport=N.httpx.MockTransport(handler),**kwargs)
+  with tempfile.TemporaryDirectory() as tmp:
+   result=asyncio.run(N.run(self.acq,self.queries,pathlib.Path(tmp)/'out',client_factory=factory));rec=result['neutral']['calls'][-1]
+   self.assertEqual(result['status'],'incomplete');self.assertEqual(stats['requests'],2);self.assertEqual(stats['clients'],stats['closed'])
+   self.assertIsNone(rec['raw_response_hex']);self.assertNotIn(marker.decode(),json.dumps(rec));self.assertTrue(result['budget']['unknown_usage'])
+ def test_cancellation_retains_partial_response_and_stops_unknown_usage(self):
+  stats={'clients':0,'requests':0,'closed':0};entered=asyncio.Event();block=asyncio.Event()
+  class Partial(N.httpx.AsyncByteStream):
+   async def __aiter__(self):
+    yield b'{"partial":';entered.set();await block.wait();yield b'null}'
+   async def aclose(self):pass
+  def factory(**kwargs):
+   stats['clients']+=1
+   class Counted(N.httpx.AsyncClient):
+    async def aclose(self):
+     if not getattr(self,'_closed_once',False):self._closed_once=True;stats['closed']+=1
+     await super().aclose()
+   async def handler(req):
+    stats['requests']+=1;body=P.strict_json(req.content)
+    if any(k.startswith('query:') for k in body['questions']):return N.httpx.Response(200,stream=Partial())
+    return N.httpx.Response(200,content=P.response_fixture(body))
+   return Counted(transport=N.httpx.MockTransport(handler),**kwargs)
+  async def scenario(path):
+   task=asyncio.create_task(N.run(self.acq,self.queries,path,client_factory=factory))
+   await asyncio.wait_for(entered.wait(),timeout=2);task.cancel();return await task
+  with tempfile.TemporaryDirectory() as tmp:
+   result=asyncio.run(scenario(pathlib.Path(tmp)/'out'));rec=result['neutral']['calls'][-1]
+   self.assertEqual(result['status'],'incomplete');self.assertEqual(stats['requests'],2);self.assertEqual(stats['clients'],stats['closed'])
+   self.assertTrue(rec['dispatched']);self.assertEqual(rec['usage_status'],'unknown');self.assertTrue(result['budget']['unknown_usage'])
+   self.assertEqual(bytes.fromhex(rec['raw_response_hex']),b'{"partial":')
+ def test_direct_live_run_is_rejected_before_network_and_credential_use(self):
+  calls=[]
+  def forbidden(**kwargs):calls.append(kwargs);raise AssertionError('network client used')
+  with tempfile.TemporaryDirectory() as tmp:
+   with self.assertRaisesRegex(ValueError,'live-execution-disabled'):
+    asyncio.run(N.run(self.acq,self.queries,pathlib.Path(tmp)/'out',offline=False,client_factory=forbidden))
+  self.assertEqual(calls,[])
+
+if __name__=='__main__':unittest.main(verbosity=2)

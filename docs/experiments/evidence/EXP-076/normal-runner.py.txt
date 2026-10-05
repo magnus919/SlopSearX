@@ -1,0 +1,222 @@
+"""EXP-076 inert runner. Default execution is fixture-only; no search path exists."""
+from __future__ import annotations
+import argparse,asyncio,hashlib,importlib.machinery,importlib.util,json,os,platform,socket,subprocess,sys,time,urllib.parse
+from pathlib import Path
+import httpx
+
+HERE=Path(__file__).resolve().parent;REPO=HERE.parents[3]
+def load(name,path):
+ loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader);m=importlib.util.module_from_spec(spec);loader.exec_module(m);return m
+P=load('exp076_prepare',HERE/'prepare.py.txt')
+T=load('exp076_http_transport',REPO/'docs/experiments/evidence/EXP-075/http-transport.py.txt')
+REGISTRATION_REVISION=P.REGISTRATION_REVISION
+ARMS=P.ARMS
+OWNED_FILES={'prepare.py.txt','normal-runner.py.txt','normal-runner-tests.py.txt','analyze.py.txt','analysis-tests.py.txt','verify-raw-receipts.py.txt','verifier-tests.py.txt'}
+DEPENDENCIES=('httpx','httpcore','anyio')
+def digest(raw):return hashlib.sha256(raw).hexdigest()
+def syncdir(path):
+ fd=os.open(path,os.O_RDONLY)
+ try:os.fsync(fd)
+ finally:os.close(fd)
+def durable(path,data,exclusive=False):
+ path=Path(path);raw=data if type(data)is bytes else P.wire(data);tmp=path.with_name(path.name+'.tmp')
+ with tmp.open('xb') as f:f.write(raw);f.flush();os.fsync(f.fileno())
+ if exclusive:os.link(tmp,path);tmp.unlink()
+ else:os.replace(tmp,path)
+ syncdir(path.parent);return {'path':path.name,'sha256':digest(raw),'bytes':len(raw)}
+def pending(path,value):
+ raw=P.wire(value)
+ with Path(path).open('xb') as f:f.write(raw);f.flush();os.fsync(f.fileno())
+ syncdir(Path(path).parent);return (time.perf_counter_ns())
+def study_identity(protocol_raw,registration_raw,input_bytes):
+ if type(input_bytes)is not dict or set(input_bytes)!=set(P.PINS) or any(type(v)is not bytes for v in input_bytes.values()):raise ValueError('study-identity-inputs')
+ return digest(protocol_raw+registration_raw+b''.join(k.encode()+b'\0'+input_bytes[k] for k in sorted(input_bytes)))
+def usage_admissible(budget):
+ b=P.PROTOCOL['bounds'];return budget['input_tokens']+64_000<=b['reported_input_tokens'] and budget['output_tokens']+32_000<=b['reported_output_tokens']
+
+def fixture_client_factory(mode='scores',stats=None):
+ stats=stats if stats is not None else {'clients':0,'requests':0,'closed':0}
+ class Client(httpx.AsyncClient):
+  async def aclose(self):
+   if not getattr(self,'_counted',False):self._counted=True;stats['closed']+=1
+   await super().aclose()
+ async def handler(req):
+  stats['requests']+=1;body=P.strict_json(req.content)
+  joint=any(k.startswith(('query:','purpose:')) for k in body['questions'])
+  if mode=='redirect' and joint:return httpx.Response(302,headers={'Location':'https://fixture.invalid/redirect'})
+  if mode=='http-error' and joint:return httpx.Response(503,content=b'fixture-http-error')
+  if mode=='overflow' and joint:return httpx.Response(200,content=b'x'*(T.MAX_RESPONSE_BYTES+20))
+  if mode=='credential-echo' and joint:return httpx.Response(200,content=b'prefix-'+req.headers['authorization'].encode()+b'-suffix')
+  if mode=='missing-usage' and joint:
+   raw=P.strict_json(P.response_fixture(body));raw.pop('usage',None);return httpx.Response(200,content=P.wire(raw))
+  if mode=='slow':await asyncio.sleep(2)
+  scores={}
+  for k,q in body['questions'].items():
+   scores[k]=5 if k.startswith(('w0:','query:')) else 2
+  return httpx.Response(200,content=P.response_fixture(body,score_by_id=scores))
+ def factory(**kwargs):
+  stats['clients']+=1
+  return Client(transport=httpx.MockTransport(handler),**kwargs)
+ factory.stats=stats;return factory
+
+def _empty_arm(status='uninvoked'):
+ return {'status':status,'order_ids':[],'scores':{},'raw_answers':{},'rational_scores':{},'usage':None,'elapsed_ms':None}
+def _empty_op(opid,case,cards,ctrl):
+ return {'id':opid,'case':case['id'],'variant':opid.rsplit('-',1)[-1] if '-' in opid else 'neutral',
+         'cards':cards,'provenance_order_ids':list(ctrl['provenance_order_ids']),
+         'arms':{a:_empty_arm() for a in ARMS},'calls':[],'baseline_phase_ms':None,'candidate_phase_ms':None,
+         'paired_wall_ms':None,'phase_endpoint_after_fsync':False,'baseline_receipt':None,'candidate_body_receipt':None,
+         'final_receipt':None,'failure':None}
+class CallFailure(Exception):
+ def __init__(self,record,code):self.record=record;self.code=code;super().__init__(code)
+
+async def run(acquisition,queries,outdir,offline=True,source_integrity=None,client_factory=None,api_key=None,
+              input_bytes=None,build_candidate_fn=None):
+ if offline is not True:raise ValueError('live-execution-disabled-until-qualified-admission')
+ if api_key not in (None,'offline-fixture-non-secret'):raise ValueError('offline-credential-forbidden')
+ if client_factory is None:client_factory=fixture_client_factory()
+ if source_integrity is None:
+  source_integrity={'input_pins':dict(P.PINS),'input_revision':REGISTRATION_REVISION,
+    'protocol_sha256':digest((HERE/'protocol.json').read_bytes()),'registration_sha256':digest((HERE/'registration-integrity.json').read_bytes()),
+    'qualification_sha256':None,'lease_identity':None,'qualified_source_revision':None}
+ out=Path(outdir)
+ if out.exists() or out.is_symlink() or not out.parent.is_dir() or not os.access(out.parent,os.W_OK):raise ValueError('output-path')
+ # Prebuild is validation only. Candidate construction inside each measured phase is fresh.
+ prepared=P.prebuild(acquisition,queries);out.mkdir(mode=0o700);receipts=out/'receipts';receipts.mkdir(mode=0o700)
+ owner=T.AsyncHTTPTransport(client_factory=client_factory);bounds=P.PROTOCOL['bounds'];budget={'attempts':0,'input_tokens':0,'output_tokens':0,'unknown_usage':False}
+ start=time.perf_counter();result={'schema':'exp076-run/1','status':'running','synthetic':True,'quality_credit':False,'adoption_eligible':False,
+  'input_pins':dict(P.PINS),'input_revision':source_integrity.get('input_revision',REGISTRATION_REVISION),'source_integrity':source_integrity,
+  'neutral':None,'operations':[],'budget':dict(budget),'wall_seconds':0.0}
+ def checkpoint():
+  result['budget']=dict(budget);result['wall_seconds']=time.perf_counter()-start;durable(out/'run.json',result)
+ index=0;stopped=False
+ async def call(raw,opid,arm,deadline):
+  nonlocal index
+  name='call-%02d.json'%index;index+=1;path=receipts/name;rec={'schema':'exp076-call/1','status':'pending','dispatched':False,
+    'operation':opid,'arm':arm,'request_hex':raw.hex(),'request_sha256':digest(raw),'raw_response_hex':None,'response_body_sha256':None,
+    'response_bytes':0,'response_complete':False,'http_status':None,'usage':None,'usage_status':'not_dispatched','elapsed_ms':None,
+    'timings':{},'transport':{'kind':'inprocess-async-httpx','trust_env':False,'follow_redirects':False,'retries':0,'concurrency':1,
+      'request_sha256':digest(raw),'response_sha256':None,'client_closed':False},'failure':None}
+  t0=time.perf_counter_ns();durable(path,rec);rec['timings']['pending_receipt_fsync_ms']=(time.perf_counter_ns()-t0)/1e6
+  try:
+   if time.perf_counter()>=deadline:raise CallFailure(rec,'whole-phase-deadline')
+   if budget['attempts']>=bounds['calls'] or not usage_admissible(budget):raise CallFailure(rec,'usage-admission')
+   timeout=min(1.0,deadline-time.perf_counter())
+   def dispatch():
+    if time.perf_counter()>=deadline:raise T.DispatchDenied()
+    rec['dispatched']=True;rec['usage_status']='unknown';budget['attempts']+=1
+    durable(path,rec)
+   began=time.perf_counter_ns()
+   try:
+    rawresp,status,complete,timings=await owner.exchange(raw,'offline-fixture-non-secret',timeout,P.PROTOCOL['wire']['endpoint'],on_dispatch=dispatch)
+    usage=P.usage_from_raw(rawresp);rec.update(status='returned',raw_response_hex=rawresp.hex(),response_body_sha256=digest(rawresp),response_bytes=len(rawresp),
+        response_complete=complete,http_status=status,usage=usage,usage_status='known' if usage is not None else 'unknown',elapsed_ms=(time.perf_counter_ns()-began)/1e6)
+    rec['transport'].update(response_sha256=digest(rawresp),client_closed=bool((owner.last_attempt or {}).get('client_closed')));rec['timings'].update(timings)
+    if usage is None:budget['unknown_usage']=True
+    else:budget['input_tokens']+=usage['input_tokens'];budget['output_tokens']+=usage['output_tokens']
+    if status!=200:raise CallFailure(rec,'http-status')
+    if not complete:raise CallFailure(rec,'incomplete-response')
+    if usage is None:raise CallFailure(rec,'unknown-usage')
+    if usage['input_tokens']>64_000 or usage['output_tokens']>32_000 or budget['input_tokens']>bounds['reported_input_tokens'] or budget['output_tokens']>bounds['reported_output_tokens']:raise CallFailure(rec,'usage-bound')
+    return rawresp,rec
+   except T.TransportFailure as e:
+    rawresp=e.raw;usage=P.usage_from_raw(rawresp) if rawresp is not None else None
+    rec.update(status='failed',http_status=e.http_status,response_complete=e.response_complete,usage=usage,
+      usage_status='known' if usage is not None else ('unknown' if e.dispatched else 'not_dispatched'),failure={'type':'TransportFailure','code':e.code},elapsed_ms=(time.perf_counter_ns()-began)/1e6)
+    if rawresp is not None:rec.update(raw_response_hex=rawresp.hex(),response_body_sha256=digest(rawresp),response_bytes=len(rawresp));rec['transport']['response_sha256']=digest(rawresp)
+    if usage is None and e.dispatched:budget['unknown_usage']=True
+    elif usage is not None:budget['input_tokens']+=usage['input_tokens'];budget['output_tokens']+=usage['output_tokens']
+    rec['timings'].update(e.timings);rec['transport']['client_closed']=bool((owner.last_attempt or {}).get('client_closed'))
+    raise CallFailure(rec,e.code) from None
+   except asyncio.CancelledError:
+    attempt=owner.last_attempt or {};partial=attempt.get('raw');dispatched=bool(attempt.get('dispatched'))
+    usage=P.usage_from_raw(partial) if type(partial)is bytes else None
+    rec.update(status='failed',dispatched=dispatched,usage=usage,
+       usage_status='known' if usage is not None else ('unknown' if dispatched else 'not_dispatched'),
+       failure={'type':'CancelledError','code':'cancelled'},elapsed_ms=(time.perf_counter_ns()-began)/1e6 if dispatched else None)
+    if type(partial)is bytes:
+     rec.update(raw_response_hex=partial.hex(),response_body_sha256=digest(partial),response_bytes=len(partial));rec['transport']['response_sha256']=digest(partial)
+    if dispatched and usage is None:budget['unknown_usage']=True
+    elif usage is not None:budget['input_tokens']+=usage['input_tokens'];budget['output_tokens']+=usage['output_tokens']
+    rec['timings'].update(attempt.get('timings',{}));rec['transport']['client_closed']=bool(attempt.get('client_closed'))
+    raise CallFailure(rec,'cancelled') from None
+  except CallFailure as e:
+   if rec.get('dispatched') and rec['usage'] is None:budget['unknown_usage']=True
+   rec.update(status='failed',failure=rec.get('failure') or {'type':'DispatchDenied','code':e.code},usage_status='unknown' if rec['dispatched'] else 'not_dispatched')
+   raise
+  finally:
+   durable(path,rec)
+  # unreachable
+
+ async def operate(opid,item,case,cards,ctrl,cand,control_raw):
+  op=_empty_op(opid,case,cards,ctrl);phase=time.perf_counter();baseline_start=time.perf_counter();baseline_deadline=baseline_start+1.0
+  try:
+   raw,record=await call(control_raw,opid,'w0',baseline_deadline);op['calls'].append(record)
+   parsed=P.parse_control(raw,ctrl);op['arms']['w0']={'status':'valid','order_ids':parsed['order_ids'],'scores':parsed['scores'],'raw_answers':parsed['raw_answers'],'rational_scores':{},'usage':parsed['usage'],'elapsed_ms':record['elapsed_ms']}
+   br={'schema':'exp076-receipt/1','operation':opid,'receipt_status':'baseline-valid','order_ids':parsed['order_ids'],'usage':parsed['usage'],'call_sha256':digest(P.wire(record))}
+   baseline_receipt_start=time.perf_counter();op['baseline_receipt']=durable(receipts/(opid+'-baseline.json'),br)
+   op['baseline_phase_ms']=(time.perf_counter()-baseline_start)*1000
+   op['arms']['w0']['elapsed_ms']=op['baseline_phase_ms']
+   if op['baseline_phase_ms']>1000:raise CallFailure(record,'baseline-deadline')
+  except (CallFailure,ValueError) as e:
+   code=e.code if isinstance(e,CallFailure) else 'baseline-parse';op['failure']={'code':code,'phase':'baseline'}
+   if isinstance(e,CallFailure) and not any(c is e.record for c in op['calls']):op['calls'].append(e.record)
+   fail={'schema':'exp076-receipt/1','operation':opid,'receipt_status':'baseline-failed','failure':op['failure'],'order_ids':list(op['provenance_order_ids'])}
+   op['final_receipt']=durable(receipts/(opid+'-final.json'),fail);op['phase_endpoint_after_fsync']=True;op['baseline_phase_ms']=(time.perf_counter()-baseline_start)*1000;op['candidate_phase_ms']=None;op['paired_wall_ms']=(time.perf_counter()-phase)*1000
+   for arm in ('joint_query','joint_purpose','candidate'):op['arms'][arm]=_empty_arm('uninvoked')
+   return op,False
+  candidate_start=time.perf_counter();deadline=candidate_start+1.0
+  try:
+   build_start=time.perf_counter_ns();builder=build_candidate_fn or P.build_candidate;joint=builder(case,cards,item.get('variant','base'));build_ms=(time.perf_counter_ns()-build_start)/1e6
+   serialize_start=time.perf_counter_ns();joint_raw=P.wire(joint['joint']);serialize_ms=(time.perf_counter_ns()-serialize_start)/1e6
+   if len(joint_raw)>bounds['request_bytes'] or len(P.wire(joint['joint']['state']))>bounds['state_bytes']:raise ValueError('candidate-request-bound')
+   if deadline-time.perf_counter()<=0:raise CallFailure({'dispatched':False,'status':'failed','usage_status':'not_dispatched','failure':{'code':'whole-phase-deadline'}},'whole-phase-deadline')
+   raw,record=await call(joint_raw,opid,'candidate',deadline);record['timings'].update({'build_ms':build_ms,'serialization_ms':serialize_ms});durable(receipts/('call-%02d.json'%(index-1)),record);op['calls'].append(record)
+   parsed=P.parse_candidate(raw,joint)
+   op['arms'].update({k:{'status':'valid','order_ids':v['order_ids'],'scores':v.get('scores',{}),'raw_answers':v.get('raw_answers',{}),
+      'rational_scores':v.get('rational_scores',{}),'usage':v['usage'],'elapsed_ms':record['elapsed_ms']} for k,v in parsed.items() if k in ARMS})
+   op['arms']['candidate']['elapsed_ms']=(time.perf_counter()-candidate_start)*1000
+   body={'schema':'exp076-receipt/1','operation':opid,'receipt_status':'candidate-valid','request_sha256':digest(joint_raw),
+         'order_ids':parsed['candidate']['order_ids'],'rational_scores':parsed['candidate']['rational_scores']}
+   op['candidate_body_receipt']=durable(receipts/(opid+'-candidate-body.json'),body)
+   final={'schema':'exp076-receipt/1','operation':opid,'receipt_status':'complete','candidate_body_sha256':op['candidate_body_receipt']['sha256'],'call_sha256':digest(P.wire(record)),
+          'candidate_order_ids':parsed['candidate']['order_ids'],'provenance_order_ids':op['provenance_order_ids']}
+   op['final_receipt']=durable(receipts/(opid+'-final.json'),final);op['phase_endpoint_after_fsync']=True
+   op['candidate_phase_ms']=(time.perf_counter()-candidate_start)*1000
+   op['paired_wall_ms']=(time.perf_counter()-phase)*1000
+   op['arms']['candidate']['elapsed_ms']=op['candidate_phase_ms']
+   if op['candidate_phase_ms']>1000:
+    op['failure']={'code':'candidate-deadline','phase':'candidate'};op['arms']['candidate'].update(status='failed-fallback',order_ids=list(op['provenance_order_ids']),rational_scores={})
+    failed={'schema':'exp076-receipt/1','operation':opid,'receipt_status':'candidate-failed-fallback','failure':op['failure'],'order_ids':op['provenance_order_ids'],
+            'proposed_body_sha256':op['candidate_body_receipt']['sha256']}
+    op['final_receipt']=durable(receipts/(opid+'-final.json'),failed);op['candidate_phase_ms']=(time.perf_counter()-candidate_start)*1000;op['phase_endpoint_after_fsync']=True;return op,False
+   return op,True
+  except (CallFailure,ValueError) as e:
+   code=e.code if isinstance(e,CallFailure) else str(e) if str(e).replace('-','').isalnum() else 'candidate-invalid'
+   op['failure']={'code':code,'phase':'candidate'}
+   if isinstance(e,CallFailure) and not any(c is e.record for c in op['calls']):op['calls'].append(e.record)
+   for arm in ('joint_query','joint_purpose','candidate'):op['arms'][arm]=_empty_arm('failed-fallback')
+   op['arms']['candidate']['order_ids']=list(op['provenance_order_ids'])
+   fail={'schema':'exp076-receipt/1','operation':opid,'receipt_status':'candidate-failed-fallback','failure':op['failure'],
+         'order_ids':list(op['provenance_order_ids'])}
+   op['final_receipt']=durable(receipts/(opid+'-final.json'),fail);op['phase_endpoint_after_fsync']=True;op['candidate_phase_ms']=(time.perf_counter()-candidate_start)*1000
+   op['arms']['candidate']['elapsed_ms']=op['candidate_phase_ms'];op['paired_wall_ms']=(time.perf_counter()-phase)*1000
+   return op,False
+
+ # Neutral fixture is first and carries no ranking/adoption credit.
+ neutral_case,neutral_cards=P.synthetic_case();neutral_item={'case':'neutral','variant':'base','arms':list(ARMS)}
+ nctrl=P.build_control(neutral_case,neutral_cards);ncand=P.build_candidate(neutral_case,neutral_cards)
+ nop,ok=await operate('neutral',neutral_item,neutral_case,neutral_cards,nctrl,ncand,P.wire(nctrl['w0']));result['neutral']=nop;checkpoint()
+ if not ok:stopped=True
+ for item,case,cards,ctrl,cand,control_raw,_ in prepared:
+  if stopped:break
+  op,ok=await operate(item['case']+'-'+item['variant'],item,case,cards,ctrl,cand,control_raw);result['operations'].append(op);checkpoint()
+  if not ok:stopped=True
+ result['status']='complete' if not stopped and len(result['operations'])==21 else 'incomplete';checkpoint();return result
+
+def main():
+ ap=argparse.ArgumentParser();ap.add_argument('--offline-fixture',action='store_true');ap.add_argument('--out',required=True);args=ap.parse_args()
+ if not args.offline_fixture:raise SystemExit('Only --offline-fixture is enabled in this unqualified harness.')
+ acquisition,queries=P.source_data({p:(P.REPO/p).read_bytes() for p in P.PINS})
+ result=asyncio.run(run(acquisition,queries,args.out,offline=True));print(json.dumps({'status':result['status'],'attempts':result['budget']['attempts']}))
+if __name__=='__main__':main()
