@@ -15,6 +15,10 @@ scored cards change, along with local IDs and shared state.
 | Composite purpose order | 0.7 | 59 | 58 |
 | Fused candidate | 0.1 | not a score population | not applicable |
 
+The q4 repeat used byte-identical control and composite requests and retained
+nine of the base top ten (overlap 0.9). This is a limited contrast with rotation,
+not a causal estimate or a guarantee for a revised request.
+
 The query branch changes coverage before any score noise is considered.
 Its unscored tail inherits incumbent order, while equal-weight fusion uses
 that resulting full ranking. Purpose scoring sees all cards, but its shared

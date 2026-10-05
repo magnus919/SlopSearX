@@ -4,6 +4,7 @@
   "source_run_sha256": "e7bd20c41d4cc3a698ea62a48eaba99c4f59a6655108ce58c1c21431f392a717",
   "operations": [
     "q4-base",
+    "q4-repeat",
     "q4-rotate"
   ],
   "pool_cards": 59,
@@ -40,5 +41,10 @@
   "provider_calls": 0,
   "search_calls": 0,
   "frozen_outcome_unchanged": "development_rejected",
-  "interpretation": "The query prefix changes membership and local IDs under rotation. Shared query/purpose state also changes. These observations do not isolate context drift from model randomness or prove a replacement policy. No weights, grades or acceptance thresholds changed."
+  "interpretation": "The query prefix changes membership and local IDs under rotation. Shared query/purpose state also changes. These observations do not isolate context drift from model randomness or prove a replacement policy. No weights, grades or acceptance thresholds changed.",
+  "repeat_comparison": {
+    "candidate_top10_overlap": 0.9,
+    "control_request_byte_identity": true,
+    "joint_request_byte_identity": true
+  }
 }
