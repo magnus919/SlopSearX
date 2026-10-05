@@ -125,13 +125,13 @@ def _assignment_id(*parts):
     return _hash('\0'.join(str(p) for p in parts).encode('utf-8'))
 
 
-def card_assignments(task_id, cards, facets, assessors=('R1', 'R2')):
+def card_assignments(task_id, cards, facets, assessors=('A', 'B')):
     """Freeze same-card fingerprints and independent assessor assignments."""
     if not isinstance(task_id, str) or not task_id or not isinstance(cards, list) or not cards:
         raise PacketError('task and nonempty card list required')
     if (len(cards) > 80 or not facets or len(set(facets)) != len(facets) or
             any(not isinstance(f, str) or not f for f in facets) or
-            len(set(assessors)) != len(assessors) or any(a not in {'R1', 'R2'} for a in assessors)):
+            len(set(assessors)) != len(assessors) or any(a not in {'A', 'B'} for a in assessors)):
         raise PacketError('card limit or assessor assignment invalid')
     frozen = []
     seen = set()
@@ -261,6 +261,9 @@ def source_chunk_assignments(task_id, source_rows, facets, *, chunk_size=20, ass
                                'pool_catalog_sha256': catalog_sha,
                                'catalog_kind': 'source_pool', 'schema': _source_chunk_schema(
                                    [r['source_id'] for r in assessable], facets)})
+    for chunk in chunks:
+        for field,value in [('task_id',chunk['task_id']),('assessor_id',chunk['assessor_id']),('chunk_id',chunk['assignment_id'])]:
+            chunk['schema']['properties'][field]={'const':value}
     return {'inventory_source_ids': ids, 'inventory_complete': True, 'assessor_ids': list(assessors),
             'pool_catalog': catalog, 'pool_catalog_sha256': catalog_sha, 'chunks': chunks}
 
@@ -272,9 +275,11 @@ def verify_source_chunk_coverage(plan, outputs):
     expected = {chunk['assignment_id']: chunk for chunk in plan['chunks'] if chunk['model_call_required']}
     observed = {}
     for output in outputs:
-        if not isinstance(output, dict) or output.get('assignment_id') not in expected:
+        if not isinstance(output, dict) or output.get('chunk_id') not in expected:
             raise PacketError('unknown source chunk output')
-        aid = output['assignment_id']
+        aid = output['chunk_id']
+        if set(output) != {'task_id','assessor_id','chunk_id','source_assessments'}:
+            raise PacketError('source chunk output envelope has missing or extra fields')
         if aid in observed:
             raise PacketError('duplicate source chunk output')
         observed[aid] = output
@@ -336,8 +341,9 @@ def source_model_input(task, chunk):
                      'critical_checks': copy_json(task['critical_checks'])},
             'chunk_id': chunk['assignment_id'], 'chunk_index': chunk['chunk_index'],
             'chunk_count': chunk['chunk_count'], 'source_total': chunk['source_total'],
-            'source_inventory': copy_json(chunk['source_inventory']),
-            'sources': copy_json(chunk['sources']), 'output_schema': copy_json(chunk['schema'])}
+            'source_inventory': [{'source_id':r['source_id'],'state':r['state']} for r in chunk['source_inventory']],
+            'sources': [{'source_id':r['source_id'],'passages':[{'evidence_id':eid,'text':r['context'][i*600:(i+1)*600]} for i,eid in enumerate(r['evidence_ids'])]} for r in chunk['sources']],
+            'output_schema': copy_json(chunk['schema'])}
 
 
 def answer_projection(card_order, openings, *, arm_id, max_cards=10, max_successes=5, context_chars=8000):
@@ -402,8 +408,8 @@ def answerer_assignment(task, projection, critical_checks):
     # remain in a private binding for mechanical hydration and audit only.
     visible_sources = []
     for source in projection['delivered_sources']:
-        visible_sources.append({'source_id': source['source_id'], 'context': source['context'],
-                                'evidence_ids': list(source['evidence_ids'])})
+        visible_sources.append({'source_id': source['source_id'],
+                                'passages':[{'evidence_id':eid,'text':projection['catalog']['passages'][eid]['text']} for eid in source['evidence_ids']]})
     visible_outcomes = [{'card_id': row['card_id'], 'state': row['state'],
                          'delivered': row['delivered']} for row in projection['opening_outcomes']]
     return {'model_input': {'task': {'task_id': task['id'], 'kind': task['kind'], 'query': task['query'],

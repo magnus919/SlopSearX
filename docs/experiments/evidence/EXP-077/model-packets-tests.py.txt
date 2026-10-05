@@ -12,7 +12,7 @@ class ModelPacketTests(unittest.TestCase):
     def test_card_assignments_bind_visible_card_bytes_and_independent_graders(self):
         cards = [{'title': 'Système 🚀', 'url': 'https://example.test/a', 'snippet': 'Résumé'}]
         rows = M.card_assignments('d1', cards, ['d1_f1', 'd1_f2'])
-        self.assertEqual([r['assessor_id'] for r in rows], ['R1', 'R2'])
+        self.assertEqual([r['assessor_id'] for r in rows], ['A', 'B'])
         self.assertEqual(rows[0]['cards'][0]['card_sha256'], rows[1]['cards'][0]['card_sha256'])
         self.assertNotEqual(rows[0]['assignment_id'], rows[1]['assignment_id'])
         self.assertEqual(rows[0]['schema']['properties']['records']['items']['properties']['facets']['items']['enum'],
@@ -56,6 +56,10 @@ class ModelPacketTests(unittest.TestCase):
                                           packet['chunks'][0])
         self.assertNotIn('pool_catalog', task_input)
         self.assertEqual(len(task_input['sources']), 20)
+        first=task_input['sources'][0]
+        self.assertEqual(''.join(p['text'] for p in first['passages']),sources[0]['context'])
+        self.assertEqual([p['evidence_id'] for p in first['passages']],packet['chunks'][0]['sources'][0]['evidence_ids'])
+        self.assertNotIn('context',task_input['source_inventory'][0])
 
     def test_source_chunk_output_coverage_is_exact_separate_and_catalog_bound(self):
         sources = [{'source_id': f's{i}', 'state': 'success', 'context': f'Context {i}'} for i in range(21)]
@@ -70,8 +74,11 @@ class ModelPacketTests(unittest.TestCase):
                     {'facet_id': 'd1_f1', 'disposition': 'evidence_available', 'scope_match': 'match',
                      'entailment': 'supports', 'applicability': 'applicable', 'not_assessable_reason': '',
                      'evidence_ids': [eid], 'reason': '', 'limitations': []}]})
-            outputs.append({'assignment_id': chunk['assignment_id'], 'task_id': 'd1',
+            outputs.append({'chunk_id': chunk['assignment_id'], 'task_id': 'd1',
                             'assessor_id': chunk['assessor_id'], 'source_assessments': assessments})
+        import jsonschema
+        for output,chunk in zip(outputs,plan['chunks']):
+            jsonschema.validate(output,chunk['schema'])
         coverage = M.verify_source_chunk_coverage(plan, outputs)
         self.assertFalse(coverage['assessors_joined'])
         self.assertEqual(coverage['assessors']['R1']['source_ids'], plan['inventory_source_ids'])
@@ -118,16 +125,12 @@ class ModelPacketTests(unittest.TestCase):
 
     def test_answerer_assignment_keeps_only_explicit_task_and_arm_projection(self):
         task = {'id': 'd1', 'kind': 'research', 'query': 'topic', 'purpose': 'purpose'}
-        projection = {'arm_id': 'candidate', 'card_order_top10': ['c1'],
-                      'opening_outcomes': [{'card_id': 'c1', 'state': 'success', 'delivered': True}],
-                      'delivered_sources': [{'source_id': 's1', 'context': 'Exact 🚀', 'evidence_ids': ['e' * 64]}],
-                      'catalog': {'version': 1, 'sources': {}, 'passages': {}},
-                      'catalog_sha256': '0' * 64, 'assigned_source_ids': ['s1']}
+        projection = M.answer_projection(['c1'],[{'card_id':'c1','source_id':'s1','state':'success','context':'Exact 🚀'}],arm_id='candidate')
         checks = [{'id': 'd1_f1', 'check': 'Check'}]
         assignment = M.answerer_assignment(task, projection, checks)
         self.assertNotIn('arm_id', assignment['model_input'])
         self.assertEqual(assignment['private_binding']['arm_id'], 'candidate')
-        self.assertEqual(assignment['model_input']['delivered_sources'][0]['context'], 'Exact 🚀')
+        self.assertEqual(''.join(p['text'] for p in assignment['model_input']['delivered_sources'][0]['passages']), 'Exact 🚀')
         self.assertEqual(assignment['model_input']['task']['critical_checks'], checks)
         self.assertEqual(assignment['model_input']['output_schema']['properties']['facets']['items']['properties']['facet_id'],
                          {'enum': ['d1_f1']})
