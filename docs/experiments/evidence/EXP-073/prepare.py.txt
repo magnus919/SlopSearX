@@ -9,7 +9,7 @@ PROTOCOL=json.loads((HERE/'protocol.json').read_bytes())
 REGISTRATION=json.loads((HERE/'registration-integrity.json').read_bytes())
 PINS=PROTOCOL['inputs']
 REGISTRATION_REVISION='e90534bcad9aff3daa34b34399293bfbbec76088'
-ARMS=('w0','purpose_component','candidate_local_fusion')
+ARMS=('w0','purpose_component','candidate')
 BUILDER_PATH='docs/experiments/evidence/EXP-072/prepare.py.txt'
 BUILDER_SHA256=''
 

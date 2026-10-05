@@ -22,7 +22,9 @@ class FixtureOpener:
         if request.method!='POST' or timeout!=1: raise ValueError('fixture-envelope')
         parsed=P.BASE.validate_request(request.data)
         if self.mode=='http-error': raise ValueError('fixture-http-error')
-        raw=P.response_fixture(parsed,score=2,usage=None if self.mode=='missing-usage' else {'input_tokens':11,'output_tokens':3})
+        raw=P.response_fixture(parsed,score=2,usage={'input_tokens':11,'output_tokens':3})
+        if self.mode=='missing-usage':
+            payload=P.strict_json(raw);payload.pop('usage',None);raw=P.wire(payload)
         return FixtureResponse(raw)
 
 def main():

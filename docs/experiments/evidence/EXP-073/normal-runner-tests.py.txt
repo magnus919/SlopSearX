@@ -1,6 +1,8 @@
 """Offline contract and fail-closed tests for the EXP-073 runner."""
 import importlib.machinery,importlib.util,json,tempfile,unittest
+import hashlib
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 HERE=Path(__file__).resolve().parent
 def load(name,path):
@@ -49,13 +51,26 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(run['schema'],'exp073-run/1');self.assertEqual(run['input_pins'],P.PINS)
             self.assertEqual(run['neutral']['status'],'fixture_only');self.assertFalse(run['neutral']['quality_credit'])
             self.assertEqual(len(run['neutral']['cards']),80)
+            self.assertEqual(len(run['neutral']['case']['facets']),4)
             self.assertEqual(set(run['neutral']['arms']),{'w0','purpose_component','candidate'})
+            self.assertLessEqual(run['neutral']['candidate_phase_ms'],1000)
+            self.assertGreaterEqual(run['neutral']['candidate_phase_ms'],run['neutral']['arms']['w0']['elapsed_ms']+run['neutral']['arms']['purpose_component']['elapsed_ms']+run['neutral']['arms']['candidate']['elapsed_ms'])
+            self.assertEqual(run['neutral']['arms']['candidate']['usage'],{'input_tokens':run['neutral']['arms']['w0']['usage']['input_tokens']+run['neutral']['arms']['purpose_component']['usage']['input_tokens'],'output_tokens':run['neutral']['arms']['w0']['usage']['output_tokens']+run['neutral']['arms']['purpose_component']['usage']['output_tokens']})
+            self.assertEqual(run['source_integrity']['protocol_sha256'],__import__('hashlib').sha256((HERE/'protocol.json').read_bytes()).hexdigest())
             for op in run['operations']:
                 self.assertEqual(set(op['arms']),{'w0','purpose_component','candidate'})
                 self.assertEqual(set(op['arms']['candidate']['order_ids']),set(op['provenance_order_ids']))
                 self.assertEqual(set(op['arms']['candidate']['rational_scores']),set(op['provenance_order_ids']))
                 self.assertFalse(op['arms']['candidate']['raw_answers'])
                 self.assertLessEqual(op['candidate_phase_ms'],1000)
+                self.assertGreaterEqual(op['candidate_phase_ms'],op['arms']['w0']['elapsed_ms']+op['arms']['purpose_component']['elapsed_ms']+op['arms']['candidate']['elapsed_ms'])
+                self.assertEqual(op['arms']['candidate']['usage'],{'input_tokens':op['arms']['w0']['usage']['input_tokens']+op['arms']['purpose_component']['usage']['input_tokens'],'output_tokens':op['arms']['w0']['usage']['output_tokens']+op['arms']['purpose_component']['usage']['output_tokens']})
+                final=json.loads(next((Path(d)/'run'/'receipts').glob(op['id']+'-final.json')).read_bytes())
+                self.assertEqual(final['receipt_status'],'durable-candidate-body')
+            call_receipt=json.loads((Path(d)/'run'/'receipts'/'call-00.json').read_bytes())
+            self.assertEqual(set(call_receipt['transport']),{'status','request_sha256','response_sha256','stdout_sha256','stderr_sha256','remote_http_ms'})
+            self.assertEqual(call_receipt['request_sha256'],call_receipt['transport']['request_sha256'])
+            self.assertEqual(call_receipt['response_body_sha256'],call_receipt['transport']['response_sha256'])
     def test_malformed_purpose_response_keeps_fresh_w0_then_stops(self):
         acq,queries=data()
         class Bad:
@@ -82,6 +97,91 @@ class RunnerTests(unittest.TestCase):
             run=N.run(acq,queries,Path(d)/'run',offline=True)
         self.assertEqual((run['status'],HighOutput.calls,run['budget']['attempts']),('incomplete',2,2))
         self.assertEqual(run['budget']['output_tokens'],120000)
+    def test_missing_usage_fixture_retains_raw_transport_receipt_and_stops(self):
+        acq,queries=data()
+        with tempfile.TemporaryDirectory() as d:
+            out=Path(d)/'run';run=N.run(acq,queries,out,offline=True,fixture='missing-usage')
+            receipt=json.loads((out/'receipts'/'call-00.json').read_bytes())
+        self.assertEqual((run['status'],run['budget']['attempts']),('incomplete',1))
+        self.assertTrue(run['budget']['unknown_usage']);self.assertIsNone(receipt['usage'])
+        self.assertIsNotNone(receipt['raw_response_hex']);self.assertEqual(receipt['status'],'failed')
+        self.assertEqual(receipt['response_body_sha256'],receipt['transport']['response_sha256'])
+    def test_http_wrapper_missing_usage_fixture_really_omits_usage(self):
+        W=load('exp073_http_wrapper_test',HERE/'http-wrapper.py.txt')
+        acq,queries=data();built=P.bodies(queries[0],acq['pools'][queries[0]['id']]['cards'])
+        body=P.wire(built['w0']);request=SimpleNamespace(method='POST',data=body)
+        response=W.FixtureOpener('missing-usage').open(request,1)
+        payload=P.strict_json(response.body)
+        self.assertNotIn('usage',payload)
+    def test_transport_timeout_preserves_available_raw_body_and_known_usage_without_retry(self):
+        acq,queries=data()
+        class Timeout:
+            calls=0
+            def __init__(self,*_): self.last_raw=None;self.last_transport=None
+            def __call__(self,body,timeout_s=1):
+                Timeout.calls+=1;req=P.BASE.strict_json(body);self.last_raw=fake_response(req)
+                self.last_transport={'status':'timeout','request_sha256':__import__('hashlib').sha256(body).hexdigest(),'response_sha256':__import__('hashlib').sha256(self.last_raw).hexdigest(),'stdout_sha256':__import__('hashlib').sha256(self.last_raw).hexdigest(),'stderr_sha256':__import__('hashlib').sha256(b'').hexdigest(),'remote_http_ms':None}
+                if Timeout.calls==4: raise TimeoutError('transport-timeout')
+                return self.last_raw,.01
+        with tempfile.TemporaryDirectory() as d,patch.object(N,'Owned',Timeout):
+            out=Path(d)/'run';run=N.run(acq,queries,out,offline=True)
+            receipt=json.loads((out/'receipts'/'call-03.json').read_bytes())
+        self.assertEqual((run['status'],Timeout.calls,run['budget']['attempts']),('incomplete',4,4))
+        self.assertEqual(run['budget']['input_tokens'],40);self.assertEqual(run['budget']['output_tokens'],8)
+        self.assertEqual(receipt['status'],'failed');self.assertEqual(receipt['usage'],{'input_tokens':10,'output_tokens':2})
+        self.assertIsNotNone(receipt['raw_response_hex']);self.assertEqual(receipt['transport']['status'],'timeout')
+    def test_transport_failure_without_body_records_unknown_usage_and_stops(self):
+        acq,queries=data()
+        class NoBody:
+            calls=0
+            def __init__(self,*_): self.last_raw=None;self.last_transport=None
+            def __call__(self,body,timeout_s=1):
+                NoBody.calls+=1
+                if NoBody.calls==3:
+                    self.last_raw=None
+                    self.last_transport={'status':'timeout','request_sha256':__import__('hashlib').sha256(body).hexdigest(),'response_sha256':__import__('hashlib').sha256(b'').hexdigest(),'stdout_sha256':__import__('hashlib').sha256(b'').hexdigest(),'stderr_sha256':__import__('hashlib').sha256(b'').hexdigest(),'remote_http_ms':None}
+                    raise TimeoutError('transport-timeout')
+                req=P.BASE.strict_json(body);self.last_raw=fake_response(req);return self.last_raw,.01
+        with tempfile.TemporaryDirectory() as d,patch.object(N,'Owned',NoBody):
+            run=N.run(acq,queries,Path(d)/'run',offline=True)
+        self.assertEqual((run['status'],NoBody.calls,run['budget']['attempts']),('incomplete',3,3))
+        self.assertTrue(run['budget']['unknown_usage']);self.assertEqual(run['budget']['input_tokens'],20)
+        self.assertEqual(run['operations'][0]['arms']['w0']['status'],'failed')
+    def test_live_owned_rejects_unbound_or_nonfinite_wrapper_telemetry(self):
+        acq,queries=data();b=P.bodies(queries[0],acq['pools'][queries[0]['id']]['cards'])
+        body=P.wire(b['w0']);raw=fake_response(P.BASE.strict_json(body))
+        env={'request_sha256':'0'*64,'response_sha256':__import__('hashlib').sha256(raw).hexdigest(),'remote_http_ms':.5}
+        result=SimpleNamespace(returncode=0,stdout=raw,stderr=json.dumps(env).encode())
+        owned=N.Owned(offline=False)
+        with patch.object(N.subprocess,'run',return_value=result),self.assertRaisesRegex(ValueError,'invalid-transport-telemetry'):
+            owned(body,timeout_s=1)
+        env.update(request_sha256=__import__('hashlib').sha256(body).hexdigest(),remote_http_ms=12.5)
+        result.stderr=json.dumps(env).encode()
+        with patch.object(N.subprocess,'run',return_value=result):
+            accepted,elapsed=owned(body,timeout_s=1)
+        self.assertEqual(accepted,raw);self.assertEqual(elapsed,12.5)
+        self.assertEqual(owned.last_raw,raw);self.assertEqual(owned.last_transport['status'],'returned')
+        env.update(request_sha256=__import__('hashlib').sha256(body).hexdigest(),remote_http_ms=float('inf'))
+        result.stderr=json.dumps(env).encode()
+        with patch.object(N.subprocess,'run',return_value=result),self.assertRaisesRegex(ValueError,'invalid-transport-telemetry'):
+            owned(body,timeout_s=1)
+    def test_global_wall_limit_stops_future_dispatch_between_operations(self):
+        acq,queries=data();clock=[0.0]
+        def mono(): clock[0]+=.001;return clock[0]
+        original=N.atomic
+        def expire_between_ops(path,value):
+            original(path,value)
+            if Path(path).name=='run.json' and value.get('neutral',{}).get('status')=='fixture_only': clock[0]+=7201
+        class Good:
+            calls=0
+            def __init__(self,*_): self.last_raw=None
+            def __call__(self,body,timeout_s=1):
+                Good.calls+=1;req=P.BASE.strict_json(body);self.last_raw=fake_response(req);return self.last_raw,.01
+        with tempfile.TemporaryDirectory() as d,patch.object(N,'Owned',Good),patch.object(N.time,'monotonic',side_effect=mono),patch.object(N,'atomic',side_effect=expire_between_ops):
+            run=N.run(acq,queries,Path(d)/'run',offline=True)
+        self.assertEqual((run['status'],Good.calls,run['budget']['attempts']),('incomplete',2,2))
+        self.assertEqual(run['operations'][0]['failure']['code'],'wall-budget')
+        self.assertEqual(run['operations'][1]['arms']['w0']['status'],'uninvoked')
     def test_deadline_includes_pending_w0_receipt_and_prevents_transport(self):
         acq,queries=data();clock=[0.0]
         def mono(): return clock[0]
@@ -105,7 +205,8 @@ class RunnerTests(unittest.TestCase):
         def mono(): clock[0]+=.001;return clock[0]
         original=N.atomic
         def slow_final(path,value):
-            if Path(path).name=='q1-base-final.json' and value.get('arms',{}).get('candidate',{}).get('status')=='valid': clock[0]+=1.01
+            op=value.get('operation',{})
+            if Path(path).name=='q1-base-final.json' and op.get('arms',{}).get('candidate',{}).get('status')=='body_durable_pending_deadline': clock[0]+=1.01
             return original(path,value)
         class Good:
             calls=0
@@ -114,9 +215,13 @@ class RunnerTests(unittest.TestCase):
                 Good.calls+=1;req=P.BASE.strict_json(body);self.last_raw=fake_response(req);return self.last_raw,.01
         with tempfile.TemporaryDirectory() as d,patch.object(N,'Owned',Good),patch.object(N.time,'monotonic',side_effect=mono),patch.object(N,'atomic',side_effect=slow_final):
             run=N.run(acq,queries,Path(d)/'run',offline=True)
+            failure=json.loads((Path(d)/'run'/'receipts'/'q1-base-failure.json').read_bytes())
+            body=json.loads((Path(d)/'run'/'receipts'/'q1-base-final.json').read_bytes())
         op=run['operations'][0]
         self.assertGreater(op['candidate_phase_ms'],1000);self.assertEqual((run['status'],Good.calls),('incomplete',4))
         self.assertEqual(op['arms']['candidate']['status'],'failed');self.assertEqual(op['arms']['candidate']['order_ids'],op['arms']['w0']['order_ids'])
+        self.assertEqual(failure['receipt_status'],'failed')
+        self.assertEqual(body['receipt_status'],'durable-candidate-body')
     def test_mutated_registered_input_fails_before_dns_credential_lease_or_transport(self):
         bad=inputs();key=next(iter(bad));bad[key]=bad[key]+b' '
         class Env(dict):
@@ -129,5 +234,35 @@ class RunnerTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'input-pin'): N.live_gate(bad,'e90534bcad9aff3daa34b34399293bfbbec76088')
             lease.assert_not_called()
         self.assertEqual(env.reads,0)
+    def test_mutated_qualified_runtime_and_analyzer_sources_fail_before_dns_key_or_lease(self):
+        for changed,expected in (('slopsearx/rerank.py','qualification-source-pin'),('analyze.py.txt','qualification-file-pin')):
+            with self.subTest(path=changed),tempfile.TemporaryDirectory() as d:
+                root=Path(d)/'repo';here=root/'docs/experiments/evidence/EXP-073';here.mkdir(parents=True)
+                for name in N.OWNED_FILES:
+                    src=HERE/name;raw=src.read_bytes() if src.is_file() else b'offline analyzer placeholder\n'
+                    (here/name).write_bytes(raw)
+                for name in N.SOURCE_FILES:
+                    path=root/name;path.parent.mkdir(parents=True,exist_ok=True);src=N.REPO/name
+                    path.write_bytes(src.read_bytes())
+                protocol=(HERE/'protocol.json').read_bytes();registration=(HERE/'registration-integrity.json').read_bytes()
+                (here/'protocol.json').write_bytes(protocol);(here/'registration-integrity.json').write_bytes(registration)
+                q={'schema':'exp073-qualification-integrity/1','qualified':True,
+                   'files':{name:hashlib.sha256((here/name).read_bytes()).hexdigest() for name in N.OWNED_FILES},
+                   'source_pins':{name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in N.SOURCE_FILES},
+                   'protocol_sha256':hashlib.sha256(protocol).hexdigest(),'registration_sha256':hashlib.sha256(registration).hexdigest()}
+                qraw=P.wire(q);(here/'qualification-integrity.json').write_bytes(qraw)
+                target=(here/changed) if '/' not in changed else (root/changed)
+                target.write_bytes(target.read_bytes()+b'mutated\n')
+                def fake_committed(name,revision):
+                    if name=='docs/experiments/evidence/EXP-073/qualification-integrity.json': return qraw
+                    if name.startswith('docs/experiments/evidence/EXP-073/') and revision=='HEAD': return (here/Path(name).name).read_bytes()
+                    return (root/name).read_bytes()
+                class Env(dict):
+                    reads=0
+                    def get(self,*a): self.reads+=1;return super().get(*a)
+                env=Env()
+                with patch.object(N,'HERE',here),patch.object(N,'REPO',root),patch.object(P,'REPO',root),patch.object(N,'committed',side_effect=fake_committed),patch.object(P,'committed',side_effect=fake_committed),patch.object(P,'validate_inputs',return_value={'input_revision':'test'}),patch.object(N,'os',SimpleNamespace(environ=env)),patch.object(N.socket,'getaddrinfo',side_effect=AssertionError('DNS before qualified-pin validation')),patch.object(N.tempfile,'gettempdir',side_effect=AssertionError('lease before qualified-pin validation')):
+                    with self.assertRaisesRegex(ValueError,expected): N.live_gate(inputs(),'e90534bcad9aff3daa34b34399293bfbbec76088')
+                self.assertEqual(env.reads,0)
 
 if __name__=='__main__': unittest.main()
