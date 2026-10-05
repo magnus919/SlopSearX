@@ -48,3 +48,14 @@ run consumes the entry. The direct-constructor regression rejects before
 transport. Root independently reran all 13 runner tests successfully. No
 unresolved material runner finding remains in this bounded follow-up; full
 analyzer/verifier qualification is still pending.
+
+## Analyzer and raw-receipt review
+
+The first raw-verifier review found that neutral interruptions could be marked
+verified without the required first call or durable failure/fallback sidecar.
+The one-call branch skipped durable failure checking and the two-call failure
+branch treated the final receipt as optional. Require the first saved call and
+the matching durable failure artifacts on every terminal neutral path. Add
+deletion/tampering regressions while preserving verification of real bounded
+failures and unknown usage. An incomplete analysis label alone is insufficient
+to establish packet integrity. Fixes and affected tests are pending.
