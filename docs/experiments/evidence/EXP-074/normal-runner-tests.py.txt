@@ -1,7 +1,8 @@
 """Offline-only implementation tests for the EXP-074 async runner."""
-import asyncio, hashlib, importlib.machinery, importlib.util, json, tempfile, unittest
+import asyncio, hashlib, importlib.machinery, importlib.metadata, importlib.util, json, tempfile, unittest
 from pathlib import Path
 from unittest.mock import patch
+from contextlib import contextmanager, ExitStack
 
 HERE=Path(__file__).resolve().parent
 def load(name,path):
@@ -17,6 +18,53 @@ def data():
     proof=N.validate_inputs(raw,P.REGISTRATION_REVISION)
     acquisition,queries=P.source_data(raw)
     return acquisition,queries,proof
+
+@contextmanager
+def simulated_qualification(root,qualified=True):
+    """Make a temporary, fully hash-consistent gate fixture; never touches global leases."""
+    root=Path(root);here=root/'qualified-source';here.mkdir()
+    protocol=(N.REPO/'docs/experiments/evidence/EXP-074/protocol.json').read_bytes()
+    registration=(N.REPO/'docs/experiments/evidence/EXP-074/registration-integrity.json').read_bytes()
+    (here/'protocol.json').write_bytes(protocol);(here/'registration-integrity.json').write_bytes(registration)
+    file_bytes={}
+    for name in N.OWNED_FILES:
+        source=N.HERE/name
+        payload=source.read_bytes()
+        target=here/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(payload)
+        file_bytes[name]=payload
+    source_bytes={name:(N.REPO/name).read_bytes() for name in N.SOURCE_FILES}
+    head=N.subprocess.run(['git','rev-parse','HEAD'],cwd=N.REPO,check=True,capture_output=True,text=True).stdout.strip()
+    q={'schema':'exp074-qualification-integrity/1','qualified':qualified,'qualified_source_revision':head,
+       'files':{name:hashlib.sha256(raw).hexdigest() for name,raw in file_bytes.items()},
+       'source_pins':{name:hashlib.sha256(raw).hexdigest() for name,raw in source_bytes.items()},
+       'dependencies':{name:importlib.metadata.version(name) for name in N.DEPENDENCIES},
+       'environment':{'python_implementation':N.platform.python_implementation(),'python_version':N.platform.python_version()},
+       'protocol_sha256':hashlib.sha256(protocol).hexdigest(),'registration_sha256':hashlib.sha256(registration).hexdigest()}
+    qraw=json.dumps(q,sort_keys=True,separators=(',',':')).encode()
+    (here/'qualification-integrity.json').write_bytes(qraw)
+    original_committed=N.committed
+    def committed(path,revision):
+        prefix='docs/experiments/evidence/EXP-074/'
+        if path.startswith(prefix) and path[len(prefix):] in file_bytes:
+            return file_bytes[path[len(prefix):]]
+        return original_committed(path,revision)
+    class EnvSentinel(dict):
+        def __init__(self):super().__init__();self.events=[]
+        def get(self,key,default=None):
+            if key=='TYPESAFE_API_KEY':self.events.append('key');return 'fixture-only-non-secret'
+            return default
+    env=EnvSentinel()
+    def dns(*args,**kwargs):env.events.append('dns');return []
+    with ExitStack() as stack:
+        stack.enter_context(patch.object(N,'HERE',here))
+        stack.enter_context(patch.object(N,'committed',side_effect=committed))
+        stack.enter_context(patch.object(N,'committed_head',return_value=qraw))
+        stack.enter_context(patch.object(N.socket,'getaddrinfo',side_effect=dns))
+        stack.enter_context(patch.object(N.os,'environ',env))
+        stack.enter_context(patch.object(N.os,'getenv',side_effect=lambda name,default=None:str(root) if name=='TMPDIR' else default))
+        yield {'input_bytes':{name:(N.REPO/name).read_bytes() for name in P.PINS},'head':head,'env':env,
+               'identity':N.study_identity(protocol,registration,{name:(N.REPO/name).read_bytes() for name in P.PINS}),
+               'lease_dir':root}
 
 class RequestAndPreflightTests(unittest.TestCase):
     def test_committed_head_helper_resolves_symbolic_head_to_a_revision(self):
@@ -39,6 +87,46 @@ class RequestAndPreflightTests(unittest.TestCase):
             out=Path(tmp)/'run'
             with self.assertRaises(ValueError):N.validate_inputs(raw,P.REGISTRATION_REVISION)
             self.assertFalse(out.exists())
+
+    def test_mutated_input_and_unqualified_manifest_stop_before_dns_or_key(self):
+        with tempfile.TemporaryDirectory() as tmp,simulated_qualification(tmp,qualified=False) as fixture:
+            with self.assertRaises(ValueError):N.live_gate(fixture['input_bytes'],fixture['head'])
+            self.assertEqual(fixture['env'].events,[])
+            self.assertFalse((fixture['lease_dir']/('exp074-lease-'+fixture['identity'])).exists())
+        with tempfile.TemporaryDirectory() as tmp,simulated_qualification(tmp,qualified=True) as fixture:
+            mutated=dict(fixture['input_bytes']);first=next(iter(mutated));mutated[first]+=b' '
+            with self.assertRaises(ValueError):N.live_gate(mutated,fixture['head'])
+            self.assertEqual(fixture['env'].events,[])
+            self.assertFalse((fixture['lease_dir']/('exp074-lease-'+fixture['identity'])).exists())
+
+    def test_valid_manifest_acquires_and_fsyncs_lease_before_dns_then_key(self):
+        with tempfile.TemporaryDirectory() as tmp,simulated_qualification(tmp) as fixture:
+            proof,key,qraw=N.live_gate(fixture['input_bytes'],fixture['head'])
+            lease=fixture['lease_dir']/('exp074-lease-'+fixture['identity'])
+            self.assertEqual(fixture['env'].events,['dns','key'])
+            self.assertEqual(lease.read_text(),fixture['identity']+'\n')
+            self.assertEqual(key,'fixture-only-non-secret');self.assertEqual(proof['lease_identity'],fixture['identity'])
+            self.assertEqual(hashlib.sha256(qraw).hexdigest(),proof['qualification_sha256'])
+
+    def test_existing_lease_rejects_before_dns_or_key(self):
+        with tempfile.TemporaryDirectory() as tmp,simulated_qualification(tmp) as fixture:
+            lease=fixture['lease_dir']/('exp074-lease-'+fixture['identity']);lease.write_text('already consumed\n')
+            with self.assertRaisesRegex(ValueError,'study-already-consumed'):
+                N.live_gate(fixture['input_bytes'],fixture['head'])
+            self.assertEqual(fixture['env'].events,[])
+            self.assertEqual(lease.read_text(),'already consumed\n')
+
+    def test_dns_failure_after_lease_keeps_burned_identity_and_does_not_read_key(self):
+        with tempfile.TemporaryDirectory() as tmp,simulated_qualification(tmp) as fixture:
+            def dns_failure(*_args,**_kwargs):
+                lease=fixture['lease_dir']/('exp074-lease-'+fixture['identity'])
+                self.assertTrue(lease.is_file())
+                raise RuntimeError('offline DNS sentinel')
+            with patch.object(N.socket,'getaddrinfo',side_effect=dns_failure):
+                with self.assertRaisesRegex(RuntimeError,'offline DNS sentinel'):
+                    N.live_gate(fixture['input_bytes'],fixture['head'])
+            lease=fixture['lease_dir']/('exp074-lease-'+fixture['identity'])
+            self.assertTrue(lease.is_file());self.assertEqual(fixture['env'].events,[])
 
 class AsyncTransportTests(unittest.IsolatedAsyncioTestCase):
     async def test_no_factory_offline_runner_uses_fixture_and_closes_both_clients(self):

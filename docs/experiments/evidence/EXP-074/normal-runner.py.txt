@@ -91,15 +91,17 @@ def live_gate(input_bytes,input_revision):
     bounds=P.PROTOCOL['bounds']
     if bounds['calls']!=44 or bounds['reported_input_tokens']!=3_000_000 or bounds['reported_output_tokens']!=160_000 or bounds['retries']!=0 or bounds['concurrency']!=1:
         raise ValueError('usage-admission-contract')
-    # These external actions occur only after every immutable closure check above.
+    # Burn the one-shot identity before any DNS or credential access. Later
+    # failures keep the lease, preventing accidental replays of this study.
+    identity=study_identity((HERE/'protocol.json').read_bytes(),(HERE/'registration-integrity.json').read_bytes(),input_bytes)
+    lease=Path(os.getenv('TMPDIR','/tmp'))/('exp074-lease-'+identity)
+    try:fd=os.open(lease,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
+    except FileExistsError:raise ValueError('study-already-consumed') from None
+    with os.fdopen(fd,'w') as f:f.write(identity+'\n');f.flush();os.fsync(f.fileno())
+    sync_directory(lease.parent)
     socket.getaddrinfo(urllib.parse.urlsplit(T.ENDPOINT).hostname,443,type=socket.SOCK_STREAM)
     api_key=os.environ.get('TYPESAFE_API_KEY','')
     if not api_key:raise ValueError('missing-credential')
-    identity=study_identity((HERE/'protocol.json').read_bytes(),(HERE/'registration-integrity.json').read_bytes(),input_bytes)
-    lease=Path(os.getenv('TMPDIR','/tmp'))/('exp074-lease-'+identity)
-    fd=os.open(lease,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
-    with os.fdopen(fd,'w') as f:f.write(identity+'\n');f.flush();os.fsync(f.fileno())
-    sync_directory(lease.parent)
     proof.update({'qualification_sha256':digest(qraw),'lease_identity':identity,
                   'qualified_source_revision':revision,'environment':dict(env),
                   'dependencies':dict(q['dependencies'])})
