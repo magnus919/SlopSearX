@@ -1,0 +1,133 @@
+"""Offline contract and fail-closed tests for the EXP-073 runner."""
+import importlib.machinery,importlib.util,json,tempfile,unittest
+from pathlib import Path
+from unittest.mock import patch
+HERE=Path(__file__).resolve().parent
+def load(name,path):
+    l=importlib.machinery.SourceFileLoader(name,str(path));s=importlib.util.spec_from_loader(l.name,l);m=importlib.util.module_from_spec(s);l.exec_module(m);return m
+P=load('exp073_tests_prepare',HERE/'prepare.py.txt');N=load('exp073_tests_runner',HERE/'normal-runner.py.txt')
+
+def data():
+    acq=P.strict_json((N.REPO/'docs/experiments/evidence/EXP-060/fresh-acquisition.json').read_bytes())
+    queries=P.strict_json((N.REPO/'docs/experiments/evidence/EXP-060/queries.json').read_bytes())
+    return acq,queries
+def inputs(): return {k:(N.REPO/k).read_bytes() for k in P.PINS}
+def fake_response(req,usage=None,malformed=False):
+    answers={k:{'type':'score','score':2,'confidence':.7,'legend':'synthetic'} for k in req['questions']}
+    if malformed and answers: answers.pop(next(iter(answers)))
+    result={'model':P.MODEL,'answers':answers,'usage':usage or {'input_tokens':10,'output_tokens':2}}
+    return json.dumps(result,separators=(',',':')).encode()
+
+class PreparationTests(unittest.TestCase):
+    def test_registered_schedule_requests_are_byte_identical_to_pinned_exp072_builders(self):
+        acq,queries=data();byid={q['id']:q for q in queries}
+        for item in P.PROTOCOL['schedule']:
+            old=P.BASE.bodies(byid[item['case']],acq['pools'][item['case']]['cards'],item['variant'])
+            new=P.bodies(byid[item['case']],acq['pools'][item['case']]['cards'],item['variant'])
+            self.assertEqual(P.wire(new['w0']),P.wire(old['w0']))
+            self.assertEqual(P.wire(new['purpose_component']),P.wire(old['candidate']))
+            self.assertEqual(new['provenance_order_ids'],old['provenance_order_ids'])
+    def test_rotation_preserves_canonical_purpose_request_and_w0_native_tail(self):
+        acq,queries=data();q=next(x for x in queries if x['id']=='q1');cards=acq['pools']['q1']['cards']
+        b=P.bodies(q,cards,'base');r=P.bodies(q,cards,'rotate')
+        self.assertEqual(P.wire(b['purpose_component']),P.wire(r['purpose_component']))
+        self.assertEqual(r['provenance_order_ids'],b['provenance_order_ids'][20:]+b['provenance_order_ids'][:20])
+        self.assertEqual(r['tail_ids'],r['provenance_order_ids'][40:])
+    def test_fusion_requires_exact_full_permutations(self):
+        cards=[{'id':str(i),'url':'u'+str(i),'title':'t','snippet':'s'} for i in range(3)]
+        for bad in (['0','1'],['0','1','1'],['0','1','x']):
+            with self.subTest(order=bad),self.assertRaises(ValueError): N.FUSE.fuse(cards,['0','1','2'],bad)
+        result=N.FUSE.fuse(cards,['0','1','2'],['2','1','0'])
+        self.assertEqual(set(result['order_ids']),{'0','1','2'});self.assertEqual(set(result['rational_scores']),{'0','1','2'})
+
+class RunnerTests(unittest.TestCase):
+    def test_offline_full_run_has_44_calls_and_neutral_has_no_quality_credit(self):
+        acq,queries=data()
+        with tempfile.TemporaryDirectory() as d:
+            run=N.run(acq,queries,Path(d)/'run',offline=True)
+            self.assertEqual((run['status'],run['budget']['attempts'],len(run['operations'])),('complete',44,21))
+            self.assertEqual(run['schema'],'exp073-run/1');self.assertEqual(run['input_pins'],P.PINS)
+            self.assertEqual(run['neutral']['status'],'fixture_only');self.assertFalse(run['neutral']['quality_credit'])
+            self.assertEqual(len(run['neutral']['cards']),80)
+            self.assertEqual(set(run['neutral']['arms']),{'w0','purpose_component','candidate'})
+            for op in run['operations']:
+                self.assertEqual(set(op['arms']),{'w0','purpose_component','candidate'})
+                self.assertEqual(set(op['arms']['candidate']['order_ids']),set(op['provenance_order_ids']))
+                self.assertEqual(set(op['arms']['candidate']['rational_scores']),set(op['provenance_order_ids']))
+                self.assertFalse(op['arms']['candidate']['raw_answers'])
+                self.assertLessEqual(op['candidate_phase_ms'],1000)
+    def test_malformed_purpose_response_keeps_fresh_w0_then_stops(self):
+        acq,queries=data()
+        class Bad:
+            calls=0
+            def __init__(self,*_): self.last_raw=None
+            def __call__(self,body,timeout_s=1):
+                Bad.calls+=1;req=P.BASE.strict_json(body);self.last_raw=fake_response(req,malformed=Bad.calls==4);return self.last_raw,.01
+        with tempfile.TemporaryDirectory() as d,patch.object(N,'Owned',Bad):
+            run=N.run(acq,queries,Path(d)/'run',offline=True)
+        op=run['operations'][0]
+        self.assertEqual((run['status'],Bad.calls),('incomplete',4))
+        self.assertEqual(run['neutral']['status'],'fixture_only')
+        self.assertEqual(op['arms']['w0']['status'],'valid');self.assertEqual(op['arms']['purpose_component']['status'],'failed')
+        self.assertEqual(op['arms']['candidate']['order_ids'],op['arms']['w0']['order_ids'])
+        self.assertEqual(run['operations'][1]['arms']['w0']['status'],'uninvoked')
+    def test_usage_admission_overflow_stops_without_a_third_transport_call(self):
+        acq,queries=data()
+        class HighOutput:
+            calls=0
+            def __init__(self,*_): self.last_raw=None
+            def __call__(self,body,timeout_s=1):
+                HighOutput.calls+=1;req=P.BASE.strict_json(body);self.last_raw=fake_response(req,{'input_tokens':1,'output_tokens':60000});return self.last_raw,.01
+        with tempfile.TemporaryDirectory() as d,patch.object(N,'Owned',HighOutput):
+            run=N.run(acq,queries,Path(d)/'run',offline=True)
+        self.assertEqual((run['status'],HighOutput.calls,run['budget']['attempts']),('incomplete',2,2))
+        self.assertEqual(run['budget']['output_tokens'],120000)
+    def test_deadline_includes_pending_w0_receipt_and_prevents_transport(self):
+        acq,queries=data();clock=[0.0]
+        def mono(): return clock[0]
+        original_fsync=N.os.fsync; fsyncs=[0]
+        def slow_fsync(fd):
+            fsyncs[0]+=1
+            result=original_fsync(fd)
+            if fsyncs[0]==1: clock[0]+=1.01
+            return result
+        class Spy:
+            calls=0
+            def __init__(self,*_): self.last_raw=None
+            def __call__(self,*_,**__): Spy.calls+=1;raise AssertionError('transport after deadline')
+        with tempfile.TemporaryDirectory() as d,patch.object(N,'Owned',Spy),patch.object(N.time,'monotonic',side_effect=mono),patch.object(N.os,'fsync',side_effect=slow_fsync):
+            run=N.run(acq,queries,Path(d)/'run',offline=True)
+            rec=json.loads((Path(d)/'run'/'receipts'/'call-00.json').read_bytes())
+        self.assertEqual((run['status'],Spy.calls,run['budget']['attempts']),('incomplete',0,0))
+        self.assertEqual(rec['status'],'failed');self.assertEqual(rec['failure'],'candidate-phase-deadline')
+    def test_deadline_includes_durable_final_operation_receipt_and_falls_back(self):
+        acq,queries=data();clock=[0.0]
+        def mono(): clock[0]+=.001;return clock[0]
+        original=N.atomic
+        def slow_final(path,value):
+            if Path(path).name=='q1-base-final.json' and value.get('arms',{}).get('candidate',{}).get('status')=='valid': clock[0]+=1.01
+            return original(path,value)
+        class Good:
+            calls=0
+            def __init__(self,*_): self.last_raw=None
+            def __call__(self,body,timeout_s=1):
+                Good.calls+=1;req=P.BASE.strict_json(body);self.last_raw=fake_response(req);return self.last_raw,.01
+        with tempfile.TemporaryDirectory() as d,patch.object(N,'Owned',Good),patch.object(N.time,'monotonic',side_effect=mono),patch.object(N,'atomic',side_effect=slow_final):
+            run=N.run(acq,queries,Path(d)/'run',offline=True)
+        op=run['operations'][0]
+        self.assertGreater(op['candidate_phase_ms'],1000);self.assertEqual((run['status'],Good.calls),('incomplete',4))
+        self.assertEqual(op['arms']['candidate']['status'],'failed');self.assertEqual(op['arms']['candidate']['order_ids'],op['arms']['w0']['order_ids'])
+    def test_mutated_registered_input_fails_before_dns_credential_lease_or_transport(self):
+        bad=inputs();key=next(iter(bad));bad[key]=bad[key]+b' '
+        class Env(dict):
+            reads=0
+            def get(self,*a): self.reads+=1;return super().get(*a)
+        env=Env();fake_os=type('OS',(),{'environ':env})
+        class Spy:
+            def __init__(self,*_): raise AssertionError('transport before pin validation')
+        with patch.object(N,'os',fake_os),patch.object(N.socket,'getaddrinfo',side_effect=AssertionError('DNS before pin validation')),patch.object(N,'Owned',Spy),patch.object(N.tempfile,'gettempdir',side_effect=AssertionError('lease before pin validation')) as lease:
+            with self.assertRaisesRegex(ValueError,'input-pin'): N.live_gate(bad,'e90534bcad9aff3daa34b34399293bfbbec76088')
+            lease.assert_not_called()
+        self.assertEqual(env.reads,0)
+
+if __name__=='__main__': unittest.main()
