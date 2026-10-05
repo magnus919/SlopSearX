@@ -146,6 +146,38 @@ def test_candidate_build_overrun_is_a_bound_predispatch_call_record():
         assert neutral["final_receipt"] is not None
 
 
+def test_dispatch_denial_after_client_setup_verifies_cleanup_without_attempt():
+    input_bytes = {name: (REPO / name).read_bytes() for name in N.P.PINS}
+    acquisition, queries = N.P.source_data(input_bytes)
+    stats = {"clients": 0, "requests": 0, "closed": 0}
+    def factory(**kwargs):
+        stats["clients"] += 1
+        if stats["clients"] == 2:
+            time.sleep(1.05)
+        class Counted(N.httpx.AsyncClient):
+            async def aclose(self):
+                if not getattr(self, "closed_once", False):
+                    self.closed_once = True
+                    stats["closed"] += 1
+                await super().aclose()
+        async def handler(request):
+            stats["requests"] += 1
+            body = N.P.strict_json(request.content)
+            return N.httpx.Response(200, content=N.P.response_fixture(body))
+        return Counted(transport=N.httpx.MockTransport(handler), **kwargs)
+    with tempfile.TemporaryDirectory() as temp:
+        out = Path(temp) / "packet"
+        run = asyncio.run(N.run(acquisition, queries, out, offline=True, client_factory=factory))
+        verified = V.verify(out)
+        call = run["neutral"]["calls"][-1]
+        assert verified["status"] == run["status"] == "incomplete"
+        assert run["budget"]["attempts"] == stats["requests"] == 1
+        assert stats["clients"] == stats["closed"]
+        assert call["dispatched"] is False and call["usage_status"] == "not_dispatched"
+        assert call["transport"]["client_closed"] is True
+        assert run["neutral"]["final_receipt"] is not None
+
+
 def test_deadline_after_candidate_body_fsync_keeps_proposed_receipt_and_native_fallback():
     input_bytes = {name: (REPO / name).read_bytes() for name in N.P.PINS}
     acquisition, queries = N.P.source_data(input_bytes)
@@ -191,7 +223,12 @@ def test_call_sidecar_mutation_is_rejected_when_run_and_final_are_unchanged():
         fixture(out)
         call_path = out / "receipts" / "call-00.json"
         call = V._read_json(call_path)
-        call["request_hex"] = (b"{}" ).hex()
+        raw = bytes.fromhex(call["raw_response_hex"])
+        raw += b" "
+        call["raw_response_hex"] = raw.hex()
+        call["response_bytes"] = len(raw)
+        call["response_body_sha256"] = sha(raw)
+        call["transport"]["response_sha256"] = sha(raw)
         call_path.write_bytes(N.P.wire(call))
         try:
             V.verify(out)
