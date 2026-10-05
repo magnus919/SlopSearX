@@ -1,9 +1,9 @@
 {
   "schema": "exp065-qualification/1",
-  "qualified": false,
+  "qualified": true,
   "files": {
     "prepare.py.txt": "afe5cdd1a43d435f0f6e4e2336962604369332c5f23af8edbe7c41990fcf7760",
-    "normal-runner.py.txt": "05f38f4daab9e67e54ebb3c066f19856b6639bd1b85ea296a30a32cc701bdb33",
+    "normal-runner.py.txt": "8858078ee1c5acdd728443b3669bdfc592d4be1b4b6c0bb3722e06698f920f43",
     "normal-runner-tests.py.txt": "a902ccc9e7e63442505de7c33871183689d79cd2785fd79ebeac41af3c4d3265",
     "http-wrapper.py.txt": "8a426f2702d48f30197433ad819adc6689587902a26d9e677302bde78bae2dbe",
     "analyze.py.txt": "7fe2d3d040cdbf2ad8a390948ed05e9dde66637e3d839bef93f5aaaa4bfd360c",
@@ -24,5 +24,6 @@
   "provider_calls": 1,
   "search_calls": 0,
   "review": "qualification.md",
-  "status": "historical invocation failed; corrected parser requires new registration"
+  "status": "qualified metadata-compatible second invocation",
+  "invocation_registration_sha256": "091d5c6e9459e0e6c92539a178daa3846822d4adc552a821aba64ed0682513e5"
 }
