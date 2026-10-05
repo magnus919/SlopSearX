@@ -39,6 +39,11 @@ def sync_directory(path):
     fd=os.open(path,os.O_RDONLY)
     try:os.fsync(fd)
     finally:os.close(fd)
+def durable_mkdirs(path):
+    path=Path(path);missing=[];probe=path
+    while not probe.exists():missing.append(probe);probe=probe.parent
+    path.mkdir(parents=True,exist_ok=True,mode=0o700)
+    for directory in missing:sync_directory(directory);sync_directory(directory.parent)
 def committed(path,revision):return P.committed(path,revision)
 def committed_head(path):
     revision=subprocess.run(['git','rev-parse','HEAD'],cwd=REPO,check=True,capture_output=True,text=True).stdout.strip()
@@ -86,7 +91,10 @@ def live_gate(input_bytes,input_revision=REGISTRATION_REVISION):
     if bounds['calls']!=44 or bounds['retries']!=0 or bounds['concurrency']!=1:raise ValueError('usage-admission-contract')
     # A setup failure after this durable exclusive create burns the run identity.
     identity=study_identity((HERE/'protocol.json').read_bytes(),(HERE/'registration-integrity.json').read_bytes(),input_bytes)
-    lease=Path(os.getenv('TMPDIR','/tmp'))/('exp075-lease-'+identity)
+    state_root=os.getenv('EXP075_LEASE_DIR') or os.getenv('XDG_STATE_HOME') or str(Path.home()/'.local/state')
+    lease_dir=Path(state_root)/'exp075';durable_mkdirs(lease_dir)
+    if lease_dir.is_symlink() or not lease_dir.is_dir():raise ValueError('lease-directory')
+    lease=lease_dir/('study-'+identity)
     try:fd=os.open(lease,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
     except FileExistsError:raise ValueError('study-already-consumed') from None
     with os.fdopen(fd,'w') as stream:stream.write(identity+'\n');stream.flush();os.fsync(stream.fileno())
