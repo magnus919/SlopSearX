@@ -4,6 +4,14 @@ This review does not register or qualify a provider run. No provider or search
 calls were made. The mechanism remains subject to exact protocol and source
 qualification before execution.
 
+Root refreshed upstream GitHub state on October 5: the latest release remains
+[v0.6.0](https://github.com/magnus919/SlopSearX/releases/tag/v0.6.0), published
+October 4 at 16:56:32 UTC. The latest eight merged PRs (#655 through #662) are
+the recorded experiment registrations, harnesses, outcomes and documentation
+repair. The current baseline is #662's merge
+`c9f2b48437c65c4ebc17f2c7ee18011ae440c119`; that inspection found no newer
+runtime implementation replacing the candidate under study.
+
 The prior-study review distinguishes this proposed canonical full-pool dual
 transaction from EXP-075's first-forty query population and complete purpose
 population. EXP-034 through EXP-036 already tested whole-pool query scoring
