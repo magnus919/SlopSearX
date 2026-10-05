@@ -92,6 +92,20 @@ class RunnerTests(unittest.TestCase):
             with patch.object(N,"committed",side_effect=lambda rel,rev: (_ for _ in ()).throw(ValueError("input-pin"))),patch.object(N.socket,"getaddrinfo",side_effect=AssertionError("DNS called")):
                 with self.assertRaises(ValueError):N.live_gate(bad,"a"*40)
 
+    def test_malformed_late_case_stops_before_live_gate_and_output_creation(self):
+        acquisition=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes())
+        queries=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+        references=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-064/completed/metric-reference-view.json").read_bytes())
+        acquisition["pools"]["q13"]["cards"][0]["title"]="x"*257
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);acq=root/"acq.json";qry=root/"queries.json";refs=root/"refs.json";out=root/"out"
+            acq.write_text(json.dumps(acquisition));qry.write_text(json.dumps(queries));refs.write_text(json.dumps(references))
+            argv=["normal-runner.py.txt","--mode","live","--acquisition",str(acq),"--queries",str(qry),"--references",str(refs),"--outdir",str(out)]
+            with patch("sys.argv",argv),patch.object(N,"live_gate",side_effect=AssertionError("live gate reached")) as gate:
+                self.assertEqual(N.main(),2)
+                gate.assert_not_called()
+            self.assertFalse(out.exists())
+
     def test_mocked_positive_live_gate_checks_all_pins_and_creates_exclusive_lease(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);here=root/"EXP-067";here.mkdir();lease_dir=root/"leases";lease_dir.mkdir()

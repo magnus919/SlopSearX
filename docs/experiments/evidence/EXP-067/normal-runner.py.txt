@@ -127,6 +127,19 @@ def neutral_case():
 def neutral_cards():
     return [{"id":"neutral-%02d"%i,"url":"https://neutral.example/%02d"%i,"title":"Synthetic source %02d"%i,"snippet":"Synthetic neutral card %02d; no real source or quality evidence."%i} for i in range(80)]
 
+def prebuild(acquisition,queries):
+    protocol=P.PROTOCOL;query_by_id={q["id"]:q for q in queries}
+    if len(query_by_id)!=len(queries):raise ValueError("query-ids")
+    pools=acquisition.get("pools")
+    if type(pools)is not dict or set(pools)!=set(query_by_id):raise ValueError("pool-inventory")
+    plan=protocol["schedule"];prepared=[]
+    for item in plan:
+        if type(item)is not dict or set(item)!={"case","variant","arms"} or item["case"] not in query_by_id or item["case"] not in pools or item["arms"]!=["w0","relative"]:raise ValueError("schedule-entry")
+        prepared.append((item,P.bodies(query_by_id[item["case"]],pools[item["case"]]["cards"],item["variant"])))
+    if len(prepared)!=21:raise ValueError("schedule-count")
+    neutral_body=P.bodies(neutral_case(),neutral_cards())["relative"]
+    return prepared,neutral_body
+
 def _uninvoked(item,acquisition):
     cards=acquisition["pools"][item["case"]]["cards"]
     native=[c["id"] for c in cards]
@@ -137,21 +150,10 @@ def _uninvoked(item,acquisition):
         row["arms"][arm]={"status":"uninvoked","order_ids":list(native),"scores":{},"usage":None,"elapsed_ms":None}
     return row
 
-def run(acquisition,queries,outdir,offline=True,source_integrity=None):
-    protocol=P.PROTOCOL;query_by_id={q["id"]:q for q in queries};
-    if len(query_by_id)!=len(queries):raise ValueError("query-ids")
-    pools=acquisition.get("pools")
-    if type(pools)is not dict or set(pools)!=set(query_by_id):raise ValueError("pool-inventory")
-    plan=protocol["schedule"]
-    # Construct and validate every registered body before creating output or
-    # dispatching the neutral call, so a malformed later case cannot create a
-    # partial run after earlier provider calls.
-    prepared=[]
-    for item in plan:
-        if type(item)is not dict or set(item)!={"case","variant","arms"} or item["case"] not in query_by_id or item["case"] not in pools or item["arms"]!=["w0","relative"]:raise ValueError("schedule-entry")
-        prepared.append((item,P.bodies(query_by_id[item["case"]],pools[item["case"]]["cards"],item["variant"])))
-    if len(prepared)!=21:raise ValueError("schedule-count")
-    neutral_body=P.bodies(neutral_case(),neutral_cards())["relative"]
+def run(acquisition,queries,outdir,offline=True,source_integrity=None,prebuilt=None):
+    # Pure preflight is also performed by main before the live gate; direct
+    # offline callers receive the same validation before output creation.
+    prepared,neutral_body=prebuilt if prebuilt is not None else prebuild(acquisition,queries)
     outdir.mkdir(parents=True,exist_ok=False);receipts=outdir/"receipts";receipts.mkdir()
     if source_integrity is not None:atomic(outdir/"source-integrity.json",source_integrity)
     operations=[];budget={"attempts":0,"input_tokens":0,"output_tokens":0,"unknown_usage":False};started=time.monotonic();owned=Owned(receipts,offline)
@@ -262,8 +264,9 @@ def main():
     try:
         input_bytes={"docs/experiments/evidence/EXP-060/fresh-acquisition.json":args.acquisition.read_bytes(),"docs/experiments/evidence/EXP-060/queries.json":args.queries.read_bytes(),"docs/experiments/evidence/EXP-064/completed/metric-reference-view.json":args.references.read_bytes()}
         acquisition=P.strict_json(input_bytes["docs/experiments/evidence/EXP-060/fresh-acquisition.json"]);queries=P.strict_json(input_bytes["docs/experiments/evidence/EXP-060/queries.json"]);references=P.strict_json(input_bytes["docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"])
+        prepared=prebuild(acquisition,queries)
         integrity=live_gate(input_bytes,args.input_revision or "") if args.mode=="live" else None
-        result=run(acquisition,queries,args.outdir,args.mode=="offline",integrity)
+        result=run(acquisition,queries,args.outdir,args.mode=="offline",integrity,prepared)
         analysis=load("exp067_analysis",HERE/"analyze.py.txt").analyze(result,acquisition,references,queries,P.PROTOCOL)
         atomic(args.outdir/"analysis.json",analysis)
         print(json.dumps({"status":result["status"],"operations":len(result["operations"]),"attempts":result["budget"]["attempts"],"synthetic":result["synthetic"],"analysis":analysis["outcome"]}))
