@@ -1,0 +1,72 @@
+{
+  "status": "prepared_before_measurement",
+  "packet_count": 8,
+  "input_packet_sha256": "7b1bec260e6a66a02f1f8587d143eefee5e1ffcc14f87e55ae1fbf30508f783a",
+  "packet_receipts": [
+    {
+      "packet_id": "a9177460-a881-4c20-ad52-efa76f975b1e",
+      "sha256": "5379c83819776bd955cc064c80493b0fc0b7d67f6b6475d422ad9d741331aeb3",
+      "bytes": 47655,
+      "passages": 70
+    },
+    {
+      "packet_id": "cf864329-c6ec-4a35-b028-e1cd62bd21eb",
+      "sha256": "f33b5d0f21e41c9a764fb3df384d13edc29b279bab2c17053e35dbce3df9d614",
+      "bytes": 53885,
+      "passages": 70
+    },
+    {
+      "packet_id": "3e6df64d-0356-4a88-8684-e16020edfe37",
+      "sha256": "b7da66d65955a80e85bc3996b98a45a85d9a3fff7f0759a1657b485c45dbcf40",
+      "bytes": 47323,
+      "passages": 70
+    },
+    {
+      "packet_id": "4c147999-a718-444c-a0e6-e199c868f962",
+      "sha256": "0f6f63fb041e371a519a64ad622b8be57b20f0a160bb3f2eefff84cb14066eeb",
+      "bytes": 53553,
+      "passages": 70
+    },
+    {
+      "packet_id": "4bd69685-e3d2-4620-af84-ef418641548d",
+      "sha256": "99b283aacc3d72f553f1e24465010ce1089d8ceda9b620693f1928d8d46c87a4",
+      "bytes": 46763,
+      "passages": 69
+    },
+    {
+      "packet_id": "78a3294d-4465-4c65-b650-6782d401528b",
+      "sha256": "f80500cae624bfe8244d379956e5f4ba247f0a9b5957217f7ececec374bf6ed8",
+      "bytes": 52904,
+      "passages": 69
+    },
+    {
+      "packet_id": "89814318-4146-4485-8c5a-6a7428def479",
+      "sha256": "ac251bd531ea5950bb27cccb459b15acfe9cc86284763e929c0ac27848861d89",
+      "bytes": 45450,
+      "passages": 67
+    },
+    {
+      "packet_id": "cfe5920a-3e48-4bee-a75e-05bd9eaf6c3c",
+      "sha256": "0e635f79cd203eb74349406cf4b6127406f2c0428a132845f046627a78a3b7c0",
+      "bytes": 51413,
+      "passages": 67
+    }
+  ],
+  "mapping_sha256": "4021e1403f3d4cc05b5f31fb5052a034a8ff2dff4dbd4a78cc5acbed821cbfa1",
+  "dispatch_schedule_sha256": "f2d6cc898e2fd3dca490d3eb0db95ebb06c64beeb43b3a87e511ca2162970d6d",
+  "materials_sha256": {
+    "quote-answer-schema.json": "adcf4757008eaf7a3a9481bb7feeb60551c09e8aae56f29e44372c10b36cbc28",
+    "validate.py.txt": "2c2e259f4594de0fd5d6adbbd663209015948bd08ba4a87ebeec04e63e511d46",
+    "prepare-tests.py.txt": "0d0829b6488738134bc5dee794154009691b2ef5ced1bed6b37d014c4a6dd1d6",
+    "id-answer-schema.json": "03aad7d4882fb20658586fcd8639180e5c78e896c7bb43c0d43d70853500cef4",
+    "registration.md": "bfcace7ca590462bfe2bf6fbb9aec082704e88d2b7b078e37c5fb4fe7fc9f8ff",
+    "protocol.json": "f9d3be8c44b72d32646223f7a839257d83aec9bad0045acdb7be4bb7431681cc",
+    "quote-prompt.txt": "ce4cb2de0db645d24af793acc5a99871f866034dc169654e265385816f81fa2c",
+    "validate-tests.py.txt": "ef15633a30a4b929523769300b8f9b327755da9eec4e81b88dc6e4d84af989e2",
+    "id-prompt.txt": "e8b42982783f21c87925f40321c6fe3ec6d49213153faae6bf9cdf2e8b02f6d8",
+    "prepare.py.txt": "d1a1ad65403e537de5aae177417bcfd7a15af901c970dfd26a26a61b69081897"
+  },
+  "model_calls": 0,
+  "search_calls": 0,
+  "qualification": "Independent Luna review found no material blocker; source identity conflicts now reject before packet generation. Cross-context/undelivered rejection is distinct from intentionally identical paired passage membership."
+}
