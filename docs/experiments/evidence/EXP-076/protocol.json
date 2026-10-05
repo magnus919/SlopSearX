@@ -259,6 +259,8 @@
     "calls": 44,
     "reported_input_tokens": 3000000,
     "reported_output_tokens": 160000,
+    "per_call_input_tokens": 64000,
+    "per_call_output_tokens": 32000,
     "wall_seconds": 7200,
     "concurrency": 1,
     "retries": 0,
@@ -280,6 +282,7 @@
     "projection_binding": "docs/experiments/evidence/EXP-076/capacity-preview.json SHA-256 74a65dedc6372e54a0de476907125c9e4443b437c10799ae2ba25fb4a4e49169; calculator SHA-256 1ad093b97d79c032df0cdb33eecffec60a3df5da63c30919ede56c08546ca43a. Candidate builder/request wire must equal this frozen projection for the exact pinned inputs."
   },
   "policy": {
+    "usage_admission": "Before every physical call, reserve 64000 input and 32000 output tokens against remaining aggregate budgets. Reject before dispatch if either reservation cannot fit. Count actual known usage once per physical call, including the independent control; unknown usage stops all remaining calls and is never treated as zero. Reject per-call usage above the registered bounds.",
     "transport": "Fresh async httpx client per call; one event loop; serial control then candidate; trust_env false; no redirects, retries or pooled reuse.",
     "response": "Exact complete namespaced query:<global_id> and purpose:<global_id> answer maps, reject extra/missing/duplicate keys, matching model, Score types, finite numeric values, query range0..9 and purpose range0..3; require known nonnegative integer usage. Preserve untrusted response bytes and usage status. Confidence or legend fields do not alter ranking.",
     "failure": "Any baseline failure stops without inventing valid baseline. Any candidate admission/transport/parser/phase failure retains the complete pre-Jev ordinary incumbent (native acquisition/provenance order in this corpus), not an unavailable fresh query-only model result; the separately measured W0 comparator remains available only as evaluation evidence. No partial joint-query rescue. Unknown usage is retained and terminates remaining calls. No timeout retry or run replay.",
