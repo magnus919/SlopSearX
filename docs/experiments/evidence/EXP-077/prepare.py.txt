@@ -13,7 +13,7 @@ REPO = HERE.parents[3]
 SCHEMA = "exp077-captured-pools/1"
 ARMS = ("w0", "joint_query", "joint_purpose", "candidate")
 STUDY_PROTOCOL = json.loads((HERE / "protocol.json").read_bytes())
-DESIGN_FILES = {"protocol.json", "cohorts.json", "candidate-source-pins.json", "stage-clock-contract.json",
+DESIGN_FILES = {"protocol.json", "cohorts.json", "candidate-source-pins.json", "stage-clock-contract.json", "integrity-contract.json",
                 "prepare.py.txt", "selector-runner.py.txt", "selector-runner-tests.py.txt", "capture-runner.py.txt",
                 "answer-runner.py.txt", "answerer-prompt.txt", "source-assessor-prompt.txt",
                 "answer-assessor-prompt.txt", "card-assessor-prompt.txt", "assignment-plan.json",

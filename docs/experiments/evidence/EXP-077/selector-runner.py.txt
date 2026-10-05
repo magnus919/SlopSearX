@@ -4,10 +4,12 @@ from __future__ import annotations
 import argparse
 import asyncio
 import hashlib
+import importlib.metadata
 import importlib.machinery
 import importlib.util
 import json
 import os
+import platform
 import stat
 import subprocess
 import time
@@ -47,6 +49,7 @@ for _name, _expected in _source_pins.items():
         raise ValueError("candidate-source-pin")
 T = _load("exp077_http_transport", HERE.parent / "EXP-075" / "http-transport.py.txt")
 REQUIRED_FILES = P.DESIGN_FILES
+PINNED_FILES = REQUIRED_FILES | {"stage-development-manifest.json", "stage-confirmation-manifest.json"}
 
 
 def durable(path: Path, value) -> dict:
@@ -151,17 +154,18 @@ def admit_live(stage: str, output: Path, acquisition: dict, cohorts: dict, clock
     qualification_raw = qualification_path.read_bytes()
     registration = P.strict_json(registration_raw)
     qualification = P.strict_json(qualification_raw)
-    if (type(registration) is not dict or registration.get("schema") != "exp077-registration/1"
-            or registration.get("status") != "registered"):
+    registration_fields = {"schema", "status", "registered_source_revision", "pins", "stage_manifest_sha256"}
+    if (type(registration) is not dict or set(registration) != registration_fields
+            or registration.get("schema") != "exp077-registration/1" or registration.get("status") != "registered"):
         raise ValueError("registration-schema")
     rev = registration.get("registered_source_revision")
-    if type(rev) is not str or len(rev) != 40:
+    if type(rev) is not str or len(rev) != 40 or any(c not in "0123456789abcdef" for c in rev):
         raise ValueError("registration-revision")
     committed_registration, _ = _committed_head("docs/experiments/evidence/EXP-077/registration-integrity.json")
     if committed_registration != registration_raw:
         raise ValueError("uncommitted-registration")
     pins = registration.get("pins")
-    if type(pins) is not dict or set(pins) != REQUIRED_FILES:
+    if type(pins) is not dict or set(pins) != PINNED_FILES:
         raise ValueError("registration-pins")
     stage_manifests = registration.get("stage_manifest_sha256")
     if type(stage_manifests) is not dict or set(stage_manifests) != {"development", "confirmation"}:
@@ -176,19 +180,43 @@ def admit_live(stage: str, output: Path, acquisition: dict, cohorts: dict, clock
         path = HERE / name
         if path.is_symlink() or not path.is_file() or digest(path.read_bytes()) != expected or _git_blob(f"docs/experiments/evidence/EXP-077/{name}", rev) != path.read_bytes():
             raise ValueError("registration-pin")
-    if type(qualification) is not dict or qualification.get("schema") != "exp077-qualification-integrity/1" or qualification.get("qualified") is not True:
+    qualification_fields = {"schema", "qualified", "qualified_source_revision", "files", "source_pins",
+                            "dependencies", "environment", "protocol_sha256", "registration_sha256",
+                            "stage_manifest_sha256"}
+    if (type(qualification) is not dict or set(qualification) != qualification_fields
+            or qualification.get("schema") != "exp077-qualification-integrity/1" or qualification.get("qualified") is not True):
         raise ValueError("runner-not-qualified")
     qrev = qualification.get("qualified_source_revision")
     committed_qualification, _ = _committed_head("docs/experiments/evidence/EXP-077/qualification-integrity.json")
-    if type(qrev) is not str or len(qrev) != 40 or committed_qualification != qualification_raw:
+    if (type(qrev) is not str or len(qrev) != 40 or any(c not in "0123456789abcdef" for c in qrev)
+            or committed_qualification != qualification_raw):
         raise ValueError("uncommitted-qualification")
+    if _git_blob("docs/experiments/evidence/EXP-077/registration-integrity.json", qrev) != registration_raw:
+        raise ValueError("qualification-registration-commit")
     qualified_files = qualification.get("files")
-    if type(qualified_files) is not dict or set(qualified_files) != REQUIRED_FILES:
+    if type(qualified_files) is not dict or set(qualified_files) != PINNED_FILES:
         raise ValueError("qualification-files")
     if (qualification.get("registration_sha256") != digest(registration_raw)
             or qualification.get("protocol_sha256") != digest((HERE / "protocol.json").read_bytes())
             or qualification.get("stage_manifest_sha256") != stage_manifests):
         raise ValueError("qualification-registration-binding")
+    dependencies = qualification.get("dependencies")
+    if type(dependencies) is not dict or not {"httpx", "httpcore", "anyio"} <= set(dependencies):
+        raise ValueError("qualification-dependencies")
+    for name, expected in dependencies.items():
+        if type(name) is not str or type(expected) is not str:
+            raise ValueError("qualification-dependency-runtime")
+        try:
+            installed = importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError:
+            raise ValueError("qualification-dependency-runtime") from None
+        if installed != expected:
+            raise ValueError("qualification-dependency-runtime")
+    environment = qualification.get("environment")
+    if (type(environment) is not dict or set(environment) != {"python_implementation", "python_version"}
+            or environment != {"python_implementation": platform.python_implementation(),
+                              "python_version": platform.python_version()}):
+        raise ValueError("qualification-environment")
     for name, expected in qualified_files.items():
         path = HERE / name
         if path.is_symlink() or not path.is_file() or digest(path.read_bytes()) != expected or _git_blob(f"docs/experiments/evidence/EXP-077/{name}", qrev) != path.read_bytes():
