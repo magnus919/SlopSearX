@@ -133,6 +133,8 @@ def _integrity_errors(acquisition, references, queries, protocol, input_bytes, p
 
 def _answer_map(row, ids, errors, label, low, high):
     answers, scores = row.get("raw_answers"), row.get("scores")
+    if row.get("rational_scores") != {}:
+        errors.append(label + "-component-rational-scores")
     if type(answers) is not dict or set(answers) != set(ids):
         errors.append(label + "-raw-answer-inventory")
         return
@@ -193,11 +195,17 @@ def _neutral(neutral, errors):
     if type(neutral) is not dict:
         errors.append("neutral-schema")
         return
-    if set(neutral) != {"status", "synthetic_input", "cards", "arms", "candidate_phase_ms"}:
+    if set(neutral) != {"status", "synthetic_input", "quality_credit", "case", "cards", "arms", "candidate_phase_ms"}:
         errors.append("neutral-fields")
-    if neutral.get("status") != "fixture_only" or neutral.get("synthetic_input") is not True:
+    if (neutral.get("status") != "fixture_only" or neutral.get("synthetic_input") is not True
+            or neutral.get("quality_credit") is not False):
         errors.append("neutral-acceptance")
     cards = neutral.get("cards")
+    case = neutral.get("case")
+    if (type(case) is not dict or type(case.get("query")) is not str
+            or type(case.get("purpose")) is not str or type(case.get("facets")) is not list
+            or len(case.get("facets", [])) != 4):
+        errors.append("neutral-case-facets")
     if type(cards) is not list or len(cards) != 80:
         errors.append("neutral-card-inventory")
         cards = []
@@ -208,6 +216,8 @@ def _neutral(neutral, errors):
            for c in cards):
         errors.append("neutral-card-schema")
         return
+    native = ids
+    canonical = canonical_ids(cards)
     arms = neutral.get("arms")
     if type(arms) is not dict or set(arms) != set(ARMS):
         errors.append("neutral-arms")
@@ -217,10 +227,14 @@ def _neutral(neutral, errors):
         if type(row) is not dict or row.get("status") != "valid":
             errors.append("neutral-" + name + "-schema")
             continue
-        if set(row) != {"status", "order_ids", "scores", "raw_answers", "usage", "elapsed_ms"}:
+        if set(row) != {"status", "order_ids", "scores", "raw_answers", "rational_scores", "usage", "elapsed_ms"}:
             errors.append("neutral-" + name + "-fields")
-        order = _score_order(row, ids, 0, 3, canonical_ids(cards), errors, "neutral-" + name)
-        if type(row.get("order_ids")) is not list or (order is not None and row["order_ids"] != order):
+        score_ids = native[:40] if name == "w0" else native
+        tie_order = native[:40] if name == "w0" else canonical
+        order = _score_order(row, score_ids, 0, 9 if name == "w0" else 3, tie_order,
+                             errors, "neutral-" + name)
+        expected_order = order + native[40:] if name == "w0" and order is not None else order
+        if type(row.get("order_ids")) is not list or (expected_order is not None and row["order_ids"] != expected_order):
             errors.append("neutral-" + name + "-order")
         if not finite_number(row.get("elapsed_ms"), 0, 1000):
             errors.append("neutral-" + name + "-deadline")
@@ -229,8 +243,20 @@ def _neutral(neutral, errors):
         errors.append("neutral-candidate-schema")
     elif not finite_number(candidate.get("elapsed_ms"), 0, 1000):
         errors.append("neutral-candidate-deadline")
-    if type(candidate) is dict and set(candidate) != {"status", "order_ids", "rational_scores", "usage", "elapsed_ms"}:
+    if type(candidate) is dict and set(candidate) != {"status", "order_ids", "scores", "raw_answers", "rational_scores", "usage", "elapsed_ms"}:
         errors.append("neutral-candidate-fields")
+    if type(candidate) is dict:
+        try:
+            expected_order, expected_rationals = _expected_fusion(
+                cards, arms["w0"].get("order_ids"), arms["purpose_component"].get("order_ids"))
+            if candidate.get("order_ids") != expected_order:
+                errors.append("neutral-candidate-order")
+            if not _same_rationals(candidate.get("rational_scores"), expected_rationals):
+                errors.append("neutral-candidate-rational-scores")
+        except (ValueError, TypeError):
+            errors.append("neutral-fusion-input")
+        if candidate.get("scores") != {} or candidate.get("raw_answers") != {}:
+            errors.append("neutral-candidate-model-output")
     candidate_usage = _usage(candidate, errors, "neutral-candidate")
     if candidate_usage is not None:
         expected_usage = {key: arms["w0"].get("usage", {}).get(key, -1)
@@ -285,7 +311,7 @@ def analyze(run, acquisition, references, queries, protocol,
     if run.get("schema") != "exp073-run/1":
         errors.append("run-schema")
     if set(run) != {"schema", "status", "operations", "synthetic", "input_pins", "input_revision",
-                    "budget", "wall_seconds", "neutral"}:
+                    "source_integrity", "budget", "wall_seconds", "neutral"}:
         errors.append("run-fields")
     if protocol.get("schema") != "exp073-fixed-query-purpose-rank-fusion/1":
         errors.append("protocol-schema")
@@ -294,6 +320,21 @@ def analyze(run, acquisition, references, queries, protocol,
     errors.extend(_integrity_errors(acquisition, references, queries, protocol, input_bytes, protocol_bytes, registration_bytes))
     if run.get("input_pins") != protocol.get("inputs"):
         errors.append("input-pins")
+    source_integrity = run.get("source_integrity")
+    if (type(source_integrity) is not dict
+            or source_integrity.get("input_pins") != protocol.get("inputs")
+            or source_integrity.get("input_revision") != run.get("input_revision")
+            or type(protocol_bytes) is not bytes
+            or type(source_integrity.get("protocol_sha256")) is not str
+            or source_integrity.get("protocol_sha256") != hashlib.sha256(protocol_bytes).hexdigest()
+            or type(registration_bytes) is not bytes
+            or type(source_integrity.get("registration_sha256")) is not str
+            or source_integrity.get("registration_sha256") != hashlib.sha256(registration_bytes).hexdigest()):
+        errors.append("source-integrity-binding")
+    revision = run.get("input_revision")
+    if (type(revision) is not str or len(revision) != 40
+            or any(char not in "0123456789abcdef" for char in revision)):
+        errors.append("input-revision")
     if run.get("status") != "complete":
         errors.append("incomplete-run")
     if type(run.get("synthetic")) is not bool:
@@ -340,7 +381,7 @@ def analyze(run, acquisition, references, queries, protocol,
             errors.append(case + "-provenance")
         rotated_cards = {c["id"]: c for c in native_cards}
         cards = op.get("cards")
-        expected_cards = [rotated_cards[cid] for cid in provenance]
+        expected_cards = [rotated_cards[cid] for cid in canonical_ids(native_cards)]
         if cards != expected_cards:
             errors.append(case + "-card-binding")
             cards = expected_cards
@@ -355,9 +396,9 @@ def analyze(run, acquisition, references, queries, protocol,
             if type(row) is not dict or row.get("status") != "valid":
                 errors.append(label + "-schema-or-failure")
                 continue
-            expected_fields = ({"status", "order_ids", "scores", "raw_answers", "usage", "elapsed_ms"}
+            expected_fields = ({"status", "order_ids", "scores", "raw_answers", "rational_scores", "usage", "elapsed_ms"}
                                if arm_name != "candidate" else
-                               {"status", "order_ids", "rational_scores", "usage", "elapsed_ms"})
+                               {"status", "order_ids", "scores", "raw_answers", "rational_scores", "usage", "elapsed_ms"})
             if set(row) != expected_fields:
                 errors.append(label + "-fields")
             expected_ids = provenance[:40] if arm_name == "w0" else provenance
@@ -397,7 +438,7 @@ def analyze(run, acquisition, references, queries, protocol,
                 orders[(case, variant, "candidate")] = fused_order
             except (ValueError, TypeError):
                 errors.append(case + "-" + str(variant) + "-fusion-input")
-            if type(crow.get("scores")) is not type(None) or type(crow.get("raw_answers")) is not type(None):
+            if crow.get("scores") != {} or crow.get("raw_answers") != {}:
                 errors.append(case + "-" + str(variant) + "-candidate-model-output")
             c_usage = _usage(crow, errors, case + "-" + str(variant) + "-candidate")
             if c_usage is not None:
@@ -460,6 +501,16 @@ def analyze(run, acquisition, references, queries, protocol,
         result["outcome"] = "incomplete"
         return result
 
+    if run.get("synthetic") is True:
+        return {"schema": "exp073-analysis/1",
+                "dataset": "synthetic offline fixture; no quality or adoption credit",
+                "adoption_eligible": False, "quality_analysis_performed": False,
+                "structural_failures": [], "synthetic": True,
+                "natural_long_pools": sum(len(p["cards"]) > 40 for p in pool_rows.values()),
+                "tail_evidence": "One natural long pool cannot establish general tail benefit.",
+                "total_wall_seconds": run["wall_seconds"],
+                "outcome": "synthetic_fixture_only"}
+
     stability = []
     for q in ("q1", "q4", "q7", "q8"):
         base = set(orders[(q, "base", "candidate")][:10])
@@ -505,8 +556,8 @@ def analyze(run, acquisition, references, queries, protocol,
         mean, ci = statistics.mean(deltas), bootstrap95(deltas)
         result["assessors"][assessor] = {"cases": records, "mean_candidate_minus_w0": mean, "bootstrap95": ci,
             "quality_gate_passed": mean >= .05 - 1e-12 and ci[0] > 0 and all(r["per_case_passed"] for r in records)}
-    result["quality_analysis_performed"] = run.get("synthetic") is False
-    result["development_quality_passed"] = run.get("synthetic") is False and all(
+    result["quality_analysis_performed"] = True
+    result["development_quality_passed"] = all(
         x["quality_gate_passed"] for x in result["assessors"].values()) and all(x["passed"] for x in stability)
     result["navigation_gate_met"] = all(x["candidate_target_top1"] for x in navigation if x["target_present"])
     result["acquisition_recall_met"] = all(x["target_present"] for x in navigation)

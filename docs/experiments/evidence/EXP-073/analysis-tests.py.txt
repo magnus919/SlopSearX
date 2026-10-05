@@ -4,6 +4,7 @@ import importlib.machinery
 import importlib.util
 import json
 import pathlib
+import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parent
@@ -26,6 +27,7 @@ def scored_arm(cards, scores, order, elapsed=100):
     ids = list(scores)
     return {"status": "valid", "scores": scores, "order_ids": order,
             "raw_answers": {cid: answer(scores[cid]) for cid in ids},
+            "rational_scores": {},
             "usage": {"input_tokens": 100, "output_tokens": 100}, "elapsed_ms": elapsed}
 
 
@@ -63,15 +65,23 @@ def fixture():
     neutral_cards = [{"id": f"neutral-{i:02}", "title": f"Neutral {i:02}",
                       "url": f"https://neutral.example/{i:02}", "snippet": f"neutral {i:02}"} for i in range(80)]
     neutral_ids = [c["id"] for c in neutral_cards]
-    neutral_scores = {cid: float(80 - i) / 80 for i, cid in enumerate(neutral_ids)}
-    neutral_order = sorted(neutral_ids, key=lambda cid: (-neutral_scores[cid], neutral_ids.index(cid)))
-    neutral_component = scored_arm(neutral_cards, neutral_scores, neutral_order)
-    neutral = {"status": "fixture_only", "synthetic_input": True, "cards": neutral_cards,
-               "arms": {"w0": copy.deepcopy(neutral_component),
-                        "purpose_component": copy.deepcopy(neutral_component),
+    neutral_w_scores = {cid: float(40 - i) / 40 * 9 for i, cid in enumerate(neutral_ids[:40])}
+    neutral_w_prefix = sorted(neutral_ids[:40], key=lambda cid: (-neutral_w_scores[cid], neutral_ids.index(cid)))
+    neutral_w_order = neutral_w_prefix + neutral_ids[40:]
+    neutral_p_scores = {cid: float(80 - i) / 80 * 3 for i, cid in enumerate(neutral_ids)}
+    neutral_p_order = sorted(neutral_ids, key=lambda cid: (-neutral_p_scores[cid], neutral_ids.index(cid)))
+    neutral_w = scored_arm(neutral_cards, neutral_w_scores, neutral_w_order)
+    neutral_p = scored_arm(neutral_cards, neutral_p_scores, neutral_p_order)
+    neutral_order, neutral_rational = A._expected_fusion(neutral_cards, neutral_w_order, neutral_p_order)
+    neutral = {"status": "fixture_only", "synthetic_input": True, "quality_credit": False,
+               "case": {"id": "neutral", "query": "neutral query", "purpose": "neutral purpose",
+                        "facets": [{"id": f"f{i}", "description": f"facet {i}"} for i in range(4)]},
+               "cards": neutral_cards,
+               "arms": {"w0": neutral_w, "purpose_component": neutral_p,
                         "candidate": {"status": "valid", "order_ids": neutral_order,
-                                      "rational_scores": {}, "usage": {"input_tokens": 200, "output_tokens": 200},
-                                      "elapsed_ms": 5}}, "candidate_phase_ms": 205}
+                                      "scores": {}, "raw_answers": {}, "rational_scores": neutral_rational,
+                                      "usage": {"input_tokens": 200, "output_tokens": 200}, "elapsed_ms": 5}},
+               "candidate_phase_ms": 205}
     operations = []
     for plan in protocol["schedule"]:
         q, variant = plan["case"], plan["variant"]
@@ -81,7 +91,7 @@ def fixture():
         if variant == "rotate":
             provenance = native[20:] + native[:20]
         by_id = {c["id"]: c for c in native_cards}
-        cards = [by_id[cid] for cid in provenance]
+        cards = [by_id[cid] for cid in A.canonical_ids(native_cards)]
         canonical = A.canonical_ids(cards)
         w0_scores = {cid: float(len(provenance[:40]) - i) / len(provenance[:40]) * 9
                      for i, cid in enumerate(provenance[:40])}
@@ -98,27 +108,105 @@ def fixture():
                            "candidate_phase_ms": 205,
                            "arms": {"w0": wrow, "purpose_component": prow,
                                     "candidate": {"status": "valid", "order_ids": fused_order,
-                                                  "rational_scores": rational, "usage": usage, "elapsed_ms": 5}}})
+                                                  "scores": {}, "raw_answers": {}, "rational_scores": rational,
+                                                  "usage": usage, "elapsed_ms": 5}}})
+    revision = "e90534bcad9aff3daa34b34399293bfbbec76088"
+    revision = "e90534bcad9aff3daa34b34399293bfbbec76088"
+    source_integrity = {"input_pins": copy.deepcopy(protocol["inputs"]), "input_revision": revision,
+                        "protocol_sha256": hashlib.sha256(protocol_bytes).hexdigest(),
+                        "registration_sha256": hashlib.sha256(registration).hexdigest()}
     run = {"schema": "exp073-run/1", "status": "complete", "synthetic": True,
-           "input_pins": copy.deepcopy(protocol["inputs"]), "input_revision": "synthetic-fixture",
+           "input_pins": copy.deepcopy(protocol["inputs"]), "input_revision": revision,
+           "source_integrity": source_integrity,
            "budget": {"attempts": 44, "input_tokens": 4_400, "output_tokens": 4_400, "unknown_usage": False},
            "wall_seconds": 12, "neutral": neutral, "operations": operations}
     return [run, acquisition, references, queries, protocol, input_bytes, protocol_bytes, registration]
 
 
 class AnalyzerTests(unittest.TestCase):
+    def test_offline_runner_output_matches_analyzer_schema_without_quality_metrics(self):
+        runner_loader = importlib.machinery.SourceFileLoader("runner073", str(ROOT / "normal-runner.py.txt"))
+        runner_spec = importlib.util.spec_from_loader(runner_loader.name, runner_loader)
+        runner = importlib.util.module_from_spec(runner_spec)
+        runner_loader.exec_module(runner)
+        acquisition, references, queries = {"pools": {}}, {"A": {}, "B": {}}, []
+        for n in range(1, 14):
+            q = f"q{n}"
+            cards = [{"id": f"c{i:02}", "url": f"https://synthetic.example/{i:02}",
+                      "title": f"Synthetic card {i:02}", "snippet": f"Synthetic snippet {i:02}"}
+                     for i in range(80)]
+            acquisition["pools"][q] = {"cards": cards}
+            queries.append({"id": q, "kind": "navigation" if n >= 9 else "research",
+                            "target_url": "https://missing.synthetic/target", "query": f"synthetic query {q}",
+                            "purpose": f"synthetic purpose {q}",
+                            "facets": [{"id": f"f{i}", "description": f"Synthetic facet {i}"} for i in range(4)]})
+            refs = {c["id"]: {"lead": 0, "facets": []} for c in cards}
+            references["A"][q] = copy.deepcopy(refs)
+            references["B"][q] = copy.deepcopy(refs)
+        input_bytes = {
+            "docs/experiments/evidence/EXP-060/fresh-acquisition.json": pack(acquisition),
+            "docs/experiments/evidence/EXP-060/queries.json": pack(queries),
+            "docs/experiments/evidence/EXP-039/source-selection-contract.json": b'{"fixture":"contract"}',
+            "docs/experiments/evidence/EXP-064/completed/metric-reference-view.json": pack(references),
+            "docs/experiments/evidence/EXP-064/completed/source-bound-references.json": b'{"fixture":"source-bound"}',
+            "docs/experiments/evidence/EXP-064/completed/semantic-correction-audit-final.json": b'{"fixture":"audit"}',
+            "docs/experiments/evidence/EXP-072/protocol.json": b'{"fixture":"exp072 protocol pin"}',
+        }
+        protocol = json.loads((ROOT / "protocol.json").read_text())
+        protocol["inputs"] = {path: hashlib.sha256(raw).hexdigest() for path, raw in input_bytes.items()}
+        protocol_bytes = pack(protocol)
+        registration = pack({"schema": "exp073-registration/1", "provider_calls": 0, "search_calls": 0,
+                             "pins": {"docs/experiments/EXP-073-fixed-query-purpose-rank-fusion.md": "a" * 64,
+                                      "docs/experiments/evidence/EXP-073/protocol.json": hashlib.sha256(protocol_bytes).hexdigest()}})
+        revision = "e90534bcad9aff3daa34b34399293bfbbec76088"
+        source_integrity = {"input_pins": copy.deepcopy(protocol["inputs"]), "input_revision": revision,
+                            "protocol_sha256": hashlib.sha256(protocol_bytes).hexdigest(),
+                            "registration_sha256": hashlib.sha256(registration).hexdigest()}
+        with tempfile.TemporaryDirectory(prefix="exp073-analyzer-integration-") as temp:
+            out = pathlib.Path(temp) / "run"
+            run = runner.run(acquisition, queries, out, offline=True, source_integrity=source_integrity)
+            run.setdefault("input_revision", revision)  # older runner shape; current runner supplies this field
+        runner_module_owned = runner.Owned
+        owned_bodies = []
+        class RecordingOwned(runner_module_owned):
+            def __call__(self, body, timeout_s=1):
+                owned_bodies.append(json.loads(body))
+                return super().__call__(body, timeout_s)
+        runner.Owned = RecordingOwned
+        try:
+            with tempfile.TemporaryDirectory(prefix="exp073-analyzer-inspect-") as temp:
+                inspected = runner.run(acquisition, queries, pathlib.Path(temp) / "run",
+                                       offline=True, source_integrity=source_integrity)
+        finally:
+            runner.Owned = runner_module_owned
+        neutral_purpose = [body for body in owned_bodies
+                           if body.get("state", {}).get("query") == "synthetic relative reading lead"]
+        self.assertEqual(len(neutral_purpose), 1)
+        self.assertEqual(len(neutral_purpose[0]["state"]["requested_facets"]), 4)
+        run = inspected
+        run["input_pins"] = copy.deepcopy(protocol["inputs"])
+        run["source_integrity"] = source_integrity
+        result = A.analyze(run, acquisition, references, queries, protocol, input_bytes, protocol_bytes, registration)
+        self.assertEqual(run["status"], "complete")
+        self.assertEqual(run["budget"]["attempts"], 44)
+        self.assertEqual(len(run["operations"]), 21)
+        self.assertEqual(result["structural_failures"], [])
+        self.assertEqual(result["outcome"], "synthetic_fixture_only")
+        self.assertFalse(result["quality_analysis_performed"])
+        self.assertNotIn("assessors", result)
+
     def test_synthetic_fixture_has_no_quality_or_adoption_credit(self):
         result = A.analyze(*fixture())
         self.assertEqual(result["structural_failures"], [])
         self.assertFalse(result["quality_analysis_performed"])
-        self.assertFalse(result["development_quality_passed"])
         self.assertFalse(result["adoption_eligible"])
         self.assertEqual(result["outcome"], "synthetic_fixture_only")
         self.assertEqual(result["natural_long_pools"], 13)
-        self.assertEqual(len(result["assessors"]["A"]["cases"]), 8)
+        self.assertNotIn("assessors", result)
 
     def test_both_independent_reference_gates_are_required(self):
         x = fixture()
+        x[0]["synthetic"] = False
         # Both assessor views independently reject this deliberately unfavorable synthetic cohort.
         for assessor in ("A", "B"):
             for q in x[2][assessor]:
@@ -138,7 +226,7 @@ class AnalyzerTests(unittest.TestCase):
         self.assertEqual(result["structural_failures"], [])
         self.assertFalse(result["assessors"]["A"]["quality_gate_passed"])
         self.assertFalse(result["assessors"]["B"]["quality_gate_passed"])
-        self.assertFalse(result["quality_analysis_performed"])
+        self.assertTrue(result["quality_analysis_performed"])
 
     def test_raw_component_score_must_match_model_answer(self):
         x = fixture()
@@ -170,7 +258,7 @@ class AnalyzerTests(unittest.TestCase):
 
     def test_candidate_must_not_contain_model_scores_or_answers(self):
         x = fixture()
-        x[0]["operations"][0]["arms"]["candidate"]["raw_answers"] = {}
+        x[0]["operations"][0]["arms"]["candidate"]["raw_answers"] = {"unexpected": {}}
         self.assertIn("q1-base-candidate-model-output", A.analyze(*x)["structural_failures"])
 
     def test_usage_call_inventory_binding_and_unknown_usage_fail_closed(self):
