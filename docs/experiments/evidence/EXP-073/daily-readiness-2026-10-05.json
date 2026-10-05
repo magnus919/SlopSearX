@@ -1,0 +1,81 @@
+{
+  "schema": "daily-readiness/1",
+  "cycle_start": "2026-10-05T13:01:07.568000+00:00",
+  "recorded_at": "2026-10-05T13:03:21.499586+00:00",
+  "elapsed_seconds": 133.931586,
+  "baseline": "948d0e6",
+  "outcome": "daily execution blocked; study remains registered",
+  "reason": "Fresh provider calls and two-hour protocol incompatible with offline zero-paid-call 45-minute heartbeat; exact runner pins and neutral qualification also not yet committed.",
+  "input_integrity": [
+    {
+      "path": "docs/experiments/evidence/EXP-060/fresh-acquisition.json",
+      "expected": "69f72e2895031d4804733f7cdb38197a2d2c43d7cddaa8589abc9a43397d1882",
+      "actual": "69f72e2895031d4804733f7cdb38197a2d2c43d7cddaa8589abc9a43397d1882",
+      "matches": true
+    },
+    {
+      "path": "docs/experiments/evidence/EXP-060/queries.json",
+      "expected": "010a418d7e37e9df198d6cb313b4612d82e76ba8bef4cc2a9502f2074bf85836",
+      "actual": "010a418d7e37e9df198d6cb313b4612d82e76ba8bef4cc2a9502f2074bf85836",
+      "matches": true
+    },
+    {
+      "path": "docs/experiments/evidence/EXP-039/source-selection-contract.json",
+      "expected": "0cdf759b83ab96bad92666bbeabbb5d232aa81876712a314f931645082291c1b",
+      "actual": "0cdf759b83ab96bad92666bbeabbb5d232aa81876712a314f931645082291c1b",
+      "matches": true
+    },
+    {
+      "path": "docs/experiments/evidence/EXP-064/completed/metric-reference-view.json",
+      "expected": "99625962fd078543d3dbf7630fc445dcfaff7fe55ab9289ef7c6f8a6ffb4afd9",
+      "actual": "99625962fd078543d3dbf7630fc445dcfaff7fe55ab9289ef7c6f8a6ffb4afd9",
+      "matches": true
+    },
+    {
+      "path": "docs/experiments/evidence/EXP-064/completed/source-bound-references.json",
+      "expected": "1b2be2e0556f3f1fd39237456917b0daa0a9795d1297822a4c43b8ea211f8f05",
+      "actual": "1b2be2e0556f3f1fd39237456917b0daa0a9795d1297822a4c43b8ea211f8f05",
+      "matches": true
+    },
+    {
+      "path": "docs/experiments/evidence/EXP-064/completed/semantic-correction-audit-final.json",
+      "expected": "9622c053eba6f6979aef36b75e46fed038dcfd6f2837b6c08d474903a0ff42b1",
+      "actual": "9622c053eba6f6979aef36b75e46fed038dcfd6f2837b6c08d474903a0ff42b1",
+      "matches": true
+    },
+    {
+      "path": "docs/experiments/evidence/EXP-072/protocol.json",
+      "expected": "8b39478ae79cc6b74b07428554559d7d8a9d5deb1e9e827a6f6dd57c4dcf675d",
+      "actual": "8b39478ae79cc6b74b07428554559d7d8a9d5deb1e9e827a6f6dd57c4dcf675d",
+      "matches": true
+    },
+    {
+      "path": "docs/experiments/EXP-073-fixed-query-purpose-rank-fusion.md",
+      "expected": "da909953340014feb5db76e184317e4ce9085b4964d8600edfe7ff846171c1c2",
+      "actual": "da909953340014feb5db76e184317e4ce9085b4964d8600edfe7ff846171c1c2",
+      "matches": true
+    },
+    {
+      "path": "docs/experiments/evidence/EXP-073/protocol.json",
+      "expected": "de8494a1108adf65f133d65150e6d322fa2965732321ab9442bca293478499a5",
+      "actual": "de8494a1108adf65f133d65150e6d322fa2965732321ab9442bca293478499a5",
+      "matches": true
+    }
+  ],
+  "provider_calls": 0,
+  "search_calls": 0,
+  "paid_calls": 0,
+  "subscription_usage": "unknown",
+  "candidate_quality_measurements": 0,
+  "last_seven_completed_reviewed": [
+    "EXP-072",
+    "EXP-071",
+    "EXP-068",
+    "EXP-067",
+    "EXP-066",
+    "EXP-065",
+    "EXP-064"
+  ],
+  "implementation_pending_supported": false,
+  "deployment": false
+}
