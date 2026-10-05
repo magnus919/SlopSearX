@@ -7,6 +7,7 @@ import pathlib
 import tempfile
 import time
 import unittest
+from unittest import mock
 
 HERE = pathlib.Path(__file__).resolve().parent
 loader = importlib.machinery.SourceFileLoader("exp075_normal_runner", str(HERE / "normal-runner.py.txt"))
@@ -48,20 +49,26 @@ class RunnerTests(unittest.TestCase):
         parsed = P.parse_joint(raw, built)
         expected = P.FUSE.fuse(built["cards"], parsed["joint_query"]["order_ids"], parsed["joint_purpose"]["order_ids"])
         self.assertEqual(parsed["candidate"], expected)
+        self.assertEqual(parsed["joint_query"]["order_ids"], built["provenance_order_ids"])
+        self.assertEqual(parsed["joint_purpose"]["order_ids"], [card["id"] for card in built["cards"]])
         self.assertEqual(set(parsed["joint_query"]["order_ids"]), {card["id"] for card in cards})
         self.assertEqual(set(parsed["joint_purpose"]["order_ids"]), {card["id"] for card in cards})
 
     def test_default_offline_path_is_fixture_only_and_records_44_calls_without_quality_credit(self):
-        stats = {"clients": 0, "requests": 0, "closed": 0}
-        factory = N.fixture_client_factory(stats=stats)
+        escaped = []
+
+        async def forbid_network(_transport, _request):
+            escaped.append(True)
+            raise AssertionError("offline-run-attempted-network")
+
         with tempfile.TemporaryDirectory() as temp:
-            output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
-                                       offline=True, prebuilt=self.prepared, client_factory=factory))
+            with mock.patch.object(N.httpx.AsyncHTTPTransport, "handle_async_request", forbid_network):
+                output = asyncio.run(N.run(self.acquisition, self.queries, pathlib.Path(temp) / "run",
+                                           offline=True, prebuilt=self.prepared))
         self.assertEqual(output["status"], "complete")
         self.assertEqual(output["budget"]["attempts"], 44)
         self.assertEqual(len(output["operations"]), 21)
-        self.assertEqual(stats["requests"], 44)
-        self.assertEqual(stats["clients"], stats["closed"])
+        self.assertEqual(escaped, [])
         self.assertFalse(output["quality_credit"])
         self.assertFalse(output["adoption_eligible"])
 
