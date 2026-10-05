@@ -305,9 +305,23 @@ def analyze(run, acquisition, references, queries, protocol,
     ids_q = [q.get("id") for q in queries if type(q) is dict]
     if len(ids_q) != 13 or set(ids_q) != {f"q{i}" for i in range(1, 14)}:
         errors.append("query-inventory")
-    if any(type(q) is not dict or type(q.get("kind")) is not str or type(q.get("target_url")) is not str
-           for q in queries):
-        errors.append("query-schema")
+    query_by_id = {q.get("id"): q for q in queries if type(q) is dict}
+    if ({q for q, item in query_by_id.items() if item.get("kind") == "research"} != {f"q{i}" for i in range(1, 9)}
+            or {q for q, item in query_by_id.items() if item.get("kind") == "navigation"} != {f"q{i}" for i in range(9, 14)}):
+        errors.append("query-kind-inventory")
+    for query in queries:
+        if (type(query) is not dict or query.get("kind") not in ("research", "navigation")
+                or type(query.get("query")) is not str or not query.get("query")
+                or type(query.get("purpose")) is not str or not query.get("purpose")
+                or type(query.get("facets")) is not list or len(query.get("facets", [])) > 4
+                or (query.get("kind") == "navigation" and type(query.get("target_url")) is not str)):
+            errors.append("query-schema")
+            break
+        if any(type(f) is not dict or set(f) != {"id", "description"}
+               or any(type(f.get(k)) is not str or not f[k] for k in ("id", "description"))
+               for f in query["facets"]):
+            errors.append("query-facet-schema")
+            break
     if run.get("schema") != "exp073-run/1":
         errors.append("run-schema")
     if set(run) != {"schema", "status", "operations", "synthetic", "input_pins", "input_revision",

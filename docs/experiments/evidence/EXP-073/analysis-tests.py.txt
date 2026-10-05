@@ -40,8 +40,11 @@ def fixture():
                   "url": f"https://example.org/{i:02}", "snippet": f"snippet {i:02}"}
                  for i in range(80)]
         acquisition["pools"][q] = {"cards": cards}
-        target = "https://example.org/00" if n in (9, 12, 13) else "https://target.example/missing"
-        queries.append({"id": q, "kind": "navigation" if n >= 9 else "research", "target_url": target})
+        query = {"id": q, "kind": "navigation" if n >= 9 else "research",
+                 "query": f"synthetic query {q}", "purpose": f"synthetic purpose {q}", "facets": []}
+        if n >= 9:
+            query["target_url"] = "https://example.org/00" if n in (9, 12, 13) else "https://target.example/missing"
+        queries.append(query)
         # Synthetic labels intentionally give no quality signal to the analyzer.
         labels = {c["id"]: {"lead": 0, "facets": []} for c in cards}
         references["A"][q] = copy.deepcopy(labels)
@@ -124,6 +127,36 @@ def fixture():
 
 
 class AnalyzerTests(unittest.TestCase):
+    def test_actual_frozen_inputs_run_offline_and_stop_before_quality(self):
+        runner_loader = importlib.machinery.SourceFileLoader("runner073_frozen", str(ROOT / "normal-runner.py.txt"))
+        runner_spec = importlib.util.spec_from_loader(runner_loader.name, runner_loader)
+        runner = importlib.util.module_from_spec(runner_spec)
+        runner_loader.exec_module(runner)
+        repo = ROOT.parents[3]
+        protocol_bytes = (ROOT / "protocol.json").read_bytes()
+        registration_bytes = (ROOT / "registration-integrity.json").read_bytes()
+        protocol = A._strict_json(protocol_bytes)
+        input_bytes = {path: (repo / path).read_bytes() for path in protocol["inputs"]}
+        acquisition, queries = runner.source_data(input_bytes)
+        references = A._strict_json(input_bytes[
+            "docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"])
+        revision = runner.REGISTRATION_REVISION
+        source_integrity = {"input_pins": copy.deepcopy(protocol["inputs"]), "input_revision": revision,
+                            "protocol_sha256": hashlib.sha256(protocol_bytes).hexdigest(),
+                            "registration_sha256": hashlib.sha256(registration_bytes).hexdigest()}
+        with tempfile.TemporaryDirectory(prefix="exp073-frozen-offline-") as temp:
+            run = runner.run(acquisition, queries, pathlib.Path(temp) / "run", offline=True,
+                             source_integrity=source_integrity)
+        result = A.analyze(run, acquisition, references, queries, protocol,
+                           input_bytes, protocol_bytes, registration_bytes)
+        self.assertEqual(run["status"], "complete")
+        self.assertEqual(run["budget"]["attempts"], 44)
+        self.assertEqual(len(run["operations"]), 21)
+        self.assertEqual(result["structural_failures"], [])
+        self.assertEqual(result["outcome"], "synthetic_fixture_only")
+        self.assertFalse(result["quality_analysis_performed"])
+        self.assertNotIn("assessors", result)
+
     def test_offline_runner_output_matches_analyzer_schema_without_quality_metrics(self):
         runner_loader = importlib.machinery.SourceFileLoader("runner073", str(ROOT / "normal-runner.py.txt"))
         runner_spec = importlib.util.spec_from_loader(runner_loader.name, runner_loader)
@@ -136,10 +169,13 @@ class AnalyzerTests(unittest.TestCase):
                       "title": f"Synthetic card {i:02}", "snippet": f"Synthetic snippet {i:02}"}
                      for i in range(80)]
             acquisition["pools"][q] = {"cards": cards}
-            queries.append({"id": q, "kind": "navigation" if n >= 9 else "research",
-                            "target_url": "https://missing.synthetic/target", "query": f"synthetic query {q}",
+            query = {"id": q, "kind": "navigation" if n >= 9 else "research",
+                            "query": f"synthetic query {q}",
                             "purpose": f"synthetic purpose {q}",
-                            "facets": [{"id": f"f{i}", "description": f"Synthetic facet {i}"} for i in range(4)]})
+                            "facets": [{"id": f"f{i}", "description": f"Synthetic facet {i}"} for i in range(4)]}
+            if n >= 9:
+                query["target_url"] = "https://missing.synthetic/target"
+            queries.append(query)
             refs = {c["id"]: {"lead": 0, "facets": []} for c in cards}
             references["A"][q] = copy.deepcopy(refs)
             references["B"][q] = copy.deepcopy(refs)
