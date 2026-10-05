@@ -1,0 +1,45 @@
+"""Bounded EXP-073 adapter. Offline fixtures are default; live requires runner admission."""
+import hashlib, importlib.machinery, importlib.util, io, json, os, sys, urllib.error, urllib.request
+from pathlib import Path
+HERE=Path(__file__).resolve().parent; REPO=HERE.parents[3]
+sys.path.insert(0,str(REPO))
+L=importlib.machinery.SourceFileLoader('exp073_prepare',str(HERE/'prepare.py.txt'))
+S=importlib.util.spec_from_loader(L.name,L); P=importlib.util.module_from_spec(S); L.exec_module(P)
+H=importlib.machinery.SourceFileLoader('exp073_transport',str(REPO/'docs/experiments/evidence/EXP-059/http-wrapper.py.txt'))
+S=importlib.util.spec_from_loader(H.name,H); HTTP=importlib.util.module_from_spec(S); H.exec_module(HTTP)
+HTTP.validate_request=P.BASE.validate_request
+
+class FixtureResponse(io.BytesIO):
+    status=200
+class FixtureOpener:
+    def __init__(self,mode='neutral'): self.mode=mode
+    def open(self,request,timeout):
+        if request.method!='POST' or timeout!=1: raise ValueError('fixture-envelope')
+        parsed=P.BASE.validate_request(request.data)
+        if self.mode=='http-error': raise urllib.error.HTTPError(HTTP.ENDPOINT,503,'offline fixture',{},FixtureResponse(b'{"error":"synthetic fixture error","usage":{"input_tokens":11,"output_tokens":3}}'))
+        raw=P.response_fixture(parsed,score=2,usage={'input_tokens':11,'output_tokens':3})
+        if self.mode=='missing-usage':
+            payload=P.strict_json(raw);payload.pop('usage',None);raw=P.wire(payload)
+        return FixtureResponse(raw)
+
+def main():
+    import argparse
+    ap=argparse.ArgumentParser();ap.add_argument('--offline-fixture',choices=('neutral','http-error','missing-usage'));a=ap.parse_args()
+    raw=sys.stdin.buffer.read(384001)
+    try:
+        P.BASE.validate_request(raw)
+        if a.offline_fixture: token='offline-fixture-non-secret'; opener=FixtureOpener(a.offline_fixture)
+        else:
+            token=os.environ.get('TYPESAFE_API_KEY','')
+            if not token: raise ValueError('missing-credential')
+            opener=urllib.request.build_opener(HTTP.NoRedirect())
+        timing={}; result=HTTP.exchange(raw,token,opener,timing=timing)
+        sys.stdout.buffer.write(result)
+        print(json.dumps({'request_sha256':hashlib.sha256(raw).hexdigest(),'response_sha256':hashlib.sha256(result).hexdigest(),'remote_http_ms':timing['remote_http_ms']}),file=sys.stderr)
+        return 0
+    except HTTP.HTTPFailure as e:
+        sys.stdout.buffer.write(e.raw)
+        print(json.dumps({'http_status':e.status,'request_sha256':hashlib.sha256(raw).hexdigest(),'response_sha256':hashlib.sha256(e.raw).hexdigest(),'remote_http_ms':e.elapsed}),file=sys.stderr);return 2
+    except Exception as e:
+        print('exp073-http-'+type(e).__name__,file=sys.stderr);return 2
+if __name__=='__main__': raise SystemExit(main())

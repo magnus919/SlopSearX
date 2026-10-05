@@ -1,0 +1,16 @@
+{
+  "status": "retained_frozen_input_offline_integration_failure",
+  "source_revision": "c4691513576789a03c05157507ebfb1644946484",
+  "provider_calls": 0,
+  "search_calls": 0,
+  "synthetic_fixture_calls": 44,
+  "runner_status": "complete",
+  "analyzer_status": "incomplete",
+  "structural_failures": [
+    "query-schema"
+  ],
+  "quality_analysis_performed": false,
+  "run_sha256": "0f5027859c6a495d8a8857de532adc0874fbddfc35bd7937eb70dcbf6568f7a2",
+  "analysis_sha256": "9ff4cff3a8843f4ef9a51e2eb23a8ea6f6c4661fd0df7e9983148ba1bfd007bd",
+  "interpretation": "Repaired synthetic-schema integration passed, but actual frozen research questions do not all include target_url. Analyzer incorrectly required it on every case. No ranking measurement or qualification credit."
+}
