@@ -1,10 +1,10 @@
 # EXP-067: pool-relative reading-priority Score
 
-Status: proposed contract under independent review; not registered for provider calls. EXP-065/066 remain rejected, unchanged evidence. The full production acceptance checklist remains required.
+Status: prospective registration before implementation; provider calls remain gated on source qualification. EXP-065/066 remain rejected, unchanged evidence. The full production acceptance checklist remains required.
 
 ## Why this is a distinct hypothesis
 
-EXP-066 judged eligibility correctly enough to retain useful-source counts, but broad positive classes inherited ordinary first-forty ordering. On q4 all baseline top-ten cards were positive in base/repeat/rotation, only three positive classifications changed between base and rotation, yet their top-ten overlap was zero. EXP-065's original EXP-039 Score instructions expressly forbade sibling comparison. This proposal tests explicit comparison within the complete supplied pool, not another absolute grade, binary filter, swap policy or probability fusion.
+EXP-066 met its registered useful-source count retention gate, but broad positive classes inherited ordinary first-forty ordering. On q4 all baseline top-ten cards were positive in base/repeat/rotation, only three positive classifications changed between base and rotation, yet their top-ten overlap was zero. EXP-065's original EXP-039 Score instructions expressly forbade sibling comparison. This proposal tests explicit comparison within the complete supplied pool, not another absolute grade, binary filter, swap policy or probability fusion.
 
 Use one comparative ordinal Score question per source in a single complete-pool request. The question measures only priority as the next source to read for the original caller purpose. Code produces the full permutation by descending returned Score and canonical UTF8 URL/title/snippet/id ties. Score positions are ordinal, not utility, correctness, probability calibration or quantities comparable across pools.
 
@@ -33,3 +33,7 @@ The provider can return fractional Score positions between levels. Validate fini
 Before implementation/live calls, register exact question/criteria strings, generator, source/input hashes, W0 freshness, fixed21-operation schedule, neutral80-card request,43-call maximum, byte/field/state/response limits, one-second read-inclusive HTTP, known usage and observed-plus-reservation admission, durable pending/source receipts, exclusive one-shot lease, full incumbent fallback and first-failure stop. Reuse the qualified shared transport rather than inventing a new one. No new searches/Brave attempts.
 
 Retain EXP-066's both-reference mean nDCG+0.05, positive bootstrap lower95, per-case loss−0.03, useful-count/facet retention, repeat/rotation overlap0.8, present-target top-one, absent-target unmet recall, exact full membership, latency/usage bounds and limited natural-long-pool evidence. Only qualifying exposed development can precede separately registered untouched confirmation; implementation of the shared opt-in SlopSearX surfaces and experimental X caller-context path remains outstanding. No runtime/default/deployment/Hermes change is included.
+
+## Independent pre-freeze review
+
+GPT-6 Luna review found the comparative ordinal proposition distinct, its count bands coherent/exhaustive, and the fixed43-call schedule feasible to qualify within existing bounds. Root independently checked3,239 count states for pool sizes2–80: exactly one plausible-card band applies in each case. No model correctness follows. One wording implication of correct eligibility was replaced with the observed count-retention result. Exact protocol and input hashes are frozen in the registration manifest; no source implementation or provider call preceded registration.
