@@ -40,3 +40,23 @@ produced a 267,151-byte request rather than the sealed preview fixture's
 inventory/context differs. The owning agent must use the registered preview's
 exact synthetic cards and context before neutral admission. Do not revise the
 immutable preview or treat a shorter substitute as its capacity test.
+
+## Initial runner inspection
+
+The unfinished runner is explicitly offline-only. Root identified five further
+requirements before a usable checkpoint or qualification:
+
+1. Measure baseline duration after its receipt fsync and candidate duration
+   after final receipt fsync; the draft measured both earlier.
+2. Persist call-record timing changes before binding sidecar hashes so embedded
+   calls and durable sidecars remain identical.
+3. Avoid appending one physical call twice when a completed baseline later
+   fails its whole-phase deadline.
+4. A candidate deadline failure must produce native incumbent fallback and a
+   failed receipt, never retain valid candidate output with a complete receipt.
+5. Remove the unregistered two-second paired-wall stopping rule. The sealed
+   design gates each complete durable phase separately and records paired wall
+   time as an observation.
+
+These findings were sent to the source owner. Final regression and exact-source
+review must establish their disposition before live admission.
