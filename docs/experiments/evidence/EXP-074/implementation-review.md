@@ -31,3 +31,22 @@ The earlier unqualified offline network escape remains recorded in
 by the later fixture test results. No qualification manifest or admitted live
 comparison exists at this review checkpoint. Fixes and their verification will
 be recorded below before admission.
+
+## Findings addressed
+
+Integrated corrections at `46f61dfa07a40f089ed8cb3d02b5fa672dccc6cc`:
+the runner creates and fsyncs its exclusive lease before DNS or credential
+lookup; an existing lease rejects before either action, and subsequent setup
+failure keeps the lease. Raw verification resolves current HEAD before passing
+a literal revision to the committed-byte helper. Independent bounded follow-up
+verified both corrections and found no remaining material blocker.
+
+Root reran 16 runner, 17 analyzer and 16 verifier tests after integration;
+all passed. The three unchanged fusion tests also passed (52 total). The added
+admission tests use temporary leases and DNS/environment sentinels; the verifier
+regression covers the non-synthetic qualification closure with mocked committed
+fixture bytes. They did not perform real DNS, read a credential or call a provider.
+
+The private launch wrapper was also inspected without execution. It resolves the
+credential lazily within `live_gate`, after exact source validation, durable
+lease acquisition and DNS; it does not load the key before admission checks.
