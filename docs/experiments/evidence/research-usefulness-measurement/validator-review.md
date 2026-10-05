@@ -33,3 +33,16 @@ Registry coverage and empty arrays do not establish exhaustive semantic
 extraction, absence of contradictions or truth. The prototype verifies only
 closed supplied identity/shape relationships; blind semantic judgments and
 their uncertainty remain separate.
+
+## Stable checkpoint disposition
+
+Root integrated the corrected prototype at `5e68b0f` and independently passed
+all 15 synthetic tests. The five findings above have focused coverage: source
+binding, nested unknown states, negative-evidence anchors, frozen independent
+assignment and controlled invalid enums. The earlier ten-test owner draft is
+not the final verification checkpoint.
+
+These passes establish bounded integrity behavior only. No live admission,
+semantic entailment/coverage, model-packet hydration or task-completion result is
+qualified. The deterministic evidence-ID hydrator and its envelope integration
+remain under construction before any prospective model study.
