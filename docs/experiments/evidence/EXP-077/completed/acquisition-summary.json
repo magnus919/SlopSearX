@@ -1,0 +1,404 @@
+{
+  "answer_calls": 0,
+  "assessment_submissions": 0,
+  "brave_calls": 0,
+  "capture_calls": 0,
+  "confirmation_started": false,
+  "decision": "Stop this fixed study at acquisition. No rescue search, model comparison, replacement run, or adoption credit. Explicit reassessment required.",
+  "jev_calls": 0,
+  "limitations": [
+    "No ranking or task-use result exists.",
+    "Wikipedia blocked every declared research acquisition.",
+    "The Sigstore cosign query did not acquire the declared sigstore/cosign target.",
+    "Raw HTTP/native metadata remains private; public evidence includes sanitized outcomes and original hashes only."
+  ],
+  "logical_acquisitions": 13,
+  "original_eligibility": {
+    "capture_or_model_calls_authorized_by_this_result": false,
+    "eligible_for_next_stage": false,
+    "engine_failures": [
+      "d1:wikipedia",
+      "d2:wikipedia",
+      "d3:wikipedia",
+      "d4:wikipedia",
+      "d5:wikipedia",
+      "d6:wikipedia",
+      "d7:wikipedia",
+      "d8:wikipedia"
+    ],
+    "logical_searches_required": 13,
+    "logical_searches_retained": 13,
+    "navigation_targets_missing": [
+      "d12"
+    ],
+    "oversized_pools_retained_without_trimming": [],
+    "pools_with_at_least_two_cards": 13,
+    "reasons": [
+      "incomplete_engine_acquisition:d1:wikipedia",
+      "incomplete_engine_acquisition:d2:wikipedia",
+      "incomplete_engine_acquisition:d3:wikipedia",
+      "incomplete_engine_acquisition:d4:wikipedia",
+      "incomplete_engine_acquisition:d5:wikipedia",
+      "incomplete_engine_acquisition:d6:wikipedia",
+      "incomplete_engine_acquisition:d7:wikipedia",
+      "incomplete_engine_acquisition:d8:wikipedia",
+      "navigation_target_not_acquired:d12"
+    ],
+    "required_research_pools_41_to_80": 4,
+    "research_pools_41_to_80": 8,
+    "schema": "exp077-acquisition-eligibility/1",
+    "stage_clock_digest": "7f4cecc71c29fec6b1b9c7896e0e852f7ce42f1b0d4a80ef62aecd2c94281494",
+    "stage_manifest_sha256": "44da47805b13ecf1dd5eb9b93ae130803dc4afff4c9269f0fe6c386fbac85d9c",
+    "status": "inconclusive"
+  },
+  "original_stage_final_sha256": "f6466ccfa110a1ef01b9d8cabb780c9f23de9a772a6bd9e9ce2aa3df48828172",
+  "outcome": "inconclusive",
+  "physical_http_calls": 37,
+  "rows": [
+    {
+      "engine_outcomes": [
+        {
+          "engine": "arxiv",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "openalex",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "github",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "wikipedia",
+          "result_count": 0,
+          "status": "blocked"
+        }
+      ],
+      "kind": "research",
+      "native_pool_count": 60,
+      "original_receipt_sha256": "e781ab7007faff39696febc6ca0a8d506457cc2ef8a089d6f2661e4e8c29b0d1",
+      "owned_http_calls": 4,
+      "query": "prompt injection",
+      "task_id": "d1"
+    },
+    {
+      "engine_outcomes": [
+        {
+          "engine": "arxiv",
+          "result_count": 8,
+          "status": "ok"
+        },
+        {
+          "engine": "openalex",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "github",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "wikipedia",
+          "result_count": 0,
+          "status": "blocked"
+        }
+      ],
+      "kind": "research",
+      "native_pool_count": 48,
+      "original_receipt_sha256": "fa08685d8f1a59c1bee084f666bbdf6f64d6a62da4983554671a5554d9f418f5",
+      "owned_http_calls": 4,
+      "query": "durable execution",
+      "task_id": "d2"
+    },
+    {
+      "engine_outcomes": [
+        {
+          "engine": "arxiv",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "openalex",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "github",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "wikipedia",
+          "result_count": 0,
+          "status": "blocked"
+        }
+      ],
+      "kind": "research",
+      "native_pool_count": 60,
+      "original_receipt_sha256": "5840dab10932101925f743c6c2e52b81574d805623be7fed47f530029b4b6b18",
+      "owned_http_calls": 4,
+      "query": "model routing",
+      "task_id": "d3"
+    },
+    {
+      "engine_outcomes": [
+        {
+          "engine": "arxiv",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "openalex",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "github",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "wikipedia",
+          "result_count": 0,
+          "status": "blocked"
+        }
+      ],
+      "kind": "research",
+      "native_pool_count": 60,
+      "original_receipt_sha256": "ffb72ccb4375326c5bd7464973eab7aa611c6180a9e7cd9b470f2d4c156d9720",
+      "owned_http_calls": 4,
+      "query": "distributed tracing",
+      "task_id": "d4"
+    },
+    {
+      "engine_outcomes": [
+        {
+          "engine": "arxiv",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "openalex",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "github",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "wikipedia",
+          "result_count": 0,
+          "status": "blocked"
+        }
+      ],
+      "kind": "research",
+      "native_pool_count": 60,
+      "original_receipt_sha256": "53af0e28630a6254aa2a9f77ec8c9694bdcdb839224ef9d8aab013ec4a6bdfc9",
+      "owned_http_calls": 4,
+      "query": "tenant isolation",
+      "task_id": "d5"
+    },
+    {
+      "engine_outcomes": [
+        {
+          "engine": "arxiv",
+          "result_count": 5,
+          "status": "ok"
+        },
+        {
+          "engine": "openalex",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "github",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "wikipedia",
+          "result_count": 0,
+          "status": "blocked"
+        }
+      ],
+      "kind": "research",
+      "native_pool_count": 45,
+      "original_receipt_sha256": "9db3fd557c106dc644b5fe8a460d6d2cde9390f5bb4e20896fa7871327f94585",
+      "owned_http_calls": 4,
+      "query": "dependency confusion",
+      "task_id": "d6"
+    },
+    {
+      "engine_outcomes": [
+        {
+          "engine": "arxiv",
+          "result_count": 11,
+          "status": "ok"
+        },
+        {
+          "engine": "openalex",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "github",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "wikipedia",
+          "result_count": 0,
+          "status": "blocked"
+        }
+      ],
+      "kind": "research",
+      "native_pool_count": 51,
+      "original_receipt_sha256": "5bfaa7a061cfce4d716ea49bcaf60029d265f8d8e40adefef322158efe6deb58",
+      "owned_http_calls": 4,
+      "query": "sandbox escape",
+      "task_id": "d7"
+    },
+    {
+      "engine_outcomes": [
+        {
+          "engine": "arxiv",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "openalex",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "github",
+          "result_count": 20,
+          "status": "ok"
+        },
+        {
+          "engine": "wikipedia",
+          "result_count": 0,
+          "status": "blocked"
+        }
+      ],
+      "kind": "research",
+      "native_pool_count": 58,
+      "original_receipt_sha256": "f86d2b3006c42034876acd61a394b0d7372f67e73e72947f3d01a446f8dfafcd",
+      "owned_http_calls": 4,
+      "query": "inference energy",
+      "task_id": "d8"
+    },
+    {
+      "engine_outcomes": [
+        {
+          "engine": "github",
+          "result_count": 20,
+          "status": "ok"
+        }
+      ],
+      "kind": "navigation",
+      "native_pool_count": 20,
+      "original_receipt_sha256": "dfe12e12260e7dd55fede50d60ab0e25052ad05af048c34689325ca554e26b98",
+      "owned_http_calls": 1,
+      "query": "langgraph",
+      "task_id": "d9"
+    },
+    {
+      "engine_outcomes": [
+        {
+          "engine": "github",
+          "result_count": 20,
+          "status": "ok"
+        }
+      ],
+      "kind": "navigation",
+      "native_pool_count": 20,
+      "original_receipt_sha256": "4ab15f38520421852f1958afa3f70348c062f2507050d1f5cf28094b402f4fe3",
+      "owned_http_calls": 1,
+      "query": "Temporal SDK Python",
+      "task_id": "d10"
+    },
+    {
+      "engine_outcomes": [
+        {
+          "engine": "github",
+          "result_count": 20,
+          "status": "ok"
+        }
+      ],
+      "kind": "navigation",
+      "native_pool_count": 20,
+      "original_receipt_sha256": "44c87235e689e60e047659fd4fe5f330d6dedfce57aceac8f90d549d477ad38d",
+      "owned_http_calls": 1,
+      "query": "OpenTelemetry Python",
+      "task_id": "d11"
+    },
+    {
+      "engine_outcomes": [
+        {
+          "engine": "github",
+          "result_count": 20,
+          "status": "ok"
+        }
+      ],
+      "kind": "navigation",
+      "native_pool_count": 20,
+      "original_receipt_sha256": "6c173e29ffe062b2728aacda1996508c59b635cdf7693700754d1960e9a55560",
+      "owned_http_calls": 1,
+      "query": "Sigstore cosign",
+      "task_id": "d12"
+    },
+    {
+      "engine_outcomes": [
+        {
+          "engine": "github",
+          "result_count": 20,
+          "status": "ok"
+        }
+      ],
+      "kind": "navigation",
+      "native_pool_count": 20,
+      "original_receipt_sha256": "008f9b571e2a3d221ac04363ebfddedfa8f009349eb8b8fb08ccc4824bc64927",
+      "owned_http_calls": 1,
+      "query": "Open Policy Agent",
+      "task_id": "d13"
+    }
+  ],
+  "schema": "exp077-acquisition-readout/1",
+  "source_scope": "Full fixed cohort acquired once; complete native pools retained privately without trimming. Candidate remains unevaluated.",
+  "stage": "development",
+  "stage_clock": {
+    "cohorts_sha256": "b217b6c249be73da2506fb39836e3edf54ce2b8fdf5447e89443f338b4bfbc12",
+    "ordered_task_ids": [
+      "d1",
+      "d2",
+      "d3",
+      "d4",
+      "d5",
+      "d6",
+      "d7",
+      "d8",
+      "d9",
+      "d10",
+      "d11",
+      "d12",
+      "d13"
+    ],
+    "protocol_sha256": "04fed87ccaa12272c73fcb6e6af5ef7da619c77488a62ae947d7cb647f251992",
+    "schema": "exp077-stage-clock/1",
+    "source_revision": "405073aa0310175506056964cead846d614cd7d7",
+    "stage": "development",
+    "stage_deadline_utc": "2026-10-06T08:20:59.652349Z",
+    "stage_id": "dbd49d72-0851-46ff-850d-565576064339",
+    "stage_manifest_sha256": "44da47805b13ecf1dd5eb9b93ae130803dc4afff4c9269f0fe6c386fbac85d9c",
+    "stage_started_utc": "2026-10-06T00:20:59.652349Z"
+  },
+  "stage_clock_digest": "7f4cecc71c29fec6b1b9c7896e0e852f7ce42f1b0d4a80ef62aecd2c94281494"
+}

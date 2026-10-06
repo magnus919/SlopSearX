@@ -26,8 +26,8 @@ Both cohorts and complete static manifests are committed before acquisition.
 Registration points to the prior sealed source commit; qualification points to
 source including registration. Metadata artifacts are verified at current HEAD,
 while pinned source files are verified at their respective prior commits.
-Qualification's live admission closure will be checked without a network call
-or live lease before the single first-stage acquisition.
+The actual committed admission closure passed before acquisition, with no
+mocked validators, DNS, network requests or lease consumed; see admission-smoke.json.
 
 The explicit live runners require committed qualification and one-shot leases.
 Any unsuccessful or inconclusive study follows the approved stop rule. These

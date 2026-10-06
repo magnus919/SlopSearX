@@ -1,6 +1,6 @@
 # EXP-077 — fixed candidate, fresh research-usefulness decision
 
-Status: design and source ready to seal; no acquisition, capture, selector or answer invocation.
+Status: inconclusive; the single development acquisition stopped before capture or comparison.
 Baseline source: `15b2410770d4bdf1dfcf6ad4f2da27ec1904c337`.
 Issue: [#516](https://github.com/magnus919/SlopSearX/issues/516).
 
@@ -49,3 +49,7 @@ public records retain sanitized hashes, counts, failures and decisions.
 This draft is not a completed registration, qualification, experiment result or
 product implementation. Missing qualification and invocation commands must be
 resolved before network/model calls; documentation commits do not complete #516.
+
+## Recorded outcome
+
+The [acquisition readout](evidence/EXP-077/completed/readout.md) records all 13 queries, eight natural 45–60-result research pools, Wikipedia blocked outcomes and the missing Sigstore target. No capture, Jev, answer or assessor call followed. This fixed study is terminal; confirmation did not start. The candidate and release thresholds remain unchanged.
