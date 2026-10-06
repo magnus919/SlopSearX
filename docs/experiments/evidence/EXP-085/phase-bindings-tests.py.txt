@@ -1,0 +1,88 @@
+"""Offline EXP-085 phase binding tests; no HTTP clients are created."""
+from __future__ import annotations
+import importlib.machinery
+import importlib.util
+import json
+import asyncio
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+
+HERE = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp085_phase_binding_tests", str(HERE / "phase-bindings.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+BINDINGS = importlib.util.module_from_spec(spec)
+sys.modules[loader.name] = BINDINGS
+loader.exec_module(BINDINGS)
+
+
+class FakeAdmission:
+    def __init__(self): self.claimed = []; self.required = []
+    def acquire_phase(self, stage, phase, root, clock):
+        self.claimed.append((phase, Path(root), clock)); return object()
+    def require_phase(self, permit, clock, root): self.required.append((Path(root), clock))
+
+
+class FakePreparer:
+    def __init__(self): self.kwargs = None
+    def prepare(self, **kwargs): self.kwargs = kwargs; kwargs["guard"](); return {"ready": True}
+
+
+class PhaseBindingTests(unittest.TestCase):
+    def test_preparation_claim_is_stage_bound_and_uses_frontend_output_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "stage"; root.mkdir()
+            admission = FakeAdmission(); prep = FakePreparer()
+            state = SimpleNamespace(outdir=root, bundle_root=Path(tmp)/"bundle", admission=admission,
+                                    permit=object(), clock=({}, b"clock", "a"*64), effective_acquisition={"pools":{}})
+            with patch.object(BINDINGS, "_load", return_value=prep):
+                result = BINDINGS.prepare_assessment_inputs(state=state, cases=[])
+            self.assertEqual(result, {"ready": True})
+            self.assertEqual(admission.claimed[0][0], "assessment-preparation")
+            self.assertEqual(prep.kwargs["output_root"], (root / "assessment-inputs").resolve())
+            self.assertEqual(prep.kwargs["source_snapshot_root"], state.bundle_root / "exp084")
+            self.assertEqual(len(admission.required), 2)
+
+    def test_selector_wrapper_forwards_fresh_exp085_clock_and_admission_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "stage"; root.mkdir()
+            out = root / "selector"
+            admission = FakeAdmission()
+            state = SimpleNamespace(effective_acquisition={"schema":"fixture"}, outdir=root,
+                clock=({}, b"clock", "a"*64), permit="opaque-new-permit", admission=admission,
+                integrity={"study_id":"EXP-085"})
+            calls = {}
+            class Selector:
+                async def run_selector(self, *args, **kwargs):
+                    calls["args"], calls["kwargs"] = args, kwargs
+                    return {"status":"fixture_only"}
+            with patch.object(BINDINGS, "_load", return_value=Selector()):
+                result = asyncio.run(BINDINGS.run_selector(state=state, cases=[{"id":"d1"}],
+                    outdir=out, offline=True, transport_factory="fixture-transport"))
+            self.assertEqual(result["status"], "fixture_only")
+            self.assertEqual(calls["args"][0], state.effective_acquisition)
+            self.assertEqual(calls["args"][2], b"clock")
+            self.assertIsNone(calls["kwargs"]["stage_permit"])
+            self.assertIsNone(calls["kwargs"]["admission_module"])
+            self.assertEqual(calls["kwargs"]["transport_factory"], "fixture-transport")
+            self.assertEqual(calls["kwargs"]["source_integrity"], state.integrity)
+
+    def test_reference_phases_are_explicit_and_reusable_only_inside_stage(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "stage"; root.mkdir(); child = root / "card-reference"; child.mkdir()
+            admission = FakeAdmission()
+            permit, require = BINDINGS.claim_assessment_phase(admission=admission, stage_permit=object(),
+                phase="card-reference", stage_outdir=root, phase_outdir=child, clock_bytes=b"clock")
+            require()
+            self.assertIsNotNone(permit)
+            self.assertEqual(admission.claimed[0][0], "card-reference")
+            self.assertEqual(len(admission.required), 2)
+            with self.assertRaisesRegex(ValueError, "not-registered"):
+                BINDINGS.claim_assessment_phase(admission=admission, stage_permit=object(),
+                    phase="capture", stage_outdir=root, phase_outdir=child, clock_bytes=b"clock")
+
+
+if __name__ == "__main__": unittest.main()

@@ -1,0 +1,146 @@
+"""Synthetic offline tests for card-reference-id-adapter.py; no grade inference."""
+import copy
+import importlib.machinery
+import pathlib
+import unittest
+
+HERE = pathlib.Path(__file__).resolve().parent
+path = HERE / "card-reference-id-adapter.py.txt"
+A = importlib.machinery.SourceFileLoader("exp085_card_reference_id_adapter_tests", str(path)).load_module()
+
+
+class CardReferenceAdapterTests(unittest.TestCase):
+    def setUp(self):
+        self.cards = [
+            {"title": "Système 🚀", "url": "https://example.test/a", "snippet": "Résumé et preuve."},
+            {"title": "Überblick", "url": "https://example.test/b", "snippet": "A second source."},
+        ]
+        self.facets = ["f1", "f2"]
+        self.built = A.build_assignment("d1", self.cards, self.facets)
+
+    def valid_response(self, built=None):
+        built = built or self.built
+        rows = []
+        for card, catalog in zip(built["assignment"]["cards"], built["reference_catalogs"]):
+            eid = catalog["entries"][0]["evidence_id"]
+            rows.append({"card_sha256": card["card_sha256"], "lead": 2, "visible": 1,
+                         "facets": ["f1"], "uncertain": ["f2"], "rationale": "Visible support.",
+                         "anchors": [eid], "facet_anchors": {"f1": [eid]}})
+        return {"records": rows}
+
+    def test_unicode_windows_are_exact_bounded_complete_and_stable(self):
+        long_text = ("Résumé🚀abc" * 100) + "fin 🛰️"
+        built = A.build_assignment("d2", [{"title": "", "url": "https://example.test", "snippet": long_text}], ["f"])
+        entries = built["reference_catalogs"][0]["entries"]
+        snippet = [row for row in entries if row["field"] == "snippet"]
+        self.assertGreater(len(snippet), 1)
+        self.assertEqual("".join(row["text"] for row in snippet), long_text)
+        self.assertTrue(all(len(row["text"].encode("utf-8")) <= 256 for row in entries))
+        self.assertTrue(all(row["text"] == long_text[row["start"]:row["end"]]
+                            for row in snippet))
+        again = A.build_assignment("d2", [{"title": "", "url": "https://example.test", "snippet": long_text}], ["f"])
+        self.assertEqual(entries, again["reference_catalogs"][0]["entries"])
+        self.assertTrue(all(row["evidence_id"].startswith("ev_") for row in entries))
+
+    def test_model_input_preserves_frozen_cards_and_has_finite_id_schema(self):
+        model_input = self.built["model_input"]
+        self.assertEqual(model_input["cards"], self.built["assignment"]["cards"])
+        self.assertEqual(model_input["facets"], self.facets)
+        ids = [row["evidence_id"] for cat in model_input["reference_catalogs"] for row in cat["entries"]]
+        self.assertEqual(model_input["output_schema"]["$defs"]["anchor"]["enum"], ids)
+        self.assertNotIn("quote", model_input["output_schema"]["$defs"]["anchor"])
+
+    def test_exact_ids_expand_and_legacy_verifier_accepts(self):
+        response = self.valid_response()
+        result = A.expand_and_verify(self.built, response)
+        self.assertEqual(result["verification"]["coverage"], "complete")
+        self.assertEqual(result["verification"]["semantic_grade"], "not_recomputed")
+        first_ref = self.built["reference_catalogs"][0]["entries"][0]
+        self.assertEqual(result["expanded_response"]["records"][0]["anchors"],
+                         [{"field": first_ref["field"], "quote": first_ref["text"]}])
+
+    def test_unknown_cross_card_duplicate_and_empty_references_rejected(self):
+        response = self.valid_response()
+        response["records"][0]["anchors"] = ["ev_" + "0" * 64]
+        with self.assertRaisesRegex(A.AdapterError, "unknown-reference-id"):
+            A.expand_and_verify(self.built, response)
+
+        response = self.valid_response()
+        other_card_id = self.built["reference_catalogs"][1]["entries"][0]["evidence_id"]
+        response["records"][0]["anchors"] = [other_card_id]
+        with self.assertRaisesRegex(A.AdapterError, "cross-card-reference"):
+            A.expand_and_verify(self.built, response)
+
+        response = self.valid_response()
+        first_id = response["records"][0]["anchors"][0]
+        response["records"][0]["anchors"] = [first_id, first_id]
+        with self.assertRaisesRegex(A.AdapterError, "reference-duplicate"):
+            A.expand_and_verify(self.built, response)
+
+        response = self.valid_response()
+        response["records"][0]["anchors"] = []
+        with self.assertRaisesRegex(A.AdapterError, "references-required"):
+            A.expand_and_verify(self.built, response)
+
+    def test_facet_coverage_and_card_order_membership_rejected(self):
+        response = self.valid_response()
+        response["records"][0]["facet_anchors"] = {}
+        with self.assertRaisesRegex(A.AdapterError, "facet-anchor-coverage"):
+            A.expand_and_verify(self.built, response)
+
+        response = self.valid_response()
+        response["records"].reverse()
+        with self.assertRaisesRegex(A.AdapterError, "card-coverage-order-or-identity"):
+            A.expand_and_verify(self.built, response)
+
+        response = self.valid_response()
+        response["records"].pop()
+        with self.assertRaisesRegex(A.AdapterError, "card-coverage-missing-or-extra"):
+            A.expand_and_verify(self.built, response)
+
+    def test_task_identity_is_part_of_every_id_and_catalog_binding(self):
+        other = A.build_assignment("d2", self.cards, self.facets)
+        ids_here = {entry["evidence_id"] for cat in self.built["reference_catalogs"] for entry in cat["entries"]}
+        ids_other = {entry["evidence_id"] for cat in other["reference_catalogs"] for entry in cat["entries"]}
+        self.assertTrue(ids_here.isdisjoint(ids_other))
+        response = self.valid_response()
+        response["records"][0]["anchors"] = [other["reference_catalogs"][0]["entries"][0]["evidence_id"]]
+        with self.assertRaisesRegex(A.AdapterError, "unknown-reference-id"):
+            A.expand_and_verify(self.built, response)
+        tampered = copy.deepcopy(self.built)
+        tampered["reference_catalogs"][0]["task_id"] = "d2"
+        with self.assertRaisesRegex(A.AdapterError, "catalog-card-binding"):
+            A.expand_and_verify(tampered, self.valid_response())
+        tampered = copy.deepcopy(self.built)
+        tampered["reference_catalogs"][0]["entries"][0]["task_id"] = "d2"
+        with self.assertRaisesRegex(A.AdapterError, "catalog-entry-binding"):
+            A.expand_and_verify(tampered, self.valid_response())
+
+    def test_model_input_must_exactly_match_assignment_and_catalog(self):
+        tampered = copy.deepcopy(self.built)
+        tampered["model_input"]["cards"][0]["snippet"] = "changed card data"
+        with self.assertRaisesRegex(A.AdapterError, "model-input-assignment-binding"):
+            A.expand_and_verify(tampered, self.valid_response())
+        tampered = copy.deepcopy(self.built)
+        tampered["model_input"]["output_schema"]["$defs"]["anchor"]["enum"].pop()
+        with self.assertRaisesRegex(A.AdapterError, "model-input-assignment-binding"):
+            A.expand_and_verify(tampered, self.valid_response())
+        tampered = copy.deepcopy(self.built)
+        tampered["model_input"]["reference_catalogs"][0]["entries"][0]["text"] = "altered"
+        with self.assertRaisesRegex(A.AdapterError, "model-input-assignment-binding"):
+            A.expand_and_verify(tampered, self.valid_response())
+
+    def test_tampered_catalog_quote_or_card_binding_rejected(self):
+        built = copy.deepcopy(self.built)
+        built["reference_catalogs"][0]["entries"][0]["text"] += "!"
+        with self.assertRaisesRegex(A.AdapterError, "catalog-entry-binding"):
+            A.expand_and_verify(built, self.valid_response())
+
+        built = copy.deepcopy(self.built)
+        built["reference_catalogs"][0]["card_sha256"] = self.built["assignment"]["cards"][1]["card_sha256"]
+        with self.assertRaisesRegex(A.AdapterError, "catalog-card-binding"):
+            A.expand_and_verify(built, self.valid_response())
+
+
+if __name__ == "__main__":
+    unittest.main()
