@@ -29,7 +29,7 @@ back to the originating result and snapshot.
   (preview/start/get/retry), dependency dossiers (start/get), and artifact lineage.
 - **Resources:** `slopsearx://capabilities`, `slopsearx://capabilities/{engine}`,
   `slopsearx://routing-profiles`, `slopsearx://health/summary`.
-- **Prompts (4):** repeatable agent workflows that compose the tools.
+- **Prompts (5):** repeatable agent workflows that compose the tools.
 
 ---
 
@@ -949,7 +949,7 @@ Read resources instead of guessing: `slopsearx://capabilities`,
 `slopsearx://capabilities/{engine}`, `slopsearx://routing-profiles`,
 `slopsearx://health/summary`.
 
-Four prompts are bundled for repeatable workflows: `research_with_source_coverage`,
+Five prompts are bundled for repeatable workflows: `research_with_source_coverage`,
 `investigate_vulnerability`, `find_company_jobs`, `compare_package_or_project`.
 
 ## 8. Agent usage guide
