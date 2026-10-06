@@ -1,6 +1,6 @@
 # EXP-090 — bounded complete-input views
 
-Status: prospective registration; no live clock or grader call.
+Status: first setup stopped before grading; corrected source must be qualified before a fresh setup.
 
 EXP-089 received the assessor’s actual final JSON, but its required source array was empty. Its [terminal diagnostic](evidence/EXP-089/completed/readout.md) shows truncated bulk reads and a subsequent lossy preview. This stage tests a narrow delivery change: addressable views of the exact original assessment packet. It does not assume truncation caused the empty response.
 
@@ -13,3 +13,5 @@ Historical grader calls total eighteen. Eighty fresh source/answer assessments y
 The discriminating probe is the first fresh source assessment with verified complete input delivery. If the worker still cannot produce a valid complete assessment after full delivery, stop this non-converging harness diagnosis and report the remaining model, task or context evidence gap. Do not weaken acceptance criteria or claim research improvement from structural tests.
 
 See the [protocol](evidence/EXP-090/protocol.json) and [production acceptance checklist](complete-pool-production-acceptance.md). This remains an experiment, separate from mainline GroktoCrawl and production implementation.
+
+The [first setup receipt](evidence/EXP-090/setup-only/readout.md) retains the controller-to-preparer proof mismatch. Health passed; no grading or quality analysis occurred. Its clock and lease are terminal and receive no credit in the corrected setup.
