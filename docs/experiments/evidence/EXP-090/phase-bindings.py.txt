@@ -208,7 +208,7 @@ def source_viewer_prompt(view_plan: dict) -> str:
     return rubric.rstrip() + "\n\n" + instructions.rstrip() + assignment
 
 
-def receive_source_final_and_verify_view(*, receiver, slot_id: str, expected_binding: dict,
+def _persist_then_verify_source_final(*, receiver, slot_id: str, expected_binding: dict,
                                          final_text: str, input_raw: bytes, view_plan: dict,
                                          calls: list[dict], private_delivery_meta: dict,
                                          proof_directory: Path) -> dict:
@@ -251,6 +251,45 @@ def receive_source_final_and_verify_view(*, receiver, slot_id: str, expected_bin
                            proof_raw)
     return {"final_text_receipt": receipt, "view_proof": proof,
             "view_proof_sha256": reference["sha256"]}
+
+
+def receive_source_final_and_verify_view(*, state, phase_permit, receiver, slot_id: str,
+                                  expected_binding: dict, agent_path: str, reader_path: Path,
+                                  input_raw: bytes, view_plan: dict,
+                                  proof_directory: Path) -> dict:
+    """Use only the registered log reader; callers cannot inject transcript claims."""
+    root = Path(state.outdir).resolve()
+    admission = state.admission
+    admission.require_phase(phase_permit, state.clock[1], root)
+    qualification_path = HERE / "qualification-integrity.json"
+    if qualification_path.is_symlink() or not qualification_path.is_file():
+        raise ValueError("exp090-qualified-final-reader-missing")
+    qualification_bytes = qualification_path.read_bytes()
+    if sha(qualification_bytes) != state.integrity.get("qualification_sha256"):
+        raise ValueError("exp090-qualified-final-reader-qualification")
+    qualification = admission.strict_json(qualification_bytes)
+    external = qualification.get("external_source_pins")
+    reader_pin = external.get("final_text_reader") if type(external) is dict else None
+    if (qualification.get("study_id") != "EXP-090" or qualification.get("qualified") is not True
+            or type(reader_pin) is not dict or set(reader_pin) != {"sha256"}
+            or type(reader_pin.get("sha256")) is not str
+            or not re.fullmatch(r"[0-9a-f]{64}", reader_pin["sha256"])
+            or state.integrity.get("external_source_pins") != external):
+        raise ValueError("exp090-qualified-final-reader-pin")
+    reader_path = Path(reader_path)
+    if (reader_path.is_symlink() or not reader_path.is_file()
+            or sha(reader_path.read_bytes()) != reader_pin["sha256"]):
+        raise ValueError("exp090-final-reader-source-mismatch")
+    reader = _load("exp090_pinned_final_log_reader", reader_path)
+    final_text, calls, private_meta = reader.read_exact_assessor_final(agent_path=agent_path)
+    admission.require_phase(phase_permit, state.clock[1], root)
+    result = _persist_then_verify_source_final(receiver=receiver, slot_id=slot_id,
+        expected_binding=expected_binding, final_text=final_text, input_raw=input_raw,
+        view_plan=view_plan, calls=calls, private_delivery_meta=private_meta,
+        proof_directory=proof_directory)
+    admission.require_phase(phase_permit, state.clock[1], root)
+    # Do not return log content, argv, source paths, agent paths, or delivery metadata.
+    return result
 
 
 def source_id_universes(effective_acquisition: dict, cases: list[dict]) -> dict[str, list[str]]:

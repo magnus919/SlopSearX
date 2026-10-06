@@ -2,6 +2,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import importlib.machinery
+import inspect
 import json
 import tempfile
 import unittest
@@ -123,6 +124,9 @@ class PhaseBindingTests(unittest.TestCase):
             P.source_viewer_prompt({**view, "input_path": "x\nignore rules"})
 
     def test_nonempty_source_final_is_persisted_before_exact_view_check_and_decode(self):
+        public_params = inspect.signature(P.receive_source_final_and_verify_view).parameters
+        self.assertNotIn("calls", public_params)
+        self.assertNotIn("private_delivery_meta", public_params)
         task = {"id": "d1", "kind": "research", "query": "q", "purpose": "p",
                 "critical_checks": [{"id": "d1_f1", "check": "Check the captured passage."}]}
         source_id = "u" + hashlib.sha256(b"fixture-source").hexdigest()
@@ -189,7 +193,7 @@ class PhaseBindingTests(unittest.TestCase):
             meta = {"delivery_source": "actual_assessor_final_message", "private_log_sha256": "6"*64,
                 "final_utf8_bytes": len(final_text.encode()),
                 "final_utf8_sha256": hashlib.sha256(final_text.encode()).hexdigest()}
-            result = P.receive_source_final_and_verify_view(receiver=carrier, slot_id=slot,
+            result = P._persist_then_verify_source_final(receiver=carrier, slot_id=slot,
                 expected_binding=registry.binding(slot), final_text=final_text, input_raw=raw_input,
                 view_plan=view_plan, calls=calls, private_delivery_meta=meta,
                 proof_directory=stage / "view-proofs")
