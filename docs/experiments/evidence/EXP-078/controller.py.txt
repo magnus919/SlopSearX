@@ -88,7 +88,7 @@ async def correct_and_prepare(state):
         bundle_root=state.bundle_root, offline=False, stage_permit=state.permit,
         source_integrity=state.integrity, stage_clock=state.clock)
     if (final.get('status') != 'complete' or final.get('fatal_stop')
-            or final.get('physical_http_calls') != 1 or final.get('target_acquired') is not True):
+            or final.get('physical_http_calls') != 1):
         raise ValueError('corrective-acquisition-terminal-stop')
     raw = (state.outdir / 'acquisition' / 'corrective-query.json').read_bytes()
     receipt_sha = hashlib.sha256(raw).hexdigest()
@@ -98,9 +98,12 @@ async def correct_and_prepare(state):
     correction['receipt_sha256'] = receipt_sha  # external byte hash; original file unchanged
     bridge = load('exp078_controller_bridge', 'input-bridge.py.txt')
     reused = bridge.prepare_reused_inputs(state.bundle_root)
-    prepared = load('exp078_controller_prepare', 'prepare.py.txt').prepare_stage(reused, correction)
+    prepared = load('exp078_controller_prepare', 'prepare.py.txt').prepare_stage(reused, correction,
+            stage_clock=state.clock[0], stage_clock_bytes=state.clock[1])
     state.admission._write_once(state.outdir / 'effective-acquisition.json',
                                state.admission.canonical_json(prepared))
+    if prepared.get('target_acquired') is not True:
+        raise ValueError('navigation-target-missing-effective-pool-retained')
     return prepared
 
 
