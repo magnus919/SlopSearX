@@ -1,0 +1,54 @@
+"""Offline-only EXP-078 selector contract checks; never creates a client."""
+from datetime import datetime, timedelta, timezone
+import importlib.machinery
+import importlib.util
+import pathlib
+import unittest
+
+HERE = pathlib.Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp078_selector_tested", str(HERE / "selector-runner.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+R = importlib.util.module_from_spec(spec)
+loader.exec_module(R)
+
+
+def fixture_clock():
+    started = datetime.now(timezone.utc)
+    clock = {"schema": "exp078-stage-clock/1", "stage": "development",
+             "stage_id": "fixture-stage", "stage_started_utc": started.isoformat(),
+             "stage_deadline_utc": (started + timedelta(seconds=28800)).isoformat(),
+             "stage_manifest_sha256": "a" * 64, "ordered_task_ids": ["d1"]}
+    return clock, R.OLD_PREPARE.clock_wire(clock)
+
+
+class SelectorContractTests(unittest.TestCase):
+    def test_blocked_wikipedia_outcome_is_retained_and_accepted(self):
+        clock, raw = fixture_clock()
+        case = {"id": "d1", "kind": "research"}
+        acquisition = {"schema": "exp078-effective-acquisition/1", "stage": "development",
+            "pools": {"d1": {"cards": [{"id": "d1-1", "url": "https://example.com", "title": "A", "snippet": "B"}]}},
+            "engine_outcomes": {"d1": {"arxiv": {"status": "ok"}, "openalex": {"status": "ok"},
+                                          "github": {"status": "ok"}, "wikipedia": {"status": "blocked"}}},
+            "acquisition_receipt": {"stage_clock": clock, "stage_clock_digest": R.digest(raw)}}
+        R.validate_effective(acquisition, [case], clock)
+        self.assertEqual(acquisition["engine_outcomes"]["d1"]["wikipedia"]["status"], "blocked")
+
+    def test_incomplete_pool_membership_fails_preflight(self):
+        clock, raw = fixture_clock()
+        acquisition = {"schema": "exp078-effective-acquisition/1", "stage": "development",
+            "pools": {"d1": {"cards": []}}, "engine_outcomes": {},
+            "acquisition_receipt": {"stage_clock": clock, "stage_clock_digest": R.digest(raw)}}
+        with self.assertRaisesRegex(ValueError, "complete-pool-membership"):
+            R.validate_effective(acquisition, [{"id": "d1", "kind": "research"}], clock)
+
+    def test_expired_clock_is_rejected_without_admission_or_transport(self):
+        started = datetime.now(timezone.utc) - timedelta(seconds=28801)
+        clock = {"schema": "exp078-stage-clock/1", "stage": "development",
+                 "stage_id": "expired", "stage_started_utc": started.isoformat(),
+                 "stage_deadline_utc": (started + timedelta(seconds=28800)).isoformat()}
+        with self.assertRaisesRegex(ValueError, "expired"):
+            R.stage_clock(R.OLD_PREPARE.clock_wire(clock))
+
+
+if __name__ == "__main__":
+    unittest.main()
