@@ -1,0 +1,442 @@
+"""EXP-083 source-bound stage clock and one-shot live admission.
+
+No provider, model, search or credential I/O is performed here. A successful
+admission yields one opaque in-process permit only after committed source,
+registration, qualification, input and stage-clock bindings verify.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import subprocess
+import uuid
+import platform
+import importlib.metadata
+from datetime import datetime, timedelta, timezone
+from pathlib import Path, PurePosixPath
+from typing import Any
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+REG_PATH = "docs/experiments/evidence/EXP-083/registration-integrity.json"
+QUAL_PATH = "docs/experiments/evidence/EXP-083/qualification-integrity.json"
+MANIFEST_PATH = HERE / "stage-development-manifest.json"
+LEASE_ROOT = Path.home() / ".local" / "state" / "exp083" / "leases"
+_DURATION = 8 * 60 * 60
+_CAP_SENTINEL = object()
+_PERMIT_SENTINEL = object()
+_ISSUED: dict[int, object] = {}
+_PERMITS: dict[int, object] = {}
+_PHASES: dict[int, object] = {}
+_PHASE_NAMES = {"capture", "selector", "answer", "grading"}
+PINNED_DEPENDENCIES = {"anyio": "4.13.0", "fastapi": "0.136.3", "httpcore": "1.0.9",
+                       "httpx": "0.28.1", "jsonschema": "4.26.0", "lxml": "6.1.1",
+                       "pydantic": "2.13.4", "requests": "2.34.2", "starlette": "1.2.1",
+                       "structlog": "26.1.0"}
+
+
+class AdmissionError(ValueError):
+    pass
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical_json(value: Any) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def strict_json(raw: bytes) -> Any:
+    def pairs(items):
+        out = {}
+        for key, value in items:
+            if key in out:
+                raise AdmissionError("duplicate-json-key")
+            out[key] = value
+        return out
+
+    def constant(_):
+        raise AdmissionError("non-finite-json")
+
+    try:
+        return json.loads(raw, object_pairs_hook=pairs, parse_constant=constant)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise AdmissionError("invalid-json") from exc
+
+
+def _git_blob(revision: str, path: str) -> bytes:
+    if not re.fullmatch(r"[0-9a-f]{40}|HEAD", revision):
+        raise AdmissionError("git-revision")
+    rel = PurePosixPath(path)
+    if rel.is_absolute() or not rel.parts or any(part in {"", ".", ".."} for part in rel.parts):
+        raise AdmissionError("source-path")
+    try:
+        result = subprocess.run(["git", "show", f"{revision}:{path}"], cwd=REPO,
+                                check=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise AdmissionError("committed-source-missing") from exc
+    return result.stdout
+
+
+def load_registration() -> dict:
+    path = REPO / REG_PATH
+    if path.is_symlink() or not path.is_file():
+        raise AdmissionError("registration-missing")
+    raw = path.read_bytes()
+    obj = strict_json(raw)
+    if (type(obj) is not dict or obj.get("schema") != "exp083-registration/1"
+            or obj.get("study_id") != "EXP-083" or obj.get("status") != "registered"):
+        raise AdmissionError("registration-schema")
+    return obj
+
+
+def _active_clock(raw: bytes, manifest: dict, manifest_sha: str, protocol_sha: str, cohorts_sha: str,
+                  source_revision: str, now: datetime | None = None) -> dict:
+    clock = strict_json(raw)
+    fields = {"schema", "stage_id", "stage", "stage_started_utc", "stage_deadline_utc",
+              "stage_manifest_sha256", "protocol_sha256", "cohorts_sha256", "source_revision",
+              "ordered_task_ids"}
+    if (type(clock) is not dict or set(clock) != fields or clock.get("schema") != "exp078-stage-clock/1"
+            or canonical_json(clock) != raw or clock.get("stage") != "development"):
+        raise AdmissionError("stage-clock-schema")
+    try:
+        started = datetime.fromisoformat(clock["stage_started_utc"].replace("Z", "+00:00"))
+        deadline = datetime.fromisoformat(clock["stage_deadline_utc"].replace("Z", "+00:00"))
+    except (AttributeError, TypeError, ValueError):
+        raise AdmissionError("stage-clock-timestamp") from None
+    current = now or datetime.now(timezone.utc)
+    if (started.tzinfo is None or deadline.tzinfo is None or current.tzinfo is None
+            or (deadline - started).total_seconds() != _DURATION or deadline <= started
+            or current < started or current >= deadline):
+        raise AdmissionError("stage-clock-inactive")
+    try:
+        stage_uuid = uuid.UUID(clock["stage_id"])
+    except (ValueError, TypeError, AttributeError):
+        raise AdmissionError("stage-clock-id") from None
+    if stage_uuid.version != 4:
+        raise AdmissionError("stage-clock-id")
+    if (clock.get("stage_manifest_sha256") != manifest_sha
+            or clock.get("protocol_sha256") != protocol_sha
+            or clock.get("cohorts_sha256") != cohorts_sha
+            or clock.get("source_revision") != source_revision
+            or clock.get("ordered_task_ids") != manifest.get("ordered_task_ids")):
+        raise AdmissionError("stage-clock-binding")
+    return clock
+
+
+def _committed_design() -> tuple[dict, bytes, bytes, bytes]:
+    registration_path = REPO / REG_PATH
+    if registration_path.is_symlink() or not registration_path.is_file():
+        raise AdmissionError("registration-missing")
+    registration_bytes = registration_path.read_bytes()
+    if _git_blob("HEAD", REG_PATH) != registration_bytes:
+        raise AdmissionError("registration-not-committed-head")
+    registration = strict_json(registration_bytes)
+    if (registration.get("schema") != "exp083-registration/1"
+            or registration.get("study_id") != "EXP-083" or registration.get("status") != "registered"):
+        raise AdmissionError("registration-schema")
+    qpath = REPO / QUAL_PATH
+    if qpath.is_symlink() or not qpath.is_file():
+        raise AdmissionError("qualification-missing")
+    qraw = qpath.read_bytes()
+    if _git_blob("HEAD", QUAL_PATH) != qraw:
+        raise AdmissionError("qualification-not-committed-head")
+    return registration, registration_bytes, qraw, strict_json(qraw)
+
+
+def verify_closure(source_integrity: dict, qualification_bytes: bytes,
+                   bundle_root: Path | None = None) -> dict:
+    """Read-only check of committed registration, qualification, source, env and optional inputs."""
+    if type(source_integrity) is not dict or source_integrity.get("synthetic") is not False:
+        raise AdmissionError("live-source-integrity")
+    registration, registration_bytes, committed_qraw, _ = _committed_design()
+    if committed_qraw != qualification_bytes:
+        raise AdmissionError("qualification-not-committed-head")
+    qualification = strict_json(qualification_bytes)
+    qsha = sha(qualification_bytes)
+    if (qualification.get("schema") != "exp083-qualification/1"
+            or qualification.get("study_id") != "EXP-083"
+            or source_integrity.get("study_id") != "EXP-083"
+            or qualification.get("qualified") is not True
+            or source_integrity.get("qualification_sha256") != qsha
+            or source_integrity.get("registration_sha256") != sha(registration_bytes)
+            or qualification.get("registration_sha256") != sha(registration_bytes)):
+        raise AdmissionError("qualification-binding")
+    revision = qualification.get("qualified_source_revision")
+    sources = registration.get("source_files")
+    if (registration.get("study_id") != "EXP-083"
+            or not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision)
+            or registration.get("registered_source_revision") != revision
+            or qualification.get("files") != sources or type(sources) is not dict or not sources):
+        raise AdmissionError("qualification-source-inventory")
+    for path, expected in sources.items():
+        committed = _git_blob(revision, path)
+        head = _git_blob("HEAD", path)
+        disk_path = REPO / path
+        if disk_path.is_symlink() or not disk_path.is_file():
+            raise AdmissionError("source-not-regular")
+        disk = disk_path.read_bytes()
+        if sha(committed) != expected or head != committed or disk != committed:
+            raise AdmissionError("qualified-source-hash-or-dirty-tree")
+    env, deps = qualification.get("environment"), qualification.get("dependencies")
+    if type(env) is not dict or type(deps) is not dict or deps != PINNED_DEPENDENCIES:
+        raise AdmissionError("qualified-environment-shape")
+    actual_env = {"python_implementation": platform.python_implementation(),
+                  "python_version": platform.python_version()}
+    if env != actual_env or source_integrity.get("environment") != actual_env:
+        raise AdmissionError("python-environment-mismatch")
+    actual_deps = {}
+    try:
+        for name in PINNED_DEPENDENCIES:
+            actual_deps[name] = importlib.metadata.version(name)
+    except importlib.metadata.PackageNotFoundError as exc:
+        raise AdmissionError("dependency-missing") from exc
+    if actual_deps != deps or source_integrity.get("dependencies") != deps:
+        raise AdmissionError("dependency-version-mismatch")
+    protocol_sha = sha((HERE / "protocol.json").read_bytes())
+    cohorts_sha = sha((HERE / "cohorts.json").read_bytes())
+    pins_sha = sha((HERE / "reuse-input-pins.json").read_bytes())
+    manifest_raw = (HERE / "stage-development-manifest.json").read_bytes()
+    manifest_obj = strict_json(manifest_raw)
+    pins_obj = strict_json((HERE / "reuse-input-pins.json").read_bytes())
+    config_pin = pins_obj.get("runtime_config_receipt_sha256")
+    if (manifest_obj.get("study_id") != "EXP-083"
+            or manifest_obj.get("source_files") != sources
+            or manifest_obj.get("input_pins_sha256") != pins_sha
+            or manifest_obj.get("input_bundle_sha256") != qualification.get("input_bundle_sha256")
+            or manifest_obj.get("runtime_config_receipt_sha256") != config_pin
+            or qualification.get("input_bundle_sha256") is None
+            or qualification.get("input_pins_sha256") != pins_sha
+            or qualification.get("runtime_config_receipt_sha256") != config_pin
+            or source_integrity.get("stage_manifest_sha256") != sha(manifest_raw)
+            or source_integrity.get("input_pins_sha256") != pins_sha
+            or source_integrity.get("runtime_config_receipt_sha256") != config_pin
+            or source_integrity.get("external_source_pins") != qualification.get("external_source_pins")
+            or qualification.get("protocol_sha256") != protocol_sha
+            or qualification.get("cohorts_sha256") != cohorts_sha
+            or qualification.get("stage_manifest_sha256") != sha(manifest_raw)
+            or source_integrity.get("qualified_source_revision") != revision
+            or source_integrity.get("protocol_sha256") != protocol_sha
+            or source_integrity.get("cohorts_sha256") != cohorts_sha
+            or source_integrity.get("input_pins_sha256") != pins_sha):
+        raise AdmissionError("source-integrity-binding")
+    input_result = None
+    if bundle_root is not None:
+        from importlib.machinery import SourceFileLoader
+        from importlib.util import module_from_spec, spec_from_loader
+        bridge_path = HERE / "input-bridge.py.txt"
+        loader = SourceFileLoader("exp083_admission_input_bridge", str(bridge_path))
+        spec = spec_from_loader(loader.name, loader)
+        bridge = module_from_spec(spec)
+        loader.exec_module(bridge)
+        input_result = bridge.verify_input_bundle(Path(bundle_root))
+        if (input_result["input_pins_sha256"] != pins_sha
+                or source_integrity.get("input_bundle_sha256") != input_result["input_bundle_sha256"]
+                or source_integrity.get("runtime_config_receipt_sha256") != input_result["runtime_config_receipt_sha256"]
+                or qualification.get("input_bundle_sha256") != input_result["input_bundle_sha256"]
+                or qualification.get("runtime_config_receipt_sha256") != input_result["runtime_config_receipt_sha256"]):
+            raise AdmissionError("input-pins-binding")
+    return {"study_id": "EXP-083", "registration_sha256": sha(registration_bytes), "qualification_sha256": qsha,
+            "qualified_source_revision": revision, "protocol_sha256": protocol_sha,
+            "cohorts_sha256": cohorts_sha, "input_pins_sha256": pins_sha,
+            "input_bundle_sha256": input_result["input_bundle_sha256"] if input_result else None,
+            "runtime_config_receipt_sha256": input_result["runtime_config_receipt_sha256"] if input_result else None,
+            "files_verified": len(sources), "input_integrity": input_result,
+            "environment": actual_env, "dependencies": actual_deps}
+
+
+def create_stage_clock(outdir: Path, source_revision: str) -> tuple[dict, bytes, str]:
+    """Create a fresh eight-hour development clock once, bound to the qualified manifest."""
+    output = Path(outdir)
+    if output.is_symlink() or not output.is_dir() or not re.fullmatch(r"[0-9a-f]{40}", source_revision):
+        raise AdmissionError("clock-output-or-revision")
+    registration, registration_raw, qraw, qualification = _committed_design()
+    manifest_raw = MANIFEST_PATH.read_bytes()
+    if _git_blob("HEAD", str(MANIFEST_PATH.relative_to(REPO))) != manifest_raw:
+        raise AdmissionError("stage-manifest-not-committed")
+    manifest = strict_json(manifest_raw)
+    protocol_raw, cohorts_raw = (HERE / "protocol.json").read_bytes(), (HERE / "cohorts.json").read_bytes()
+    if (manifest.get("schema") != "exp083-stage-manifest/1" or manifest.get("study_id") != "EXP-083"
+            or manifest.get("stage") != "development"
+            or manifest.get("protocol_sha256") != sha(protocol_raw)
+            or manifest.get("cohorts_sha256") != sha(cohorts_raw)
+            or manifest.get("ordered_task_ids") != [f"d{i}" for i in range(1, 14)]
+            or manifest.get("source_files") != registration.get("source_files")
+            or qualification.get("qualified") is not True
+            or qualification.get("stage_manifest_sha256") != sha(manifest_raw)
+            or qualification.get("qualified_source_revision") != source_revision):
+        raise AdmissionError("stage-manifest-binding")
+    started = datetime.now(timezone.utc).replace(microsecond=0)
+    deadline = started + timedelta(seconds=_DURATION)
+    clock = {"schema": "exp078-stage-clock/1", "stage_id": str(uuid.uuid4()), "stage": "development",
+             "stage_started_utc": started.isoformat().replace("+00:00", "Z"),
+             "stage_deadline_utc": deadline.isoformat().replace("+00:00", "Z"),
+             "stage_manifest_sha256": sha(manifest_raw), "protocol_sha256": sha(protocol_raw),
+             "cohorts_sha256": sha(cohorts_raw), "source_revision": source_revision,
+             "ordered_task_ids": [f"d{i}" for i in range(1, 14)]}
+    raw = canonical_json(clock)
+    path = output / "stage-clock.json"
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    try:
+        fd = os.open(path, flags, 0o600)
+        with os.fdopen(fd, "wb") as file:
+            file.write(raw)
+            file.flush()
+            os.fsync(file.fileno())
+        dirfd = os.open(output, os.O_RDONLY)
+        try:
+            os.fsync(dirfd)
+        finally:
+            os.close(dirfd)
+    except FileExistsError as exc:
+        raise AdmissionError("stage-clock-already-created") from exc
+    return clock, raw, sha(raw)
+
+
+class _Capability:
+    __slots__ = ("seal", "identity", "stage", "clock_digest", "outdir", "used")
+
+    def __init__(self, identity: str, clock_digest: str, outdir: Path):
+        self.seal = _CAP_SENTINEL
+        self.identity = identity
+        self.stage = "development"
+        self.clock_digest = clock_digest
+        self.outdir = outdir.resolve()
+        self.used = False
+
+
+class _StagePermit:
+    __slots__ = ("seal", "identity", "stage", "clock_digest", "outdir")
+
+    def __init__(self, identity: str, clock_digest: str, outdir: Path):
+        self.seal = _PERMIT_SENTINEL
+        self.identity = identity
+        self.stage = "development"
+        self.clock_digest = clock_digest
+        self.outdir = outdir.resolve()
+
+
+class _PhasePermit:
+    __slots__ = ("seal", "identity", "stage", "phase", "clock_digest", "outdir")
+
+    def __init__(self, identity: str, phase: str, clock_digest: str, outdir: Path):
+        self.seal = _PERMIT_SENTINEL
+        self.identity = identity
+        self.stage = "development"
+        self.phase = phase
+        self.clock_digest = clock_digest
+        self.outdir = outdir.resolve()
+
+
+def _write_once(path: Path, data: bytes) -> None:
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    if path.parent.is_symlink() or not path.parent.is_dir():
+        raise AdmissionError("lease-directory")
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    try:
+        fd = os.open(path, flags, 0o600)
+    except FileExistsError as exc:
+        raise AdmissionError("stage-already-admitted") from exc
+    with os.fdopen(fd, "wb") as file:
+        file.write(data)
+        file.flush()
+        os.fsync(file.fileno())
+    dirfd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(dirfd)
+    finally:
+        os.close(dirfd)
+
+
+def admit_live(outdir: Path, source_integrity: dict, qualification_bytes: bytes,
+               bundle_root: Path) -> _Capability:
+    """Validate committed source/input bindings and burn the stage lease."""
+    if bundle_root is None:
+        raise AdmissionError("frozen-recovery-inputs-required")
+    proof = verify_closure(source_integrity, qualification_bytes, bundle_root)
+    out = Path(outdir)
+    clock_path = out / "stage-clock.json"
+    if out.is_symlink() or clock_path.is_symlink() or not clock_path.is_file():
+        raise AdmissionError("stage-clock-file")
+    clock_raw = clock_path.read_bytes()
+    manifest_path = HERE / "stage-development-manifest.json"
+    manifest_raw = manifest_path.read_bytes()
+    clock = _active_clock(clock_raw, strict_json(manifest_raw), sha(manifest_raw),
+                          proof["protocol_sha256"], proof["cohorts_sha256"],
+                          proof["qualified_source_revision"])
+    identity = sha(canonical_json({"registration": proof["registration_sha256"],
+                                   "qualification": proof["qualification_sha256"],
+                                   "inputs": proof["input_pins_sha256"],
+                                   "input_bundle": proof["input_bundle_sha256"],
+                                   "runtime_config": proof["runtime_config_receipt_sha256"],
+                                   "study_id": "EXP-083", "stage": clock["stage"]}))
+    lease = {"schema": "exp083-stage-lease/1", "stage": "development", "identity": identity,
+             "clock_sha256": sha(clock_raw), "qualification_sha256": proof["qualification_sha256"]}
+    _write_once(LEASE_ROOT / f"{identity}.json", canonical_json(lease))
+    capability = _Capability(identity, sha(clock_raw), out)
+    _ISSUED[id(capability)] = capability
+    return capability
+
+def consume_capability(capability: _Capability) -> _StagePermit:
+    """Consume the stage capability once and return its reusable in-process permit."""
+    if (not isinstance(capability, _Capability) or capability.seal is not _CAP_SENTINEL
+            or capability.used or _ISSUED.get(id(capability)) is not capability):
+        raise AdmissionError("live-capability-invalid-or-used")
+    capability.used = True
+    _ISSUED.pop(id(capability), None)
+    permit = _StagePermit(capability.identity, capability.clock_digest, capability.outdir)
+    _PERMITS[id(permit)] = permit
+    return permit
+
+
+def _check_clock_permit(outdir: Path, clock_bytes: bytes, identity: str, expected_clock: str) -> dict:
+    output = Path(outdir)
+    if output.is_symlink():
+        raise AdmissionError("phase-output-directory")
+    clock_path = output / "stage-clock.json"
+    if clock_path.is_symlink() or not clock_path.is_file() or clock_path.read_bytes() != clock_bytes:
+        raise AdmissionError("phase-clock-file-binding")
+    if sha(clock_bytes) != expected_clock:
+        raise AdmissionError("phase-clock-digest")
+    manifest_raw = MANIFEST_PATH.read_bytes()
+    manifest = strict_json(manifest_raw)
+    clock = _active_clock(clock_bytes, manifest, sha(manifest_raw),
+                          sha((HERE / "protocol.json").read_bytes()),
+                          sha((HERE / "cohorts.json").read_bytes()),
+                          strict_json(clock_bytes)["source_revision"] )
+    if identity == "":
+        raise AdmissionError("phase-identity")
+    return clock
+
+
+def acquire_phase(stage_permit: _StagePermit, phase: str, outdir: Path,
+                  clock_bytes: bytes) -> _PhasePermit:
+    if (not isinstance(stage_permit, _StagePermit) or stage_permit.seal is not _PERMIT_SENTINEL
+            or _PERMITS.get(id(stage_permit)) is not stage_permit
+            or phase not in _PHASE_NAMES or stage_permit.outdir != Path(outdir).resolve()):
+        raise AdmissionError("stage-permit-required")
+    _check_clock_permit(outdir, clock_bytes, stage_permit.identity, stage_permit.clock_digest)
+    phase_identity = sha(canonical_json({"stage_identity": stage_permit.identity, "phase": phase}))
+    lease = {"schema": "exp083-phase-lease/1", "stage_identity": stage_permit.identity,
+             "phase": phase, "clock_sha256": stage_permit.clock_digest, "phase_identity": phase_identity}
+    _write_once(LEASE_ROOT / f"{phase_identity}.json", canonical_json(lease))
+    permit = _PhasePermit(phase_identity, phase, stage_permit.clock_digest, Path(outdir))
+    _PHASES[id(permit)] = permit
+    return permit
+
+
+def require_phase(phase_permit: _PhasePermit, clock_bytes: bytes, outdir: Path) -> None:
+    """Reusable guard before environment/client access and before each dispatch."""
+    if (not isinstance(phase_permit, _PhasePermit) or phase_permit.seal is not _PERMIT_SENTINEL
+            or _PHASES.get(id(phase_permit)) is not phase_permit
+            or phase_permit.outdir != Path(outdir).resolve()):
+        raise AdmissionError("phase-permit-required")
+    _check_clock_permit(outdir, clock_bytes, phase_permit.identity, phase_permit.clock_digest)
