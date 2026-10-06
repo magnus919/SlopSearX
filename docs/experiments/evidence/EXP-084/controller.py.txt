@@ -1,0 +1,187 @@
+"""Persistent-process EXP-084 operational-recovery coordinator; no effects occur on import.
+
+Keep the returned state in one process through capture, blind reference freezing,
+selection, answers and grading. Exiting loses its opaque permit: do not readmit
+or create a replacement clock. Raw artifacts remain in the private stage folder.
+"""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+from dataclasses import dataclass
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+
+def load(name, filename):
+    path = HERE / filename
+    relative = path.relative_to(REPO).as_posix()
+    committed = subprocess.run(['git', 'show', f'HEAD:{relative}'], cwd=REPO,
+        check=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout
+    if path.is_symlink() or path.read_bytes() != committed:
+        raise ValueError('uncommitted-controller-dependency')
+    if name in sys.modules:
+        module = sys.modules[name]
+        if Path(module.__file__).resolve() != path.resolve():
+            raise ValueError('module-identity-path')
+        return module
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    try:
+        loader.exec_module(module)
+    except BaseException:
+        sys.modules.pop(name, None)
+        raise
+    return module
+
+
+def preflight(bundle_root, cli_path=None):
+    admission = load('exp084_admission', 'admission.py.txt')
+    qraw = (HERE / 'qualification-integrity.json').read_bytes()
+    q = admission.strict_json(qraw)
+    rraw = (HERE / 'registration-integrity.json').read_bytes()
+    integrity = {'study_id': 'EXP-084', 'synthetic': False, 'qualification_sha256': admission.sha(qraw),
+        'registration_sha256': admission.sha(rraw),
+        'qualified_source_revision': q['qualified_source_revision'],
+        'protocol_sha256': admission.sha((HERE / 'protocol.json').read_bytes()),
+        'cohorts_sha256': admission.sha((HERE / 'cohorts.json').read_bytes()),
+        'stage_manifest_sha256': q['stage_manifest_sha256'],
+        'input_pins_sha256': admission.sha((HERE / 'reuse-input-pins.json').read_bytes()),
+        'input_bundle_sha256': q['input_bundle_sha256'],
+        'runtime_config_receipt_sha256': q['runtime_config_receipt_sha256'],
+        'environment': q['environment'], 'dependencies': q['dependencies'],
+        'external_source_pins': q['external_source_pins']}
+    admission.verify_closure(integrity, qraw)  # verify source before importing the bridge
+    proof = admission.verify_closure(integrity, qraw, Path(bundle_root))
+    pins = integrity.get('external_source_pins')
+    pin = pins.get('groktocrawl_cli') if isinstance(pins, dict) else None
+    if (not isinstance(pin, dict) or set(pin) != {'sha256', 'revision'}
+            or not isinstance(pin.get('sha256'), str) or not re.fullmatch(r'[0-9a-f]{64}', pin['sha256'])
+            or not isinstance(pin.get('revision'), str) or not re.fullmatch(r'[0-9a-f]{40}', pin['revision'])):
+        raise ValueError('qualified-cli-pin-invalid')
+    cli=Path(cli_path) if cli_path is not None else Path.home()/'.local/bin/groktocrawl'
+    if cli.is_symlink() or not cli.is_file() or hashlib.sha256(cli.read_bytes()).hexdigest()!=pin['sha256']:
+        raise ValueError('pinned-cli-preflight-failed')
+    return admission, integrity, qraw, proof
+
+
+@dataclass(frozen=True)
+class State:
+    outdir: Path
+    bundle_root: Path
+    admission: object
+    permit: object
+    integrity: dict
+    clock: tuple
+
+
+def begin(outdir, bundle_root, cli_path=None):
+    admission, integrity, qraw, _ = preflight(bundle_root, cli_path)
+    # Validate the exact configured candidate before creating the write-once
+    # clock or consuming the stage lease. Keep the values only in this stack
+    # frame; install them into the process environment after admission.
+    capture_config = _read_bound_capture_configuration(bundle_root, integrity, admission.strict_json)
+    out = Path(outdir)
+    out.mkdir(mode=0o700, parents=False, exist_ok=False)
+    clock = admission.create_stage_clock(out, integrity['qualified_source_revision'])
+    capability = admission.admit_live(out, integrity, qraw, Path(bundle_root))
+    state=State(out, Path(bundle_root), admission,
+                admission.consume_capability(capability), integrity, clock)
+    _configure_capture(state, capture_config)
+    return state
+
+
+def prepare_recovery(state):
+    """Bind unchanged predecessor data to this new clock; make no search call."""
+    bridge = load('exp084_controller_bridge', 'input-bridge.py.txt')
+    data = bridge.prepare_recovery_inputs(state.bundle_root)
+    acquisition = json.loads(json.dumps(data['pools']))
+    acquisition['acquisition_receipt'] = {'stage_clock': state.clock[0],
+        'stage_clock_digest': state.clock[2]}
+    acquisition['recovery_provenance'] = {'study_id': 'EXP-084',
+        'input_bundle_sha256': state.integrity['input_bundle_sha256'],
+        'prior_study_credit': False, 'new_searches': 0}
+    state.admission._write_once(state.outdir/'effective-input-envelope.json',
+                               state.admission.canonical_json(acquisition))
+    return acquisition
+
+
+def _read_bound_capture_configuration(bundle_root, integrity, strict_json=json.loads):
+    """Read and verify configured endpoint/key in memory without installing them."""
+    import hmac
+    binding_raw = (Path(bundle_root)/'configuration-binding.json').read_bytes()
+    if hashlib.sha256(binding_raw).hexdigest()!=integrity['runtime_config_receipt_sha256']:
+        raise ValueError('runtime-config-receipt-binding')
+    binding = strict_json(binding_raw)
+    config = {}
+    for line in (Path.home()/'.hermes/.env').read_text().splitlines():
+        line=line.strip().removeprefix('export ')
+        key,sep,value=line.partition('=')
+        if sep and key in {'GROKTOCRAWL_API_URL','FIRECRAWL_API_URL',
+                           'GROKTOCRAWL_API_KEY','API_KEY','FIRECRAWL_API_KEY'}:
+            config[key]=value.strip().strip('"\'')
+    url=config.get('GROKTOCRAWL_API_URL') or config.get('FIRECRAWL_API_URL')
+    key=config.get('GROKTOCRAWL_API_KEY') or config.get('API_KEY') or config.get('FIRECRAWL_API_KEY')
+    if not url or not key:raise ValueError('existing-candidate-configuration-missing')
+    nonce=bytes.fromhex(binding['nonce'])
+    tag=lambda value:hmac.new(nonce,value.encode(),hashlib.sha256).hexdigest()
+    if (not hmac.compare_digest(tag(url.rstrip('/')),binding['server_tag'])
+            or not hmac.compare_digest(tag(key),binding['credential_tag'])):
+        raise ValueError('existing-candidate-configuration-changed')
+    return (url.rstrip('/'), key)
+
+
+def _configure_capture(state, config):
+    """Install previously verified candidate settings in this process only."""
+    import os
+    url, key = config
+    os.environ['GROKTOCRAWL_API_URL']=url.rstrip('/')
+    os.environ['GROKTOCRAWL_API_KEY']=key
+    os.environ['API_KEY']=key
+
+
+def load_frozen_bindings():
+    path=HERE/'phase-bindings.py.txt'
+    relative=path.relative_to(REPO).as_posix()
+    committed=subprocess.run(['git','show',f'HEAD:{relative}'],cwd=REPO,
+        check=True,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL).stdout
+    if path.is_symlink() or path.read_bytes()!=committed:
+        raise ValueError('uncommitted-frozen-binding')
+    name='exp084_frozen_phase_bindings'
+    if name in sys.modules:return sys.modules[name]
+    loader=importlib.machinery.SourceFileLoader(name,str(path))
+    spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec);sys.modules[name]=module
+    loader.exec_module(module)
+    return module
+
+
+def capture(state, acquisition, cases, cli_path):
+    clock, raw, digest = state.clock
+    try:
+        bindings = load_frozen_bindings()
+        return bindings.run_capture(acquisition=acquisition, cases=cases,
+            cli_path=Path(cli_path), source_integrity=state.integrity, stage_outdir=state.outdir,
+            outdir=state.outdir/'capture', admission=state.admission,
+            stage_permit=state.permit, clock=clock, clock_bytes=raw, clock_sha256=digest)
+    except BaseException as exc:
+        out=state.outdir/'capture'
+        if not out.is_symlink():
+            out.mkdir(mode=0o700,parents=False,exist_ok=True)
+            inner_path=out/'capture-phase-terminal.json'
+            inner=state.admission.strict_json(inner_path.read_bytes()) if inner_path.is_file() else {}
+            terminal={'schema':'exp084-capture-terminal/1','study_id':'EXP-084',
+                'status':'incomplete','terminal_error_class':type(exc).__name__,
+                'stage_clock_sha256':digest,'quality_credit':False,
+                'owned_http_attempts':inner.get('owned_dispatch_count','unknown')}
+            state.admission._write_once(out/'recovery-capture-terminal.json',
+                                       state.admission.canonical_json(terminal))
+        raise

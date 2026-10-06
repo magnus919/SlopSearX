@@ -1,0 +1,623 @@
+"""EXP-077 bounded shared source capture runner.
+
+Import is inert. The default CLI mode creates a synthetic zero-I/O receipt;
+live mode is disabled until a separately sealed qualification artifact matches
+this file, the protocol, cohorts, prompts, and pinned consumer sources.
+
+Only the runner's own scraper-API HTTP exchanges are bounded here. Any
+downstream fetches performed inside the scraper service are unobserved unless
+the service exposes them and must never be described as zero or <=640.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib.machinery
+import importlib.util
+import importlib.metadata
+import json
+import os
+import re
+import signal
+import sys
+import platform
+import subprocess
+import tempfile
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+from urllib.parse import urlsplit
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+PROTOCOL = HERE / "protocol.json"
+COHORTS = HERE / "cohorts.json"
+PINFILE = HERE.parent / "EXP-077" / "candidate-source-pins.json"
+MAX_ATTEMPTS = 640
+MAX_RESPONSE = 2_000_000
+REQUEST_TIMEOUT = 30
+HEALTH_TIMEOUT = 8
+MAX_STAGE_WALL = 28_800
+RAW_DIR = "private-raw"
+LEASE_PREFIX = "exp077-capture"
+
+
+class CaptureBudgetError(RuntimeError):
+    """An owned HTTP cap or endpoint mismatch stopped the run."""
+
+
+class StageDeadlineError(TimeoutError):
+    """The one shared stage clock expired."""
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _pairs(items):
+    result = {}
+    for key, value in items:
+        if key in result:
+            raise ValueError("duplicate-json-key")
+        result[key] = value
+    return result
+
+
+def strict_json(raw: bytes):
+    return json.loads(raw, object_pairs_hook=_pairs,
+                      parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite-json")))
+
+
+def safe_file(path: Path) -> bytes:
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("input-file-type")
+    return path.read_bytes()
+
+
+def durable(path: Path, value) -> None:
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    os.chmod(path.parent, 0o700)
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "xb") as stream:
+        stream.write((json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode())
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.replace(tmp, path)
+    fd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def validate_public_url(value: str) -> str:
+    if not isinstance(value, str) or len(value) > 4096:
+        raise ValueError("source-url-invalid")
+    # Reuse the candidate's existing retrieval eligibility predicate rather
+    # than a weaker local URL parser. Its documented limitation is hostname
+    # DNS aliases; actual resolution/redirect protections remain the pinned
+    # scraper service's responsibility.
+    from slopsearx.retrieval_url import RETRIEVAL_URL_STATUS_OK, _retrieval_url
+    status, _reason, scheme, safe_url = _retrieval_url(value)
+    if status != RETRIEVAL_URL_STATUS_OK or scheme != "https" or safe_url != value:
+        raise ValueError("source-url-not-eligible-public-https")
+    parts = urlsplit(value)
+    host = (parts.hostname or "").lower().rstrip(".")
+    if (parts.scheme != "https" or not host or parts.username or parts.password
+            or parts.port not in (None, 443) or parts.fragment
+            or host in {"localhost", "localhost.localdomain"}
+            or host.endswith((".localhost", ".local", ".internal", ".test", ".invalid"))):
+        raise ValueError("source-url-not-public-https")
+    # Reject literal private/loopback/link-local/multicast addresses. DNS
+    # resolution and post-redirect targets remain service-owned/unobserved.
+    import ipaddress
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        ip = None
+    if ip is not None and not ip.is_global:
+        raise ValueError("source-url-not-public-address")
+    return value
+
+
+def validate_inventory(raw: bytes) -> tuple[dict, list[dict]]:
+    obj = strict_json(raw)
+    if (not isinstance(obj, dict) or obj.get("schema") != "exp077-acquired-pools/1"
+            or obj.get("synthetic") is not False):
+        raise ValueError("acquisition-schema-or-synthetic")
+    rows = obj.get("sources")
+    if not isinstance(rows, list) or len(rows) > MAX_ATTEMPTS:
+        raise ValueError("capture-inventory-cap")
+    ids, urls = set(), set()
+    normalized = []
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != {"source_id", "url", "title"}:
+            raise ValueError("capture-inventory-row")
+        source_id, url = row["source_id"], row["url"]
+        if not isinstance(source_id, str) or not source_id or len(source_id) > 128 or source_id in ids:
+            raise ValueError("capture-source-id")
+        if url is not None and not isinstance(url, str):
+            raise ValueError("capture-url-type")
+        ids.add(source_id)
+        eligible, state = False, "unsupported_url_not_attempted"
+        if isinstance(url, str):
+            try:
+                validate_public_url(url)
+                if url in urls:
+                    state = "duplicate_url_not_attempted"
+                else:
+                    urls.add(url)
+                    eligible, state = True, "pending"
+            except ValueError:
+                state = "unsupported_url_not_attempted"
+        copy = dict(row)
+        copy["_capture_eligible"], copy["_capture_initial_state"] = eligible, state
+        normalized.append(copy)
+    return obj, normalized
+
+
+def validate_stage_clock(raw: bytes, admission: dict) -> dict:
+    obj = strict_json(raw)
+    if not isinstance(obj, dict) or obj.get("schema") != "exp077-stage-clock/1":
+        raise ValueError("stage-clock-schema")
+    expected_fields = {"schema", "stage_id", "stage", "stage_started_utc", "stage_deadline_utc",
+                       "stage_manifest_sha256", "protocol_sha256", "cohorts_sha256",
+                       "source_revision", "ordered_task_ids"}
+    if set(obj) != expected_fields:
+        raise ValueError("stage-clock-fields")
+    canonical = (json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                            allow_nan=False) + "\n").encode("utf-8")
+    if canonical != raw:
+        raise ValueError("stage-clock-not-canonical")
+    try:
+        started = datetime.fromisoformat(obj["stage_started_utc"].replace("Z", "+00:00"))
+        deadline = datetime.fromisoformat(obj["stage_deadline_utc"].replace("Z", "+00:00"))
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("stage-clock-timestamp") from exc
+    if started.tzinfo is None or deadline.tzinfo is None or deadline <= started:
+        raise ValueError("stage-clock-order")
+    if (deadline - started).total_seconds() != MAX_STAGE_WALL:
+        raise ValueError("stage-clock-interval")
+    now = datetime.now(timezone.utc)
+    if not started <= now < deadline:
+        raise ValueError("stage-clock-not-active")
+    stage, stage_id = obj.get("stage"), obj.get("stage_id")
+    if stage not in {"development", "confirmation"} or not isinstance(stage_id, str):
+        raise ValueError("stage-clock-id")
+    if not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", stage_id):
+        raise ValueError("stage-clock-uuid")
+    if not re.fullmatch(r"[0-9a-f]{64}", str(obj.get("stage_manifest_sha256", ""))):
+        raise ValueError("stage-static-manifest-hash")
+    static_manifest = HERE / f"stage-{stage}-manifest.json"
+    if sha(safe_file(static_manifest)) != obj["stage_manifest_sha256"]:
+        raise ValueError("stage-static-manifest-binding")
+    expected_tasks = [x["id"] for x in strict_json(safe_file(COHORTS))["cohorts"][stage]]
+    if (obj.get("protocol_sha256") != admission["protocol_sha256"]
+            or obj.get("cohorts_sha256") != admission["cohorts_sha256"]
+            or obj.get("ordered_task_ids") != expected_tasks
+            or not re.fullmatch(r"[0-9a-f]{40}", str(obj.get("source_revision", "")))):
+        raise ValueError("stage-clock-source-binding")
+    return {"stage": stage, "stage_id": stage_id, "stage_started_utc": started.isoformat(),
+            "stage_deadline_utc": deadline.isoformat(), "stage_manifest_sha256": obj["stage_manifest_sha256"],
+            "source_revision": obj["source_revision"],
+            "stage_clock_digest": sha(raw),
+            "remaining_seconds": (deadline - now).total_seconds()}
+
+
+def validate_static(protocol_path: Path = PROTOCOL, cohorts_path: Path = COHORTS,
+                    pin_path: Path = PINFILE, *, live: bool = False) -> dict:
+    protocol_raw, cohorts_raw, pins_raw = safe_file(protocol_path), safe_file(cohorts_path), safe_file(pin_path)
+    protocol = strict_json(protocol_raw)
+    cohorts = strict_json(cohorts_raw)
+    pins = strict_json(pins_raw)
+    protocol_status = protocol.get("status")
+    pin_status = pins.get("status")
+    if (protocol.get("schema") != "exp077-fixed-usefulness-study/1"
+            or (protocol_status != "registered" if live else
+                protocol_status not in {"design_draft_harness_unqualified", "registered"})):
+        raise ValueError("protocol-not-frozen")
+    if protocol.get("capture", {}).get("owned_attempts_maximum_per_stage") != MAX_ATTEMPTS:
+        raise ValueError("capture-budget-mismatch")
+    if protocol.get("capture", {}).get("owned_http_timeout_seconds") != REQUEST_TIMEOUT or protocol.get("capture", {}).get("response_bytes") != MAX_RESPONSE:
+        raise ValueError("capture-transport-bounds-mismatch")
+    if set(cohorts.get("cohorts", {})) != {"development", "confirmation"}:
+        raise ValueError("cohort-membership")
+    for stage, rows in cohorts["cohorts"].items():
+        if not isinstance(rows, list) or len(rows) != 13 or len({r.get("id") for r in rows}) != 13:
+            raise ValueError("cohort-size-or-duplicates:" + stage)
+    allowed_pin_states = {"frozen_candidate_source_inventory"}
+    if not live:
+        allowed_pin_states.add("draft source inventory; registration seal pending")
+    if pin_status not in allowed_pin_states:
+        raise ValueError("source-pins-not-frozen")
+    actual = {}
+    for rel, digest in pins.get("pins", {}).items():
+        if not re.fullmatch(r"[0-9a-f]{64}", str(digest)) or sha(safe_file(REPO / rel)) != digest:
+            raise ValueError("candidate-source-pin:" + rel)
+        actual[rel] = digest
+    return {"protocol_sha256": sha(protocol_raw), "cohorts_sha256": sha(cohorts_raw),
+            "source_pinfile_sha256": sha(pins_raw), "candidate_source_sha256": actual}
+
+
+def verify_qualification(q: dict, qraw: bytes, qpath: Path, owned_files: dict) -> dict:
+    """Require committed registration/qualification and exact current/prior pins."""
+    integrity = strict_json(safe_file(HERE / "integrity-contract.json"))
+    registration_path = HERE / Path(integrity["registration_path"]).name
+    qualification_path = HERE / Path(integrity["qualification_path"]).name
+    if qpath.resolve() != qualification_path.resolve() or safe_file(qualification_path) != qraw:
+        raise ValueError("qualification-must-be-committed-artifact")
+    if q.get("schema") != integrity["qualification_schema"] or q.get("qualified") is not True:
+        raise ValueError("qualification-not-qualified")
+    if (not isinstance(q.get("qualified_source_revision"), str)
+            or not re.fullmatch(r"[0-9a-f]{40}", q["qualified_source_revision"])):
+        raise ValueError("qualification-source-revision")
+    qfiles = q.get("files")
+    if not isinstance(qfiles, dict) or any(qfiles.get(name) != digest for name, digest in owned_files.items()):
+        raise ValueError("qualification-owned-files")
+    regraw = safe_file(registration_path)
+    registration = strict_json(regraw)
+    if (q.get("registration_sha256") != sha(regraw)
+            or registration.get("schema") != integrity["registration_schema"]
+            or registration.get("status") != integrity["registration_status"]
+            or not re.fullmatch(r"[0-9a-f]{40}", str(registration.get("registered_source_revision", "")))):
+        raise ValueError("registration-binding")
+    current_qualification = subprocess.run(["git", "show", "HEAD:" +
+        str(qualification_path.relative_to(REPO))], cwd=REPO, check=True, capture_output=True).stdout
+    current_registration = subprocess.run(["git", "show", "HEAD:" +
+        str(registration_path.relative_to(REPO))], cwd=REPO, check=True, capture_output=True).stdout
+    if current_qualification != qraw or current_registration != regraw:
+        raise ValueError("integrity-metadata-not-at-committed-head")
+    registration_pins = registration.get("pins")
+    if not isinstance(registration_pins, dict):
+        raise ValueError("registration-pins")
+    for rel, digest in registration_pins.items():
+        repo_rel = f"docs/experiments/evidence/EXP-077/{rel}"
+        current = safe_file(REPO / repo_rel)
+        try:
+            prior = subprocess.run(["git", "show", registration["registered_source_revision"] + ":" + repo_rel],
+                                   cwd=REPO, check=True, capture_output=True).stdout
+        except subprocess.CalledProcessError as exc:
+            raise ValueError("registration-prior-source-missing:" + repo_rel) from exc
+        if sha(current) != digest or sha(prior) != digest:
+            raise ValueError("registration-source-binding:" + repo_rel)
+    if q.get("protocol_sha256") != sha(safe_file(PROTOCOL)):
+        raise ValueError("qualification-protocol-binding")
+    if q.get("stage_manifest_sha256") != registration.get("stage_manifest_sha256"):
+        raise ValueError("qualification-stage-manifest-binding")
+    source_pins = q.get("source_pins")
+    if not isinstance(source_pins, dict):
+        raise ValueError("qualification-source-pins")
+    for rel, digest in source_pins.items():
+        if not isinstance(rel, str) or not re.fullmatch(r"[0-9a-f]{64}", str(digest)):
+            raise ValueError("qualification-source-pin-shape")
+        if sha(safe_file(REPO / rel)) != digest:
+            raise ValueError("qualification-source-pin:" + rel)
+    for name, version in q.get("dependencies", {}).items():
+        if importlib.metadata.version(name) != version:
+            raise ValueError("qualification-dependency:" + name)
+    environment = q.get("environment", {})
+    if (environment.get("python_implementation") != platform.python_implementation()
+            or environment.get("python_version") != platform.python_version()):
+        raise ValueError("qualification-python-environment")
+    # The source commit predates qualification metadata; current pinned bytes
+    # must match both the qualified checkout and this process's working tree.
+    for rel, expected in {**qfiles, **source_pins}.items():
+        repo_rel = f"docs/experiments/evidence/EXP-077/{rel}" if rel in qfiles else rel
+        if sha(safe_file(REPO / repo_rel)) != expected:
+            raise ValueError("qualification-current-file:" + repo_rel)
+        try:
+            prior = subprocess.run(["git", "show", q["qualified_source_revision"] + ":" + repo_rel],
+                                   cwd=REPO, check=True, capture_output=True).stdout
+        except subprocess.CalledProcessError as exc:
+            raise ValueError("qualification-prior-source-missing:" + repo_rel) from exc
+        if sha(prior) != expected:
+            raise ValueError("qualification-prior-source-binding:" + repo_rel)
+    return {"registration": registration, "integrity": integrity}
+
+
+def acquire_lease(manifest_hash: str, root: Path | None = None) -> Path:
+    path = (root or Path(tempfile.gettempdir())) / f"{LEASE_PREFIX}.{manifest_hash}.lease"
+    fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(json.dumps({"started_utc": datetime.now(timezone.utc).isoformat(),
+                                 "pid": os.getpid(), "manifest_sha256": manifest_hash}).encode())
+        stream.flush()
+        os.fsync(stream.fileno())
+    return path
+
+
+def offline_fixture(outdir: Path) -> dict:
+    if outdir.exists() or outdir.is_symlink():
+        raise ValueError("outdir-exists-or-symlink")
+    outdir.mkdir(parents=True, mode=0o700)
+    result = {"schema": "exp077-source-capture/1", "status": "offline_fixture_only",
+              "synthetic": True, "owned_http_attempts": 0,
+              "internal_service_calls": "unknown; no service contacted",
+              "limitations": ["No source bytes acquired; no task-use or ranking evidence."]}
+    durable(outdir / "capture.json", result)
+    return result
+
+
+def capture_acceptance(result):
+    """Apply the exact pinned prior refusal/challenge policy; no new heuristic."""
+    policy_path=HERE.parent/'source-use-next-stage'/'capture-runner.py.txt'
+    pin_key='docs/experiments/evidence/source-use-next-stage/capture-runner.py.txt'
+    pins=strict_json(safe_file(PINFILE)).get('pins',{})
+    if sha(safe_file(policy_path)) != pins.get(pin_key):
+        raise ValueError('consumer-predicate-source-pin')
+    loader=importlib.machinery.SourceFileLoader('exp077_pinned_consumer_policy',str(policy_path))
+    spec=importlib.util.spec_from_loader(loader.name,loader)
+    policy=importlib.util.module_from_spec(spec);loader.exec_module(policy)
+    data=result.get('data',result) if isinstance(result,dict) else {}
+    markdown=data.get('markdown') if isinstance(data,dict) else None
+    classification={'barrier_flagged':policy.barrier_flagged(result),
+                    'markdown_challenge':policy.markdown_challenge(markdown if isinstance(markdown,str) else None),
+                    'refusal':bool(isinstance(result,dict) and (result.get('error') or result.get('refusal') or (isinstance(data,dict) and data.get('refusal'))))}
+    accepted=bool(isinstance(result,dict) and result.get('success') is True and isinstance(markdown,str) and markdown.strip() and not any(classification.values()))
+    return accepted,markdown,classification
+
+
+def live_capture(inventory: list[dict], cli_path: Path, outdir: Path,
+                 admission: dict, stage_clock: dict, *, client_factory=None) -> dict:
+    """Run one serialized capture against the existing configured CLI.
+
+    The CLI keeps endpoint/authentication discovery. Monkeypatch only its
+    requests transport to count and bound runner-owned API exchanges. The
+    scraper service's subsequent URL fetches are not exposed by this hook.
+    """
+    import requests
+    cli_raw = safe_file(cli_path)
+    if sha(cli_raw) != admission.get("cli_sha256"):
+        raise ValueError("cli-source-pin-mismatch")
+    if time.time() >= datetime.fromisoformat(stage_clock["stage_deadline_utc"]).timestamp():
+        raise StageDeadlineError("stage-clock-expired-before-cli-import")
+    loader = importlib.machinery.SourceFileLoader("exp077_pinned_cli", str(cli_path))
+    spec = importlib.util.spec_from_loader("exp077_pinned_cli", loader)
+    cli = importlib.util.module_from_spec(spec)
+    loader.exec_module(cli)
+    client = (client_factory or cli.Client)()
+    original = requests.request
+    deadline_monotonic = time.monotonic() + max(0, datetime.fromisoformat(
+        stage_clock["stage_deadline_utc"]).timestamp() - time.time())
+    attempts, receipts = 0, []
+    transports = []
+    rawdir = outdir / RAW_DIR
+    rawdir.mkdir(mode=0o700)
+    os.chmod(rawdir, 0o700)
+    active_timeout = HEALTH_TIMEOUT
+
+    def bounded_request(*args, **kwargs):
+        nonlocal attempts
+        attempts += 1
+        if attempts > MAX_ATTEMPTS + 1:  # one health request, separately accounted
+            raise RuntimeError("owned-http-attempt-budget")
+        # Extract keyword-form requests exactly once before forwarding them
+        # positionally. The pinned GroktoCrawl CLI calls requests.request with
+        # method= and url= keywords; retaining those keys caused duplicate
+        # argument TypeErrors before any owned HTTP exchange.
+        method = kwargs.pop("method", args[0] if args else "GET")
+        url = kwargs.pop("url", args[1] if len(args) > 1 else "")
+        host = (urlsplit(str(url)).hostname or "").lower()
+        if host not in {((urlsplit(client.server).hostname or "").lower()), ""}:
+            raise RuntimeError("cli-transport-destination-changed")
+        remaining_stage = deadline_monotonic - time.monotonic()
+        if remaining_stage <= 0:
+            raise StageDeadlineError("stage-clock-expired-before-owned-request")
+        exchange_timeout = min(active_timeout, remaining_stage)
+        kwargs.update(timeout=exchange_timeout, allow_redirects=False, stream=True)
+        call_start = time.monotonic()
+        prev_handler, prev_timer = signal.getsignal(signal.SIGALRM), signal.getitimer(signal.ITIMER_REAL)
+        def alarm(_signum, _frame):
+            raise TimeoutError("owned-http-deadline")
+        signal.signal(signal.SIGALRM, alarm)
+        signal.setitimer(signal.ITIMER_REAL, exchange_timeout)
+        receipt = {"attempt": attempts, "kind": "health" if attempts == 1 else "scrape_api",
+                   "method": str(method), "url_host": host, "started_monotonic": call_start,
+                   "status": "in_flight"}
+        transports.append(receipt)
+        durable(rawdir / "http-transports.json", transports)
+        try:
+            response = original(method, url, *args[2:], **kwargs)
+            chunks, size = [], 0
+            for chunk in response.iter_content(65536):
+                size += len(chunk)
+                if size > MAX_RESPONSE:
+                    response.close()
+                    receipt.update(status="response_byte_cap", response_bytes=size,
+                                   elapsed_seconds=time.monotonic() - call_start)
+                    durable(rawdir / "http-transports.json", transports)
+                    raise RuntimeError("owned-response-byte-cap")
+                chunks.append(chunk)
+            body = b"".join(chunks)
+            headers=kwargs.get('headers') or {}
+            auth=headers.get('Authorization') or headers.get('authorization') or ''
+            bearer=auth.removeprefix('Bearer ') if isinstance(auth,str) else ''
+            if bearer and bearer != auth and bearer.encode() in body:
+                raise ValueError('capture-credential-echo-suppressed')
+            response._content, response._content_consumed = body, True
+            response.close()
+            receipt.update(status="completed", status_code=int(response.status_code),
+                           response_bytes=size, response_sha256=sha(body),
+                           elapsed_seconds=time.monotonic() - call_start)
+            durable(rawdir / "http-transports.json", transports)
+            return response
+        except Exception as exc:
+            if receipt["status"] == "in_flight":
+                receipt.update(status="transport_error", error_class=type(exc).__name__,
+                               elapsed_seconds=time.monotonic() - call_start)
+            durable(rawdir / "http-transports.json", transports)
+            raise
+        finally:
+            signal.setitimer(signal.ITIMER_REAL, *prev_timer)
+            signal.signal(signal.SIGALRM, prev_handler)
+
+    requests.request = bounded_request
+    try:
+        receipts = [{"source_id": item["source_id"],
+                     "url_sha256": sha((item["url"] or "").encode()),
+                     "status": item["_capture_initial_state"]}
+                    for item in inventory]
+        durable(outdir / "receipts.json", receipts)
+        health_response = requests.request("GET", client.server + "/health")
+        health = strict_json(health_response.content)
+        runtime = health.get("runtime") or {}
+        if (health_response.status_code != 200 or health.get("status") != "ok"
+                or runtime.get("model") != "free" or not isinstance(runtime.get("revision"), str)
+                or not runtime["revision"].strip() or runtime["revision"] == "unknown"):
+            raise RuntimeError("candidate-health-identity-rejected")
+        identity = {"status": "ok", "configured_model": "free",
+                    "observed_model": str(runtime["model"]),
+                    "observed_revision": str(runtime["revision"])}
+        durable(outdir / "health-identity.json", identity)
+        active_timeout = REQUEST_TIMEOUT
+        for index, item in enumerate(inventory):
+            if time.monotonic() >= deadline_monotonic:
+                for remaining in receipts[index:]:
+                    remaining["status"] = "not_attempted_stage_deadline"
+                break
+            row = receipts[index]
+            if not item["_capture_eligible"]:
+                durable(outdir / "receipts.json", receipts)
+                continue
+            row["status"] = "in_flight"
+            durable(outdir / "receipts.json", receipts)
+            call_count_before = attempts
+            try:
+                result = client.scrape(item["url"], formats=["markdown"],
+                                       only_main_content=True, timeout=REQUEST_TIMEOUT * 1000)
+                if attempts - call_count_before != 1:
+                    raise CaptureBudgetError("one-owned-api-call-per-source-violated")
+                if time.monotonic() >= deadline_monotonic:
+                    row.update(status="completed_after_stage_deadline", accepted=False)
+                    for remaining in receipts[index + 1:]:
+                        remaining["status"] = "not_attempted_stage_deadline"
+                    durable(outdir / "receipts.json", receipts)
+                    break
+                accepted,markdown,classification=capture_acceptance(result)
+                row['consumer_classification']=classification
+                failed=not accepted
+                if failed:
+                    row.update(status="failed_or_refused", accepted=False,
+                               outcome_sha256=sha(json.dumps(result, sort_keys=True, default=str).encode()))
+                else:
+                    raw = {"source_id": item["source_id"],
+                           "url": item["url"], "markdown": markdown}
+                    raw_bytes = json.dumps(raw, ensure_ascii=False, sort_keys=True).encode()
+                    raw_path = rawdir / f"source-{index + 1:04d}.json"
+                    with open(raw_path, "xb") as stream:
+                        stream.write(raw_bytes); stream.flush(); os.fsync(stream.fileno())
+                    bounded = markdown[:8000]
+                    row.update(status="captured", accepted=True, captured_bytes=len(markdown.encode()),
+                               captured_sha256=sha(markdown.encode()),
+                               assessment_context_characters=len(bounded),
+                               assessment_context_sha256=sha(bounded.encode()),
+                               assessment_context_truncated=len(markdown) > 8000,
+                               raw_path=f"{RAW_DIR}/{raw_path.name}")
+            except CaptureBudgetError as exc:
+                row.update(status="error", accepted=False, error_class=type(exc).__name__)
+                for remaining in receipts[index + 1:]:
+                    remaining["status"] = "not_attempted_terminal_error"
+                durable(outdir / "receipts.json", receipts)
+                raise
+            except Exception as exc:
+                row.update(status="error", accepted=False, error_class=type(exc).__name__)
+            durable(outdir / "receipts.json", receipts)
+        if time.monotonic() >= deadline_monotonic:
+            for row in receipts:
+                if row["status"] == "pending":
+                    row["status"] = "not_attempted_stage_deadline"
+            durable(outdir / "receipts.json", receipts)
+        terminal = {"captured", "failed_or_refused", "error",
+                    "unsupported_url_not_attempted", "duplicate_url_not_attempted"}
+        complete = all(row["status"] in terminal for row in receipts)
+        result = {"schema": "exp077-source-capture/1", "status": "complete" if complete
+                  and time.monotonic() < deadline_monotonic else "incomplete",
+                  "synthetic": False, "admission": admission,
+                  "stage_clock": {k: v for k, v in stage_clock.items() if k != "remaining_seconds"},
+                  "owned_http_attempts_including_health": attempts,
+                  "owned_http_capture_attempts": max(0, attempts - 1),
+                  "owned_health_attempts": 1,
+                  "internal_service_calls": "unknown unless independently exposed by scraper service; not bounded by owned HTTP cap",
+                  "runtime_identity": identity, "inventory_count": len(inventory),
+                  "captures": receipts}
+        durable(outdir / "capture.json", result)
+        return result
+    finally:
+        requests.request = original
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", choices=("offline", "live"), default="offline")
+    parser.add_argument("--outdir", required=True, type=Path)
+    parser.add_argument("--inventory", type=Path)
+    parser.add_argument("--stage-clock", type=Path)
+    parser.add_argument("--qualification", type=Path)
+    parser.add_argument("--cli-path", type=Path)
+    args = parser.parse_args(argv)
+    admission = validate_static(live=args.mode == "live")
+    if args.mode == "offline":
+        return offline_fixture(args.outdir)
+    # Live is deliberately blocked until a separately reviewed, exact-hash
+    # qualification is written after offline tests. Never infer permission.
+    if not args.qualification or not args.inventory or not args.cli_path or not args.stage_clock:
+        raise ValueError("live-requires-inventory-cli-stage-clock-and-qualification")
+    qraw = safe_file(args.qualification)
+    q = strict_json(qraw)
+    expected = {name: sha(safe_file(HERE / name))
+                for name in ("capture-runner.py.txt", "answer-runner.py.txt", "runner-tests.py.txt",
+                             "answerer-prompt.txt", "answerer.schema.json")}
+    verify_qualification(q, qraw, args.qualification, expected)
+    if any(q.get("source_pins", {}).get(path) != digest
+           for path, digest in admission["candidate_source_sha256"].items()):
+        raise ValueError("qualification-candidate-pins")
+    if args.outdir.exists() or args.outdir.is_symlink():
+        raise ValueError("outdir-exists-or-symlink")
+    if args.cli_path.is_symlink() or not args.cli_path.is_file():
+        raise ValueError("cli-path-invalid")
+    cli_hash = sha(safe_file(args.cli_path))
+    external_pins = q.get("external_source_pins")
+    external_cli = external_pins.get("groktocrawl_cli") if isinstance(external_pins, dict) else None
+    if (not isinstance(external_cli, dict) or set(external_cli) != {"sha256", "revision"}
+            or external_cli.get("sha256") != cli_hash
+            or not re.fullmatch(r"[0-9a-f]{40}", str(external_cli.get("revision", "")))):
+        raise ValueError("qualification-cli-pin-mismatch")
+    admission["cli_sha256"] = cli_hash
+    admission["cli_source_revision"] = external_cli["revision"]
+    inventory_raw = safe_file(args.inventory)
+    inventory_obj, rows = validate_inventory(inventory_raw)
+    stage_clock_raw = safe_file(args.stage_clock)
+    stage_clock = validate_stage_clock(stage_clock_raw, admission)
+    if stage_clock.get("source_revision") != q.get("qualified_source_revision"):
+        raise ValueError("stage-clock-qualified-revision-mismatch")
+    if q.get("protocol_sha256") != admission["protocol_sha256"]:
+        raise ValueError("qualification-protocol-pin-mismatch")
+    integrity = strict_json(safe_file(HERE / "integrity-contract.json"))
+    registration_path = HERE / Path(integrity["registration_path"]).name
+    registration_raw = safe_file(registration_path)
+    if q.get("registration_sha256") != sha(registration_raw):
+        raise ValueError("qualification-registration-pin-mismatch")
+    if q.get("stage_manifest_sha256") != stage_clock["stage_manifest_sha256"]:
+        raise ValueError("qualification-stage-manifest-pin-mismatch")
+    if (inventory_obj.get("stage_id") != stage_clock["stage_id"]
+            or inventory_obj.get("stage_clock_digest") != stage_clock["stage_clock_digest"]
+            or inventory_obj.get("stage_manifest_sha256") != stage_clock["stage_manifest_sha256"]):
+        raise ValueError("inventory-stage-clock-binding")
+    manifest_hash = sha(inventory_raw)
+    acquire_lease(manifest_hash)
+    args.outdir.mkdir(parents=True, mode=0o700)
+    durable(args.outdir / "admission.json", {**admission, "inventory_sha256": manifest_hash,
+             "inventory_count": len(rows), "lease_digest": manifest_hash,
+             "stage_clock": {k: v for k, v in stage_clock.items() if k != "remaining_seconds"}, "synthetic": False})
+    # Credentials and endpoint are imported/loaded only in the live worker,
+    # after admission, qualification, input, destination and lease checks.
+    try:
+        return live_capture(rows, args.cli_path, args.outdir, admission, stage_clock)
+    except Exception as exc:
+        durable(args.outdir / "terminal-error.json", {"error_class": type(exc).__name__,
+                 "phase": "live_capture", "inventory_sha256": manifest_hash})
+        raise
+
+
+if __name__ == "__main__":
+    main()
