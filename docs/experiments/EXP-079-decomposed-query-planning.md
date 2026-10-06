@@ -17,3 +17,7 @@ Fixed-corpus paper recovery: 0.2083 → 0.7500; absolute gain 0.5417, adjusted i
 [Shared readout](evidence/QUERY-PLANNING-2026-10-06/readout.md), [qualified decisions](evidence/QUERY-PLANNING-2026-10-06/decision-summary.json), [raw receipts](evidence/QUERY-PLANNING-2026-10-06/receipts.jsonl), and [analysis](evidence/QUERY-PLANNING-2026-10-06/analysis-rows.json) retain all outcomes and limitations. No runtime code change or implementation PR. Documentation persistence PR: pending.
 
 Documentation persistence: [PR #678](https://github.com/magnus919/SlopSearX/pull/678).
+
+## Capability delivery — 2026-10-06
+
+The maintainer subsequently authorized production-grade caller-directed planning interfaces. [PR #685](https://github.com/magnus919/SlopSearX/pull/685) merged as `f244683716c74ccc25869fa94019ce2d36628351` after complete CI and a substantive Droid LGTM. [Delivery evidence](QUERY_PLANNING_DELIVERY.md) records exact-head gates, fixes, merged-state checks and rollback. This delivers validated optional interfaces; it does not change the original experiment outcome, qualify an automatic model planner, or claim new answer-quality evidence.
