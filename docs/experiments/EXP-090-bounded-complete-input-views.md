@@ -1,6 +1,6 @@
 # EXP-090 — bounded complete-input views
 
-Status: first setup stopped before grading; corrected source must be qualified before a fresh setup.
+Status: terminal and inconclusive; complete byte delivery verified, but the source submission violated the exact transcript rule.
 
 EXP-089 received the assessor’s actual final JSON, but its required source array was empty. Its [terminal diagnostic](evidence/EXP-089/completed/readout.md) shows truncated bulk reads and a subsequent lossy preview. This stage tests a narrow delivery change: addressable views of the exact original assessment packet. It does not assume truncation caused the empty response.
 
@@ -15,3 +15,5 @@ The discriminating probe is the first fresh source assessment with verified comp
 See the [protocol](evidence/EXP-090/protocol.json) and [production acceptance checklist](complete-pool-production-acceptance.md). This remains an experiment, separate from mainline GroktoCrawl and production implementation.
 
 The [first setup receipt](evidence/EXP-090/setup-only/readout.md) retains the controller-to-preparer proof mismatch. Health passed; no grading or quality analysis occurred. Its clock and lease are terminal and receive no credit in the corrected setup.
+
+The [terminal readout](evidence/EXP-090/completed/readout.md) records all 43 pages delivered and the extra failed zero-index request. No source grade or quality result was accepted. The bounded diagnostic loop has stopped with a prospective explicit-index/command-schedule proposal.
