@@ -1,0 +1,386 @@
+"""EXP-078 capture and answer bindings to its own phase admission.
+
+The EXP-077 implementations below are called only as portable transport and
+packet helpers. Their legacy study admission and terminal receipts are never
+used as EXP-078 qualification evidence. This module has no import-time I/O.
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+import re
+from pathlib import Path
+import time
+import sys
+from datetime import datetime, timezone
+
+import httpx
+
+HERE = Path(__file__).resolve().parent
+EXP077 = HERE.parent / "EXP-077"
+EXP083 = HERE.parent / "EXP-083"
+REPO = HERE.parents[3]
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
+
+def _load(name: str, path: Path):
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("pinned-helper-unavailable")
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    if spec is None:
+        raise ValueError("pinned-helper-loader")
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical(value) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def shared_stage_elapsed(clock: dict) -> float:
+    started = datetime.fromisoformat(clock["stage_started_utc"].replace("Z", "+00:00"))
+    if started.tzinfo is None or started.utcoffset().total_seconds() != 0:
+        raise ValueError("exp078-stage-clock-timezone")
+    return max(0.0, (datetime.now(timezone.utc) - started).total_seconds())
+
+
+def write_once(path: Path, value) -> dict:
+    raw = value if type(value) is bytes else canonical(value)
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+    directory = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
+    return {"path": path.name, "sha256": sha(raw), "bytes": len(raw)}
+
+
+def _phase(admission, stage_permit, name: str, stage_outdir: Path,
+           phase_outdir: Path, clock_bytes: bytes):
+    if not isinstance(clock_bytes, bytes) or not clock_bytes:
+        raise ValueError("exp078-clock-bytes-required")
+    stage_root = Path(stage_outdir).resolve()
+    phase_root = Path(phase_outdir).resolve()
+    if phase_root == stage_root or not phase_root.is_relative_to(stage_root):
+        raise ValueError("exp078-phase-output-must-be-inside-stage")
+    phase_permit = admission.acquire_phase(stage_permit, name, stage_root, clock_bytes)
+    admission.require_phase(phase_permit, clock_bytes, stage_root)
+    return phase_permit
+
+
+def validate_answer_coverage(assignments: list[dict], cases: list[dict]) -> None:
+    research_ids = [case.get("id") for case in cases if case.get("kind") == "research"]
+    if len(research_ids) != 8 or len(set(research_ids)) != 8:
+        raise ValueError("exp078-answer-research-cohort")
+    observed = []
+    for assignment in assignments:
+        if not isinstance(assignment, dict):
+            raise ValueError("exp078-answer-assignment-shape")
+        model_input = assignment.get("model_input")
+        binding = assignment.get("private_binding")
+        if not isinstance(model_input, dict) or not isinstance(binding, dict):
+            raise ValueError("exp078-answer-assignment-shape")
+        task = model_input.get("task")
+        if not isinstance(task, dict):
+            raise ValueError("exp078-answer-assignment-task")
+        observed.append((task.get("task_id"), binding.get("arm_id")))
+    expected = {(task_id, arm) for task_id in research_ids for arm in ("w0", "candidate")}
+    if len(observed) != 16 or set(observed) != expected:
+        raise ValueError("exp078-answer-assignment-coverage")
+
+
+def validate_inventory(inventory: dict) -> list[dict]:
+    if (not isinstance(inventory, dict) or inventory.get("schema") != "exp078-capture-inventory/1"
+            or inventory.get("synthetic") is not False or not isinstance(inventory.get("sources"), list)
+            or len(inventory["sources"]) > 640):
+        raise ValueError("exp078-capture-inventory")
+    helper = _load("exp083_capture_transport_helper", EXP083 / "capture-runner.py.txt")
+    rows, ids, urls = [], set(), set()
+    for source in inventory["sources"]:
+        if (not isinstance(source, dict) or set(source) != {"source_id", "url", "title"}
+                or not isinstance(source["source_id"], str) or not source["source_id"]
+                or source["source_id"] in ids or not isinstance(source["title"], str)
+                or (source["url"] is not None and not isinstance(source["url"], str))):
+            raise ValueError("exp078-capture-source-row")
+        ids.add(source["source_id"])
+        eligible, status = False, "unsupported_url_not_attempted"
+        url = source["url"]
+        if isinstance(url, str):
+            try:
+                helper.validate_public_url(url)
+                if url in urls:
+                    status = "duplicate_url_not_attempted"
+                else:
+                    urls.add(url)
+                    eligible, status = True, "pending"
+            except ValueError:
+                status = "unsupported_url_not_attempted"
+        rows.append({**source, "_capture_eligible": eligible, "_capture_initial_state": status})
+    return rows
+
+
+def capture_inventory(acquisition: dict, cases: list[dict]) -> tuple[dict, dict]:
+    """Derive one shared capture inventory from every effective research pool."""
+    if not isinstance(acquisition, dict) or acquisition.get("schema") != "exp078-effective-acquisition/1":
+        raise ValueError("exp078-effective-acquisition-required")
+    research = [case for case in cases if case.get("kind") == "research"]
+    if len(research) != 8 or len({case["id"] for case in research}) != 8:
+        raise ValueError("exp078-eight-research-cases-required")
+    sources, source_rows, card_sources = [], {}, {}
+    source_map = acquisition.get("source_id_by_card_id")
+    native_map = acquisition.get("native_results_by_card_id")
+    if not isinstance(source_map, dict) or not isinstance(native_map, dict):
+        raise ValueError("exp078-native-source-bindings-required")
+    for case in research:
+        case_id = case["id"]
+        pool = acquisition.get("pools", {}).get(case_id)
+        source_ids = source_map.get(case_id)
+        native_results = native_map.get(case_id)
+        if (not isinstance(pool, dict) or not isinstance(pool.get("cards"), list)
+                or not isinstance(source_ids, dict) or not isinstance(native_results, dict)):
+            raise ValueError("exp078-research-pool-missing-for-capture")
+        cards = pool["cards"]
+        if len(cards) > 80:
+            raise ValueError("exp078-research-pool-card-cap")
+        for index, card in enumerate(cards):
+            if not isinstance(card, dict) or set(card) != {"id", "url", "title", "snippet"}:
+                raise ValueError("exp078-research-card-shape")
+            card_id = card["id"]
+            source_id = source_ids.get(card_id)
+            native = native_results.get(card_id)
+            if not isinstance(card_id, str) or not card_id or not isinstance(source_id, str) or not source_id:
+                raise ValueError("exp078-research-card-identity")
+            if not isinstance(native, dict):
+                raise ValueError("exp078-native-result-missing")
+            url = native.get("url")
+            if url is not None and not isinstance(url, str):
+                raise ValueError("exp078-native-url-type")
+            if isinstance(url, str) and url:
+                expected_source_id = "u" + sha(url.split("#", 1)[0].encode("utf-8"))
+            else:
+                native_wire = canonical({"task_id": case_id, "result_index": index, "result": native})
+                expected_source_id = "r" + sha(native_wire)
+            if expected_source_id != source_id:
+                raise ValueError("exp078-native-source-id-binding")
+            row = {"source_id": source_id, "url": url, "title": native.get("title") or ""}
+            prior = source_rows.get(source_id)
+            if prior is not None:
+                prior_url = prior["url"]
+                prior_base = prior_url.split("#", 1)[0] if isinstance(prior_url, str) else prior_url
+                base = url.split("#", 1)[0] if isinstance(url, str) else url
+                if prior_base != base:
+                    raise ValueError("exp078-source-identity-url-collision")
+            else:
+                source_rows[source_id] = row
+                sources.append(row)
+            card_sources[f"{case_id}:{card_id}"] = source_id
+    if len(sources) > 640:
+        raise ValueError("exp078-capture-inventory-over-cap")
+    inventory = {"schema": "exp078-capture-inventory/1", "synthetic": False, "sources": sources}
+    # Ensure no duplicate source identity was accidentally introduced by null URLs.
+    if len({row["source_id"] for row in sources}) != len(sources):
+        raise ValueError("exp078-capture-source-identity-duplicate")
+    return inventory, {"schema": "exp078-card-source-binding/1", "card_sources": card_sources}
+
+
+def run_capture(*, acquisition: dict, cases: list[dict],
+                cli_path: Path, source_integrity: dict,
+                stage_outdir: Path, outdir: Path, admission, stage_permit, clock: dict, clock_bytes: bytes,
+                clock_sha256: str) -> dict:
+    """Capture at most 640 distinct public HTTPS URLs plus one health request."""
+    if outdir.exists() or outdir.is_symlink():
+        raise ValueError("exp078-capture-output-must-be-new")
+    inventory, binding = capture_inventory(acquisition, cases)
+    rows = validate_inventory(inventory)
+    pins = source_integrity.get("external_source_pins") if isinstance(source_integrity, dict) else None
+    cli_pin = pins.get("groktocrawl_cli") if isinstance(pins, dict) else None
+    if (not isinstance(cli_pin, dict) or set(cli_pin) != {"sha256", "revision"}
+            or not isinstance(cli_pin.get("sha256"), str)
+            or not re.fullmatch(r"[0-9a-f]{64}", cli_pin["sha256"])
+            or not isinstance(cli_pin.get("revision"), str)
+            or not re.fullmatch(r"[0-9a-f]{40}", cli_pin["revision"])):
+        raise ValueError("exp078-qualified-cli-pin-required")
+    cli_sha256 = cli_pin["sha256"]
+    if sha(clock_bytes) != clock_sha256 or json.loads(clock_bytes) != clock:
+        raise ValueError("exp078-capture-clock-binding")
+    outdir.mkdir(mode=0o700, parents=True, exist_ok=False)
+    phase_permit = _phase(admission, stage_permit, "capture", stage_outdir, outdir, clock_bytes)
+    stage_root = Path(stage_outdir).resolve()
+    admission.require_phase(phase_permit, clock_bytes, stage_root)
+    helper = _load("exp083_capture_runner", EXP083 / "capture-runner.py.txt")
+    # live_capture re-reads and hashes the executable before import. The pin
+    # was independently admitted by the EXP-078 source closure.
+    if helper.sha(helper.safe_file(cli_path)) != cli_sha256:
+        raise ValueError("exp078-cli-source-pin")
+    import requests
+    original = requests.request
+    checks = {"owned_http_dispatches": 0}
+
+    def guarded_request(*args, **kwargs):
+        admission.require_phase(phase_permit, clock_bytes, stage_root)
+        checks["owned_http_dispatches"] += 1
+        if checks["owned_http_dispatches"] > 641:
+            raise ValueError("exp078-capture-http-budget")
+        return original(*args, **kwargs)
+
+    requests.request = guarded_request
+    helper_out = outdir / "portable-capture-wire"
+    helper_out.mkdir(mode=0o700)
+    binding_ref = write_once(outdir / "card-source-binding.json", binding)
+    capture_started = time.monotonic()
+    try:
+        # Reusable helper's admission argument is only an already-verified
+        # source digest needed for its pre-import check; EXP-078 owns admission.
+        helper_receipt = helper.live_capture(rows, cli_path, helper_out,
+            {"cli_sha256": cli_sha256}, clock)
+    except BaseException as exc:
+        native_receipt = helper_out / "capture.json"
+        raw = helper.safe_file(native_receipt) if native_receipt.is_file() and not native_receipt.is_symlink() else b""
+        failed = {"schema": "exp078-capture-phase/1", "stage": "development",
+                  "status": "incomplete", "synthetic": False,
+                  "quality_credit": False, "adoption_eligible": False,
+                  "stage_clock_sha256": clock_sha256,
+                  "terminal_error_class": type(exc).__name__,
+                  "owned_http_attempt_receipt_sha256": sha(raw) if raw else None,
+                  "owned_dispatch_count": checks["owned_http_dispatches"],
+                  "shared_stage_elapsed_seconds": shared_stage_elapsed(clock),
+                  "capture_phase_elapsed_seconds": time.monotonic() - capture_started}
+        write_once(outdir / "capture-phase-terminal.json", failed)
+        raise
+    finally:
+        requests.request = original
+    receipt_path = helper_out / "capture.json"
+    raw = helper.safe_file(receipt_path)
+    result = {"schema": "exp078-capture-phase/1", "stage": "development",
+              "status": helper_receipt.get("status"), "synthetic": False,
+              "quality_credit": False, "adoption_eligible": False,
+              "stage_clock_sha256": clock_sha256,
+              "owned_http_capture_attempts": helper_receipt.get("owned_http_capture_attempts"),
+              "owned_health_attempts": helper_receipt.get("owned_health_attempts"),
+              "runtime_identity": helper_receipt.get("runtime_identity"),
+              "internal_service_calls": "unknown", "helper_wire_receipt_sha256": sha(raw),
+              "shared_stage_elapsed_seconds": shared_stage_elapsed(clock),
+              "capture_phase_elapsed_seconds": time.monotonic() - capture_started,
+              "card_source_binding_sha256": binding_ref["sha256"],
+              "helper_wire_receipt_path": "portable-capture-wire/capture.json"}
+    result_ref = write_once(outdir / "capture-phase.json", result)
+    result["receipt"] = result_ref
+    return result
+
+
+class _GuardedHTTPTransport(httpx.BaseTransport):
+    """Sync HTTPX transport checking the EXP-078 permit before each send."""
+    def __init__(self, inner, admission, phase_permit, clock_bytes, stage_outdir, limit):
+        if not isinstance(inner, httpx.BaseTransport):
+            raise ValueError("exp078-answer-transport-type")
+        self.inner, self.admission = inner, admission
+        self.phase_permit, self.clock_bytes, self.stage_outdir = phase_permit, clock_bytes, Path(stage_outdir).resolve()
+        self.limit, self.calls = limit, 0
+
+    def handle_request(self, request):
+        self.admission.require_phase(self.phase_permit, self.clock_bytes, self.stage_outdir)
+        self.calls += 1
+        if self.calls > self.limit:
+            raise ValueError("exp078-answer-http-budget")
+        return self.inner.handle_request(request)
+
+    def close(self):
+        self.inner.close()
+
+
+def run_answers(*, assignments: list[dict], cases: list[dict], prompt: str, schema: dict,
+                stage_outdir: Path, outdir: Path, admission, stage_permit, clock: dict, clock_bytes: bytes,
+                clock_sha256: str, offline_transport=None, offline: bool = False) -> dict:
+    """Run two readiness plus sixteen answer requests under one phase permit."""
+    if outdir.exists() or outdir.is_symlink():
+        raise ValueError("exp078-answer-output-must-be-new")
+    if not isinstance(assignments, list) or len(assignments) != 16:
+        raise ValueError("exp078-answer-assignment-count")
+    validate_answer_coverage(assignments, cases)
+    if sha(clock_bytes) != clock_sha256 or json.loads(clock_bytes) != clock:
+        raise ValueError("exp078-answer-clock-binding")
+    outdir.mkdir(mode=0o700, parents=True, exist_ok=False)
+    phase_permit = None
+    if offline:
+        if offline_transport is None:
+            raise ValueError("exp078-answer-offline-requires-mock-transport")
+    else:
+        if stage_permit is None or admission is None or offline_transport is not None:
+            raise ValueError("exp078-answer-live-requires-common-admission")
+        phase_permit = _phase(admission, stage_permit, "answer", stage_outdir, outdir, clock_bytes)
+        admission.require_phase(phase_permit, clock_bytes, Path(stage_outdir).resolve())
+    answer_runner = _load("exp078_answer_runner", EXP077 / "answer-runner.py.txt")
+    packet = {"schema": "exp077-answer-packet/1", "synthetic": False,
+              "stage_id": clock["stage_id"], "stage_clock_digest": clock_sha256,
+              "assignments": assignments}
+    validated_schema = answer_runner.validate_schema(canonical(schema))
+    answer_runner.validate_packet(canonical(packet), validated_schema)
+    if offline:
+        endpoint, api_key = "https://fixture.invalid/v1/chat/completions", "exp078-offline-fixture"
+        transport = offline_transport
+    else:
+        endpoint = os.environ.get("LLM_BASE_URL", "")
+        api_key = os.environ.get("LLM_API_KEY", "")
+        if not endpoint or not api_key:
+            raise ValueError("exp078-answer-configuration-unavailable-after-admission")
+        import httpx
+        transport = _GuardedHTTPTransport(httpx.HTTPTransport(retries=0, trust_env=False),
+            admission, phase_permit, clock_bytes, stage_outdir, 18)
+    helper_out = outdir / "portable-answer-wire"
+    helper_out.mkdir(mode=0o700)
+    started = time.monotonic()
+    try:
+        helper_result = answer_runner.run_answers(assignments, prompt, schema, endpoint, api_key,
+                                                   helper_out, clock, transport=transport)
+    except BaseException as exc:
+        receipt_path = helper_out / "call-receipts.json"
+        raw = receipt_path.read_bytes() if receipt_path.is_file() and not receipt_path.is_symlink() else b""
+        failed = {"schema": "exp078-answer-phase/1", "stage": "development",
+                  "status": "incomplete", "synthetic": offline,
+                  "quality_credit": False, "adoption_eligible": False,
+                  "stage_clock_sha256": clock_sha256,
+                  "terminal_error_class": type(exc).__name__,
+                  "helper_call_receipts_sha256": sha(raw) if raw else None,
+                  "shared_stage_elapsed_seconds": shared_stage_elapsed(clock),
+                  "answer_phase_elapsed_seconds": time.monotonic() - started}
+        write_once(outdir / "answer-phase-terminal.json", failed)
+        raise
+    elapsed = time.monotonic() - started
+    answer_receipt = helper_out / "answer-run.json"
+    if answer_receipt.is_symlink() or not answer_receipt.is_file():
+        raise ValueError("exp078-answer-helper-receipt-missing")
+    helper_raw = answer_receipt.read_bytes()
+    if not offline:
+        admission.require_phase(phase_permit, clock_bytes, Path(stage_outdir).resolve())
+    status = "complete" if helper_result.get("status") == "complete" and elapsed <= 28_800 else "incomplete"
+    result = {"schema": "exp078-answer-phase/1", "stage": "development",
+              "status": status, "synthetic": offline,
+              "quality_credit": False, "adoption_eligible": False,
+              "stage_clock_sha256": clock_sha256,
+              "owned_api_calls": helper_result.get("owned_api_calls"),
+              "reported_usage": helper_result.get("reported_usage"),
+              "returned_models": helper_result.get("returned_models"),
+              "immutable_model_revision": helper_result.get("immutable_model_revision"),
+              "shared_stage_elapsed_seconds": shared_stage_elapsed(clock),
+              "answer_phase_elapsed_seconds": elapsed,
+              "helper_wire_receipt_sha256": sha(helper_raw),
+              "helper_wire_receipt_path": "portable-answer-wire/answer-run.json"}
+    ref = write_once(outdir / "answer-phase.json", result)
+    result["receipt"] = ref
+    return result

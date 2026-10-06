@@ -1,0 +1,295 @@
+"""Verify the immutable EXP-078 recovery inputs for EXP-083, read-only.
+
+The bridge verifies byte pins and cross-receipt bindings. Runtime configuration
+is treated as opaque bytes; values, endpoints, and keys are never parsed or
+returned. EXP-078 protocol payloads remain data and grant no EXP-083 authority.
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+from pathlib import Path, PurePosixPath
+from typing import Any
+
+HERE = Path(__file__).resolve().parent
+PINS_PATH = HERE / "reuse-input-pins.json"
+EXPECTED_FILES = {
+    "effective-acquisition.json", "acquisition/corrective-query.json",
+    "acquisition/stage-final.json", "acquisition/http/http-001.json",
+    "acquisition/http/http-001.body", "acquisition/reused-inputs.json",
+    "capture/capture-phase-terminal.json", "capture/card-source-binding.json",
+    "capture/portable-capture-wire/private-raw/http-transports.json",
+    "capture/portable-capture-wire/receipts.json", "configuration-binding.json",
+    "development-terminal.json", "stage-clock.json",
+}
+TASK_IDS = [f"d{i}" for i in range(1, 14)]
+TARGET = "https://github.com/sigstore/cosign"
+EXP078_PREPARE_PATH = HERE.parent / "EXP-078" / "prepare.py.txt"
+# Frozen projection/source-identity implementation used to build EXP-078's
+# effective pools. Keep this exact source pinned; do not silently substitute a
+# newer projection when checking the retained recovery input.
+EXP078_PREPARE_SHA256 = "c5e3e3d65a5f1beaeb2419521b3a97bec9a612446fa1bd271e4813814735adfa"
+
+
+class InputError(ValueError):
+    pass
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical_json(value: Any) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def strict_json(raw: bytes) -> Any:
+    def pairs(items):
+        out = {}
+        for key, value in items:
+            if key in out:
+                raise InputError("duplicate-json-key")
+            out[key] = value
+        return out
+
+    def constant(_value):
+        raise InputError("non-finite-json")
+
+    try:
+        return json.loads(raw, object_pairs_hook=pairs, parse_constant=constant)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise InputError("invalid-json") from exc
+
+
+def _read(root: Path, relative: str) -> bytes:
+    rel = PurePosixPath(relative)
+    if rel.is_absolute() or not rel.parts or any(x in {"", ".", ".."} for x in rel.parts):
+        raise InputError("unsafe-input-path")
+    path, cursor = root.joinpath(*rel.parts), root
+    for part in rel.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise InputError("symlink-input")
+    if not path.is_file():
+        raise InputError("missing-input")
+    return path.read_bytes()
+
+
+def _load_pins(pins_path: Path) -> tuple[dict, bytes]:
+    raw = pins_path.read_bytes()
+    pins = strict_json(raw)
+    if (type(pins) is not dict or pins.get("schema") != "exp083-reused-input-pins/1"
+            or pins.get("status") != "registered_input_provenance"
+            or type(pins.get("files")) is not list):
+        raise InputError("pins-schema")
+    rows = pins["files"]
+    names = [row.get("path") for row in rows if type(row) is dict]
+    if len(names) != len(rows) or set(names) != EXPECTED_FILES or len(names) != len(set(names)):
+        raise InputError("pins-membership")
+    for row in rows:
+        digest = row.get("sha256")
+        if (type(digest) is not str or len(digest) != 64
+                or any(ch not in "0123456789abcdef" for ch in digest)
+                or type(row.get("bytes")) is not int or row["bytes"] < 0):
+            raise InputError("pins-entry")
+    if pins.get("file_count") != len(rows) or pins.get("total_bytes") != sum(r["bytes"] for r in rows):
+        raise InputError("pins-count")
+    return pins, raw
+
+
+def verify_input_bundle(bundle_root: Path, pins_path: Path = PINS_PATH) -> dict:
+    """Require exactly the 13 frozen source artifacts and return hash-only proof."""
+    root = Path(bundle_root)
+    if root.is_symlink() or not root.is_dir():
+        raise InputError("bundle-root")
+    pins, pins_raw = _load_pins(pins_path)
+    rows = sorted(pins["files"], key=lambda item: item["path"])
+    actual = set()
+    for base, dirs, files in os.walk(root, followlinks=False):
+        if any((Path(base) / name).is_symlink() for name in dirs):
+            raise InputError("bundle-symlink-directory")
+        for name in files:
+            path = Path(base) / name
+            if path.is_symlink() or not path.is_file():
+                raise InputError("bundle-nonregular-file")
+            actual.add(path.relative_to(root).as_posix())
+    if actual != EXPECTED_FILES:
+        raise InputError("bundle-inventory-mismatch")
+    total = 0
+    for row in rows:
+        raw = _read(root, row["path"])
+        if len(raw) != row["bytes"] or sha(raw) != row["sha256"]:
+            raise InputError("bundle-hash-mismatch")
+        total += len(raw)
+    if total != pins["total_bytes"]:
+        raise InputError("bundle-total-bytes")
+    inventory = {"schema": "exp083-input-bundle/1", "files": rows}
+    config_sha = pins.get("runtime_config_receipt_sha256")
+    actual_config_sha = sha(_read(root, "configuration-binding.json"))
+    if config_sha != actual_config_sha:
+        raise InputError("runtime-config-pin")
+    return {"input_pins_sha256": sha(pins_raw),
+            "input_bundle_sha256": sha(canonical_json(inventory)),
+            "runtime_config_receipt_sha256": config_sha,
+            "file_count": len(rows), "total_bytes": total}
+
+
+def _validate_cards(effective: dict) -> None:
+    pools = effective.get("pools")
+    if type(pools) is not dict or set(pools) != set(TASK_IDS):
+        raise InputError("effective-pool-membership")
+    source_ids, native = effective.get("source_id_by_card_id"), effective.get("native_results_by_card_id")
+    if (type(source_ids) is not dict or type(native) is not dict
+            or set(source_ids) != set(TASK_IDS) or set(native) != set(TASK_IDS)):
+        raise InputError("effective-provenance-map")
+    for task in TASK_IDS:
+        pool = pools[task]
+        cards = pool.get("cards") if type(pool) is dict else None
+        if (type(cards) is not list or pool.get("natural_count") != len(cards)
+                or pool.get("merged_count") != len(cards)):
+            raise InputError("effective-card-count")
+        ids = []
+        for card in cards:
+            if (type(card) is not dict or set(card) != {"id", "url", "title", "snippet"}
+                    or any(type(card[k]) is not str for k in ("id", "url", "title", "snippet"))):
+                raise InputError("effective-card-shape")
+            ids.append(card["id"])
+        if (len(ids) != len(set(ids)) or set(source_ids[task]) != set(ids)
+                or set(native[task]) != set(ids)):
+            raise InputError("effective-card-id-mapping")
+        if (any(type(value) is not str or not value for value in source_ids[task].values())
+                or any(type(value) is not dict for value in native[task].values())):
+            raise InputError("effective-provenance-value")
+
+
+def _frozen_exp078_prepare():
+    path = EXP078_PREPARE_PATH
+    if path.is_symlink() or not path.is_file() or sha(path.read_bytes()) != EXP078_PREPARE_SHA256:
+        raise InputError("frozen-exp078-projector-binding")
+    loader = importlib.machinery.SourceFileLoader("exp083_frozen_exp078_prepare", str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    if spec is None:
+        raise InputError("frozen-exp078-projector-loader")
+    module = importlib.util.module_from_spec(spec)
+    try:
+        loader.exec_module(module)
+    except BaseException as exc:
+        raise InputError("frozen-exp078-projector-import") from exc
+    return module
+
+
+def _validate_correction_pool(effective: dict, query: dict) -> None:
+    """Prove d12 is exactly the ordered correction output, not another pool."""
+    results = query.get("results")
+    if type(results) is not list:
+        raise InputError("correction-results-shape")
+    present = any(type(row) is dict and type(row.get("url")) is str
+                  and row["url"].rstrip("/") == TARGET.rstrip("/") for row in results)
+    if query.get("target_acquired") is not True or not present:
+        raise InputError("correction-target-not-in-results")
+
+    task = "d12"
+    cards = effective["pools"][task]["cards"]
+    native_by_id = effective["native_results_by_card_id"][task]
+    source_by_id = effective["source_id_by_card_id"][task]
+    ordered_native = [native_by_id.get(card["id"]) for card in cards]
+    if ordered_native != results or len(cards) != len(results):
+        raise InputError("d12-pool-receipt-binding")
+
+    prepare = _frozen_exp078_prepare()
+    for index, (card, native) in enumerate(zip(cards, ordered_native)):
+        try:
+            expected_card = prepare.project_card(task, index, native)
+            expected_source = prepare._source_id(native, task, index)
+        except BaseException as exc:
+            raise InputError("d12-pool-projection") from exc
+        if card != expected_card or source_by_id.get(card["id"]) != expected_source:
+            raise InputError("d12-pool-projection")
+
+
+def _validate_correction(root: Path, query: dict, query_raw: bytes) -> None:
+    if (query.get("schema") != "exp078-corrective-query-receipt/1"
+            or query.get("task_id") != "d12" or query.get("query") != "cosign"
+            or query.get("target_url") != TARGET or query.get("engine") != "github"
+            or query.get("status") != "complete" or query.get("effective_pool_source") != "corrective_github_query"
+            or query.get("physical_http_calls") != 1 or query.get("target_acquired") is not True
+            or query.get("partial") is not False or query.get("all_unresponsive") is not False
+            or query.get("cached") is not False):
+        raise InputError("correction-receipt-shape")
+    calls = query.get("http_calls")
+    if type(calls) is not list or len(calls) != 1:
+        raise InputError("correction-call-count")
+    call = calls[0]
+    if (type(call) is not dict or call.get("query_id") != "d12" or call.get("engine") != "github"
+            or call.get("dispatched") is not True or call.get("body_complete") is not True
+            or call.get("body_truncated") is not False or call.get("failure") is not None
+            or call.get("status_code") != 200 or call.get("call_index") != 1
+            or call.get("sidecar_path") != "http-001.json" or call.get("body_path") != "http-001.body"):
+        raise InputError("correction-call-status")
+    side_raw = _read(root, "acquisition/http/http-001.json")
+    body_raw = _read(root, "acquisition/http/http-001.body")
+    side = strict_json(side_raw)
+    if (type(side) is not dict or sha(side_raw) != call.get("sidecar_sha256")
+            or side.get("query_id") != "d12" or side.get("engine") != "github"
+            or side.get("body_complete") is not True or side.get("body_truncated") is not False):
+        raise InputError("correction-sidecar-binding")
+    body_sha = sha(body_raw)
+    if (body_sha != call.get("retained_body_sha256")
+            or body_sha != call.get("response_body_sha256")
+            or len(body_raw) != call.get("retained_body_bytes")
+            or side.get("retained_body_sha256") != body_sha):
+        raise InputError("correction-body-binding")
+
+
+def prepare_recovery_inputs(bundle_root: Path, pins_path: Path = PINS_PATH) -> dict:
+    """Validate all 13 prior effective pools and return them as private data."""
+    root = Path(bundle_root)
+    integrity = verify_input_bundle(root, pins_path)
+    effective_raw = _read(root, "effective-acquisition.json")
+    query_raw = _read(root, "acquisition/corrective-query.json")
+    final_raw = _read(root, "acquisition/stage-final.json")
+    reused_raw = _read(root, "acquisition/reused-inputs.json")
+    terminal_raw = _read(root, "development-terminal.json")
+    clock_raw = _read(root, "stage-clock.json")
+    effective, query, final = strict_json(effective_raw), strict_json(query_raw), strict_json(final_raw)
+    reused, terminal, clock = strict_json(reused_raw), strict_json(terminal_raw), strict_json(clock_raw)
+    if (effective.get("schema") != "exp078-effective-acquisition/1"
+            or effective.get("stage") != "development" or effective.get("synthetic") is not False):
+        raise InputError("effective-acquisition-schema")
+    _validate_correction(root, query, query_raw)
+    _validate_cards(effective)
+    _validate_correction_pool(effective, query)
+    correction_sha = sha(query_raw)
+    prior_d12 = effective.get("historical_d12")
+    if (effective.get("corrective_query_sha256") != correction_sha
+            or type(prior_d12) is not dict or prior_d12.get("effective") is not False
+            or prior_d12.get("target_present") is not False
+            or query.get("original_d12_receipt_sha256") != prior_d12.get("receipt_sha256")):
+        raise InputError("correction-effective-pool-binding")
+    if (final.get("schema") != "exp078-correction-run/1" or final.get("status") != "complete"
+            or final.get("fatal_stop") is not None or final.get("physical_http_calls") != 1
+            or final.get("target_acquired") is not True or final.get("original_d12_modified") is not False
+            or final.get("corrective_query_receipt_sha256") != correction_sha
+            or final.get("stage_id") != query.get("stage_id")):
+        raise InputError("prior-stage-final-binding")
+    if (clock.get("schema") != "exp078-stage-clock/1" or clock.get("stage_id") != final.get("stage_id")
+            or query.get("stage_clock_digest") != final.get("stage_clock_sha256")
+            or sha(clock_raw) != final.get("stage_clock_sha256")):
+        raise InputError("prior-stage-clock-binding")
+    if (terminal.get("schema") != "exp078-development-terminal/1"
+            or terminal.get("status") != "inconclusive"
+            or terminal.get("stage_clock_sha256") != final.get("stage_clock_sha256")):
+        raise InputError("prior-terminal-binding")
+    if (reused.get("schema") != "exp078-reused-inputs-reference/1"
+            or reused.get("historical_d12_receipt_sha256") != prior_d12.get("receipt_sha256")
+            or reused.get("d12_effective_pool_source") != "corrective_github_query"
+            or reused.get("no_predecessor_bytes_modified") is not True):
+        raise InputError("prior-reused-input-binding")
+    return {"schema": "exp083-recovery-inputs/1", "synthetic": False,
+            **integrity, "pools": effective, "correction_receipt": query,
+            "prior_stage_receipt": final, "prior_terminal": terminal,
+            "quality_credit_from_exp078": False}
