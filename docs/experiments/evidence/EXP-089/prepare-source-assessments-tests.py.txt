@@ -1,0 +1,80 @@
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import tempfile
+import types
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp089_prepare_source_assessments", str(HERE / "prepare-source-assessments.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+P = importlib.util.module_from_spec(spec)
+loader.exec_module(P)
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+class SourcePreparationTests(unittest.TestCase):
+    def test_dispatch_overlay_contains_only_48_source_slots(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original_load = importlib.machinery.SourceFileLoader.load_module
+            class FakeLoader:
+                def __init__(self, name, path):
+                    self.path = path
+                def load_module(self):
+                    def prepare(*, output_root, acquisition, cases, guard, source_snapshot_root):
+                        output_root.mkdir(parents=True)
+                        jobs = []
+                        for task in range(1, 9):
+                            for assessor in ("R1", "R2"):
+                                for chunk in range(3):
+                                    logical = f"development-d{task}-source-{assessor}-{chunk+1}"
+                                    raw = b'{"source":"x"}'
+                                    label = b'{"label_binding":{}}'
+                                    (output_root / f"{logical}.json").write_bytes(raw)
+                                    (output_root / f"{logical}.labels.json").write_bytes(label)
+                                    jobs.append({"logical_submission": logical, "role": "source",
+                                        "model_call_required": True, "task_id": f"d{task}",
+                                        "assessor_id": assessor, "chunk_index": chunk,
+                                        "helper_id": f"helper-{chunk}", "input_path": f"{logical}.json",
+                                        "input_bytes": len(raw), "input_sha256": sha(raw),
+                                        "label_binding_path": f"{logical}.labels.json",
+                                        "label_binding_sha256": sha(label)})
+                        jobs.append({"logical_submission":"card-d1-A", "role":"card", "model_call_required":True})
+                        (output_root / "manifest.json").write_text(json.dumps({"jobs":jobs}))
+                        return {"manifest_sha256":"a"*64}
+                    return types.SimpleNamespace(prepare=prepare)
+            importlib.machinery.SourceFileLoader.load_module = FakeLoader.load_module
+            try:
+                proof = {"assignment_count": 16, "record_count": 884, "records": []}
+                result = P.prepare_source_assessments(
+                    output_root=root / "output", acquisition={}, cases=[],
+                    guard=lambda: None, source_snapshot_root=root / "snapshot",
+                    carried_card_references=proof, stage_clock_sha256="3"*64,
+                    protocol_sha256="4"*64, qualified_source_revision="a"*40)
+            finally:
+                importlib.machinery.SourceFileLoader.load_module = original_load
+            self.assertEqual(result["active_source_slot_count"], 48)
+            manifest = json.loads((root / "output" / "source-slot-manifest.json").read_text())
+            self.assertEqual(len(manifest["active_source_slots"]), 48)
+            self.assertTrue(all(row["role"] == "source" for row in manifest["active_source_slots"]))
+            self.assertEqual(manifest["card_reference_dispatch_slots"], 0)
+            self.assertEqual(manifest["model_calls_performed"], 0)
+            self.assertFalse(any("card-d1" in row["logical_submission"] for row in manifest["active_source_slots"]))
+
+    def test_missing_carried_checkpoint_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(P.PrepareError, "carried-card-proof-required"):
+                P.prepare_source_assessments(output_root=Path(tmp) / "new", acquisition={}, cases=[],
+                    guard=lambda: None, source_snapshot_root=Path(tmp) / "snapshot",
+                    carried_card_references={}, stage_clock_sha256="3"*64,
+                    protocol_sha256="4"*64, qualified_source_revision="a"*40)
+
+
+if __name__ == "__main__":
+    unittest.main()

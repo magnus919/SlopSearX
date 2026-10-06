@@ -1,0 +1,233 @@
+"""EXP-089 one-process controller for the frozen card checkpoint and exact final-text continuation.
+
+Import is inert. No search, source capture, provider, credential-file, or model
+I/O occurs unless the caller explicitly invokes a post-admission operation.
+"""
+from __future__ import annotations
+import hashlib
+import hmac
+import importlib.machinery
+import importlib.util
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+from dataclasses import dataclass
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+
+def load(name: str, filename: str):
+    path = HERE / filename
+    relative = path.relative_to(REPO).as_posix()
+    committed = subprocess.run(["git", "show", f"HEAD:{relative}"], cwd=REPO,
+        check=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout
+    if path.is_symlink() or path.read_bytes() != committed:
+        raise ValueError("uncommitted-controller-dependency")
+    if name in sys.modules:
+        module = sys.modules[name]
+        if Path(module.__file__).resolve() != path.resolve():
+            raise ValueError("module-identity-path")
+        return module
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    try:
+        loader.exec_module(module)
+    except BaseException:
+        sys.modules.pop(name, None)
+        raise
+    return module
+
+
+def preflight(bundle_root, cli_path=None):
+    """Verify committed EXP-089 source and the exact frozen input bundle first."""
+    admission = load("exp089_admission", "admission.py.txt")
+    qraw = (HERE / "qualification-integrity.json").read_bytes()
+    q = admission.strict_json(qraw)
+    rraw = (HERE / "registration-integrity.json").read_bytes()
+    integrity = {"study_id": "EXP-089", "synthetic": False,
+        "qualification_sha256": admission.sha(qraw), "registration_sha256": admission.sha(rraw),
+        "qualified_source_revision": q["qualified_source_revision"],
+        "protocol_sha256": admission.sha((HERE / "protocol.json").read_bytes()),
+        "cohorts_sha256": admission.sha((HERE / "cohorts.json").read_bytes()),
+        "stage_manifest_sha256": q["stage_manifest_sha256"],
+        "input_pins_sha256": admission.sha((HERE / "reuse-input-pins.json").read_bytes()),
+        "input_bundle_sha256": q["input_bundle_sha256"],
+        "runtime_config_receipt_sha256": q["runtime_config_receipt_sha256"],
+        "environment": q["environment"], "dependencies": q["dependencies"],
+        "external_source_pins": q["external_source_pins"]}
+    admission.verify_closure(integrity, qraw)  # qualify code before importing the bridge
+    proof = admission.verify_closure(integrity, qraw, Path(bundle_root))
+    cli_pins = integrity.get("external_source_pins")
+    pin = cli_pins.get("groktocrawl_cli") if isinstance(cli_pins, dict) else None
+    if (not isinstance(pin, dict) or set(pin) != {"sha256", "revision"}
+            or not isinstance(pin.get("sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", pin["sha256"])
+            or not isinstance(pin.get("revision"), str) or not re.fullmatch(r"[0-9a-f]{40}", pin["revision"])):
+        raise ValueError("qualified-cli-pin-invalid")
+    cli = Path(cli_path) if cli_path is not None else Path.home() / ".local/bin/groktocrawl"
+    if cli.is_symlink() or not cli.is_file() or hashlib.sha256(cli.read_bytes()).hexdigest() != pin["sha256"]:
+        raise ValueError("pinned-cli-preflight-failed")
+    return admission, integrity, qraw, proof
+
+
+@dataclass(frozen=True)
+class State:
+    outdir: Path
+    bundle_root: Path
+    admission: object
+    permit: object
+    integrity: dict
+    clock: tuple
+    effective_acquisition: dict
+    input_proof: dict
+    carried_card_references: dict
+
+
+def begin(outdir, bundle_root, cli_path=None):
+    """Verify, mint one new EXP-089 clock/lease, then rebase only clock metadata."""
+    admission, integrity, qraw, proof = preflight(bundle_root, cli_path)
+    # Verify the exact process configuration before any stage directory, clock,
+    # or lease is created. Values remain in this frame until admission succeeds.
+    capture_config = _read_bound_capture_configuration(bundle_root, integrity, admission.strict_json)
+    output = Path(outdir)
+    if output.exists() or output.is_symlink():
+        raise ValueError("fresh-stage-output-required")
+    output.mkdir(mode=0o700, parents=False, exist_ok=False)
+    clock = admission.create_stage_clock(output, integrity["qualified_source_revision"])
+    capability = admission.admit_live(output, integrity, qraw, Path(bundle_root))
+    permit = admission.consume_capability(capability)
+    _configure_capture(capture_config)
+    bridge = load("exp089_input_bridge", "input-bridge.py.txt")
+    prepared = bridge.prepare_reused_inputs(Path(bundle_root), stage_clock=clock[0],
+        stage_clock_digest=clock[2])
+    effective = prepared["effective_acquisition"]
+    effective_raw = admission.canonical_json(effective)
+    admission._write_once(output / "effective-input-envelope.json", effective_raw)
+    carried = prepared["carried_card_references"]
+    if type(carried) is not dict or len(carried.get("records", [])) != 16:
+        raise ValueError("carried-card-checkpoint-invalid")
+    # Store only opaque paths/hashes and counts; no grade values are copied.
+    proof = {"assignment_count": 16, "record_count": sum(row.get("record_count", 0) for row in carried["records"]),
+             "records": carried["records"], "manifest_sha256": carried.get("manifest_sha256")}
+    if proof["record_count"] != 884:
+        raise ValueError("carried-card-record-count")
+    admission._write_once(output / "carried-card-proof.json", admission.canonical_json(proof))
+    return State(output, Path(bundle_root), admission, permit, integrity, clock,
+                 effective, prepared["input_integrity"], proof)
+
+
+def _read_bound_capture_configuration(bundle_root, integrity, strict_json=json.loads):
+    """Read current Hermes URL/key in memory and verify the salted frozen binding."""
+    binding_path = Path(bundle_root) / "original" / "configuration-binding.json"
+    if binding_path.is_symlink() or not binding_path.is_file():
+        raise ValueError("runtime-config-receipt-unavailable")
+    binding_raw = binding_path.read_bytes()
+    if hashlib.sha256(binding_raw).hexdigest() != integrity.get("runtime_config_receipt_sha256"):
+        raise ValueError("runtime-config-receipt-binding")
+    binding = strict_json(binding_raw)
+    config = {}
+    for line in (Path.home() / ".hermes" / ".env").read_text().splitlines():
+        line = line.strip().removeprefix("export ")
+        key, sep, value = line.partition("=")
+        if sep and key in {"GROKTOCRAWL_API_URL", "FIRECRAWL_API_URL",
+                           "GROKTOCRAWL_API_KEY", "API_KEY", "FIRECRAWL_API_KEY"}:
+            config[key] = value.strip().strip("\"'")
+    url = config.get("GROKTOCRAWL_API_URL") or config.get("FIRECRAWL_API_URL")
+    key = config.get("GROKTOCRAWL_API_KEY") or config.get("API_KEY") or config.get("FIRECRAWL_API_KEY")
+    try:
+        nonce = bytes.fromhex(binding["nonce"])
+        tag = lambda value: hmac.new(nonce, value.encode(), hashlib.sha256).hexdigest()
+        valid = (url and key and hmac.compare_digest(tag(url.rstrip("/")), binding["server_tag"])
+                 and hmac.compare_digest(tag(key), binding["credential_tag"]))
+    except (KeyError, TypeError, ValueError):
+        valid = False
+    if not valid:
+        raise ValueError("existing-candidate-configuration-changed")
+    return url.rstrip("/"), key
+
+
+def _configure_capture(config):
+    """Install verified settings in process memory after fresh admission only."""
+    url, key = config
+    os.environ["GROKTOCRAWL_API_URL"] = url.rstrip("/")
+    os.environ["GROKTOCRAWL_API_KEY"] = key
+    os.environ["API_KEY"] = key
+
+
+def health_check(state: State, *, client_factory=None):
+    """Perform at most one post-admission health request and retain sanitized outcome.
+
+    Does not load credentials or persist request URL, response body, headers, or
+    exception text. Tests inject only a local fake client.
+    """
+    import httpx
+    clock, clock_raw, clock_sha = state.clock
+    phase = state.admission.acquire_phase(state.permit, "health", state.outdir, clock_raw)
+    state.admission.require_phase(phase, clock_raw, state.outdir)
+    prior_health_path = state.bundle_root / "exp084" / "capture" / "portable-capture-wire" / "health-identity.json"
+    if prior_health_path.is_symlink() or not prior_health_path.is_file():
+        raise ValueError("pinned-health-identity-unavailable")
+    prior_health = json.loads(prior_health_path.read_bytes())
+    expected_revision = prior_health.get("observed_revision") if type(prior_health) is dict else None
+    if (type(prior_health) is not dict or prior_health.get("status") != "ok"
+            or prior_health.get("configured_model") != "free"
+            or prior_health.get("observed_model") != "free"
+            or type(expected_revision) is not str
+            or not re.fullmatch(r"[0-9a-f]{40,64}", expected_revision)):
+        raise ValueError("pinned-health-identity-invalid")
+    base = os.environ.get("GROKTOCRAWL_API_URL") or os.environ.get("FIRECRAWL_API_URL")
+    factory = client_factory or (lambda **kw: httpx.AsyncClient(**kw))
+    attempts = 0
+
+    async def perform():
+        nonlocal attempts
+        safe_status, model, revision = "incomplete", None, None
+        failure_code = None
+        if not isinstance(base, str) or not base.startswith(("http://", "https://")):
+            failure_code = "endpoint_unavailable"
+        else:
+            endpoint = base.rstrip("/")
+            if endpoint.endswith("/v1"):
+                endpoint = endpoint[:-3]
+            url = endpoint + "/health"
+            try:
+                async with factory(timeout=httpx.Timeout(8.0), follow_redirects=False,
+                                   trust_env=False, transport=None) as client:
+                    state.admission.require_phase(phase, clock_raw, state.outdir)
+                    attempts += 1
+                    response = await client.get(url)
+                    response.raise_for_status()
+                    body = response.json()
+                    runtime = body.get("runtime") if type(body) is dict else None
+                    if type(body) is not dict or body.get("status") != "ok" or type(runtime) is not dict:
+                        failure_code = "health_status_invalid"
+                    else:
+                        candidate_model, candidate_revision = runtime.get("model"), runtime.get("revision")
+                        if (candidate_model != "free"
+                                or type(candidate_revision) is not str
+                                or not re.fullmatch(r"[0-9a-f]{40,64}", candidate_revision)):
+                            failure_code = "health_identity_invalid"
+                        elif candidate_revision != expected_revision:
+                            failure_code = "health_revision_mismatch"
+                        else:
+                            safe_status, model, revision = "healthy", candidate_model, candidate_revision
+            except BaseException as exc:
+                if isinstance(exc, (KeyboardInterrupt, SystemExit)):
+                    raise
+                failure_code = "health_exchange_failed" if attempts else "health_client_failed"
+        receipt = {"schema": "exp089-health-receipt/1", "study_id": "EXP-089",
+            "status": safe_status, "model_identity": model, "revision": revision,
+            "stage_clock_sha256": clock_sha, "physical_http_calls": attempts,
+            "failure_code": failure_code, "quality_credit": False,
+            "endpoint_and_response_body_retained": False}
+        state.admission._write_once(state.outdir / "health.json",
+                                    state.admission.canonical_json(receipt))
+        if safe_status != "healthy":
+            raise ValueError(failure_code or "health_check_failed")
+        return receipt
+    return perform()

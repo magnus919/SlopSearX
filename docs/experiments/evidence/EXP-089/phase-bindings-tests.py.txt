@@ -1,0 +1,70 @@
+import importlib.machinery
+import hashlib
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+P = importlib.machinery.SourceFileLoader("exp089_phase_bindings_tests", str(HERE / "phase-bindings.py.txt")).load_module()
+
+
+class FakeAdmission:
+    def __init__(self): self.claimed = []; self.required = []
+    def acquire_phase(self, permit, phase, outdir, clock_bytes):
+        self.claimed.append(phase); return (phase, str(outdir))
+    def require_phase(self, permit, clock_bytes, outdir): self.required.append((permit, str(outdir)))
+
+
+class PhaseBindingTests(unittest.TestCase):
+    def test_card_reference_phase_is_not_claimable(self):
+        admission = FakeAdmission()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); child = root / "card"
+            with self.assertRaisesRegex(ValueError, "not-registered"):
+                P.claim_assessment_phase(admission=admission, stage_permit=object(),
+                    phase="card-reference", stage_outdir=root, phase_outdir=child,
+                    clock_bytes=b"clock")
+        self.assertEqual(admission.claimed, [])
+
+    def test_answer_output_manifest_binds_all_actual_answer_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            answers_dir = root / "answers"; answers_dir.mkdir()
+            calls = [{"kind": "readiness", "task_id": "neutral-1", "status": "http_success"},
+                     {"kind": "readiness", "task_id": "neutral-2", "status": "http_success"}]
+            answers = []
+            for task in range(1, 9):
+                for arm in ("w0", "candidate"):
+                    name = f"d{task}-{arm}.json"
+                    body = json.dumps({"answer": f"{task}-{arm}"}).encode()
+                    (answers_dir / name).write_bytes(body)
+                    digest = hashlib.sha256(body).hexdigest()
+                    answers.append({"task_id": f"d{task}", "arm": arm, "answer_sha256": digest})
+                    calls.append({"kind": "answer", "task_id": f"d{task}", "arm": arm,
+                                  "status": "http_success", "answer_path": name,
+                                  "answer_sha256": digest})
+            run_path = root / "answer-run.json"
+            run_path.write_text(json.dumps({"schema": "exp077-answer-run/1",
+                "status": "complete", "call_receipts": calls, "answers": answers}))
+            frozen = P.freeze_answer_output_manifest(run_path, answers_dir, root / "manifest.json")
+            self.assertEqual(frozen["answer_count"], 16)
+            self.assertEqual(frozen["manifest"]["schema"], "exp089-answer-output-manifest/1")
+            self.assertEqual(len(frozen["manifest"]["answers"]), 16)
+            self.assertEqual(frozen["manifest_sha256"],
+                hashlib.sha256((root / "manifest.json").read_bytes()).hexdigest())
+
+    def test_only_fresh_source_and_answer_assessor_phases_are_claimable(self):
+        for phase in ("source-reference", "answer-assessment"):
+            admission = FakeAdmission()
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp); child = root / phase
+                permit, require = P.claim_assessment_phase(admission=admission,
+                    stage_permit=object(), phase=phase, stage_outdir=root,
+                    phase_outdir=child, clock_bytes=b"clock")
+                require()
+            self.assertEqual(admission.claimed, [phase])
+            self.assertEqual(len(admission.required), 2)
+
+
+if __name__ == "__main__": unittest.main()

@@ -1,0 +1,47 @@
+import json
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+PREVIOUS = HERE.parent / "EXP-088" / "protocol.json"
+CURRENT = HERE / "protocol.json"
+
+
+class ProtocolTests(unittest.TestCase):
+    def test_scientific_candidate_and_quality_gates_are_unchanged(self):
+        old = json.loads(PREVIOUS.read_text())
+        new = json.loads(CURRENT.read_text())
+        for field in ("candidate", "quality", "task_use", "consumer", "jev_invocation"):
+            self.assertEqual(new[field], old[field], field)
+
+    def test_card_phase_is_not_permitted_and_only_sixteen_are_carried(self):
+        protocol = json.loads(CURRENT.read_text())
+        phases = protocol["phase_plan"]["ordered_phases"]
+        self.assertNotIn("card-reference", phases)
+        self.assertFalse(protocol["phase_plan"]["card_reference_phase_permitted"])
+        self.assertEqual(protocol["acquisition"]["carry_forward_card_assignments"], 16)
+        self.assertEqual(protocol["acquisition"]["carry_forward_card_records"], 884)
+        self.assertFalse(protocol["acquisition"]["failed_source_submission_reused"])
+
+    def test_fresh_slots_and_historical_budget_are_explicit(self):
+        protocol = json.loads(CURRENT.read_text())
+        models = protocol["models"]
+        self.assertEqual(models["source_assessment_calls_expected"], 48)
+        self.assertEqual(models["answer_assessment_calls_expected"], 32)
+        self.assertEqual(models["historical_exp088_luna_submissions_counted"], 17)
+        self.assertEqual(models["maximum_logical_luna_submissions_per_stage"], 112)
+        self.assertIn("97 of 112", models["cumulative_development_luna_call_accounting"])
+        self.assertEqual(protocol["confirmation_scope"]["not_run"], True)
+        self.assertIn("entirely new tasks and pools", protocol["confirmation_scope"]["future_requirement"])
+
+    def test_receiver_keeps_exact_unmodified_response(self):
+        protocol = json.loads(CURRENT.read_text())
+        carrier = protocol["final_json_carrier"]
+        self.assertEqual(carrier["maximum_bytes"], 2_000_000)
+        self.assertTrue(carrier["original_parser_unchanged"])
+        self.assertTrue(carrier["raw_final_text_is_authoritative"])
+        self.assertEqual(carrier["missing_or_empty"], "terminal invalid output; no retry")
+
+
+if __name__ == "__main__":
+    unittest.main()
