@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from slopsearx.capabilities import MCPPolicy
-from slopsearx.mcp import dependency_tools, lineage_tools, receipt_tools, staged_tools, tools
+from slopsearx.mcp import dependency_tools, lineage_tools, planning_tools, receipt_tools, staged_tools, tools
 from slopsearx.mcp.server import create_server
 from slopsearx.mcp.tool_registry import (
     TOOL_DEFINITIONS,
@@ -31,6 +31,9 @@ GOLDEN_TOOL_NAMES = (
     "slopsearx_read_results",
     "slopsearx_read_result",
     "slopsearx_read_entities",
+    "slopsearx_plan_research",
+    "slopsearx_plan_query_variants",
+    "slopsearx_plan_research_followup",
     "slopsearx_start_research",
     "slopsearx_get_job",
     "slopsearx_cancel_job",
@@ -60,7 +63,7 @@ GOLDEN_TOOL_NAMES = (
 
 def _exported_tool_names() -> set[str]:
     exported: set[str] = set()
-    for module in (tools, receipt_tools, staged_tools, dependency_tools, lineage_tools):
+    for module in (tools, receipt_tools, staged_tools, dependency_tools, lineage_tools, planning_tools):
         exported.update(
             name
             for name, value in vars(module).items()

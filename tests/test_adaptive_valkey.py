@@ -209,3 +209,31 @@ async def test_extension_serializes_with_lifecycle_requests(state, competitor):
         replay = await t.slopsearx_extend_research(**arguments)
         assert len(replay["queries"]) == 2
         assert replay["budgets"]["used"]["attempts"] == 2
+
+
+async def test_planning_evidence_survives_real_valkey_reload(state, backend):  # noqa: F811
+    from slopsearx.mcp import planning_tools as p
+
+    first = await start(state, max_queries=3, max_attempts=3)
+    attempt = first["queries"][0]["attempts"][0]
+    preview = await p.slopsearx_plan_research_followup(
+        first["job_id"],
+        "evidence followup",
+        parent_attempt_id=attempt["attempt_id"],
+        evidence_result_ids=attempt["admitted_result_ids"][:1],
+        rationale="Inspect the returned lead",
+        subquestion_id="a",
+        engines=["wikipedia"],
+    )
+    assert "error" not in preview, preview
+    args = {**preview["execution"]["arguments"], "continuation_key": "persisted-evidence"}
+    result = await t.slopsearx_extend_research(**args)
+    assert "error" not in result, result
+    loaded = await ResearchJobStore(backend).load(first["job_id"])
+    assert loaded.queries[-1].planning_method == "evidence_followup"
+    assert loaded.queries[-1].evidence_result_ids == attempt["admitted_result_ids"][:1]
+    assert loaded.queries[-1].evidence_engines == ["wikipedia"]
+    before = dict(loaded.budget_used)
+    replay = await t.slopsearx_extend_research(**args)
+    assert replay["budgets"]["used"]["attempts"] == before["attempts"]
+    assert len((await ResearchJobStore(backend).load(first["job_id"])).queries) == 2

@@ -155,7 +155,16 @@ class BrowserWorkflows:
             "state": "partial",
             "revision": 3,
             "summary": "Two subquestions",
-            "details": {"lineage": [{"unsafe": "<img src=x>"}]},
+            "details": {
+                "lineage": [{"unsafe": "<img src=x>"}],
+                "subquestions": [
+                    {
+                        "planning_method": "evidence_followup",
+                        "parent_attempt_id": "parent-1",
+                        "evidence_reference_count": 1,
+                    }
+                ],
+            },
         }
 
     async def cancel_research(self, _context: Any, _object_id: str, revision: int) -> str:
@@ -235,6 +244,8 @@ def test_workflow_console_real_server_browser_journey() -> None:
             page.keyboard.press("Tab")
             assert page.get_by_role("link", name="SlopSearX").evaluate("el => document.activeElement === el")
             page.get_by_role("link", name="Inspect workflow").click()
+            assert "evidence_followup" in page.locator("pre").inner_text()
+            assert "evidence_reference_count" in page.locator("pre").inner_text()
             assert page.locator(".mutations .notice").count() == 1
             assert page.get_by_text("Submit to confirm.").is_visible()
             assert "<img src=x>" not in page.content()

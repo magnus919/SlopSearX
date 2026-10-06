@@ -130,3 +130,7 @@ adaptive jobs alongside new workers. Rollback requires draining adaptive jobs
 before restoring older research workers. Existing HTTP search traffic does not
 activate these jobs. Research records and snapshot handles retain their normal
 retention limits; this feature adds no permanent database.
+
+## Query planning
+
+Use [query-planning previews](QUERY_PLANNING.md) to validate decomposed plans, optional terminology variants and evidence-linked follow-ups before execution. These previews do not search, reserve budgets or decide sufficiency. New query fields `planning_method` and `evidence_result_ids` are additive; parent source scope is server-derived and revalidated on execution and recovery.

@@ -96,6 +96,7 @@ from slopsearx.research import (
     summarize_coverage,
 )
 from slopsearx.research_budget import ResearchMutationError, budget_summary, initialize_budget
+from slopsearx.research_planning import query_identity, validate_planning_metadata, validate_variant
 from slopsearx.retrieval_url import (
     RETRIEVAL_DEPRECATED_SITE_LOCAL_V6 as RETRIEVAL_DEPRECATED_SITE_LOCAL_V6,
 )
@@ -1677,21 +1678,42 @@ def _research_workflow_budget_error(job: ResearchJob) -> dict[str, Any] | None:
     return None
 
 
-def _research_dispatch_error(state: McpState, query: ResearchQuery) -> str | None:
+def _research_dispatch_error(state: McpState, query: ResearchQuery, *, check_evidence: bool = False) -> str | None:
     if not state.policy.tool_enabled("research"):
         return "research grant is disabled"
+    try:
+        validate_planning_metadata(
+            query.planning_method, query.evidence_result_ids, query.parent_attempt_id, query.rationale
+        )
+    except ValueError as exc:
+        return str(exc)
     grant = INTENT_GRANTS.get(query.intent)
     if query.requires_intent_grant and grant and not state.policy.tool_enabled(grant):
         return f"{query.intent} requires the {grant} grant"
     if not query.engines:
         return "research query has no permitted engines"
+    if check_evidence and query.evidence_result_ids:
+        if (
+            not isinstance(query.evidence_engines, list)
+            or not query.evidence_engines
+            or any(not isinstance(name, str) for name in query.evidence_engines)
+        ):
+            return "evidence references have no valid captured source scope"
+        if query.evidence_intent is not None:
+            if not isinstance(query.evidence_intent, str) or query.evidence_intent not in INTENT_PROFILES:
+                return "evidence references have an invalid captured intent"
+            evidence_grant = INTENT_GRANTS.get(query.evidence_intent)
+            if evidence_grant and not state.policy.tool_enabled(evidence_grant):
+                return "captured evidence intent grant has been revoked"
+        if rejection := _enforce_policy(state, query.evidence_engines):
+            return str(rejection["error"]["message"])
     error = _enforce_policy(state, query.engines)
     return str(error["error"]["message"]) if error else None
 
 
 def bind_research_policy(state: McpState) -> None:
     """Keep recovered and retried dispatches behind the shared live policy gate."""
-    state.runner.dispatch_validator = lambda query: _research_dispatch_error(state, query)
+    state.runner.dispatch_validator = lambda query: _research_dispatch_error(state, query, check_evidence=True)
 
 
 def _research_metadata(value: Any, name: str, limit: int = 512) -> str | None:
@@ -1703,7 +1725,16 @@ def _research_metadata(value: Any, name: str, limit: int = 512) -> str | None:
 
 
 def _prepare_research_query(state: McpState, entry: dict[str, Any], max_engines: int) -> ResearchQuery:
-    allowed = {"query", "intent", "engines", "subquestion_id", "rationale", "parent_attempt_id"}
+    allowed = {
+        "query",
+        "intent",
+        "engines",
+        "subquestion_id",
+        "rationale",
+        "parent_attempt_id",
+        "planning_method",
+        "evidence_result_ids",
+    }
     if not isinstance(entry, dict) or set(entry) - allowed:
         raise ResearchMutationError("invalid_input", "invalid research plan entry fields")
     text = entry.get("query")
@@ -1741,22 +1772,54 @@ def _prepare_research_query(state: McpState, entry: dict[str, Any], max_engines:
         rationale=_research_metadata(entry.get("rationale"), "rationale", state.policy.max_query_length),
         parent_attempt_id=_research_metadata(entry.get("parent_attempt_id"), "parent_attempt_id", 128),
         requires_intent_grant=True,
+        planning_method=entry.get("planning_method"),
     )
+    try:
+        query.evidence_result_ids = validate_planning_metadata(
+            query.planning_method, entry.get("evidence_result_ids", []), query.parent_attempt_id, query.rationale
+        )
+    except ValueError as exc:
+        raise ResearchMutationError("invalid_input", str(exc)) from exc
     rejection = _research_dispatch_error(state, query)
     if rejection:
         raise ResearchMutationError("tool_disabled", rejection)
     return query
 
 
-def _validate_research_associations(job: ResearchJob, query: ResearchQuery) -> None:
+def _validate_research_associations(
+    job: ResearchJob, query: ResearchQuery, state: McpState, *, replay: bool = False
+) -> None:
     if query.subquestion_id is not None and query.subquestion_id not in job.subquestions:
         raise ResearchMutationError("invalid_input", "unknown subquestion_id")
-    if query.parent_attempt_id is not None and not any(
-        attempt.attempt_id == query.parent_attempt_id and attempt.state != "running"
+    parents = [
+        (existing, attempt)
         for existing in job.queries
         for attempt in existing.attempts
-    ):
+        if attempt.attempt_id == query.parent_attempt_id and attempt.state != "running"
+    ]
+    if query.parent_attempt_id is not None and not parents:
         raise ResearchMutationError("invalid_input", "parent_attempt_id must identify a terminal attempt in this job")
+    if query.evidence_result_ids:
+        parent_query, parent = parents[0]
+        if parent.state not in {"done", "failed", "cancelled", "expired", "interrupted"}:
+            raise ResearchMutationError("invalid_input", "evidence parent must be a terminal attempt")
+        if not set(query.evidence_result_ids).issubset(parent.admitted_result_ids):
+            raise ResearchMutationError("invalid_result_id", "evidence must be admitted results of the named parent")
+        rejection = _research_dispatch_error(state, parent_query, check_evidence=True)
+        if rejection:
+            raise ResearchMutationError("policy_rejected", rejection)
+        query.evidence_engines = list(parent_query.engines)
+        query.evidence_intent = parent_query.intent if parent_query.requires_intent_grant else None
+    if query.planning_method == "evidence_followup" and not replay:
+        if query.subquestion_id is not None and job.subquestions[query.subquestion_id]["state"] == "resolved":
+            raise ResearchMutationError("invalid_job_state", "subquestion is already caller-resolved")
+        if any(query_identity(query.query, query.engines) == query_identity(q.query, q.engines) for q in job.queries):
+            raise ResearchMutationError("duplicate_query", "query already searched or planned in this scope")
+    if query.planning_method == "terminology_expansion":
+        try:
+            validate_variant(job.question, query.query)
+        except ValueError as exc:
+            raise ResearchMutationError("invalid_input", str(exc)) from exc
 
 
 def _research_limit(value: int | None, ceiling: int, field: str) -> int:
@@ -1896,6 +1959,11 @@ async def slopsearx_start_research(
             warnings: list[str] = []
             for index, query in enumerate(queries):
                 query.index = index
+                if query.planning_method == "terminology_expansion":
+                    try:
+                        validate_variant(question, query.query)
+                    except ValueError as exc:
+                        raise ResearchMutationError("invalid_input", str(exc)) from exc
                 if query.parent_attempt_id is not None:
                     raise ResearchMutationError("invalid_input", "initial queries cannot reference parent attempts")
                 if query.subquestion_id is not None and query.subquestion_id not in declared:
@@ -2152,6 +2220,8 @@ async def slopsearx_extend_research(
     rationale: str | None = None,
     parent_attempt_id: str | None = None,
     continuation_key: str | None = None,
+    planning_method: str | None = None,
+    evidence_result_ids: list[str] | None = None,
 ) -> dict[str, Any]:
     """Append and execute one bounded follow-up query to a research job.
 
@@ -2237,9 +2307,16 @@ async def slopsearx_extend_research(
         new_query.rationale = _research_metadata(rationale, "rationale", state.policy.max_query_length)
         new_query.parent_attempt_id = _research_metadata(parent_attempt_id, "parent_attempt_id", 128)
         new_query.continuation_key = _research_metadata(continuation_key, "continuation_key", 128)
-    except ResearchMutationError as exc:
-        return _error(exc.code, str(exc))
-    equivalent = [
+        new_query.planning_method = planning_method
+        new_query.evidence_result_ids = validate_planning_metadata(
+            planning_method,
+            evidence_result_ids if evidence_result_ids is not None else [],
+            new_query.parent_attempt_id,
+            new_query.rationale,
+        )
+    except (ResearchMutationError, ValueError) as exc:
+        return _error(getattr(exc, "code", "invalid_input"), str(exc))
+    equivalent: list[Any] = [
         new_query.query,
         new_query.intent,
         sorted(new_query.engines),
@@ -2247,6 +2324,14 @@ async def slopsearx_extend_research(
         new_query.rationale,
         new_query.parent_attempt_id,
     ]
+    # Keep legacy continuation digests byte-identical when new metadata is absent.
+    if new_query.planning_method is not None or new_query.evidence_result_ids:
+        equivalent.append(
+            {
+                "planning_method": new_query.planning_method,
+                "evidence_result_ids": sorted(new_query.evidence_result_ids),
+            }
+        )
     new_query.continuation_digest = hashlib.sha256(json.dumps(equivalent).encode()).hexdigest()
     # Read-only replay remains available after completion/deadline. Current
     # caller and scope policy above still applies; no lease or dispatch needed.
@@ -2255,6 +2340,11 @@ async def slopsearx_extend_research(
         if previous is not None:
             if previous.continuation_digest != new_query.continuation_digest:
                 return _error("idempotency_conflict", "continuation_key was used for another request")
+            if new_query.evidence_result_ids:
+                try:
+                    _validate_research_associations(job, new_query, state, replay=True)
+                except ResearchMutationError as exc:
+                    return _error(exc.code, str(exc))
             result = _job_summary(job)
             result["note"] = "returned the current status of the previously accepted continuation"
             return result
@@ -2280,13 +2370,13 @@ async def slopsearx_extend_research(
         initialize_budget(target, state.policy)
         if target.caller_completed:
             raise ResearchMutationError("invalid_job_state", "caller already completed this job")
-        _validate_research_associations(target, new_query)
         if new_query.continuation_key:
             previous = next((q for q in target.queries if q.continuation_key == new_query.continuation_key), None)
             if previous is not None:
                 if previous.continuation_digest != new_query.continuation_digest:
                     raise ResearchMutationError("idempotency_conflict", "continuation_key was used for another request")
                 raise ResearchMutationError("continuation_replayed", "continuation already accepted")
+        _validate_research_associations(target, new_query, state)
         if len(target.queries) >= target.budget_limits["queries"]:
             raise ResearchMutationError("job_budget_exceeded", "job query budget is exhausted")
         for key, amount in (("attempts", 1), ("engine_attempts", len(new_query.engines)), ("results", 1)):
@@ -2294,7 +2384,7 @@ async def slopsearx_extend_research(
                 raise ResearchMutationError("job_budget_exceeded", f"job {key} budget is exhausted")
         if len(new_query.engines) > target.budget_limits["engines_per_query"]:
             raise ResearchMutationError("job_budget_exceeded", "follow-up exceeds per-query engine budget")
-        rejection = _research_dispatch_error(state, new_query)
+        rejection = _research_dispatch_error(state, new_query, check_evidence=True)
         if rejection:
             raise ResearchMutationError("tool_disabled", rejection)
         target.queries.append(dataclasses.replace(new_query, index=len(target.queries)))
@@ -2476,6 +2566,8 @@ def _job_summary(job: ResearchJob) -> dict[str, Any]:
                 "subquestion_id": query.subquestion_id,
                 "rationale": query.rationale,
                 "parent_attempt_id": query.parent_attempt_id,
+                "planning_method": query.planning_method,
+                "evidence_result_ids": query.evidence_result_ids,
                 "continuation_key": query.continuation_key,
                 "attempts": [
                     {

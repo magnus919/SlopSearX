@@ -1086,3 +1086,9 @@ Four prompts are bundled for repeatable workflows: `research_with_source_coverag
 | `all_engines_failed` | Every selected engine failed; check `engine_outcomes` and retry |
 | Research job stuck `running` | Process died; jobs are marked `expired` at next startup |
 | No results but engines `ok` | Legitimate empty match (e.g. jobs tool without a company) |
+
+## Caller-directed query planning
+
+`slopsearx_plan_research`, `slopsearx_plan_query_variants` and `slopsearx_plan_research_followup` require `MCP_GRANT_RESEARCH=1`. All are read-only previews and share current engine policy and execution budgets. Initial previews need no store; follow-up previews require the tenant's research job and unexpired snapshot evidence. The `plan_research_with_evidence` prompt guides decomposition and evidence-conditioned continuation while leaving judgment with the caller.
+
+See [QUERY_PLANNING.md](QUERY_PLANNING.md) for arguments, ready-to-execute payloads, identifier preservation, duplicate handling, policy/expiry/budget errors and rollout/rollback. Ordinary HTTP search and existing research template defaults are unchanged.

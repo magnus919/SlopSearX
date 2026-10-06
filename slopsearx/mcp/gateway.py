@@ -243,6 +243,11 @@ async def research_with_source_coverage(question: str) -> str:
     return _extract_prompt_text(result)
 
 
+async def plan_research_with_evidence(question: str) -> str:
+    result = await _get_session().get_prompt("plan_research_with_evidence", {"question": question})
+    return _extract_prompt_text(result)
+
+
 async def investigate_vulnerability(target: str) -> str:
     result = await _get_session().get_prompt("investigate_vulnerability", {"target": target})
     return _extract_prompt_text(result)
@@ -342,6 +347,7 @@ def create_gateway(
     mcp.prompt()(investigate_vulnerability)
     mcp.prompt()(find_company_jobs)
     mcp.prompt()(compare_package_or_project)
+    mcp.prompt()(plan_research_with_evidence)
 
     return mcp
 

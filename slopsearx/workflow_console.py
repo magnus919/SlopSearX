@@ -25,6 +25,7 @@ from slopsearx.mcp.tools import (
 )
 from slopsearx.portal_auth import PortalAuthContext
 from slopsearx.research import ResearchJobRunner
+from slopsearx.research_planning import validate_planning_metadata
 from slopsearx.research_store import JOB_RETENTION_SECONDS, ResearchJobStore
 from slopsearx.saved_events import public_event
 from slopsearx.saved_models import SavedDefinition
@@ -125,6 +126,26 @@ class WorkflowConsoleService:
         ):
             return False
         for query in job.queries:
+            if query.evidence_result_ids:
+                try:
+                    validate_planning_metadata(
+                        query.planning_method, query.evidence_result_ids, query.parent_attempt_id, query.rationale
+                    )
+                except ValueError:
+                    return False
+                if (
+                    not isinstance(query.evidence_engines, list)
+                    or not query.evidence_engines
+                    or any(not isinstance(name, str) for name in query.evidence_engines)
+                    or not self._engines_allowed(query.evidence_engines)
+                ):
+                    return False
+                if query.evidence_intent is not None:
+                    if not isinstance(query.evidence_intent, str):
+                        return False
+                    evidence_grant = _INTENT_GRANTS.get(query.evidence_intent)
+                    if evidence_grant and not self.policy.tool_enabled(evidence_grant):
+                        return False
             if not self._engines_allowed(list(query.engines)):
                 return False
             grant = _INTENT_GRANTS.get(query.intent)
@@ -266,6 +287,9 @@ class WorkflowConsoleService:
                     {
                         "index": query.index,
                         "state": query.state,
+                        "planning_method": query.planning_method,
+                        "parent_attempt_id": query.parent_attempt_id,
+                        "evidence_reference_count": len(query.evidence_result_ids),
                         "attempts": [{"state": attempt.state, "cursor": attempt.cursor} for attempt in query.attempts],
                     }
                     for query in job.queries

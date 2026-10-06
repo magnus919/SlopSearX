@@ -260,3 +260,40 @@ async def test_dossier_and_saved_reports_use_authoritative_redacted_readers(
     assert "resolved_package_identity" in detail["details"]
     with pytest.raises(WorkflowNotFoundError):
         await console.detail(context("workflow.read"), "saved_search", "saved")
+
+
+async def test_planning_metadata_visible_but_revoked_evidence_denied() -> None:
+    policy = MCPPolicy(enabled_tools={"research": True}, sensitive_engines={"secret"})
+    job = ResearchJob(
+        job_id="planned",
+        question="q",
+        strategy="triangulate",
+        queries=[
+            ResearchQuery(
+                index=0,
+                query="followup",
+                intent="web",
+                engines=["wikipedia"],
+                planning_method="evidence_followup",
+                parent_attempt_id="parent",
+                rationale="Inspect lead",
+                evidence_result_ids=["snapshot:0"],
+                evidence_engines=["wikipedia"],
+            )
+        ],
+    )
+
+    class Jobs(EmptyJobs):
+        async def load(self, _object_id: str) -> Any:
+            return job
+
+    console = service(policy, FakeStaged([]), FakeSaved([]))
+    console.jobs = Jobs()  # type: ignore[assignment]
+    detail = await console.detail(context("workflow.read"), "research", "planned")
+    subquestion = detail["details"]["subquestions"][0]
+    assert subquestion["planning_method"] == "evidence_followup"
+    assert subquestion["parent_attempt_id"] == "parent"
+    assert subquestion["evidence_reference_count"] == 1
+    job.queries[0].evidence_engines = ["secret"]
+    with pytest.raises(WorkflowNotFoundError):
+        await console.detail(context("workflow.read"), "research", "planned")

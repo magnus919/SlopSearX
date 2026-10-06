@@ -155,7 +155,7 @@ class TestGatewayOAuthFlow:
         )
         async with _gateway_client(gateway) as client:
             tools = await client.list_tools()
-            assert len(tools) == 35
+            assert len(tools) == 38
             status = await client.call_tool_mcp("slopsearx_get_service_status", {})
             assert status.model_dump(by_alias=True)["isError"] is False
 
