@@ -196,3 +196,7 @@ the metadata; HTML shows escaped messages in a collapsed Source availability
 disclosure. Explicit invalid MCP scopes may include public-source advisories
 alongside their unchanged error. Validation errors without a resolved search
 scope need not include advisories.
+
+## Research planning provenance
+
+Research detail projections expose `planning_method`, `parent_attempt_id` and `evidence_reference_count` for caller-directed plans, including null/zero values on legacy records. These are provenance, not quality or completion judgments. Detail markup remains escaped and policy/tenant guarded; no new browser-side execution path or untrusted query text is introduced. Captured evidence-source revocation denies detail access. `tests/test_workflow_console_policy.py` covers metadata and source-policy denial; portal contract/browser suites cover rendering and isolation.

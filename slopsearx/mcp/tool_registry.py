@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from slopsearx.mcp import dependency_tools, lineage_tools, receipt_tools, staged_tools, tools
+from slopsearx.mcp import dependency_tools, lineage_tools, planning_tools, receipt_tools, staged_tools, tools
 
 
 class StateRequirement(StrEnum):
@@ -176,6 +176,36 @@ TOOL_DEFINITIONS: tuple[ToolDefinition, ...] = (
         state=StateRequirement.SNAPSHOT,
         docs="docs/ENTITY_GROUPING.md",
         transport_test="tests/test_entity_transport.py",
+    ),
+    _definition(
+        planning_tools.slopsearx_plan_research,
+        contract="slopsearx.research.planning",
+        grants=("research",),
+        state=StateRequirement.NONE,
+        sensitive=_REVALIDATED_SCOPE,
+        policy_gate=True,
+        docs="docs/QUERY_PLANNING.md",
+        transport_test="tests/test_query_planning_transport.py",
+    ),
+    _definition(
+        planning_tools.slopsearx_plan_query_variants,
+        contract="slopsearx.research.planning",
+        grants=("research",),
+        state=StateRequirement.NONE,
+        sensitive=_REVALIDATED_SCOPE,
+        policy_gate=True,
+        docs="docs/QUERY_PLANNING.md",
+        transport_test="tests/test_query_planning_transport.py",
+    ),
+    _definition(
+        planning_tools.slopsearx_plan_research_followup,
+        contract="slopsearx.research.planning",
+        grants=("research",),
+        state=StateRequirement.DURABLE,
+        sensitive=_REVALIDATED_SCOPE,
+        policy_gate=True,
+        docs="docs/QUERY_PLANNING.md",
+        transport_test="tests/test_query_planning_transport.py",
     ),
     _definition(
         tools.slopsearx_start_research,

@@ -162,6 +162,10 @@ class ResearchQuery:
     continuation_key: str | None = None
     continuation_digest: str | None = None
     requires_intent_grant: bool = False
+    planning_method: str | None = None
+    evidence_result_ids: list[str] = field(default_factory=list)
+    evidence_engines: list[str] = field(default_factory=list)
+    evidence_intent: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -387,6 +391,10 @@ def _job_from_payload(payload: dict[str, Any]) -> ResearchJob:
             continuation_key=item.get("continuation_key"),
             continuation_digest=item.get("continuation_digest"),
             requires_intent_grant=bool(item.get("requires_intent_grant", True)),
+            planning_method=item.get("planning_method"),
+            evidence_result_ids=item.get("evidence_result_ids") or [],
+            evidence_engines=item.get("evidence_engines") or [],
+            evidence_intent=item.get("evidence_intent"),
         )
         for item in (payload.get("queries") or [])
     ]

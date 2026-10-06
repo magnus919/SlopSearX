@@ -192,12 +192,13 @@ slopsearx-mcp --remote http://<slopsearx-host>:8000/mcp --oauth
 MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.com slopsearx-mcp
 ```
 
-- 35 tools: `slopsearx_search`, `slopsearx_search_targeted`,
+- 38 tools: `slopsearx_search`, `slopsearx_search_targeted`,
   `slopsearx_search_jobs`, `slopsearx_search_security`,
   `slopsearx_search_science`, `slopsearx_list_capabilities`,
   `slopsearx_explain_search_scope`, `slopsearx_get_service_status`,
   `slopsearx_read_results`, `slopsearx_read_result`, `slopsearx_read_entities`,
-  `slopsearx_start_research`, `slopsearx_get_job`, `slopsearx_cancel_job`,
+  `slopsearx_plan_research`, `slopsearx_plan_query_variants`,
+  `slopsearx_plan_research_followup`, `slopsearx_start_research`, `slopsearx_get_job`, `slopsearx_cancel_job`,
   `slopsearx_retry_research`, `slopsearx_extend_research`,
   `slopsearx_update_research`,
   `slopsearx_create_saved_search`, `slopsearx_get_saved_search`,
@@ -341,3 +342,5 @@ and troubleshooting runbook.
 MIT — see [LICENSE](LICENSE).
 
 Scholarly results are grouped by [identified work](docs/SCHOLARLY_WORK_GROUPING.md) before reranking, with bounded internal source provenance and optional SearXNG Paper metadata.
+
+Caller-directed query planning previews decomposition, terminology variants and evidence-linked follow-ups without dispatch. See [query planning](docs/QUERY_PLANNING.md).
