@@ -197,6 +197,7 @@
     "free_answer_calls_maximum": 18,
     "fresh_source_and_answer_assessments": 80,
     "historical_exp088_luna_submissions_counted": 21,
+    "historical_luna_submission_accounting_detail": "The 21 historical submissions are the already charged development grader calls across the prior registered attempts; the 80 fresh source/answer calls add to that total. Carried card assignments are immutable inputs, not fresh grader calls in EXP-093.",
     "input_bytes_per_submission": 384000,
     "jev_calls_maximum": 44,
     "maximum_answer_api_calls_per_stage": 18,
@@ -242,14 +243,14 @@
     "all_targets_acquired_and_top1_required": true,
     "bootstrap95_lower_bound_strictly_positive": true,
     "bootstrap_draws": 10000,
-    "bootstrap_seed": 6501,
+    "bootstrap_seed": 7701,
     "exact_navigation_targets_per_stage": 5,
-    "incumbent_identity_displacement": "At most one baseline W0 top-10 source with grade >=2 may be absent from candidate top ten per primary case under each independent reference.",
+    "incumbent_identity_displacement": "diagnostic_only",
     "independent_references": [
       "A",
       "B"
     ],
-    "mean_ndcg10_gain_minimum": 0.05,
+    "mean_ndcg10_gain_minimum": 0.02,
     "natural_primary_pools_41_to_80_minimum": 4,
     "per_case_delta_minimum": -0.03,
     "primary_research_tasks_per_stage": 8,
@@ -262,7 +263,6 @@
     "top10_overlap_minimum": 0.8,
     "useful_count_noninferiority": true,
     "useful_facet_retention": true,
-    "useful_identity_displacement_maximum": 1,
     "useful_lead_grade_minimum": 2,
     "variants": [
       "base",

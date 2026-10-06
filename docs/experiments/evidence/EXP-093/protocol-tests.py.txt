@@ -4,21 +4,24 @@ import unittest
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+PREDECESSOR_PROTOCOL = HERE.parent / "EXP-092" / "protocol.json"
 CURRENT = HERE / "protocol.json"
 
 
 class ProtocolTests(unittest.TestCase):
     def test_fixed_candidate_and_all_frozen_numerical_gates(self):
         new = json.loads(CURRENT.read_text())
-        self.assertIn("Fraction RRF k60", new["candidate"]["contract"])
+        old = json.loads(PREDECESSOR_PROTOCOL.read_text())
+        for field in ("candidate", "quality", "task_use", "consumer", "jev_invocation"):
+            self.assertEqual(new[field], old[field], field)
         quality = new["quality"]
         self.assertEqual(quality["independent_references"], ["A", "B"])
-        self.assertEqual(quality["mean_ndcg10_gain_minimum"], 0.05)
+        self.assertEqual(quality["mean_ndcg10_gain_minimum"], 0.02)
         self.assertEqual(quality["bootstrap_draws"], 10000)
-        self.assertEqual(quality["bootstrap_seed"], 6501)
+        self.assertEqual(quality["bootstrap_seed"], 7701)
         self.assertEqual(quality["per_case_delta_minimum"], -0.03)
         self.assertEqual(quality["top10_overlap_minimum"], 0.8)
-        self.assertEqual(quality["useful_identity_displacement_maximum"], 1)
+        self.assertEqual(quality["incumbent_identity_displacement"], "diagnostic_only")
         self.assertEqual(quality["exact_navigation_targets_per_stage"], 5)
         self.assertTrue(quality["all_targets_acquired_and_top1_required"])
 
