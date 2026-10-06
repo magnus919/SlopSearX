@@ -80,10 +80,6 @@ class InputBridgeTests(unittest.TestCase):
         with self.assertRaisesRegex(BRIDGE.InputError, "research-outcome-not-approved"):
             BRIDGE._outcomes({"engine_outcomes": rows}, task, protocol)
 
-    def test_original_d12_never_in_effective_membership(self):
-        self.assertEqual([f"d{i}" for i in range(1, 12)] + ["d13"],
-                         [x for x in [f"d{i}" for i in range(1, 12)] + ["d13"]])
-        self.assertNotIn("d12", {f"d{i}" for i in range(1, 12)} | {"d13"})
 
 
 if __name__ == "__main__":
