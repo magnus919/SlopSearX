@@ -115,8 +115,16 @@ def begin(outdir, bundle_root, cli_path=None):
 
 
 def _opaque_card_proof(carried: dict) -> dict:
-    """Retain only bridge-verified hashes, paths, and aggregate counts."""
-    if type(carried) is not dict or type(carried.get("records")) is not list or len(carried["records"]) != 16:
+    """Preserve the complete bridge-validated, nonsemantic reuse proof."""
+    if (type(carried) is not dict
+            or carried.get("schema") != "exp090-carried-card-reference-proof/1"
+            or carried.get("source_study_id") != "EXP-088"
+            or carried.get("exp084_grader_outputs_used") is not False
+            or carried.get("card_assessments_carried_unchanged") is not True
+            or carried.get("card_job_count") != 16
+            or carried.get("record_count") != 884
+            or type(carried.get("records")) is not list
+            or len(carried["records"]) != 16):
         raise ValueError("carried-card-checkpoint-invalid")
     path = carried.get("assessment_manifest_path")
     digest = carried.get("assessment_manifest_sha256")
@@ -124,14 +132,34 @@ def _opaque_card_proof(carried: dict) -> dict:
             or type(digest) is not str or not re.fullmatch(r"[0-9a-f]{64}", digest)):
         raise ValueError("carried-card-manifest-binding")
     records = carried["records"]
-    if any(type(row) is not dict or type(row.get("record_count")) is not int for row in records):
+    row_fields = {"logical_submission", "task_id", "assessor_id", "helper_id", "record_count",
+                  "input_path", "input_sha256", "assignment_path", "assignment_sha256",
+                  "label_binding_path", "label_binding_sha256", "raw_response_path",
+                  "raw_response_sha256", "decoded_response_path", "decoded_response_sha256",
+                  "verified_response_path", "verified_response_sha256", "dispatch_receipt_path",
+                  "dispatch_receipt_sha256", "validation_receipt_path", "validation_receipt_sha256"}
+    if any(type(row) is not dict or set(row) != row_fields or type(row.get("record_count")) is not int
+           or row["record_count"] < 1 for row in records):
         raise ValueError("carried-card-record-shape")
-    proof = {"assignment_count": 16, "record_count": sum(row["record_count"] for row in records),
-             "records": records, "assessment_manifest_path": path,
-             "assessment_manifest_sha256": digest}
-    if proof["record_count"] != 884:
+    hashes = ("input_sha256", "assignment_sha256", "label_binding_sha256", "raw_response_sha256",
+              "decoded_response_sha256", "verified_response_sha256", "dispatch_receipt_sha256",
+              "validation_receipt_sha256")
+    if any(type(row.get(key)) is not str or not re.fullmatch(r"[0-9a-f]{64}", row[key])
+           for row in records for key in hashes):
+        raise ValueError("carried-card-record-hash")
+    if any(type(row.get(key)) is not str or not row[key]
+           for row in records for key in ("logical_submission", "task_id", "assessor_id", "helper_id",
+                                          "input_path", "assignment_path", "label_binding_path",
+                                          "raw_response_path", "decoded_response_path", "verified_response_path",
+                                          "dispatch_receipt_path", "validation_receipt_path")):
+        raise ValueError("carried-card-record-path")
+    if (len({row["logical_submission"] for row in records}) != 16
+            or len({(row["task_id"], row["assessor_id"]) for row in records}) != 16
+            or sum(row["record_count"] for row in records) != 884):
         raise ValueError("carried-card-record-count")
-    return proof
+    # These are bridge-verified opaque paths and hashes, not card grades or
+    # response contents. Preserve the validator's field names for the phase guard.
+    return json.loads(json.dumps(carried))
 
 
 def _read_bound_capture_configuration(bundle_root, integrity, strict_json=json.loads):
