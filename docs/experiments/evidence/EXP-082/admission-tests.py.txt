@@ -60,7 +60,10 @@ class AdmissionTests(unittest.TestCase):
         manifest={"schema":"exp082-stage-manifest/1","study_id":"EXP-082","stage":"development",
                   "protocol_sha256":sha(source_files["docs/experiments/evidence/EXP-082/protocol.json"]),
                   "cohorts_sha256":sha(source_files["docs/experiments/evidence/EXP-082/cohorts.json"]),
-                  "ordered_task_ids":[f"d{i}" for i in range(1,14)],"source_files":hashes}
+                  "ordered_task_ids":[f"d{i}" for i in range(1,14)],"source_files":hashes,
+                  "input_pins_sha256":proof["input_pins_sha256"],
+                  "input_bundle_sha256":proof["input_bundle_sha256"],
+                  "runtime_config_receipt_sha256":proof["runtime_config_receipt_sha256"]}
         manifest_raw=canonical(manifest); (self.exp/"stage-development-manifest.json").write_bytes(manifest_raw)
         self.qualified_rev=self.commit("qualified EXP-082 test sources")
         env={"python_implementation":platform.python_implementation(),"python_version":platform.python_version()}

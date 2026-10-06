@@ -206,6 +206,9 @@ def verify_closure(source_integrity: dict, qualification_bytes: bytes,
     config_pin = pins_obj.get("runtime_config_receipt_sha256")
     if (manifest_obj.get("study_id") != "EXP-082"
             or manifest_obj.get("source_files") != sources
+            or manifest_obj.get("input_pins_sha256") != pins_sha
+            or manifest_obj.get("input_bundle_sha256") != qualification.get("input_bundle_sha256")
+            or manifest_obj.get("runtime_config_receipt_sha256") != config_pin
             or qualification.get("input_bundle_sha256") is None
             or qualification.get("input_pins_sha256") != pins_sha
             or qualification.get("runtime_config_receipt_sha256") != config_pin
