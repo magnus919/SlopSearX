@@ -1,0 +1,134 @@
+"""EXP-091 source-only dispatch manifest over the pinned EXP-088 preparer.
+
+The EXP-088 helper is used only for deterministic packet construction. Its
+card packets are local preparation artifacts and are never registered,
+receivable, or dispatchable in EXP-091. The dispatch manifest exposes only
+its 48 active source slots.
+"""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import json
+import os
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+EXP088 = HERE.parent / "EXP-088"
+
+
+class PrepareError(ValueError):
+    pass
+
+
+def _sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _canonical(value) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def _write_once(path: Path, raw: bytes, guard) -> None:
+    guard()
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+    dfd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(dfd)
+    finally:
+        os.close(dfd)
+
+
+def prepare_source_assessments(*, output_root: Path, acquisition: dict, cases: list,
+                               guard, source_snapshot_root: Path,
+                               carried_card_references: dict,
+                               stage_clock_sha256: str, protocol_sha256: str,
+                               qualified_source_revision: str) -> dict:
+    out = Path(output_root)
+    if out.exists() or out.is_symlink():
+        raise PrepareError("source-preparation-output-must-be-new")
+    if (type(carried_card_references) is not dict
+            or carried_card_references.get("schema") != "exp091-carried-card-reference-proof/1"
+            or carried_card_references.get("card_job_count") != 16
+            or carried_card_references.get("record_count") != 884
+            or carried_card_references.get("card_assessments_carried_unchanged") is not True
+            or carried_card_references.get("exp084_grader_outputs_used") is not False):
+        raise PrepareError("carried-card-proof-required")
+    helper_path = EXP088 / "prepare-assessments.py.txt"
+    if helper_path.is_symlink() or not helper_path.is_file():
+        raise PrepareError("frozen-source-preparer-unavailable")
+    helper = importlib.machinery.SourceFileLoader("exp091_frozen_088_preparer", str(helper_path)).load_module()
+    view_path = HERE / "input-view-verifier.py.txt"
+    if view_path.is_symlink() or not view_path.is_file():
+        raise PrepareError("packet-view-verifier-unavailable")
+    view_verifier = importlib.machinery.SourceFileLoader(
+        "exp091_input_view_verifier_prepare", str(view_path)).load_module()
+    internal = out / "deterministic-preparation"
+    result = helper.prepare(output_root=internal, acquisition=acquisition, cases=cases,
+                            guard=guard, source_snapshot_root=Path(source_snapshot_root))
+    manifest_path = internal / "manifest.json"
+    raw = manifest_path.read_bytes()
+    manifest = json.loads(raw)
+    jobs = manifest.get("jobs")
+    if type(jobs) is not list:
+        raise PrepareError("frozen-source-manifest")
+    active = [row for row in jobs if row.get("role") == "source" and row.get("model_call_required") is True]
+    if len(active) != 48:
+        raise PrepareError("source-active-slot-count")
+    slots = []
+    input_refs = []
+    for job in active:
+        input_path = internal / job["input_path"]
+        label_path = internal / job["label_binding_path"]
+        for path in (input_path, label_path):
+            if path.is_symlink() or not path.is_file():
+                raise PrepareError("source-input-file-missing")
+        input_raw = input_path.read_bytes()
+        label_raw = label_path.read_bytes()
+        if (len(input_raw) != job.get("input_bytes") or _sha(input_raw) != job.get("input_sha256")
+                or len(input_raw) > 384_000
+                or _sha(label_raw) != job.get("label_binding_sha256")):
+            raise PrepareError("source-input-hash-or-size")
+        input_ref = str(input_path.resolve())
+        try:
+            view_plan = view_verifier.input_view_plan(
+                input_raw, expected_sha256=_sha(input_raw), input_path=input_ref,
+                viewer_path=str((HERE / "packet-viewer.py.txt").resolve()),
+                slot_id=job["logical_submission"], source_manifest_sha256=_sha(raw))
+        except ValueError as exc:
+            raise PrepareError("source-input-view-plan-invalid") from exc
+        slots.append({"logical_submission": job["logical_submission"], "role": "source",
+                      "task_id": job["task_id"], "assessor_id": job["assessor_id"],
+                      "chunk_index": job["chunk_index"], "helper_id": job["helper_id"],
+                      "input_sha256": _sha(input_raw), "input_bytes": len(input_raw),
+                      "label_binding_sha256": _sha(label_raw),
+                      "input_view_plan": view_plan,
+                      "stage_clock_sha256": stage_clock_sha256,
+                      "protocol_sha256": protocol_sha256,
+                      "qualified_source_revision": qualified_source_revision})
+        input_refs.append({"logical_submission": job["logical_submission"],
+                           "input_path": input_ref,
+                           "label_binding_path": (Path("deterministic-preparation") / job["label_binding_path"]).as_posix()})
+    slots.sort(key=lambda row: row["logical_submission"])
+    slot_manifest = {"schema": "exp091-source-slot-manifest/1", "study_id": "EXP-091",
+                     "stage_clock_sha256": stage_clock_sha256,
+                     "protocol_sha256": protocol_sha256,
+                     "qualified_source_revision": qualified_source_revision,
+                     "preparation_manifest_sha256": _sha(raw),
+                     "carried_card_proof": carried_card_references,
+                     "active_source_slot_count": len(slots), "active_source_slots": slots,
+                     "source_input_refs": sorted(input_refs, key=lambda row: row["logical_submission"]),
+                     "card_reference_dispatch_slots": 0, "model_calls_performed": 0}
+    slot_raw = _canonical(slot_manifest)
+    _write_once(out / "source-slot-manifest.json", slot_raw, guard)
+    return {"schema": "exp091-source-preparation/1", "status": "prepared",
+            "active_source_slot_count": len(slots), "source_slot_manifest": "source-slot-manifest.json",
+            "source_slot_manifest_sha256": _sha(slot_raw),
+            "preparation_manifest_sha256": _sha(raw),
+            "carried_card_reference_count": 16,
+            "card_reference_dispatch_slots": 0, "model_calls_performed": 0}
