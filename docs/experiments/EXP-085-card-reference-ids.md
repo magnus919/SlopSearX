@@ -1,6 +1,6 @@
 # EXP-085 — card references using bound IDs
 
-Status: prospective development study; no ranking result or production adoption claim.
+Status: terminal setup-inconclusive. The [retained outcome](evidence/EXP-085/completed/readout.md) records one rejected health request and zero model calls; no ranking result or production adoption claim.
 
 EXP-084 captured 359 usable pages from the existing 442-source inventory. Its first two card assessments stopped the study because some model-written quotations did not exactly match the supplied cards. Those failed outputs remain unchanged in the [terminal record](evidence/EXP-084/completed/readout.md); they are not reference truth for this study.
 
