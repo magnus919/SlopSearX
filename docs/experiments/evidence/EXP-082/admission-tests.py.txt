@@ -1,0 +1,121 @@
+"""Offline source-closure and one-shot EXP-082 authority tests."""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import platform
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE=Path(__file__).resolve().parent
+
+def load(name,path):
+    l=importlib.machinery.SourceFileLoader(name,str(path)); s=importlib.util.spec_from_loader(name,l)
+    m=importlib.util.module_from_spec(s); sys.modules[name]=m; l.exec_module(m); return m
+
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+def canonical(value): return (json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(",",":"),allow_nan=False)+"\n").encode()
+
+class AdmissionTests(unittest.TestCase):
+    def setUp(self):
+        self.temp=tempfile.TemporaryDirectory(prefix="exp082-admission-")
+        self.root=Path(self.temp.name)/"repo"; self.exp=self.root/"docs/experiments/evidence/EXP-082"
+        self.exp.mkdir(parents=True)
+        self.adm=load("exp082_admission_"+str(id(self)),HERE/"admission.py.txt")
+        self.bridge_tests=load("exp082_bridge_tests_"+str(id(self)),HERE/"input-bridge-tests.py.txt")
+        self._make_fixture()
+        self.adm.REPO=self.root; self.adm.HERE=self.exp
+        self.adm.REG_PATH="docs/experiments/evidence/EXP-082/registration-integrity.json"
+        self.adm.QUAL_PATH="docs/experiments/evidence/EXP-082/qualification-integrity.json"
+        self.adm.MANIFEST_PATH=self.exp/"stage-development-manifest.json"
+        self.adm.LEASE_ROOT=Path(self.temp.name)/"leases-exp082"
+
+    def tearDown(self): self.temp.cleanup()
+    def git(self,*args): return subprocess.run(["git",*args],cwd=self.root,check=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).stdout
+    def commit(self,msg):
+        self.git("add","-A"); self.git("-c","user.name=EXP-082 tests","-c","user.email=exp082@example.invalid","commit","-m",msg)
+        return self.git("rev-parse","HEAD").decode().strip()
+
+    def _make_fixture(self):
+        subprocess.run(["git","init","-q",str(self.root)],check=True)
+        self.bundle=Path(self.temp.name)/"bundle"; self.bundle.mkdir()
+        self.bridge_tests.make_bundle(self.bundle)
+        pins_path=self.exp/"reuse-input-pins.json"
+        self.pins=self.bridge_tests.write_pins(self.bundle,pins_path)
+        source_files={
+            "docs/experiments/evidence/EXP-082/admission.py.txt":(HERE/"admission.py.txt").read_bytes(),
+            "docs/experiments/evidence/EXP-082/input-bridge.py.txt":(HERE/"input-bridge.py.txt").read_bytes(),
+            "docs/experiments/evidence/EXP-082/protocol.json":(HERE/"protocol.json").read_bytes(),
+            "docs/experiments/evidence/EXP-082/cohorts.json":(HERE/"cohorts.json").read_bytes(),
+            "docs/experiments/evidence/EXP-082/reuse-input-pins.json":pins_path.read_bytes(),
+        }
+        for rel,raw in source_files.items(): (self.root/rel).write_bytes(raw)
+        self.bridge=load("exp082_bridge_fixture_"+str(id(self)),HERE/"input-bridge.py.txt")
+        proof=self.bridge.verify_input_bundle(self.bundle,pins_path)
+        hashes={k:sha(v) for k,v in source_files.items()}
+        manifest={"schema":"exp082-stage-manifest/1","study_id":"EXP-082","stage":"development",
+                  "protocol_sha256":sha(source_files["docs/experiments/evidence/EXP-082/protocol.json"]),
+                  "cohorts_sha256":sha(source_files["docs/experiments/evidence/EXP-082/cohorts.json"]),
+                  "ordered_task_ids":[f"d{i}" for i in range(1,14)],"source_files":hashes}
+        manifest_raw=canonical(manifest); (self.exp/"stage-development-manifest.json").write_bytes(manifest_raw)
+        self.qualified_rev=self.commit("qualified EXP-082 test sources")
+        env={"python_implementation":platform.python_implementation(),"python_version":platform.python_version()}
+        deps=dict(self.adm.PINNED_DEPENDENCIES)
+        registration={"schema":"exp082-registration/1","study_id":"EXP-082","status":"registered","source_files":hashes}
+        reg_raw=canonical(registration); (self.exp/"registration-integrity.json").write_bytes(reg_raw)
+        qualification={"schema":"exp082-qualification/1","study_id":"EXP-082","qualified":True,
+            "qualified_source_revision":self.qualified_rev,"files":hashes,"environment":env,"dependencies":deps,
+            "protocol_sha256":manifest["protocol_sha256"],"cohorts_sha256":manifest["cohorts_sha256"],
+            "stage_manifest_sha256":sha(manifest_raw),"input_bundle_sha256":proof["input_bundle_sha256"],
+            "runtime_config_receipt_sha256":proof["runtime_config_receipt_sha256"]}
+        self.qraw=canonical(qualification); (self.exp/"qualification-integrity.json").write_bytes(self.qraw)
+        self.commit("test registration and qualification")
+        self.source={"synthetic":False,"study_id":"EXP-082","registration_sha256":sha(reg_raw),
+            "qualification_sha256":sha(self.qraw),"qualified_source_revision":self.qualified_rev,
+            "protocol_sha256":manifest["protocol_sha256"],"cohorts_sha256":manifest["cohorts_sha256"],
+            "stage_manifest_sha256":sha(manifest_raw),"input_pins_sha256":proof["input_pins_sha256"],
+            "input_bundle_sha256":proof["input_bundle_sha256"],
+            "runtime_config_receipt_sha256":proof["runtime_config_receipt_sha256"],
+            "environment":env,"dependencies":deps}
+
+    def test_exact_committed_source_and_private_input_bundle_verify(self):
+        proof=self.adm.verify_closure(self.source,self.qraw,self.bundle)
+        self.assertEqual(proof["qualified_source_revision"],self.qualified_rev)
+        self.assertEqual(proof["study_id"],"EXP-082")
+        self.assertEqual(proof["input_integrity"]["file_count"],13)
+
+    def test_one_shot_permits_bind_stage_root_and_reject_acquisition_phase(self):
+        root=Path(self.temp.name)/"stage"; root.mkdir(mode=0o700)
+        clock=self.adm.create_stage_clock(root,self.qualified_rev)
+        cap=self.adm.admit_live(root,self.source,self.qraw,self.bundle)
+        stage=self.adm.consume_capability(cap)
+        phase=self.adm.acquire_phase(stage,"capture",root,clock[1])
+        self.adm.require_phase(phase,clock[1],root)
+        child=root/"capture"; child.mkdir()
+        with self.assertRaisesRegex(self.adm.AdmissionError,"phase-permit-required"):
+            self.adm.require_phase(phase,clock[1],child)
+        with self.assertRaisesRegex(self.adm.AdmissionError,"stage-permit-required"):
+            self.adm.acquire_phase(stage,"acquisition",root,clock[1])
+        self.assertTrue(str(self.adm.LEASE_ROOT).endswith("leases-exp082"))
+
+    def test_prior_exp078_clock_bytes_do_not_satisfy_new_manifest_binding(self):
+        root=Path(self.temp.name)/"stage"; root.mkdir(mode=0o700)
+        clock=self.adm.create_stage_clock(root,self.qualified_rev)
+        old=dict(clock[0],stage_manifest_sha256="f"*64)
+        raw=canonical(old)
+        manifest_raw=(self.exp/"stage-development-manifest.json").read_bytes()
+        manifest=json.loads(manifest_raw)
+        with self.assertRaisesRegex(self.adm.AdmissionError,"stage-clock-binding"):
+            self.adm._active_clock(raw,manifest,sha(manifest_raw),clock[0]["protocol_sha256"],
+                                   clock[0]["cohorts_sha256"],self.qualified_rev)
+
+    def test_other_study_identity_is_rejected(self):
+        bad=dict(self.source,study_id="EXP-078")
+        with self.assertRaisesRegex(self.adm.AdmissionError,"qualification-binding"):
+            self.adm.verify_closure(bad,self.qraw,self.bundle)
+
+if __name__=="__main__": unittest.main()

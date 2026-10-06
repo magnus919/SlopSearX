@@ -1,0 +1,11 @@
+{
+  "schema": "exp082-stage-clock-contract/1",
+  "study_id": "EXP-082",
+  "stage": "development",
+  "wire_schema": "exp078-stage-clock/1",
+  "duration_seconds": 28800,
+  "starts_before": "the single read-only Hermes health validation and first capture request",
+  "ordered_task_ids": ["d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "d11", "d12", "d13"],
+  "required_bindings": ["EXP-082 registration SHA-256", "EXP-082 qualification SHA-256", "EXP-082 stage manifest SHA-256", "EXP-082 protocol SHA-256", "EXP-082 cohorts SHA-256", "EXP-082 qualified source revision", "frozen input bundle SHA-256", "runtime configuration receipt SHA-256"],
+  "portable_wire_note": "The frozen EXP-078 helpers consume this versioned clock shape. EXP-079/082 clocks, IDs, capabilities, phase permits, and leases are never reused."
+}

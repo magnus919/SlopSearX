@@ -1,0 +1,177 @@
+"""Offline EXP-082 controller checks using temporary Git and input fixtures only."""
+from __future__ import annotations
+
+import hashlib
+import hmac
+import importlib.machinery
+import importlib.util
+import json
+import os
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+
+HERE = Path(__file__).resolve().parent
+
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    loader.exec_module(module)
+    return module
+
+
+FIXTURES = load("exp082_controller_admission_fixtures", HERE / "admission-tests.py.txt")
+BRIDGE_FIXTURES = load("exp082_controller_bridge_fixtures", HERE / "input-bridge-tests.py.txt")
+
+
+class ControllerTests(unittest.TestCase):
+    def setUp(self):
+        self.fixture = FIXTURES.AdmissionTests()
+        self.fixture.setUp()
+        self.controller = load("exp082_controller_under_test", HERE / "controller.py.txt")
+        sys.modules.pop("exp082_controller_bridge", None)
+        self.controller.HERE = self.fixture.exp
+        self.controller.REPO = self.fixture.root
+        self.cli_path = Path(self.fixture.temp.name) / "inert-groktocrawl-cli.py"
+        self.cli_bytes = b"raise RuntimeError('fixture CLI must never be imported')\n"
+        self.cli_path.write_bytes(self.cli_bytes)
+        sys.modules.pop("exp082_admission", None)
+        admission = self.controller.load("exp082_admission", "admission.py.txt")
+        admission.HERE = self.fixture.exp
+        admission.REPO = self.fixture.root
+        admission.MANIFEST_PATH = self.fixture.exp / "stage-development-manifest.json"
+        admission.LEASE_ROOT = Path(self.fixture.temp.name) / "leases-controller"
+        self.admission = admission
+
+        # Add a fake public CLI pin to the fixture qualification. The inert
+        # fixture file is hashed during preflight and removed before capture.
+        q = admission.strict_json(self.fixture.qraw)
+        self.cli_pin = {"sha256": hashlib.sha256(self.cli_bytes).hexdigest(), "revision": "1" * 40}
+        q["external_source_pins"] = {"groktocrawl_cli": self.cli_pin}
+        self.fixture.qraw = admission.canonical_json(q)
+        (self.fixture.exp / "qualification-integrity.json").write_bytes(self.fixture.qraw)
+        self.fixture.commit("add inert fixture CLI source pin")
+        self.fixture.source["qualification_sha256"] = admission.sha(self.fixture.qraw)
+        self.fixture.source["external_source_pins"] = q["external_source_pins"]
+
+    def tearDown(self):
+        sys.modules.pop("exp082_admission", None)
+        self.fixture.tearDown()
+
+    def test_preflight_begin_and_recovery_bind_new_clock_without_quality_credit(self):
+        admission, integrity, qraw, proof = self.controller.preflight(self.fixture.bundle, self.cli_path)
+        self.assertIs(admission, self.admission)
+        self.assertEqual(proof["input_integrity"]["file_count"], 13)
+        self.assertFalse(integrity["synthetic"])
+        self.assertEqual(integrity["study_id"], "EXP-082")
+
+        output = Path(self.fixture.temp.name) / "new-stage"
+        self.cli_path.write_bytes(self.cli_bytes + b"# changed after qualification\n")
+        with self.assertRaisesRegex(ValueError, "pinned-cli-preflight-failed"):
+            self.controller.begin(Path(self.fixture.temp.name) / "must-not-exist", self.fixture.bundle,
+                                  self.cli_path)
+        self.assertFalse((Path(self.fixture.temp.name) / "must-not-exist").exists())
+        self.cli_path.write_bytes(self.cli_bytes)
+        with tempfile.TemporaryDirectory() as tmp, patch.object(
+                self.controller, "_configure_capture", return_value=None) as configure:
+            state = self.controller.begin(output, self.fixture.bundle, self.cli_path)
+            acquisition = self.controller.prepare_recovery(state)
+            configure.assert_called_once_with(state)
+            self.assertEqual(state.clock[0]["stage"], "development")
+            self.assertEqual(state.clock[1], (output / "stage-clock.json").read_bytes())
+            self.assertEqual(acquisition["schema"], "exp078-effective-acquisition/1")
+            self.assertEqual(set(acquisition["pools"]), {f"d{i}" for i in range(1, 14)})
+            self.assertEqual(acquisition["acquisition_receipt"]["stage_clock_digest"], state.clock[2])
+            self.assertEqual(acquisition["recovery_provenance"]["new_searches"], 0)
+            self.assertFalse(acquisition["recovery_provenance"]["prior_study_credit"])
+            persisted = json.loads((output / "effective-input-envelope.json").read_bytes())
+            self.assertEqual(persisted["acquisition_receipt"], acquisition["acquisition_receipt"])
+
+    def test_capture_uses_frozen_phase_binding_and_missing_cli_stops_before_dispatch(self):
+        output = Path(self.fixture.temp.name) / "capture-stage"
+        with patch.object(self.controller, "_configure_capture", return_value=None):
+            state = self.controller.begin(output, self.fixture.bundle, self.cli_path)
+            acquisition = self.controller.prepare_recovery(state)
+        # The generic admission fixture uses opaque source IDs. Recompute the
+        # deterministic IDs for its synthetic native rows so the frozen 078
+        # capture binding receives a self-consistent test acquisition.
+        for task_id, rows in acquisition["native_results_by_card_id"].items():
+            for card_id, native in rows.items():
+                url = native.get("url")
+                if isinstance(url, str) and url:
+                    identity = "u" + hashlib.sha256(url.split("#", 1)[0].encode("utf-8")).hexdigest()
+                else:
+                    wire = json.dumps({"task_id": task_id,
+                                       "result_index": acquisition["pools"][task_id]["cards"].index(
+                                           next(card for card in acquisition["pools"][task_id]["cards"]
+                                                if card["id"] == card_id)),
+                                       "result": native}, ensure_ascii=False, sort_keys=True,
+                                      separators=(",", ":"), allow_nan=False) + "\n"
+                    identity = "r" + hashlib.sha256(wire.encode("utf-8")).hexdigest()
+                acquisition["source_id_by_card_id"][task_id][card_id] = identity
+        cases = json.loads((HERE / "cohorts.json").read_bytes())["cohorts"]["development"]
+        self.cli_path.unlink()
+        # The controller itself and admission run against the temporary Git
+        # fixture; the frozen EXP-078 binding is verified from this checkout's
+        # committed source, then its first CLI read fails before dispatch.
+        actual_repo = HERE.parents[3]
+        with patch.object(self.controller, "REPO", actual_repo), patch.object(
+                self.controller, "HERE", actual_repo / "docs/experiments/evidence/EXP-082"):
+            with self.assertRaises((FileNotFoundError, ValueError)) as caught:
+                self.controller.capture(state, acquisition, cases, self.cli_path)
+        self.assertEqual(type(caught.exception).__name__, "ValueError")
+        self.assertEqual(str(caught.exception), "input-file-type")
+        terminal = output / "capture" / "recovery-capture-terminal.json"
+        self.assertTrue(terminal.is_file())
+        failed = json.loads(terminal.read_bytes())
+        self.assertEqual(failed["schema"], "exp082-capture-terminal/1")
+        self.assertEqual(failed["status"], "incomplete")
+        self.assertEqual(failed["owned_http_attempts"], "unknown")
+        self.assertFalse(failed["quality_credit"])
+        self.assertEqual(len(list(self.admission.LEASE_ROOT.glob("*.json"))), 2)
+        self.assertFalse((output / "capture" / "portable-capture-wire" / "private-raw" /
+                          "http-transports.json").exists())
+
+    def test_capture_configuration_uses_only_bound_fake_values_and_never_echoes_them(self):
+        fake_home = Path(self.fixture.temp.name) / "home"
+        env_dir = fake_home / ".hermes"
+        env_dir.mkdir(parents=True)
+        server = "https://candidate.fixture.invalid"
+        secret = "fixture-only-not-a-real-credential"
+        nonce = b"controller-test-nonce"
+        tag = lambda value: hmac.new(nonce, value.encode(), hashlib.sha256).hexdigest()
+        binding = {"nonce": nonce.hex(), "server_tag": tag(server), "credential_tag": tag(secret)}
+        bundle = Path(self.fixture.temp.name) / "config-bundle"
+        bundle.mkdir()
+        binding_raw = json.dumps(binding, sort_keys=True, separators=(",", ":")).encode()
+        (bundle / "configuration-binding.json").write_bytes(binding_raw)
+        (env_dir / ".env").write_text(
+            f"GROKTOCRAWL_API_URL={server}\nGROKTOCRAWL_API_KEY={secret}\n", encoding="utf-8")
+        state = SimpleNamespace(bundle_root=bundle,
+            integrity={"runtime_config_receipt_sha256": hashlib.sha256(binding_raw).hexdigest()},
+            admission=SimpleNamespace(strict_json=lambda raw: json.loads(raw)))
+        with patch.object(Path, "home", return_value=fake_home), patch.dict(os.environ, {}, clear=True):
+            self.controller._configure_capture(state)
+            self.assertEqual(os.environ["GROKTOCRAWL_API_URL"], server)
+            self.assertEqual(os.environ["GROKTOCRAWL_API_KEY"], secret)
+            self.assertEqual(os.environ["API_KEY"], secret)
+
+        tampered = json.loads(binding_raw)
+        tampered["credential_tag"] = "0" * 64
+        (bundle / "configuration-binding.json").write_text(json.dumps(tampered), encoding="utf-8")
+        state.integrity["runtime_config_receipt_sha256"] = hashlib.sha256(
+            (bundle / "configuration-binding.json").read_bytes()).hexdigest()
+        with patch.object(Path, "home", return_value=fake_home), patch.dict(os.environ, {}, clear=True):
+            with self.assertRaisesRegex(ValueError, "existing-candidate-configuration-changed"):
+                self.controller._configure_capture(state)
+            self.assertNotIn("GROKTOCRAWL_API_KEY", os.environ)
+
+
+if __name__ == "__main__":
+    unittest.main()
