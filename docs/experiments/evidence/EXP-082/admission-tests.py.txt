@@ -65,12 +65,16 @@ class AdmissionTests(unittest.TestCase):
         self.qualified_rev=self.commit("qualified EXP-082 test sources")
         env={"python_implementation":platform.python_implementation(),"python_version":platform.python_version()}
         deps=dict(self.adm.PINNED_DEPENDENCIES)
-        registration={"schema":"exp082-registration/1","study_id":"EXP-082","status":"registered","source_files":hashes}
+        registration={"schema":"exp082-registration/1","study_id":"EXP-082","status":"registered",
+                      "registered_source_revision":self.qualified_rev,"source_files":hashes}
         reg_raw=canonical(registration); (self.exp/"registration-integrity.json").write_bytes(reg_raw)
         qualification={"schema":"exp082-qualification/1","study_id":"EXP-082","qualified":True,
-            "qualified_source_revision":self.qualified_rev,"files":hashes,"environment":env,"dependencies":deps,
+            "qualified_source_revision":self.qualified_rev,"registration_sha256":sha(reg_raw),
+            "files":hashes,"environment":env,"dependencies":deps,
+            "external_source_pins":{},
             "protocol_sha256":manifest["protocol_sha256"],"cohorts_sha256":manifest["cohorts_sha256"],
             "stage_manifest_sha256":sha(manifest_raw),"input_bundle_sha256":proof["input_bundle_sha256"],
+            "input_pins_sha256":proof["input_pins_sha256"],
             "runtime_config_receipt_sha256":proof["runtime_config_receipt_sha256"]}
         self.qraw=canonical(qualification); (self.exp/"qualification-integrity.json").write_bytes(self.qraw)
         self.commit("test registration and qualification")
@@ -80,6 +84,7 @@ class AdmissionTests(unittest.TestCase):
             "stage_manifest_sha256":sha(manifest_raw),"input_pins_sha256":proof["input_pins_sha256"],
             "input_bundle_sha256":proof["input_bundle_sha256"],
             "runtime_config_receipt_sha256":proof["runtime_config_receipt_sha256"],
+            "external_source_pins":qualification["external_source_pins"],
             "environment":env,"dependencies":deps}
 
     def test_exact_committed_source_and_private_input_bundle_verify(self):

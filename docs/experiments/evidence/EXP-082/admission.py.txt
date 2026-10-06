@@ -163,12 +163,14 @@ def verify_closure(source_integrity: dict, qualification_bytes: bytes,
             or source_integrity.get("study_id") != "EXP-082"
             or qualification.get("qualified") is not True
             or source_integrity.get("qualification_sha256") != qsha
-            or source_integrity.get("registration_sha256") != sha(registration_bytes)):
+            or source_integrity.get("registration_sha256") != sha(registration_bytes)
+            or qualification.get("registration_sha256") != sha(registration_bytes)):
         raise AdmissionError("qualification-binding")
     revision = qualification.get("qualified_source_revision")
     sources = registration.get("source_files")
     if (registration.get("study_id") != "EXP-082"
             or not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision)
+            or registration.get("registered_source_revision") != revision
             or qualification.get("files") != sources or type(sources) is not dict or not sources):
         raise AdmissionError("qualification-source-inventory")
     for path, expected in sources.items():
@@ -203,9 +205,14 @@ def verify_closure(source_integrity: dict, qualification_bytes: bytes,
     pins_obj = strict_json((HERE / "reuse-input-pins.json").read_bytes())
     config_pin = pins_obj.get("runtime_config_receipt_sha256")
     if (manifest_obj.get("study_id") != "EXP-082"
+            or manifest_obj.get("source_files") != sources
             or qualification.get("input_bundle_sha256") is None
+            or qualification.get("input_pins_sha256") != pins_sha
             or qualification.get("runtime_config_receipt_sha256") != config_pin
+            or source_integrity.get("stage_manifest_sha256") != sha(manifest_raw)
+            or source_integrity.get("input_pins_sha256") != pins_sha
             or source_integrity.get("runtime_config_receipt_sha256") != config_pin
+            or source_integrity.get("external_source_pins") != qualification.get("external_source_pins")
             or qualification.get("protocol_sha256") != protocol_sha
             or qualification.get("cohorts_sha256") != cohorts_sha
             or qualification.get("stage_manifest_sha256") != sha(manifest_raw)
