@@ -1,6 +1,6 @@
 # EXP-087 — preserve the original anchor-list contract
 
-Status: prospective development study; ranking usefulness is unmeasured.
+Status: terminal assessment-inconclusive. The [retained outcome](evidence/EXP-087/completed/readout.md) records eleven valid card responses and a twelfth unknown-reference failure. Ranking usefulness is unmeasured.
 
 EXP-086's fifth card assessment was rejected for repeating a same-card reference ID. Its [terminal outcome](evidence/EXP-086/completed/readout.md) remains invalid and receives no quality credit. The supplied output schema and original EXP-077 literal-anchor verifier permit repeated anchors; the newer ID adapter had added an extra rejection.
 

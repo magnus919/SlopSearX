@@ -1,0 +1,209 @@
+"""Offline tests for exact, field-aware EXP-088 reference-label transport."""
+import copy
+import hashlib
+import importlib.machinery
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+L = importlib.machinery.SourceFileLoader("exp088_reference_labels_tested",
+                                          str(HERE / "reference-labels.py.txt")).load_module()
+A = importlib.machinery.SourceFileLoader("exp087_card_reference_adapter_for_exp088",
+    str(HERE.parent / "EXP-087" / "card-reference-id-adapter.py.txt")).load_module()
+C = importlib.machinery.SourceFileLoader("exp077_catalog_for_exp088",
+    str(HERE.parent / "source-use-next-stage" / "evidence-catalog.py.txt")).load_module()
+
+
+def sid(ch):
+    return "u" + ch * 64
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+class ReferenceLabelsTests(unittest.TestCase):
+    def setUp(self):
+        self.task = "d1"
+        self.cards = [
+            {"title": "second title", "url": "https://example.test/b", "snippet": "beta Ω" * 90},
+            {"title": "first title", "url": "https://example.test/a", "snippet": "alpha Ω"},
+        ]
+        self.facets = ["d1_f1"]
+        self.built = A.build_assignment(self.task, self.cards, self.facets, assessor_id="A",
+                                        global_ids=["g-b", "g-a"])
+        self.contexts = [{"source_id": sid("b"), "context": "B" * 725},
+                         {"source_id": sid("a"), "context": "A" * 1205}]
+        self.catalog = C.build(self.contexts)
+        self.source_ids = [sid("b"), sid("a"), sid("c")]  # full-task order is deliberately unsorted
+
+    def test_card_roundtrip_order_multiplicity_scope_and_nonreference_invariance(self):
+        bundle = L.encode_card_assignment(self.task, self.built)
+        model = bundle["model_input"]
+        original = self.built["model_input"]
+        self.assertEqual(model["cards"], original["cards"])
+        self.assertEqual(model["facets"], original["facets"])
+        original_enum = original["output_schema"]["$defs"]["anchor"]["enum"]
+        encoded_enum = model["output_schema"]["$defs"]["anchor"]["enum"]
+        label_by_original = {row["original_id"]: row["label"]
+                             for row in bundle["label_binding"]["labels"]}
+        self.assertEqual(encoded_enum, [label_by_original[value] for value in original_enum])
+        self.assertEqual([c["card_sha256"] for c in model["reference_catalogs"]],
+                         [c["card_sha256"] for c in original["reference_catalogs"]])
+        for before, after in zip(original["reference_catalogs"], model["reference_catalogs"]):
+            self.assertEqual([(x["field"], x["index"], x["start"], x["end"], x["text"])
+                              for x in before["entries"]],
+                             [(x["field"], x["index"], x["start"], x["end"], x["text"])
+                              for x in after["entries"]])
+        self.assertTrue(all(len(e["evidence_id"]) < 67 for cat in model["reference_catalogs"]
+                            for e in cat["entries"]))
+        by_sha = {cat["card_sha256"]: cat for cat in model["reference_catalogs"]}
+        cardsha = original["cards"][0]["card_sha256"]
+        label = by_sha[cardsha]["entries"][0]["evidence_id"]
+        response = {"records": [{"card_sha256": cardsha, "lead": 2, "visible": 1,
+                    "facets": ["d1_f1"], "uncertain": [], "rationale": "unchanged prose Ω",
+                    "anchors": [label, label], "facet_anchors": {"d1_f1": [label]}}]}
+        restored = L.decode_card_response(bundle, response)
+        expected = self.built["reference_catalogs"][
+            next(i for i, c in enumerate(self.built["reference_catalogs"]) if c["card_sha256"] == cardsha)
+        ]["entries"][0]["evidence_id"]
+        self.assertEqual(restored["records"][0]["anchors"], [expected, expected])
+        self.assertEqual(restored["records"][0]["rationale"], "unchanged prose Ω")
+        wrong_card = copy.deepcopy(response)
+        wrong_card["records"][0]["card_sha256"] = original["cards"][1]["card_sha256"]
+        with self.assertRaisesRegex(L.LabelError, "unknown-or-cross-scope-label"):
+            L.decode_card_response(bundle, wrong_card)
+        unknown = copy.deepcopy(response)
+        unknown["records"][0]["anchors"] = ["L-D1-C080-R9999"]
+        with self.assertRaises(L.LabelError):
+            L.decode_card_response(bundle, unknown)
+        mutated = copy.deepcopy(bundle)
+        mutated["model_input"]["cards"][0]["snippet"] += "tamper"
+        with self.assertRaisesRegex(L.LabelError, "encoded-model-input-hash-mismatch"):
+            L.decode_card_response(mutated, response)
+        mutated_map = copy.deepcopy(bundle)
+        mutated_map["label_binding"]["labels"][0]["original_id"] = "ev_" + "0" * 64
+        L._seal(mutated_map["label_binding"])
+        with self.assertRaisesRegex(L.LabelError, "regenerated-identity-map-mismatch"):
+            L.decode_card_response(mutated_map, response)
+        collision = copy.deepcopy(self.built)
+        collision["reference_catalogs"][0]["entries"].append(
+            copy.deepcopy(collision["reference_catalogs"][0]["entries"][0]))
+        collision["model_input"]["reference_catalogs"] = copy.deepcopy(collision["reference_catalogs"])
+        with self.assertRaisesRegex(L.LabelError, "duplicate-original-card-reference"):
+            L.encode_card_assignment(self.task, collision)
+
+    def test_card_aliases_do_not_follow_display_order(self):
+        reversed_built = A.build_assignment(self.task, list(reversed(self.cards)), self.facets,
+                                            assessor_id="B", global_ids=["g-a", "g-b"])
+        one = L.encode_card_assignment(self.task, self.built)
+        two = L.encode_card_assignment(self.task, reversed_built)
+        def by_original(bundle):
+            return {(row["group_id"], row["original_id"]): row["label"]
+                    for row in bundle["label_binding"]["labels"]}
+        self.assertEqual(by_original(one), by_original(two))
+
+    def test_source_chunk_roundtrip_rejects_unknown_and_cross_source(self):
+        source_a, source_b = self.contexts
+        p_a = [eid for eid, p in self.catalog["passages"].items() if p["source_id"] == source_a["source_id"]]
+        p_b = [eid for eid, p in self.catalog["passages"].items() if p["source_id"] == source_b["source_id"]]
+        source_input = {"task": {"task_id": self.task, "query": "unchanged"},
+                        "source_inventory": [{"source_id": s, "state": "success"} for s in self.source_ids],
+                        "sources": [{"source_id": source_b["source_id"], "passages":[
+                            {"evidence_id": eid, "text": self.catalog["passages"][eid]["text"]} for eid in p_b]},
+                                    {"source_id": source_a["source_id"], "passages":[
+                            {"evidence_id": eid, "text": self.catalog["passages"][eid]["text"]} for eid in p_a]}],
+                        "output_schema": {"enum": list(reversed(p_a + p_b))}}
+        bundle = L.encode_source_input(self.task, source_input, self.catalog, self.source_ids)
+        self.assertEqual(bundle["model_input"]["source_inventory"], source_input["source_inventory"])
+        self.assertEqual(bundle["model_input"]["output_schema"], source_input["output_schema"])
+        for before, after in zip(source_input["sources"], bundle["model_input"]["sources"]):
+            self.assertEqual([p["text"] for p in before["passages"]], [p["text"] for p in after["passages"]])
+            self.assertEqual([p["evidence_id"] for p in after["passages"]],
+                             [next(r["label"] for r in bundle["label_binding"]["labels"]
+                                   if r["original_id"] == p["evidence_id"])
+                              for p in before["passages"]])
+        eida, eidb = p_a[0], p_b[0]
+        label_a = next(x["label"] for x in bundle["label_binding"]["labels"] if x["original_id"] == eida)
+        label_b = next(x["label"] for x in bundle["label_binding"]["labels"] if x["original_id"] == eidb)
+        result = {"task_id": self.task, "assessor_id": "R1", "chunk_id": "chunk",
+                  "source_assessments": [{"source_id": source_a["source_id"], "facets": [
+                    {"facet_id": "d1_f1", "evidence_ids": [label_a, label_a]}]}]}
+        decoded = L.decode_source_response(bundle, result)
+        self.assertEqual(decoded["source_assessments"][0]["facets"][0]["evidence_ids"], [eida, eida])
+        wrong = copy.deepcopy(result)
+        wrong["source_assessments"][0]["facets"][0]["evidence_ids"] = [label_b]
+        with self.assertRaisesRegex(L.LabelError, "unknown-or-cross-scope-label"):
+            L.decode_source_response(bundle, wrong)
+        wrong["source_assessments"][0]["facets"][0]["evidence_ids"] = ["L-D2-S001-R0001"]
+        with self.assertRaises(L.LabelError):
+            L.decode_source_response(bundle, wrong)
+        with self.assertRaisesRegex(L.LabelError, "source-group-limit-or-duplicate"):
+            L.encode_source_input(self.task, source_input, self.catalog, self.source_ids + [self.source_ids[0]])
+
+    def test_answer_arm_alias_is_stable_across_subsets_and_assessor_packet_roundtrip(self):
+        source_a, source_b = self.contexts
+        eid_a = next(e for e, p in self.catalog["passages"].items() if p["source_id"] == source_a["source_id"])
+        eid_b = next(e for e, p in self.catalog["passages"].items() if p["source_id"] == source_b["source_id"])
+        cat_a = C.build([source_a])
+        cat_ab = C.build(self.contexts)
+        def answer_input(catalog, sid_value, eid):
+            return {"task": {"task_id": self.task, "query": "query exact"}, "cards": ["card-id"],
+                    "opening_outcomes": [{"card_id": "card-id", "source_id": sid_value, "state": "success"}],
+                    "delivered_sources": [{"source_id": sid_value, "passages":[
+                        {"evidence_id": eid, "text": catalog["passages"][eid]["text"]}]}],
+                    "output_schema": {"type": "object"}}
+        arm_one = L.encode_answerer_input(self.task, answer_input(cat_a, source_a["source_id"], eid_a),
+                                          cat_a, self.source_ids)
+        arm_two = L.encode_answerer_input(self.task, answer_input(cat_ab, source_a["source_id"], eid_a),
+                                          cat_ab, self.source_ids)
+        one_label = next(r["label"] for r in arm_one["label_binding"]["labels"] if r["original_id"] == eid_a)
+        two_label = next(r["label"] for r in arm_two["label_binding"]["labels"] if r["original_id"] == eid_a)
+        self.assertEqual(one_label, two_label)
+        self.assertEqual([p["text"] for p in arm_one["model_input"]["delivered_sources"][0]["passages"]],
+                         [p["text"] for p in arm_two["model_input"]["delivered_sources"][0]["passages"]])
+        answer_response = {"facets": [{"facet_id": "d1_f1", "conclusion": "wording stays",
+                            "claims": [{"text": "claim text", "evidence_ids": [one_label]}]}]}
+        self.assertEqual(L.decode_answerer_response(arm_one, answer_response)["facets"][0]["claims"][0]["evidence_ids"],
+                         [eid_a])
+
+        answer_catalog = cat_a
+        answer_label = one_label
+        source_label = next(r["label"] for r in L.encode_source_input(
+            self.task, {"task": {"task_id": self.task}, "sources": [{"source_id": source_a["source_id"], "passages":[
+                {"evidence_id": eid_a, "text": answer_catalog["passages"][eid_a]["text"]}]}]},
+            self.catalog, self.source_ids)["label_binding"]["labels"] if r["original_id"] == eid_a)
+        self.assertEqual(answer_label, source_label)
+        packet = {"task_id": self.task, "packet_id": "packet-original", "arm_id": "arm1",
+                  "catalog": copy.deepcopy(answer_catalog),
+                  "delivered_sources": [{"source_id": source_a["source_id"], "evidence_ids": [eid_a]}],
+                  "answer_facets": [{"facet_id": "d1_f1", "claims": [
+                      {"claim_id": "d1_f1:C001", "text": "claim kept", "evidence_ids": [eid_a]}]}],
+                  "own_source_assessment": {"tasks": [{"task_id": self.task, "arms": [{
+                      "facet_assessments": [{"facet_id": "d1_f1", "evidence_dispositions": [{
+                          "source_id": source_a["source_id"], "references": [
+                              {"evidence_id": eid_a, "quote": "quote preserved"}]}]}]}]}]}}
+        assessor = L.encode_answer_assessor_input(self.task, packet, self.catalog, answer_catalog, self.source_ids)
+        model_packet = assessor["model_input"]
+        self.assertEqual(model_packet["packet_id"], packet["packet_id"])
+        self.assertEqual(list(model_packet["catalog"]["passages"]),
+                         [next(r["label"] for r in assessor["label_binding"]["labels"]
+                               if r["original_id"] == eid) for eid in answer_catalog["passages"]])
+        self.assertEqual(model_packet["answer_facets"][0]["claims"][0]["text"], "claim kept")
+        self.assertEqual(model_packet["own_source_assessment"]["tasks"][0]["arms"][0]
+                         ["facet_assessments"][0]["evidence_dispositions"][0]
+                         ["references"][0]["quote"], "quote preserved")
+        output = {"schema": "research-usefulness-assessment/1", "packet_id": "packet-original",
+                  "assessor_id": "R1", "packet_kind": "answer", "tasks": [{"task_id": self.task,
+                  "arms": [{"arm_id": "arm1", "facet_assessments": [{"facet_id": "d1_f1",
+                  "claims": [{"claim_id": "d1_f1:C001", "text": "claim kept", "evidence_ids": [answer_label]}],
+                  "evidence_dispositions": [{"source_id": source_a["source_id"],
+                                             "evidence_ids": [source_label]}]}]}]}]}
+        restored = L.decode_answer_assessor_response(assessor, output)
+        fac = restored["tasks"][0]["arms"][0]["facet_assessments"][0]
+        self.assertEqual(fac["claims"][0]["evidence_ids"], [eid_a])
+        self.assertEqual(fac["evidence_dispositions"][0]["evidence_ids"], [eid_a])
+
+
+if __name__ == "__main__":
+    unittest.main()

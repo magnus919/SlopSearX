@@ -1,0 +1,225 @@
+"""Offline card-reference-ID projection adapter for frozen EXP-077 card packets.
+
+This is a mechanics experiment only. It does not alter grade semantics, repair
+historical outputs, or make quality claims. No provider/network access occurs.
+"""
+from __future__ import annotations
+
+import copy
+import hashlib
+import importlib.machinery
+import json
+from pathlib import Path
+from typing import Any
+
+HERE = Path(__file__).resolve().parent
+PACKETS_PATH = HERE.parent / "EXP-077" / "model-packets.py.txt"
+if not PACKETS_PATH.is_file() or PACKETS_PATH.is_symlink():
+    raise RuntimeError("frozen EXP-077 model-packets.py.txt is unavailable")
+M = importlib.machinery.SourceFileLoader("exp077_card_reference_id_packets", str(PACKETS_PATH)).load_module()
+MAX_WINDOW_BYTES = 256
+
+
+class AdapterError(ValueError):
+    pass
+
+
+def _sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _canonical(value: Any) -> bytes:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True,
+                      separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+def _evidence_id(task_id: str, card_sha256: str, field: str, index: int, text: str) -> str:
+    text_sha256 = _sha(text.encode("utf-8"))
+    material = "\0".join(("exp077-card-reference-id/1", task_id, card_sha256, field,
+                          str(index), text_sha256)).encode("utf-8")
+    return "ev_" + _sha(material)
+
+
+def _windows(text: str, maximum: int = MAX_WINDOW_BYTES) -> list[tuple[int, int, str]]:
+    """Partition text on Python Unicode boundaries into exact UTF-8 byte windows."""
+    if type(text) is not str:
+        raise AdapterError("card field must be a string")
+    windows: list[tuple[int, int, str]] = []
+    start = 0
+    while start < len(text):
+        end, size = start, 0
+        while end < len(text):
+            width = len(text[end].encode("utf-8"))
+            if size + width > maximum:
+                break
+            size += width
+            end += 1
+        if end == start:
+            raise AdapterError("unicode-codepoint-exceeds-window-limit")
+        windows.append((start, end, text[start:end]))
+        start = end
+    return windows
+
+
+def _catalog_for(task_id: str, card: dict) -> dict:
+    card_sha = card["card_sha256"]
+    entries = []
+    for field in ("title", "url", "snippet"):
+        for index, (start, end, text) in enumerate(_windows(card[field])):
+            text_sha = _sha(text.encode("utf-8"))
+            entries.append({
+                "evidence_id": _evidence_id(task_id, card_sha, field, index, text),
+                "task_id": task_id,
+                "card_sha256": card_sha,
+                "field": field,
+                "index": index,
+                "start": start,
+                "end": end,
+                "text": text,
+                "text_sha256": text_sha,
+            })
+    if not entries:
+        raise AdapterError("card-has-no-nonempty-reference-window")
+    return {"task_id": task_id, "card_sha256": card_sha, "entries": entries}
+
+
+def build_assignment(task_id: str, cards: list[dict], facets: list[str], *,
+                     assessor_id: str = "A", global_ids: list[str] | None = None) -> dict:
+    """Wrap one frozen card assignment with stable, card-bound reference IDs."""
+    assignments = M.card_assignments(task_id, cards, facets, (assessor_id,), global_ids=global_ids)
+    assignment = assignments[0]
+    catalogs = [_catalog_for(task_id, card) for card in assignment["cards"]]
+    all_ids = [entry["evidence_id"] for cat in catalogs for entry in cat["entries"]]
+    if len(all_ids) != len(set(all_ids)):
+        raise AdapterError("evidence-id-collision")
+
+    output_schema = copy.deepcopy(assignment["schema"])
+    output_schema["$defs"]["anchor"] = {"type": "string", "enum": all_ids}
+    model_input = _model_input_for(assignment, catalogs, output_schema)
+    return {"assignment": assignment, "model_input": model_input,
+            "reference_catalogs": catalogs}
+
+
+def _model_input_for(assignment: dict, catalogs: list[dict], output_schema: dict | None = None) -> dict:
+    """Derive the exact model input without changing frozen card/catalog data."""
+    schema = copy.deepcopy(assignment["schema"]) if output_schema is None else copy.deepcopy(output_schema)
+    ids = [entry["evidence_id"] for catalog in catalogs for entry in catalog["entries"]]
+    schema["$defs"]["anchor"] = {"type": "string", "enum": ids}
+    return {
+        "task_id": assignment["task_id"],
+        "cards": copy.deepcopy(assignment["cards"]),
+        "facets": list(assignment["facets"]),
+        "reference_catalogs": copy.deepcopy(catalogs),
+        "output_schema": schema,
+    }
+
+
+def _validate_catalogs(assignment: dict, catalogs: list[dict]) -> dict[str, dict]:
+    cards = assignment["cards"]
+    if type(catalogs) is not list or len(catalogs) != len(cards):
+        raise AdapterError("catalog-card-coverage")
+    by_card: dict[str, dict] = {}
+    global_ids: dict[str, dict] = {}
+    for card, catalog in zip(cards, catalogs):
+        if (type(catalog) is not dict or set(catalog) != {"task_id", "card_sha256", "entries"}
+                or catalog["task_id"] != assignment["task_id"]
+                or catalog["card_sha256"] != card["card_sha256"]
+                or type(catalog["entries"]) is not list):
+            raise AdapterError("catalog-card-binding")
+        for entry in catalog["entries"]:
+            required = {"evidence_id", "task_id", "card_sha256", "field", "index", "start", "end", "text", "text_sha256"}
+            if type(entry) is not dict or set(entry) != required:
+                raise AdapterError("catalog-entry-shape")
+            field, index = entry["field"], entry["index"]
+            start, end, text = entry["start"], entry["end"], entry["text"]
+            if (entry["task_id"] != assignment["task_id"]
+                    or entry["card_sha256"] != card["card_sha256"] or field not in ("title", "url", "snippet")
+                    or type(index) is not int or index < 0 or type(start) is not int or type(end) is not int
+                    or start < 0 or end <= start or end > len(card[field]) or type(text) is not str
+                    or text != card[field][start:end] or len(text.encode("utf-8")) > MAX_WINDOW_BYTES
+                    or entry["text_sha256"] != _sha(text.encode("utf-8"))
+                    or entry["evidence_id"] != _evidence_id(assignment["task_id"], card["card_sha256"], field, index, text)):
+                raise AdapterError("catalog-entry-binding")
+            evidence_id = entry["evidence_id"]
+            if evidence_id in global_ids:
+                raise AdapterError("catalog-evidence-id-duplicate")
+            expanded = {"field": field, "quote": text}
+            by_card.setdefault(card["card_sha256"], {})[evidence_id] = expanded
+            global_ids[evidence_id] = {"card_sha256": card["card_sha256"], **expanded}
+        expected_entries = _catalog_for(assignment["task_id"], card)["entries"]
+        if catalog["entries"] != expected_entries:
+            raise AdapterError("catalog-window-coverage-or-order")
+    return {"by_card": by_card, "all": global_ids}
+
+
+def expand_and_verify(built: dict, response: dict) -> dict:
+    """Validate reference IDs, expand exact quotes, then run the legacy verifier."""
+    if type(built) is not dict or set(built) != {"assignment", "model_input", "reference_catalogs"}:
+        raise AdapterError("adapter-assignment-shape")
+    assignment = built["assignment"]
+    catalogs = _validate_catalogs(assignment, built["reference_catalogs"])
+    expected_model_input = _model_input_for(assignment, built["reference_catalogs"])
+    if built["model_input"] != expected_model_input:
+        raise AdapterError("model-input-assignment-binding")
+    expected_cards = assignment["cards"]
+    if type(response) is not dict or set(response) != {"records"} or type(response["records"]) is not list:
+        raise AdapterError("response-shape")
+    rows = response["records"]
+    if len(rows) != len(expected_cards):
+        raise AdapterError("card-coverage-missing-or-extra")
+    expected_ids = [card["card_sha256"] for card in expected_cards]
+    observed_ids = [row.get("card_sha256") if type(row) is dict else None for row in rows]
+    if observed_ids != expected_ids:
+        raise AdapterError("card-coverage-order-or-identity")
+
+    expanded_rows = []
+    for row, card in zip(rows, expected_cards):
+        if type(row) is not dict or set(row) != {
+                "card_sha256", "lead", "visible", "facets", "uncertain", "rationale", "anchors", "facet_anchors"}:
+            raise AdapterError("record-shape")
+        if (type(row["lead"]) is not int or row["lead"] not in range(4)
+                or type(row["visible"]) is not int or row["visible"] not in range(4)):
+            raise AdapterError("grade-outside-frozen-scale")
+        facets = row["facets"]
+        uncertain = row["uncertain"]
+        allowed_facets = set(assignment["facets"])
+        if (type(facets) is not list or any(type(x) is not str for x in facets)
+                or len(facets) != len(set(facets)) or not set(facets) <= allowed_facets
+                or type(uncertain) is not list or any(type(x) is not str for x in uncertain)
+                or len(uncertain) != len(set(uncertain)) or not set(uncertain) <= allowed_facets):
+            raise AdapterError("facet-membership-or-duplicates")
+        if type(row["rationale"]) is not str or not row["rationale"].strip():
+            raise AdapterError("rationale-required")
+
+        card_ids = catalogs["by_card"][card["card_sha256"]]
+
+        def expand_list(values, field_name):
+            if type(values) is not list or not values:
+                raise AdapterError(field_name + "-references-required")
+            if any(type(value) is not str or not value for value in values):
+                raise AdapterError(field_name + "-reference-id-invalid")
+            expanded = []
+            for value in values:
+                if value not in card_ids:
+                    if value in catalogs["all"]:
+                        raise AdapterError("cross-card-reference")
+                    raise AdapterError("unknown-reference-id")
+                expanded.append(copy.deepcopy(card_ids[value]))
+            return expanded
+
+        anchors = expand_list(row["anchors"], "anchors")
+        facet_anchors = row["facet_anchors"]
+        if type(facet_anchors) is not dict or set(facet_anchors) != set(facets):
+            raise AdapterError("facet-anchor-coverage")
+        expanded_facet_anchors = {
+            facet: expand_list(refs, "facet-anchors")
+            for facet, refs in facet_anchors.items()
+        }
+        expanded_rows.append({**row, "anchors": anchors, "facet_anchors": expanded_facet_anchors})
+
+    expanded_response = {"records": expanded_rows}
+    try:
+        verification = M.verify_card_response(assignment, expanded_response)
+    except M.PacketError as exc:
+        raise AdapterError("legacy-verification-failed:" + str(exc)) from exc
+    return {"expanded_response": expanded_response, "verification": verification}
