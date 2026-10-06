@@ -71,6 +71,16 @@ class ReferenceLabelsTests(unittest.TestCase):
         mutated["model_input"]["cards"][0]["snippet"] += "tamper"
         with self.assertRaisesRegex(L.LabelError, "encoded-model-input-hash-mismatch"):
             L.decode_card_response(mutated, response)
+        mutated_map = copy.deepcopy(bundle)
+        mutated_map["label_binding"]["labels"][0]["original_id"] = "ev_" + "0" * 64
+        with self.assertRaisesRegex(L.LabelError, "binding-hash-mismatch"):
+            L.decode_card_response(mutated_map, response)
+        collision = copy.deepcopy(self.built)
+        collision["reference_catalogs"][0]["entries"].append(
+            copy.deepcopy(collision["reference_catalogs"][0]["entries"][0]))
+        collision["model_input"]["reference_catalogs"] = copy.deepcopy(collision["reference_catalogs"])
+        with self.assertRaisesRegex(L.LabelError, "duplicate-original-card-reference"):
+            L.encode_card_assignment(self.task, collision)
 
     def test_card_aliases_do_not_follow_display_order(self):
         reversed_built = A.build_assignment(self.task, list(reversed(self.cards)), self.facets,
@@ -111,6 +121,8 @@ class ReferenceLabelsTests(unittest.TestCase):
         wrong["source_assessments"][0]["facets"][0]["evidence_ids"] = ["L-D2-S001-R0001"]
         with self.assertRaises(L.LabelError):
             L.decode_source_response(bundle, wrong)
+        with self.assertRaisesRegex(L.LabelError, "source-group-limit-or-duplicate"):
+            L.encode_source_input(self.task, source_input, self.catalog, self.source_ids + [self.source_ids[0]])
 
     def test_answer_arm_alias_is_stable_across_subsets_and_assessor_packet_roundtrip(self):
         source_a, source_b = self.contexts
