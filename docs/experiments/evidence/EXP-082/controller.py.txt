@@ -10,6 +10,7 @@ import importlib.machinery
 import importlib.util
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -60,8 +61,13 @@ def preflight(bundle_root, cli_path=None):
         'external_source_pins': q['external_source_pins']}
     admission.verify_closure(integrity, qraw)  # verify source before importing the bridge
     proof = admission.verify_closure(integrity, qraw, Path(bundle_root))
+    pins = integrity.get('external_source_pins')
+    pin = pins.get('groktocrawl_cli') if isinstance(pins, dict) else None
+    if (not isinstance(pin, dict) or set(pin) != {'sha256', 'revision'}
+            or not isinstance(pin.get('sha256'), str) or not re.fullmatch(r'[0-9a-f]{64}', pin['sha256'])
+            or not isinstance(pin.get('revision'), str) or not re.fullmatch(r'[0-9a-f]{40}', pin['revision'])):
+        raise ValueError('qualified-cli-pin-invalid')
     cli=Path(cli_path) if cli_path is not None else Path.home()/'.local/bin/groktocrawl'
-    pin=integrity['external_source_pins']['groktocrawl_cli']
     if cli.is_symlink() or not cli.is_file() or hashlib.sha256(cli.read_bytes()).hexdigest()!=pin['sha256']:
         raise ValueError('pinned-cli-preflight-failed')
     return admission, integrity, qraw, proof
@@ -79,13 +85,17 @@ class State:
 
 def begin(outdir, bundle_root, cli_path=None):
     admission, integrity, qraw, _ = preflight(bundle_root, cli_path)
+    # Validate the exact configured candidate before creating the write-once
+    # clock or consuming the stage lease. Keep the values only in this stack
+    # frame; install them into the process environment after admission.
+    capture_config = _read_bound_capture_configuration(bundle_root, integrity, admission.strict_json)
     out = Path(outdir)
     out.mkdir(mode=0o700, parents=False, exist_ok=False)
     clock = admission.create_stage_clock(out, integrity['qualified_source_revision'])
     capability = admission.admit_live(out, integrity, qraw, Path(bundle_root))
     state=State(out, Path(bundle_root), admission,
                 admission.consume_capability(capability), integrity, clock)
-    _configure_capture(state)
+    _configure_capture(state, capture_config)
     return state
 
 
@@ -104,13 +114,13 @@ def prepare_recovery(state):
     return acquisition
 
 
-def _configure_capture(state):
-    """Use existing candidate settings in this process; never modify its file."""
-    import os,hmac
-    binding_raw = (state.bundle_root/'configuration-binding.json').read_bytes()
-    if hashlib.sha256(binding_raw).hexdigest()!=state.integrity['runtime_config_receipt_sha256']:
+def _read_bound_capture_configuration(bundle_root, integrity, strict_json=json.loads):
+    """Read and verify configured endpoint/key in memory without installing them."""
+    import hmac
+    binding_raw = (Path(bundle_root)/'configuration-binding.json').read_bytes()
+    if hashlib.sha256(binding_raw).hexdigest()!=integrity['runtime_config_receipt_sha256']:
         raise ValueError('runtime-config-receipt-binding')
-    binding = state.admission.strict_json(binding_raw)
+    binding = strict_json(binding_raw)
     config = {}
     for line in (Path.home()/'.hermes/.env').read_text().splitlines():
         line=line.strip().removeprefix('export ')
@@ -126,6 +136,13 @@ def _configure_capture(state):
     if (not hmac.compare_digest(tag(url.rstrip('/')),binding['server_tag'])
             or not hmac.compare_digest(tag(key),binding['credential_tag'])):
         raise ValueError('existing-candidate-configuration-changed')
+    return (url.rstrip('/'), key)
+
+
+def _configure_capture(state, config):
+    """Install previously verified candidate settings in this process only."""
+    import os
+    url, key = config
     os.environ['GROKTOCRAWL_API_URL']=url.rstrip('/')
     os.environ['GROKTOCRAWL_API_KEY']=key
     os.environ['API_KEY']=key
@@ -148,9 +165,9 @@ def load_frozen_bindings():
 
 
 def capture(state, acquisition, cases, cli_path):
-    bindings = load_frozen_bindings()
     clock, raw, digest = state.clock
     try:
+        bindings = load_frozen_bindings()
         return bindings.run_capture(acquisition=acquisition, cases=cases,
             cli_path=Path(cli_path), source_integrity=state.integrity, stage_outdir=state.outdir,
             outdir=state.outdir/'capture', admission=state.admission,

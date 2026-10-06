@@ -15,6 +15,9 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
 
 
 def load(name, path):
@@ -48,17 +51,31 @@ class ControllerTests(unittest.TestCase):
         admission.MANIFEST_PATH = self.fixture.exp / "stage-development-manifest.json"
         admission.LEASE_ROOT = Path(self.fixture.temp.name) / "leases-controller"
         self.admission = admission
+        frozen_prepare = self.fixture.root / "docs/experiments/evidence/EXP-078/prepare.py.txt"
+        frozen_prepare.parent.mkdir(parents=True)
+        frozen_prepare.write_bytes((REPO / "docs/experiments/evidence/EXP-078/prepare.py.txt").read_bytes())
+        source_revision = self.fixture.commit("provide frozen EXP-078 projector fixture")
 
         # Add a fake public CLI pin to the fixture qualification. The inert
         # fixture file is hashed during preflight and removed before capture.
         q = admission.strict_json(self.fixture.qraw)
         self.cli_pin = {"sha256": hashlib.sha256(self.cli_bytes).hexdigest(), "revision": "1" * 40}
         q["external_source_pins"] = {"groktocrawl_cli": self.cli_pin}
+        q["qualified_source_revision"] = source_revision
+        registration_path = self.fixture.exp / "registration-integrity.json"
+        registration = admission.strict_json(registration_path.read_bytes())
+        registration["registered_source_revision"] = source_revision
+        registration_raw = admission.canonical_json(registration)
+        registration_path.write_bytes(registration_raw)
+        q["registration_sha256"] = admission.sha(registration_raw)
         self.fixture.qraw = admission.canonical_json(q)
         (self.fixture.exp / "qualification-integrity.json").write_bytes(self.fixture.qraw)
-        self.fixture.commit("add inert fixture CLI source pin")
+        self.fixture.commit("add inert fixture CLI pin and source registration binding")
+        self.fixture.source["registration_sha256"] = admission.sha(registration_raw)
         self.fixture.source["qualification_sha256"] = admission.sha(self.fixture.qraw)
+        self.fixture.source["qualified_source_revision"] = source_revision
         self.fixture.source["external_source_pins"] = q["external_source_pins"]
+        self.fixture.qualified_rev = source_revision
 
     def tearDown(self):
         sys.modules.pop("exp082_admission", None)
@@ -78,11 +95,21 @@ class ControllerTests(unittest.TestCase):
                                   self.cli_path)
         self.assertFalse((Path(self.fixture.temp.name) / "must-not-exist").exists())
         self.cli_path.write_bytes(self.cli_bytes)
-        with tempfile.TemporaryDirectory() as tmp, patch.object(
-                self.controller, "_configure_capture", return_value=None) as configure:
+        def read_fixture(bundle, integrity, strict_json):
+            self.assertEqual(bundle, self.fixture.bundle)
+            self.assertFalse(output.exists())
+            return ("fixture-url", "fixture-key")
+        def install_fixture(state, config):
+            self.assertEqual(config, ("fixture-url", "fixture-key"))
+            self.assertTrue((state.outdir / "stage-clock.json").is_file())
+        with patch.object(self.controller, "_read_bound_capture_configuration",
+                          side_effect=read_fixture) as read_config, patch.object(
+                self.controller, "_configure_capture", side_effect=install_fixture) as configure:
             state = self.controller.begin(output, self.fixture.bundle, self.cli_path)
             acquisition = self.controller.prepare_recovery(state)
-            configure.assert_called_once_with(state)
+            read_config.assert_called_once_with(self.fixture.bundle, state.integrity,
+                                                self.admission.strict_json)
+            configure.assert_called_once_with(state, ("fixture-url", "fixture-key"))
             self.assertEqual(state.clock[0]["stage"], "development")
             self.assertEqual(state.clock[1], (output / "stage-clock.json").read_bytes())
             self.assertEqual(acquisition["schema"], "exp078-effective-acquisition/1")
@@ -95,7 +122,9 @@ class ControllerTests(unittest.TestCase):
 
     def test_capture_uses_frozen_phase_binding_and_missing_cli_stops_before_dispatch(self):
         output = Path(self.fixture.temp.name) / "capture-stage"
-        with patch.object(self.controller, "_configure_capture", return_value=None):
+        with patch.object(self.controller, "_read_bound_capture_configuration",
+                          return_value=("fixture-url", "fixture-key")), patch.object(
+                self.controller, "_configure_capture", return_value=None):
             state = self.controller.begin(output, self.fixture.bundle, self.cli_path)
             acquisition = self.controller.prepare_recovery(state)
         # The generic admission fixture uses opaque source IDs. Recompute the
@@ -120,7 +149,7 @@ class ControllerTests(unittest.TestCase):
         # The controller itself and admission run against the temporary Git
         # fixture; the frozen EXP-078 binding is verified from this checkout's
         # committed source, then its first CLI read fails before dispatch.
-        actual_repo = HERE.parents[3]
+        actual_repo = REPO
         with patch.object(self.controller, "REPO", actual_repo), patch.object(
                 self.controller, "HERE", actual_repo / "docs/experiments/evidence/EXP-082"):
             with self.assertRaises((FileNotFoundError, ValueError)) as caught:
@@ -153,11 +182,13 @@ class ControllerTests(unittest.TestCase):
         (bundle / "configuration-binding.json").write_bytes(binding_raw)
         (env_dir / ".env").write_text(
             f"GROKTOCRAWL_API_URL={server}\nGROKTOCRAWL_API_KEY={secret}\n", encoding="utf-8")
-        state = SimpleNamespace(bundle_root=bundle,
-            integrity={"runtime_config_receipt_sha256": hashlib.sha256(binding_raw).hexdigest()},
+        integrity = {"runtime_config_receipt_sha256": hashlib.sha256(binding_raw).hexdigest()}
+        state = SimpleNamespace(bundle_root=bundle, integrity=integrity,
             admission=SimpleNamespace(strict_json=lambda raw: json.loads(raw)))
         with patch.object(Path, "home", return_value=fake_home), patch.dict(os.environ, {}, clear=True):
-            self.controller._configure_capture(state)
+            config = self.controller._read_bound_capture_configuration(bundle, integrity)
+            self.assertNotIn("GROKTOCRAWL_API_KEY", os.environ)
+            self.controller._configure_capture(state, config)
             self.assertEqual(os.environ["GROKTOCRAWL_API_URL"], server)
             self.assertEqual(os.environ["GROKTOCRAWL_API_KEY"], secret)
             self.assertEqual(os.environ["API_KEY"], secret)
@@ -169,8 +200,29 @@ class ControllerTests(unittest.TestCase):
             (bundle / "configuration-binding.json").read_bytes()).hexdigest()
         with patch.object(Path, "home", return_value=fake_home), patch.dict(os.environ, {}, clear=True):
             with self.assertRaisesRegex(ValueError, "existing-candidate-configuration-changed"):
-                self.controller._configure_capture(state)
+                self.controller._read_bound_capture_configuration(bundle, integrity)
             self.assertNotIn("GROKTOCRAWL_API_KEY", os.environ)
+
+    def test_invalid_candidate_configuration_fails_before_stage_clock_or_lease(self):
+        output = Path(self.fixture.temp.name) / "config-must-not-admit"
+        with patch.object(self.controller, "_read_bound_capture_configuration",
+                          side_effect=ValueError("existing-candidate-configuration-changed")):
+            with self.assertRaisesRegex(ValueError, "existing-candidate-configuration-changed"):
+                self.controller.begin(output, self.fixture.bundle, self.cli_path)
+        self.assertFalse(output.exists())
+        self.assertFalse(self.admission.LEASE_ROOT.exists())
+
+    def test_malformed_cli_revision_pin_fails_before_stage_clock_or_lease(self):
+        q = self.admission.strict_json(self.fixture.qraw)
+        q["external_source_pins"]["groktocrawl_cli"]["revision"] = "not-a-commit"
+        self.fixture.qraw = self.admission.canonical_json(q)
+        (self.fixture.exp / "qualification-integrity.json").write_bytes(self.fixture.qraw)
+        self.fixture.commit("malformed temporary CLI pin fixture")
+        output = Path(self.fixture.temp.name) / "pin-must-not-admit"
+        with self.assertRaisesRegex(ValueError, "qualified-cli-pin-invalid"):
+            self.controller.begin(output, self.fixture.bundle, self.cli_path)
+        self.assertFalse(output.exists())
+        self.assertFalse(self.admission.LEASE_ROOT.exists())
 
 
 if __name__ == "__main__":
