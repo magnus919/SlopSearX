@@ -32,6 +32,7 @@ PREP = PREP_TESTS.P
 VIEW = PREP_TESTS.VIEW
 PACKET_VIEWER = PREP_TESTS.PACKET_VIEWER
 ADMISSION = load("exp090_admission_controller_test", HERE / "admission.py.txt")
+CARRIER = load("exp090_carrier_identity_controller_test", HERE / "final-json-carrier.py.txt")
 
 
 def digest(raw):
@@ -99,7 +100,8 @@ class _SterileAdmission:
     _write_once = staticmethod(ADMISSION._write_once)
     def __init__(self): self.phases = []
     def create_stage_clock(self, output, revision):
-        clock = {"schema": "exp078-stage-clock/1", "stage": "development", "fixture": True}
+        clock = {"schema": "exp078-stage-clock/1", "stage": "development",
+                 "stage_id": "sterile-controller-fixture", "fixture": True}
         raw = self.canonical_json(clock)
         return clock, raw, digest(raw)
     def admit_live(self, *args): return object()
@@ -112,6 +114,7 @@ class _SterileAdmission:
 def _fake_frozen_prepare(output_root, acquisition, cases, guard, source_snapshot_root):
     output_root.mkdir(parents=True)
     jobs = []
+    files = []
     for task_number in range(1, 9):
         task = f"d{task_number}"
         for assessor in ("R1", "R2"):
@@ -126,7 +129,13 @@ def _fake_frozen_prepare(output_root, acquisition, cases, guard, source_snapshot
                     "helper_id": f"helper-{chunk}", "input_path": input_name,
                     "input_bytes": len(raw), "input_sha256": digest(raw),
                     "label_binding_path": label_name, "label_binding_sha256": digest(labels)})
-    (output_root / "manifest.json").write_text(json.dumps({"jobs": jobs}), encoding="utf-8")
+        plan_path = f"private/source-plans/{task}.json"
+        plan_raw = json.dumps({"task_id": task, "chunks": [], "inventory_source_ids": [],
+                               "assessor_ids": []}, sort_keys=True).encode()
+        (output_root / plan_path).parent.mkdir(parents=True, exist_ok=True)
+        (output_root / plan_path).write_bytes(plan_raw)
+        files.append({"path": plan_path, "sha256": digest(plan_raw)})
+    (output_root / "manifest.json").write_text(json.dumps({"jobs": jobs, "files": files}), encoding="utf-8")
     return {"manifest_sha256": "4" * 64}
 
 
@@ -163,19 +172,53 @@ class ControllerToPhaseIntegrationTests(unittest.TestCase):
                     if name == "input-view-verifier.py.txt": return VIEW
                     if name == "packet-viewer.py.txt": return PACKET_VIEWER
                     return original_load_module(loader)
-                cases = [{"id": f"d{i}", "query": f"fixture query {i}",
-                          "purpose": f"fixture purpose {i}",
-                          "critical_checks": [{"id": f"d{i}_f1", "check": "fixture"}]}
-                         for i in range(1, 9)]
+                cohorts = json.loads((HERE / "cohorts.json").read_bytes())
+                cases90 = cohorts["cohorts"]["development"]
+                research90 = [case for case in cases90 if case.get("kind") == "research"]
+                self.assertEqual(len(cases90), 13)
+                self.assertEqual(len(research90), 8)
                 with mock.patch.object(importlib.machinery.SourceFileLoader,
                                        "load_module", fixture_load_module):
-                    result = P.prepare_assessment_inputs(state=state, cases=cases)
+                    # Exact coordinator call; all admission/phase methods above
+                    # are sterile fixtures and no model/network function exists.
+                    result = P.prepare_assessment_inputs(state=state, cases=research90)
                 self.assertEqual(result["active_source_slot_count"], 48)
                 slot_manifest = json.loads((state.outdir / "assessment-inputs" /
                                             "source-slot-manifest.json").read_bytes())
                 self.assertEqual(slot_manifest["carried_card_proof"], state.carried_card_references)
                 self.assertEqual(admission.phases, ["assessment-preparation"])
                 self.assertEqual(result["model_calls_performed"], 0)
+
+                source_views = {row["logical_submission"]: row["input_view_plan"]
+                                for row in slot_manifest["active_source_slots"]}
+                source_jobs = [{key: value for key, value in row.items() if key != "input_view_plan"}
+                               for row in slot_manifest["active_source_slots"]]
+                identity_fields = {"logical_submission", "role", "task_id", "assessor_id",
+                                   "chunk_index", "helper_id"}
+                source_identities = [{key: job[key] for key in identity_fields} for job in source_jobs]
+                answer_plan = json.loads((HERE.parent / "EXP-077" / "assignment-plan.json").read_bytes())[
+                    "stages"]["development"]["answer"]
+                answer_identities = [{"logical_submission": job["submission_id"],
+                    "role": "answer-assessor", "task_id": job["task_id"],
+                    "assessor_id": job["assessor_id"], "anonymous_arm": job["anonymous_arm"],
+                    "packet_id": digest(ADMISSION.canonical_json(
+                        [state.clock[0]["stage_id"], job["submission_id"]]))}
+                    for job in answer_plan]
+                registry = CARRIER.SlotRegistry(source_identities, answer_identities)
+                registry.bind_source_inputs(source_jobs)
+                first = source_jobs[0]
+                # This is the coordinator's dispatch identity check and pinned
+                # local input read, without claiming a dispatch or model call.
+                self.assertEqual(registry.binding(first["logical_submission"]), first)
+                ref = next(row for row in slot_manifest["source_input_refs"]
+                           if row["logical_submission"] == first["logical_submission"])
+                input_path = Path(ref["input_path"])
+                label_path = state.outdir / "assessment-inputs" / ref["label_binding_path"]
+                self.assertEqual(digest(input_path.read_bytes()), first["input_sha256"])
+                self.assertEqual(digest(label_path.read_bytes()), first["label_binding_sha256"])
+                prompt = P.source_viewer_prompt(source_views[first["logical_submission"]])
+                self.assertIn("page_count=1", prompt)
+                self.assertIn("input_sha256=" + first["input_sha256"], prompt)
             finally:
                 BRIDGE.prepare_reused_inputs = previous_prepare
 
