@@ -1,43 +1,183 @@
 from __future__ import annotations
+import hashlib
 import importlib.machinery
+import importlib.util
+import json
+import sys
+import tempfile
+import types
 import unittest
 from pathlib import Path
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
-C = importlib.machinery.SourceFileLoader("exp090_controller_test", str(HERE / "controller.py.txt")).load_module()
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    try:
+        loader.exec_module(module)
+    except BaseException:
+        sys.modules.pop(name, None)
+        raise
+    return module
+
+C = load("exp090_controller_test", HERE / "controller.py.txt")
+P = load("exp090_phase_bindings_controller_test", HERE / "phase-bindings.py.txt")
+INPUT_TESTS = load("exp090_bridge_fixture_for_controller_test", HERE / "input-bridge-tests.py.txt")
+BRIDGE = INPUT_TESTS.B
+PREP_TESTS = load("exp090_source_prep_fixture_for_controller_test", HERE / "prepare-source-assessments-tests.py.txt")
+PREP = PREP_TESTS.P
+VIEW = PREP_TESTS.VIEW
+PACKET_VIEWER = PREP_TESTS.PACKET_VIEWER
+ADMISSION = load("exp090_admission_controller_test", HERE / "admission.py.txt")
+
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def valid_proof():
+    records = []
+    for task_number in range(1, 9):
+        task = f"d{task_number}"
+        for assessor in ("A", "B"):
+            index = len(records)
+            row = {"logical_submission": f"development-{task}-card-{assessor}",
+                   "task_id": task, "assessor_id": assessor,
+                   "helper_id": f"helper-{task}-{assessor}",
+                   "record_count": 56 if task_number in (1, 2) else 55,
+                   "input_path": f"card-inputs/{index}.json", "input_sha256": "b" * 64,
+                   "assignment_path": f"private/card-assignments/{index}.json", "assignment_sha256": "c" * 64,
+                   "label_binding_path": f"private/label-bindings/{index}.json", "label_binding_sha256": "d" * 64,
+                   "raw_response_path": f"responses/{index}.raw.json", "raw_response_sha256": "e" * 64,
+                   "decoded_response_path": f"responses/{index}.decoded.json", "decoded_response_sha256": "f" * 64,
+                   "verified_response_path": f"responses/{index}.verified.json", "verified_response_sha256": "1" * 64,
+                   "dispatch_receipt_path": f"receipts/dispatch-{index}.json", "dispatch_receipt_sha256": "2" * 64,
+                   "validation_receipt_path": f"receipts/validation-{index}.json", "validation_receipt_sha256": "3" * 64}
+            records.append(row)
+    return {"schema": "exp090-carried-card-reference-proof/1", "source_study_id": "EXP-088",
+            "exp084_grader_outputs_used": False, "card_assessments_carried_unchanged": True,
+            "card_job_count": 16, "record_count": 884,
+            "assessment_manifest_path": "exp088-card-reference/provenance/assessment-manifest.json",
+            "assessment_manifest_sha256": "a" * 64, "records": records}
 
 
 class OpaqueCardProofTests(unittest.TestCase):
-    def proof(self):
-        return {"assessment_manifest_path": "exp088-card-reference/provenance/assessment-manifest.json",
-                "assessment_manifest_sha256": "a" * 64,
-                "records": ([{"record_count": 55, "input_sha256": "b" * 64} for _ in range(15)]
-                            + [{"record_count": 59, "input_sha256": "b" * 64}])}
-
-    def test_preserves_only_opaque_proof_and_exact_aggregate_counts(self):
-        result = C._opaque_card_proof(self.proof())
-        self.assertEqual(result["assignment_count"], 16)
-        self.assertEqual(result["record_count"], 884)
-        self.assertEqual(result["assessment_manifest_sha256"], "a" * 64)
+    def test_preserves_complete_bridge_guard_schema_without_grade_payloads(self):
+        supplied = valid_proof()
+        result = C._opaque_card_proof(supplied)
+        for field in ("schema", "source_study_id", "exp084_grader_outputs_used",
+                      "card_assessments_carried_unchanged", "card_job_count", "record_count",
+                      "assessment_manifest_path", "assessment_manifest_sha256", "records"):
+            self.assertEqual(result[field], supplied[field])
         self.assertNotIn("verified_response", result)
-        invalid = self.proof()
-        invalid["records"][-1]["record_count"] = 58
-        with self.assertRaisesRegex(ValueError, "carried-card-record-count"):
-            C._opaque_card_proof(invalid)
+        self.assertNotIn("grades", result)
+        self.assertEqual((result["card_job_count"], result["record_count"]), (16, 884))
 
-    def test_rejects_wrong_manifest_binding_or_record_inventory(self):
-        wrong = self.proof()
-        wrong["assessment_manifest_path"] = "other.json"
-        with self.assertRaisesRegex(ValueError, "carried-card-manifest-binding"):
-            C._opaque_card_proof(wrong)
-        wrong = self.proof()
-        wrong["records"].pop()
+    def test_rejects_changed_lineage_coverage_hashes_and_inventory(self):
+        for field, bad in (("schema", "wrong"), ("source_study_id", "EXP-084"),
+                           ("exp084_grader_outputs_used", True),
+                           ("card_assessments_carried_unchanged", False),
+                           ("card_job_count", 15), ("record_count", 883)):
+            with self.subTest(field=field):
+                proof = valid_proof(); proof[field] = bad
+                with self.assertRaises(ValueError): C._opaque_card_proof(proof)
+        proof = valid_proof(); proof["records"][0]["input_sha256"] = "not-a-hash"
+        with self.assertRaisesRegex(ValueError, "carried-card-record-hash"):
+            C._opaque_card_proof(proof)
+        proof = valid_proof(); proof["records"].pop()
         with self.assertRaisesRegex(ValueError, "carried-card-checkpoint-invalid"):
-            C._opaque_card_proof(wrong)
-        wrong = self.proof()
-        wrong["assessment_manifest_sha256"] = "not-a-hash"
-        with self.assertRaisesRegex(ValueError, "carried-card-manifest-binding"):
-            C._opaque_card_proof(wrong)
+            C._opaque_card_proof(proof)
+
+
+class _SterileAdmission:
+    """Nonlive clock/permit fixture: every method is local and records use."""
+    canonical_json = staticmethod(ADMISSION.canonical_json)
+    strict_json = staticmethod(ADMISSION.strict_json)
+    _write_once = staticmethod(ADMISSION._write_once)
+    def __init__(self): self.phases = []
+    def create_stage_clock(self, output, revision):
+        clock = {"schema": "exp078-stage-clock/1", "stage": "development", "fixture": True}
+        raw = self.canonical_json(clock)
+        return clock, raw, digest(raw)
+    def admit_live(self, *args): return object()
+    def consume_capability(self, _capability): return object()
+    def acquire_phase(self, _permit, phase, _stage, _clock):
+        self.phases.append(phase); return object()
+    def require_phase(self, _phase, _clock, _stage): return None
+
+
+def _fake_frozen_prepare(output_root, acquisition, cases, guard, source_snapshot_root):
+    output_root.mkdir(parents=True)
+    jobs = []
+    for task_number in range(1, 9):
+        task = f"d{task_number}"
+        for assessor in ("R1", "R2"):
+            for chunk in range(3):
+                logical = f"development-{task}-source-{assessor}-{chunk + 1}"
+                raw, labels = b'{"source":"synthetic"}', b'{"labels":[]}'
+                input_name, label_name = logical + ".json", logical + ".labels.json"
+                (output_root / input_name).write_bytes(raw)
+                (output_root / label_name).write_bytes(labels)
+                jobs.append({"logical_submission": logical, "role": "source", "model_call_required": True,
+                    "task_id": task, "assessor_id": assessor, "chunk_index": chunk,
+                    "helper_id": f"helper-{chunk}", "input_path": input_name,
+                    "input_bytes": len(raw), "input_sha256": digest(raw),
+                    "label_binding_path": label_name, "label_binding_sha256": digest(labels)})
+    (output_root / "manifest.json").write_text(json.dumps({"jobs": jobs}), encoding="utf-8")
+    return {"manifest_sha256": "4" * 64}
+
+
+class ControllerToPhaseIntegrationTests(unittest.TestCase):
+    def test_controller_state_proof_reaches_real_phase_guard_offline(self):
+        """Exercise begin -> actual bridge -> State -> actual phase preparer, with no live admission."""
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle_root, pins_path = INPUT_TESTS.fixture(tmp)
+            previous_prepare = BRIDGE.prepare_reused_inputs
+            BRIDGE.prepare_reused_inputs = lambda root, *, stage_clock, stage_clock_digest: previous_prepare(
+                root, stage_clock=stage_clock, stage_clock_digest=stage_clock_digest,
+                pins_path=pins_path, base_pins_path=BRIDGE.EXP088_PINS_PATH)
+            admission = _SterileAdmission()
+            integrity = {"qualified_source_revision": "a" * 40}
+            original_load = C.load
+            def load_bridge(name, filename):
+                return BRIDGE if filename == "input-bridge.py.txt" else original_load(name, filename)
+            try:
+                with (mock.patch.object(C, "preflight", return_value=(admission, integrity, b"{}", {})),
+                      mock.patch.object(C, "_read_bound_capture_configuration", return_value=("fixture", "unused")),
+                      mock.patch.object(C, "_configure_capture"),
+                      mock.patch.object(C, "load", side_effect=load_bridge)):
+                    state = C.begin(Path(tmp) / "stage", bundle_root)
+                self.assertEqual(state.carried_card_references["schema"],
+                                 "exp090-carried-card-reference-proof/1")
+                self.assertEqual((state.carried_card_references["card_job_count"],
+                                  state.carried_card_references["record_count"]), (16, 884))
+
+                original_load_module = importlib.machinery.SourceFileLoader.load_module
+                def fixture_load_module(loader):
+                    name = Path(loader.path).name
+                    if name == "prepare-assessments.py.txt":
+                        return types.SimpleNamespace(prepare=_fake_frozen_prepare)
+                    if name == "input-view-verifier.py.txt": return VIEW
+                    if name == "packet-viewer.py.txt": return PACKET_VIEWER
+                    return original_load_module(loader)
+                cases = [{"id": f"d{i}", "query": f"fixture query {i}",
+                          "purpose": f"fixture purpose {i}",
+                          "critical_checks": [{"id": f"d{i}_f1", "check": "fixture"}]}
+                         for i in range(1, 9)]
+                with mock.patch.object(importlib.machinery.SourceFileLoader,
+                                       "load_module", fixture_load_module):
+                    result = P.prepare_assessment_inputs(state=state, cases=cases)
+                self.assertEqual(result["active_source_slot_count"], 48)
+                slot_manifest = json.loads((state.outdir / "assessment-inputs" /
+                                            "source-slot-manifest.json").read_bytes())
+                self.assertEqual(slot_manifest["carried_card_proof"], state.carried_card_references)
+                self.assertEqual(admission.phases, ["assessment-preparation"])
+                self.assertEqual(result["model_calls_performed"], 0)
+            finally:
+                BRIDGE.prepare_reused_inputs = previous_prepare
 
 
 if __name__ == "__main__":
