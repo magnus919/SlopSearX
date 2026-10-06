@@ -1,0 +1,148 @@
+"""Focused offline fixtures for EXP-085 private input preparation."""
+import hashlib
+import importlib.machinery
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+
+HERE = Path(__file__).resolve().parent
+PREP = importlib.machinery.SourceFileLoader(
+    "exp085_prepare_assessments_tested", str(HERE / "prepare-assessments.py.txt")).load_module()
+BRIDGE = importlib.machinery.SourceFileLoader(
+    "exp085_test_projector", str(HERE.parent / "EXP-078" / "prepare.py.txt")).load_module()
+
+
+def dump(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def fixture(root, *, incomplete=False):
+    cases, pools, source_ids, native_maps, card_sources = [], {}, {}, {}, {}
+    capture_rows, raw_rows, counter = [], [], 0
+    card_counts = {"d1": 41, "d2": 21, **{f"d{i}": 1 for i in range(3, 9)}}
+    for n in range(1, 9):
+        tid = f"d{n}"
+        case = {"id": tid, "query": f"query {tid}", "purpose": f"purpose {tid}",
+                "critical_checks": [{"id": f"{tid}_f1", "check": "Check the supplied evidence."}]}
+        cases.append(case)
+        cards, srcmap, nativemap = [], {}, {}
+        for i in range(card_counts[tid]):
+            counter += 1
+            native = {"title": f"Title {tid} {i}", "content": f"Snippet {tid} {i}",
+                      "url": f"https://example.test/{tid}/{i}"}
+            card = BRIDGE.project_card(tid, i, native)
+            sid = BRIDGE._source_id(native, tid, i)
+            cards.append(card)
+            srcmap[card["id"]] = sid
+            nativemap[card["id"]] = native
+            card_sources[f"{tid}:{card['id']}"] = sid
+            unavailable = tid == "d2" and i == 20
+            if unavailable:
+                capture_rows.append({"source_id": sid, "status": "error", "accepted": False,
+                                     "error_class": "SyntheticError"})
+                continue
+            markdown = "Evidence Ω " + ("x" * (8500 if tid == "d1" and i == 0 else 6988))
+            raw_path = f"private-raw/source-{counter:04d}.json"
+            rawdoc = {"source_id": sid, "url": native["url"], "markdown": markdown}
+            raw_rows.append((raw_path, rawdoc))
+            context = markdown[:8000]
+            digest = sha(context.encode("utf-8"))
+            capture_rows.append({"source_id": sid, "status": "captured", "accepted": True,
+                                 "raw_path": raw_path, "captured_bytes": len(markdown.encode("utf-8")),
+                                 "captured_sha256": sha(markdown.encode("utf-8")),
+                                 "assessment_context_characters": len(context),
+                                 "assessment_context_sha256": digest,
+                                 "assessment_context_truncated": len(markdown) > 8000,
+                                 "url_sha256": sha(native["url"].encode("utf-8")),
+                                 "consumer_classification": {"barrier_flagged": False,
+                                                             "markdown_challenge": False, "refusal": False}})
+        pools[tid] = {"cards": cards, "natural_count": len(cards), "merged_count": len(cards)}
+        source_ids[tid], native_maps[tid] = srcmap, nativemap
+    acquisition = {"schema": "exp078-effective-acquisition/1", "stage": {"stage": "development"},
+                   "synthetic": False, "pools": pools, "source_id_by_card_id": source_ids,
+                   "native_results_by_card_id": native_maps}
+    snapshot = root / "snapshot"
+    dump(snapshot / "effective-input-envelope.json", acquisition)
+    dump(snapshot / "stage-clock.json", {"schema": "fake-clock"})
+    dump(snapshot / "capture" / "card-source-binding.json",
+         {"schema": "exp078-card-source-binding/1", "card_sources": card_sources})
+    capture_raw = {"schema": "exp077-source-capture/1", "status": "complete", "synthetic": False,
+                   "inventory_count": len(capture_rows), "captures": capture_rows}
+    dump(snapshot / "capture" / "portable-capture-wire" / "capture.json", capture_raw)
+    wire = snapshot / "capture" / "portable-capture-wire"
+    (wire / "receipts.json").write_text(json.dumps(capture_rows), encoding="utf-8")
+    for rel, doc in raw_rows:
+        dump(wire / rel, doc)
+    capture_bytes = (wire / "capture.json").read_bytes()
+    binding_bytes = (snapshot / "capture" / "card-source-binding.json").read_bytes()
+    clock_bytes = (snapshot / "stage-clock.json").read_bytes()
+    dump(snapshot / "capture" / "capture-phase.json", {
+        "schema": "exp078-capture-phase/1", "status": "complete" if not incomplete else "running",
+        "stage_clock_sha256": sha(clock_bytes), "card_source_binding_sha256": sha(binding_bytes),
+        "helper_wire_receipt_sha256": sha(capture_bytes)})
+    return snapshot, acquisition, cases
+
+
+class PreparationTests(unittest.TestCase):
+    def test_chunks_unavailable_states_conditional_fourth_and_per_submission_cap(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            snapshot, acquisition, cases = fixture(root)
+            admitted_parent = root / "admitted-stage"
+            admitted_parent.mkdir()
+            (admitted_parent / "stage-clock.json").write_text("already admitted", encoding="utf-8")
+            output_root = admitted_parent / "assessment-inputs"
+            result = PREP.prepare(output_root, acquisition, cases, lambda: None, snapshot)
+            manifest = json.loads((output_root / "manifest.json").read_text())
+            self.assertEqual(result["card_jobs"], 16)
+            self.assertEqual(result["active_source_jobs"], 20)
+            self.assertEqual(manifest["source_snapshot_root"], "exp084/")
+            self.assertTrue((admitted_parent / "stage-clock.json").is_file())
+            jobs = manifest["jobs"]
+            d1 = [j for j in jobs if j.get("task_id") == "d1" and j.get("role") == "source"]
+            self.assertEqual([j["chunk_index"] for j in d1 if j.get("model_call_required")], [0, 1, 2, 0, 1, 2])
+            self.assertEqual(sum(j.get("conditional_state") == "absent_trailing_chunk" for j in d1), 2)
+            d2_unavailable = [j for j in jobs if j.get("task_id") == "d2" and j.get("role") == "source"
+                              and j.get("chunk_index") == 1]
+            self.assertEqual(len(d2_unavailable), 2)
+            self.assertTrue(all(j["model_call_required"] is False for j in d2_unavailable))
+            payloads = [json.loads((output_root / j["input_path"]).read_text())
+                        for j in jobs if j.get("input_path")]
+            self.assertTrue(all(len((output_root / j["input_path"]).read_bytes()) <= PREP.MAX_SUBMISSION_BYTES
+                                for j in jobs if j.get("input_path")))
+            self.assertGreater(sum(len((output_root / j["input_path"]).read_bytes())
+                                   for j in jobs if j.get("input_path")), PREP.MAX_SUBMISSION_BYTES)
+            self.assertEqual(manifest["serialized_submission_bytes_total_diagnostic"],
+                             sum(len((output_root / j["input_path"]).read_bytes())
+                                 for j in jobs if j.get("input_path")))
+            source_inputs = [p["source_model_input"] for p in payloads if "source_model_input" in p]
+            self.assertEqual(len(source_inputs), 20)
+            d2_plan = json.loads((output_root / "private/source-plans/d2.json").read_text())
+            self.assertEqual(d2_plan["chunks"][1]["source_inventory"][-1]["state"], "failed")
+            self.assertTrue(all(len(chunk["source_inventory"]) <= 20 for chunk in source_inputs))
+
+    def test_incomplete_capture_refuses_before_any_output_or_guard(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            snapshot, acquisition, cases = fixture(root, incomplete=True)
+            calls = []
+            stage_parent = root / "admitted-stage"
+            stage_parent.mkdir()
+            (stage_parent / "stage-clock.json").write_text("already admitted", encoding="utf-8")
+            output_root = stage_parent / "assessment-inputs"
+            with self.assertRaisesRegex(PREP.PrepareError, "capture-phase-not-terminal"):
+                PREP.prepare(output_root, acquisition, cases, lambda: calls.append(True), snapshot)
+            self.assertEqual(calls, [])
+            self.assertFalse(output_root.exists())
+            self.assertTrue((stage_parent / "stage-clock.json").is_file())
+
+
+if __name__ == "__main__":
+    unittest.main()
