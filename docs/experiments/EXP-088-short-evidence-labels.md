@@ -1,6 +1,6 @@
 # EXP-088 — short evidence labels with exact reference validation
 
-Status: prospective registration; no live assessment or quality result yet.
+Status: development in progress. All sixteen fresh card assessments passed exact-reference validation; [captured-page assessment and the quality comparisons remain](evidence/EXP-088/in-progress/readout.md). No ranking or task-use result yet.
 
 EXP-087 stopped when its twelfth card assessment selected an unknown long evidence ID. Its [terminal outcome](evidence/EXP-087/completed/readout.md) remains invalid and receives no ranking-quality credit. This study tests a narrower interface change: short, closed evidence labels that expand privately to the original exact references.
 
