@@ -1,6 +1,6 @@
 # EXP-090 — complete delivery, protocol-invalid submission
 
-All 43 assigned pages were delivered byte-exactly. The grader returned a 28,435-byte final JSON object. Before the 23 correct viewer calls, it made one invalid request for pages `0,1`; page indices actually start at one. The instructions and small description did not state that starting index explicitly.
+All 43 assigned pages were delivered byte-exactly. The grader returned a 28,435-byte final JSON object. After the description and before the correct page reads, it made one invalid request for pages `0,1`; page indices actually start at one. The instructions and small description did not state that starting index explicitly.
 
 The registered transcript gate required exactly the declared calls with no retry. All 24 actual calls remain retained; the required submission failed with `transcript-call-count`. Comparing successful outputs with the expected byte hashes is diagnostic only. No filtered transcript, repaired grade, accepted assessment, downstream answer or quality score was produced. No new search or source fetch occurred. This stage is terminal and inconclusive.
 
