@@ -107,6 +107,6 @@ def capture(state, acquisition, cases, cli_path):
     bindings = load('exp078_controller_bindings', 'phase-bindings.py.txt')
     clock, raw, digest = state.clock
     return bindings.run_capture(acquisition=acquisition, cases=cases,
-        cli_path=Path(cli_path), source_integrity=state.integrity, outdir=state.outdir,
-        admission=state.admission, stage_permit=state.permit, clock=clock,
+        cli_path=Path(cli_path), source_integrity=state.integrity, stage_outdir=state.outdir,
+        outdir=state.outdir / 'capture', admission=state.admission, stage_permit=state.permit, clock=clock,
         clock_bytes=raw, clock_sha256=digest)
