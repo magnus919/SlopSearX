@@ -950,7 +950,8 @@ Read resources instead of guessing: `slopsearx://capabilities`,
 `slopsearx://health/summary`.
 
 Five prompts are bundled for repeatable workflows: `research_with_source_coverage`,
-`investigate_vulnerability`, `find_company_jobs`, `compare_package_or_project`.
+`investigate_vulnerability`, `find_company_jobs`, `compare_package_or_project`, and
+`plan_research_with_evidence`.
 
 ## 8. Agent usage guide
 
