@@ -1,0 +1,301 @@
+"""Offline-only tests for the EXP-078 single corrective acquisition.
+
+The fixture is deliberately synthetic and is never admitted for live use. All
+HTTP requests use HTTPX MockTransport; tests assert the target, one-call cap,
+separate original d12 provenance, output permissions, and terminal failure
+behavior without touching a key, DNS, network, or stage lease.
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+import tempfile
+import unittest
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
+
+import httpx
+
+HERE = Path(__file__).resolve().parent
+LOADER = importlib.machinery.SourceFileLoader("exp078_acquire_tested", str(HERE / "acquire.py.txt"))
+SPEC = importlib.util.spec_from_loader(LOADER.name, LOADER)
+N = importlib.util.module_from_spec(SPEC)
+LOADER.exec_module(N)
+B = N._load_input_bridge()
+
+
+def digest(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _fixture_bundle(root: Path) -> Path:
+    """Create a complete pin-consistent predecessor with the registered d12 miss."""
+    bundle = root / "frozen-input"
+    bundle.mkdir(mode=0o700)
+    cohorts = B.strict_json((HERE / "cohorts.json").read_bytes())
+    tasks = cohorts["cohorts"]["development"]
+    engine_list = B.strict_json((HERE / "protocol.json").read_bytes())["acquisition"][
+        "historical_research_engines"]
+    call_no = 0
+    for query_no, task in enumerate(tasks, 1):
+        task_id = task["id"]
+        research = task["kind"] == "research"
+        engines = engine_list if research else ["github"]
+        results = []
+        count = 41 if research else 20
+        for index in range(count):
+            url = f"https://fixture.invalid/{task_id}/{index}"
+            if not research and task_id != "d12" and index == 0:
+                url = task["target_url"]
+            results.append({"url": url, "title": f"{task_id} result {index}",
+                            "content": "synthetic pinned predecessor", "engine": engines[0],
+                            "position": index + 1})
+        outcomes = [{"engine": engine, "status": "blocked" if engine == "wikipedia" else "ok",
+                     "result_count": 0 if engine == "wikipedia" else count,
+                     "latency_ms": 1.0} for engine in engines]
+        calls = []
+        for engine in engines:
+            call_no += 1
+            body = f"synthetic transport body {call_no}".encode()
+            sidecar = N.canonical_json({"query_id": task_id, "engine": engine,
+                                        "status_code": 200, "dispatched": True})
+            body_name, side_name = f"http-{call_no:03d}.body", f"http-{call_no:03d}.json"
+            http_dir = bundle / "http"
+            http_dir.mkdir(exist_ok=True)
+            (http_dir / body_name).write_bytes(body)
+            (http_dir / side_name).write_bytes(sidecar)
+            calls.append({"query_id": task_id, "engine": engine, "dispatched": True,
+                          "body_path": body_name, "sidecar_path": side_name,
+                          "sidecar_sha256": digest(sidecar),
+                          "retained_body_sha256": digest(body),
+                          "response_body_sha256": digest(body),
+                          "retained_body_bytes": len(body)})
+        query = {"schema": "exp077-logical-search/1", "task_id": task_id,
+                 "kind": task["kind"], "query": task["query"],
+                 "target_url": task.get("target_url"), "results": results,
+                 "engine_outcomes": outcomes, "partial": research,
+                 "deadline_exceeded": False, "all_unresponsive": False,
+                 "cached": False, "http_calls": calls}
+        (bundle / f"query-{query_no:02d}-{task_id}.json").write_bytes(N.canonical_json(query))
+
+    entries = []
+    for path in sorted(bundle.rglob("*")):
+        if path.is_file():
+            raw = path.read_bytes()
+            entries.append({"path": path.relative_to(bundle).as_posix(),
+                            "sha256": digest(raw), "bytes": len(raw)})
+    pins = {"schema": "exp078-reuse-input-pins/1", "status": "approved_reuse_input_pins",
+            "file_count": len(entries), "total_bytes": sum(row["bytes"] for row in entries),
+            "files": entries,
+            "predecessor_provenance": {"stage_final_sha256": "a" * 64}}
+    pins_path = root / "fixture-pins.json"
+    pins_path.write_bytes(N.canonical_json(pins))
+    return pins_path
+
+
+def _clock(outdir: Path) -> tuple[dict, bytes, str]:
+    protocol_raw = (HERE / "protocol.json").read_bytes()
+    cohorts_raw = (HERE / "cohorts.json").read_bytes()
+    started = datetime.now(timezone.utc).replace(microsecond=0)
+    clock = {"schema": "exp078-stage-clock/1", "stage_id": "fixture-stage-0001",
+             "stage": "development", "stage_started_utc": started.isoformat().replace("+00:00", "Z"),
+             "stage_deadline_utc": (started + timedelta(hours=8)).isoformat().replace("+00:00", "Z"),
+             "stage_manifest_sha256": "b" * 64, "protocol_sha256": digest(protocol_raw),
+             "cohorts_sha256": digest(cohorts_raw), "source_revision": "0" * 40,
+             "ordered_task_ids": [f"d{i}" for i in range(1, 14)]}
+    raw = N.canonical_json(clock)
+    (outdir / "stage-clock.json").write_bytes(raw)
+    return clock, raw, digest(raw)
+
+
+def _response(target: bool = True) -> dict:
+    rows = []
+    for index in range(20):
+        url = N.TARGET_URL if target and index == 3 else f"https://github.com/fixture/repo-{index}"
+        rows.append({"html_url": url, "full_name": f"fixture/repo-{index}",
+                     "name": f"repo-{index}", "description": f"fixture result {index}",
+                     "language": "Go", "stargazers_count": 100 + index, "topics": []})
+    return {"items": rows}
+
+
+class AcquisitionTests(unittest.IsolatedAsyncioTestCase):
+    async def _run(self, status: int = 200, target: bool = True, body: bytes | None = None,
+                   raise_transport: bool = False):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        root = Path(temp.name)
+        bundle_root = root / "frozen-input"
+        pins = _fixture_bundle(root)
+        historical_sha = digest((bundle_root / "query-12-d12.json").read_bytes())
+        outdir = root / "stage"
+        outdir.mkdir(mode=0o700)
+        clock = _clock(outdir)
+        observed = []
+
+        def handle(request: httpx.Request) -> httpx.Response:
+            observed.append(request)
+            if raise_transport:
+                raise httpx.ConnectTimeout("synthetic transport interruption", request=request)
+            if body is not None:
+                content = body
+            else:
+                content = json.dumps(_response(target)).encode()
+            return httpx.Response(status, request=request, content=content,
+                                  headers={"content-type": "application/json"})
+
+        result = await N.run_correction(outdir=outdir, bundle_root=bundle_root,
+            pins_path=pins, offline=True,
+            transport_factory=lambda: httpx.MockTransport(handle), stage_clock=clock)
+        return root, outdir, result, observed, pins, historical_sha
+
+    async def test_single_fresh_query_uses_new_pool_only_and_retains_original_miss(self):
+        root, outdir, final, requests, pins, historical_sha = await self._run()
+        self.assertEqual(final["status"], "complete")
+        self.assertTrue(final["synthetic"])
+        self.assertFalse(final["quality_credit"])
+        self.assertFalse(final["adoption_eligible"])
+        self.assertEqual(final["physical_http_calls"], 1)
+        self.assertEqual(len(requests), 1)
+        request = requests[0]
+        self.assertEqual(request.url.host, "api.github.com")
+        self.assertEqual(parse_qs(urlsplit(str(request.url)).query),
+                         {"q": ["cosign"], "per_page": ["20"], "page": ["1"]})
+        self.assertNotIn("authorization", {k.lower(): v for k, v in request.headers.items()})
+        acquisition = outdir / "acquisition"
+        receipt_bytes = (acquisition / "corrective-query.json").read_bytes()
+        receipt = json.loads(receipt_bytes)
+        self.assertEqual(digest(receipt_bytes), final["corrective_query_receipt_sha256"])
+        self.assertEqual(receipt["status"], "complete")
+        self.assertEqual(receipt["physical_http_calls"], 1)
+        self.assertTrue(receipt["target_acquired"])
+        self.assertEqual(receipt["effective_pool_source"], "corrective_github_query")
+        self.assertEqual(len(receipt["results"]), 20)
+        self.assertFalse(any(row["url"].startswith("https://fixture.invalid/d12/")
+                             for row in receipt["results"]))
+        reuse = json.loads((acquisition / "reused-inputs.json").read_bytes())
+        self.assertFalse(reuse["historical_d12_effective_pool"])
+        self.assertTrue(reuse["no_predecessor_bytes_modified"])
+        self.assertEqual(reuse["historical_d12_receipt_sha256"], historical_sha)
+        self.assertEqual(reuse["input_pins_sha256"], digest(pins.read_bytes()))
+        self.assertEqual((acquisition.stat().st_mode & 0o777), 0o700)
+        self.assertEqual((acquisition / "stage-final.json").stat().st_mode & 0o777, 0o600)
+        call = receipt["http_calls"][0]
+        self.assertEqual(call["call_index"], 1)
+        self.assertEqual(call["status_code"], 200)
+        self.assertTrue((acquisition / "http" / call["body_path"]).is_file())
+        self.assertTrue((acquisition / "http" / call["sidecar_path"]).is_file())
+
+    async def test_target_miss_is_retained_without_insertion_or_retry(self):
+        _, outdir, final, requests, _, _ = await self._run(target=False)
+        receipt = json.loads((outdir / "acquisition/corrective-query.json").read_bytes())
+        self.assertEqual(final["status"], "complete")
+        self.assertFalse(receipt["target_acquired"])
+        self.assertEqual(len(receipt["results"]), 20)
+        self.assertFalse(any(row["url"] == N.TARGET_URL for row in receipt["results"]))
+        self.assertEqual(len(requests), 1)
+
+    async def test_http_failure_is_terminal_and_has_a_raw_receipt(self):
+        _, outdir, final, requests, _, _ = await self._run(status=503)
+        receipt = json.loads((outdir / "acquisition/corrective-query.json").read_bytes())
+        self.assertEqual(final["status"], "incomplete")
+        self.assertEqual(len(requests), 1)
+        self.assertEqual(receipt["physical_http_calls"], 1)
+        self.assertEqual(receipt["http_calls"][0]["status_code"], 503)
+        self.assertEqual(receipt["results"], [])
+        self.assertIsNotNone(receipt["failure"])
+        self.assertIsNotNone(final["fatal_stop"])
+
+    async def test_response_overflow_stops_and_keeps_bounded_body(self):
+        _, outdir, final, requests, _, _ = await self._run(body=b"x" * (N.MAX_RESPONSE_BYTES + 1))
+        receipt = json.loads((outdir / "acquisition/corrective-query.json").read_bytes())
+        self.assertEqual(final["status"], "incomplete")
+        self.assertEqual(len(requests), 1)
+        self.assertEqual(receipt["physical_http_calls"], 1)
+        call = receipt["http_calls"][0]
+        self.assertLessEqual(call["retained_body_bytes"], N.MAX_RESPONSE_BYTES)
+        self.assertEqual(final["physical_http_calls"], 1)
+
+    async def test_transport_interruption_is_sanitized_and_receipted_once(self):
+        _, outdir, final, requests, _, _ = await self._run(raise_transport=True)
+        receipt = json.loads((outdir / "acquisition/corrective-query.json").read_bytes())
+        call = receipt["http_calls"][0]
+        self.assertEqual(final["status"], "incomplete")
+        self.assertEqual(len(requests), 1)
+        self.assertEqual(receipt["physical_http_calls"], 1)
+        self.assertEqual(call["failure"], "ConnectTimeout")
+        self.assertIsNone(call["status_code"])
+        raw = (outdir / "acquisition/corrective-query.json").read_text()
+        self.assertNotIn("synthetic transport interruption", raw)
+
+    async def test_phase_guard_checks_before_dispatch_and_rejects_expired_clock(self):
+        class Admission:
+            def __init__(self):
+                self.checks = 0
+
+            def require_phase(self, permit, clock_bytes, outdir):
+                self.checks += 1
+
+        called = []
+        def handler(request):
+            called.append(request)
+            return httpx.Response(200, request=request, content=b"ok")
+
+        with tempfile.TemporaryDirectory() as temp:
+            outdir = Path(temp)
+            current = datetime.now(timezone.utc).replace(microsecond=0)
+            clock = {"stage_deadline_utc": (current + timedelta(hours=1)).isoformat().replace("+00:00", "Z")}
+            clock_bytes = N.canonical_json(clock)
+            admission = Admission()
+            inner = httpx.MockTransport(handler)
+            guard = N._PhaseGuard(inner, admission, object(), clock_bytes, outdir)
+            async with httpx.AsyncClient(transport=guard) as client:
+                await client.get("https://fixture.invalid/no-network")
+            self.assertEqual((admission.checks, len(called)), (1, 1))
+
+            expired = {"stage_deadline_utc": (current - timedelta(seconds=1)).isoformat().replace("+00:00", "Z")}
+            expired_bytes = N.canonical_json(expired)
+            guard = N._PhaseGuard(httpx.MockTransport(handler), admission, object(), expired_bytes, outdir)
+            request = httpx.Request("GET", "https://fixture.invalid/no-network")
+            with self.assertRaisesRegex(N.CorrectionError, "deadline expired"):
+                await guard.handle_async_request(request)
+            self.assertEqual((admission.checks, len(called)), (1, 1))
+
+    async def test_live_mode_without_stage_permit_cannot_construct_transport(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        root = Path(temp.name)
+        pins = _fixture_bundle(root)
+        bundle = root / "frozen-input"
+        outdir = root / "stage"
+        outdir.mkdir(mode=0o700)
+        _clock(outdir)
+        called = []
+        original = httpx.AsyncHTTPTransport
+
+        def forbidden_transport(*args, **kwargs):
+            called.append((args, kwargs))
+            raise AssertionError("live transport must not be constructed")
+
+        httpx.AsyncHTTPTransport = forbidden_transport
+        try:
+            with self.assertRaisesRegex(N.CorrectionError, "genuine EXP-078 stage permit"):
+                await N.run_correction(outdir=outdir, bundle_root=bundle,
+                    source_integrity={"synthetic": False}, stage_clock=_clock_value(outdir))
+        finally:
+            httpx.AsyncHTTPTransport = original
+        self.assertEqual(called, [])
+        self.assertFalse((outdir / "acquisition").exists())
+
+
+def _clock_value(outdir: Path):
+    raw = (outdir / "stage-clock.json").read_bytes()
+    value = json.loads(raw)
+    return value, raw, digest(raw)
+
+
+if __name__ == "__main__":
+    unittest.main()
