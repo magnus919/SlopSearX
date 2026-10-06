@@ -1,0 +1,110 @@
+import hashlib
+import json
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+PREDECESSOR_PROTOCOL = HERE.parent / "EXP-093" / "protocol.json"
+CURRENT = HERE / "protocol.json"
+
+
+class ProtocolTests(unittest.TestCase):
+    def test_fixed_candidate_and_all_frozen_numerical_gates(self):
+        new = json.loads(CURRENT.read_text())
+        old = json.loads(PREDECESSOR_PROTOCOL.read_text())
+        for field in ("candidate", "quality", "task_use", "consumer", "jev_invocation"):
+            self.assertEqual(new[field], old[field], field)
+        quality = new["quality"]
+        self.assertEqual(quality["independent_references"], ["A", "B"])
+        self.assertEqual(quality["mean_ndcg10_gain_minimum"], 0.02)
+        self.assertEqual(quality["bootstrap_draws"], 10000)
+        self.assertEqual(quality["bootstrap_seed"], 7701)
+        self.assertEqual(quality["per_case_delta_minimum"], -0.03)
+        self.assertEqual(quality["top10_overlap_minimum"], 0.8)
+        self.assertEqual(quality["incumbent_identity_displacement"], "diagnostic_only")
+        self.assertEqual(quality["exact_navigation_targets_per_stage"], 5)
+        self.assertTrue(quality["all_targets_acquired_and_top1_required"])
+
+    def test_only_source_and_answer_reference_tokens_are_reencoded(self):
+        protocol = json.loads(CURRENT.read_text())
+        source = protocol["source_citation_aliases"]
+        self.assertEqual(source["format"], "D<task digit>E<four decimal digits>")
+        self.assertIn("before dispatch", source["codebook"])
+        self.assertIn("exact inverse decoding", source["validation"])
+        self.assertIn("before dispatch", source["codebook"])
+        self.assertEqual(source["unchanged"], [
+            "source_id", "task_id", "claim/facet/task/packet/arm identities",
+            "source text and context", "all non-reference values",
+            "array/list order and multiplicity", "catalog order"])
+        self.assertEqual(source["codec_sha256"], hashlib.sha256(
+            (HERE / "citation-codec.py.txt").read_bytes()).hexdigest())
+        predecessor = HERE.parent / "EXP-093"
+        for key, filename in (("source_prompt_sha256", "source-assessor-prompt.txt"),
+                              ("answerer_prompt_sha256", "answerer-prompt.txt"),
+                              ("answer_assessor_prompt_sha256", "answer-assessor-prompt.txt")):
+            current = (HERE / filename).read_bytes()
+            self.assertEqual(source[key], hashlib.sha256(current).hexdigest())
+            self.assertEqual(current, (predecessor / filename).read_bytes())
+
+    def test_fresh_slots_and_cumulative_budget_are_explicit(self):
+        protocol = json.loads(CURRENT.read_text())
+        models = protocol["models"]
+        self.assertEqual(models["source_assessment_calls_expected"], 48)
+        self.assertEqual(models["answer_assessment_calls_expected"], 32)
+        self.assertEqual(models["historical_grader_submissions_counted"], 22)
+        self.assertEqual(models["maximum_logical_grader_submissions_per_stage"], 112)
+        self.assertIn("102 of 112", models["cumulative_development_grader_call_accounting"])
+        self.assertEqual(protocol["confirmation_scope"]["not_run"], True)
+        self.assertIn("entirely new tasks and pools", protocol["confirmation_scope"]["future_requirement"])
+        self.assertEqual(protocol["acquisition"]["carry_forward_card_assignments"], 16)
+        self.assertEqual(protocol["acquisition"]["carry_forward_card_records"], 884)
+        self.assertFalse(protocol["acquisition"]["failed_source_submission_reused"])
+
+    def test_exp093_is_terminal_and_no_previous_grader_response_is_reused(self):
+        protocol = json.loads(CURRENT.read_text())
+        predecessor = protocol["predecessor"]
+        self.assertEqual(predecessor["id"], "EXP-093")
+        self.assertEqual(predecessor["terminal_status"], "assessment_inconclusive")
+        self.assertFalse(predecessor["quality_credit"])
+        self.assertFalse(predecessor["response_reused"])
+        self.assertEqual(predecessor["terminal_sha256"],
+                         "9ba88091811fd1c1a3bf62d8f53fd7ebc12dd51b9f4ccd896aeb36524474651d")
+        self.assertIn("EXP-093 stopped", protocol["purpose"])
+        self.assertEqual(protocol["external_source_pins"]["final_text_reader"]["sha256"], "b7d4d27e7c4a64d372fddca2f0fed0c8ee5a17fc42e51e5e3c2186b9b7a94e3c")
+
+    def test_only_fresh_independent_assessments_request_sol(self):
+        protocol = json.loads(CURRENT.read_text())
+        models = protocol["models"]
+        self.assertEqual(models["assessment_model"]["model_id"], "gpt-6.1-sol")
+        self.assertEqual(set(models["assessment_model"]["scope"]),
+                         {"source_assessment", "answer_assessment"})
+        self.assertEqual(models["answerer_model"], "free")
+        self.assertEqual(models["health_model"], "free")
+        self.assertEqual(models["source_assessment_calls_expected"], 48)
+        self.assertEqual(models["answer_assessment_calls_expected"], 32)
+        self.assertEqual(models["historical_grader_submissions_counted"] +
+                         models["fresh_source_and_answer_assessments"], 102)
+        self.assertEqual(models["maximum_logical_grader_submissions_per_stage"], 112)
+        self.assertEqual(models["maximum_total_logical_model_submissions_per_stage"], 130)
+        self.assertIn("requested model in each dispatch receipt",
+                      models["assessment_model"]["assignment"])
+
+    def test_source_manifest_binds_assessment_model_without_changing_slot_rows(self):
+        preparer = (HERE / "prepare-source-assessments.py.txt").read_text()
+        self.assertIn("requested_assessment_model_id", preparer)
+        self.assertIn('"gpt-6.1-sol"', preparer)
+        carrier = (HERE / "final-json-carrier.py.txt").read_text()
+        self.assertIn('"protocol_sha256", "qualified_source_revision"', carrier)
+        self.assertNotIn('"requested_assessment_model_id"', carrier)
+
+    def test_no_card_calls_or_output_repairs(self):
+        protocol = json.loads(CURRENT.read_text())
+        self.assertNotIn("card-reference", protocol["phase_plan"]["ordered_phases"])
+        self.assertFalse(protocol["phase_plan"]["card_reference_phase_permitted"])
+        self.assertIn("no retries", protocol["stop"])
+        self.assertEqual(protocol["acquisition"]["new_searches"], 0)
+        self.assertEqual(protocol["acquisition"]["new_source_fetches"], 0)
+
+
+if __name__ == "__main__":
+    unittest.main()
