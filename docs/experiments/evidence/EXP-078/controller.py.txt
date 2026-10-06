@@ -1,0 +1,113 @@
+"""Persistent-process EXP-078 coordinator; no effects occur on import.
+
+Keep the returned state in one process through capture, blind reference freezing,
+selection, answers and grading. Exiting loses its opaque permit: do not readmit
+or create a replacement clock. Raw artifacts remain in the private stage folder.
+"""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import subprocess
+import sys
+from dataclasses import dataclass
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+
+def load(name, filename):
+    path = HERE / filename
+    relative = path.relative_to(REPO).as_posix()
+    committed = subprocess.run(['git', 'show', f'HEAD:{relative}'], cwd=REPO,
+        check=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout
+    if path.is_symlink() or path.read_bytes() != committed:
+        raise ValueError('uncommitted-controller-dependency')
+    if name in sys.modules:
+        module = sys.modules[name]
+        if Path(module.__file__).resolve() != path.resolve():
+            raise ValueError('module-identity-path')
+        return module
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    try:
+        loader.exec_module(module)
+    except BaseException:
+        sys.modules.pop(name, None)
+        raise
+    return module
+
+
+def preflight(bundle_root):
+    admission = load('exp078_admission', 'admission.py.txt')
+    qraw = (HERE / 'qualification-integrity.json').read_bytes()
+    q = admission.strict_json(qraw)
+    rraw = (HERE / 'registration-integrity.json').read_bytes()
+    bridge = load('exp078_controller_bridge', 'input-bridge.py.txt')
+    inputs = bridge.verify_input_bundle(Path(bundle_root))
+    integrity = {'synthetic': False, 'qualification_sha256': admission.sha(qraw),
+        'registration_sha256': admission.sha(rraw),
+        'qualified_source_revision': q['qualified_source_revision'],
+        'protocol_sha256': admission.sha((HERE / 'protocol.json').read_bytes()),
+        'cohorts_sha256': admission.sha((HERE / 'cohorts.json').read_bytes()),
+        'input_pins_sha256': inputs['input_pins_sha256'],
+        'input_bundle_sha256': inputs['input_bundle_sha256'],
+        'environment': q['environment'], 'dependencies': q['dependencies'],
+        'external_source_pins': q['external_source_pins']}
+    proof = admission.verify_closure(integrity, qraw, Path(bundle_root))
+    return admission, integrity, qraw, proof
+
+
+@dataclass(frozen=True)
+class State:
+    outdir: Path
+    bundle_root: Path
+    admission: object
+    permit: object
+    integrity: dict
+    clock: tuple
+
+
+def begin(outdir, bundle_root):
+    admission, integrity, qraw, _ = preflight(bundle_root)
+    out = Path(outdir)
+    out.mkdir(mode=0o700, parents=False, exist_ok=False)
+    clock = admission.create_stage_clock(out, integrity['qualified_source_revision'])
+    capability = admission.admit_live(out, integrity, qraw, Path(bundle_root))
+    return State(out, Path(bundle_root), admission,
+                 admission.consume_capability(capability), integrity, clock)
+
+
+async def correct_and_prepare(state):
+    runner = load('exp078_controller_acquire', 'acquire.py.txt')
+    final = await runner.run_correction(outdir=state.outdir,
+        bundle_root=state.bundle_root, offline=False, stage_permit=state.permit,
+        source_integrity=state.integrity, stage_clock=state.clock)
+    if (final.get('status') != 'complete' or final.get('fatal_stop')
+            or final.get('physical_http_calls') != 1 or final.get('target_acquired') is not True):
+        raise ValueError('corrective-acquisition-terminal-stop')
+    raw = (state.outdir / 'acquisition' / 'corrective-query.json').read_bytes()
+    receipt_sha = hashlib.sha256(raw).hexdigest()
+    if final.get('corrective_query_receipt_sha256') != receipt_sha:
+        raise ValueError('corrective-receipt-binding')
+    correction = state.admission.strict_json(raw)
+    correction['receipt_sha256'] = receipt_sha  # external byte hash; original file unchanged
+    bridge = load('exp078_controller_bridge', 'input-bridge.py.txt')
+    reused = bridge.prepare_reused_inputs(state.bundle_root)
+    prepared = load('exp078_controller_prepare', 'prepare.py.txt').prepare_stage(reused, correction)
+    state.admission._write_once(state.outdir / 'effective-acquisition.json',
+                               state.admission.canonical_json(prepared))
+    return prepared
+
+
+def capture(state, acquisition, cases, cli_path):
+    bindings = load('exp078_controller_bindings', 'phase-bindings.py.txt')
+    clock, raw, digest = state.clock
+    return bindings.run_capture(acquisition=acquisition, cases=cases,
+        cli_path=Path(cli_path), source_integrity=state.integrity, outdir=state.outdir,
+        admission=state.admission, stage_permit=state.permit, clock=clock,
+        clock_bytes=raw, clock_sha256=digest)
