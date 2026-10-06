@@ -1,0 +1,9 @@
+# EXP-091 — protocol-invalid assessment and label interpretation gap
+
+The first fresh source assessor completed its scheduled reads, then requested clarification through a non-viewer communication tool and returned a final assessment without usable citation references. The pinned reader rejected the unexpected tool kind before the normal final receiver ran. The actual final was subsequently retained byte-exactly through a separate forensic capture; this is not an accepted submission or grade repair.
+
+A deterministic inspection disproved the suspected wrong-file/encoding bug. The assigned packet's SHA matches its slot manifest; all 213 passage references belong to the paired alias map and none are original IDs. The canonical encoded model-input hash matches the binding's encoded-input hash. Its prompt matches the frozen EXP-088 label-aware prompt. The assessor nevertheless interpreted `L-D1-S…-R…` aliases as original IDs and reported that usable short labels were absent.
+
+This is an observed label-interpretation and protocol-compliance gap, not evidence of missing bytes, malformed source encoding, model correctness, Jev usefulness or production readiness. All failed source outputs remain excluded. Twenty historical grading calls include sixteen valid carried card assignments and four failed source submissions; no call is refunded. No new search, source fetch, Jev or answer call occurred.
+
+The bounded next correction is explicit representation metadata: identify the supplied passage `evidence_id` strings as already encoded citation aliases and require copying them verbatim, without an alternate mapping or invented abbreviated IDs. Preserve all actual packet bytes, evidence identities, criteria and acceptance gates. Fully delivered but unaccepted assessments cannot establish research benefit.
