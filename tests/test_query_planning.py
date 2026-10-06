@@ -317,3 +317,15 @@ async def test_actual_snapshot_provenance_checked_before_disclosure(state):
     assert "error" in denied
     assert "evidence" not in denied
     assert state.ctx.active_engines["wikipedia"].calls == 1
+
+
+async def test_nullable_legacy_planning_lists_load_as_empty(state):
+    job = await first_job(state)
+    loaded = await state.job_store.load(job["job_id"])
+    payload = _job_to_payload(loaded)
+    payload["queries"][0]["evidence_result_ids"] = None
+    payload["queries"][0]["evidence_engines"] = None
+    restored = _job_from_payload(payload)
+    assert restored.queries[0].evidence_result_ids == []
+    assert restored.queries[0].evidence_engines == []
+    assert t._research_dispatch_error(state, restored.queries[0], check_evidence=True) is None

@@ -297,3 +297,15 @@ async def test_planning_metadata_visible_but_revoked_evidence_denied() -> None:
     job.queries[0].evidence_engines = ["secret"]
     with pytest.raises(WorkflowNotFoundError):
         await console.detail(context("workflow.read"), "research", "planned")
+
+
+@pytest.mark.parametrize("method", ["unknown", "evidence_followup"])
+def test_portal_denies_malformed_planning_metadata_before_projection(method):
+    console = service(MCPPolicy(enabled_tools={"research": True}), FakeStaged([]), FakeSaved([]))
+    job = ResearchJob(
+        job_id="malformed",
+        question="q",
+        strategy="triangulate",
+        queries=[ResearchQuery(index=0, query="q", intent="web", engines=["wikipedia"], planning_method=method)],
+    )
+    assert console._job_allowed(job, "research") is False

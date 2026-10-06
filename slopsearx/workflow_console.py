@@ -126,13 +126,13 @@ class WorkflowConsoleService:
         ):
             return False
         for query in job.queries:
+            try:
+                validate_planning_metadata(
+                    query.planning_method, query.evidence_result_ids, query.parent_attempt_id, query.rationale
+                )
+            except ValueError:
+                return False
             if query.evidence_result_ids:
-                try:
-                    validate_planning_metadata(
-                        query.planning_method, query.evidence_result_ids, query.parent_attempt_id, query.rationale
-                    )
-                except ValueError:
-                    return False
                 if (
                     not isinstance(query.evidence_engines, list)
                     or not query.evidence_engines

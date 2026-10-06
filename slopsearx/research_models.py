@@ -392,8 +392,8 @@ def _job_from_payload(payload: dict[str, Any]) -> ResearchJob:
             continuation_digest=item.get("continuation_digest"),
             requires_intent_grant=bool(item.get("requires_intent_grant", True)),
             planning_method=item.get("planning_method"),
-            evidence_result_ids=item.get("evidence_result_ids", []),
-            evidence_engines=item.get("evidence_engines", []),
+            evidence_result_ids=item.get("evidence_result_ids") or [],
+            evidence_engines=item.get("evidence_engines") or [],
             evidence_intent=item.get("evidence_intent"),
         )
         for item in (payload.get("queries") or [])
