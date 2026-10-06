@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.machinery
 import importlib.util
 import json
+import asyncio
 import sys
 import tempfile
 import unittest
@@ -44,6 +45,30 @@ class PhaseBindingTests(unittest.TestCase):
             self.assertEqual(prep.kwargs["output_root"], (root / "assessment-inputs").resolve())
             self.assertEqual(prep.kwargs["source_snapshot_root"], state.bundle_root / "exp084")
             self.assertEqual(len(admission.required), 2)
+
+    def test_selector_wrapper_forwards_fresh_exp085_clock_and_admission_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "stage"; root.mkdir()
+            out = root / "selector"
+            admission = FakeAdmission()
+            state = SimpleNamespace(effective_acquisition={"schema":"fixture"}, outdir=root,
+                clock=({}, b"clock", "a"*64), permit="opaque-new-permit", admission=admission,
+                integrity={"study_id":"EXP-085"})
+            calls = {}
+            class Selector:
+                async def run_selector(self, *args, **kwargs):
+                    calls["args"], calls["kwargs"] = args, kwargs
+                    return {"status":"fixture_only"}
+            with patch.object(BINDINGS, "_load", return_value=Selector()):
+                result = asyncio.run(BINDINGS.run_selector(state=state, cases=[{"id":"d1"}],
+                    outdir=out, offline=True, transport_factory="fixture-transport"))
+            self.assertEqual(result["status"], "fixture_only")
+            self.assertEqual(calls["args"][0], state.effective_acquisition)
+            self.assertEqual(calls["args"][2], b"clock")
+            self.assertIsNone(calls["kwargs"]["stage_permit"])
+            self.assertIsNone(calls["kwargs"]["admission_module"])
+            self.assertEqual(calls["kwargs"]["transport_factory"], "fixture-transport")
+            self.assertEqual(calls["kwargs"]["source_integrity"], state.integrity)
 
     def test_reference_phases_are_explicit_and_reusable_only_inside_stage(self):
         with tempfile.TemporaryDirectory() as tmp:

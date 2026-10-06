@@ -119,6 +119,16 @@ def prepare_assessment_inputs(*, state, cases, outdir=None):
                           source_snapshot_root=state.bundle_root / "exp084")
 
 
+async def run_selector(*, state, cases, outdir, offline=False, transport_factory=None):
+    """Run the unchanged EXP-078 selector helper on EXP-085 inputs/admission."""
+    selector = _load("exp085_portable_selector_runner",
+                     HERE.parent / "EXP-078" / "selector-runner.py.txt")
+    return await selector.run_selector(state.effective_acquisition, cases, state.clock[1],
+        state.outdir, Path(outdir), offline=offline, stage_permit=None if offline else state.permit,
+        admission_module=None if offline else state.admission,
+        transport_factory=transport_factory, source_integrity=state.integrity)
+
+
 def claim_assessment_phase(*, admission, stage_permit, phase, stage_outdir, phase_outdir,
                            clock_bytes):
     """Claim one registered grader phase and return its reusable dispatch guard."""
