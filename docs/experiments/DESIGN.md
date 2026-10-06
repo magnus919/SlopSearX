@@ -53,7 +53,11 @@ independent sampling unit and uncertainty for noisy task/performance claims.
 Run one experiment per scheduled cycle, once per America/New_York calendar day
 at approximately 09:00. Deduplicate by start date, not finish time or a rolling
 24-hour cutoff. Skip an overlapping cycle; do not catch up missed days. Default
-to a 45-minute budget, offline replay and zero paid calls. Record actual cost,
+to a 45-minute budget and prefer offline replay. The maintainer authorized live
+Jev API calls on 2026-10-05; preregister bounded calls, tokens/cost and stopping
+rules when they are required. Other paid providers retain the zero-call default
+unless separately authorized. This permission does not grant access to credentials
+rejected by automatic approval review. Record actual cost,
 requests and elapsed time where available; do not estimate subscription tokens
 from wall time. User-authorized one-offs remain possible.
 
