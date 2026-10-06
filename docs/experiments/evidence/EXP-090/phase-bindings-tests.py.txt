@@ -113,8 +113,11 @@ class PhaseBindingTests(unittest.TestCase):
                 "input_sha256": "1" * 64, "page_count": 7,
                 "source_manifest_sha256": "2" * 64}
         prompt = P.source_viewer_prompt(view)
-        rubric = (EXP077 / "source-assessor-prompt.txt").read_text(encoding="utf-8").rstrip()
+        rubric = (HERE.parent / "EXP-088" / "source-assessor-prompt.txt").read_text(encoding="utf-8").rstrip()
         self.assertTrue(prompt.startswith(rubric + "\n\n"))
+        self.assertIn("select supplied short labels only", prompt)
+        self.assertIn("Preserve schema-required task_id, assessor_id, chunk_id, source_id and facet_id", prompt)
+        self.assertIn("never copy coordinates/hashes/quotes/original evidence IDs", prompt)
         self.assertIn("--describe", prompt)
         self.assertIn("--pages", prompt)
         self.assertIn("input_sha256=" + "1" * 64, prompt)
