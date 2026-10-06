@@ -4,7 +4,21 @@ Implementation acceptance plan inspected against SlopSearX `3d5e8bac38b619aec1bd
 
 The cross-service boundary follows accepted X ADR-0082: GroktoCrawl owns the caller's question, constraints, evidence sufficiency and completion; SlopSearX owns bounded search dispatch, merge/ranking and immutable result snapshots. Keep the SlopSearX ordinary HTTP behavior unchanged when the option is absent. The proposed ADR-0093 provenance work is not an accepted substitute for candidate quality evidence.
 
-## Current evidence and next action (2026-10-05)
+## Current evidence and next action (2026-10-06)
+
+The latest source-reference continuation, [EXP-093](EXP-093-fixed-citation-codes.md), is terminal/inconclusive. [PR #702](https://github.com/magnus919/SlopSearX/pull/702) merged reviewed offline transport qualification; [PR #703](https://github.com/magnus919/SlopSearX/pull/703) retained the failed live outcome. All 42 assigned pages passed exact delivery verification, but strict citation decoding rejected one wrong-source reference among 127 occurrences. Zero required source assessments were accepted. The sixteen carried card assignments remain immutable inputs; they do not replace source references or task-use judgments. No ranking or task-completion quality analysis occurred, and no confirmation was run. No further harness retry is proposed.
+
+The immediate evidence gap is a complete independently validated source-reference set, followed by the registered ranking and task-use comparisons. Reliable delivery, shorter citation codes, passing offline fixtures, and merged experiment documents do not fill that gap. The current frozen candidate, +.02 mean-gain threshold, bootstrap seed 7701, diagnostic-only incumbent identity displacement, task-use protections, resource ceilings and untouched-confirmation requirement remain unchanged. This outcome establishes neither improvement nor inferiority of the selector.
+
+| Release requirement | Current evidence | State |
+| --- | --- | --- |
+| Complete valid development references | Carried card references exist; the first required source response failed scope validation | Incomplete |
+| Registered development ranking and task-use gates | No complete qualifying comparison | Unproven |
+| Wholly fresh untouched confirmation | Not run | Incomplete |
+| Purpose/facet integration, compatibility and recovery checks | Checklist below remains required after candidate qualification | Not delivered by these experiments |
+| Production PR, required CI/review and reversible rollout | No qualified selector implementation or rollout | Incomplete |
+
+Earlier outcomes below are retained as historical evidence, not current adoption credit.
 
 The [recent upstream experiment audit](evidence/EXP-071/upstream-experiment-reconciliation.md) found no shipped caller-purpose/facet complete-pool selector. [EXP-072](EXP-072-constraint-specific-reading-scale.md) completed 64 calls and retained useful counts/facets, but failed the fixed two-reference development quality gate; [PR #633](https://github.com/magnus919/SlopSearX/pull/633) preserves the rejected outcome and diagnosis. There is still no candidate eligible for implementation or final confirmation. No checklist item below is complete merely because the harness or this evidence is merged.
 
