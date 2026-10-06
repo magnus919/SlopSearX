@@ -1,0 +1,724 @@
+"""EXP-090 assessment and answer bindings to fresh EXP-090 admission.
+
+EXP-077 packet/answer code is consumed only as immutable wire behavior. Prior
+study admissions and terminal receipts grant no EXP-090 authority. Import is inert.
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+import re
+from pathlib import Path
+import time
+import sys
+from datetime import datetime, timezone
+
+import httpx
+
+HERE = Path(__file__).resolve().parent
+EXP077 = HERE.parent / "EXP-077"
+REPO = HERE.parents[3]
+REFERENCE_LABELS_PATH = HERE.parent / "EXP-088" / "reference-labels.py.txt"
+REFERENCE_LABELS_SHA256 = "f88def629293c87abd890cc42a748337c5225408e48be079832363d0b07ccf5c"
+ANSWERER_PROMPT_PATH = HERE.parent / "EXP-088" / "answerer-prompt.txt"
+ANSWERER_PROMPT_SHA256 = "314cb345d90bc9ddd4ad98dee9dfc6ef61e6d353dc61bf32ddb47b805cb80372"
+ANSWER_ASSESSOR_PROMPT_PATH = HERE.parent / "EXP-088" / "answer-assessor-prompt.txt"
+ANSWER_ASSESSOR_PROMPT_SHA256 = "d3c005914ece92661c3ac05d15327af6ee6fbba91b3920460dd09d1434c5d22e"
+SOURCE_PROMPT_PATH = EXP077 / "source-assessor-prompt.txt"
+SOURCE_PROMPT_SHA256 = "ffdb89b3ffbe82ec6e449970c4875999df6b3d5ad237892549ea3deab7c7d5dd"
+SOURCE_VIEW_INSTRUCTIONS_PATH = HERE / "source-viewer-instructions.txt"
+SOURCE_VIEW_INSTRUCTIONS_SHA256 = "0f7f54f0fa7b961754b11e3ac66f4b736aa623f9a318f241ad22a854f3197204"
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
+
+def _load(name: str, path: Path):
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("pinned-helper-unavailable")
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    if spec is None:
+        raise ValueError("pinned-helper-loader")
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical(value) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def shared_stage_elapsed(clock: dict) -> float:
+    started = datetime.fromisoformat(clock["stage_started_utc"].replace("Z", "+00:00"))
+    if started.tzinfo is None or started.utcoffset().total_seconds() != 0:
+        raise ValueError("exp078-stage-clock-timezone")
+    return max(0.0, (datetime.now(timezone.utc) - started).total_seconds())
+
+
+def write_once(path: Path, value) -> dict:
+    raw = value if type(value) is bytes else canonical(value)
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+    directory = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
+    return {"path": path.name, "sha256": sha(raw), "bytes": len(raw)}
+
+
+def _phase(admission, stage_permit, name: str, stage_outdir: Path,
+           phase_outdir: Path, clock_bytes: bytes):
+    if not isinstance(clock_bytes, bytes) or not clock_bytes:
+        raise ValueError("exp078-clock-bytes-required")
+    stage_root = Path(stage_outdir).resolve()
+    phase_root = Path(phase_outdir).resolve()
+    if phase_root == stage_root or not phase_root.is_relative_to(stage_root):
+        raise ValueError("exp078-phase-output-must-be-inside-stage")
+    phase_permit = admission.acquire_phase(stage_permit, name, stage_root, clock_bytes)
+    admission.require_phase(phase_permit, clock_bytes, stage_root)
+    return phase_permit
+
+
+def validate_answer_coverage(assignments: list[dict], cases: list[dict]) -> None:
+    research_ids = [case.get("id") for case in cases if case.get("kind") == "research"]
+    if len(research_ids) != 8 or len(set(research_ids)) != 8:
+        raise ValueError("exp078-answer-research-cohort")
+    observed = []
+    for assignment in assignments:
+        if not isinstance(assignment, dict):
+            raise ValueError("exp078-answer-assignment-shape")
+        model_input = assignment.get("model_input")
+        binding = assignment.get("private_binding")
+        if not isinstance(model_input, dict) or not isinstance(binding, dict):
+            raise ValueError("exp078-answer-assignment-shape")
+        task = model_input.get("task")
+        if not isinstance(task, dict):
+            raise ValueError("exp078-answer-assignment-task")
+        observed.append((task.get("task_id"), binding.get("arm_id")))
+    expected = {(task_id, arm) for task_id in research_ids for arm in ("w0", "candidate")}
+    if len(observed) != 16 or set(observed) != expected:
+        raise ValueError("exp078-answer-assignment-coverage")
+
+
+
+
+def prepare_assessment_inputs(*, state, cases, outdir=None):
+    """Prepare frozen grader packets under an EXP-090 phase guard; no model calls."""
+    stage_root = Path(state.outdir).resolve()
+    output = Path(outdir) if outdir is not None else stage_root / "assessment-inputs"
+    output = output.resolve()
+    phase_permit = _phase(state.admission, state.permit, "assessment-preparation",
+                          stage_root, output, state.clock[1])
+    guard = lambda: state.admission.require_phase(phase_permit, state.clock[1], stage_root)
+    helper = _load("exp090_source_assessment_preparer", HERE / "prepare-source-assessments.py.txt")
+    return helper.prepare_source_assessments(
+        output_root=output, acquisition=state.effective_acquisition, cases=cases, guard=guard,
+        source_snapshot_root=state.bundle_root / "exp084",
+        carried_card_references=state.carried_card_references,
+        stage_clock_sha256=state.clock[2],
+        protocol_sha256=sha((HERE / "protocol.json").read_bytes()),
+        qualified_source_revision=state.integrity["qualified_source_revision"])
+
+
+async def run_selector(*, state, cases, outdir, offline=False, transport_factory=None):
+    """Run the unchanged EXP-078 selector helper on EXP-090 inputs/admission."""
+    selector = _load("exp090_portable_selector_runner",
+                     HERE.parent / "EXP-078" / "selector-runner.py.txt")
+    return await selector.run_selector(state.effective_acquisition, cases, state.clock[1],
+        state.outdir, Path(outdir), offline=offline, stage_permit=None if offline else state.permit,
+        admission_module=None if offline else state.admission,
+        transport_factory=transport_factory, source_integrity=state.integrity)
+
+
+def claim_assessment_phase(*, admission, stage_permit, phase, stage_outdir, phase_outdir,
+                           clock_bytes):
+    """Claim one registered grader phase and return its reusable dispatch guard."""
+    if phase not in {"source-reference", "answer-assessment"}:
+        raise ValueError("exp090-assessment-phase-not-registered")
+    phase_permit = _phase(admission, stage_permit, phase, Path(stage_outdir),
+                          Path(phase_outdir), clock_bytes)
+    root = Path(stage_outdir).resolve()
+    def require():
+        admission.require_phase(phase_permit, clock_bytes, root)
+    return phase_permit, require
+
+
+def _reference_labels():
+    if (REFERENCE_LABELS_PATH.is_symlink() or not REFERENCE_LABELS_PATH.is_file()
+            or sha(REFERENCE_LABELS_PATH.read_bytes()) != REFERENCE_LABELS_SHA256):
+        raise ValueError("exp090-reference-label-codec-pin")
+    return _load("exp090_reference_labels_phase", REFERENCE_LABELS_PATH)
+
+
+def labelled_prompt(role: str) -> str:
+    """Read one frozen label-aware prompt; criteria and rubrics remain unchanged."""
+    paths = {"answerer": (ANSWERER_PROMPT_PATH, ANSWERER_PROMPT_SHA256),
+             "answer-assessor": (ANSWER_ASSESSOR_PROMPT_PATH, ANSWER_ASSESSOR_PROMPT_SHA256)}
+    if role not in paths:
+        raise ValueError("exp090-prompt-role")
+    path, expected = paths[role]
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("exp090-prompt-pin")
+    raw = path.read_bytes()
+    if sha(raw) != expected:
+        raise ValueError("exp090-prompt-pin")
+    return raw.decode("utf-8")
+
+
+def source_viewer_prompt(view_plan: dict) -> str:
+    """Bind the unchanged source rubric to exact input-view task metadata."""
+    if (type(view_plan) is not dict or view_plan.get("schema") != "exp090-input-view-plan/1"
+            or type(view_plan.get("input_path")) is not str
+            or "\n" in view_plan["input_path"] or "\r" in view_plan["input_path"]
+            or type(view_plan.get("viewer_path")) is not str
+            or not Path(view_plan["viewer_path"]).is_absolute()
+            or "\n" in view_plan["viewer_path"] or "\r" in view_plan["viewer_path"]
+            or type(view_plan.get("page_count")) is not int or view_plan["page_count"] < 1):
+        raise ValueError("exp090-input-view-plan-shape")
+    for key in ("input_sha256", "source_manifest_sha256"):
+        if type(view_plan.get(key)) is not str or not re.fullmatch(r"[0-9a-f]{64}", view_plan[key]):
+            raise ValueError("exp090-input-view-plan-digest")
+    if (SOURCE_PROMPT_PATH.is_symlink() or not SOURCE_PROMPT_PATH.is_file()
+            or sha(SOURCE_PROMPT_PATH.read_bytes()) != SOURCE_PROMPT_SHA256
+            or SOURCE_VIEW_INSTRUCTIONS_PATH.is_symlink()
+            or not SOURCE_VIEW_INSTRUCTIONS_PATH.is_file()
+            or sha(SOURCE_VIEW_INSTRUCTIONS_PATH.read_bytes()) != SOURCE_VIEW_INSTRUCTIONS_SHA256):
+        raise ValueError("exp090-source-prompt-pin")
+    rubric = SOURCE_PROMPT_PATH.read_text(encoding="utf-8")
+    instructions = SOURCE_VIEW_INSTRUCTIONS_PATH.read_text(encoding="utf-8")
+    assignment = ("\n\nFrozen source-slot values (copy exactly into viewer commands):\n"
+                  f"viewer_path={view_plan['viewer_path']}\n"
+                  f"input_path={view_plan['input_path']}\n"
+                  f"input_sha256={view_plan['input_sha256']}\n"
+                  f"page_count={view_plan['page_count']}\n"
+                  f"preparation_manifest_sha256={view_plan['source_manifest_sha256']}\n")
+    return rubric.rstrip() + "\n\n" + instructions.rstrip() + assignment
+
+
+def receive_source_final_and_verify_view(*, receiver, slot_id: str, expected_binding: dict,
+                                         final_text: str, input_raw: bytes, view_plan: dict,
+                                         calls: list[dict], private_delivery_meta: dict,
+                                         proof_directory: Path) -> dict:
+    """Persist exact source final text, then require transcript-bound full input view.
+
+    The final text is durable even if view coverage fails. No parser, decoder,
+    source validator, or source-grade acceptor should run unless this returns.
+    """
+    receipt = receiver.receive(slot_id, expected_binding, final_text)
+    if (type(final_text) is not str or type(private_delivery_meta) is not dict
+            or private_delivery_meta.get("delivery_source") != "actual_assessor_final_message"
+            or private_delivery_meta.get("final_utf8_bytes") != len(final_text.encode("utf-8"))
+            or private_delivery_meta.get("final_utf8_sha256") != sha(final_text.encode("utf-8"))
+            or type(private_delivery_meta.get("private_log_sha256")) is not str
+            or not re.fullmatch(r"[0-9a-f]{64}", private_delivery_meta["private_log_sha256"])):
+        raise ValueError("exp090-private-final-delivery-binding")
+    verifier_path = HERE / "input-view-verifier.py.txt"
+    verifier = _load("exp090_input_view_verifier_phase", verifier_path)
+    if (type(view_plan) is not dict or view_plan.get("logical_submission") != slot_id
+            or view_plan.get("input_sha256") != expected_binding.get("input_sha256")
+            or view_plan.get("input_bytes") != expected_binding.get("input_bytes")
+            or type(view_plan.get("input_path")) is not str):
+        raise ValueError("exp090-view-slot-binding")
+    proof = verifier.verify_tool_transcript(input_raw,
+        expected_sha256=view_plan["input_sha256"], input_path=view_plan["input_path"],
+        viewer_path=view_plan["viewer_path"],
+        slot_id=slot_id, source_manifest_sha256=view_plan["source_manifest_sha256"],
+        calls=calls, transcript_log_sha256=private_delivery_meta["private_log_sha256"])
+    expected_plan = verifier.input_view_plan(input_raw,
+        expected_sha256=view_plan["input_sha256"], input_path=view_plan["input_path"],
+        viewer_path=view_plan["viewer_path"],
+        slot_id=slot_id, source_manifest_sha256=view_plan["source_manifest_sha256"])
+    if canonical(view_plan) != canonical(expected_plan):
+        raise ValueError("exp090-view-plan-mismatch")
+    proof["final_text_sha256"] = receipt["sha256"]
+    proof["final_text_bytes"] = receipt["bytes"]
+    proof["final_text_persisted_exactly"] = receipt["persisted_exact_final_text"] is True
+    proof_raw = canonical(proof)
+    reference = write_once(Path(proof_directory) / (sha(slot_id.encode("utf-8"))[:20] + ".view.json"),
+                           proof_raw)
+    return {"final_text_receipt": receipt, "view_proof": proof,
+            "view_proof_sha256": reference["sha256"]}
+
+
+def source_id_universes(effective_acquisition: dict, cases: list[dict]) -> dict[str, list[str]]:
+    """Derive one canonical full-pool source universe per research task."""
+    pools = effective_acquisition.get("pools") if type(effective_acquisition) is dict else None
+    maps = effective_acquisition.get("source_id_by_card_id") if type(effective_acquisition) is dict else None
+    if type(pools) is not dict or type(maps) is not dict:
+        raise ValueError("exp090-source-universe-acquisition")
+    result = {}
+    for case in cases:
+        if case.get("kind") != "research":
+            continue
+        task_id = case.get("id")
+        pool, mapping = pools.get(task_id), maps.get(task_id)
+        if type(pool) is not dict or type(pool.get("cards")) is not list or type(mapping) is not dict:
+            raise ValueError("exp090-source-universe-pool")
+        ids, seen = [], set()
+        for card in pool["cards"]:
+            card_id = card.get("id") if type(card) is dict else None
+            source_id = mapping.get(card_id)
+            if type(source_id) is not str or not source_id:
+                raise ValueError("exp090-source-universe-membership")
+            if source_id not in seen:
+                seen.add(source_id)
+                ids.append(source_id)
+        result[task_id] = ids
+    return result
+
+
+def decode_assessment_response(role: str, bundle: dict, response: dict) -> dict:
+    """Decode a private label bundle before invoking the frozen validator."""
+    labels = _reference_labels()
+    decoders = {"source": labels.decode_source_response,
+                "answerer": labels.decode_answerer_response,
+                "answer-assessor": labels.decode_answer_assessor_response}
+    if role not in decoders:
+        raise ValueError("exp090-response-role")
+    return decoders[role](bundle, response)
+
+
+def decode_source_reference_response(bundle: dict, response: dict) -> dict:
+    """Restore source-pool labels before the unchanged source packet validator."""
+    return _reference_labels().decode_source_response(bundle, response)
+
+
+def encode_answer_assessor_packet(*, task_id: str, packet_input: dict, source_catalog: dict,
+                                  answer_catalog: dict, source_ids: list[str], outdir: Path) -> dict:
+    """Build a private two-domain answer-assessor packet and sealed label map."""
+    labels = _reference_labels()
+    bundle = labels.encode_answer_assessor_input(task_id, packet_input, source_catalog,
+                                                 answer_catalog, source_ids)
+    output = Path(outdir)
+    if output.exists() or output.is_symlink():
+        raise ValueError("exp090-answer-assessor-output-must-be-new")
+    output.mkdir(mode=0o700, parents=True, exist_ok=False)
+    binding_ref = write_once(output / "label-binding.json", bundle)
+    return {"model_input": bundle["model_input"], "label_binding": binding_ref,
+            "label_binding_bundle": bundle}
+
+
+def decode_answer_assessor_response(bundle: dict, response: dict) -> dict:
+    """Restore source-pool and answer-arm labels without changing response order."""
+    return _reference_labels().decode_answer_assessor_response(bundle, response)
+
+class _GuardedHTTPTransport(httpx.BaseTransport):
+    """Sync HTTPX transport checking the EXP-078 permit before each send."""
+    def __init__(self, inner, admission, phase_permit, clock_bytes, stage_outdir, limit):
+        if not isinstance(inner, httpx.BaseTransport):
+            raise ValueError("exp078-answer-transport-type")
+        self.inner, self.admission = inner, admission
+        self.phase_permit, self.clock_bytes, self.stage_outdir = phase_permit, clock_bytes, Path(stage_outdir).resolve()
+        self.limit, self.calls = limit, 0
+
+    def handle_request(self, request):
+        self.admission.require_phase(self.phase_permit, self.clock_bytes, self.stage_outdir)
+        self.calls += 1
+        if self.calls > self.limit:
+            raise ValueError("exp078-answer-http-budget")
+        return self.inner.handle_request(request)
+
+    def close(self):
+        self.inner.close()
+
+
+class _LabelledAnswerTransport(httpx.BaseTransport):
+    """Alias answer evidence references on the wire and retain both body forms.
+
+    The frozen EXP-077 runner continues to validate and persist its ordinary
+    64-hex-ID response. This outer transport stores the provider body separately
+    and supplies only a mechanically decoded body to that unchanged runner.
+    """
+    def __init__(self, inner, *, assignments, bundles, outdir: Path, api_key: str):
+        if not isinstance(inner, httpx.BaseTransport):
+            raise ValueError("exp090-answer-transport-type")
+        self.inner, self.assignments, self.bundles = inner, assignments, bundles
+        self.outdir, self.api_key = Path(outdir), api_key
+        self.outdir.mkdir(mode=0o700, parents=True, exist_ok=False)
+        self.calls = 0
+        self.receipts = []
+
+    @staticmethod
+    def _answer_wire_input(assignment: dict) -> dict:
+        model = assignment["model_input"]
+        task = model["task"]
+        return {"task_id": task["task_id"], "kind": task["kind"], "query": task["query"],
+                "purpose": task["purpose"], "critical_checks": task["critical_checks"],
+                "cards": model["cards"], "opening_outcomes": model["opening_outcomes"],
+                "delivered_sources": model["delivered_sources"], "output_schema": model["output_schema"]}
+
+    def _rewrite_request(self, request: httpx.Request):
+        raw = request.read()
+        envelope = json.loads(raw)
+        safe_headers = [(key, value) for key, value in request.headers.multi_items()
+                        if key.lower() not in {"content-length", "transfer-encoding", "host"}]
+        messages = envelope.get("messages")
+        if not isinstance(messages, list) or len(messages) != 2:
+            raise ValueError("exp090-answer-request-message-shape")
+        user = messages[1].get("content") if isinstance(messages[1], dict) else None
+        if not isinstance(user, str):
+            raise ValueError("exp090-answer-request-user-content")
+        # This exact plaintext is emitted by the frozen EXP-077 runner for its
+        # two readiness calls; it is deliberately outside the JSON task schema.
+        if user == "This is a synthetic endpoint readiness check, not study evidence.":
+            return httpx.Request(request.method, request.url, headers=safe_headers,
+                                 content=raw), None
+        model_input = json.loads(user)
+        task_id = model_input.get("task_id") if isinstance(model_input, dict) else None
+        match_input = json.loads(json.dumps(model_input, ensure_ascii=False))
+        # The frozen EXP-077 transport helper asks for this derived private
+        # set, although its closed assignment schema stores it on passages.
+        # It is never part of the actual request: replaced below from the
+        # sealed label bundle before the HTTP exchange.
+        for source in match_input.get("delivered_sources", []):
+            if isinstance(source, dict):
+                source.pop("evidence_ids", None)
+        matches = []
+        for assignment in self.assignments:
+            original = self._answer_wire_input(assignment)
+            if original == match_input:
+                binding = assignment["private_binding"]
+                key = (task_id, binding["arm_id"])
+                bundle = self.bundles.get(key)
+                if bundle is None:
+                    raise ValueError("exp090-answer-label-binding-missing")
+                matches.append((assignment, bundle))
+        if not matches:
+            raise ValueError("exp090-answer-input-unassigned")
+        assignment, bundle = matches[0]
+        if any(candidate_bundle["label_binding"] != bundle["label_binding"]
+               for _, candidate_bundle in matches[1:]):
+            raise ValueError("exp090-answer-input-ambiguous-label-map")
+        encoded = bundle["model_input"]
+        if (encoded.get("task", {}).get("task_id") != task_id
+                or encoded.get("task") != assignment["model_input"]["task"]):
+            raise ValueError("exp090-answer-label-task-binding")
+        model_input["delivered_sources"] = encoded["delivered_sources"]
+        rewritten_user = json.dumps(model_input, ensure_ascii=False, sort_keys=True,
+                                    separators=(",", ":"))
+        for row in bundle["label_binding"]["labels"]:
+            if row["original_id"] in rewritten_user:
+                raise ValueError("exp090-original-reference-id-leaked-to-model")
+        messages[1]["content"] = rewritten_user
+        rewritten = json.dumps(envelope, ensure_ascii=False, sort_keys=True,
+                               separators=(",", ":")).encode("utf-8")
+        return httpx.Request(request.method, request.url, headers=safe_headers,
+                             content=rewritten), (task_id, bundle, sha(rewritten))
+
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        self.calls += 1
+        if self.calls > 18:
+            raise ValueError("exp090-answer-http-budget")
+        rewritten, binding = self._rewrite_request(request)
+        response = self.inner.handle_request(rewritten)
+        chunks = []
+        count = 0
+        complete = True
+        for chunk in response.iter_bytes(65536):
+            count += len(chunk)
+            if count > 2_000_000:
+                chunks.append(chunk[:max(0, 2_000_001 - (count - len(chunk)))])
+                complete = False
+                break
+            chunks.append(chunk)
+        raw = b"".join(chunks)
+        status = response.status_code
+        response_headers = list(response.headers.multi_items())
+        response_extensions = dict(response.extensions)
+        response.close()
+        slot = self.calls
+        record = {"schema": "exp090-vendor-response/1", "slot": slot,
+                  "task_id": binding[0] if binding else None,
+                  "request_sha256": binding[2] if binding else sha(rewritten.content),
+                  "http_status": status, "response_bytes": len(raw),
+                  "response_sha256": sha(raw), "response_complete": complete,
+                  "label_binding_sha256": sha(canonical(binding[1]["label_binding"])) if binding else None,
+                  "decoded_response_sha256": None, "decode_status": "not_applicable" if binding is None else "pending"}
+        echo = bool(self.api_key and self.api_key.encode() in raw)
+        if echo:
+            record["body_suppressed"] = "credential_echo"
+        else:
+            raw_path = self.outdir / f"vendor-response-{slot:02d}.body"
+            write_once(raw_path, raw)
+            record["raw_body_path"] = raw_path.name
+            record["raw_body_file_sha256"] = sha(raw)
+        portable = raw
+        decoded_over_cap = False
+        if binding is not None and complete and not echo and 200 <= status < 300:
+            try:
+                envelope = json.loads(raw)
+                content = envelope["choices"][0]["message"]["content"]
+                decoded = _reference_labels().decode_answerer_response(binding[1], json.loads(content))
+                envelope["choices"][0]["message"]["content"] = json.dumps(
+                    decoded, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+                portable = json.dumps(envelope, ensure_ascii=False, sort_keys=True,
+                                      separators=(",", ":")).encode("utf-8")
+                record["decoded_response_bytes"] = len(portable)
+                record["decoded_response_sha256"] = sha(portable)
+                if len(portable) > 2_000_000:
+                    decoded_over_cap = True
+                    portable = raw
+                    record["decode_status"] = "portable_response_byte_cap"
+                    record["portable_body_status"] = "oversized_decoded_body_not_persisted"
+                else:
+                    record["decode_status"] = "decoded"
+            except (ValueError, KeyError, TypeError):
+                # Leave the aliased response intact so the unchanged validator
+                # rejects it while preserving its parsed usage when available.
+                record["decode_status"] = "rejected_by_codec"
+        if not echo and not decoded_over_cap:
+            portable_path = self.outdir / f"portable-response-{slot:02d}.body"
+            write_once(portable_path, portable)
+            record["portable_body_path"] = portable_path.name
+            record.setdefault("decoded_response_sha256", sha(portable))
+            record["portable_response_bytes"] = len(portable)
+            record["portable_response_sha256"] = sha(portable)
+        meta_path = self.outdir / f"response-{slot:02d}.json"
+        write_once(meta_path, record)
+        self.receipts.append(record)
+        if decoded_over_cap:
+            raise ValueError("exp090-portable-response-byte-cap")
+        headers = [(k, v) for k, v in response_headers
+                   if k.lower() not in {"content-length", "content-encoding", "transfer-encoding"}]
+        return httpx.Response(status, headers=headers, content=portable,
+                              request=rewritten, extensions=response_extensions)
+
+    def close(self):
+        self.inner.close()
+
+
+
+def freeze_answer_output_manifest(answer_run_path: Path, answer_directory: Path,
+                                  output_path: Path, guard=lambda: None) -> dict:
+    """Bind all sixteen validated frozen-runner answers before answer assessment."""
+    run_path, answer_root = Path(answer_run_path), Path(answer_directory)
+    if (run_path.is_symlink() or not run_path.is_file()
+            or answer_root.is_symlink() or not answer_root.is_dir()):
+        raise ValueError("exp090-answer-output-receipt-missing")
+    raw = run_path.read_bytes()
+    run = json.loads(raw)
+    if run.get("schema") != "exp077-answer-run/1" or run.get("status") != "complete":
+        raise ValueError("exp090-answer-output-run-incomplete")
+    calls = run.get("call_receipts")
+    answers = run.get("answers")
+    if type(calls) is not list or len(calls) != 18 or type(answers) is not list or len(answers) != 16:
+        raise ValueError("exp090-answer-output-coverage")
+    # Do not filter malformed call rows before the exact 2-readiness + 16-answer
+    # schedule check: null/non-object rows must fail even when all 16 answer
+    # files happen to be present.
+    if any(type(row) is not dict for row in calls):
+        raise ValueError("exp090-answer-output-coverage")
+    if any(row.get("status") != "http_success" for row in calls):
+        raise ValueError("exp090-answer-output-coverage")
+    expected = {(f"d{i}", arm) for i in range(1, 9) for arm in ("w0", "candidate")}
+    # Bind the frozen 2-readiness + 16-answer dispatch sequence. EXP-077 call
+    # receipts omit the arm field; its exact answer filename is the identity.
+    expected_paths = {f"{task}-{arm}.json": (task, arm) for task, arm in expected}
+    expected_schedule = [("readiness", "neutral-1", None), ("readiness", "neutral-2", None)] + [
+        ("answer", f"d{task}", arm) for task in range(1, 9) for arm in ("w0", "candidate")]
+    receipt_by_answer = {}
+    for slot, (call, expected_row) in enumerate(zip(calls, expected_schedule), start=1):
+        kind, task_id, arm = expected_row
+        if (call.get("slot") != slot or call.get("kind") != kind
+                or call.get("task_id") != task_id):
+            raise ValueError("exp090-answer-output-call-sequence")
+        if kind == "readiness":
+            if any(key in call for key in ("answer_path", "answer_sha256", "arm")):
+                raise ValueError("exp090-answer-output-readiness-shape")
+            continue
+        path = call.get("answer_path")
+        key = expected_paths.get(path) if type(path) is str else None
+        digest = call.get("answer_sha256")
+        if (key != (task_id, arm) or key in receipt_by_answer
+                or type(digest) is not str or not re.fullmatch(r"[0-9a-f]{64}", digest)):
+            raise ValueError("exp090-answer-output-duplicate")
+        receipt_by_answer[key] = call
+    if set(receipt_by_answer) != expected:
+        raise ValueError("exp090-answer-output-identity")
+    rows = []
+    for answer in answers:
+        if type(answer) is not dict or set(answer) != {"task_id", "arm", "answer_sha256"}:
+            raise ValueError("exp090-answer-output-row")
+        key = (answer["task_id"], answer["arm"])
+        call = receipt_by_answer.get(key)
+        if call is None or call.get("answer_sha256") != answer["answer_sha256"]:
+            raise ValueError("exp090-answer-output-call-binding")
+        file_path = answer_root / call["answer_path"]
+        if file_path.is_symlink() or not file_path.is_file():
+            raise ValueError("exp090-answer-file-missing")
+        body = file_path.read_bytes()
+        if len(body) < 1 or len(body) > 2_000_000 or sha(body) != answer["answer_sha256"]:
+            raise ValueError("exp090-answer-file-hash-or-size")
+        rows.append({"task_id": key[0], "arm": key[1], "answer_sha256": sha(body),
+                     "receipt_sha256": sha(raw), "bytes": len(body)})
+    if {(r["task_id"], r["arm"]) for r in rows} != expected:
+        raise ValueError("exp090-answer-output-set")
+    manifest = {"schema": "exp090-answer-output-manifest/1", "status": "complete",
+                "answers": sorted(rows, key=lambda r: (r["task_id"], r["arm"]))}
+    output_path = Path(output_path)
+    ref = write_once(output_path, manifest)
+    return {"manifest": manifest, "manifest_sha256": ref["sha256"],
+            "manifest_path": ref["path"], "answer_run_sha256": sha(raw),
+            "answer_count": len(rows)}
+
+
+def run_answers(*, assignments: list[dict], cases: list[dict], prompt: str, schema: dict,
+                stage_outdir: Path, outdir: Path, admission, stage_permit, clock: dict, clock_bytes: bytes,
+                clock_sha256: str, source_id_universe_by_task: dict[str, list[str]],
+                offline_transport=None, offline: bool = False) -> dict:
+    """Run two readiness plus sixteen answer requests under one phase permit."""
+    if outdir.exists() or outdir.is_symlink():
+        raise ValueError("exp078-answer-output-must-be-new")
+    if not isinstance(assignments, list) or len(assignments) != 16:
+        raise ValueError("exp078-answer-assignment-count")
+    validate_answer_coverage(assignments, cases)
+    research_ids = [row["id"] for row in cases if row.get("kind") == "research"]
+    if (type(source_id_universe_by_task) is not dict
+            or set(source_id_universe_by_task) != set(research_ids)):
+        raise ValueError("exp090-answer-source-universe-coverage")
+    frozen_prompt = labelled_prompt("answerer")
+    if prompt != frozen_prompt:
+        raise ValueError("exp090-answerer-prompt-pin")
+    labels = _reference_labels()
+    label_bundles = {}
+    for assignment in assignments:
+        task_id = assignment["model_input"]["task"]["task_id"]
+        arm = assignment["private_binding"]["arm_id"]
+        if task_id not in source_id_universe_by_task:
+            raise ValueError("exp090-answer-source-universe-task")
+        bundle = labels.encode_answerer_input(task_id, assignment["model_input"],
+            assignment["private_binding"]["catalog"], source_id_universe_by_task[task_id])
+        key = (task_id, arm)
+        if key in label_bundles:
+            raise ValueError("exp090-answer-label-assignment-duplicate")
+        label_bundles[key] = bundle
+    if sha(clock_bytes) != clock_sha256 or json.loads(clock_bytes) != clock:
+        raise ValueError("exp078-answer-clock-binding")
+    outdir.mkdir(mode=0o700, parents=True, exist_ok=False)
+    phase_permit = None
+    if offline:
+        if not isinstance(offline_transport, httpx.MockTransport):
+            raise ValueError("exp078-answer-offline-requires-mock-transport")
+    else:
+        if stage_permit is None or admission is None or offline_transport is not None:
+            raise ValueError("exp078-answer-live-requires-common-admission")
+        phase_permit = _phase(admission, stage_permit, "answer", stage_outdir, outdir, clock_bytes)
+        admission.require_phase(phase_permit, clock_bytes, Path(stage_outdir).resolve())
+    answer_runner = _load("exp078_answer_runner", EXP077 / "answer-runner.py.txt")
+    packet = {"schema": "exp077-answer-packet/1", "synthetic": False,
+              "stage_id": clock["stage_id"], "stage_clock_digest": clock_sha256,
+              "assignments": assignments}
+    validated_schema = answer_runner.validate_schema(canonical(schema))
+    answer_runner.validate_packet(canonical(packet), validated_schema)
+    # Frozen EXP-077 run_answers consumes a derived evidence_ids list on each
+    # delivered source, while its validator/packet schema intentionally carries
+    # IDs only on passages. Add the private derived view after validating the
+    # original packet; _LabelledAnswerTransport removes it and sends only the
+    # unchanged passage schema with aliases.
+    runner_assignments = json.loads(json.dumps(assignments, ensure_ascii=False, allow_nan=False))
+    for assignment in runner_assignments:
+        for source in assignment["model_input"]["delivered_sources"]:
+            source["evidence_ids"] = [passage["evidence_id"] for passage in source["passages"]]
+    if offline:
+        endpoint, api_key = "https://fixture.invalid/v1/chat/completions", "exp078-offline-fixture"
+        # Keep the transport's lookup basis on the exact packet that passed
+        # the frozen validator. The derived evidence_ids list is only a local
+        # compatibility view for run_answers and must never enter lookup or
+        # the serialized model request.
+        alias_transport = _LabelledAnswerTransport(offline_transport, assignments=assignments,
+            bundles=label_bundles, outdir=outdir / "vendor-responses", api_key=api_key)
+        transport = alias_transport
+    else:
+        endpoint = os.environ.get("LLM_BASE_URL", "")
+        api_key = os.environ.get("LLM_API_KEY", "")
+        if not endpoint or not api_key:
+            raise ValueError("exp078-answer-configuration-unavailable-after-admission")
+        alias_transport = _LabelledAnswerTransport(httpx.HTTPTransport(retries=0, trust_env=False),
+            assignments=assignments, bundles=label_bundles,
+            outdir=outdir / "vendor-responses", api_key=api_key)
+        transport = _GuardedHTTPTransport(alias_transport,
+            admission, phase_permit, clock_bytes, stage_outdir, 18)
+    helper_out = outdir / "portable-answer-wire"
+    helper_out.mkdir(mode=0o700)
+    label_root = outdir / "private-label-bindings"
+    label_root.mkdir(mode=0o700)
+    label_refs = []
+    for (task_id, arm), bundle in sorted(label_bundles.items()):
+        label_refs.append({"task_id": task_id, "arm_id": arm,
+                           **write_once(label_root / f"{task_id}-{arm}.json", bundle)})
+    started = time.monotonic()
+    try:
+        helper_result = answer_runner.run_answers(runner_assignments, prompt, validated_schema, endpoint, api_key,
+                                                   helper_out, clock, transport=transport)
+    except BaseException as exc:
+        receipt_path = helper_out / "call-receipts.json"
+        raw = receipt_path.read_bytes() if receipt_path.is_file() and not receipt_path.is_symlink() else b""
+        failed = {"schema": "exp078-answer-phase/1", "stage": "development",
+                  "status": "incomplete", "synthetic": offline,
+                  "quality_credit": False, "adoption_eligible": False,
+                  "stage_clock_sha256": clock_sha256,
+                  "terminal_error_class": type(exc).__name__,
+                  "helper_call_receipts_sha256": sha(raw) if raw else None,
+                  "vendor_response_receipts": alias_transport.receipts,
+                  "vendor_response_receipts_sha256": sha(canonical(alias_transport.receipts)),
+                  "private_label_bindings": label_refs,
+                  "shared_stage_elapsed_seconds": shared_stage_elapsed(clock),
+                  "answer_phase_elapsed_seconds": time.monotonic() - started}
+        write_once(outdir / "answer-phase-terminal.json", failed)
+        raise
+    elapsed = time.monotonic() - started
+    answer_receipt = helper_out / "answer-run.json"
+    if answer_receipt.is_symlink() or not answer_receipt.is_file():
+        raise ValueError("exp078-answer-helper-receipt-missing")
+    helper_raw = answer_receipt.read_bytes()
+    answer_manifest = freeze_answer_output_manifest(answer_receipt, helper_out,
+        outdir / "answer-output-manifest.json",
+        guard=(lambda: None) if offline else
+            (lambda: admission.require_phase(phase_permit, clock_bytes, Path(stage_outdir).resolve())))
+    if not offline:
+        admission.require_phase(phase_permit, clock_bytes, Path(stage_outdir).resolve())
+    status = "complete" if helper_result.get("status") == "complete" and elapsed <= 28_800 else "incomplete"
+    result = {"schema": "exp078-answer-phase/1", "stage": "development",
+              "status": status, "synthetic": offline,
+              "quality_credit": False, "adoption_eligible": False,
+              "stage_clock_sha256": clock_sha256,
+              "owned_api_calls": helper_result.get("owned_api_calls"),
+              "reported_usage": helper_result.get("reported_usage"),
+              "returned_models": helper_result.get("returned_models"),
+              "immutable_model_revision": helper_result.get("immutable_model_revision"),
+              "shared_stage_elapsed_seconds": shared_stage_elapsed(clock),
+              "answer_phase_elapsed_seconds": elapsed,
+              "helper_wire_receipt_sha256": sha(helper_raw),
+              "helper_wire_receipt_path": "portable-answer-wire/answer-run.json",
+              "vendor_response_receipts": alias_transport.receipts,
+              "vendor_response_receipts_sha256": sha(canonical(alias_transport.receipts)),
+              "answer_output_manifest_sha256": answer_manifest["manifest_sha256"],
+              "answer_output_manifest_path": answer_manifest["manifest_path"],
+              "private_label_bindings": label_refs}
+    ref = write_once(outdir / "answer-phase.json", result)
+    result["receipt"] = ref
+    return result
+
+
+def receive_exact_assessment_final(*, receiver, admission, phase_permit,
+                                   stage_outdir, clock_bytes, slot_id,
+                                   expected_binding, final_text):
+    """Require the active registered phase, then persist the supplied final text unchanged."""
+    root = Path(stage_outdir).resolve()
+    admission.require_phase(phase_permit, clock_bytes, root)
+    receipt = receiver.receive(slot_id, expected_binding, final_text)
+    admission.require_phase(phase_permit, clock_bytes, root)
+    return receipt
