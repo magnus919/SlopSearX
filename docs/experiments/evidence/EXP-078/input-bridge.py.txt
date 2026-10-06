@@ -1,0 +1,224 @@
+"""Verify immutable EXP-077 acquisition inputs for the distinct EXP-078 stage.
+
+This module is inert: it reads and hashes saved files only. It makes no HTTP,
+model, capture, search, or credential calls. The failed original d12 pool is
+retained as history, never exposed as an effective pool.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+from pathlib import Path, PurePosixPath
+from typing import Any
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+PINS_PATH = HERE / "reuse-input-pins.json"
+COHORTS_PATH = HERE / "cohorts.json"
+
+
+class InputError(ValueError):
+    pass
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical_json(value: Any) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def strict_json(raw: bytes) -> Any:
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise InputError("duplicate-json-key")
+            result[key] = value
+        return result
+
+    def constant(_value):
+        raise InputError("non-finite-json")
+
+    try:
+        return json.loads(raw, object_pairs_hook=pairs, parse_constant=constant)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise InputError("invalid-json") from exc
+
+
+def _read_regular(root: Path, relative: str) -> bytes:
+    rel = PurePosixPath(relative)
+    if rel.is_absolute() or not rel.parts or any(p in {"", ".", ".."} for p in rel.parts):
+        raise InputError("unsafe-relative-path")
+    path = root.joinpath(*rel.parts)
+    cursor = root
+    for part in rel.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise InputError("symlink-input")
+    if not path.is_file():
+        raise InputError("missing-input")
+    return path.read_bytes()
+
+
+def load_pins(pins_path: Path = PINS_PATH) -> tuple[dict, bytes]:
+    raw = pins_path.read_bytes()
+    pins = strict_json(raw)
+    if (type(pins) is not dict or pins.get("schema") != "exp078-reuse-input-pins/1"
+            or pins.get("status") != "approved_reuse_input_pins" or type(pins.get("files")) is not list):
+        raise InputError("pins-schema")
+    paths = [row.get("path") for row in pins["files"] if type(row) is dict]
+    if len(paths) != len(pins["files"]) or len(set(paths)) != len(paths):
+        raise InputError("pins-path-uniqueness")
+    if pins.get("file_count") != len(paths):
+        raise InputError("pins-count")
+    for row in pins["files"]:
+        if (not isinstance(row.get("sha256"), str) or len(row["sha256"]) != 64
+                or type(row.get("bytes")) is not int or row["bytes"] < 0):
+            raise InputError("pins-entry")
+    return pins, raw
+
+
+def verify_input_bundle(bundle_root: Path, pins_path: Path = PINS_PATH) -> dict:
+    root = Path(bundle_root)
+    if root.is_symlink() or not root.is_dir():
+        raise InputError("bundle-root")
+    pins, pins_raw = load_pins(pins_path)
+    expected = {row["path"]: row for row in pins["files"]}
+    actual = set()
+    for base, dirs, names in os.walk(root, followlinks=False):
+        if any((Path(base) / name).is_symlink() for name in dirs):
+            raise InputError("bundle-symlink-directory")
+        for name in names:
+            path = Path(base) / name
+            if path.is_symlink() or not path.is_file():
+                raise InputError("bundle-nonregular-file")
+            actual.add(path.relative_to(root).as_posix())
+    if actual != set(expected):
+        raise InputError("bundle-inventory-mismatch")
+    total = 0
+    for relative, row in expected.items():
+        raw = _read_regular(root, relative)
+        if len(raw) != row["bytes"] or sha(raw) != row["sha256"]:
+            raise InputError("bundle-hash-mismatch")
+        total += len(raw)
+    if total != pins.get("total_bytes"):
+        raise InputError("bundle-byte-count")
+    inventory = {"schema": "exp078-input-bundle/1",
+                 "files": [{"path": row["path"], "sha256": row["sha256"], "bytes": row["bytes"]}
+                           for row in sorted(pins["files"], key=lambda item: item["path"])]}
+    return {"input_pins_sha256": sha(pins_raw),
+            "input_bundle_sha256": sha(canonical_json(inventory)),
+            "file_count": len(expected), "total_bytes": total,
+            "historical_stage_final_sha256": pins["predecessor_provenance"]["stage_final_sha256"]}
+
+
+def _query_file(index: int, task_id: str) -> str:
+    return f"query-{index:02d}-{task_id}.json"
+
+
+def _validate_physical_receipts(root: Path, query: dict, task_id: str) -> None:
+    calls = query.get("http_calls")
+    if type(calls) is not list or not calls:
+        raise InputError("query-http-calls")
+    for call in calls:
+        if type(call) is not dict or call.get("query_id") != task_id or call.get("dispatched") is not True:
+            raise InputError("call-query-binding")
+        side_name = PurePosixPath(call.get("sidecar_path", "")).name
+        body_name = PurePosixPath(call.get("body_path", "")).name
+        if side_name != call.get("sidecar_path") or body_name != call.get("body_path"):
+            raise InputError("call-path-shape")
+        side_raw = _read_regular(root, f"http/{side_name}")
+        body_raw = _read_regular(root, f"http/{body_name}")
+        if sha(side_raw) != call.get("sidecar_sha256"):
+            raise InputError("call-sidecar-hash")
+        sidecar = strict_json(side_raw)
+        if type(sidecar) is not dict or sidecar.get("query_id") != task_id or sidecar.get("engine") != call.get("engine"):
+            raise InputError("call-sidecar-binding")
+        body_hash = sha(body_raw)
+        if (body_hash != call.get("retained_body_sha256")
+                or body_hash != call.get("response_body_sha256")
+                or len(body_raw) != call.get("retained_body_bytes")):
+            raise InputError("call-body-binding")
+
+
+def _outcomes(query: dict, task: dict, protocol: dict) -> list[dict]:
+    engines = protocol["acquisition"]["historical_research_engines"] if task["kind"] == "research" else ["github"]
+    rows = query.get("engine_outcomes")
+    if type(rows) is not list or [r.get("engine") for r in rows if type(r) is dict] != engines:
+        raise InputError("engine-outcome-coverage")
+    for row in rows:
+        engine, status = row.get("engine"), row.get("status")
+        if task["kind"] == "research":
+            if engine == "wikipedia":
+                if status != "blocked":
+                    raise InputError("wikipedia-outcome-drift")
+            elif status != "ok":
+                raise InputError("research-outcome-not-approved")
+        elif status != "ok":
+            raise InputError("navigation-outcome-not-ok")
+    return rows
+
+
+def prepare_reused_inputs(bundle_root: Path, pins_path: Path = PINS_PATH,
+                          cohorts_path: Path = COHORTS_PATH) -> dict:
+    """Return 12 pinned effective pools plus a history-only original d12 receipt."""
+    integrity = verify_input_bundle(bundle_root, pins_path)
+    root = Path(bundle_root)
+    pins, pins_raw = load_pins(pins_path)
+    cohorts = strict_json(Path(cohorts_path).read_bytes())
+    protocol = strict_json((HERE / "protocol.json").read_bytes())
+    tasks = cohorts.get("cohorts", {}).get("development")
+    if type(tasks) is not list or [t.get("id") for t in tasks] != [f"d{i}" for i in range(1, 14)]:
+        raise InputError("development-task-order")
+    effective, historical_d12 = {}, None
+    for index, task in enumerate(tasks, 1):
+        task_id = task["id"]
+        relative = _query_file(index, task_id)
+        raw = _read_regular(root, relative)
+        query = strict_json(raw)
+        if (type(query) is not dict or query.get("task_id") != task_id
+                or query.get("kind") != task["kind"] or query.get("query") != task["query"]
+                or query.get("target_url") != task.get("target_url")
+                or query.get("partial") is not (task["kind"] == "research")
+                or query.get("deadline_exceeded") is not False or query.get("all_unresponsive") is not False):
+            raise InputError("historical-query-contract")
+        _validate_physical_receipts(root, query, task_id)
+        outcomes = _outcomes(query, task, protocol)
+        results = query.get("results")
+        if type(results) is not list:
+            raise InputError("historical-results-shape")
+        if task_id == "d12":
+            normalized_target = task["target_url"].rstrip("/")
+            target_was_present = any(type(r) is dict and r.get("url", "").rstrip("/") == normalized_target for r in results)
+            if target_was_present:
+                raise InputError("original-d12-no-longer-matches-pinned-miss")
+            historical_d12 = {"task_id": "d12", "receipt_path": relative,
+                              "receipt_sha256": sha(raw), "result_count": len(results),
+                              "target_present": False, "effective": False}
+            continue
+        if task["kind"] == "research" and not (41 <= len(results) <= 80):
+            raise InputError("research-pool-size")
+        if task["kind"] == "navigation":
+            target = task["target_url"].rstrip("/")
+            if not any(type(r) is dict and isinstance(r.get("url"), str)
+                       and r["url"].rstrip("/") == target for r in results):
+                raise InputError("reused-navigation-target-missing")
+        effective[task_id] = {"task_id": task_id, "kind": task["kind"],
+                              "results": results, "engine_outcomes": outcomes,
+                              "receipt_path": relative, "receipt_sha256": sha(raw),
+                              "reused": True, "wikipedia_unavailable": task["kind"] == "research"}
+    expected_ids = [f"d{i}" for i in range(1, 12)] + ["d13"]
+    if list(effective) != expected_ids or historical_d12 is None:
+        raise InputError("effective-input-membership")
+    return {"schema": "exp078-reused-inputs/1", "stage": "development", "synthetic": False,
+            "input_integrity": integrity,
+            "input_pins_sha256": integrity["input_pins_sha256"],
+            "input_bundle_sha256": integrity["input_bundle_sha256"],
+            "pools": effective, "historical_d12": historical_d12,
+            "corrective_query": {"task_id": "d12", "query": "cosign", "engine": "github",
+                                 "target_url": "https://github.com/sigstore/cosign",
+                                 "effective_pool": "new corrective result only"}}
