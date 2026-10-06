@@ -1,0 +1,226 @@
+"""Synthetic offline tests for EXP-094 frozen-input and card-reference bridge."""
+import copy
+import hashlib
+import importlib.machinery
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+B = importlib.machinery.SourceFileLoader("exp094_input_bridge_test", str(HERE / "input-bridge.py.txt")).load_module()
+A = importlib.machinery.SourceFileLoader("exp088_card_adapter_test",
+    str(HERE.parent / "EXP-088" / "card-reference-id-adapter.py.txt")).load_module()
+L = importlib.machinery.SourceFileLoader("exp088_labels_test",
+    str(HERE.parent / "EXP-088" / "reference-labels.py.txt")).load_module()
+OLD = importlib.machinery.SourceFileLoader("exp088_old_bridge_test",
+    str(HERE.parent / "EXP-088" / "input-bridge.py.txt")).load_module()
+
+
+def write(path, raw):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(raw)
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def fixture(tmp):
+    root = Path(tmp) / "bundle"
+    root.mkdir()
+    pin_path = Path(tmp) / "pins.json"
+    prompt = (HERE.parent / "EXP-088" / "card-assessor-prompt.txt").read_bytes()
+    helper_pins = {key: digest for key, (_path, digest) in B.EXP088_HELPERS.items()}
+    oldpins_raw = B.EXP088_PINS_PATH.read_bytes()
+    oldpins = B.strict_json(oldpins_raw)
+    base_rows = oldpins["files"]
+
+    # 442 fake frozen cards across the eight development tasks, two identical assignments each.
+    counts = {f"d{i}": (56 if i in (1, 2) else 55) for i in range(1, 9)}
+    pools, sources, natives = {}, {}, {}
+    built_by_key, labels_by_key, payload_by_key, response_by_key = {}, {}, {}, {}
+    jobs, manifest_files = [], []
+    card_path_prefix = "exp088-card-reference/assessment-inputs/"
+    for task, count in counts.items():
+        cards, gids = [], []
+        for i in range(count):
+            gid = f"{task}-card-{i:03d}"
+            cards.append({"id": gid, "title": f"Fixture title {task} {i}",
+                          "url": f"https://fixture.invalid/{task}/{i}",
+                          "snippet": f"Synthetic no-grade fixture evidence {task} {i}"})
+            gids.append(gid)
+        pools[task] = {"cards": cards, "natural_count": count, "merged_count": count}
+        sources[task] = {gid: "u" + hashlib.sha256(gid.encode()).hexdigest() for gid in gids}
+        natives[task] = {gid: {"url": card["url"]} for gid, card in zip(gids, cards)}
+        facets = [task + "_f1"]
+        for assessor in B.ASSESSORS:
+            key = (task, assessor)
+            built = A.build_assignment(task, [{k: c[k] for k in ("title", "url", "snippet")} for c in cards],
+                                       facets, assessor_id=assessor, global_ids=gids)
+            bundle = L.encode_card_assignment(task, built)
+            logical = f"development-{task}-card-{assessor}"
+            task_data = {"task_id": task, "query": f"synthetic query {task}",
+                         "purpose": f"synthetic purpose {task}",
+                         "critical_checks": [{"id": facets[0], "check": "fixture only"}]}
+            payload = {"prompt": prompt.decode("utf-8"), "task": task_data,
+                       "card_model_input": bundle["model_input"]}
+            response_rows = []
+            for card, catalog in zip(built["assignment"]["cards"], bundle["model_input"]["reference_catalogs"]):
+                label = catalog["entries"][0]["evidence_id"]
+                response_rows.append({"card_sha256": card["card_sha256"], "lead": 1, "visible": 1,
+                    "facets": facets, "uncertain": [], "rationale": "synthetic fixture rationale",
+                    "anchors": [label], "facet_anchors": {facets[0]: [label]}})
+            raw_response = {"records": response_rows}
+            decoded = L.decode_card_response(bundle, raw_response)
+            verified = A.expand_and_verify(built, decoded)
+            paths = {"input_path": f"card-inputs/{logical}.json",
+                     "private_plan_path": f"private/card-assignments/{logical}.json",
+                     "label_binding_path": f"private/label-bindings/{logical}.json"}
+            objects = {paths["input_path"]: payload, paths["private_plan_path"]: built,
+                       paths["label_binding_path"]: bundle}
+            path_hashes = {}
+            for rel, obj in objects.items():
+                raw = B.canonical_json(obj)
+                write(root / "exp088-card-reference" / "assessment-inputs" / rel, raw)
+                path_hashes[rel] = {"bytes": len(raw), "sha256": sha(raw)}
+                manifest_files.append({"path": rel, **path_hashes[rel]})
+            response_objects = {"raw": raw_response, "decoded": decoded, "verified": verified}
+            for suffix, obj in response_objects.items():
+                raw = B.canonical_json(obj)
+                write(root / f"exp088-card-reference/responses/{logical}.{suffix}.json", raw)
+            job = {"task_id": task, "assessor_id": assessor, "logical_submission": logical,
+                   "role": "card", "helper_id": built["assignment"]["assignment_id"],
+                   **paths, "input_bytes": path_hashes[paths["input_path"]]["bytes"],
+                   "input_sha256": path_hashes[paths["input_path"]]["sha256"],
+                   "private_plan_sha256": path_hashes[paths["private_plan_path"]]["sha256"],
+                   "label_binding_sha256": path_hashes[paths["label_binding_path"]]["sha256"]}
+            jobs.append(job)
+            built_by_key[key], labels_by_key[key], payload_by_key[key], response_by_key[key] = built, bundle, payload, raw_response
+
+    old_clock = {"schema": "exp078-stage-clock/1", "stage": "development", "old": True}
+    old_clock_raw = B.canonical_json(old_clock)
+    binding = {"schema": "fixture-card-source-binding/1", "opaque": "fixture"}
+    binding_raw = B.canonical_json(binding)
+    original = {"schema": "exp078-effective-acquisition/1", "synthetic": False,
+                "acquisition_receipt": {"stage_clock": old_clock, "stage_clock_digest": sha(old_clock_raw)},
+                "stage": "development", "input_provenance": {"fixture": "pinned"},
+                "engine_outcomes": {"fixture": "unavailable"}, "target_acquired": True,
+                "pools": pools, "source_id_by_card_id": sources, "native_results_by_card_id": natives}
+    for i in range(9, 14):
+        task = f"d{i}"; gid = task + "-card-000"
+        card = {"id": gid, "title": "fixture title", "url": f"https://fixture.invalid/{task}", "snippet": "fixture"}
+        original["pools"][task] = {"cards": [card], "natural_count": 1, "merged_count": 1}
+        original["source_id_by_card_id"][task] = {gid: "u" + hashlib.sha256(gid.encode()).hexdigest()}
+        original["native_results_by_card_id"][task] = {gid: {"url": card["url"]}}
+    snapshot = copy.deepcopy(original)
+    snapshot["stage"] = "EXP-084"
+    snapshot["recovery_provenance"] = {"study_id": "EXP-084", "prior_study_credit": False, "new_searches": 0}
+    phase = {"schema": "exp078-capture-phase/1", "status": "complete",
+             "stage_clock_sha256": sha(old_clock_raw), "card_source_binding_sha256": sha(binding_raw)}
+    stage_clock_raw = B.canonical_json(old_clock)
+
+    # Fill the exact base-path inventory from EXP-088 pins; replace the bridge-read artifacts.
+    for row in base_rows:
+        name = row["path"]
+        raw = (b"synthetic-base-file:" + name.encode())[:row["bytes"]].ljust(row["bytes"], b"x")
+        if name == "original/effective-acquisition.json": raw = B.canonical_json(original)
+        elif name == "exp084/effective-input-envelope.json": raw = B.canonical_json(snapshot)
+        elif name == "exp084/stage-clock.json": raw = stage_clock_raw
+        elif name in {"original/capture/card-source-binding.json", "exp084/capture/card-source-binding.json"}: raw = binding_raw
+        elif name == "exp084/capture/capture-phase.json": raw = B.canonical_json(phase)
+        elif name == "original/configuration-binding.json": raw = b"fixture config"
+        write(root / name, raw)
+
+    manifest = {"schema": "exp088-private-assessment-inputs/1", "study_id": "EXP-088",
+                "card_jobs": 16, "jobs": jobs, "files": manifest_files, "helper_pins": helper_pins,
+                "capture_pins": {"runtime_config_receipt_sha256": sha(b"fixture config")}}
+    write(root / "exp088-card-reference/provenance/assessment-manifest.json", B.canonical_json(manifest))
+    write(root / "exp088-card-reference/provenance/stage-clock.json", old_clock_raw)
+    write(root / "exp088-card-reference/provenance/development-terminal.json", b"terminal proof")
+    write(root / "exp088-card-reference/provenance/health.json", B.canonical_json({"status": "healthy"}))
+    for index, job in enumerate(sorted(jobs, key=lambda x: (x["task_id"], x["assessor_id"])), 1):
+        logical = job["logical_submission"]
+        raw = B.canonical_json(response_by_key[(job["task_id"], job["assessor_id"])])
+        dispatch = {"schema": "exp088-card-dispatch/1", "slot": index, "job": job,
+                    "model": "fixture-only", "response_file": logical + ".raw.json",
+                    "stage_clock_sha256": sha(old_clock_raw)}
+        validation = {"schema": "exp088-card-validation/1", "slot": index, "job": logical,
+                      "status": "valid", "response_sha256": sha(raw), "response_bytes": len(raw),
+                      "record_count": len(response_by_key[(job["task_id"], job["assessor_id"])]["records"])}
+        write(root / f"exp088-card-reference/receipts/dispatch-{index:03d}.json", B.canonical_json(dispatch))
+        write(root / f"exp088-card-reference/receipts/validation-{index:03d}.json", B.canonical_json(validation))
+
+    rows = []
+    for path in sorted(p for p in root.rglob("*") if p.is_file()):
+        rel = path.relative_to(root).as_posix(); raw = path.read_bytes()
+        rows.append({"path": rel, "bytes": len(raw), "sha256": sha(raw)})
+    card_rows = [r for r in rows if r["path"].startswith("exp088-card-reference/")]
+    assert len(rows) == B.EXPECTED_TOTAL_FILES and len(card_rows) == B.EXPECTED_CARD_FILES
+    pins = {"schema": "exp094-reused-input-pins/1", "status": "registered_input_provenance",
+            "file_count": len(rows), "total_bytes": sum(r["bytes"] for r in rows),
+            "base_file_count": B.EXPECTED_BASE_FILES, "carry_forward_card_file_count": len(card_rows),
+            "base_input_pins_sha256": sha(oldpins_raw), "runtime_config_receipt_sha256": sha(b"fixture config"),
+            "lineage_helper_pins": helper_pins, "files": rows, "carry_forward_card_files": card_rows,
+            "new_searches": 0, "preparation_model_calls": 0,
+            "exp084_grader_outputs_reused": False, "exp088_card_references_carried_unchanged": True}
+    write(pin_path, B.canonical_json(pins))
+    return root, pin_path
+
+
+class InputBridgeTests(unittest.TestCase):
+    def test_complete_reuse_proof_and_new_clock_rebase(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, pins = fixture(tmp)
+            result = B.verify_carried_card_references(root, pins)
+            proof = result["card_reuse_proof"]
+            self.assertEqual((proof["card_job_count"], proof["record_count"]), (16, 884))
+            self.assertEqual(len(proof["records"]), 16)
+            self.assertEqual({(r["task_id"], r["assessor_id"]) for r in proof["records"]}, B.EXPECTED_JOBS)
+            self.assertTrue(all(r["decoded_response_path"].endswith(".decoded.json") for r in proof["records"]))
+            self.assertFalse(any(k in proof for k in ("grades", "responses", "semantic_grade")))
+            clock = {"schema": "exp078-stage-clock/1", "stage": "development", "new_fixture": True}
+            rebased = B.prepare_reused_inputs(root, stage_clock=clock,
+                stage_clock_digest=sha(B.canonical_json(clock)), pins_path=pins)
+            self.assertEqual(rebased["schema"], "exp094-reused-inputs/1")
+            self.assertEqual(rebased["effective_acquisition"]["pools"],
+                             B.strict_json((root / "original/effective-acquisition.json").read_bytes())["pools"])
+            self.assertEqual(rebased["effective_acquisition"]["acquisition_receipt"]["stage_clock_digest"],
+                             sha(B.canonical_json(clock)))
+            self.assertFalse(rebased["effective_acquisition"]["recovery_provenance"]["old_grader_outputs_used"])
+
+    def test_modified_decoded_response_is_rejected_after_repin(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, pins = fixture(tmp)
+            path = root / "exp088-card-reference/responses/development-d1-card-A.decoded.json"
+            decoded = B.strict_json(path.read_bytes())
+            decoded["records"][0]["rationale"] = "changed synthetic fixture"
+            write(path, B.canonical_json(decoded))
+            pin_obj = B.strict_json(pins.read_bytes())
+            rel = path.relative_to(root).as_posix()
+            for row in pin_obj["files"]:
+                if row["path"] == rel:
+                    row["bytes"] = len(path.read_bytes()); row["sha256"] = sha(path.read_bytes())
+            pin_obj["total_bytes"] = sum(row["bytes"] for row in pin_obj["files"])
+            for row in pin_obj["carry_forward_card_files"]:
+                if row["path"] == rel:
+                    row["bytes"] = len(path.read_bytes()); row["sha256"] = sha(path.read_bytes())
+            write(pins, B.canonical_json(pin_obj))
+            with self.assertRaisesRegex(B.InputError, "card-decoded-response-mismatch"):
+                B.verify_carried_card_references(root, pins)
+
+    def test_extra_file_and_bad_clock_are_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, pins = fixture(tmp)
+            write(root / "exp088-card-reference/analysis/result.json", b"forbidden")
+            with self.assertRaisesRegex(B.InputError, "grader-output-is-not-input"):
+                B.verify_bundle_inventory(root, pins)
+        with tempfile.TemporaryDirectory() as tmp:
+            root, pins = fixture(tmp)
+            clock = {"schema": "exp078-stage-clock/1", "stage": "development", "fresh": True}
+            with self.assertRaisesRegex(B.InputError, "new-stage-clock-required"):
+                B.prepare_reused_inputs(root, stage_clock=clock, stage_clock_digest="0" * 64, pins_path=pins)
+
+
+if __name__ == "__main__":
+    unittest.main()
