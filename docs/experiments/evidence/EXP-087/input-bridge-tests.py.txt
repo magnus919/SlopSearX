@@ -1,0 +1,132 @@
+"""Offline EXP-087 immutable-input bridge tests; fixture data is synthetic."""
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp087_bridge_test", str(HERE / "input-bridge.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+BRIDGE = importlib.util.module_from_spec(spec)
+loader.exec_module(BRIDGE)
+
+
+def canon(value):
+    return BRIDGE.canonical_json(value)
+
+
+def write(path, raw):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(raw)
+
+
+def fixture(tmp):
+    root = Path(tmp) / "bundle"
+    root.mkdir()
+    original = {"schema": "exp078-effective-acquisition/1", "synthetic": False,
+                "acquisition_receipt": {"stage_clock": {"schema": "exp078-stage-clock/1"},
+                                        "stage_clock_digest": "0" * 64},
+                "stage": "development", "input_provenance": {"fixture": "pinned"},
+                "engine_outcomes": {"wikipedia": "unavailable"}, "target_acquired": True,
+                "historical_d12": {"retained": True}, "corrective_query_sha256": "a" * 64,
+                "numerical_thresholds_changed": False, "pools": {},
+                "source_id_by_card_id": {}, "native_results_by_card_id": {}}
+    for task in BRIDGE.TASK_IDS:
+        card = {"id": "global-" + task, "url": "https://example.invalid/" + task,
+                "title": "Frozen fixture title", "snippet": "Frozen fixture snippet"}
+        original["pools"][task] = {"cards": [card], "natural_count": 1, "merged_count": 1}
+        original["source_id_by_card_id"][task] = {card["id"]: "source-" + task}
+        original["native_results_by_card_id"][task] = {card["id"]: {"url": card["url"]}}
+    oldclock = {"schema": "exp078-stage-clock/1", "stage": "development", "fixture": True}
+    oldclock_raw = canon(oldclock)
+    original["acquisition_receipt"]["stage_clock_digest"] = BRIDGE.sha(oldclock_raw)
+    snapshot = json.loads(json.dumps(original))
+    snapshot["stage"] = "EXP-084"
+    snapshot["recovery_provenance"] = {"study_id": "EXP-084", "prior_study_credit": False, "new_searches": 0}
+    card_binding = {"schema": "fixture-card-source-binding/1", "card_sources": {}}
+    binding_raw = canon(card_binding)
+    phase = {"schema": "exp078-capture-phase/1", "status": "complete",
+             "stage_clock_sha256": BRIDGE.sha(oldclock_raw),
+             "card_source_binding_sha256": BRIDGE.sha(binding_raw)}
+    files = {f"original/{name}": b"fixture-original:" + name.encode()
+             for name in BRIDGE.ORIGINAL_FILES}
+    files["original/effective-acquisition.json"] = canon(original)
+    config = b"fixture-private-config-binding"
+    files["original/configuration-binding.json"] = config
+    files.update({"exp084/development-terminal.json": b"terminal-provenance",
+                  "exp084/effective-input-envelope.json": canon(snapshot),
+                  "exp084/stage-clock.json": oldclock_raw,
+                  "exp084/capture/capture-phase.json": canon(phase),
+                  "exp084/capture/card-source-binding.json": binding_raw,
+                  "exp084/capture/portable-capture-wire/private-raw/source-0001.json": b"captured-source"})
+    rows = []
+    for name, raw in sorted(files.items()):
+        write(root / name, raw)
+        rows.append({"path": name, "bytes": len(raw), "sha256": BRIDGE.sha(raw)})
+    pins = {"schema": "exp087-reused-input-pins/1", "status": "registered_input_provenance",
+            "source_stage": "EXP-084-terminal-assessment_inconclusive", "file_count": len(rows),
+            "total_bytes": sum(row["bytes"] for row in rows),
+            "runtime_config_receipt_sha256": BRIDGE.sha(config), "files": rows}
+    pins_path = Path(tmp) / "pins.json"
+    write(pins_path, canon(pins))
+    return root, pins_path, original
+
+
+class BridgeTests(unittest.TestCase):
+    def test_rebase_changes_only_new_stage_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, pins, original = fixture(tmp)
+            clock = {"schema": "exp078-stage-clock/1", "stage": "development", "stage_id": "fresh"}
+            clock_digest = BRIDGE.sha(canon(clock))
+            prepared = BRIDGE.prepare_reused_inputs(root, stage_clock=clock,
+                stage_clock_digest=clock_digest, pins_path=pins)
+            effective = prepared["effective_acquisition"]
+            self.assertEqual(BRIDGE._immutable_effective(effective), BRIDGE._immutable_effective(original))
+            self.assertEqual(effective["pools"], original["pools"])
+            self.assertEqual(effective["native_results_by_card_id"], original["native_results_by_card_id"])
+            self.assertEqual(effective["source_id_by_card_id"], original["source_id_by_card_id"])
+            self.assertEqual(effective["acquisition_receipt"]["stage_clock_digest"], clock_digest)
+            self.assertEqual(effective["recovery_provenance"]["prior_stage_clock_credit_seconds"], 0)
+            self.assertFalse(effective["recovery_provenance"]["old_grader_outputs_used"])
+
+    def test_any_pinned_byte_mutation_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, pins, _ = fixture(tmp)
+            path = root / "exp084/capture/card-source-binding.json"
+            path.write_bytes(path.read_bytes() + b"x")
+            with self.assertRaisesRegex(BRIDGE.InputError, "bundle-hash-mismatch"):
+                BRIDGE.verify_input_bundle(root, pins)
+
+    def test_extra_grader_output_or_symlink_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, pins, _ = fixture(tmp)
+            path = root / "exp084/card-references/output.json"
+            write(path, b"must not enter input bundle")
+            with self.assertRaisesRegex(BRIDGE.InputError, "grader-output-is-not-input"):
+                BRIDGE.verify_input_bundle(root, pins)
+
+    def test_snapshot_pool_or_source_map_mutation_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, pins, original = fixture(tmp)
+            snapshot_path = root / "exp084/effective-input-envelope.json"
+            snapshot = json.loads(snapshot_path.read_bytes())
+            snapshot["pools"]["d1"]["cards"][0]["title"] = "changed"
+            write(snapshot_path, canon(snapshot))
+            pins_obj = json.loads(pins.read_bytes())
+            for row in pins_obj["files"]:
+                if row["path"] == "exp084/effective-input-envelope.json":
+                    raw = snapshot_path.read_bytes()
+                    row["bytes"] = len(raw); row["sha256"] = BRIDGE.sha(raw)
+            pins_obj["total_bytes"] = sum(row["bytes"] for row in pins_obj["files"])
+            write(pins, canon(pins_obj))
+            clock = {"schema":"exp078-stage-clock/1","stage":"development","stage_id":"fresh"}
+            with self.assertRaisesRegex(BRIDGE.InputError, "snapshot-mutates-pool-or-provenance"):
+                BRIDGE.prepare_reused_inputs(root, stage_clock=clock,
+                    stage_clock_digest=BRIDGE.sha(canon(clock)), pins_path=pins)
+
+
+if __name__ == "__main__":
+    unittest.main()
