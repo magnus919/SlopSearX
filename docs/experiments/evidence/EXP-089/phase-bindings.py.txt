@@ -435,23 +435,33 @@ def freeze_answer_output_manifest(answer_run_path: Path, answer_directory: Path,
         raise ValueError("exp089-answer-output-run-incomplete")
     calls = run.get("call_receipts")
     answers = run.get("answers")
-    if (type(calls) is not list or len(calls) != 18
-            or any(row.get("status") != "http_success" for row in calls if type(row) is dict)
+    if (type(calls) is not list or len(calls) != 18 or any(type(row) is not dict for row in calls)
+            or any(row.get("status") != "http_success" for row in calls)
             or type(answers) is not list or len(answers) != 16):
         raise ValueError("exp089-answer-output-coverage")
     expected = {(f"d{i}", arm) for i in range(1, 9) for arm in ("w0", "candidate")}
-    # EXP-077 call receipts omit the arm field; the frozen answer filename is
-    # the canonical identity and was created only after schema validation.
-    receipt_by_answer = {}
+    # Bind the frozen 2-readiness + 16-answer dispatch sequence. EXP-077 call
+    # receipts omit the arm field; its exact answer filename is the identity.
     expected_paths = {f"{task}-{arm}.json": (task, arm) for task, arm in expected}
-    for call in calls:
-        if type(call) is dict and call.get("kind") == "answer":
-            path = call.get("answer_path")
-            key = expected_paths.get(path) if type(path) is str else None
-            if (key is None or call.get("task_id") != key[0] or key in receipt_by_answer
-                    or type(call.get("answer_sha256")) is not str):
-                raise ValueError("exp089-answer-output-duplicate")
-            receipt_by_answer[key] = call
+    expected_schedule = [("readiness", "neutral-1", None), ("readiness", "neutral-2", None)] + [
+        ("answer", f"d{task}", arm) for task in range(1, 9) for arm in ("w0", "candidate")]
+    receipt_by_answer = {}
+    for slot, (call, expected_row) in enumerate(zip(calls, expected_schedule), start=1):
+        kind, task_id, arm = expected_row
+        if (call.get("slot") != slot or call.get("kind") != kind
+                or call.get("task_id") != task_id):
+            raise ValueError("exp089-answer-output-call-sequence")
+        if kind == "readiness":
+            if any(key in call for key in ("answer_path", "answer_sha256", "arm")):
+                raise ValueError("exp089-answer-output-readiness-shape")
+            continue
+        path = call.get("answer_path")
+        key = expected_paths.get(path) if type(path) is str else None
+        digest = call.get("answer_sha256")
+        if (key != (task_id, arm) or key in receipt_by_answer
+                or type(digest) is not str or not re.fullmatch(r"[0-9a-f]{64}", digest)):
+            raise ValueError("exp089-answer-output-duplicate")
+        receipt_by_answer[key] = call
     if set(receipt_by_answer) != expected:
         raise ValueError("exp089-answer-output-identity")
     rows = []

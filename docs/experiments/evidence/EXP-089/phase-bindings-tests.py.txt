@@ -65,14 +65,15 @@ class PhaseBindingTests(unittest.TestCase):
     def test_answer_output_manifest_binds_all_actual_answer_files(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); answers_dir = root / "answers"; answers_dir.mkdir()
-            calls = [{"kind": "readiness", "task_id": f"neutral-{i}", "status": "http_success"} for i in (1, 2)]
+            calls = [{"slot": i, "kind": "readiness", "task_id": f"neutral-{i}", "status": "http_success"}
+                     for i in (1, 2)]
             answers = []
             for task in range(1, 9):
                 for arm in ("w0", "candidate"):
                     name = f"d{task}-{arm}.json"; body = json.dumps({"answer": f"{task}-{arm}"}).encode()
                     (answers_dir / name).write_bytes(body); digest = hashlib.sha256(body).hexdigest()
                     answers.append({"task_id": f"d{task}", "arm": arm, "answer_sha256": digest})
-                    calls.append({"kind": "answer", "task_id": f"d{task}", "arm": arm,
+                    calls.append({"slot": len(calls) + 1, "kind": "answer", "task_id": f"d{task}",
                                   "status": "http_success", "answer_path": name, "answer_sha256": digest})
             run_path = root / "answer-run.json"
             run_path.write_text(json.dumps({"schema": "exp077-answer-run/1", "status": "complete",
@@ -81,6 +82,11 @@ class PhaseBindingTests(unittest.TestCase):
             self.assertEqual(frozen["answer_count"], 16)
             self.assertEqual(frozen["manifest"]["schema"], "exp089-answer-output-manifest/1")
             self.assertEqual(frozen["manifest_sha256"], hashlib.sha256((root / "manifest.json").read_bytes()).hexdigest())
+            bad_run = {"schema": "exp077-answer-run/1", "status": "complete",
+                "call_receipts": calls[2:] + [None, None], "answers": answers}
+            run_path.write_text(json.dumps(bad_run))
+            with self.assertRaisesRegex(ValueError, "exp089-answer-output-coverage"):
+                P.freeze_answer_output_manifest(run_path, answers_dir, root / "bad-manifest.json")
 
     def test_only_fresh_source_and_answer_assessor_phases_are_claimable(self):
         for phase in ("source-reference", "answer-assessment"):
@@ -109,8 +115,9 @@ class PhaseBindingTests(unittest.TestCase):
                 "disposition": "evidence_available", "scope_match": "match", "entailment": "supports",
                 "applicability": "applicable", "not_assessable_reason": "", "evidence_ids": [alias],
                 "reason": "fixture", "limitations": []}]}]}
-        decoded = P.decode_source_reference_response(encoded, response)
-        final_text = json.dumps(decoded, ensure_ascii=False, separators=(",", ":"))
+        final_text = json.dumps(response, ensure_ascii=False, separators=(",", ":"))
+        original_eid = next(row["original_id"] for row in encoded["label_binding"]["labels"]
+                            if row["label"] == alias)
         registry = _carrier_inventory()
         with tempfile.TemporaryDirectory() as tmp:
             stage = Path(tmp) / "stage"; stage.mkdir()
@@ -120,8 +127,13 @@ class PhaseBindingTests(unittest.TestCase):
             receipt = receiver.receive(slot, registry.binding(slot), final_text)
             raw = (stage / "raw-source-finals" / receipt["path"]).read_bytes()
             self.assertEqual(raw, final_text.encode("utf-8"))
-            parsed = json.loads(raw)
-            closed = SOURCE_ADAPTER.close_source_chunk_assessments(plan, [parsed], task)
+            self.assertEqual(receipt["sha256"], hashlib.sha256(raw).hexdigest())
+            self.assertIn(alias.encode(), raw)
+            self.assertNotIn(original_eid.encode(), raw)
+            decoded = P.decode_source_reference_response(encoded, json.loads(raw))
+            self.assertIn(original_eid, decoded["source_assessments"][0]["facets"][0]["evidence_ids"])
+            self.assertEqual(decoded["source_assessments"][0]["facets"][0]["reason"], "fixture")
+            closed = SOURCE_ADAPTER.close_source_chunk_assessments(plan, [decoded], task)
             assessor = closed["assessors"]["R1"]
             self.assertTrue(assessor["validation"]["structurally_valid"])
             self.assertEqual(assessor["critical_endpoint"]["semantic_completion"], "not_claimed")
