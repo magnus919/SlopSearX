@@ -253,3 +253,5 @@ These are investigation leads, not accepted hypotheses or promised benefits.
 
 Promote a lead into a registered experiment only after inspecting its real
 production path and establishing a measurable baseline.
+
+| [EXP-083](EXP-083-capture-transport-recovery.md) | Can the fixed keyword-request wrapper capture the unchanged pools? | source qualified; live pending | 16 offline tests, including the actual pinned CLI with fake responses. Same 13 pools and fixed candidate/gates; no searches. EXP-082 failure retained. | #516; no runtime implementation |
