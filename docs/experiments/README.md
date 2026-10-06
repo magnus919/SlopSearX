@@ -130,7 +130,10 @@ infrastructure failures are `inconclusive` or `blocked`, not negative evidence.
 ## Execution limits
 
 Default to one active experiment and one candidate per cycle, offline replay,
-no paid API calls, and a 45-minute execution budget. Register tighter or justified
+a 45-minute execution budget, and no paid providers except authorized live Jev
+calls (maintainer, 2026-10-05). Register bounded Jev requests, token/cost accounting
+and stopping rules before invocation; credential access remains separately governed.
+Register tighter or justified
 alternative limits before running. Stop on guardrail breach or budget exhaustion,
 record partial evidence, and resume only under an explicit updated plan. Live
 traffic, production writes, new spend, or participant recruitment require scope
@@ -144,6 +147,10 @@ of opening a competing experiment. Automatically merge documentation-only
 experiment PRs as described below; merge implementation PRs only under the standing rule below. Do not deploy automatically.
 
 ## Ledger
+
+[2026-10-06 daily process correction](evidence/DAILY-2026-10-06/readout.md)
+records the live-Jev authorization update and unfinished recovery prerequisites;
+no runtime improvement or quality measurement is claimed.
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
