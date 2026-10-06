@@ -15,3 +15,5 @@ State: inconclusive. Registration commit: `42ed87cc0999b44c5d88d452611881b11c221
 Four expansion acquisitions rate-limited; availability gate became unreachable and twenty planned requests remain uninvoked. Quality effect cannot be estimated. No failed request retried and no negative usefulness claim.
 
 [Shared readout](evidence/QUERY-PLANNING-2026-10-06/readout.md), [qualified decisions](evidence/QUERY-PLANNING-2026-10-06/decision-summary.json), [raw receipts](evidence/QUERY-PLANNING-2026-10-06/receipts.jsonl), and [analysis](evidence/QUERY-PLANNING-2026-10-06/analysis-rows.json) retain all outcomes and limitations. No runtime code change or implementation PR. Documentation persistence PR: pending.
+
+Documentation persistence: [PR #678](https://github.com/magnus919/SlopSearX/pull/678).

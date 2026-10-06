@@ -42,3 +42,5 @@ The same interactive caller authored the questions, knew the references, and wro
 Advance decomposition and evidence-conditioned planning to a fresh, independent confirmation design with unseen questions, fixed planner model/prompts, independent evidence-support grading and an equal-budget concise-query control. Freeze scorer references outside planner context. Test uncertainty/error propagation and stopping separately. Run expansion only as a newly registered trial with adequate acquisition capacity; do not reuse this interrupted attempt as a successful or negative quality test. No automatic background run, implementation, merge of runtime changes or deployment is initiated.
 
 Portal impact: documentation and inert evidence only; browser-visible contracts unchanged. Under the repository experiment guide, no CI/pre-commit or reviewer requests are made for the documentation PR. Registration, plans, raw observations, all failures, analysis validity, qualified decisions and readout are retained with checksums.
+
+Documentation persistence: [PR #678](https://github.com/magnus919/SlopSearX/pull/678). Registration remains a separate signed commit before measurement.
