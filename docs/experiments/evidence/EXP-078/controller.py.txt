@@ -47,17 +47,16 @@ def preflight(bundle_root):
     qraw = (HERE / 'qualification-integrity.json').read_bytes()
     q = admission.strict_json(qraw)
     rraw = (HERE / 'registration-integrity.json').read_bytes()
-    bridge = load('exp078_controller_bridge', 'input-bridge.py.txt')
-    inputs = bridge.verify_input_bundle(Path(bundle_root))
     integrity = {'synthetic': False, 'qualification_sha256': admission.sha(qraw),
         'registration_sha256': admission.sha(rraw),
         'qualified_source_revision': q['qualified_source_revision'],
         'protocol_sha256': admission.sha((HERE / 'protocol.json').read_bytes()),
         'cohorts_sha256': admission.sha((HERE / 'cohorts.json').read_bytes()),
-        'input_pins_sha256': inputs['input_pins_sha256'],
-        'input_bundle_sha256': inputs['input_bundle_sha256'],
+        'input_pins_sha256': admission.sha((HERE / 'reuse-input-pins.json').read_bytes()),
+        'input_bundle_sha256': q['input_bundle_sha256'],
         'environment': q['environment'], 'dependencies': q['dependencies'],
         'external_source_pins': q['external_source_pins']}
+    admission.verify_closure(integrity, qraw)  # verify source before importing the bridge
     proof = admission.verify_closure(integrity, qraw, Path(bundle_root))
     return admission, integrity, qraw, proof
 

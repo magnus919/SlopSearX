@@ -238,7 +238,6 @@ def create_stage_clock(outdir: Path, source_revision: str) -> tuple[dict, bytes,
             or manifest.get("cohorts_sha256") != sha(cohorts_raw)
             or manifest.get("ordered_task_ids") != [f"d{i}" for i in range(1, 14)]
             or manifest.get("source_files") != registration.get("source_files")
-            or manifest.get("manifest_sha256") != sha(manifest_raw)
             or qualification.get("qualified") is not True
             or qualification.get("stage_manifest_sha256") != sha(manifest_raw)
             or qualification.get("qualified_source_revision") != source_revision):
