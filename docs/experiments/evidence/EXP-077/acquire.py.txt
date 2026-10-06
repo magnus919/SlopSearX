@@ -661,7 +661,7 @@ def _validate_qualification(*, qualification_path: pathlib.Path, repo_root: path
 def _validate_frozen(protocol: dict[str, Any], cohorts: dict[str, Any], stage: str) -> list[dict[str, Any]]:
     if protocol.get("schema") != "exp077-fixed-usefulness-study/1":
         raise AcquisitionError("unsupported EXP-077 protocol schema")
-    if protocol.get("status") != "design_draft_harness_unqualified":
+    if protocol.get("status") not in {"design_draft_harness_unqualified", "registered"}:
         raise AcquisitionError("unexpected protocol status; acquisition runner remains unqualified")
     policy = protocol.get("acquisition", {})
     if (policy.get("brave_calls") != 0 or policy.get("retries") != 0 or
@@ -836,6 +836,8 @@ async def run_stage(*, stage: str, protocol_path: pathlib.Path, cohorts_path: pa
     registration_path = registration_path or protocol_path.parent / "registration-integrity.json"
     qualification_path = qualification_path or protocol_path.parent / "qualification-integrity.json"
     if not synthetic_fixture:
+        if protocol.get("status") != "registered":
+            raise AcquisitionError("live acquisition requires registered protocol")
         _validate_live_input_paths(repo_root, stage, protocol_path, cohorts_path,
                                    static_manifest_path, registration_path, qualification_path)
     (_static_manifest, stage_manifest_sha, registration_sha, registered_source_revision,
