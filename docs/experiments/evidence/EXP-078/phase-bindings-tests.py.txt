@@ -1,8 +1,10 @@
 """Focused offline tests for EXP-078 capture/answer transport bindings."""
 import importlib.machinery
 import importlib.util
+import asyncio
 import json
 import pathlib
+import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 
@@ -277,6 +279,38 @@ class PhaseBindingTests(unittest.TestCase):
         inventory, binding = M.capture_inventory(acquisition, cases)
         self.assertEqual(len(inventory["sources"]), 328)
         self.assertEqual(len(binding["card_sources"]), 328)
+        # Exercise the entire fixed selector schedule, including request/response
+        # transport, strict parsing, fusion, and durable terminal receipts. Every
+        # exchange is backed by an explicit in-process MockTransport fixture.
+        with tempfile.TemporaryDirectory() as tmp:
+            stage_root = pathlib.Path(tmp) / "stage"
+            stage_root.mkdir()
+            output = stage_root / "selector"
+            stats = {"calls": 0, "clients": 0, "closed": 0}
+            transport_factory = SELECTOR.fixture_transport_factory(stats=stats)
+            run = asyncio.run(SELECTOR.run_selector(
+                acquisition, cases, P._canonical(clock), stage_root, output,
+                offline=True, transport_factory=transport_factory))
+            self.assertEqual(run["status"], "complete")
+            self.assertTrue(run["synthetic"])
+            self.assertFalse(run["quality_credit"])
+            self.assertFalse(run["adoption_eligible"])
+            self.assertEqual(len(run["operations"]), 21)
+            self.assertEqual(len(run["operations"]) + 1, 22)  # 21 fixed slots plus neutral.
+            self.assertTrue(all(op["status"] in {"complete", "native_target_top1_noop"}
+                                for op in run["operations"]))
+            self.assertEqual(sum(op["status"] == "complete" for op in run["operations"]), 16)
+            self.assertEqual(sum(op["status"] == "native_target_top1_noop"
+                                 for op in run["operations"]), 5)
+            self.assertEqual(stats["calls"], 34)  # neutral pair + 16 operation pairs.
+            self.assertEqual(stats["clients"], stats["calls"])
+            self.assertEqual(stats["closed"], stats["clients"])
+            self.assertEqual(run["budget"]["attempts"], stats["calls"])
+            self.assertTrue(run["neutral"]["phase_endpoint_after_fsync"])
+            self.assertTrue(all(op["phase_endpoint_after_fsync"] for op in run["operations"]
+                                if op["status"] == "complete"))
+            self.assertTrue((output / "selector-run.json").is_file())
+            self.assertEqual(len(list((output / "receipts").glob("*-candidate-body.json"))), 17)
 
 
 if __name__ == "__main__":
