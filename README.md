@@ -48,6 +48,7 @@ registry at runtime — treat them as authoritative.
 
 | Engine | Type | Auth | Categories |
 |---|---|---|---|
+| [Bing](https://www.bing.com/) | Scrape | None | general |
 | [Brave Search](https://brave.com/search/api/) | API | `ENGINE_BRAVE_API_KEY` | general, news, science, images |
 | [DuckDuckGo](https://duckduckgo.com/) | Scrape | None | general, news, images |
 | [Google](https://google.com/) | Scrape | None | general, news |
@@ -251,7 +252,9 @@ DEBIAN_SECURITY_REFRESH="$(date +%s)" docker compose build
 
 ### VPN and proxy deployments
 
-Google and DuckDuckGo are best-effort HTML-scrape adapters. VPN, proxy, and
+Bing, Google and DuckDuckGo are best-effort HTML-scrape adapters. Bing's
+results page needs no JavaScript, so it often still answers where Google
+serves a JavaScript or consent wall. VPN, proxy, and
 datacenter IPs can receive consent, challenge, or block pages; configure a
 Brave API key (`ENGINE_BRAVE_API_KEY`) for a reliable API-backed web-search
 source. A Brave key supplements the other active Tier-1 engines; it does not

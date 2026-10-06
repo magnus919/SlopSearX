@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 MODEL = "jev-1.13.0"
 CARD_VERSION = "1"
-GENERAL_ENGINES = frozenset({"brave", "google", "duckduckgo"})
+GENERAL_ENGINES = frozenset({"bing", "brave", "google", "duckduckgo"})
 BROAD_SUPPORT_ENGINES = frozenset({"wikipedia", "stackexchange", "reddit", "hackernews"})
 
 # Production routing cards are deliberately concise. Every registered engine

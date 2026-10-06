@@ -103,6 +103,13 @@ _DEFAULT_ENGINES: dict[str, dict[str, Any]] = {
         "rate_limit": 0.33,  # 1 req per 3 seconds (arXiv ToS)
         "weight": 0.8,
     },
+    "bing": {
+        "base_url": "https://www.bing.com/search",
+        "type": "scrape",
+        "timeout_ms": 10_000,
+        "max_results": 10,
+        "weight": 0.6,
+    },
     "brave": {
         "base_url": "https://api.search.brave.com/res/v1/web/search",
         "type": "api",

@@ -95,6 +95,7 @@ RERANK_POLICY_VERSION = "global-shortlist-no-promotion-v2"
 # (the "tier-1 fallback" routing rule).
 DEFAULT_TIER1_ENGINES: frozenset[str] = frozenset(
     {
+        "bing",
         "brave",
         "duckduckgo",
         "google",

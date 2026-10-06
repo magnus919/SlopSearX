@@ -980,6 +980,7 @@ def _scope_hints(categories: list[str]) -> list[str]:
 _DEFAULT_ENGINE_CAVEATS: dict[str, list[str]] = {
     "github": ["pagination hardcoded to page 1"],
     "brave": ["safesearch parameter not enforced"],
+    "bing": ["scrape adapter — subject to blocking and CAPTCHAs"],
     "google": ["scrape adapter — subject to blocking and CAPTCHAs"],
     "duckduckgo": ["scrape adapter — subject to blocking and CAPTCHAs"],
     "greenhouse": ["requires a company name in the query; returns no full job descriptions"],

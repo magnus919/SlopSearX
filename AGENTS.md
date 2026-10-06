@@ -6,8 +6,8 @@ This document helps AI coding agents understand the project structure, architect
 
 ```
 slopsearx/
-├── engines/            # Engine adapter plugins (one file per engine, 50 total)
-│   ├── arxiv.py           brave.py           crates.py
+├── engines/            # Engine adapter plugins (one file per engine, 51 total)
+│   ├── arxiv.py           bing.py            brave.py           crates.py
 │   ├── censys.py          clinicaltrials.py  courtlistener.py (removed)
 │   ├── crtsh.py           cve.py             dehashed.py
 │   ├── dockerhub.py       duckduckgo.py      edgar.py
