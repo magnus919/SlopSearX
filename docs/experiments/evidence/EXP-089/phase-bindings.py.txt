@@ -21,11 +21,11 @@ import httpx
 HERE = Path(__file__).resolve().parent
 EXP077 = HERE.parent / "EXP-077"
 REPO = HERE.parents[3]
-REFERENCE_LABELS_PATH = HERE / "reference-labels.py.txt"
+REFERENCE_LABELS_PATH = HERE.parent / "EXP-088" / "reference-labels.py.txt"
 REFERENCE_LABELS_SHA256 = "f88def629293c87abd890cc42a748337c5225408e48be079832363d0b07ccf5c"
-ANSWERER_PROMPT_PATH = HERE / "answerer-prompt.txt"
+ANSWERER_PROMPT_PATH = HERE.parent / "EXP-088" / "answerer-prompt.txt"
 ANSWERER_PROMPT_SHA256 = "314cb345d90bc9ddd4ad98dee9dfc6ef61e6d353dc61bf32ddb47b805cb80372"
-ANSWER_ASSESSOR_PROMPT_PATH = HERE / "answer-assessor-prompt.txt"
+ANSWER_ASSESSOR_PROMPT_PATH = HERE.parent / "EXP-088" / "answer-assessor-prompt.txt"
 ANSWER_ASSESSOR_PROMPT_SHA256 = "d3c005914ece92661c3ac05d15327af6ee6fbba91b3920460dd09d1434c5d22e"
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
@@ -439,14 +439,19 @@ def freeze_answer_output_manifest(answer_run_path: Path, answer_directory: Path,
             or any(row.get("status") != "http_success" for row in calls if type(row) is dict)
             or type(answers) is not list or len(answers) != 16):
         raise ValueError("exp089-answer-output-coverage")
+    expected = {(f"d{i}", arm) for i in range(1, 9) for arm in ("w0", "candidate")}
+    # EXP-077 call receipts omit the arm field; the frozen answer filename is
+    # the canonical identity and was created only after schema validation.
     receipt_by_answer = {}
+    expected_paths = {f"{task}-{arm}.json": (task, arm) for task, arm in expected}
     for call in calls:
         if type(call) is dict and call.get("kind") == "answer":
-            key = (call.get("task_id"), call.get("arm"))
-            if key in receipt_by_answer or type(call.get("answer_path")) is not str:
+            path = call.get("answer_path")
+            key = expected_paths.get(path) if type(path) is str else None
+            if (key is None or call.get("task_id") != key[0] or key in receipt_by_answer
+                    or type(call.get("answer_sha256")) is not str):
                 raise ValueError("exp089-answer-output-duplicate")
             receipt_by_answer[key] = call
-    expected = {(f"d{i}", arm) for i in range(1, 9) for arm in ("w0", "candidate")}
     if set(receipt_by_answer) != expected:
         raise ValueError("exp089-answer-output-identity")
     rows = []

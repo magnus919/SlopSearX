@@ -1,0 +1,44 @@
+from __future__ import annotations
+import importlib.machinery
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+C = importlib.machinery.SourceFileLoader("exp089_controller_test", str(HERE / "controller.py.txt")).load_module()
+
+
+class OpaqueCardProofTests(unittest.TestCase):
+    def proof(self):
+        return {"assessment_manifest_path": "exp088-card-reference/provenance/assessment-manifest.json",
+                "assessment_manifest_sha256": "a" * 64,
+                "records": ([{"record_count": 55, "input_sha256": "b" * 64} for _ in range(15)]
+                            + [{"record_count": 59, "input_sha256": "b" * 64}])}
+
+    def test_preserves_only_opaque_proof_and_exact_aggregate_counts(self):
+        result = C._opaque_card_proof(self.proof())
+        self.assertEqual(result["assignment_count"], 16)
+        self.assertEqual(result["record_count"], 884)
+        self.assertEqual(result["assessment_manifest_sha256"], "a" * 64)
+        self.assertNotIn("verified_response", result)
+        invalid = self.proof()
+        invalid["records"][-1]["record_count"] = 58
+        with self.assertRaisesRegex(ValueError, "carried-card-record-count"):
+            C._opaque_card_proof(invalid)
+
+    def test_rejects_wrong_manifest_binding_or_record_inventory(self):
+        wrong = self.proof()
+        wrong["assessment_manifest_path"] = "other.json"
+        with self.assertRaisesRegex(ValueError, "carried-card-manifest-binding"):
+            C._opaque_card_proof(wrong)
+        wrong = self.proof()
+        wrong["records"].pop()
+        with self.assertRaisesRegex(ValueError, "carried-card-checkpoint-invalid"):
+            C._opaque_card_proof(wrong)
+        wrong = self.proof()
+        wrong["assessment_manifest_sha256"] = "not-a-hash"
+        with self.assertRaisesRegex(ValueError, "carried-card-manifest-binding"):
+            C._opaque_card_proof(wrong)
+
+
+if __name__ == "__main__":
+    unittest.main()

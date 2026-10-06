@@ -108,17 +108,30 @@ def begin(outdir, bundle_root, cli_path=None):
     effective = prepared["effective_acquisition"]
     effective_raw = admission.canonical_json(effective)
     admission._write_once(output / "effective-input-envelope.json", effective_raw)
-    carried = prepared["carried_card_references"]
-    if type(carried) is not dict or len(carried.get("records", [])) != 16:
-        raise ValueError("carried-card-checkpoint-invalid")
-    # Store only opaque paths/hashes and counts; no grade values are copied.
-    proof = {"assignment_count": 16, "record_count": sum(row.get("record_count", 0) for row in carried["records"]),
-             "records": carried["records"], "manifest_sha256": carried.get("manifest_sha256")}
-    if proof["record_count"] != 884:
-        raise ValueError("carried-card-record-count")
+    proof = _opaque_card_proof(prepared["carried_card_references"])
     admission._write_once(output / "carried-card-proof.json", admission.canonical_json(proof))
     return State(output, Path(bundle_root), admission, permit, integrity, clock,
                  effective, prepared["input_integrity"], proof)
+
+
+def _opaque_card_proof(carried: dict) -> dict:
+    """Retain only bridge-verified hashes, paths, and aggregate counts."""
+    if type(carried) is not dict or type(carried.get("records")) is not list or len(carried["records"]) != 16:
+        raise ValueError("carried-card-checkpoint-invalid")
+    path = carried.get("assessment_manifest_path")
+    digest = carried.get("assessment_manifest_sha256")
+    if (path != "exp088-card-reference/provenance/assessment-manifest.json"
+            or type(digest) is not str or not re.fullmatch(r"[0-9a-f]{64}", digest)):
+        raise ValueError("carried-card-manifest-binding")
+    records = carried["records"]
+    if any(type(row) is not dict or type(row.get("record_count")) is not int for row in records):
+        raise ValueError("carried-card-record-shape")
+    proof = {"assignment_count": 16, "record_count": sum(row["record_count"] for row in records),
+             "records": records, "assessment_manifest_path": path,
+             "assessment_manifest_sha256": digest}
+    if proof["record_count"] != 884:
+        raise ValueError("carried-card-record-count")
+    return proof
 
 
 def _read_bound_capture_configuration(bundle_root, integrity, strict_json=json.loads):
