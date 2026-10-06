@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 import httpx
 
 import engines  # noqa: F401 — trigger @register_engine
@@ -218,3 +220,44 @@ async def test_valid_empty_rich_query_results_are_successful() -> None:
     assert result.status is EngineStatus.OK
     assert result.results == []
     assert result.error_message is None
+
+
+async def test_user_agent_names_a_contact_url_on_both_stages() -> None:
+    """Wikimedia's robot policy (https://w.wiki/4wJS) 403s agents without contact info (issue 674)."""
+    handler, calls = _sequenced_handler(
+        [httpx.Response(200, json=_opensearch()), httpx.Response(200, json=_rich_query())],
+    )
+
+    async with MockHTTP(handler):
+        result = await _adapter().search("Ada")
+
+    assert result.status is EngineStatus.OK
+    assert len(calls) == 2
+    for request in calls:
+        user_agent = request.headers["User-Agent"]
+        assert user_agent.startswith("SlopSearX/")
+        assert "https://github.com/magnus919/SlopSearX" in user_agent
+
+
+async def test_user_agent_can_be_overridden_by_config() -> None:
+    handler, calls = _sequenced_handler(
+        [httpx.Response(200, json=_opensearch()), httpx.Response(200, json=_rich_query())],
+    )
+    adapter = discover_engines(
+        {"wikipedia": {"enabled": True, "user_agent": "MyDeploy/1.0 (ops@example.org)"}},
+    )["wikipedia"]
+
+    async with MockHTTP(handler):
+        await adapter.search("Ada")
+
+    assert [request.headers["User-Agent"] for request in calls] == ["MyDeploy/1.0 (ops@example.org)"] * 2
+
+
+def test_user_agent_env_override_reaches_engine_config(monkeypatch) -> None:
+    from slopsearx.config import load_config
+
+    monkeypatch.setenv("ENGINE_WIKIPEDIA_USER_AGENT", "MyDeploy/1.0 (ops@example.org)")
+    cfg = load_config("/nonexistent/slopsearx.yaml")
+
+    assert cfg.engines["wikipedia"].user_agent == "MyDeploy/1.0 (ops@example.org)"
+    assert dataclasses.asdict(cfg.engines["wikipedia"])["user_agent"] == "MyDeploy/1.0 (ops@example.org)"
