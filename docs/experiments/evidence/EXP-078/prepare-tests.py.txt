@@ -1,0 +1,107 @@
+"""Offline tests for constructing the fixed effective EXP-078 pools."""
+import importlib.machinery
+import importlib.util
+import json
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    mod = importlib.util.module_from_spec(spec)
+    loader.exec_module(mod)
+    return mod
+
+P = load("exp078_test_prepare", HERE / "prepare.py.txt")
+
+
+def fixture():
+    pools = {}
+    for i in list(range(1, 12)) + [13]:
+        task_id = f"d{i}"
+        kind = "research" if i <= 8 else "navigation"
+        outcomes = ([{"engine": e, "status": "ok" if e != "wikipedia" else "blocked"}
+                    for e in ("arxiv", "openalex", "github", "wikipedia")] if kind == "research"
+                   else [{"engine": "github", "status": "ok"}])
+        results = [{"url": f"https://example.test/{task_id}/1", "title": task_id,
+                    "content": "retained source text"}]
+        pools[task_id] = {"task_id": task_id, "kind": kind, "results": results,
+                          "engine_outcomes": outcomes, "receipt_path": f"query-{i:02d}-{task_id}.json",
+                          "receipt_sha256": f"{i:064x}", "reused": True,
+                          "wikipedia_unavailable": kind == "research"}
+    return {"schema": "exp078-reused-inputs/1", "synthetic": False, "pools": pools,
+            "historical_d12": {"receipt_sha256": "d" * 64, "target_present": False, "effective": False}}
+
+
+def correction(present=True):
+    rows = [{"url": "https://github.com/sigstore/cosign", "title": "cosign", "content": "new correction"}]
+    if not present:
+        rows = [{"url": "https://github.com/example/other", "title": "other", "content": "not target"}]
+    return {"schema": "exp078-corrective-query-receipt/1", "task_id": "d12", "query": "cosign",
+            "target_url": "https://github.com/sigstore/cosign", "engine": "github",
+            "effective_pool_source": "corrective_github_query", "results": rows,
+            "engine_outcomes": [{"engine": "github", "status": "ok"}], "partial": False,
+            "all_unresponsive": False, "cached": False, "physical_http_calls": 1,
+            "status": "complete", "target_acquired": present, "receipt_sha256": "e" * 64}
+
+
+def clock():
+    value = {"schema": "exp078-stage-clock/1", "stage_id": "fixture", "stage": "development",
+             "stage_started_utc": "2026-10-06T00:00:00Z", "stage_deadline_utc": "2026-10-06T08:00:00Z",
+             "stage_manifest_sha256": "a" * 64, "protocol_sha256": "b" * 64,
+             "cohorts_sha256": "c" * 64, "source_revision": "1" * 40,
+             "ordered_task_ids": [f"d{i}" for i in range(1, 14)]}
+    raw = P._canonical(value)
+    return value, raw
+
+
+class PrepareTests(unittest.TestCase):
+    def test_twelve_reused_pools_plus_correction_are_exact_thirteen(self):
+        c, raw = clock()
+        result = P.prepare_stage(fixture(), correction(), stage_clock=c, stage_clock_bytes=raw)
+        self.assertEqual(list(result["pools"]), [f"d{i}" for i in range(1, 14)])
+        self.assertEqual(set(result["pools"]["d1"]), {"cards", "natural_count", "merged_count"})
+        self.assertEqual(result["pools"]["d12"]["cards"][0]["url"], "https://github.com/sigstore/cosign")
+        self.assertEqual(result["pools"]["d12"]["natural_count"], 1)
+        self.assertEqual(result["historical_d12"]["receipt_sha256"], "d" * 64)
+        self.assertEqual(result["engine_outcomes"]["d1"]["wikipedia"]["status"], "blocked")
+        self.assertEqual(result["numerical_thresholds_changed"], False)
+        card_id = result["pools"]["d12"]["cards"][0]["id"]
+        self.assertEqual(result["source_id_by_card_id"]["d12"][card_id],
+                         result["native_results_by_card_id"]["d12"][card_id]["url"].split("#", 1)[0] and
+                         "u" + P._sha(result["native_results_by_card_id"]["d12"][card_id]["url"].split("#", 1)[0].encode()))
+
+    def test_correction_miss_stays_missing_without_synthetic_insertion(self):
+        c, raw = clock()
+        result = P.prepare_stage(fixture(), correction(False), stage_clock=c, stage_clock_bytes=raw)
+        self.assertFalse(result["target_acquired"])
+        self.assertEqual(result["pools"]["d12"]["natural_count"], 1)
+        self.assertEqual(result["pools"]["d12"]["cards"][0]["url"], "https://github.com/example/other")
+
+    def test_wrong_query_and_multi_call_correction_rejected(self):
+        c, raw = clock()
+        wrong = correction(); wrong["query"] = "cosign alternative"
+        with self.assertRaisesRegex(P.PrepareError, "correction-identity"):
+            P.prepare_stage(fixture(), wrong, stage_clock=c, stage_clock_bytes=raw)
+        many = correction(); many["physical_http_calls"] = 2
+        with self.assertRaisesRegex(P.PrepareError, "correction-call-budget"):
+            P.prepare_stage(fixture(), many, stage_clock=c, stage_clock_bytes=raw)
+
+    def test_projection_matches_frozen_077_pure_helper(self):
+        old = load("exp078_test_old_projector", HERE.parent / "EXP-077" / "prepare-stage.py.txt")
+        raw = {"url": "https://example.test/a#frag", "title": "Tïtle", "content": "café & facts",
+               "metadata": {"preserved": True}}
+        self.assertEqual(P.project_card("d7", 4, raw), old.project_card("d7", 4, raw))
+
+    def test_original_d12_cannot_be_smuggled_into_effective_pool(self):
+        c, raw = clock()
+        reused = fixture()
+        reused["pools"]["d12"] = {"results": [{"url": "https://github.com/sigstore/cosign"}]}
+        with self.assertRaisesRegex(P.PrepareError, "reused-membership"):
+            P.prepare_stage(reused, correction(), stage_clock=c, stage_clock_bytes=raw)
+
+
+if __name__ == "__main__":
+    unittest.main()

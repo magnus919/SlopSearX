@@ -1,0 +1,11 @@
+{
+  "schema": "exp078-stage-clock-contract/1",
+  "stage": "development",
+  "duration_seconds": 28800,
+  "starts_before": "the single corrective d12 GitHub request",
+  "covers": ["corrective acquisition", "capture", "selector", "answer generation", "assessor grading", "analysis", "durable receipts"],
+  "historical_reuse_time_credit_seconds": 0,
+  "required_fields": ["schema", "stage_id", "stage", "stage_started_utc", "stage_deadline_utc", "stage_manifest_sha256", "protocol_sha256", "cohorts_sha256", "source_revision", "ordered_task_ids"],
+  "canonicalization": "sorted compact UTF-8 JSON with ensure_ascii=false and exactly one trailing newline; SHA-256 over exact file bytes",
+  "old_clock_reuse": false
+}

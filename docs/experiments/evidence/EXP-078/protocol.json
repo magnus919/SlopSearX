@@ -1,0 +1,209 @@
+{
+  "acquisition": {
+    "brave_calls": 0,
+    "category": "reference",
+    "correction_query": {
+      "effective_pool": "new response only; never union with original d12 pool",
+      "query": "cosign",
+      "target_url": "https://github.com/sigstore/cosign",
+      "task_id": "d12"
+    },
+    "corrective_http_requests_maximum": 1,
+    "corrective_queries_maximum": 1,
+    "credentials": "none; public keyless GitHub request only for the corrective query",
+    "historical_research_engines": [
+      "arxiv",
+      "openalex",
+      "github",
+      "wikipedia"
+    ],
+    "language": "en",
+    "maximum_results": 20,
+    "navigation_engines": [
+      "github"
+    ],
+    "page": 1,
+    "prior_receipts": "All 13 original query receipts and 37 physical HTTP request/response sidecars are immutable, hash-bound historical inputs; not fresh calls or time credit in this stage.",
+    "query_pacing_seconds": 0,
+    "redirects": 0,
+    "research_engines": [
+      "arxiv",
+      "openalex",
+      "github"
+    ],
+    "response_bytes_per_http_call": 2000000,
+    "retries": 0,
+    "reused_effective_inputs": "d1-d11 and d13 exactly as pinned (12 pools); d12 original receipt retained as history but excluded from effective pool.",
+    "scope_exception": "Explicitly permits evaluation with complete received research pools despite retained blocked Wikipedia outcomes; other missing/partial/empty/overflow outcomes remain failures and are never substituted.",
+    "unavailable_outcome": "retain original blocked outcomes as unavailable; do not synthesize success or drop source cards/outcomes",
+    "unavailable_research_engine": "wikipedia"
+  },
+  "adoption": "No production adoption from this development stage. Separate untouched confirmation and full product delivery remain required.",
+  "candidate": {
+    "contract": "Exact EXP-076 canonical complete-pool dual Score populations and equal-weight Fraction RRF k60. Same query/purpose instructions, criteria, model, projection and tie rule; only fresh caller task/pool data differ.",
+    "fallback": "entire pre-Jev native/provenance order",
+    "jev_model": "jev-1.13.0",
+    "legacy_w0_request_bytes": 128000,
+    "maximum_cards": 80,
+    "maximum_questions": 160,
+    "phase_deadline_ms": 1000,
+    "phase_includes": "fresh construction/serialization, exchange, parsing/fusion, final receipt fsync",
+    "request_bytes": 384000,
+    "response_bytes": 2000000,
+    "state_bytes": 128000,
+    "tuning_allowed": false
+  },
+  "capture": {
+    "assessment_context_character_limit_per_source": 8000,
+    "assessment_scope": "Complete eligible source inventory with a frozen first-8000-Unicode-character view per successful capture, prepared before selector output. Full raw capture remains private; retain both full and bounded context hashes and truncation flags. This is not exhaustive full-document factual review.",
+    "budget_scope": "Owned experimental requests only: <=640 scrape requests plus one read-only candidate health request. Candidate-internal HTTP fanout is not bounded by this figure and is unknown unless separately exposed.",
+    "format": "markdown",
+    "health_calls_maximum_per_stage": 1,
+    "internal_service_calls": "observe where exposed; otherwise explicitly unknown, not counted as zero",
+    "no_login_or_private_sources": true,
+    "one_attempt_per_distinct_public_url": true,
+    "owned_attempts_maximum_per_stage": 640,
+    "owned_http_timeout_seconds": 30,
+    "physical_experimental_http_calls_maximum_per_stage": 641,
+    "raw_content_publication": "private evidence storage; public sanitized hashes/aggregates only",
+    "research_only": true,
+    "response_bytes": 2000000,
+    "shared_snapshot_for_both_arms": true,
+    "source_url_admission": "Use pinned public retrieval URL validator; reject userinfo, private/local/numeric-private destinations before dispatch. HTTPS-only capture follows the prior source-use capture contract; unsupported URLs remain recorded unavailable, never rewritten or replaced. Hostname DNS aliases additionally depend on candidate scraper SSRF controls."
+  },
+  "cohorts_file": "cohorts.json",
+  "confirmation_requires_development_pass": false,
+  "confirmation_scope": {
+    "cohort_untouched": true,
+    "future_engine_plan": [
+      "arxiv",
+      "openalex",
+      "github"
+    ],
+    "not_run": true,
+    "wikipedia": "excluded prospectively as unavailable; future three-engine confirmation is not comparable to earlier four-engine studies"
+  },
+  "consumer": {
+    "alias_limitations": "record configured and returned model identity; do not assert immutable checkpoint equivalence",
+    "candidate_prefix_presented": 10,
+    "evidence_catalog_segment_characters": 600,
+    "same_projection_for_arms": true,
+    "source_availability_and_ordering": "apply same dedup/refusal/video/availability policy to each fixed top-ten order; preserve failed openings separately",
+    "source_context_character_limit": 8000,
+    "successful_sources_maximum": 5
+  },
+  "date": "2026-10-06",
+  "fresh_stage_scope": {
+    "covers": "corrective acquisition, capture, selector, answer generation, assessor grading, analysis and durable receipts",
+    "covers_seconds": 28800,
+    "historical_input_time_credit_seconds": 0,
+    "reuse_does_not_reset_or_extend_clock": true,
+    "starts_before": "corrective d12 query"
+  },
+  "grading_order": [
+    "verify immutable reused receipts and the one corrective query",
+    "freeze complete effective pools and source captures",
+    "freeze independent card/source references",
+    "run neutral and fixed selector comparisons",
+    "generate fixed budgeted answers",
+    "freeze anonymous packets",
+    "grade each assessor separately",
+    "verify receipts and compute every frozen endpoint"
+  ],
+  "jev_invocation": {
+    "call_slots": "neutral capacity pair plus 13 base and 8 repeat/rotate operation pairs",
+    "concurrency": 1,
+    "per_call_reported_input_tokens_maximum": 64000,
+    "per_call_reported_output_tokens_maximum": 32000,
+    "physical_calls_maximum_per_stage": 44,
+    "reported_input_tokens_total_maximum": 3000000,
+    "reported_output_tokens_total_maximum": 160000,
+    "reserve_before_each_call": {
+      "input": 64000,
+      "output": 32000
+    },
+    "retries": 0,
+    "unknown_usage": "terminal_stop"
+  },
+  "models": {
+    "answer_api_concurrency": 1,
+    "answer_calls_basis": "16 task/arm answers plus 2 declared neutral readiness checks",
+    "answer_max_output_tokens_requested": 8192,
+    "answer_provider_surface": "Existing explicitly configured OpenAI-compatible HTTP/HTTPS origin or /v1 base; normalized to one /v1/chat/completions path. Endpoint/key remain private runtime configuration read only after qualified admission.",
+    "answer_words_maximum": 800,
+    "answerer_alias": "free",
+    "card_and_source_and_answer_assessors": "GPT-6 Luna, independent anonymous packets; not human gold",
+    "concurrency_luna_maximum": 2,
+    "input_bytes_per_submission": 384000,
+    "maximum_answer_api_calls_per_stage": 18,
+    "maximum_logical_luna_submissions_per_stage": 112,
+    "maximum_total_logical_model_submissions_per_stage": 130,
+    "output_bytes_per_submission": 2000000,
+    "reported_usage": "retain where exposed; in-app grader billing/tokens may be unobservable, never invent them",
+    "retries": 0,
+    "source_assessment_chunk_sources": 20,
+    "source_chunks_complete_inventory_required": true
+  },
+  "predecessor": {
+    "id": "EXP-077",
+    "mutate_or_reclassify": false,
+    "original_protocol_sha256": "04fed87ccaa12272c73fcb6e6af5ef7da619c77488a62ae947d7cb647f251992",
+    "terminal_status": "inconclusive"
+  },
+  "purpose": "Development-only bounded study under the maintainer-approved acquisition amendment. No production adoption or confirmation-stage execution.",
+  "quality": {
+    "all_targets_acquired_and_top1_required": true,
+    "bootstrap95_lower_bound_strictly_positive": true,
+    "bootstrap_draws": 10000,
+    "bootstrap_seed": 7701,
+    "exact_navigation_targets_per_stage": 5,
+    "incumbent_identity_displacement": "diagnostic_only",
+    "independent_references": [
+      "A",
+      "B"
+    ],
+    "mean_ndcg10_gain_minimum": 0.02,
+    "natural_primary_pools_41_to_80_minimum": 4,
+    "per_case_delta_minimum": -0.03,
+    "primary_research_tasks_per_stage": 8,
+    "stability_task_indices": [
+      1,
+      4,
+      7,
+      8
+    ],
+    "top10_overlap_minimum": 0.8,
+    "useful_count_noninferiority": true,
+    "useful_facet_retention": true,
+    "useful_lead_grade_minimum": 2,
+    "variants": [
+      "base",
+      "repeat",
+      "rotate"
+    ]
+  },
+  "schema": "exp078-fixed-research-usefulness/1",
+  "stage_wall_seconds_maximum": 28800,
+  "stages": [
+    "development"
+  ],
+  "status": "registered_amendment",
+  "stop": "Any source/input integrity failure, unregistered request, budget/deadline breach, missing required endpoint, or incomplete grade stops the run with retained partial evidence; no retries, rescue, tuning, replacement or automatic confirmation.",
+  "task_use": {
+    "abstention_counts_as_completion": false,
+    "additional_complete_tasks_minimum_each": 2,
+    "assessor_disagreements": "separate endpoints, never average into a pass",
+    "candidate_material_unsupported_claims_allowed": 0,
+    "candidate_missed_critical_contradictions_or_qualifications_allowed": 0,
+    "candidate_target_or_version_errors_allowed": 0,
+    "completion": "all declared critical checks supported, applicable and correctly applied to delivered evidence; model self-certification is insufficient",
+    "independent_assessors": [
+      "R1",
+      "R2"
+    ],
+    "required_endpoint_unknown_or_invalid": "inconclusive, retained; never imputed/repaired",
+    "source_unavailability": "recorded in denominators; not-acquired is an observed state, not automatically a structural packet error",
+    "uncertainty_report": "Paired task bootstrap of completion-count difference, 10000 draws, seed7701; descriptive only, no additional significance gate.",
+    "w0_completed_to_candidate_incomplete_allowed": 0
+  }
+}

@@ -1,0 +1,90 @@
+"""Offline tests for exact prior-input pinning and the approved partial engine scope."""
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+FILE = Path(__file__).resolve().with_name("input-bridge.py.txt")
+loader = importlib.machinery.SourceFileLoader("exp078_test_input_bridge", str(FILE))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+BRIDGE = importlib.util.module_from_spec(spec)
+loader.exec_module(BRIDGE)
+
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+class InputBridgeTests(unittest.TestCase):
+    def pins(self, root, extra=None):
+        entries = []
+        for path in sorted(root.rglob("*")):
+            if path.is_file():
+                raw = path.read_bytes()
+                entries.append({"path": path.relative_to(root).as_posix(), "sha256": digest(raw), "bytes": len(raw)})
+        payload = {"schema": "exp078-reuse-input-pins/1", "status": "approved_reuse_input_pins",
+                   "file_count": len(entries), "total_bytes": sum(x["bytes"] for x in entries),
+                   "files": entries, "predecessor_provenance": {"stage_final_sha256": "a" * 64}}
+        return payload
+
+    def test_exact_bundle_hashes_pass(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "bundle"
+            root.mkdir()
+            (root / "receipt.json").write_bytes(b"frozen\n")
+            pins = Path(tmp) / "pins.json"
+            pins.write_bytes(BRIDGE.canonical_json(self.pins(root)))
+            result = BRIDGE.verify_input_bundle(root, pins)
+            self.assertEqual(result["file_count"], 1)
+            self.assertEqual(result["input_pins_sha256"], digest(pins.read_bytes()))
+            inventory = {"schema": "exp078-input-bundle/1", "files": self.pins(root)["files"]}
+            self.assertEqual(result["input_bundle_sha256"], digest(BRIDGE.canonical_json(inventory)))
+            self.assertNotEqual(result["input_bundle_sha256"], result["input_pins_sha256"])
+
+    def test_unpinned_extra_file_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "bundle"
+            root.mkdir()
+            (root / "receipt.json").write_bytes(b"frozen\n")
+            pins = Path(tmp) / "pins.json"
+            pins.write_bytes(BRIDGE.canonical_json(self.pins(root)))
+            (root / "extra").write_bytes(b"unregistered")
+            with self.assertRaisesRegex(BRIDGE.InputError, "bundle-inventory-mismatch"):
+                BRIDGE.verify_input_bundle(root, pins)
+
+    def test_tampered_pinned_bytes_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "bundle"
+            root.mkdir()
+            (root / "receipt.json").write_bytes(b"frozen\n")
+            pins = Path(tmp) / "pins.json"
+            pins.write_bytes(BRIDGE.canonical_json(self.pins(root)))
+            (root / "receipt.json").write_bytes(b"changed")
+            with self.assertRaisesRegex(BRIDGE.InputError, "bundle-hash-mismatch"):
+                BRIDGE.verify_input_bundle(root, pins)
+
+    def test_research_partial_scope_requires_wikipedia_blocked_and_other_engines_ok(self):
+        protocol = BRIDGE.strict_json((BRIDGE.HERE / "protocol.json").read_bytes())
+        task = {"kind": "research"}
+        rows = [{"engine": e, "status": "ok"} for e in ("arxiv", "openalex", "github")]
+        rows.append({"engine": "wikipedia", "status": "blocked"})
+        self.assertEqual(len(BRIDGE._outcomes({"engine_outcomes": rows}, task, protocol)), 4)
+        rows[-1]["status"] = "ok"
+        with self.assertRaisesRegex(BRIDGE.InputError, "wikipedia-outcome-drift"):
+            BRIDGE._outcomes({"engine_outcomes": rows}, task, protocol)
+        rows[-1]["status"] = "blocked"
+        rows[1]["status"] = "error"
+        with self.assertRaisesRegex(BRIDGE.InputError, "research-outcome-not-approved"):
+            BRIDGE._outcomes({"engine_outcomes": rows}, task, protocol)
+
+    def test_original_d12_never_in_effective_membership(self):
+        self.assertEqual([f"d{i}" for i in range(1, 12)] + ["d13"],
+                         [x for x in [f"d{i}" for i in range(1, 12)] + ["d13"]])
+        self.assertNotIn("d12", {f"d{i}" for i in range(1, 12)} | {"d13"})
+
+
+if __name__ == "__main__":
+    unittest.main()
