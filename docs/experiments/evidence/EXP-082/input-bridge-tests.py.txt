@@ -12,6 +12,11 @@ loader = importlib.machinery.SourceFileLoader("exp082_test_bridge", str(HERE / "
 spec = importlib.util.spec_from_loader(loader.name, loader)
 BRIDGE = importlib.util.module_from_spec(spec)
 loader.exec_module(BRIDGE)
+prepare_loader = importlib.machinery.SourceFileLoader(
+    "exp082_test_frozen_exp078_prepare", str(HERE.parent / "EXP-078" / "prepare.py.txt"))
+prepare_spec = importlib.util.spec_from_loader(prepare_loader.name, prepare_loader)
+PREPARE = importlib.util.module_from_spec(prepare_spec)
+prepare_loader.exec_module(PREPARE)
 
 
 def write(path: Path, raw: bytes) -> None:
@@ -35,6 +40,7 @@ def make_bundle(root: Path) -> Path:
              "source_revision":"1"*40,"stage_started_utc":"2026-10-06T00:00:00Z",
              "stage_deadline_utc":"2026-10-06T08:00:00Z","ordered_task_ids":BRIDGE.TASK_IDS}
     clock_raw=BRIDGE.canonical_json(clock); write(root/"stage-clock.json",clock_raw)
+    d12_result = {"url":BRIDGE.TARGET,"title":"cosign","content":"fixture"}
     query={"schema":"exp078-corrective-query-receipt/1","task_id":"d12","query":"cosign",
            "target_url":BRIDGE.TARGET,"engine":"github","status":"complete",
            "effective_pool_source":"corrective_github_query","physical_http_calls":1,
@@ -46,7 +52,7 @@ def make_bundle(root: Path) -> Path:
              "call_index":1,"sidecar_path":"http-001.json","body_path":"http-001.body",
              "sidecar_sha256":BRIDGE.sha(side_raw),"retained_body_sha256":BRIDGE.sha(body),
              "response_body_sha256":BRIDGE.sha(body),"retained_body_bytes":len(body)}],
-           "results":[{"url":BRIDGE.TARGET}]}
+           "results":[d12_result]}
     query_raw=BRIDGE.canonical_json(query); write(root/"acquisition/corrective-query.json",query_raw)
     cards={}; source={}; native={}; pools={}
     for task in BRIDGE.TASK_IDS:
@@ -55,6 +61,13 @@ def make_bundle(root: Path) -> Path:
         card={"id":card_id,"url":url,"title":task,"snippet":"fixture"}
         cards[task]=[card]; source[task]={card_id:"u"+task}; native[task]={card_id:{"url":url}}
         pools[task]={"cards":[card],"natural_count":1,"merged_count":1}
+    # Keep the fixture's corrected d12 exactly aligned with the pinned 078
+    # card projection, native row and deterministic source identity.
+    d12_card = PREPARE.project_card("d12", 0, d12_result)
+    cards["d12"] = [d12_card]
+    source["d12"] = {d12_card["id"]: PREPARE._source_id(d12_result, "d12", 0)}
+    native["d12"] = {d12_card["id"]: d12_result}
+    pools["d12"] = {"cards":[d12_card],"natural_count":1,"merged_count":1}
     effective={"schema":"exp078-effective-acquisition/1","stage":"development","synthetic":False,
         "pools":pools,"source_id_by_card_id":source,"native_results_by_card_id":native,
         "historical_d12":{"receipt_sha256":"d"*64,"target_present":False,"effective":False},
@@ -122,6 +135,22 @@ class InputBridgeTests(unittest.TestCase):
         (self.root/"configuration-binding.json").write_bytes(b"different opaque receipt")
         with self.assertRaisesRegex(BRIDGE.InputError,"bundle-hash-mismatch"):
             BRIDGE.verify_input_bundle(self.root,self.pins)
+
+    def test_corrected_d12_pool_must_match_complete_frozen_projection(self):
+        effective_path = self.root / "effective-acquisition.json"
+        effective = BRIDGE.strict_json(effective_path.read_bytes())
+        card = effective["pools"]["d12"]["cards"][0]
+        self.assertEqual(card, PREPARE.project_card("d12", 0,
+            effective["native_results_by_card_id"]["d12"][card["id"]]))
+        self.assertEqual(len(BRIDGE.prepare_recovery_inputs(self.root, self.pins)["pools"]["pools"]), 13)
+
+        # Even a completely re-pinned bundle cannot substitute or alter d12's
+        # result projection while retaining the correction receipt claim.
+        card["snippet"] += " altered"
+        effective_path.write_bytes(BRIDGE.canonical_json(effective))
+        write_pins(self.root, self.pins)
+        with self.assertRaisesRegex(BRIDGE.InputError, "d12-pool-projection"):
+            BRIDGE.prepare_recovery_inputs(self.root, self.pins)
 
 
 if __name__ == "__main__": unittest.main()

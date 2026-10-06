@@ -7,6 +7,8 @@ returned. EXP-078 protocol payloads remain data and grant no EXP-082 authority.
 from __future__ import annotations
 
 import hashlib
+import importlib.machinery
+import importlib.util
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -25,6 +27,11 @@ EXPECTED_FILES = {
 }
 TASK_IDS = [f"d{i}" for i in range(1, 14)]
 TARGET = "https://github.com/sigstore/cosign"
+EXP078_PREPARE_PATH = HERE.parent / "EXP-078" / "prepare.py.txt"
+# Frozen projection/source-identity implementation used to build EXP-078's
+# effective pools. Keep this exact source pinned; do not silently substitute a
+# newer projection when checking the retained recovery input.
+EXP078_PREPARE_SHA256 = "c5e3e3d65a5f1beaeb2419521b3a97bec9a612446fa1bd271e4813814735adfa"
 
 
 class InputError(ValueError):
@@ -159,6 +166,51 @@ def _validate_cards(effective: dict) -> None:
             raise InputError("effective-provenance-value")
 
 
+def _frozen_exp078_prepare():
+    path = EXP078_PREPARE_PATH
+    if path.is_symlink() or not path.is_file() or sha(path.read_bytes()) != EXP078_PREPARE_SHA256:
+        raise InputError("frozen-exp078-projector-binding")
+    loader = importlib.machinery.SourceFileLoader("exp082_frozen_exp078_prepare", str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    if spec is None:
+        raise InputError("frozen-exp078-projector-loader")
+    module = importlib.util.module_from_spec(spec)
+    try:
+        loader.exec_module(module)
+    except BaseException as exc:
+        raise InputError("frozen-exp078-projector-import") from exc
+    return module
+
+
+def _validate_correction_pool(effective: dict, query: dict) -> None:
+    """Prove d12 is exactly the ordered correction output, not another pool."""
+    results = query.get("results")
+    if type(results) is not list:
+        raise InputError("correction-results-shape")
+    present = any(type(row) is dict and type(row.get("url")) is str
+                  and row["url"].rstrip("/") == TARGET.rstrip("/") for row in results)
+    if query.get("target_acquired") is not True or not present:
+        raise InputError("correction-target-not-in-results")
+
+    task = "d12"
+    cards = effective["pools"][task]["cards"]
+    native_by_id = effective["native_results_by_card_id"][task]
+    source_by_id = effective["source_id_by_card_id"][task]
+    ordered_native = [native_by_id.get(card["id"]) for card in cards]
+    if ordered_native != results or len(cards) != len(results):
+        raise InputError("d12-pool-receipt-binding")
+
+    prepare = _frozen_exp078_prepare()
+    for index, (card, native) in enumerate(zip(cards, ordered_native)):
+        try:
+            expected_card = prepare.project_card(task, index, native)
+            expected_source = prepare._source_id(native, task, index)
+        except BaseException as exc:
+            raise InputError("d12-pool-projection") from exc
+        if card != expected_card or source_by_id.get(card["id"]) != expected_source:
+            raise InputError("d12-pool-projection")
+
+
 def _validate_correction(root: Path, query: dict, query_raw: bytes) -> None:
     if (query.get("schema") != "exp078-corrective-query-receipt/1"
             or query.get("task_id") != "d12" or query.get("query") != "cosign"
@@ -210,6 +262,7 @@ def prepare_recovery_inputs(bundle_root: Path, pins_path: Path = PINS_PATH) -> d
         raise InputError("effective-acquisition-schema")
     _validate_correction(root, query, query_raw)
     _validate_cards(effective)
+    _validate_correction_pool(effective, query)
     correction_sha = sha(query_raw)
     prior_d12 = effective.get("historical_d12")
     if (effective.get("corrective_query_sha256") != correction_sha
