@@ -233,7 +233,7 @@ def verify_closure(source_integrity: dict, qualification_bytes: bytes,
         spec = spec_from_loader(loader.name, loader)
         bridge = module_from_spec(spec)
         loader.exec_module(bridge)
-        input_result = bridge.verify_input_bundle(Path(bundle_root))
+        input_result = bridge.verify_bundle_inventory(Path(bundle_root))
         if (input_result["input_pins_sha256"] != pins_sha
                 or source_integrity.get("input_bundle_sha256") != input_result["input_bundle_sha256"]
                 or source_integrity.get("runtime_config_receipt_sha256") != input_result["runtime_config_receipt_sha256"]
