@@ -1,6 +1,6 @@
 # EXP-089 — preserve the card checkpoint and receive final JSON directly
 
-Status: prospective registration; no live stage admitted.
+Status: terminal assessment-inconclusive. [The first final JSON was captured exactly but omitted the required source inventory](evidence/EXP-089/completed/readout.md). Oversized tool reads had been truncated; no quality result exists.
 
 EXP-088 completed every required card assessment, then stopped when the first source assessor’s output-writing script failed. Its [terminal outcome](evidence/EXP-088/completed/readout.md) remains assessment-inconclusive. This stage fixes the response carrier: the controller stores and hashes the assessor’s actual final-message bytes, then applies unchanged reference and coverage validation. It never treats a completion assertion as a response or reconstructs grades from a failed script. Missing, malformed, mismatched or oversized output is terminal, without retry or repair.
 
