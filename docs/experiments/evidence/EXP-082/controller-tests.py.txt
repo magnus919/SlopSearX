@@ -38,6 +38,9 @@ class ControllerTests(unittest.TestCase):
         sys.modules.pop("exp082_controller_bridge", None)
         self.controller.HERE = self.fixture.exp
         self.controller.REPO = self.fixture.root
+        self.cli_path = Path(self.fixture.temp.name) / "inert-groktocrawl-cli.py"
+        self.cli_bytes = b"raise RuntimeError('fixture CLI must never be imported')\n"
+        self.cli_path.write_bytes(self.cli_bytes)
         sys.modules.pop("exp082_admission", None)
         admission = self.controller.load("exp082_admission", "admission.py.txt")
         admission.HERE = self.fixture.exp
@@ -46,10 +49,10 @@ class ControllerTests(unittest.TestCase):
         admission.LEASE_ROOT = Path(self.fixture.temp.name) / "leases-controller"
         self.admission = admission
 
-        # Add a fake public CLI pin to the fixture qualification. It is only
-        # exercised with a missing path later, before any import or request.
+        # Add a fake public CLI pin to the fixture qualification. The inert
+        # fixture file is hashed during preflight and removed before capture.
         q = admission.strict_json(self.fixture.qraw)
-        self.cli_pin = {"sha256": "a" * 64, "revision": "1" * 40}
+        self.cli_pin = {"sha256": hashlib.sha256(self.cli_bytes).hexdigest(), "revision": "1" * 40}
         q["external_source_pins"] = {"groktocrawl_cli": self.cli_pin}
         self.fixture.qraw = admission.canonical_json(q)
         (self.fixture.exp / "qualification-integrity.json").write_bytes(self.fixture.qraw)
@@ -62,16 +65,22 @@ class ControllerTests(unittest.TestCase):
         self.fixture.tearDown()
 
     def test_preflight_begin_and_recovery_bind_new_clock_without_quality_credit(self):
-        admission, integrity, qraw, proof = self.controller.preflight(self.fixture.bundle)
+        admission, integrity, qraw, proof = self.controller.preflight(self.fixture.bundle, self.cli_path)
         self.assertIs(admission, self.admission)
         self.assertEqual(proof["input_integrity"]["file_count"], 13)
         self.assertFalse(integrity["synthetic"])
         self.assertEqual(integrity["study_id"], "EXP-082")
 
         output = Path(self.fixture.temp.name) / "new-stage"
+        self.cli_path.write_bytes(self.cli_bytes + b"# changed after qualification\n")
+        with self.assertRaisesRegex(ValueError, "pinned-cli-preflight-failed"):
+            self.controller.begin(Path(self.fixture.temp.name) / "must-not-exist", self.fixture.bundle,
+                                  self.cli_path)
+        self.assertFalse((Path(self.fixture.temp.name) / "must-not-exist").exists())
+        self.cli_path.write_bytes(self.cli_bytes)
         with tempfile.TemporaryDirectory() as tmp, patch.object(
                 self.controller, "_configure_capture", return_value=None) as configure:
-            state = self.controller.begin(output, self.fixture.bundle)
+            state = self.controller.begin(output, self.fixture.bundle, self.cli_path)
             acquisition = self.controller.prepare_recovery(state)
             configure.assert_called_once_with(state)
             self.assertEqual(state.clock[0]["stage"], "development")
@@ -87,7 +96,7 @@ class ControllerTests(unittest.TestCase):
     def test_capture_uses_frozen_phase_binding_and_missing_cli_stops_before_dispatch(self):
         output = Path(self.fixture.temp.name) / "capture-stage"
         with patch.object(self.controller, "_configure_capture", return_value=None):
-            state = self.controller.begin(output, self.fixture.bundle)
+            state = self.controller.begin(output, self.fixture.bundle, self.cli_path)
             acquisition = self.controller.prepare_recovery(state)
         # The generic admission fixture uses opaque source IDs. Recompute the
         # deterministic IDs for its synthetic native rows so the frozen 078
@@ -107,7 +116,7 @@ class ControllerTests(unittest.TestCase):
                     identity = "r" + hashlib.sha256(wire.encode("utf-8")).hexdigest()
                 acquisition["source_id_by_card_id"][task_id][card_id] = identity
         cases = json.loads((HERE / "cohorts.json").read_bytes())["cohorts"]["development"]
-        absent_cli = Path(self.fixture.temp.name) / "missing-pinned-cli.py"
+        self.cli_path.unlink()
         # The controller itself and admission run against the temporary Git
         # fixture; the frozen EXP-078 binding is verified from this checkout's
         # committed source, then its first CLI read fails before dispatch.
@@ -115,15 +124,16 @@ class ControllerTests(unittest.TestCase):
         with patch.object(self.controller, "REPO", actual_repo), patch.object(
                 self.controller, "HERE", actual_repo / "docs/experiments/evidence/EXP-082"):
             with self.assertRaises((FileNotFoundError, ValueError)) as caught:
-                self.controller.capture(state, acquisition, cases, absent_cli)
+                self.controller.capture(state, acquisition, cases, self.cli_path)
         self.assertEqual(type(caught.exception).__name__, "ValueError")
         self.assertEqual(str(caught.exception), "input-file-type")
-        terminal = output / "capture" / "capture-phase-terminal.json"
-        # This currently exposes a material receipt gap: the frozen binding
-        # claims the phase before validating the CLI file, but that failure is
-        # outside its terminal-sidecar guard. No request or terminal receipt is
-        # produced, while the one-shot phase lease remains consumed.
-        self.assertFalse(terminal.exists())
+        terminal = output / "capture" / "recovery-capture-terminal.json"
+        self.assertTrue(terminal.is_file())
+        failed = json.loads(terminal.read_bytes())
+        self.assertEqual(failed["schema"], "exp082-capture-terminal/1")
+        self.assertEqual(failed["status"], "incomplete")
+        self.assertEqual(failed["owned_http_attempts"], "unknown")
+        self.assertFalse(failed["quality_credit"])
         self.assertEqual(len(list(self.admission.LEASE_ROOT.glob("*.json"))), 2)
         self.assertFalse((output / "capture" / "portable-capture-wire" / "private-raw" /
                           "http-transports.json").exists())
