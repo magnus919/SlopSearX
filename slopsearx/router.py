@@ -59,7 +59,7 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
             "pip",
             "cargo",
         ],
-        "engines": ["brave", "github", "stackexchange", "duckduckgo", "wikipedia"],
+        "engines": ["brave", "github", "stackexchange", "duckduckgo", "bing", "wikipedia"],
     },
     {
         "name": "science",
@@ -78,7 +78,7 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
             "mathematics",
             "statistics",
         ],
-        "engines": ["brave", "arxiv", "semanticscholar", "openalex", "duckduckgo", "wikipedia"],
+        "engines": ["brave", "arxiv", "semanticscholar", "openalex", "duckduckgo", "bing", "wikipedia"],
     },
     {
         "name": "news",
@@ -92,7 +92,7 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
             "released",
             "headline",
         ],
-        "engines": ["brave", "hackernews", "duckduckgo"],
+        "engines": ["brave", "hackernews", "duckduckgo", "bing"],
     },
     {
         "name": "social",
@@ -104,7 +104,7 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
             "discussion",
             "forum",
         ],
-        "engines": ["brave", "hackernews", "reddit", "duckduckgo"],
+        "engines": ["brave", "hackernews", "reddit", "duckduckgo", "bing"],
     },
     {
         "name": "reference",
@@ -119,7 +119,7 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
             "manual",
             "definition",
         ],
-        "engines": ["brave", "wikipedia", "stackexchange", "duckduckgo"],
+        "engines": ["brave", "wikipedia", "stackexchange", "duckduckgo", "bing"],
     },
     {
         "name": "historical",
@@ -132,7 +132,7 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
             "vintage",
             "retro",
         ],
-        "engines": ["brave", "wikipedia", "internetarchive", "duckduckgo"],
+        "engines": ["brave", "wikipedia", "internetarchive", "duckduckgo", "bing"],
     },
     {
         "name": "jobs",
@@ -154,11 +154,11 @@ _DEFAULT_TOPICS: list[dict[str, Any]] = [
             "full-time",
             "workday",
         ],
-        "engines": ["brave", "duckduckgo", "greenhouse", "ashby", "lever"],
+        "engines": ["brave", "duckduckgo", "bing", "greenhouse", "ashby", "lever"],
     },
 ]
 
-_DEFAULT_FALLBACK = ["brave", "duckduckgo", "wikipedia", "stackexchange", "reddit"]
+_DEFAULT_FALLBACK = ["brave", "duckduckgo", "bing", "wikipedia", "stackexchange", "reddit"]
 
 
 class QueryRouter:

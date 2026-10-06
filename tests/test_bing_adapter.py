@@ -154,3 +154,30 @@ class TestBingSearch:
             result = await adapter.search("q")
 
         assert result.status is EngineStatus.TIMEOUT
+
+
+class TestBingRouting:
+    @pytest.mark.parametrize(
+        "query",
+        [
+            "Kubernetes 1.34 release date",  # code
+            "quantum error correction paper",  # science
+            "latest news on rust",  # news
+            "reddit discussion about tabs",  # social
+            "how to configure nginx",  # reference
+        ],
+    )
+    def test_topic_routes_include_bing_beside_the_other_general_scrapers(self, query):
+        from slopsearx.router import QueryRouter
+
+        routed = QueryRouter().route(query)
+        assert routed is not None
+        assert "bing" in routed
+
+    def test_every_default_topic_that_uses_duckduckgo_also_uses_bing(self):
+        from slopsearx.router import _DEFAULT_FALLBACK, _DEFAULT_TOPICS
+
+        for topic in _DEFAULT_TOPICS:
+            if "duckduckgo" in topic["engines"]:
+                assert "bing" in topic["engines"], topic["name"]
+        assert "bing" in _DEFAULT_FALLBACK
