@@ -1,0 +1,250 @@
+{
+  "schema_version": 1,
+  "created": "2026-10-06",
+  "cases": [
+    {
+      "id": "q01",
+      "family": "retrieval_planning",
+      "question": "Compare learned dense passage retrieval and retrieval-augmented generation for open-domain question answering.",
+      "targets": [
+        {
+          "id": "2004.04906",
+          "title": "Dense Passage Retrieval for Open-Domain Question Answering",
+          "source_url": "https://arxiv.org/abs/2004.04906"
+        },
+        {
+          "id": "2005.11401",
+          "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+          "source_url": "https://arxiv.org/abs/2005.11401"
+        }
+      ]
+    },
+    {
+      "id": "q02",
+      "family": "retrieval_planning",
+      "question": "Compare expanding a query with a generated pseudo-document against embedding a hypothetical document for zero-shot retrieval.",
+      "targets": [
+        {
+          "id": "2303.07678",
+          "title": "Query2doc: Query Expansion with Large Language Models",
+          "source_url": "https://arxiv.org/abs/2303.07678"
+        },
+        {
+          "id": "2212.10496",
+          "title": "Precise Zero-Shot Dense Retrieval without Relevance Labels",
+          "source_url": "https://arxiv.org/abs/2212.10496"
+        }
+      ]
+    },
+    {
+      "id": "q03",
+      "family": "retrieval_planning",
+      "question": "Compare listwise permutation prompting and pairwise prompting for reranking search results with language models.",
+      "targets": [
+        {
+          "id": "2304.09542",
+          "title": "Is ChatGPT Good at Search? Investigating Large Language Models as Re-Ranking Agents",
+          "source_url": "https://arxiv.org/abs/2304.09542"
+        },
+        {
+          "id": "2306.17563",
+          "title": "Large Language Models are Effective Text Rankers with Pairwise Ranking Prompting",
+          "source_url": "https://arxiv.org/abs/2306.17563"
+        }
+      ]
+    },
+    {
+      "id": "q04",
+      "family": "retrieval_planning",
+      "question": "Compare modular question decomposition and interleaving retrieval with reasoning for multi-hop question answering.",
+      "targets": [
+        {
+          "id": "2210.02406",
+          "title": "Decomposed Prompting: A Modular Approach for Solving Complex Tasks",
+          "source_url": "https://arxiv.org/abs/2210.02406"
+        },
+        {
+          "id": "2212.10509",
+          "title": "Interleaving Retrieval with Chain-of-Thought Reasoning for Knowledge-Intensive Multi-Step Questions",
+          "source_url": "https://arxiv.org/abs/2212.10509"
+        }
+      ]
+    },
+    {
+      "id": "q05",
+      "family": "model_methods",
+      "question": "Compare interleaved reasoning and acting with self-supervised learning of language-model tool use.",
+      "targets": [
+        {
+          "id": "2210.03629",
+          "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+          "source_url": "https://arxiv.org/abs/2210.03629"
+        },
+        {
+          "id": "2302.04761",
+          "title": "Toolformer: Language Models Can Teach Themselves to Use Tools",
+          "source_url": "https://arxiv.org/abs/2302.04761"
+        }
+      ]
+    },
+    {
+      "id": "q06",
+      "family": "model_methods",
+      "question": "Compare retrieval self-reflection with corrective retrieval when retrieved evidence is unreliable.",
+      "targets": [
+        {
+          "id": "2310.11511",
+          "title": "Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection",
+          "source_url": "https://arxiv.org/abs/2310.11511"
+        },
+        {
+          "id": "2401.15884",
+          "title": "Corrective Retrieval Augmented Generation",
+          "source_url": "https://arxiv.org/abs/2401.15884"
+        }
+      ]
+    },
+    {
+      "id": "q07",
+      "family": "model_methods",
+      "question": "Compare low-rank language-model adaptation with quantized low-rank finetuning under memory constraints.",
+      "targets": [
+        {
+          "id": "2106.09685",
+          "title": "LoRA: Low-Rank Adaptation of Large Language Models",
+          "source_url": "https://arxiv.org/abs/2106.09685"
+        },
+        {
+          "id": "2305.14314",
+          "title": "QLoRA: Efficient Finetuning of Quantized LLMs",
+          "source_url": "https://arxiv.org/abs/2305.14314"
+        }
+      ]
+    },
+    {
+      "id": "q08",
+      "family": "model_methods",
+      "question": "Compare the original attention-only Transformer architecture with bidirectional encoder pretraining for language understanding.",
+      "targets": [
+        {
+          "id": "1706.03762",
+          "title": "Attention Is All You Need",
+          "source_url": "https://arxiv.org/abs/1706.03762"
+        },
+        {
+          "id": "1810.04805",
+          "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+          "source_url": "https://arxiv.org/abs/1810.04805"
+        }
+      ]
+    },
+    {
+      "id": "q09",
+      "family": "retrieval_infrastructure",
+      "question": "Compare contextualized late-interaction retrieval with learned sparse lexical expansion for first-stage ranking.",
+      "targets": [
+        {
+          "id": "2004.12832",
+          "title": "ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT",
+          "source_url": "https://arxiv.org/abs/2004.12832"
+        },
+        {
+          "id": "2107.05720",
+          "title": "SPLADE: Sparse Lexical and Expansion Model for First Stage Ranking",
+          "source_url": "https://arxiv.org/abs/2107.05720"
+        }
+      ]
+    },
+    {
+      "id": "q10",
+      "family": "retrieval_infrastructure",
+      "question": "Compare Siamese sentence embeddings with unsupervised contrastive dense information retrieval.",
+      "targets": [
+        {
+          "id": "1908.10084",
+          "title": "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
+          "source_url": "https://arxiv.org/abs/1908.10084"
+        },
+        {
+          "id": "2112.09118",
+          "title": "Unsupervised Dense Information Retrieval with Contrastive Learning",
+          "source_url": "https://arxiv.org/abs/2112.09118"
+        }
+      ]
+    },
+    {
+      "id": "q11",
+      "family": "retrieval_infrastructure",
+      "question": "Compare heterogeneous zero-shot information-retrieval evaluation with a massive text-embedding benchmark.",
+      "targets": [
+        {
+          "id": "2104.08663",
+          "title": "BEIR: A Heterogenous Benchmark for Zero-shot Evaluation of Information Retrieval Models",
+          "source_url": "https://arxiv.org/abs/2104.08663"
+        },
+        {
+          "id": "2210.07316",
+          "title": "MTEB: Massive Text Embedding Benchmark",
+          "source_url": "https://arxiv.org/abs/2210.07316"
+        }
+      ]
+    },
+    {
+      "id": "q12",
+      "family": "retrieval_infrastructure",
+      "question": "Compare language-model resource selectors with classical web resource selection for federated search.",
+      "targets": [
+        {
+          "id": "2401.17645",
+          "title": "ReSLLM: Large Language Models are Strong Resource Selectors for Federated Search",
+          "source_url": "https://arxiv.org/abs/2401.17645"
+        },
+        {
+          "id": "1609.04556",
+          "title": "Resource Selection for Federated Search on the Web",
+          "source_url": "https://arxiv.org/abs/1609.04556"
+        }
+      ]
+    },
+    {
+      "id": "c01",
+      "family": "exact_title_control",
+      "question": "Query2doc: Query Expansion with Large Language Models",
+      "targets": [
+        {
+          "id": "2303.07678",
+          "title": "Query2doc: Query Expansion with Large Language Models",
+          "source_url": "https://arxiv.org/abs/2303.07678"
+        }
+      ]
+    },
+    {
+      "id": "c02",
+      "family": "exact_title_control",
+      "question": "LoRA: Low-Rank Adaptation of Large Language Models",
+      "targets": [
+        {
+          "id": "2106.09685",
+          "title": "LoRA: Low-Rank Adaptation of Large Language Models",
+          "source_url": "https://arxiv.org/abs/2106.09685"
+        }
+      ]
+    },
+    {
+      "id": "c03",
+      "family": "exact_title_control",
+      "question": "MTEB: Massive Text Embedding Benchmark",
+      "targets": [
+        {
+          "id": "2210.07316",
+          "title": "MTEB: Massive Text Embedding Benchmark",
+          "source_url": "https://arxiv.org/abs/2210.07316"
+        }
+      ]
+    }
+  ],
+  "provenance": "Author-constructed public-paper discovery challenge cases; primary arXiv title/ID pages verified before registration. No retrieved evaluation results inspected.",
+  "rights": "New task text and manifests authored in this session; bibliographic titles/IDs/URLs and minimized OpenAlex metadata; no full paper texts retained.",
+  "scope": "Exposed development pilot, not production-prevalence sample or untouched holdout. Same caller constructed references and plans: contamination risk disclosed.",
+  "baseline_sha": "17727a71daf2116e2337f293c9261361140eeb52"
+}

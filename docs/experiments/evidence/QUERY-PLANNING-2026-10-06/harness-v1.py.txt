@@ -1,0 +1,171 @@
+from __future__ import annotations
+import argparse, asyncio, dataclasses, hashlib, json, os, platform, random, re, statistics, sys, time
+from pathlib import Path
+from types import SimpleNamespace
+ROOT=Path(os.environ.get('QP_SOURCE_ROOT',Path.cwd())).resolve()
+sys.path.insert(0,str(ROOT))
+import httpx
+from engines.openalex import OpenAlexAdapter
+from slopsearx.capabilities import CapabilityCatalog,MCPPolicy
+from slopsearx.config import Config,EngineEntry
+from slopsearx.mcp.tools import _enforce_policy
+from slopsearx.research import plan_research_queries
+from slopsearx.service import AppContext,SearchService,SearchRequest,search_response_to_payload,search_response_from_payload
+EV=ROOT/'docs/experiments/evidence/QUERY-PLANNING-2026-10-06'
+SEED=20261006
+
+def dump(path,value): path.write_text(json.dumps(value,indent=2,sort_keys=True)+'\n')
+def rows(path): return [json.loads(s) for s in path.read_text().splitlines()] if path.exists() else []
+def append(path,value):
+ with path.open('a') as stream: stream.write(json.dumps(value,sort_keys=True)+'\n'); stream.flush(); os.fsync(stream.fileno())
+def normalize(value): return ''.join(re.findall(r'[a-z0-9]+',value.casefold()))
+def pins():
+ for name,expected in json.loads((EV/'registration-pins.json').read_text()).items():
+  assert hashlib.sha256((EV/name).read_bytes()).hexdigest()==expected, f'registration drift {name}'
+
+def runtime(transport=None):
+ cfg=Config(engines={'openalex':EngineEntry(base_url='https://api.openalex.org',timeout_ms=15000,max_results=20)})
+ engine=OpenAlexAdapter(dataclasses.asdict(cfg.engines['openalex']))
+ if transport is not None: engine.set_http_transport(transport)
+ catalog=CapabilityCatalog(cfg,{'openalex':engine}); policy=MCPPolicy()
+ ctx=AppContext(active_engines={'openalex':engine},catalog=catalog)
+ return engine,SearchService(ctx),SimpleNamespace(catalog=catalog,policy=policy)
+
+async def qualify():
+ pins(); checks=[]
+ def ok(name,condition):
+  if not condition: raise AssertionError(name)
+  checks.append(name)
+ def handler(req):
+  text=req.url.params.get('search','')
+  if text=='failure':return httpx.Response(503,json={'error':'fixture failure'})
+  works=[] if text=='empty' else [{'id':'https://openalex.org/W1','doi':'https://doi.org/10.0/fixture','title':'Alpha: Beta','abstract_inverted_index':{'fixture':[0]},'relevance_score':2,'publication_date':'2020-01-01'}]
+  return httpx.Response(200,json={'results':works})
+ transport=httpx.MockTransport(handler); engine,service,state=runtime(transport)
+ ok('source permitted',_enforce_policy(state,['openalex']) is None)
+ ok('mixed sensitive scope rejected atomically',_enforce_policy(state,['openalex','hibp']) is not None)
+ ok('unknown scope rejected',_enforce_policy(state,['unknown']) is not None)
+ response=await service.search(SearchRequest(query='fixture',engines=['openalex']))
+ ok('real service returns fixture',len(response.results)==1 and response.results[0].title=='Alpha: Beta')
+ payload=search_response_to_payload(response); revived=search_response_from_payload(payload)
+ ok('JSON-safe serialization',json.loads(json.dumps(payload))['results'][0]['engines']==['openalex'])
+ ok('round-trip provenance',revived.results[0].engines=={'openalex'})
+ ok('round-trip identity',revived.results[0].url==response.results[0].url)
+ response=await service.search(SearchRequest(query='empty',engines=['openalex']))
+ ok('empty is retained success',not response.results and response.engine_outcomes[0].status=='ok')
+ response=await service.search(SearchRequest(query='failure',engines=['openalex']))
+ ok('upstream failure classified',not response.results and response.engine_outcomes[0].status!='ok')
+ ok('punctuation matcher',normalize('Alpha: Beta')==normalize('alpha-beta'))
+ ok('near-match not accepted',normalize('Alpha Beta 2')!=normalize('Alpha Beta'))
+ plan,_=plan_research_queries('fixture','counterevidence',3,1,state.catalog,state.policy)
+ ok('shipped baseline texts',[q.query for q in plan]==['fixture','fixture limitations','fixture criticism'])
+ ok('manifest sample',len(json.loads((EV/'cases.json').read_text())['cases'])==15)
+ await engine.shutdown()
+ dump(EV/'qualification.json',{'checks':checks,'passed':len(checks),'fixture_only':True,'external_requests':0})
+ print(json.dumps({'qualified':len(checks),'external_requests':0}))
+
+def load_plan(name): return {r['id']:r for r in json.loads((EV/f'plans-{name}.json').read_text())['cases']}
+
+async def acquire(phase):
+ pins(); assert (EV/'qualification.json').exists()
+ cases=json.loads((EV/'cases.json').read_text())['cases']
+ engine,service,state=runtime()
+ known={r['key']:r for r in rows(EV/'receipts.jsonl')}; attempted={r['key'] for r in rows(EV/'attempts.jsonl')}
+ clock=EV/'stage-clock.json'
+ if not clock.exists(): dump(clock,{'started_epoch':time.time(),'budget_seconds':3600})
+ started=json.loads(clock.read_text())['started_epoch']
+ operations=[]; rng=random.Random(SEED)
+ if phase=='first':
+  operations=[(c['id']+':first',c['id'],'shared',1,c['question'],None) for c in cases]
+ elif phase=='decomposition':
+  plan=load_plan('decomposition')
+  for c in cases:
+   baseline,_=plan_research_queries(c['question'],'counterevidence',3,1,state.catalog,state.policy)
+   block=[(c['id']+f':baseline:{i+1}',c['id'],'baseline',i+1,q.query,c['id']+':first') for i,q in enumerate(baseline) if i]
+   if c['family']!='exact_title_control':
+    candidate=plan[c['id']]['queries']; assert len(candidate)==2
+    block += [(c['id']+f':decomposition:{i+2}',c['id'],'decomposition',i+2,q,c['id']+':first') for i,q in enumerate(candidate)]
+   rng.shuffle(block); operations.extend(block)
+ elif phase in ('adaptive2','adaptive3'):
+  plan=load_plan(phase); step=int(phase[-1])
+  for c in cases:
+   if c['family']=='exact_title_control':continue
+   p=plan[c['id']]; assert p['parent'] in known; assert p['rationale']; assert p['query']
+   operations.append((c['id']+f':adaptive:{step}',c['id'],'adaptive',step,p['query'],p['parent']))
+ elif phase=='expansion':
+  plan=load_plan('expansion')
+  for c in cases:
+   if c['family']=='exact_title_control':continue
+   p=plan[c['id']]; assert p['hypothetical_passage']; assert len(p['queries'])==2
+   operations.extend((c['id']+f':expansion:{i+2}',c['id'],'expansion',i+2,q,c['id']+':first') for i,q in enumerate(p['queries']))
+ else:raise ValueError(phase)
+ # Bind candidate query bytes and harness before any phase dispatch.
+ source=Path(__file__).read_bytes(); phases=EV/f'phase-{phase}-manifest.json'
+ phase_manifest={'phase':phase,'harness_sha256':hashlib.sha256(source).hexdigest(),'operations':operations}
+ if phases.exists(): assert json.loads(phases.read_text())==json.loads(json.dumps(phase_manifest))
+ else:dump(phases,phase_manifest)
+ try:
+  for key,case,arm,slot,query,parent in operations:
+   if key in known: continue
+   assert key not in attempted, f'interrupted reservation, no retry: {key}'
+   assert time.time()-started<3600,'stage deadline expired'
+   assert len(attempted)<135,'external request ceiling'
+   assert 0<len(query)<=500,'query length guard'
+   rejection=_enforce_policy(state,['openalex']); assert rejection is None,rejection
+   reservation={'key':key,'case':case,'arm':arm,'slot':slot,'query':query,'parent':parent,'reserved_epoch':time.time(),'phase':phase}
+   append(EV/'attempts.jsonl',reservation); attempted.add(key)
+   t=time.monotonic()
+   response=await service.search(SearchRequest(query=query,engines=['openalex'],max_results=20,freshness='prefer_fresh'))
+   payload=search_response_to_payload(response); revived=search_response_from_payload(json.loads(json.dumps(payload)))
+   assert [r.url for r in revived.results]==[r.url for r in response.results],'roundtrip identity'
+   assert all(r.engines=={'openalex'} for r in revived.results),'provenance guard'
+   assert response.scope.selected_engines==['openalex'],'scope guard'
+   cards=[{'title':r.title,'url':r.url,'content':r.content[:200],'published_date':r.published_date,'engines':sorted(r.engines),'payload':r.payload} for r in response.results[:10]]
+   receipt={**reservation,'completed_epoch':time.time(),'elapsed_ms':(time.monotonic()-t)*1000,'outcomes':[dataclasses.asdict(o) for o in response.engine_outcomes],'total_results':len(response.results),'cards':cards,'serialized_roundtrip':True,'policy_checked':True}
+   append(EV/'receipts.jsonl',receipt); known[key]=receipt
+   statuses=[o['status'] for o in receipt['outcomes']]
+   print(json.dumps({'key':key,'status':statuses,'results':len(cards)}),flush=True)
+   await asyncio.sleep(1)
+ finally: await engine.shutdown()
+
+
+def score(case,receipts):
+ titles={normalize(c['title']) for r in receipts for c in r['cards']}
+ hits=[t['id'] for t in case['targets'] if normalize(t['title']) in titles]
+ return len(hits)/len(case['targets']),hits
+
+def analyze():
+ pins(); cases=json.loads((EV/'cases.json').read_text())['cases']; receipts=rows(EV/'receipts.jsonl'); bykey={r['key']:r for r in receipts}
+ study=[]; summaries={}
+ for arm in ('decomposition','adaptive','expansion'):
+  records=[]; complete=True
+  for c in cases:
+   first=bykey.get(c['id']+':first')
+   if first is None:complete=False; continue
+   b=[first]+[bykey.get(c['id']+f':baseline:{s}') for s in (2,3)]
+   a=[first] if c['family']=='exact_title_control' else [first]+[bykey.get(c['id']+f':{arm}:{s}') for s in (2,3)]
+   if any(r is None for r in b+a):complete=False
+   b=[r for r in b if r is not None];a=[r for r in a if r is not None]
+   bv,bhits=score(c,b);av,ahits=score(c,a)
+   records.append({'id':c['id'],'family':c['family'],'baseline_recovery':bv,'candidate_recovery':av,'difference':av-bv,'baseline_hits':bhits,'candidate_hits':ahits,'baseline_receipts':[r['key'] for r in b],'candidate_receipts':[r['key'] for r in a],'baseline_calls':len(b),'candidate_calls':len(a)})
+  evalrows=[r for r in records if r['family']!='exact_title_control'];controls=[r for r in records if r['family']=='exact_title_control']
+  diffs=[r['difference'] for r in evalrows]; rng=random.Random(SEED)
+  samples=sorted(statistics.fmean(rng.choices(diffs,k=len(diffs))) for _ in range(50000)) if diffs else [0]
+  low=samples[int(.0083333333333333*(len(samples)-1))]; high=samples[int(.9916666666666667*(len(samples)-1))]
+  armkeys={k for r in records for k in r['candidate_receipts']};bkeys={k for r in records for k in r['baseline_receipts']}
+  def availability(keys):return sum(bool(bykey[k]['outcomes']) and all(o['status']=='ok' for o in bykey[k]['outcomes']) for k in keys)/len(keys) if keys else 0
+  families={f:statistics.fmean(r['difference'] for r in evalrows if r['family']==f) for f in sorted({r['family'] for r in evalrows})}
+  gates={'complete':complete and len(records)==15,'useful_effect_bound':low>=.15,'baseline_availability':availability(bkeys)>=.90,'candidate_availability':availability(armkeys)>=.90,'family_nonregression':all(v>=-.05 for v in families.values()),'control_nonregression':all(r['difference']>=0 for r in controls),'policy_and_identity':all(bykey[k]['policy_checked'] and bykey[k]['serialized_roundtrip'] for k in armkeys|bkeys)}
+  outcome='supported' if all(gates.values()) else ('inconclusive' if not gates['complete'] or not gates['baseline_availability'] or not gates['candidate_availability'] else 'not-supported')
+  summaries[arm]={'outcome':outcome,'scope':'exposed fixed-corpus reading-lead recovery only; no production or answer-quality validation','baseline_mean':statistics.fmean(r['baseline_recovery'] for r in evalrows),'candidate_mean':statistics.fmean(r['candidate_recovery'] for r in evalrows),'difference':statistics.fmean(diffs),'effect_interval_98_3333':[low,high],'baseline_complete_tasks':sum(r['baseline_recovery']==1 for r in evalrows),'candidate_complete_tasks':sum(r['candidate_recovery']==1 for r in evalrows),'family_differences':families,'baseline_logical_calls':len(bkeys),'candidate_logical_calls':len(armkeys),'baseline_availability':availability(bkeys),'candidate_availability':availability(armkeys),'gates':gates}
+  study.extend({'arm':arm,**r} for r in records)
+ dump(EV/'analysis-rows.json',study);dump(EV/'summary.json',summaries)
+ print(json.dumps(summaries,indent=2))
+
+async def main():
+ p=argparse.ArgumentParser();p.add_argument('mode',choices=['qualify','acquire','analyze']);p.add_argument('--root',default=str(ROOT));p.add_argument('--phase');args=p.parse_args()
+ assert Path(args.root).resolve()==ROOT
+ if args.mode=='qualify':await qualify()
+ elif args.mode=='acquire':await acquire(args.phase)
+ else:analyze()
+if __name__=='__main__':asyncio.run(main())

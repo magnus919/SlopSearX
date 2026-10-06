@@ -1,0 +1,90 @@
+{
+  "author": "Interactive Codex caller",
+  "source_inputs": "All ten round-2 titles and complete first-pass cards only; no baseline/decomposition/expansion cards or aggregate scores inspected. This evaluates query choice under a fixed maximum three-slot allocation, not adaptive stopping.",
+  "cases": [
+    {
+      "id": "q01",
+      "parent": "q01:adaptive:2",
+      "query": "retrieval augmented generation knowledge intensive NLP",
+      "rationale": "Round 2 card 1 locates dense passage retrieval; now locate the retrieval-conditioned generation contrast.",
+      "term_origin": "Original question plus caller prior terminology knowledge."
+    },
+    {
+      "id": "q02",
+      "parent": "q02:adaptive:2",
+      "query": "query2doc query expansion",
+      "rationale": "Round 2 cards 1/3 locate hypothetical-document dense retrieval; next locate the query-text expansion contrast.",
+      "term_origin": "query2doc is caller prior knowledge, not attributed to the returned cards."
+    },
+    {
+      "id": "q03",
+      "parent": "q03:adaptive:2",
+      "query": "pairwise ranking prompting language models",
+      "rationale": "Round 2 cards 1/2 locate the listwise reranking paper; narrow the pairwise contrast for an additional reading lead. Both facets already have leads, so this final fixed-budget slot may be redundant.",
+      "term_origin": "Round 1 cards 1/6."
+    },
+    {
+      "id": "q04",
+      "parent": "q04:adaptive:2",
+      "query": "interleaving retrieval chain of thought",
+      "rationale": "Round 2 card 1 locates modular decomposition; refine the interleaved reasoning contrast. Both facets already have leads, so this final fixed-budget slot may be redundant.",
+      "term_origin": "Round 1 cards 1/4."
+    },
+    {
+      "id": "q05",
+      "parent": "q05:adaptive:2",
+      "query": "ReAct synergizing reasoning acting",
+      "rationale": "Round 2 contains later reasoning/acting variants; narrow to the original reasoning-action method.",
+      "term_origin": "ReAct method name is caller prior knowledge; ReACT_OCRS is only a related observed title, not proof of the original method."
+    },
+    {
+      "id": "q06",
+      "parent": "q06:adaptive:2",
+      "query": "corrective retrieval augmented generation",
+      "rationale": "Round 2 returns reflection-oriented methods; turn to the other requested facet, retrieval correction.",
+      "term_origin": "Original question; no new named method."
+    },
+    {
+      "id": "q07",
+      "parent": "q07:adaptive:2",
+      "query": "QLoRA efficient quantized finetuning",
+      "rationale": "Round 2 returns many LoRA variants; turn to the quantized adaptation contrast.",
+      "term_origin": "QLoRA is caller prior knowledge, not inferred from the LoRA variant cards."
+    },
+    {
+      "id": "q08",
+      "parent": "q08:adaptive:2",
+      "query": "attention is all you need",
+      "rationale": "Round 2 card 1 locates BERT; turn to the original attention-only architecture.",
+      "term_origin": "Original Transformer paper title is caller prior knowledge."
+    },
+    {
+      "id": "q09",
+      "parent": "q09:adaptive:2",
+      "query": "SPLADE sparse lexical expansion",
+      "rationale": "Round 2 card 2 locates ColBERT; refine the sparse-expansion contrast. Both facets already have leads, so this final fixed-budget slot may be redundant.",
+      "term_origin": "Round 1 card 1 title."
+    },
+    {
+      "id": "q10",
+      "parent": "q10:adaptive:2",
+      "query": "unsupervised dense retrieval contrastive learning",
+      "rationale": "Round 2 card 2 locates the Siamese embedding paper; refine the unsupervised retrieval contrast. Both facets already have leads, so this final fixed-budget slot may be redundant.",
+      "term_origin": "Round 1 card 1 title."
+    },
+    {
+      "id": "q11",
+      "parent": "q11:adaptive:2",
+      "query": "BEIR heterogeneous zero shot retrieval benchmark",
+      "rationale": "Round 2 cards 1/2 locate MTEB; now locate the heterogeneous retrieval benchmark behind regional variants.",
+      "term_origin": "BEIR from round 1 card 4 snippet and card 6 title."
+    },
+    {
+      "id": "q12",
+      "parent": "q12:adaptive:2",
+      "query": "ReSLLM federated resource selection",
+      "rationale": "Round 2 cards 1 and 9/10 cover classical and LLM selection; narrow the LLM facet. Both facets already have leads, so this final fixed-budget slot may be redundant.",
+      "term_origin": "ReSLLM from round 2 cards 9/10."
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "author": "Interactive Codex caller",
+  "source_inputs": "Registered user questions only; no live result or analysis inspected while authoring these plans. Caller already knows target corpus: exposed development pilot, not blinded or held-out.",
+  "sampling": "Single authored trajectory; exact model revision and temperature unavailable.",
+  "cases": [
+    {
+      "id": "q01",
+      "queries": [
+        "DPR RAG",
+        "dense retrieval augmented generation"
+      ],
+      "hypothetical_passage": "The vocabulary for this comparison includes DPR and RAG, dense retrievers, and retrieval-conditioned generation.",
+      "term_origin": "Caller prior knowledge; hypothetical terminology, not retrieved evidence."
+    },
+    {
+      "id": "q02",
+      "queries": [
+        "HyDE query2doc",
+        "hypothetical documents query expansion"
+      ],
+      "hypothetical_passage": "Generated relevance text may be used as a hypothetical embedding input (HyDE) or as query expansion (query2doc).",
+      "term_origin": "Caller prior knowledge; hypothetical terminology, not retrieved evidence."
+    },
+    {
+      "id": "q03",
+      "queries": [
+        "listwise pairwise reranking",
+        "RankGPT pairwise ranking"
+      ],
+      "hypothetical_passage": "The two ranking formulations compare permutations of lists with pairwise preferences; RankGPT is a terminology lead from caller prior knowledge.",
+      "term_origin": "Caller prior knowledge; hypothetical terminology, not retrieved evidence."
+    },
+    {
+      "id": "q04",
+      "queries": [
+        "decomposition interleaved retrieval",
+        "Decomposed Prompting IRCoT"
+      ],
+      "hypothetical_passage": "Modular decomposition and interleaved retrieval may be described using Decomposed Prompting and IRCoT.",
+      "term_origin": "Caller prior knowledge; hypothetical terminology, not retrieved evidence."
+    },
+    {
+      "id": "q05",
+      "queries": [
+        "ReAct Toolformer",
+        "reasoning acting tool learning"
+      ],
+      "hypothetical_passage": "Reasoning-action trajectories and learned API use may be described as ReAct and Toolformer.",
+      "term_origin": "Caller prior knowledge; hypothetical terminology, not retrieved evidence."
+    },
+    {
+      "id": "q06",
+      "queries": [
+        "Self-RAG CRAG",
+        "self reflective corrective retrieval"
+      ],
+      "hypothetical_passage": "Self-RAG and CRAG are candidate terminology for reflection and corrective retrieval.",
+      "term_origin": "Caller prior knowledge; hypothetical terminology, not retrieved evidence."
+    },
+    {
+      "id": "q07",
+      "queries": [
+        "LoRA QLoRA",
+        "low rank quantized finetuning"
+      ],
+      "hypothetical_passage": "Low-rank adapters and quantized adaptation are often called LoRA and QLoRA.",
+      "term_origin": "Caller prior knowledge; hypothetical terminology, not retrieved evidence."
+    },
+    {
+      "id": "q08",
+      "queries": [
+        "Transformer BERT",
+        "attention bidirectional pretraining"
+      ],
+      "hypothetical_passage": "Transformer attention architecture and BERT bidirectional pretraining are the two terminology groups.",
+      "term_origin": "Caller prior knowledge; hypothetical terminology, not retrieved evidence."
+    },
+    {
+      "id": "q09",
+      "queries": [
+        "ColBERT SPLADE",
+        "late interaction sparse expansion"
+      ],
+      "hypothetical_passage": "ColBERT and SPLADE name contrasting late-interaction and sparse-expansion retrieval families.",
+      "term_origin": "Caller prior knowledge; hypothetical terminology, not retrieved evidence."
+    },
+    {
+      "id": "q10",
+      "queries": [
+        "Sentence-BERT Contriever",
+        "sentence embeddings contrastive retrieval"
+      ],
+      "hypothetical_passage": "Sentence-BERT and Contriever are possible terminology for Siamese embeddings and contrastive unsupervised retrieval.",
+      "term_origin": "Caller prior knowledge; hypothetical terminology, not retrieved evidence."
+    },
+    {
+      "id": "q11",
+      "queries": [
+        "BEIR MTEB",
+        "retrieval embedding benchmarks"
+      ],
+      "hypothetical_passage": "BEIR and MTEB are candidate names for heterogeneous retrieval and broad embedding evaluation.",
+      "term_origin": "Caller prior knowledge; hypothetical terminology, not retrieved evidence."
+    },
+    {
+      "id": "q12",
+      "queries": [
+        "ReSLLM federated search",
+        "resource selection web language models"
+      ],
+      "hypothetical_passage": "ReSLLM and resource selection are vocabulary for language-model and classical federated retrieval routing.",
+      "term_origin": "Caller prior knowledge; hypothetical terminology, not retrieved evidence."
+    }
+  ]
+}
