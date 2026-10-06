@@ -1,0 +1,198 @@
+{
+  "harness_sha256": "b46eaeac79b5bcc67dd7e02de9337d4cbf016e0f0219fad1a93a9f63b1dbc499",
+  "operations": [
+    [
+      "q01:expansion:2",
+      "q01",
+      "expansion",
+      2,
+      "DPR RAG",
+      "q01:first"
+    ],
+    [
+      "q01:expansion:3",
+      "q01",
+      "expansion",
+      3,
+      "dense retrieval augmented generation",
+      "q01:first"
+    ],
+    [
+      "q02:expansion:2",
+      "q02",
+      "expansion",
+      2,
+      "HyDE query2doc",
+      "q02:first"
+    ],
+    [
+      "q02:expansion:3",
+      "q02",
+      "expansion",
+      3,
+      "hypothetical documents query expansion",
+      "q02:first"
+    ],
+    [
+      "q03:expansion:2",
+      "q03",
+      "expansion",
+      2,
+      "listwise pairwise reranking",
+      "q03:first"
+    ],
+    [
+      "q03:expansion:3",
+      "q03",
+      "expansion",
+      3,
+      "RankGPT pairwise ranking",
+      "q03:first"
+    ],
+    [
+      "q04:expansion:2",
+      "q04",
+      "expansion",
+      2,
+      "decomposition interleaved retrieval",
+      "q04:first"
+    ],
+    [
+      "q04:expansion:3",
+      "q04",
+      "expansion",
+      3,
+      "Decomposed Prompting IRCoT",
+      "q04:first"
+    ],
+    [
+      "q05:expansion:2",
+      "q05",
+      "expansion",
+      2,
+      "ReAct Toolformer",
+      "q05:first"
+    ],
+    [
+      "q05:expansion:3",
+      "q05",
+      "expansion",
+      3,
+      "reasoning acting tool learning",
+      "q05:first"
+    ],
+    [
+      "q06:expansion:2",
+      "q06",
+      "expansion",
+      2,
+      "Self-RAG CRAG",
+      "q06:first"
+    ],
+    [
+      "q06:expansion:3",
+      "q06",
+      "expansion",
+      3,
+      "self reflective corrective retrieval",
+      "q06:first"
+    ],
+    [
+      "q07:expansion:2",
+      "q07",
+      "expansion",
+      2,
+      "LoRA QLoRA",
+      "q07:first"
+    ],
+    [
+      "q07:expansion:3",
+      "q07",
+      "expansion",
+      3,
+      "low rank quantized finetuning",
+      "q07:first"
+    ],
+    [
+      "q08:expansion:2",
+      "q08",
+      "expansion",
+      2,
+      "Transformer BERT",
+      "q08:first"
+    ],
+    [
+      "q08:expansion:3",
+      "q08",
+      "expansion",
+      3,
+      "attention bidirectional pretraining",
+      "q08:first"
+    ],
+    [
+      "q09:expansion:2",
+      "q09",
+      "expansion",
+      2,
+      "ColBERT SPLADE",
+      "q09:first"
+    ],
+    [
+      "q09:expansion:3",
+      "q09",
+      "expansion",
+      3,
+      "late interaction sparse expansion",
+      "q09:first"
+    ],
+    [
+      "q10:expansion:2",
+      "q10",
+      "expansion",
+      2,
+      "Sentence-BERT Contriever",
+      "q10:first"
+    ],
+    [
+      "q10:expansion:3",
+      "q10",
+      "expansion",
+      3,
+      "sentence embeddings contrastive retrieval",
+      "q10:first"
+    ],
+    [
+      "q11:expansion:2",
+      "q11",
+      "expansion",
+      2,
+      "BEIR MTEB",
+      "q11:first"
+    ],
+    [
+      "q11:expansion:3",
+      "q11",
+      "expansion",
+      3,
+      "retrieval embedding benchmarks",
+      "q11:first"
+    ],
+    [
+      "q12:expansion:2",
+      "q12",
+      "expansion",
+      2,
+      "ReSLLM federated search",
+      "q12:first"
+    ],
+    [
+      "q12:expansion:3",
+      "q12",
+      "expansion",
+      3,
+      "resource selection web language models",
+      "q12:first"
+    ]
+  ],
+  "phase": "expansion"
+}

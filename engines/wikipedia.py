@@ -17,6 +17,10 @@ from slopsearx.adapter import (
 )
 
 _BLOCKED_STATUS_CODES = frozenset({403})
+# Wikimedia's robot policy (https://w.wiki/4wJS) answers 403 to agents without
+# contact information, so the default names the project URL. Deployments can
+# set their own with the engine's ``user_agent`` config (ENGINE_WIKIPEDIA_USER_AGENT).
+DEFAULT_USER_AGENT = "SlopSearX/0.1.0 (https://github.com/magnus919/SlopSearX; meta search engine; agent-native)"
 _DIAGNOSTIC_LIMIT = 1000
 _MIME_TYPE_RE = re.compile(r"[a-z0-9][a-z0-9!#$&^_.+-]*/[a-z0-9][a-z0-9!#$&^_.+-]*")
 
@@ -99,7 +103,7 @@ class WikipediaAdapter(EngineAdapter):
         timeout_ms = cfg.get("timeout_ms", 3_000)
         max_results = cfg.get("max_results", 3)
 
-        headers = {"User-Agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"}
+        headers = {"User-Agent": cfg.get("user_agent") or DEFAULT_USER_AGENT}
         start_time = time.monotonic()
 
         try:

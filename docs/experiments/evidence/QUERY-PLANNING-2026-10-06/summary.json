@@ -1,0 +1,95 @@
+{
+  "adaptive": {
+    "baseline_availability": 1.0,
+    "baseline_complete_tasks": 0,
+    "baseline_logical_calls": 45,
+    "baseline_mean": 0.20833333333333334,
+    "candidate_availability": 0.9487179487179487,
+    "candidate_complete_tasks": 8,
+    "candidate_logical_calls": 39,
+    "candidate_mean": 0.8333333333333334,
+    "difference": 0.625,
+    "effect_interval_98_3333": [
+      0.4166666666666667,
+      0.8333333333333334
+    ],
+    "family_differences": {
+      "model_methods": 0.5,
+      "retrieval_infrastructure": 0.625,
+      "retrieval_planning": 0.75
+    },
+    "gates": {
+      "baseline_availability": true,
+      "candidate_availability": true,
+      "complete": true,
+      "control_nonregression": true,
+      "family_nonregression": true,
+      "policy_and_identity": true,
+      "useful_effect_bound": true
+    },
+    "outcome": "supported",
+    "scope": "exposed fixed-corpus reading-lead recovery only; no production or answer-quality validation"
+  },
+  "decomposition": {
+    "baseline_availability": 1.0,
+    "baseline_complete_tasks": 0,
+    "baseline_logical_calls": 45,
+    "baseline_mean": 0.20833333333333334,
+    "candidate_availability": 1.0,
+    "candidate_complete_tasks": 7,
+    "candidate_logical_calls": 39,
+    "candidate_mean": 0.75,
+    "difference": 0.5416666666666666,
+    "effect_interval_98_3333": [
+      0.2916666666666667,
+      0.7916666666666666
+    ],
+    "family_differences": {
+      "model_methods": 0.25,
+      "retrieval_infrastructure": 0.75,
+      "retrieval_planning": 0.625
+    },
+    "gates": {
+      "baseline_availability": true,
+      "candidate_availability": true,
+      "complete": true,
+      "control_nonregression": true,
+      "family_nonregression": true,
+      "policy_and_identity": true,
+      "useful_effect_bound": true
+    },
+    "outcome": "supported",
+    "scope": "exposed fixed-corpus reading-lead recovery only; no production or answer-quality validation"
+  },
+  "expansion": {
+    "baseline_availability": 1.0,
+    "baseline_complete_tasks": 0,
+    "baseline_logical_calls": 45,
+    "baseline_mean": 0.20833333333333334,
+    "candidate_availability": 0.7894736842105263,
+    "candidate_complete_tasks": 0,
+    "candidate_logical_calls": 19,
+    "candidate_mean": 0.20833333333333334,
+    "difference": 0.0,
+    "effect_interval_98_3333": [
+      0.0,
+      0.0
+    ],
+    "family_differences": {
+      "model_methods": 0.0,
+      "retrieval_infrastructure": 0.0,
+      "retrieval_planning": 0.0
+    },
+    "gates": {
+      "baseline_availability": true,
+      "candidate_availability": false,
+      "complete": false,
+      "control_nonregression": true,
+      "family_nonregression": true,
+      "policy_and_identity": true,
+      "useful_effect_bound": false
+    },
+    "outcome": "inconclusive",
+    "scope": "exposed fixed-corpus reading-lead recovery only; no production or answer-quality validation"
+  }
+}
