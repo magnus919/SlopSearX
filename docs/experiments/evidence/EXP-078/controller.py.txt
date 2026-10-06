@@ -52,6 +52,7 @@ def preflight(bundle_root):
         'qualified_source_revision': q['qualified_source_revision'],
         'protocol_sha256': admission.sha((HERE / 'protocol.json').read_bytes()),
         'cohorts_sha256': admission.sha((HERE / 'cohorts.json').read_bytes()),
+        'stage_manifest_sha256': q['stage_manifest_sha256'],
         'input_pins_sha256': admission.sha((HERE / 'reuse-input-pins.json').read_bytes()),
         'input_bundle_sha256': q['input_bundle_sha256'],
         'environment': q['environment'], 'dependencies': q['dependencies'],
