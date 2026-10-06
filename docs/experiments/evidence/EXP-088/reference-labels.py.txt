@@ -1,0 +1,465 @@
+"""EXP-088 deterministic private aliases for frozen evidence references.
+
+This codec only translates evidence identifiers. It never changes passages,
+card/source/packet/claim identities, semantic text, ordering outside reference
+catalog presentation, or any judgment. Decoded objects must still pass the
+unchanged EXP-077/087 validators.
+"""
+from __future__ import annotations
+
+import copy
+import hashlib
+import json
+import re
+
+SCHEMA = "exp088-reference-label-binding/1"
+TASKS = {f"d{i}" for i in range(1, 9)} | {f"c{i}" for i in range(1, 9)}
+MAX_GROUPS = 80
+MAX_REFS_PER_GROUP = 4096
+_SHA = re.compile(r"^[0-9a-f]{64}$")
+_SOURCE_ID = re.compile(r"^[ur]([0-9a-f]{64})$")
+_CARD_EID = re.compile(r"^ev_([0-9a-f]{64})$")
+
+
+class LabelError(ValueError):
+    """Malformed, out-of-scope, or unhydratable reference label."""
+
+
+def _canon(value) -> bytes:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True,
+                      separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+def _sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _copy(value):
+    try:
+        return json.loads(json.dumps(value, ensure_ascii=False, allow_nan=False))
+    except (TypeError, ValueError) as exc:
+        raise LabelError("input-is-not-finite-json") from exc
+
+
+def _task(task_id: str) -> str:
+    if type(task_id) is not str or task_id not in TASKS:
+        raise LabelError("task-out-of-scope")
+    return task_id
+
+
+def _seal(binding: dict) -> dict:
+    binding["binding_sha256"] = _sha(_canon({k: v for k, v in binding.items()
+                                             if k != "binding_sha256"}))
+    return binding
+
+
+def _verify_bundle(bundle: dict, *, domains: set[str] | None = None) -> tuple[dict, dict]:
+    if type(bundle) is not dict or set(bundle) != {"model_input", "label_binding"}:
+        raise LabelError("bundle-shape")
+    binding = bundle["label_binding"]
+    if type(binding) is not dict or binding.get("schema") != SCHEMA:
+        raise LabelError("binding-schema")
+    task_id = _task(binding.get("task_id"))
+    if domains is not None and binding.get("domain") not in domains:
+        raise LabelError("reference-domain-mismatch")
+    expected_seal = _sha(_canon({k: v for k, v in binding.items() if k != "binding_sha256"}))
+    if binding.get("binding_sha256") != expected_seal:
+        raise LabelError("binding-hash-mismatch")
+    if _sha(_canon(bundle["model_input"])) != binding.get("encoded_model_input_sha256"):
+        raise LabelError("encoded-model-input-hash-mismatch")
+    entries = binding.get("labels")
+    if type(entries) is not list:
+        raise LabelError("label-map-shape")
+    by_label, by_original = {}, {}
+    allowed_domains = {"card", "source_pool", "answer_arm"}
+    for row in entries:
+        if (type(row) is not dict or set(row) != {"label", "original_id", "group_id", "domain"}
+                or row["domain"] not in allowed_domains or not all(type(row[k]) is str and row[k]
+                                                                   for k in ("label", "original_id", "group_id"))):
+            raise LabelError("label-map-entry")
+        if row["label"] in by_label or (row["domain"], row["group_id"], row["original_id"]) in by_original:
+            raise LabelError("label-map-collision")
+        if not row["label"].startswith(f"L-{task_id.upper()}-"):
+            raise LabelError("label-task-scope")
+        by_label[row["label"]] = row
+        by_original[(row["domain"], row["group_id"], row["original_id"])] = row["label"]
+    return binding, by_label
+
+
+def _card_catalog_maps(task_id: str, built: dict) -> tuple[dict, dict, list]:
+    if type(built) is not dict or set(built) != {"assignment", "model_input", "reference_catalogs"}:
+        raise LabelError("card-built-shape")
+    assignment, model = built["assignment"], built["model_input"]
+    if (type(assignment) is not dict or type(model) is not dict
+            or assignment.get("task_id") != task_id or model.get("task_id") != task_id
+            or model.get("reference_catalogs") != built["reference_catalogs"]):
+        raise LabelError("card-built-task-or-catalog-binding")
+    cards = assignment.get("cards")
+    catalogs = built["reference_catalogs"]
+    if type(cards) is not list or type(catalogs) is not list or len(cards) != len(catalogs):
+        raise LabelError("card-catalog-coverage")
+    if len(cards) > MAX_GROUPS:
+        raise LabelError("card-group-limit")
+    card_ids = [c.get("card_sha256") if type(c) is dict else None for c in cards]
+    if (any(type(x) is not str or not _SHA.fullmatch(x) for x in card_ids)
+            or len(card_ids) != len(set(card_ids))):
+        raise LabelError("card-sha-membership")
+    by_card = {}
+    all_original = set()
+    for card, catalog in zip(cards, catalogs):
+        card_sha = card["card_sha256"]
+        if (type(catalog) is not dict or catalog.get("task_id") != task_id
+                or catalog.get("card_sha256") != card_sha or type(catalog.get("entries")) is not list):
+            raise LabelError("card-catalog-scope")
+        eids = []
+        for entry in catalog["entries"]:
+            if (type(entry) is not dict or entry.get("task_id") != task_id
+                    or entry.get("card_sha256") != card_sha or type(entry.get("evidence_id")) is not str
+                    or not _CARD_EID.fullmatch(entry["evidence_id"])):
+                raise LabelError("card-reference-entry")
+            eid = entry["evidence_id"]
+            if eid in all_original:
+                raise LabelError("duplicate-original-card-reference")
+            all_original.add(eid)
+            eids.append(eid)
+        if len(eids) > MAX_REFS_PER_GROUP:
+            raise LabelError("references-per-card-limit")
+        by_card[card_sha] = eids
+    return by_card, {c["card_sha256"]: c for c in catalogs}, cards
+
+
+def _catalog_source_map(catalog: dict, task_id: str, source_ids: list[str]) -> tuple[dict, list[str]]:
+    if type(catalog) is not dict or type(catalog.get("sources")) is not dict or type(catalog.get("passages")) is not dict:
+        raise LabelError("source-catalog-shape")
+    if type(source_ids) is not list or any(type(s) is not str for s in source_ids):
+        raise LabelError("source-universe-shape")
+    if len(source_ids) > MAX_GROUPS or len(source_ids) != len(set(source_ids)):
+        raise LabelError("source-group-limit-or-duplicate")
+    canonical = {}
+    for sid in source_ids:
+        match = _SOURCE_ID.fullmatch(sid)
+        if not match:
+            raise LabelError("source-id-not-canonical-sha")
+        canonical[sid] = match.group(1)
+    if not set(catalog["sources"]).issubset(set(source_ids)):
+        raise LabelError("catalog-source-outside-task-universe")
+    group_order = sorted(source_ids, key=lambda sid: (canonical[sid], sid))
+    by_source = {sid: [] for sid in source_ids}
+    for eid, passage in catalog["passages"].items():
+        if (type(eid) is not str or not _SHA.fullmatch(eid) or type(passage) is not dict
+                or type(passage.get("source_id")) is not str or passage["source_id"] not in by_source):
+            raise LabelError("source-passage-entry")
+        if eid in by_source[passage["source_id"]]:
+            raise LabelError("duplicate-original-source-reference")
+        by_source[passage["source_id"]].append(eid)
+    for sid, eids in by_source.items():
+        if len(eids) > MAX_REFS_PER_GROUP:
+            raise LabelError("references-per-source-limit")
+        eids.sort()
+    return by_source, group_order
+
+
+def _make_labels(task_id: str, domain: str, groups: dict, order: list[str]) -> tuple[dict, list[dict]]:
+    prefix = "C" if domain == "card" else ("S" if domain == "source_pool" else "A")
+    labels, rows = {}, []
+    for group_index, group_id in enumerate(order, 1):
+        refs = groups[group_id]
+        if len(refs) > MAX_REFS_PER_GROUP:
+            raise LabelError("references-per-group-limit")
+        for ref_index, original_id in enumerate(sorted(refs), 1):
+            label = f"L-{task_id.upper()}-{prefix}{group_index:03d}-R{ref_index:04d}"
+            if label in labels:
+                raise LabelError("generated-label-collision")
+            labels[original_id] = label
+            rows.append({"label": label, "original_id": original_id,
+                         "group_id": group_id, "domain": domain})
+    return labels, rows
+
+
+def _bundle(task_id: str, domain: str, original_model: dict, encoded_model: dict,
+            catalogs, labels_rows: list[dict], *, universe: list[str] | None = None) -> dict:
+    binding = {"schema": SCHEMA, "task_id": task_id, "domain": domain,
+               "original_model_input_sha256": _sha(_canon(original_model)),
+               "catalogs_sha256": _sha(_canon(catalogs)),
+               "source_universe_sha256": _sha(_canon(sorted(universe))) if universe is not None else None,
+               "encoded_model_input_sha256": _sha(_canon(encoded_model)),
+               "labels": labels_rows}
+    _seal(binding)
+    return {"model_input": encoded_model, "label_binding": binding}
+
+
+def encode_card_assignment(task_id: str, built: dict) -> dict:
+    """Alias card catalog IDs in one complete frozen EXP-087 card assignment."""
+    task_id = _task(task_id)
+    groups, catalog_by_card, _cards = _card_catalog_maps(task_id, built)
+    order = sorted(groups)
+    labels, rows = _make_labels(task_id, "card", groups, order)
+    model = _copy(built["model_input"])
+    sorted_catalogs = []
+    for card_sha in order:
+        cat = _copy(catalog_by_card[card_sha])
+        cat["entries"].sort(key=lambda row: row["evidence_id"])
+        for entry in cat["entries"]:
+            entry["evidence_id"] = labels[entry["evidence_id"]]
+        sorted_catalogs.append(cat)
+    model["reference_catalogs"] = sorted_catalogs
+    all_labels = [row["label"] for row in rows]
+    schema = model.get("output_schema")
+    if (type(schema) is not dict or type(schema.get("$defs")) is not dict
+            or type(schema["$defs"].get("anchor")) is not dict):
+        raise LabelError("card-output-schema-shape")
+    schema["$defs"]["anchor"]["enum"] = sorted(all_labels)
+    # Cards and every other model-facing field are unchanged.
+    return _bundle(task_id, "card", built["model_input"], model,
+                   built["reference_catalogs"], rows)
+
+
+def _encode_source_input(task_id: str, model_input: dict, catalog: dict, source_ids: list[str], domain: str):
+    task_id = _task(task_id)
+    groups, order = _catalog_source_map(catalog, task_id, source_ids)
+    labels, rows = _make_labels(task_id, domain, groups, order)
+    encoded = _copy(model_input)
+    task = encoded.get("task")
+    if type(task) is not dict or task.get("task_id") != task_id:
+        raise LabelError("source-model-task-scope")
+    sources = encoded.get("sources")
+    if type(sources) is not list:
+        raise LabelError("source-model-input-shape")
+    for source in sources:
+        sid = source.get("source_id") if type(source) is dict else None
+        if sid not in groups:
+            raise LabelError("source-input-outside-universe")
+        passages = source.get("passages")
+        if type(passages) is not list:
+            raise LabelError("source-passages-shape")
+        seen = set()
+        for passage in passages:
+            eid = passage.get("evidence_id") if type(passage) is dict else None
+            if eid not in groups[sid] or eid in seen:
+                raise LabelError("source-input-reference-scope")
+            seen.add(eid)
+            passage["evidence_id"] = labels[eid]
+        passages.sort(key=lambda row: row["evidence_id"])
+    return _bundle(task_id, domain, model_input, encoded, catalog, rows, universe=source_ids)
+
+
+def encode_source_input(task_id: str, model_input: dict, catalog: dict, source_ids: list[str]) -> dict:
+    """Alias passage IDs in one source-chunk model input using the whole task pool."""
+    return _encode_source_input(task_id, model_input, catalog, source_ids, "source_pool")
+
+
+def encode_answerer_input(task_id: str, model_input: dict, catalog: dict, source_ids: list[str]) -> dict:
+    """Alias only delivered-passage IDs for one answer-arm model input."""
+    task_id = _task(task_id)
+    groups, order = _catalog_source_map(catalog, task_id, source_ids)
+    labels, rows = _make_labels(task_id, "answer_arm", groups, order)
+    encoded = _copy(model_input)
+    task = encoded.get("task")
+    if type(task) is not dict or task.get("task_id") != task_id:
+        raise LabelError("answerer-task-scope")
+    sources = encoded.get("delivered_sources")
+    if type(sources) is not list:
+        raise LabelError("answerer-model-input-shape")
+    for source in sources:
+        sid = source.get("source_id") if type(source) is dict else None
+        passages = source.get("passages") if type(source) is dict else None
+        if sid not in groups or type(passages) is not list:
+            raise LabelError("answerer-source-scope")
+        seen = set()
+        for passage in passages:
+            eid = passage.get("evidence_id") if type(passage) is dict else None
+            if eid not in groups[sid] or eid in seen:
+                raise LabelError("answerer-reference-scope")
+            seen.add(eid)
+            passage["evidence_id"] = labels[eid]
+        passages.sort(key=lambda row: row["evidence_id"])
+    return _bundle(task_id, "answer_arm", model_input, encoded, catalog, rows, universe=source_ids)
+
+
+def _decode_ids(values, mapping, domain, *, group_id=None):
+    if type(values) is not list:
+        raise LabelError("reference-list-shape")
+    out = []
+    for value in values:
+        row = mapping.get(value) if type(value) is str else None
+        if row is None or row["domain"] != domain or (group_id is not None and row["group_id"] != group_id):
+            raise LabelError("unknown-or-cross-scope-label")
+        out.append(row["original_id"])
+    return out
+
+
+def _decode_catalog(bundle: dict, domain: str) -> tuple[dict, dict]:
+    binding, mapping = _verify_bundle(bundle, domains={domain})
+    return binding, mapping
+
+
+def decode_card_response(bundle: dict, response: dict) -> dict:
+    """Restore card response IDs exactly, retaining repeats and array order."""
+    binding, mapping = _decode_catalog(bundle, "card")
+    result = _copy(response)
+    records = result.get("records") if type(result) is dict else None
+    if type(records) is not list:
+        raise LabelError("card-response-shape")
+    for record in records:
+        if type(record) is not dict or type(record.get("card_sha256")) is not str:
+            raise LabelError("card-response-record")
+        group = record["card_sha256"]
+        anchors = record.get("anchors")
+        if type(anchors) is not list:
+            raise LabelError("card-anchor-list-shape")
+        record["anchors"] = _decode_ids(anchors, mapping, "card", group_id=group)
+        facet_anchors = record.get("facet_anchors")
+        if type(facet_anchors) is not dict:
+            raise LabelError("card-facet-anchor-shape")
+        for facet, values in facet_anchors.items():
+            facet_anchors[facet] = _decode_ids(values, mapping, "card", group_id=group)
+    return result
+
+
+def _decode_source_response(bundle: dict, response: dict, domain: str) -> dict:
+    binding, mapping = _decode_catalog(bundle, domain)
+    result = _copy(response)
+    if result.get("task_id") != binding["task_id"]:
+        raise LabelError("source-response-task-scope")
+    rows = result.get("source_assessments") if type(result) is dict else None
+    if type(rows) is not list:
+        raise LabelError("source-response-shape")
+    for source in rows:
+        if type(source) is not dict or type(source.get("source_id")) is not str:
+            raise LabelError("source-response-row")
+        sid, facets = source["source_id"], source.get("facets")
+        if type(facets) is not list:
+            raise LabelError("source-response-facets")
+        for facet in facets:
+            if type(facet) is not dict or "evidence_ids" not in facet:
+                raise LabelError("source-response-reference-field")
+            facet["evidence_ids"] = _decode_ids(facet["evidence_ids"], mapping, domain, group_id=sid)
+    return result
+
+
+def decode_source_response(bundle: dict, response: dict) -> dict:
+    return _decode_source_response(bundle, response, "source_pool")
+
+
+def decode_answerer_response(bundle: dict, response: dict) -> dict:
+    _binding, mapping = _decode_catalog(bundle, "answer_arm")
+    result = _copy(response)
+    facets = result.get("facets") if type(result) is dict else None
+    if type(facets) is not list:
+        raise LabelError("answerer-response-shape")
+    for facet in facets:
+        claims = facet.get("claims") if type(facet) is dict else None
+        if type(claims) is not list:
+            raise LabelError("answerer-claims-shape")
+        for claim in claims:
+            if type(claim) is not dict or "evidence_ids" not in claim:
+                raise LabelError("answerer-reference-field")
+            claim["evidence_ids"] = _decode_ids(claim["evidence_ids"], mapping, "answer_arm")
+    return result
+
+
+def _replace_catalog_keys(catalog: dict, labels: dict, groups: dict) -> dict:
+    result = _copy(catalog)
+    passages = result.get("passages")
+    if type(passages) is not dict:
+        raise LabelError("answer-catalog-shape")
+    rewritten = {}
+    for eid in sorted(passages):
+        passage = passages[eid]
+        sid = passage.get("source_id") if type(passage) is dict else None
+        if sid not in groups or eid not in groups[sid] or eid not in labels:
+            raise LabelError("answer-catalog-reference-scope")
+        rewritten[labels[eid]] = passage
+    result["passages"] = dict(sorted(rewritten.items()))
+    return result
+
+
+def encode_answer_assessor_input(task_id: str, packet_input: dict, source_catalog: dict,
+                                 answer_catalog: dict, source_ids: list[str]) -> dict:
+    """Alias source-pool and answer-arm references in an assessor input packet."""
+    task_id = _task(task_id)
+    source_groups, source_order = _catalog_source_map(source_catalog, task_id, source_ids)
+    answer_groups, answer_order = _catalog_source_map(answer_catalog, task_id, source_ids)
+    source_labels, source_rows = _make_labels(task_id, "source_pool", source_groups, source_order)
+    answer_labels, answer_rows = _make_labels(task_id, "answer_arm", answer_groups, answer_order)
+    encoded = _copy(packet_input)
+    if encoded.get("task_id") != task_id:
+        raise LabelError("answer-assessor-task-scope")
+    if "catalog" in encoded:
+        encoded["catalog"] = _replace_catalog_keys(encoded["catalog"], answer_labels, answer_groups)
+    for source in encoded.get("delivered_sources", []):
+        sid = source.get("source_id") if type(source) is dict else None
+        if sid not in answer_groups:
+            raise LabelError("answer-assessor-delivered-source-scope")
+        source["evidence_ids"] = _map_original_ids(source.get("evidence_ids"), answer_labels,
+                                                    answer_groups, domain="answer_arm", group_id=sid)
+    for facet in encoded.get("answer_facets", []):
+        claims = facet.get("claims") if type(facet) is dict else None
+        if type(claims) is not list:
+            raise LabelError("answer-assessor-answer-facets")
+        for claim in claims:
+            if type(claim) is not dict:
+                raise LabelError("answer-assessor-claim")
+            claim["evidence_ids"] = _map_original_ids(claim.get("evidence_ids"), answer_labels, answer_groups,
+                                                       domain="answer_arm")
+    own = encoded.get("own_source_assessment")
+    if type(own) is dict:
+        for task in own.get("tasks", []):
+            for arm in task.get("arms", []):
+                for facet in arm.get("facet_assessments", []):
+                    for disp in facet.get("evidence_dispositions", []):
+                        sid = disp.get("source_id")
+                        if "evidence_ids" in disp:
+                            disp["evidence_ids"] = _map_original_ids(disp["evidence_ids"], source_labels,
+                                source_groups, domain="source_pool", group_id=sid)
+                        for ref in disp.get("references", []):
+                            eid = ref.get("evidence_id") if type(ref) is dict else None
+                            ref["evidence_id"] = _map_one(eid, source_labels, source_groups,
+                                                           "source_pool", sid)
+    rows = source_rows + answer_rows
+    binding = {"schema": SCHEMA, "task_id": task_id, "domain": "answer_assessor",
+               "original_model_input_sha256": _sha(_canon(packet_input)),
+               "catalogs_sha256": _sha(_canon({"source_pool": source_catalog, "answer_arm": answer_catalog})),
+               "source_universe_sha256": _sha(_canon(sorted(source_ids))),
+               "encoded_model_input_sha256": _sha(_canon(encoded)), "labels": rows}
+    _seal(binding)
+    return {"model_input": encoded, "label_binding": binding}
+
+
+def _map_one(value, labels, groups, domain, group_id=None):
+    if type(value) is not str or value not in labels:
+        raise LabelError("unknown-original-reference")
+    for g, refs in groups.items():
+        if value in refs:
+            if group_id is not None and group_id != g:
+                raise LabelError("original-reference-cross-scope")
+            return labels[value]
+    raise LabelError("original-reference-outside-catalog")
+
+
+def _map_original_ids(values, labels, groups, *, domain, group_id=None):
+    if type(values) is not list:
+        raise LabelError("original-reference-list-shape")
+    return [_map_one(value, labels, groups, domain, group_id) for value in values]
+
+
+def decode_answer_assessor_response(bundle: dict, response: dict) -> dict:
+    """Restore answer-arm and pool references on the unchanged answer packet."""
+    binding, mapping = _decode_catalog(bundle, "answer_assessor")
+    result = _copy(response)
+    tasks = result.get("tasks") if type(result) is dict else None
+    if type(tasks) is not list:
+        raise LabelError("answer-assessor-response-shape")
+    if [row.get("task_id") for row in tasks if type(row) is dict] != [binding["task_id"]]:
+        raise LabelError("answer-assessor-response-task-scope")
+    for task in tasks:
+        for arm in task.get("arms", []):
+            for facet in arm.get("facet_assessments", []):
+                for claim in facet.get("claims", []):
+                    if "evidence_ids" in claim:
+                        claim["evidence_ids"] = _decode_ids(claim["evidence_ids"], mapping, "answer_arm")
+                for disp in facet.get("evidence_dispositions", []):
+                    if "evidence_ids" in disp:
+                        disp["evidence_ids"] = _decode_ids(disp["evidence_ids"], mapping,
+                                                            "source_pool", group_id=disp.get("source_id"))
+    return result
