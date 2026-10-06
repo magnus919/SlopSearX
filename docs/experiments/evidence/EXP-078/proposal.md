@@ -1,6 +1,6 @@
 # EXP-078 — proposed development-only acquisition repair
 
-**State: proposal only. No invocation is registered or authorized.** This document asks for an explicit decision on a narrowly scoped amendment; it does not open an EXP-078 stage or grant search, model, credential, or provider access.
+**State: acquisition amendment approved by the maintainer on 2026-10-06.** Approval covers the two exceptions below and execution of the bounded study after separate registration, source qualification and one-shot admission checks. Those checks have not yet passed; no live stage has started.
 
 EXP-077 remains terminal and inconclusive. Its development acquisition retained eight ungraded research pools (45–60 cards each), four target-acquired navigation pools, and all 37 HTTP receipts. Wikipedia returned blocked outcomes across the eight research tasks. The original Sigstore/cosign navigation search retained 20 results but missed its frozen target. No grading, selector, capture, answer, or comparison calls followed. The exact retained bundle is represented by [hash-only pins](reuse-input-pins.json); raw requests, responses, URLs, and private captures are not copied here. The original receipts and readout remain unchanged.
 
