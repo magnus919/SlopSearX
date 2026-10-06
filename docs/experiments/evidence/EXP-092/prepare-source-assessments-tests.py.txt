@@ -1,0 +1,130 @@
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import tempfile
+import types
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp092_prepare_source_assessments", str(HERE / "prepare-source-assessments.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+P = importlib.util.module_from_spec(spec)
+loader.exec_module(P)
+VIEW = importlib.machinery.SourceFileLoader("exp092_prepare_test_view_verifier",
+    str(HERE / "input-view-verifier.py.txt")).load_module()
+PACKET_VIEWER = importlib.machinery.SourceFileLoader("exp092_prepare_test_packet_viewer",
+    str(HERE / "packet-viewer.py.txt")).load_module()
+LABEL_CODEC = importlib.machinery.SourceFileLoader("exp092_prepare_test_label_codec",
+    str(HERE.parent / "EXP-088" / "reference-labels.py.txt")).load_module()
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def fixture_packet(task, seed):
+    source_id = "u" + sha(seed.encode())
+    evidence_id = sha((seed + " passage").encode())
+    model = {"task": {"task_id": task}, "sources": [{"source_id": source_id,
+        "passages": [{"evidence_id": evidence_id}]}]}
+    catalog = {"sources": {source_id: {}},
+               "passages": {evidence_id: {"source_id": source_id}}}
+    bundle = LABEL_CODEC.encode_source_input(task, model, catalog, [source_id])
+    packet = {"prompt": "fixture prompt", "source_model_input": bundle["model_input"]}
+    input_raw = P._canonical(packet)
+    label_raw = P._canonical(bundle)
+    return input_raw, label_raw, source_id, evidence_id, bundle["model_input"]["sources"][0]["passages"][0]["evidence_id"]
+
+
+class SourcePreparationTests(unittest.TestCase):
+    def test_dispatch_overlay_contains_only_48_source_slots(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original_load = importlib.machinery.SourceFileLoader.load_module
+            class FakeLoader:
+                def __init__(self, name, path):
+                    self.path = path
+                def load_module(self):
+                    if Path(self.path).name == "input-view-verifier.py.txt":
+                        return VIEW
+                    if Path(self.path).name == "packet-viewer.py.txt":
+                        return PACKET_VIEWER
+                    if Path(self.path).name == "reference-labels.py.txt":
+                        return LABEL_CODEC
+                    def prepare(*, output_root, acquisition, cases, guard, source_snapshot_root):
+                        output_root.mkdir(parents=True)
+                        jobs = []
+                        for task in range(1, 9):
+                            for assessor in ("R1", "R2"):
+                                for chunk in range(3):
+                                    logical = f"development-d{task}-source-{assessor}-{chunk+1}"
+                                    raw, label, _sid, _eid, _alias = fixture_packet(f"d{task}", logical)
+                                    (output_root / f"{logical}.json").write_bytes(raw)
+                                    (output_root / f"{logical}.labels.json").write_bytes(label)
+                                    jobs.append({"logical_submission": logical, "role": "source",
+                                        "model_call_required": True, "task_id": f"d{task}",
+                                        "assessor_id": assessor, "chunk_index": chunk,
+                                        "helper_id": f"helper-{chunk}", "input_path": f"{logical}.json",
+                                        "input_bytes": len(raw), "input_sha256": sha(raw),
+                                        "label_binding_path": f"{logical}.labels.json",
+                                        "label_binding_sha256": sha(label)})
+                        jobs.append({"logical_submission":"card-d1-A", "role":"card", "model_call_required":True})
+                        (output_root / "manifest.json").write_text(json.dumps({"jobs":jobs}))
+                        return {"manifest_sha256":"a"*64}
+                    return types.SimpleNamespace(prepare=prepare)
+            importlib.machinery.SourceFileLoader.load_module = FakeLoader.load_module
+            try:
+                proof = {"schema": "exp092-carried-card-reference-proof/1", "card_job_count": 16,
+                         "record_count": 884, "card_assessments_carried_unchanged": True,
+                         "exp084_grader_outputs_used": False, "records": []}
+                result = P.prepare_source_assessments(
+                    output_root=root / "output", acquisition={}, cases=[],
+                    guard=lambda: None, source_snapshot_root=root / "snapshot",
+                    carried_card_references=proof, stage_clock_sha256="3"*64,
+                    protocol_sha256="4"*64, qualified_source_revision="a"*40)
+            finally:
+                importlib.machinery.SourceFileLoader.load_module = original_load
+            self.assertEqual(result["active_source_slot_count"], 48)
+            manifest = json.loads((root / "output" / "source-slot-manifest.json").read_text())
+            self.assertEqual(len(manifest["active_source_slots"]), 48)
+            self.assertTrue(all(row["role"] == "source" for row in manifest["active_source_slots"]))
+            self.assertEqual(manifest["card_reference_dispatch_slots"], 0)
+            self.assertEqual(manifest["model_calls_performed"], 0)
+            self.assertEqual(manifest["citation_alias_integrity"]["validated_source_slot_count"], 48)
+            self.assertEqual(manifest["citation_alias_integrity"]["validated_passage_reference_count"], 48)
+            self.assertTrue(manifest["citation_alias_integrity"]["all_passage_references_are_bound_aliases"])
+            self.assertFalse(any("card-d1" in row["logical_submission"] for row in manifest["active_source_slots"]))
+
+    def test_source_aliases_are_exact_bound_passage_ids_not_source_ids(self):
+        raw, labels, source_id, original_eid, alias = fixture_packet("d1", "fixture")
+        proof = P.verify_source_alias_binding(raw, labels, "d1")
+        self.assertEqual(proof["passage_reference_count"], 1)
+        self.assertTrue(proof["encoded_model_input_matches_binding"])
+        self.assertTrue(proof["all_passage_references_are_bound_aliases"])
+        self.assertRegex(alias, r"^L-D1-S[0-9]{3}-R[0-9a-f]{16}$")
+        self.assertNotEqual(alias, original_eid)
+        packet = json.loads(raw)
+        self.assertEqual(packet["source_model_input"]["sources"][0]["source_id"], source_id)
+        self.assertEqual(packet["source_model_input"]["sources"][0]["passages"][0]["evidence_id"], alias)
+        changed = json.loads(raw)
+        changed["source_model_input"]["sources"][0]["passages"][0]["evidence_id"] = original_eid
+        with self.assertRaises(P.PrepareError):
+            P.verify_source_alias_binding(P._canonical(changed), labels, "d1")
+        changed = json.loads(raw)
+        changed["source_model_input"]["sources"][0]["source_id"] = "u" + "0" * 64
+        with self.assertRaisesRegex(P.PrepareError, "source-alias-input-binding-mismatch"):
+            P.verify_source_alias_binding(P._canonical(changed), labels, "d1")
+
+    def test_missing_carried_checkpoint_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(P.PrepareError, "carried-card-proof-required"):
+                P.prepare_source_assessments(output_root=Path(tmp) / "new", acquisition={}, cases=[],
+                    guard=lambda: None, source_snapshot_root=Path(tmp) / "snapshot",
+                    carried_card_references={}, stage_clock_sha256="3"*64,
+                    protocol_sha256="4"*64, qualified_source_revision="a"*40)
+
+
+if __name__ == "__main__":
+    unittest.main()

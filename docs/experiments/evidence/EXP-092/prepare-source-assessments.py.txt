@@ -1,0 +1,193 @@
+"""EXP-092 source-only dispatch manifest over the pinned EXP-088 preparer.
+
+The EXP-088 helper is used only for deterministic packet construction. Its
+card packets are local preparation artifacts and are never registered,
+receivable, or dispatchable in EXP-092. The dispatch manifest exposes only
+its 48 active source slots.
+"""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import json
+import os
+import re
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+EXP088 = HERE.parent / "EXP-088"
+_LABEL_CODEC = EXP088 / "reference-labels.py.txt"
+_LABEL_CODEC_SHA256 = "f88def629293c87abd890cc42a748337c5225408e48be079832363d0b07ccf5c"
+
+
+class PrepareError(ValueError):
+    pass
+
+
+def _sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _canonical(value) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+
+def _load_label_codec():
+    if (_LABEL_CODEC.is_symlink() or not _LABEL_CODEC.is_file()
+            or _sha(_LABEL_CODEC.read_bytes()) != _LABEL_CODEC_SHA256):
+        raise PrepareError("frozen-label-codec-pin")
+    return importlib.machinery.SourceFileLoader("exp092_source_alias_codec", str(_LABEL_CODEC)).load_module()
+
+
+def verify_source_alias_binding(input_raw: bytes, label_raw: bytes, task_id: str) -> dict:
+    """Prove the packet's supplied passage IDs are its bound short aliases.
+
+    This validates only representation, task scope, and hashes; it does not
+    read or assess any model response or semantic judgment.
+    """
+    try:
+        packet = json.loads(input_raw)
+        bundle = json.loads(label_raw)
+        codec = _load_label_codec()
+        binding, by_label = codec._verify_bundle(bundle, domains={"source_pool"})
+    except Exception as exc:
+        raise PrepareError("source-alias-binding-invalid") from exc
+    model = packet.get("source_model_input") if type(packet) is dict else None
+    if (type(model) is not dict or model != bundle.get("model_input")
+            or binding.get("task_id") != task_id):
+        raise PrepareError("source-alias-input-binding-mismatch")
+    sources = model.get("sources")
+    if type(sources) is not list:
+        raise PrepareError("source-alias-source-list")
+    pattern = re.compile(r"^L-" + re.escape(task_id.upper()) + r"-S[0-9]{3}-R[0-9a-f]{16}$")
+    count = 0
+    for source in sources:
+        if type(source) is not dict or type(source.get("source_id")) is not str:
+            raise PrepareError("source-alias-source-identity")
+        source_id = source["source_id"]
+        passages = source.get("passages")
+        if type(passages) is not list:
+            raise PrepareError("source-alias-passage-list")
+        for passage in passages:
+            alias = passage.get("evidence_id") if type(passage) is dict else None
+            row = by_label.get(alias) if type(alias) is str else None
+            if (row is None or not pattern.fullmatch(alias) or row.get("domain") != "source"
+                    or row.get("group_id") != source_id or row.get("original_id") == alias):
+                raise PrepareError("source-citation-alias-unbound")
+            count += 1
+    return {"schema": "exp092-source-citation-alias-proof/1", "task_id": task_id,
+            "input_sha256": _sha(input_raw), "label_binding_sha256": _sha(label_raw),
+            "passage_reference_count": count, "encoded_model_input_matches_binding": True,
+            "all_passage_references_are_bound_aliases": True}
+
+def _write_once(path: Path, raw: bytes, guard) -> None:
+    guard()
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+    dfd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(dfd)
+    finally:
+        os.close(dfd)
+
+
+def prepare_source_assessments(*, output_root: Path, acquisition: dict, cases: list,
+                               guard, source_snapshot_root: Path,
+                               carried_card_references: dict,
+                               stage_clock_sha256: str, protocol_sha256: str,
+                               qualified_source_revision: str) -> dict:
+    out = Path(output_root)
+    if out.exists() or out.is_symlink():
+        raise PrepareError("source-preparation-output-must-be-new")
+    if (type(carried_card_references) is not dict
+            or carried_card_references.get("schema") != "exp092-carried-card-reference-proof/1"
+            or carried_card_references.get("card_job_count") != 16
+            or carried_card_references.get("record_count") != 884
+            or carried_card_references.get("card_assessments_carried_unchanged") is not True
+            or carried_card_references.get("exp084_grader_outputs_used") is not False):
+        raise PrepareError("carried-card-proof-required")
+    helper_path = EXP088 / "prepare-assessments.py.txt"
+    if helper_path.is_symlink() or not helper_path.is_file():
+        raise PrepareError("frozen-source-preparer-unavailable")
+    helper = importlib.machinery.SourceFileLoader("exp092_frozen_088_preparer", str(helper_path)).load_module()
+    view_path = HERE / "input-view-verifier.py.txt"
+    if view_path.is_symlink() or not view_path.is_file():
+        raise PrepareError("packet-view-verifier-unavailable")
+    view_verifier = importlib.machinery.SourceFileLoader(
+        "exp092_input_view_verifier_prepare", str(view_path)).load_module()
+    internal = out / "deterministic-preparation"
+    result = helper.prepare(output_root=internal, acquisition=acquisition, cases=cases,
+                            guard=guard, source_snapshot_root=Path(source_snapshot_root))
+    manifest_path = internal / "manifest.json"
+    raw = manifest_path.read_bytes()
+    manifest = json.loads(raw)
+    jobs = manifest.get("jobs")
+    if type(jobs) is not list:
+        raise PrepareError("frozen-source-manifest")
+    active = [row for row in jobs if row.get("role") == "source" and row.get("model_call_required") is True]
+    if len(active) != 48:
+        raise PrepareError("source-active-slot-count")
+    slots = []
+    input_refs = []
+    alias_reference_total = 0
+    for job in active:
+        input_path = internal / job["input_path"]
+        label_path = internal / job["label_binding_path"]
+        for path in (input_path, label_path):
+            if path.is_symlink() or not path.is_file():
+                raise PrepareError("source-input-file-missing")
+        input_raw = input_path.read_bytes()
+        label_raw = label_path.read_bytes()
+        if (len(input_raw) != job.get("input_bytes") or _sha(input_raw) != job.get("input_sha256")
+                or len(input_raw) > 384_000
+                or _sha(label_raw) != job.get("label_binding_sha256")):
+            raise PrepareError("source-input-hash-or-size")
+        alias_proof = verify_source_alias_binding(input_raw, label_raw, job["task_id"])
+        alias_reference_total += alias_proof["passage_reference_count"]
+        input_ref = str(input_path.resolve())
+        try:
+            view_plan = view_verifier.input_view_plan(
+                input_raw, expected_sha256=_sha(input_raw), input_path=input_ref,
+                viewer_path=str((HERE / "packet-viewer.py.txt").resolve()),
+                slot_id=job["logical_submission"], source_manifest_sha256=_sha(raw))
+        except ValueError as exc:
+            raise PrepareError("source-input-view-plan-invalid") from exc
+        slots.append({"logical_submission": job["logical_submission"], "role": "source",
+                      "task_id": job["task_id"], "assessor_id": job["assessor_id"],
+                      "chunk_index": job["chunk_index"], "helper_id": job["helper_id"],
+                      "input_sha256": _sha(input_raw), "input_bytes": len(input_raw),
+                      "label_binding_sha256": _sha(label_raw),
+                      "input_view_plan": view_plan,
+                      "stage_clock_sha256": stage_clock_sha256,
+                      "protocol_sha256": protocol_sha256,
+                      "qualified_source_revision": qualified_source_revision})
+        input_refs.append({"logical_submission": job["logical_submission"],
+                           "input_path": input_ref,
+                           "label_binding_path": (Path("deterministic-preparation") / job["label_binding_path"]).as_posix()})
+    slots.sort(key=lambda row: row["logical_submission"])
+    slot_manifest = {"schema": "exp092-source-slot-manifest/1", "study_id": "EXP-092",
+                     "stage_clock_sha256": stage_clock_sha256,
+                     "protocol_sha256": protocol_sha256,
+                     "qualified_source_revision": qualified_source_revision,
+                     "preparation_manifest_sha256": _sha(raw),
+                     "carried_card_proof": carried_card_references,
+                     "active_source_slot_count": len(slots), "active_source_slots": slots,
+                     "citation_alias_integrity": {"schema": "exp092-source-citation-alias-summary/1",
+                         "validated_source_slot_count": len(slots),
+                         "validated_passage_reference_count": alias_reference_total,
+                         "all_passage_references_are_bound_aliases": True},
+                     "source_input_refs": sorted(input_refs, key=lambda row: row["logical_submission"]),
+                     "card_reference_dispatch_slots": 0, "model_calls_performed": 0}
+    slot_raw = _canonical(slot_manifest)
+    _write_once(out / "source-slot-manifest.json", slot_raw, guard)
+    return {"schema": "exp092-source-preparation/1", "status": "prepared",
+            "active_source_slot_count": len(slots), "source_slot_manifest": "source-slot-manifest.json",
+            "source_slot_manifest_sha256": _sha(slot_raw),
+            "preparation_manifest_sha256": _sha(raw),
+            "carried_card_reference_count": 16,
+            "card_reference_dispatch_slots": 0, "model_calls_performed": 0}

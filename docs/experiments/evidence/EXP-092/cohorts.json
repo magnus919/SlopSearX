@@ -1,0 +1,462 @@
+{
+  "acquisition": {
+    "carried_card_assignments": 16,
+    "carry_forward_card_assignments": 16,
+    "carry_forward_card_records": 884,
+    "confirmation_not_run": true,
+    "confirmation_scope": "Future confirmation requires entirely new tasks and pools plus fresh independent references; none are allocated or run in this stage.",
+    "confirmation_task_ids_unchanged": [],
+    "failed_source_submission_reused": false,
+    "fresh_answer_assessments": 32,
+    "fresh_source_assessments": 48,
+    "new_searches": 0,
+    "reused_effective_task_ids": [
+      "d1",
+      "d2",
+      "d3",
+      "d4",
+      "d5",
+      "d6",
+      "d7",
+      "d8",
+      "d9",
+      "d10",
+      "d11",
+      "d12",
+      "d13"
+    ],
+    "source": "Exact same 513-file frozen input bundle and unchanged carried card references; no source search/fetch and no EXP-089 outputs."
+  },
+  "brave_calls": 0,
+  "candidate_contract": "Exact EXP-076 canonical complete-pool dual-score transaction and equal-weight fusion; no tuning.",
+  "carried_card_assessments": 16,
+  "category": "reference",
+  "cohorts": {
+    "confirmation": [
+      {
+        "critical_checks": [
+          {
+            "check": "Identify corpus-admission and poisoning threat assumptions.",
+            "id": "c1_f1"
+          },
+          {
+            "check": "Describe documented provenance/admission or detection controls and their limits.",
+            "id": "c1_f2"
+          },
+          {
+            "check": "Distinguish poisoning evaluation from retrieved instruction-injection tests.",
+            "id": "c1_f3"
+          }
+        ],
+        "id": "c1",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Screen a research corpus for poisoning before ingestion. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "data poisoning"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "Identify failure accounting and open/half-open/closed transitions.",
+            "id": "c2_f1"
+          },
+          {
+            "check": "Bound timeout, cancellation and retry behavior without hiding failed attempts.",
+            "id": "c2_f2"
+          },
+          {
+            "check": "Explain recovery checks and avoid inferring service correctness from availability.",
+            "id": "c2_f3"
+          }
+        ],
+        "id": "c2",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Bound a research tool outage while preserving useful failure evidence. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "circuit breaker"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "Explain draft/target verification and distribution-preservation assumptions.",
+            "id": "c3_f1"
+          },
+          {
+            "check": "Compare latency/resource benefits under documented workload/hardware conditions.",
+            "id": "c3_f2"
+          },
+          {
+            "check": "Identify unsupported equivalence or speedup claims and appropriate checks.",
+            "id": "c3_f3"
+          }
+        ],
+        "id": "c3",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Evaluate speculative decoding for an inference service. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "speculative decoding"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "Separate an artifact signature from provenance/attestation assertions.",
+            "id": "c4_f1"
+          },
+          {
+            "check": "Explain key or identity trust and verifier policy boundaries.",
+            "id": "c4_f2"
+          },
+          {
+            "check": "Identify reproducible verification records and what a valid signature does not prove.",
+            "id": "c4_f3"
+          }
+        ],
+        "id": "c4",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Verify software-factory release artifacts against declared identity. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "artifact signing"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "State the protected unit, adjacency/threat assumptions and privacy budget.",
+            "id": "c5_f1"
+          },
+          {
+            "check": "Account for repeated releases/composition rather than claiming privacy from aggregation alone.",
+            "id": "c5_f2"
+          },
+          {
+            "check": "Describe documented utility tradeoffs and limits without asserting legal compliance.",
+            "id": "c5_f3"
+          }
+        ],
+        "id": "c5",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Evaluate privacy-preserving aggregate agent telemetry. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "differential privacy"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "Describe controlled dependencies/environment/timestamp inputs and comparison method.",
+            "id": "c6_f1"
+          },
+          {
+            "check": "Distinguish reproducibility from artifact signing and supply-chain safety.",
+            "id": "c6_f2"
+          },
+          {
+            "check": "State observed verification requirements and what mismatches/unknowns mean.",
+            "id": "c6_f3"
+          }
+        ],
+        "id": "c6",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Check whether independent builds reproduce a release artifact. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "reproducible builds"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "Distinguish fetch freshness, source versions and semantic correctness.",
+            "id": "c7_f1"
+          },
+          {
+            "check": "Explain invalidation/versioning behavior and retained immutable evidence.",
+            "id": "c7_f2"
+          },
+          {
+            "check": "Describe observable change/staleness checks and unavailable-source limitations.",
+            "id": "c7_f3"
+          }
+        ],
+        "id": "c7",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Keep research results fresh while preserving versioned citations. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "cache invalidation"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "Explain data/gradient/aggregation boundaries and participant assumptions.",
+            "id": "c8_f1"
+          },
+          {
+            "check": "Distinguish keeping raw data local from demonstrated privacy against inference attacks.",
+            "id": "c8_f2"
+          },
+          {
+            "check": "Describe documented non-IID/utility/security evaluation limits.",
+            "id": "c8_f3"
+          }
+        ],
+        "id": "c8",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Assess learning across private codebases without centralizing raw code. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "federated learning"
+      },
+      {
+        "id": "c9",
+        "kind": "navigation",
+        "purpose": "Find the official source repository for PydanticAI.",
+        "query": "PydanticAI",
+        "target_url": "https://github.com/pydantic/pydantic-ai"
+      },
+      {
+        "id": "c10",
+        "kind": "navigation",
+        "purpose": "Find the official source repository for LiteLLM.",
+        "query": "LiteLLM",
+        "target_url": "https://github.com/BerriAI/litellm"
+      },
+      {
+        "id": "c11",
+        "kind": "navigation",
+        "purpose": "Find the official source repository for Trivy.",
+        "query": "Trivy",
+        "target_url": "https://github.com/aquasecurity/trivy"
+      },
+      {
+        "id": "c12",
+        "kind": "navigation",
+        "purpose": "Find the official source repository for Syft.",
+        "query": "Syft",
+        "target_url": "https://github.com/anchore/syft"
+      },
+      {
+        "id": "c13",
+        "kind": "navigation",
+        "purpose": "Find the official source repository for vLLM.",
+        "query": "vLLM",
+        "target_url": "https://github.com/vllm-project/vllm"
+      }
+    ],
+    "development": [
+      {
+        "critical_checks": [
+          {
+            "check": "Identify the untrusted-input entry point and applicable attacker capability.",
+            "id": "d1_f1"
+          },
+          {
+            "check": "Describe a documented instruction/tool permission boundary and its limits.",
+            "id": "d1_f2"
+          },
+          {
+            "check": "Give evidence-grounded evaluation checks without claiming complete prevention.",
+            "id": "d1_f3"
+          }
+        ],
+        "id": "d1",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Separate retrieved-content instructions from trusted agent/tool authorization. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "prompt injection"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "Separate persisted workflow state from completion of external actions.",
+            "id": "d2_f1"
+          },
+          {
+            "check": "Explain the documented idempotency/replay boundary and failure window.",
+            "id": "d2_f2"
+          },
+          {
+            "check": "Identify observable restart/recovery checks and unsupported exactly-once assurances.",
+            "id": "d2_f3"
+          }
+        ],
+        "id": "d2",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Resume an interrupted tool workflow without duplicating external side effects. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "durable execution"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "Distinguish configured aliases from observed provider/model identity and capabilities.",
+            "id": "d3_f1"
+          },
+          {
+            "check": "Apply context, tool/structured-output and latency constraints to routing.",
+            "id": "d3_f2"
+          },
+          {
+            "check": "Explain bounded failure/fallback behavior and limits of success metadata.",
+            "id": "d3_f3"
+          }
+        ],
+        "id": "d3",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Route research calls among models using observable capabilities and constraints. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "model routing"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "Bind run/tool spans and causal parent relationships to recorded observations.",
+            "id": "d4_f1"
+          },
+          {
+            "check": "Distinguish timing/token accounting from evidence that the task completed.",
+            "id": "d4_f2"
+          },
+          {
+            "check": "Describe selective logging/redaction and retained diagnostic limitations.",
+            "id": "d4_f3"
+          }
+        ],
+        "id": "d4",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Trace a factory agent run across tool calls without leaking sensitive content. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "distributed tracing"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "Identify where authorization and tenant identity constrain reads and writes.",
+            "id": "d5_f1"
+          },
+          {
+            "check": "Separate namespace partitioning from enforcement against cross-tenant access.",
+            "id": "d5_f2"
+          },
+          {
+            "check": "Describe reproducible isolation checks and remaining leakage assumptions.",
+            "id": "d5_f3"
+          }
+        ],
+        "id": "d5",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Prevent cross-tenant research cache/index disclosure. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "tenant isolation"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "Identify namespace/registry-resolution conditions that enable confusion.",
+            "id": "d6_f1"
+          },
+          {
+            "check": "Use documented registry, pinning and artifact identity checks.",
+            "id": "d6_f2"
+          },
+          {
+            "check": "Distinguish package identity controls from proof that a dependency is safe.",
+            "id": "d6_f3"
+          }
+        ],
+        "id": "d6",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Prevent a coding agent from resolving the wrong public package. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "dependency confusion"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "Describe process/filesystem/network restrictions and their trust assumptions.",
+            "id": "d7_f1"
+          },
+          {
+            "check": "Distinguish container packaging from a demonstrated security boundary.",
+            "id": "d7_f2"
+          },
+          {
+            "check": "State observable isolation checks and unsupported claims of escape prevention.",
+            "id": "d7_f3"
+          }
+        ],
+        "id": "d7",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Bound untrusted generated-code execution in a software factory. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "sandbox escape"
+      },
+      {
+        "critical_checks": [
+          {
+            "check": "Separate energy, instantaneous power and latency/throughput measurements.",
+            "id": "d8_f1"
+          },
+          {
+            "check": "Bind measurement scope to hardware/workload/idle-baseline assumptions.",
+            "id": "d8_f2"
+          },
+          {
+            "check": "Explain a documented measurement method and comparison limitations.",
+            "id": "d8_f3"
+          }
+        ],
+        "id": "d8",
+        "kind": "research",
+        "purpose": "Research documented approaches to: Measure inference energy for research workloads before allocating capacity. Seek public technical documentation, implementations and research leads; do not infer unseen findings. This requests a source-grounded research explanation, not execution or certification of a deployed system.",
+        "query": "inference energy"
+      },
+      {
+        "id": "d9",
+        "kind": "navigation",
+        "purpose": "Find the official source repository for langgraph.",
+        "query": "langgraph",
+        "target_url": "https://github.com/langchain-ai/langgraph"
+      },
+      {
+        "id": "d10",
+        "kind": "navigation",
+        "purpose": "Find the official source repository for Temporal SDK Python.",
+        "query": "Temporal SDK Python",
+        "target_url": "https://github.com/temporalio/sdk-python"
+      },
+      {
+        "id": "d11",
+        "kind": "navigation",
+        "purpose": "Find the official source repository for OpenTelemetry Python.",
+        "query": "OpenTelemetry Python",
+        "target_url": "https://github.com/open-telemetry/opentelemetry-python"
+      },
+      {
+        "id": "d12",
+        "kind": "navigation",
+        "purpose": "Find the official source repository for Sigstore cosign.",
+        "query": "Sigstore cosign",
+        "target_url": "https://github.com/sigstore/cosign"
+      },
+      {
+        "id": "d13",
+        "kind": "navigation",
+        "purpose": "Find the official source repository for Open Policy Agent.",
+        "query": "Open Policy Agent",
+        "target_url": "https://github.com/open-policy-agent/opa"
+      }
+    ]
+  },
+  "engines": {
+    "confirmation": {
+      "cohort_changed": false,
+      "research": [
+        "arxiv",
+        "openalex",
+        "github"
+      ],
+      "stage_executed": false,
+      "wikipedia": "excluded prospectively as unavailable"
+    },
+    "historical_unavailable_research": "Preserve all original engine outcomes, including unavailable Wikipedia states, as captured; no calls in this stage.",
+    "navigation": [
+      "github"
+    ],
+    "research": [
+      "arxiv",
+      "openalex",
+      "github"
+    ]
+  },
+  "fresh_answer_assessments": 32,
+  "fresh_source_assessments": 48,
+  "github_mode": "No acquisition call; exact saved effective pools are immutable inputs.",
+  "max_physical_search_http_requests_per_stage": 0,
+  "per_engine_result_cap": 20,
+  "provider_calls": 0,
+  "query_pacing_seconds": 7,
+  "request_count_basis": "No search/source calls; one health check, 80 fresh Luna grading submissions, up to 18 free answer calls, and 44 Jev calls; 17 historical Luna submissions are retained in cumulative budget accounting.",
+  "schema": "exp092-cohorts/1",
+  "status": "frozen_development_final_json_carrier",
+  "study_id": "EXP-092"
+}
