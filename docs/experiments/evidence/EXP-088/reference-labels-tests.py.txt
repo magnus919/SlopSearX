@@ -26,7 +26,7 @@ class ReferenceLabelsTests(unittest.TestCase):
     def setUp(self):
         self.task = "d1"
         self.cards = [
-            {"title": "second title", "url": "https://example.test/b", "snippet": "beta Ω"},
+            {"title": "second title", "url": "https://example.test/b", "snippet": "beta Ω" * 90},
             {"title": "first title", "url": "https://example.test/a", "snippet": "alpha Ω"},
         ]
         self.facets = ["d1_f1"]
@@ -43,8 +43,18 @@ class ReferenceLabelsTests(unittest.TestCase):
         original = self.built["model_input"]
         self.assertEqual(model["cards"], original["cards"])
         self.assertEqual(model["facets"], original["facets"])
+        original_enum = original["output_schema"]["$defs"]["anchor"]["enum"]
+        encoded_enum = model["output_schema"]["$defs"]["anchor"]["enum"]
+        label_by_original = {row["original_id"]: row["label"]
+                             for row in bundle["label_binding"]["labels"]}
+        self.assertEqual(encoded_enum, [label_by_original[value] for value in original_enum])
         self.assertEqual([c["card_sha256"] for c in model["reference_catalogs"]],
-                         sorted(c["card_sha256"] for c in original["reference_catalogs"]))
+                         [c["card_sha256"] for c in original["reference_catalogs"]])
+        for before, after in zip(original["reference_catalogs"], model["reference_catalogs"]):
+            self.assertEqual([(x["field"], x["index"], x["start"], x["end"], x["text"])
+                              for x in before["entries"]],
+                             [(x["field"], x["index"], x["start"], x["end"], x["text"])
+                              for x in after["entries"]])
         self.assertTrue(all(len(e["evidence_id"]) < 67 for cat in model["reference_catalogs"]
                             for e in cat["entries"]))
         by_sha = {cat["card_sha256"]: cat for cat in model["reference_catalogs"]}
@@ -64,7 +74,7 @@ class ReferenceLabelsTests(unittest.TestCase):
         with self.assertRaisesRegex(L.LabelError, "unknown-or-cross-scope-label"):
             L.decode_card_response(bundle, wrong_card)
         unknown = copy.deepcopy(response)
-        unknown["records"][0]["anchors"] = ["L-D1-C001-R0001"]
+        unknown["records"][0]["anchors"] = ["L-D1-C080-R9999"]
         with self.assertRaises(L.LabelError):
             L.decode_card_response(bundle, unknown)
         mutated = copy.deepcopy(bundle)
@@ -73,7 +83,8 @@ class ReferenceLabelsTests(unittest.TestCase):
             L.decode_card_response(mutated, response)
         mutated_map = copy.deepcopy(bundle)
         mutated_map["label_binding"]["labels"][0]["original_id"] = "ev_" + "0" * 64
-        with self.assertRaisesRegex(L.LabelError, "binding-hash-mismatch"):
+        L._seal(mutated_map["label_binding"])
+        with self.assertRaisesRegex(L.LabelError, "regenerated-identity-map-mismatch"):
             L.decode_card_response(mutated_map, response)
         collision = copy.deepcopy(self.built)
         collision["reference_catalogs"][0]["entries"].append(
@@ -106,6 +117,12 @@ class ReferenceLabelsTests(unittest.TestCase):
         bundle = L.encode_source_input(self.task, source_input, self.catalog, self.source_ids)
         self.assertEqual(bundle["model_input"]["source_inventory"], source_input["source_inventory"])
         self.assertEqual(bundle["model_input"]["output_schema"], source_input["output_schema"])
+        for before, after in zip(source_input["sources"], bundle["model_input"]["sources"]):
+            self.assertEqual([p["text"] for p in before["passages"]], [p["text"] for p in after["passages"]])
+            self.assertEqual([p["evidence_id"] for p in after["passages"]],
+                             [next(r["label"] for r in bundle["label_binding"]["labels"]
+                                   if r["original_id"] == p["evidence_id"])
+                              for p in before["passages"]])
         eida, eidb = p_a[0], p_b[0]
         label_a = next(x["label"] for x in bundle["label_binding"]["labels"] if x["original_id"] == eida)
         label_b = next(x["label"] for x in bundle["label_binding"]["labels"] if x["original_id"] == eidb)
@@ -143,6 +160,8 @@ class ReferenceLabelsTests(unittest.TestCase):
         one_label = next(r["label"] for r in arm_one["label_binding"]["labels"] if r["original_id"] == eid_a)
         two_label = next(r["label"] for r in arm_two["label_binding"]["labels"] if r["original_id"] == eid_a)
         self.assertEqual(one_label, two_label)
+        self.assertEqual([p["text"] for p in arm_one["model_input"]["delivered_sources"][0]["passages"]],
+                         [p["text"] for p in arm_two["model_input"]["delivered_sources"][0]["passages"]])
         answer_response = {"facets": [{"facet_id": "d1_f1", "conclusion": "wording stays",
                             "claims": [{"text": "claim text", "evidence_ids": [one_label]}]}]}
         self.assertEqual(L.decode_answerer_response(arm_one, answer_response)["facets"][0]["claims"][0]["evidence_ids"],
@@ -154,6 +173,7 @@ class ReferenceLabelsTests(unittest.TestCase):
             self.task, {"task": {"task_id": self.task}, "sources": [{"source_id": source_a["source_id"], "passages":[
                 {"evidence_id": eid_a, "text": answer_catalog["passages"][eid_a]["text"]}]}]},
             self.catalog, self.source_ids)["label_binding"]["labels"] if r["original_id"] == eid_a)
+        self.assertEqual(answer_label, source_label)
         packet = {"task_id": self.task, "packet_id": "packet-original", "arm_id": "arm1",
                   "catalog": copy.deepcopy(answer_catalog),
                   "delivered_sources": [{"source_id": source_a["source_id"], "evidence_ids": [eid_a]}],
@@ -166,6 +186,9 @@ class ReferenceLabelsTests(unittest.TestCase):
         assessor = L.encode_answer_assessor_input(self.task, packet, self.catalog, answer_catalog, self.source_ids)
         model_packet = assessor["model_input"]
         self.assertEqual(model_packet["packet_id"], packet["packet_id"])
+        self.assertEqual(list(model_packet["catalog"]["passages"]),
+                         [next(r["label"] for r in assessor["label_binding"]["labels"]
+                               if r["original_id"] == eid) for eid in answer_catalog["passages"]])
         self.assertEqual(model_packet["answer_facets"][0]["claims"][0]["text"], "claim kept")
         self.assertEqual(model_packet["own_source_assessment"]["tasks"][0]["arms"][0]
                          ["facet_assessments"][0]["evidence_dispositions"][0]

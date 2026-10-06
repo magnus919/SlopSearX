@@ -67,11 +67,12 @@ def _verify_bundle(bundle: dict, *, domains: set[str] | None = None) -> tuple[di
         raise LabelError("binding-hash-mismatch")
     if _sha(_canon(bundle["model_input"])) != binding.get("encoded_model_input_sha256"):
         raise LabelError("encoded-model-input-hash-mismatch")
+    _verify_identity_map(binding)
     entries = binding.get("labels")
     if type(entries) is not list:
         raise LabelError("label-map-shape")
     by_label, by_original = {}, {}
-    allowed_domains = {"card", "source_pool", "answer_arm"}
+    allowed_domains = {"card", "source"}
     for row in entries:
         if (type(row) is not dict or set(row) != {"label", "original_id", "group_id", "domain"}
                 or row["domain"] not in allowed_domains or not all(type(row[k]) is str and row[k]
@@ -84,6 +85,83 @@ def _verify_bundle(bundle: dict, *, domains: set[str] | None = None) -> tuple[di
         by_label[row["label"]] = row
         by_original[(row["domain"], row["group_id"], row["original_id"])] = row["label"]
     return binding, by_label
+
+
+def _card_groups_from_catalogs(task_id: str, catalogs: list[dict]) -> tuple[dict, list[str]]:
+    if type(catalogs) is not list or len(catalogs) > MAX_GROUPS:
+        raise LabelError("card-group-limit")
+    groups, seen = {}, set()
+    for catalog in catalogs:
+        if (type(catalog) is not dict or catalog.get("task_id") != task_id
+                or type(catalog.get("card_sha256")) is not str
+                or not _SHA.fullmatch(catalog["card_sha256"])
+                or type(catalog.get("entries")) is not list):
+            raise LabelError("card-catalog-scope")
+        group = catalog["card_sha256"]
+        if group in groups:
+            raise LabelError("duplicate-card-group")
+        refs = []
+        for entry in catalog["entries"]:
+            eid = entry.get("evidence_id") if type(entry) is dict else None
+            if (type(eid) is not str or not _CARD_EID.fullmatch(eid)
+                    or entry.get("task_id") != task_id or entry.get("card_sha256") != group
+                    or eid in seen):
+                raise LabelError("card-reference-identity-mismatch")
+            seen.add(eid)
+            refs.append(eid)
+        if len(refs) > MAX_REFS_PER_GROUP:
+            raise LabelError("references-per-card-limit")
+        groups[group] = refs
+    return groups, sorted(groups)
+
+
+def _verify_identity_map(binding: dict) -> None:
+    """Regenerate aliases from private original catalogs, never trust a self-seal alone."""
+    domain, task_id = binding.get("domain"), binding.get("task_id")
+    basis = binding.get("identity_basis")
+    if type(basis) is not dict:
+        raise LabelError("identity-basis-missing")
+    if domain == "card":
+        if set(basis) != {"catalogs"}:
+            raise LabelError("card-identity-basis-shape")
+        catalogs = basis["catalogs"]
+        if _sha(_canon(catalogs)) != binding.get("catalogs_sha256"):
+            raise LabelError("identity-catalog-hash-mismatch")
+        groups, order = _card_groups_from_catalogs(task_id, catalogs)
+        _labels, expected = _make_labels(task_id, "card", groups, order)
+        universe_digest = None
+    elif domain in {"source_pool", "answer_arm"}:
+        if set(basis) != {"catalogs", "source_ids"}:
+            raise LabelError("source-identity-basis-shape")
+        catalogs, universe = basis["catalogs"], basis["source_ids"]
+        if (_sha(_canon(catalogs)) != binding.get("catalogs_sha256")
+                or _sha(_canon(sorted(universe))) != binding.get("source_universe_sha256")):
+            raise LabelError("identity-catalog-or-universe-hash-mismatch")
+        groups, order = _catalog_source_map(catalogs, task_id, universe)
+        _labels, expected = _make_labels(task_id, "source", groups, order)
+        universe_digest = binding["source_universe_sha256"]
+    elif domain == "answer_assessor":
+        if set(basis) != {"source_catalog", "answer_catalog", "source_ids"}:
+            raise LabelError("answer-assessor-identity-basis-shape")
+        src, ans, universe = basis["source_catalog"], basis["answer_catalog"], basis["source_ids"]
+        catalogs = {"source_pool": src, "answer_arm": ans}
+        if (_sha(_canon(catalogs)) != binding.get("catalogs_sha256")
+                or _sha(_canon(sorted(universe))) != binding.get("source_universe_sha256")):
+            raise LabelError("identity-catalog-or-universe-hash-mismatch")
+        src_groups, order = _catalog_source_map(src, task_id, universe)
+        ans_groups, _ = _catalog_source_map(ans, task_id, universe)
+        for eid in set(src.get("passages", {})) & set(ans.get("passages", {})):
+            if src["passages"][eid] != ans["passages"][eid]:
+                raise LabelError("same-id-passage-catalog-conflict")
+        groups = {sid: sorted(set(src_groups[sid]) | set(ans_groups[sid])) for sid in universe}
+        _labels, expected = _make_labels(task_id, "source", groups, order)
+        universe_digest = binding["source_universe_sha256"]
+    else:
+        raise LabelError("binding-domain-unknown")
+    if binding.get("labels") != expected:
+        raise LabelError("regenerated-identity-map-mismatch")
+    if binding.get("source_universe_sha256") != universe_digest:
+        raise LabelError("source-universe-binding-mismatch")
 
 
 def _card_catalog_maps(task_id: str, built: dict) -> tuple[dict, dict, list]:
@@ -160,30 +238,40 @@ def _catalog_source_map(catalog: dict, task_id: str, source_ids: list[str]) -> t
 
 
 def _make_labels(task_id: str, domain: str, groups: dict, order: list[str]) -> tuple[dict, list[dict]]:
-    prefix = "C" if domain == "card" else ("S" if domain == "source_pool" else "A")
+    prefix = "C" if domain == "card" else "S"
     labels, rows = {}, []
     for group_index, group_id in enumerate(order, 1):
         refs = groups[group_id]
         if len(refs) > MAX_REFS_PER_GROUP:
             raise LabelError("references-per-group-limit")
         for ref_index, original_id in enumerate(sorted(refs), 1):
-            label = f"L-{task_id.upper()}-{prefix}{group_index:03d}-R{ref_index:04d}"
+            if domain == "card":
+                reference_token = f"R{ref_index:04d}"
+            else:
+                # Content-derived suffix is stable when arm/chunk catalogs are
+                # subsets; group ordinals come from the full sorted task pool.
+                reference_token = "R" + _sha(
+                    f"exp088-source-label/1\0{task_id}\0{group_id}\0{original_id}".encode("utf-8"))[:16]
+            label = f"L-{task_id.upper()}-{prefix}{group_index:03d}-{reference_token}"
             if label in labels:
                 raise LabelError("generated-label-collision")
             labels[original_id] = label
             rows.append({"label": label, "original_id": original_id,
-                         "group_id": group_id, "domain": domain})
+                         "group_id": group_id, "domain": "card" if domain == "card" else "source"})
     return labels, rows
 
 
 def _bundle(task_id: str, domain: str, original_model: dict, encoded_model: dict,
             catalogs, labels_rows: list[dict], *, universe: list[str] | None = None) -> dict:
+    basis = {"catalogs": catalogs}
+    if universe is not None:
+        basis["source_ids"] = _copy(universe)
     binding = {"schema": SCHEMA, "task_id": task_id, "domain": domain,
                "original_model_input_sha256": _sha(_canon(original_model)),
                "catalogs_sha256": _sha(_canon(catalogs)),
                "source_universe_sha256": _sha(_canon(sorted(universe))) if universe is not None else None,
                "encoded_model_input_sha256": _sha(_canon(encoded_model)),
-               "labels": labels_rows}
+               "identity_basis": basis, "labels": labels_rows}
     _seal(binding)
     return {"model_input": encoded_model, "label_binding": binding}
 
@@ -195,20 +283,21 @@ def encode_card_assignment(task_id: str, built: dict) -> dict:
     order = sorted(groups)
     labels, rows = _make_labels(task_id, "card", groups, order)
     model = _copy(built["model_input"])
-    sorted_catalogs = []
-    for card_sha in order:
-        cat = _copy(catalog_by_card[card_sha])
-        cat["entries"].sort(key=lambda row: row["evidence_id"])
+    encoded_catalogs = []
+    for cat_original in built["reference_catalogs"]:
+        cat = _copy(cat_original)
         for entry in cat["entries"]:
             entry["evidence_id"] = labels[entry["evidence_id"]]
-        sorted_catalogs.append(cat)
-    model["reference_catalogs"] = sorted_catalogs
-    all_labels = [row["label"] for row in rows]
+        encoded_catalogs.append(cat)
+    model["reference_catalogs"] = encoded_catalogs
     schema = model.get("output_schema")
     if (type(schema) is not dict or type(schema.get("$defs")) is not dict
             or type(schema["$defs"].get("anchor")) is not dict):
         raise LabelError("card-output-schema-shape")
-    schema["$defs"]["anchor"]["enum"] = sorted(all_labels)
+    original_enum = schema["$defs"]["anchor"].get("enum")
+    if type(original_enum) is not list or any(value not in labels for value in original_enum):
+        raise LabelError("card-output-schema-reference-enum")
+    schema["$defs"]["anchor"]["enum"] = [labels[value] for value in original_enum]
     # Cards and every other model-facing field are unchanged.
     return _bundle(task_id, "card", built["model_input"], model,
                    built["reference_catalogs"], rows)
@@ -239,7 +328,6 @@ def _encode_source_input(task_id: str, model_input: dict, catalog: dict, source_
                 raise LabelError("source-input-reference-scope")
             seen.add(eid)
             passage["evidence_id"] = labels[eid]
-        passages.sort(key=lambda row: row["evidence_id"])
     return _bundle(task_id, domain, model_input, encoded, catalog, rows, universe=source_ids)
 
 
@@ -272,7 +360,6 @@ def encode_answerer_input(task_id: str, model_input: dict, catalog: dict, source
                 raise LabelError("answerer-reference-scope")
             seen.add(eid)
             passage["evidence_id"] = labels[eid]
-        passages.sort(key=lambda row: row["evidence_id"])
     return _bundle(task_id, "answer_arm", model_input, encoded, catalog, rows, universe=source_ids)
 
 
@@ -333,7 +420,7 @@ def _decode_source_response(bundle: dict, response: dict, domain: str) -> dict:
         for facet in facets:
             if type(facet) is not dict or "evidence_ids" not in facet:
                 raise LabelError("source-response-reference-field")
-            facet["evidence_ids"] = _decode_ids(facet["evidence_ids"], mapping, domain, group_id=sid)
+            facet["evidence_ids"] = _decode_ids(facet["evidence_ids"], mapping, "source", group_id=sid)
     return result
 
 
@@ -354,7 +441,7 @@ def decode_answerer_response(bundle: dict, response: dict) -> dict:
         for claim in claims:
             if type(claim) is not dict or "evidence_ids" not in claim:
                 raise LabelError("answerer-reference-field")
-            claim["evidence_ids"] = _decode_ids(claim["evidence_ids"], mapping, "answer_arm")
+            claim["evidence_ids"] = _decode_ids(claim["evidence_ids"], mapping, "source")
     return result
 
 
@@ -364,13 +451,12 @@ def _replace_catalog_keys(catalog: dict, labels: dict, groups: dict) -> dict:
     if type(passages) is not dict:
         raise LabelError("answer-catalog-shape")
     rewritten = {}
-    for eid in sorted(passages):
-        passage = passages[eid]
+    for eid, passage in passages.items():
         sid = passage.get("source_id") if type(passage) is dict else None
         if sid not in groups or eid not in groups[sid] or eid not in labels:
             raise LabelError("answer-catalog-reference-scope")
         rewritten[labels[eid]] = passage
-    result["passages"] = dict(sorted(rewritten.items()))
+    result["passages"] = rewritten
     return result
 
 
@@ -380,8 +466,9 @@ def encode_answer_assessor_input(task_id: str, packet_input: dict, source_catalo
     task_id = _task(task_id)
     source_groups, source_order = _catalog_source_map(source_catalog, task_id, source_ids)
     answer_groups, answer_order = _catalog_source_map(answer_catalog, task_id, source_ids)
-    source_labels, source_rows = _make_labels(task_id, "source_pool", source_groups, source_order)
-    answer_labels, answer_rows = _make_labels(task_id, "answer_arm", answer_groups, answer_order)
+    union_groups = {sid: sorted(set(source_groups[sid]) | set(answer_groups[sid])) for sid in source_ids}
+    source_labels, rows = _make_labels(task_id, "source", union_groups, source_order)
+    answer_labels = source_labels
     encoded = _copy(packet_input)
     if encoded.get("task_id") != task_id:
         raise LabelError("answer-assessor-task-scope")
@@ -392,7 +479,7 @@ def encode_answer_assessor_input(task_id: str, packet_input: dict, source_catalo
         if sid not in answer_groups:
             raise LabelError("answer-assessor-delivered-source-scope")
         source["evidence_ids"] = _map_original_ids(source.get("evidence_ids"), answer_labels,
-                                                    answer_groups, domain="answer_arm", group_id=sid)
+                                                    answer_groups, domain="source", group_id=sid)
     for facet in encoded.get("answer_facets", []):
         claims = facet.get("claims") if type(facet) is dict else None
         if type(claims) is not list:
@@ -401,7 +488,7 @@ def encode_answer_assessor_input(task_id: str, packet_input: dict, source_catalo
             if type(claim) is not dict:
                 raise LabelError("answer-assessor-claim")
             claim["evidence_ids"] = _map_original_ids(claim.get("evidence_ids"), answer_labels, answer_groups,
-                                                       domain="answer_arm")
+                                                       domain="source")
     own = encoded.get("own_source_assessment")
     if type(own) is dict:
         for task in own.get("tasks", []):
@@ -411,17 +498,20 @@ def encode_answer_assessor_input(task_id: str, packet_input: dict, source_catalo
                         sid = disp.get("source_id")
                         if "evidence_ids" in disp:
                             disp["evidence_ids"] = _map_original_ids(disp["evidence_ids"], source_labels,
-                                source_groups, domain="source_pool", group_id=sid)
+                                source_groups, domain="source", group_id=sid)
                         for ref in disp.get("references", []):
                             eid = ref.get("evidence_id") if type(ref) is dict else None
                             ref["evidence_id"] = _map_one(eid, source_labels, source_groups,
-                                                           "source_pool", sid)
-    rows = source_rows + answer_rows
+                                                           "source", sid)
     binding = {"schema": SCHEMA, "task_id": task_id, "domain": "answer_assessor",
                "original_model_input_sha256": _sha(_canon(packet_input)),
                "catalogs_sha256": _sha(_canon({"source_pool": source_catalog, "answer_arm": answer_catalog})),
                "source_universe_sha256": _sha(_canon(sorted(source_ids))),
-               "encoded_model_input_sha256": _sha(_canon(encoded)), "labels": rows}
+               "encoded_model_input_sha256": _sha(_canon(encoded)),
+               "identity_basis": {"source_catalog": source_catalog,
+                                  "answer_catalog": answer_catalog,
+                                  "source_ids": _copy(source_ids)},
+               "labels": rows}
     _seal(binding)
     return {"model_input": encoded, "label_binding": binding}
 
@@ -457,9 +547,9 @@ def decode_answer_assessor_response(bundle: dict, response: dict) -> dict:
             for facet in arm.get("facet_assessments", []):
                 for claim in facet.get("claims", []):
                     if "evidence_ids" in claim:
-                        claim["evidence_ids"] = _decode_ids(claim["evidence_ids"], mapping, "answer_arm")
+                        claim["evidence_ids"] = _decode_ids(claim["evidence_ids"], mapping, "source")
                 for disp in facet.get("evidence_dispositions", []):
                     if "evidence_ids" in disp:
                         disp["evidence_ids"] = _decode_ids(disp["evidence_ids"], mapping,
-                                                            "source_pool", group_id=disp.get("source_id"))
+                                                            "source", group_id=disp.get("source_id"))
     return result
