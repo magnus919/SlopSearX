@@ -1,0 +1,21 @@
+{
+  "agent_allocation_failures_before_inference": 2,
+  "answer_model_calls": 0,
+  "card_model_calls": 5,
+  "cause": "Fifth card response contains a repeated same-card anchor ID; adapter rejects duplicates although emitted schema and legacy literal verifier permit repeated anchors.",
+  "clock_sha256": "05755f274aea8c630ff76e1d5d2f2987a6008ec65c6a3943add5aaa6761dc533",
+  "failure_code": "anchors-reference-duplicate",
+  "invalid_card_responses": 1,
+  "jev_calls": 0,
+  "new_searches": 0,
+  "new_source_http_calls": 0,
+  "physical_health_http_calls": 1,
+  "qualified_source_revision": "fc6fc05f8285ea4807a6d5010001005d92298c41",
+  "ranking_quality_credit": false,
+  "retry_or_repair": false,
+  "schema": "exp086-development-terminal/1",
+  "source_model_calls": 0,
+  "status": "assessment_inconclusive",
+  "study_id": "EXP-086",
+  "valid_card_responses": 4
+}

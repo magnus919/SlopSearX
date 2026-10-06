@@ -1,6 +1,6 @@
 # EXP-086 — nested runtime health identity recovery
 
-Status: prospective development study; no ranking-quality or production-adoption claim.
+Status: terminal assessment-inconclusive. See the [retained outcome](evidence/EXP-086/completed/readout.md); no ranking-quality or production-adoption claim.
 
 EXP-085 stopped after one health request because its checker expected top-level model and revision fields. The actual API exposes these inside `runtime`, as the earlier working capture helper already established. The [terminal attempt](evidence/EXP-085/completed/readout.md) remains unchanged and receives no completion or quality credit.
 
