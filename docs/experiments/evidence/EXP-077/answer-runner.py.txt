@@ -108,10 +108,10 @@ def validate_packet(raw: bytes, schema: dict) -> tuple[dict, list[dict]]:
         if not isinstance(task["purpose"], str) or not task["purpose"].strip():
             raise ValueError("answer-purpose")
         cards = model_input["cards"]
-        if not isinstance(cards, list) or len(cards) != 10 or len(set(cards)) != 10:
+        if not isinstance(cards, list) or not 0 <= len(cards) <= 10 or len(set(cards)) != len(cards):
             raise ValueError("answer-card-prefix")
         outcomes = model_input["opening_outcomes"]
-        if not isinstance(outcomes, list) or len(outcomes) != 10:
+        if not isinstance(outcomes, list) or len(outcomes) != len(cards):
             raise ValueError("answer-opening-outcomes")
         if any(not isinstance(row, dict) or row.get("card_id") != cards[index]
                or not isinstance(row.get("state"), str) or not isinstance(row.get("delivered"), bool)

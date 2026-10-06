@@ -51,6 +51,14 @@ def assignments():
 
 
 class RunnerTests(unittest.TestCase):
+    def test_short_fixed_prefix_is_not_an_extra_ten_card_gate(self):
+        obj={'schema':'exp077-answer-packet/1','synthetic':False,'stage_id':'1f3a2f22-6912-4ec2-8ff6-3c8ae159c347','stage_clock_digest':'a'*64,'stage_manifest_sha256':'b'*64,'assignments':assignments()}
+        for assignment in obj['assignments']:
+            assignment['model_input']['cards']=assignment['model_input']['cards'][:3]
+            assignment['model_input']['opening_outcomes']=assignment['model_input']['opening_outcomes'][:3]
+        schema=answer.validate_schema((HERE/'answerer.schema.json').read_bytes())
+        answer.validate_packet(json.dumps(obj).encode(),schema)
+
     def test_provider_credential_echo_is_not_persisted(self):
         import httpx
         from datetime import datetime,timedelta,timezone
