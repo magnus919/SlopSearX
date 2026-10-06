@@ -1,0 +1,1691 @@
+{
+  "answer_arm_labels": "deterministic private mapping fixed before answer generation; public assessor packets omit w0/candidate labels",
+  "independence": "fresh isolated Luna invocation per declared submission; one assessor sees only its own packet, never ranking/arm names/other grades",
+  "schema": "exp077-assignment-plan/1",
+  "source_chunk_rule": "native source inventory partitioned into consecutive chunks of at most20; all inventory retained including failed captures; absent trailing chunks make no model call",
+  "stages": {
+    "confirmation": {
+      "answer": [
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c1-answer-R1-arm1",
+          "task_id": "c1"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c1-answer-R1-arm2",
+          "task_id": "c1"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c1-answer-R2-arm1",
+          "task_id": "c1"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c1-answer-R2-arm2",
+          "task_id": "c1"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c2-answer-R1-arm1",
+          "task_id": "c2"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c2-answer-R1-arm2",
+          "task_id": "c2"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c2-answer-R2-arm1",
+          "task_id": "c2"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c2-answer-R2-arm2",
+          "task_id": "c2"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c3-answer-R1-arm1",
+          "task_id": "c3"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c3-answer-R1-arm2",
+          "task_id": "c3"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c3-answer-R2-arm1",
+          "task_id": "c3"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c3-answer-R2-arm2",
+          "task_id": "c3"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c4-answer-R1-arm1",
+          "task_id": "c4"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c4-answer-R1-arm2",
+          "task_id": "c4"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c4-answer-R2-arm1",
+          "task_id": "c4"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c4-answer-R2-arm2",
+          "task_id": "c4"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c5-answer-R1-arm1",
+          "task_id": "c5"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c5-answer-R1-arm2",
+          "task_id": "c5"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c5-answer-R2-arm1",
+          "task_id": "c5"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c5-answer-R2-arm2",
+          "task_id": "c5"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c6-answer-R1-arm1",
+          "task_id": "c6"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c6-answer-R1-arm2",
+          "task_id": "c6"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c6-answer-R2-arm1",
+          "task_id": "c6"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c6-answer-R2-arm2",
+          "task_id": "c6"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c7-answer-R1-arm1",
+          "task_id": "c7"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c7-answer-R1-arm2",
+          "task_id": "c7"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c7-answer-R2-arm1",
+          "task_id": "c7"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c7-answer-R2-arm2",
+          "task_id": "c7"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c8-answer-R1-arm1",
+          "task_id": "c8"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "confirmation-c8-answer-R1-arm2",
+          "task_id": "c8"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c8-answer-R2-arm1",
+          "task_id": "c8"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "confirmation-c8-answer-R2-arm2",
+          "task_id": "c8"
+        }
+      ],
+      "card": [
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "confirmation-c1-card-A",
+          "task_id": "c1"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "confirmation-c1-card-B",
+          "task_id": "c1"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "confirmation-c2-card-A",
+          "task_id": "c2"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "confirmation-c2-card-B",
+          "task_id": "c2"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "confirmation-c3-card-A",
+          "task_id": "c3"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "confirmation-c3-card-B",
+          "task_id": "c3"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "confirmation-c4-card-A",
+          "task_id": "c4"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "confirmation-c4-card-B",
+          "task_id": "c4"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "confirmation-c5-card-A",
+          "task_id": "c5"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "confirmation-c5-card-B",
+          "task_id": "c5"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "confirmation-c6-card-A",
+          "task_id": "c6"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "confirmation-c6-card-B",
+          "task_id": "c6"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "confirmation-c7-card-A",
+          "task_id": "c7"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "confirmation-c7-card-B",
+          "task_id": "c7"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "confirmation-c8-card-A",
+          "task_id": "c8"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "confirmation-c8-card-B",
+          "task_id": "c8"
+        }
+      ],
+      "logical_assessment_maximum": 112,
+      "source": [
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c1-source-R1-1",
+          "task_id": "c1"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c1-source-R1-2",
+          "task_id": "c1"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c1-source-R1-3",
+          "task_id": "c1"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c1-source-R1-4",
+          "task_id": "c1"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c1-source-R2-1",
+          "task_id": "c1"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c1-source-R2-2",
+          "task_id": "c1"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c1-source-R2-3",
+          "task_id": "c1"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c1-source-R2-4",
+          "task_id": "c1"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c2-source-R1-1",
+          "task_id": "c2"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c2-source-R1-2",
+          "task_id": "c2"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c2-source-R1-3",
+          "task_id": "c2"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c2-source-R1-4",
+          "task_id": "c2"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c2-source-R2-1",
+          "task_id": "c2"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c2-source-R2-2",
+          "task_id": "c2"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c2-source-R2-3",
+          "task_id": "c2"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c2-source-R2-4",
+          "task_id": "c2"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c3-source-R1-1",
+          "task_id": "c3"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c3-source-R1-2",
+          "task_id": "c3"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c3-source-R1-3",
+          "task_id": "c3"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c3-source-R1-4",
+          "task_id": "c3"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c3-source-R2-1",
+          "task_id": "c3"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c3-source-R2-2",
+          "task_id": "c3"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c3-source-R2-3",
+          "task_id": "c3"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c3-source-R2-4",
+          "task_id": "c3"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c4-source-R1-1",
+          "task_id": "c4"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c4-source-R1-2",
+          "task_id": "c4"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c4-source-R1-3",
+          "task_id": "c4"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c4-source-R1-4",
+          "task_id": "c4"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c4-source-R2-1",
+          "task_id": "c4"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c4-source-R2-2",
+          "task_id": "c4"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c4-source-R2-3",
+          "task_id": "c4"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c4-source-R2-4",
+          "task_id": "c4"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c5-source-R1-1",
+          "task_id": "c5"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c5-source-R1-2",
+          "task_id": "c5"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c5-source-R1-3",
+          "task_id": "c5"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c5-source-R1-4",
+          "task_id": "c5"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c5-source-R2-1",
+          "task_id": "c5"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c5-source-R2-2",
+          "task_id": "c5"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c5-source-R2-3",
+          "task_id": "c5"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c5-source-R2-4",
+          "task_id": "c5"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c6-source-R1-1",
+          "task_id": "c6"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c6-source-R1-2",
+          "task_id": "c6"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c6-source-R1-3",
+          "task_id": "c6"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c6-source-R1-4",
+          "task_id": "c6"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c6-source-R2-1",
+          "task_id": "c6"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c6-source-R2-2",
+          "task_id": "c6"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c6-source-R2-3",
+          "task_id": "c6"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c6-source-R2-4",
+          "task_id": "c6"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c7-source-R1-1",
+          "task_id": "c7"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c7-source-R1-2",
+          "task_id": "c7"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c7-source-R1-3",
+          "task_id": "c7"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c7-source-R1-4",
+          "task_id": "c7"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c7-source-R2-1",
+          "task_id": "c7"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c7-source-R2-2",
+          "task_id": "c7"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c7-source-R2-3",
+          "task_id": "c7"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c7-source-R2-4",
+          "task_id": "c7"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c8-source-R1-1",
+          "task_id": "c8"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c8-source-R1-2",
+          "task_id": "c8"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c8-source-R1-3",
+          "task_id": "c8"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c8-source-R1-4",
+          "task_id": "c8"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c8-source-R2-1",
+          "task_id": "c8"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c8-source-R2-2",
+          "task_id": "c8"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c8-source-R2-3",
+          "task_id": "c8"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "confirmation-c8-source-R2-4",
+          "task_id": "c8"
+        }
+      ]
+    },
+    "development": {
+      "answer": [
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d1-answer-R1-arm1",
+          "task_id": "d1"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d1-answer-R1-arm2",
+          "task_id": "d1"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d1-answer-R2-arm1",
+          "task_id": "d1"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d1-answer-R2-arm2",
+          "task_id": "d1"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d2-answer-R1-arm1",
+          "task_id": "d2"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d2-answer-R1-arm2",
+          "task_id": "d2"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d2-answer-R2-arm1",
+          "task_id": "d2"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d2-answer-R2-arm2",
+          "task_id": "d2"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d3-answer-R1-arm1",
+          "task_id": "d3"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d3-answer-R1-arm2",
+          "task_id": "d3"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d3-answer-R2-arm1",
+          "task_id": "d3"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d3-answer-R2-arm2",
+          "task_id": "d3"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d4-answer-R1-arm1",
+          "task_id": "d4"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d4-answer-R1-arm2",
+          "task_id": "d4"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d4-answer-R2-arm1",
+          "task_id": "d4"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d4-answer-R2-arm2",
+          "task_id": "d4"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d5-answer-R1-arm1",
+          "task_id": "d5"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d5-answer-R1-arm2",
+          "task_id": "d5"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d5-answer-R2-arm1",
+          "task_id": "d5"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d5-answer-R2-arm2",
+          "task_id": "d5"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d6-answer-R1-arm1",
+          "task_id": "d6"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d6-answer-R1-arm2",
+          "task_id": "d6"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d6-answer-R2-arm1",
+          "task_id": "d6"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d6-answer-R2-arm2",
+          "task_id": "d6"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d7-answer-R1-arm1",
+          "task_id": "d7"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d7-answer-R1-arm2",
+          "task_id": "d7"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d7-answer-R2-arm1",
+          "task_id": "d7"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d7-answer-R2-arm2",
+          "task_id": "d7"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d8-answer-R1-arm1",
+          "task_id": "d8"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R1",
+          "role": "answer",
+          "submission_id": "development-d8-answer-R1-arm2",
+          "task_id": "d8"
+        },
+        {
+          "anonymous_arm": "arm1",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d8-answer-R2-arm1",
+          "task_id": "d8"
+        },
+        {
+          "anonymous_arm": "arm2",
+          "assessor_id": "R2",
+          "role": "answer",
+          "submission_id": "development-d8-answer-R2-arm2",
+          "task_id": "d8"
+        }
+      ],
+      "card": [
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "development-d1-card-A",
+          "task_id": "d1"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "development-d1-card-B",
+          "task_id": "d1"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "development-d2-card-A",
+          "task_id": "d2"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "development-d2-card-B",
+          "task_id": "d2"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "development-d3-card-A",
+          "task_id": "d3"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "development-d3-card-B",
+          "task_id": "d3"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "development-d4-card-A",
+          "task_id": "d4"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "development-d4-card-B",
+          "task_id": "d4"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "development-d5-card-A",
+          "task_id": "d5"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "development-d5-card-B",
+          "task_id": "d5"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "development-d6-card-A",
+          "task_id": "d6"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "development-d6-card-B",
+          "task_id": "d6"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "development-d7-card-A",
+          "task_id": "d7"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "development-d7-card-B",
+          "task_id": "d7"
+        },
+        {
+          "assessor_id": "A",
+          "role": "card",
+          "submission_id": "development-d8-card-A",
+          "task_id": "d8"
+        },
+        {
+          "assessor_id": "B",
+          "role": "card",
+          "submission_id": "development-d8-card-B",
+          "task_id": "d8"
+        }
+      ],
+      "logical_assessment_maximum": 112,
+      "source": [
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d1-source-R1-1",
+          "task_id": "d1"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d1-source-R1-2",
+          "task_id": "d1"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d1-source-R1-3",
+          "task_id": "d1"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d1-source-R1-4",
+          "task_id": "d1"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d1-source-R2-1",
+          "task_id": "d1"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d1-source-R2-2",
+          "task_id": "d1"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d1-source-R2-3",
+          "task_id": "d1"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d1-source-R2-4",
+          "task_id": "d1"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d2-source-R1-1",
+          "task_id": "d2"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d2-source-R1-2",
+          "task_id": "d2"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d2-source-R1-3",
+          "task_id": "d2"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d2-source-R1-4",
+          "task_id": "d2"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d2-source-R2-1",
+          "task_id": "d2"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d2-source-R2-2",
+          "task_id": "d2"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d2-source-R2-3",
+          "task_id": "d2"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d2-source-R2-4",
+          "task_id": "d2"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d3-source-R1-1",
+          "task_id": "d3"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d3-source-R1-2",
+          "task_id": "d3"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d3-source-R1-3",
+          "task_id": "d3"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d3-source-R1-4",
+          "task_id": "d3"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d3-source-R2-1",
+          "task_id": "d3"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d3-source-R2-2",
+          "task_id": "d3"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d3-source-R2-3",
+          "task_id": "d3"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d3-source-R2-4",
+          "task_id": "d3"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d4-source-R1-1",
+          "task_id": "d4"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d4-source-R1-2",
+          "task_id": "d4"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d4-source-R1-3",
+          "task_id": "d4"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d4-source-R1-4",
+          "task_id": "d4"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d4-source-R2-1",
+          "task_id": "d4"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d4-source-R2-2",
+          "task_id": "d4"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d4-source-R2-3",
+          "task_id": "d4"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d4-source-R2-4",
+          "task_id": "d4"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d5-source-R1-1",
+          "task_id": "d5"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d5-source-R1-2",
+          "task_id": "d5"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d5-source-R1-3",
+          "task_id": "d5"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d5-source-R1-4",
+          "task_id": "d5"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d5-source-R2-1",
+          "task_id": "d5"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d5-source-R2-2",
+          "task_id": "d5"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d5-source-R2-3",
+          "task_id": "d5"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d5-source-R2-4",
+          "task_id": "d5"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d6-source-R1-1",
+          "task_id": "d6"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d6-source-R1-2",
+          "task_id": "d6"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d6-source-R1-3",
+          "task_id": "d6"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d6-source-R1-4",
+          "task_id": "d6"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d6-source-R2-1",
+          "task_id": "d6"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d6-source-R2-2",
+          "task_id": "d6"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d6-source-R2-3",
+          "task_id": "d6"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d6-source-R2-4",
+          "task_id": "d6"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d7-source-R1-1",
+          "task_id": "d7"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d7-source-R1-2",
+          "task_id": "d7"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d7-source-R1-3",
+          "task_id": "d7"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d7-source-R1-4",
+          "task_id": "d7"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d7-source-R2-1",
+          "task_id": "d7"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d7-source-R2-2",
+          "task_id": "d7"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d7-source-R2-3",
+          "task_id": "d7"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d7-source-R2-4",
+          "task_id": "d7"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d8-source-R1-1",
+          "task_id": "d8"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d8-source-R1-2",
+          "task_id": "d8"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d8-source-R1-3",
+          "task_id": "d8"
+        },
+        {
+          "assessor_id": "R1",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d8-source-R1-4",
+          "task_id": "d8"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 0,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d8-source-R2-1",
+          "task_id": "d8"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 1,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d8-source-R2-2",
+          "task_id": "d8"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 2,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d8-source-R2-3",
+          "task_id": "d8"
+        },
+        {
+          "assessor_id": "R2",
+          "chunk_index": 3,
+          "conditional": "only if this inventory chunk exists",
+          "role": "source",
+          "submission_id": "development-d8-source-R2-4",
+          "task_id": "d8"
+        }
+      ]
+    }
+  },
+  "status": "prospective rules; actual content hashes frozen before each role"
+}

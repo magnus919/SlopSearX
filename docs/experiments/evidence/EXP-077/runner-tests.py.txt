@@ -1,0 +1,260 @@
+"""Offline-only focused tests for the EXP-077 capture and answer runners."""
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+sys.path.insert(0, str(REPO))
+
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    loader.exec_module(module)
+    return module
+
+
+capture = load("exp077_capture_tests", HERE / "capture-runner.py.txt")
+answer = load("exp077_answer_tests", HERE / "answer-runner.py.txt")
+
+
+def assignments():
+    schema = json.loads((HERE / "answerer.schema.json").read_text())
+    cohorts = json.loads((HERE / "cohorts.json").read_text())
+    catalog = {"version": 1, "sources": {}, "passages": {}}
+    catalog_hash = hashlib.sha256(json.dumps(catalog, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    rows = []
+    for task in [x for x in cohorts["cohorts"]["development"] if x["kind"] == "research"]:
+        for arm in ("w0", "candidate"):
+            output = json.loads(json.dumps(schema))
+            output["properties"]["facets"]["items"]["properties"]["facet_id"] = {
+                "enum": [check["id"] for check in task["critical_checks"]]}
+            rows.append({"model_input": {
+                "task": {"task_id": task["id"], "kind": task["kind"], "query": task["query"],
+                         "purpose": task["purpose"], "critical_checks": task["critical_checks"]},
+                "cards": [f"card-{i}" for i in range(10)],
+                "opening_outcomes": [{"card_id": f"card-{i}", "state": "unavailable", "delivered": False}
+                                     for i in range(10)],
+                "delivered_sources": [], "output_schema": output},
+                "private_binding": {"arm_id": arm, "catalog": catalog,
+                                     "catalog_sha256": catalog_hash, "assigned_source_ids": []}})
+    return rows
+
+
+class RunnerTests(unittest.TestCase):
+    def test_short_fixed_prefix_is_not_an_extra_ten_card_gate(self):
+        obj={'schema':'exp077-answer-packet/1','synthetic':False,'stage_id':'1f3a2f22-6912-4ec2-8ff6-3c8ae159c347','stage_clock_digest':'a'*64,'stage_manifest_sha256':'b'*64,'assignments':assignments()}
+        for assignment in obj['assignments']:
+            assignment['model_input']['cards']=assignment['model_input']['cards'][:3]
+            assignment['model_input']['opening_outcomes']=assignment['model_input']['opening_outcomes'][:3]
+        schema=answer.validate_schema((HERE/'answerer.schema.json').read_bytes())
+        answer.validate_packet(json.dumps(obj).encode(),schema)
+
+    def test_provider_credential_echo_is_not_persisted(self):
+        import httpx
+        from datetime import datetime,timedelta,timezone
+        key='nonsecret-echo-fixture-value'
+        def respond(request):return httpx.Response(200,json={'model':'free','choices':[{'message':{'content':key}}]})
+        with tempfile.TemporaryDirectory() as temp:
+            out=Path(temp)/'output';out.mkdir()
+            clock={'stage_deadline_utc':(datetime.now(timezone.utc)+timedelta(seconds=60)).isoformat(),'stage_clock_digest':'0'*64}
+            with self.assertRaisesRegex(ValueError,'credential-echo'):
+                answer.run_answers([], 'fixture prompt', answer.validate_schema((HERE/'answerer.schema.json').read_bytes()),'http://provider.example.test/v1',key,out,clock,transport=httpx.MockTransport(respond))
+            self.assertFalse(any(key.encode() in f.read_bytes() for f in out.rglob('*') if f.is_file()))
+
+    def test_configured_provider_origin_or_v1_base_uses_one_v1_path(self):
+        expected='http://provider.example.test/v1/chat/completions'
+        for base in ('http://provider.example.test','http://provider.example.test/v1','http://provider.example.test/v1/chat/completions'):
+            self.assertEqual(answer.chat_completion_url(base),expected)
+        with self.assertRaises(ValueError):answer.chat_completion_url('https://user:password@provider.example.test')
+
+    def test_exact_pinned_consumer_barrier_policy(self):
+        accepted,_,flags=capture.capture_acceptance({'success':True,'data':{'markdown':'Please verify you are a human'}})
+        self.assertFalse(accepted);self.assertTrue(flags['markdown_challenge'])
+        accepted,_,flags=capture.capture_acceptance({'success':True,'data':{'markdown':'Useful technical content','quality':{'checks':{'block_detected':'warn'}}}})
+        self.assertFalse(accepted);self.assertTrue(flags['barrier_flagged'])
+        self.assertTrue(capture.capture_acceptance({'success':True,'data':{'markdown':'Useful technical content'}})[0])
+
+    def test_root_protocol_and_cohort_closure(self):
+        protocol = json.loads((HERE / "protocol.json").read_text())
+        cohorts = json.loads((HERE / "cohorts.json").read_text())
+        self.assertEqual(protocol["schema"], "exp077-fixed-usefulness-study/1")
+        self.assertEqual(set(cohorts["cohorts"]), {"development", "confirmation"})
+        admission = capture.validate_static()
+        self.assertEqual(admission["protocol_sha256"], hashlib.sha256((HERE / "protocol.json").read_bytes()).hexdigest())
+
+    def test_capture_inventory_keeps_unsupported_and_deduplicates(self):
+        rows = [{"source_id": "s1", "url": "https://example.org/a", "title": "A"},
+                {"source_id": "s2", "url": "https://example.org/a", "title": "duplicate"},
+                {"source_id": "s3", "url": "http://127.0.0.1/private", "title": "private"},
+                {"source_id": "s4", "url": None, "title": "missing"}]
+        _, normalized = capture.validate_inventory(json.dumps({"schema": "exp077-acquired-pools/1",
+            "synthetic": False, "sources": rows}).encode())
+        self.assertEqual([r["_capture_initial_state"] for r in normalized],
+                         ["pending", "duplicate_url_not_attempted", "unsupported_url_not_attempted",
+                          "unsupported_url_not_attempted"])
+        self.assertEqual(sum(r["_capture_eligible"] for r in normalized), 1)
+
+    def test_capture_durably_records_transport_error_and_bounded_view(self):
+        import requests
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            cli_path, outdir = root / "pinned-cli.py", root / "output"
+            cli_path.write_text("# inert test-only cli module\n")
+            outdir.mkdir(mode=0o700)
+            source = {"source_id": "s1", "url": "https://example.org/a", "title": "A",
+                      "_capture_eligible": True, "_capture_initial_state": "pending"}
+            source2 = {"source_id": "s2", "url": "https://example.org/b", "title": "B",
+                       "_capture_eligible": True, "_capture_initial_state": "pending"}
+            outcomes = [
+                {"status": "ok", "runtime": {"model": "free", "revision": "test-revision"}},
+                RuntimeError("offline test transport failure"),
+                {"success": True, "data": {"markdown": "x" * 8100}},
+            ]
+            def fake_request(_method, _url, **_kwargs):
+                next_outcome = outcomes.pop(0)
+                if isinstance(next_outcome, Exception):
+                    raise next_outcome
+                body = json.dumps(next_outcome).encode()
+                response = requests.Response()
+                response.status_code = 200
+                response._content = body
+                response._content_consumed = True
+                return response
+            class Client:
+                server = "https://scraper.invalid"
+                def scrape(self, url, **kwargs):
+                    requests.request("POST", self.server + "/v2/scrape", json={"url": url}, **kwargs)
+                    return {"success": True, "data": {"markdown": "x" * 8100}}
+            stage_clock = {"remaining_seconds": 1200,
+                           "stage_deadline_utc": "2099-01-01T00:00:00+00:00",
+                           "stage_clock_digest": "f" * 64}
+            with patch("requests.request", fake_request):
+                result = capture.live_capture([source, source2], cli_path, outdir,
+                    {"cli_sha256": hashlib.sha256(cli_path.read_bytes()).hexdigest()}, stage_clock,
+                    client_factory=Client)
+            self.assertEqual(result["status"], "complete")
+            receipt = json.loads((outdir / "private-raw" / "http-transports.json").read_text())
+            self.assertEqual([x["status"] for x in receipt], ["completed", "transport_error", "completed"])
+            self.assertEqual(result["captures"][0]["status"], "error")
+            source_receipt = result["captures"][1]
+            self.assertEqual(source_receipt["assessment_context_characters"], 8000)
+            self.assertTrue(source_receipt["assessment_context_truncated"])
+
+    def test_unpinned_cli_is_rejected_before_module_import(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            marker, cli_path, outdir = root / "import-ran", root / "cli.py", root / "output"
+            cli_path.write_text(f"from pathlib import Path\nPath({str(marker)!r}).write_text('ran')\n")
+            outdir.mkdir(mode=0o700)
+            with self.assertRaisesRegex(ValueError, "cli-source-pin-mismatch"):
+                capture.live_capture([], cli_path, outdir, {"cli_sha256": "0" * 64},
+                    {"stage_deadline_utc": "2099-01-01T00:00:00+00:00", "remaining_seconds": 100})
+            self.assertFalse(marker.exists())
+
+    def test_answer_packet_accepts_facets_only_schema_and_private_catalog(self):
+        rows = assignments()
+        packet = {"schema": "exp077-answer-packet/1", "synthetic": False,
+                  "stage_id": "1f3a2f22-6912-4ec2-8ff6-3c8ae159c347",
+                  "stage_clock_digest": "a" * 64, "stage_manifest_sha256": "b" * 64,
+                  "assignments": rows}
+        schema = answer.validate_schema((HERE / "answerer.schema.json").read_bytes())
+        _, accepted = answer.validate_packet(json.dumps(packet).encode(), schema)
+        self.assertEqual(len(accepted), 16)
+
+    def test_answer_accepts_exact_schema_and_rejects_unassigned_evidence(self):
+        schema = answer.validate_schema((HERE / "answerer.schema.json").read_bytes())
+        valid = json.dumps({"facets": [{"facet_id": "f1", "conclusion": "supported", "claims": []}]})
+        self.assertEqual(answer.validate_answer(valid, schema, set(), ["f1"])["facets"][0]["facet_id"], "f1")
+        bad = json.dumps({"facets": [{"facet_id": "f1", "conclusion": "supported",
+                                      "claims": [{"text": "claim", "evidence_ids": ["c" * 64]}]}]})
+        with self.assertRaisesRegex(ValueError, "answer-evidence-not-delivered"):
+            answer.validate_answer(bad, schema, set(), ["f1"])
+        with self.assertRaisesRegex(ValueError, "answer-json-shape"):
+            answer.validate_answer('{"answer":"wrong schema"}', schema, set(), ["f1"])
+
+    def test_answer_runner_uses_only_offline_transport_and_records_all_18_calls(self):
+        import httpx
+        rows = assignments()
+        schema = answer.validate_schema((HERE / "answerer.schema.json").read_bytes())
+        replies = []
+        for _ in range(2):
+            replies.append({"model": "free-test-revision", "usage": {"prompt_tokens": 2, "completion_tokens": 1},
+                            "choices": [{"message": {"content": '{"ready":true}'}}]})
+        for assignment in rows:
+            ids = [x["id"] for x in assignment["model_input"]["task"]["critical_checks"]]
+            content = json.dumps({"facets": [{"facet_id": fid, "conclusion": "supported", "claims": []}
+                                              for fid in ids]})
+            replies.append({"model": "free-test-revision", "usage": {"prompt_tokens": 3, "completion_tokens": 4},
+                            "choices": [{"message": {"content": content}}]})
+        seen = []
+        def handler(request):
+            seen.append(request)
+            payload = replies[len(seen) - 1]
+            return httpx.Response(200, json=payload)
+        stage_clock = {"remaining_seconds": 1800, "stage_clock_digest": "c" * 64,
+                       "stage_deadline_utc": "2099-01-01T00:00:00+00:00"}
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp) / "run"
+            out.mkdir(mode=0o700)
+            result = answer.run_answers(rows, "offline system prompt", schema, "https://offline.invalid",
+                                        "dummy-test-secret", out, stage_clock,
+                                        transport=httpx.MockTransport(handler))
+            self.assertEqual(result["status"], "complete")
+            self.assertEqual(result["owned_api_calls"], 18)
+            self.assertEqual(len(seen), 18)
+            self.assertTrue(all("dummy-test-secret" not in p.read_text(errors="ignore")
+                                for p in out.rglob("*") if p.is_file()))
+            self.assertEqual(len(json.loads((out / "call-receipts.json").read_text())), 18)
+
+    def test_answer_transport_failure_has_durable_unknown_usage_receipt(self):
+        import httpx
+        rows = assignments()
+        schema = answer.validate_schema((HERE / "answerer.schema.json").read_bytes())
+        def fail(_request):
+            raise httpx.ConnectError("offline sentinel")
+        stage_clock = {"remaining_seconds": 1800, "stage_clock_digest": "d" * 64,
+                       "stage_deadline_utc": "2099-01-01T00:00:00+00:00"}
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp) / "run"
+            out.mkdir(mode=0o700)
+            with self.assertRaises(httpx.ConnectError):
+                answer.run_answers(rows, "offline system prompt", schema, "https://offline.invalid",
+                                   "dummy-test-secret", out, stage_clock,
+                                   transport=httpx.MockTransport(fail))
+            receipt = json.loads((out / "call-receipts.json").read_text())[0]
+            self.assertEqual(receipt["status"], "transport_error")
+            self.assertEqual(receipt["usage_status"], "unknown")
+            self.assertTrue((out / "answer-terminal-error.json").is_file())
+
+    def test_answer_response_cap_is_streamed_and_retained(self):
+        import httpx
+        rows = assignments()
+        schema = answer.validate_schema((HERE / "answerer.schema.json").read_bytes())
+        def oversized(_request):
+            return httpx.Response(200, stream=httpx.ByteStream(b"x" * (answer.MAX_RESPONSE_BYTES + 1)))
+        stage_clock = {"remaining_seconds": 1800, "stage_clock_digest": "e" * 64,
+                       "stage_deadline_utc": "2099-01-01T00:00:00+00:00"}
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp) / "run"
+            out.mkdir(mode=0o700)
+            with self.assertRaisesRegex(ValueError, "answer-response-byte-cap"):
+                answer.run_answers(rows, "offline system prompt", schema, "https://offline.invalid",
+                                   "dummy-test-secret", out, stage_clock,
+                                   transport=httpx.MockTransport(oversized))
+            receipt = json.loads((out / "call-receipts.json").read_text())[0]
+            self.assertEqual(receipt["status"], "response_byte_cap")
+            self.assertEqual(receipt["usage_status"], "unknown")
+
+
+if __name__ == "__main__":
+    unittest.main()

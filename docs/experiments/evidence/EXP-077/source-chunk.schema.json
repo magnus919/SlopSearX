@@ -1,0 +1,116 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "assessor_id",
+    "chunk_id",
+    "source_assessments"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "assessor_id": {
+      "enum": [
+        "R1",
+        "R2"
+      ]
+    },
+    "chunk_id": {
+      "type": "string"
+    },
+    "source_assessments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_id",
+          "facets"
+        ],
+        "properties": {
+          "source_id": {
+            "type": "string"
+          },
+          "facets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "facet_id",
+                "disposition",
+                "scope_match",
+                "entailment",
+                "applicability",
+                "not_assessable_reason",
+                "evidence_ids",
+                "reason",
+                "limitations"
+              ],
+              "properties": {
+                "facet_id": {
+                  "type": "string"
+                },
+                "disposition": {
+                  "enum": [
+                    "not_acquired",
+                    "acquired_unusable",
+                    "evidence_available",
+                    "not_assessable"
+                  ]
+                },
+                "scope_match": {
+                  "enum": [
+                    "match",
+                    "mismatch",
+                    "uncertain",
+                    "not_assessable"
+                  ]
+                },
+                "entailment": {
+                  "enum": [
+                    "supports",
+                    "contradicts",
+                    "qualifies",
+                    "does_not_entail",
+                    "uncertain",
+                    "not_assessable"
+                  ]
+                },
+                "applicability": {
+                  "enum": [
+                    "applicable",
+                    "not_applicable",
+                    "uncertain",
+                    "not_assessable"
+                  ]
+                },
+                "not_assessable_reason": {
+                  "type": "string"
+                },
+                "evidence_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "uniqueItems": true
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "limitations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+"""EXP077 pure endpoint calculator; never authorizes a live run or repairs a grade.
+
+Caller must verify original receipts, source/card/answer inventories and semantic
+packet integrity separately. This calculator deliberately cannot emit adoption.
+"""
+import math,random,statistics
+
+def ranking_case(w0,candidate,rows):
+    ids=set(rows)
+    for order in (w0,candidate):
+        if len(order)!=len(ids) or set(order)!=ids:raise ValueError('complete permutation required')
+    for row in rows.values():
+        if type(row['lead']) is not int or not 0<=row['lead']<=3:raise ValueError('lead grade')
+        if type(row['facets']) is not list or len(set(row['facets']))!=len(row['facets']):raise ValueError('facets')
+    def dcg(order):return sum((2**rows[c]['lead']-1)/math.log2(i+2) for i,c in enumerate(order[:10]))
+    ideal=dcg(sorted(rows,key=lambda c:-rows[c]['lead']))
+    def view(order):
+        useful={c for c in order[:10] if rows[c]['lead']>=2}
+        return {'ndcg10':dcg(order)/ideal if ideal else 0.0,'useful_count':len(useful),'facets':sorted({f for c in useful for f in rows[c]['facets']}),'useful_ids':sorted(useful)}
+    a,b=view(w0),view(candidate);delta=b['ndcg10']-a['ndcg10']
+    lost=sorted(set(a['facets'])-set(b['facets']))
+    return {'w0':a,'candidate':b,'delta':delta,'lost_facets':lost,'identity_displaced_diagnostic':sorted(set(a['useful_ids'])-set(candidate[:10])), 'passes':delta>=-.03 and b['useful_count']>=a['useful_count'] and not lost}
+
+def ranking_endpoint(cases):
+    if len(cases)!=8:raise ValueError('eight primary cases required')
+    values=[c['delta'] for c in cases]
+    if any(type(x) not in (float,int) or not math.isfinite(x) for x in values):raise ValueError('finite deltas')
+    rng=random.Random(7701)
+    samples=sorted(statistics.mean(rng.choices(values,k=8)) for _ in range(10000))
+    ci=[samples[249],samples[9749]];mean=statistics.mean(values)
+    return {'mean_delta':mean,'bootstrap95':ci,'passes':mean>=.02 and ci[0]>0 and all(c['passes'] is True for c in cases)}
+
+def answer_endpoint(arm):
+    """Derive endpoint from all critical facet assessments, not answer self-report."""
+    facets=arm['facet_assessments']
+    if not facets:raise ValueError('critical facets required')
+    hazards=[];unknown=[];complete=True
+    for f in facets:
+        for key in ('unsupported_material_claims','missed_qualifications'):
+            if f[key]:hazards.append({'facet_id':f['facet_id'],'kind':key,'items':f[key]})
+        if f['scope_match']=='mismatch' or f['applicability']=='not_applicable':
+            hazards.append({'facet_id':f['facet_id'],'kind':'target_scope_or_applicability'})
+        if f['status']=='not_assessable' or any(f[k] in ('uncertain','not_assessable') for k in ('scope_match','entailment','applicability')):
+            unknown.append(f['facet_id'])
+        # not_acquired is observed availability, never automatically an unknown.
+        if any(d['disposition']=='not_assessable' for d in f['evidence_dispositions']):unknown.append(f['facet_id'])
+        supported_anchors={(r['source_id'],r['evidence_id']) for d in f['evidence_dispositions'] if d['disposition']=='used_with_support' for r in d['references']}
+        anchored = any((r['source_id'],r['evidence_id']) in supported_anchors for i,c in enumerate(f['claims']) if i not in f['unsupported_claim_indices'] for r in c['references'])
+        complete &= (anchored and f['status']=='complete' and f['scope_match']=='match' and f['applicability']=='applicable'
+                     and f['entailment'] in ('supports','qualifies','contradicts'))
+    return {'complete':bool(complete and not hazards and not unknown),'material_failures':hazards,'unknown_critical_facets':sorted(set(unknown))}
+
+def task_use_endpoint(pairs):
+    if len(pairs)!=8:raise ValueError('eight paired tasks required')
+    wins=losses=ties=0;unknown=[];hazards=[];paired_deltas=[];w0_completed=candidate_completed=0
+    for task_id,w0,candidate in pairs:
+        a,b=answer_endpoint(w0),answer_endpoint(candidate)
+        if a['unknown_critical_facets'] or b['unknown_critical_facets']:unknown.append(task_id)
+        if b['material_failures']:hazards.append({'task_id':task_id,'failures':b['material_failures']})
+        wins+=int(b['complete'] and not a['complete']);losses+=int(a['complete'] and not b['complete']);ties+=int(a['complete']==b['complete'])
+        w0_completed+=int(a['complete']);candidate_completed+=int(b['complete']);paired_deltas.append(int(b['complete'])-int(a['complete']))
+    rng=random.Random(7701);samples=sorted(sum(rng.choices(paired_deltas,k=8)) for _ in range(10000))
+    return {'w0_completed':w0_completed,'candidate_completed':candidate_completed,'additional_completed_bootstrap95_diagnostic':[samples[249],samples[9749]],'uncertainty_method':'paired task bootstrap,10000 draws,seed7701; descriptive only, no added gate','wins':wins,'ties':ties,'losses':losses,'additional_completed':wins-losses,'unknown_tasks':unknown,'candidate_material_failures':hazards,'passes':wins-losses>=2 and losses==0 and not unknown and not hazards}
