@@ -42,7 +42,7 @@ def load(name, filename):
     return module
 
 
-def preflight(bundle_root):
+def preflight(bundle_root, cli_path=None):
     admission = load('exp082_admission', 'admission.py.txt')
     qraw = (HERE / 'qualification-integrity.json').read_bytes()
     q = admission.strict_json(qraw)
@@ -60,6 +60,10 @@ def preflight(bundle_root):
         'external_source_pins': q['external_source_pins']}
     admission.verify_closure(integrity, qraw)  # verify source before importing the bridge
     proof = admission.verify_closure(integrity, qraw, Path(bundle_root))
+    cli=Path(cli_path) if cli_path is not None else Path.home()/'.local/bin/groktocrawl'
+    pin=integrity['external_source_pins']['groktocrawl_cli']
+    if cli.is_symlink() or not cli.is_file() or hashlib.sha256(cli.read_bytes()).hexdigest()!=pin['sha256']:
+        raise ValueError('pinned-cli-preflight-failed')
     return admission, integrity, qraw, proof
 
 
@@ -73,8 +77,8 @@ class State:
     clock: tuple
 
 
-def begin(outdir, bundle_root):
-    admission, integrity, qraw, _ = preflight(bundle_root)
+def begin(outdir, bundle_root, cli_path=None):
+    admission, integrity, qraw, _ = preflight(bundle_root, cli_path)
     out = Path(outdir)
     out.mkdir(mode=0o700, parents=False, exist_ok=False)
     clock = admission.create_stage_clock(out, integrity['qualified_source_revision'])
@@ -146,7 +150,21 @@ def load_frozen_bindings():
 def capture(state, acquisition, cases, cli_path):
     bindings = load_frozen_bindings()
     clock, raw, digest = state.clock
-    return bindings.run_capture(acquisition=acquisition, cases=cases,
-        cli_path=Path(cli_path), source_integrity=state.integrity, stage_outdir=state.outdir,
-        outdir=state.outdir / 'capture', admission=state.admission, stage_permit=state.permit, clock=clock,
-        clock_bytes=raw, clock_sha256=digest)
+    try:
+        return bindings.run_capture(acquisition=acquisition, cases=cases,
+            cli_path=Path(cli_path), source_integrity=state.integrity, stage_outdir=state.outdir,
+            outdir=state.outdir/'capture', admission=state.admission,
+            stage_permit=state.permit, clock=clock, clock_bytes=raw, clock_sha256=digest)
+    except BaseException as exc:
+        out=state.outdir/'capture'
+        if not out.is_symlink():
+            out.mkdir(mode=0o700,parents=False,exist_ok=True)
+            inner_path=out/'capture-phase-terminal.json'
+            inner=state.admission.strict_json(inner_path.read_bytes()) if inner_path.is_file() else {}
+            terminal={'schema':'exp082-capture-terminal/1','study_id':'EXP-082',
+                'status':'incomplete','terminal_error_class':type(exc).__name__,
+                'stage_clock_sha256':digest,'quality_credit':False,
+                'owned_http_attempts':inner.get('owned_dispatch_count','unknown')}
+            state.admission._write_once(out/'recovery-capture-terminal.json',
+                                       state.admission.canonical_json(terminal))
+        raise
