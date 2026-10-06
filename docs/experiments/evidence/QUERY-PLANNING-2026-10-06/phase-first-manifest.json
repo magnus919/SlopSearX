@@ -1,0 +1,126 @@
+{
+  "harness_sha256": "8b9c26ad9dd0762282093b359a13face0f002782a2e9c110dda52e5b49332c57",
+  "operations": [
+    [
+      "q01:first",
+      "q01",
+      "shared",
+      1,
+      "Compare learned dense passage retrieval and retrieval-augmented generation for open-domain question answering.",
+      null
+    ],
+    [
+      "q02:first",
+      "q02",
+      "shared",
+      1,
+      "Compare expanding a query with a generated pseudo-document against embedding a hypothetical document for zero-shot retrieval.",
+      null
+    ],
+    [
+      "q03:first",
+      "q03",
+      "shared",
+      1,
+      "Compare listwise permutation prompting and pairwise prompting for reranking search results with language models.",
+      null
+    ],
+    [
+      "q04:first",
+      "q04",
+      "shared",
+      1,
+      "Compare modular question decomposition and interleaving retrieval with reasoning for multi-hop question answering.",
+      null
+    ],
+    [
+      "q05:first",
+      "q05",
+      "shared",
+      1,
+      "Compare interleaved reasoning and acting with self-supervised learning of language-model tool use.",
+      null
+    ],
+    [
+      "q06:first",
+      "q06",
+      "shared",
+      1,
+      "Compare retrieval self-reflection with corrective retrieval when retrieved evidence is unreliable.",
+      null
+    ],
+    [
+      "q07:first",
+      "q07",
+      "shared",
+      1,
+      "Compare low-rank language-model adaptation with quantized low-rank finetuning under memory constraints.",
+      null
+    ],
+    [
+      "q08:first",
+      "q08",
+      "shared",
+      1,
+      "Compare the original attention-only Transformer architecture with bidirectional encoder pretraining for language understanding.",
+      null
+    ],
+    [
+      "q09:first",
+      "q09",
+      "shared",
+      1,
+      "Compare contextualized late-interaction retrieval with learned sparse lexical expansion for first-stage ranking.",
+      null
+    ],
+    [
+      "q10:first",
+      "q10",
+      "shared",
+      1,
+      "Compare Siamese sentence embeddings with unsupervised contrastive dense information retrieval.",
+      null
+    ],
+    [
+      "q11:first",
+      "q11",
+      "shared",
+      1,
+      "Compare heterogeneous zero-shot information-retrieval evaluation with a massive text-embedding benchmark.",
+      null
+    ],
+    [
+      "q12:first",
+      "q12",
+      "shared",
+      1,
+      "Compare language-model resource selectors with classical web resource selection for federated search.",
+      null
+    ],
+    [
+      "c01:first",
+      "c01",
+      "shared",
+      1,
+      "Query2doc: Query Expansion with Large Language Models",
+      null
+    ],
+    [
+      "c02:first",
+      "c02",
+      "shared",
+      1,
+      "LoRA: Low-Rank Adaptation of Large Language Models",
+      null
+    ],
+    [
+      "c03:first",
+      "c03",
+      "shared",
+      1,
+      "MTEB: Massive Text Embedding Benchmark",
+      null
+    ]
+  ],
+  "phase": "first"
+}

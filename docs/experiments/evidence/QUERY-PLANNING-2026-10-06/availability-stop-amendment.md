@@ -1,0 +1,5 @@
+# Prospective operational stop qualification
+
+After EXP-080 acquisition, two final queries returned `rate_limited`; neither is retried. Before any EXP-081 acquisition, implement the already registered 90% availability gate as an early stop: all 15 shared originals succeeded and expansion has at most 24 new requests, so four failed expansion requests make at most 35/39 successful logical requests possible. Stop and retain every remaining operation as uninvoked rather than sending requests that cannot qualify the experiment. This changes no query, target, primary measure, threshold, result or analysis rule. It is an operational implementation of the registered guardrail, not a rescue or quality-tuning trial. A cooldown before the new arm is allowed by the at-least-one-second pacing rule. Any incomplete arm is inconclusive, not evidence against expansion.
+
+The original harness and phase source hashes remain immutable as `harness-v1.py.txt`. The revised harness changes only this expansion stop; qualify it offline before that arm. Both versions are retained. No failed acquisition is rerun or replaced.

@@ -1,0 +1,90 @@
+{
+  "author": "Interactive Codex caller",
+  "source_inputs": "Complete first-ten cards of the shared first pass only; baseline/decomposition result cards and scores not inspected. q06/q07 reread separately after an initial tool-output truncation; all first-pass cards inspected.",
+  "cases": [
+    {
+      "id": "q01",
+      "parent": "q01:first",
+      "query": "dense passage retrieval open domain question answering",
+      "rationale": "Cards 2/5 identify RocketQA as a dense-retrieval refinement; narrow to the underlying dense-passage retrieval facet.",
+      "term_origin": "Observed RocketQA titles and original question."
+    },
+    {
+      "id": "q02",
+      "parent": "q02:first",
+      "query": "hypothetical document embeddings zero shot retrieval",
+      "rationale": "Card 1 and card 8 concern embeddings and the question explicitly asks for hypothetical documents; isolate that facet before query expansion.",
+      "term_origin": "Original question; no new named method."
+    },
+    {
+      "id": "q03",
+      "parent": "q03:first",
+      "query": "ChatGPT search reranking permutation",
+      "rationale": "Cards 1/6 cover pairwise prompting, while the missing contrast is listwise permutation ranking.",
+      "term_origin": "ChatGPT is caller prior knowledge, not inferred from the retrieved cards."
+    },
+    {
+      "id": "q04",
+      "parent": "q04:first",
+      "query": "decomposed prompting modular multi hop",
+      "rationale": "Cards 1/4 cover interleaved retrieval; search the missing modular decomposition facet.",
+      "term_origin": "Decomposed Prompting terminology is caller prior knowledge."
+    },
+    {
+      "id": "q05",
+      "parent": "q05:first",
+      "query": "reasoning acting language models",
+      "rationale": "Card 2 supplies the tool-learning facet; the reasoning/acting side remains to be located.",
+      "term_origin": "Original question, no new named method."
+    },
+    {
+      "id": "q06",
+      "parent": "q06:first",
+      "query": "self reflection retrieval augmented generation",
+      "rationale": "Card 6 concerns Reflective RAG; isolate reflection rather than unreliable-evidence generalities.",
+      "term_origin": "Observed Reflective RAG title and original question."
+    },
+    {
+      "id": "q07",
+      "parent": "q07:first",
+      "query": "LoRA low rank adaptation",
+      "rationale": "Card 8 explicitly describes LoRA as low-rank adaptation; use its named entity to find the foundational work.",
+      "term_origin": "LoRA from q07:first card 8 snippet."
+    },
+    {
+      "id": "q08",
+      "parent": "q08:first",
+      "query": "BERT bidirectional pre training language understanding",
+      "rationale": "Card 6 mentions BERT, and the question asks for bidirectional encoder pretraining; narrow to that named method.",
+      "term_origin": "BERT from q08:first card 6 snippet."
+    },
+    {
+      "id": "q09",
+      "parent": "q09:first",
+      "query": "ColBERT contextualized late interaction",
+      "rationale": "Cards 1/4 cover sparse expansion; card 2 explicitly mentions ColBERT as the multi-vector contrast.",
+      "term_origin": "ColBERT from q09:first card 2 snippet."
+    },
+    {
+      "id": "q10",
+      "parent": "q10:first",
+      "query": "Siamese sentence embeddings",
+      "rationale": "Card 1 covers unsupervised contrastive retrieval; the requested Siamese representation facet remains.",
+      "term_origin": "Original question, no new named method."
+    },
+    {
+      "id": "q11",
+      "parent": "q11:first",
+      "query": "MTEB massive text embedding benchmark",
+      "rationale": "Cards 2/5 are multilingual/regional variants; narrow to the base embedding benchmark.",
+      "term_origin": "MTEB base acronym is caller prior knowledge; cards show MMTEB and PL-MTEB."
+    },
+    {
+      "id": "q12",
+      "parent": "q12:first",
+      "query": "federated search resource selection",
+      "rationale": "Most first-pass titles concern federated learning rather than search; remove language-model terms and anchor resource selection to search.",
+      "term_origin": "Original question and observed topic mismatch."
+    }
+  ]
+}
