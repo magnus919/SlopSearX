@@ -1,0 +1,168 @@
+"""Offline EXP-086 controller tests; all HTTP is a local fake."""
+import asyncio
+import importlib.machinery
+import importlib.util
+import json
+import os
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+
+HERE = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp086_controller_test", str(HERE / "controller.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+CONTROLLER = importlib.util.module_from_spec(spec)
+sys.modules[loader.name] = CONTROLLER
+loader.exec_module(CONTROLLER)
+
+
+class FakeResponse:
+    def __init__(self, payload): self.payload = payload
+    def raise_for_status(self): return None
+    def json(self): return self.payload
+
+
+class FakeClient:
+    def __init__(self, response): self.response = response; self.urls = []; self.closed = False
+    async def __aenter__(self): return self
+    async def __aexit__(self, *_): self.closed = True
+    async def get(self, url): self.urls.append(url); return self.response
+
+
+class FakeAdmission:
+    def __init__(self): self.events = []; self.writes = {}
+    def acquire_phase(self, permit, phase, outdir, clock_bytes):
+        self.events.append(("claim", phase, Path(outdir), clock_bytes)); return "health-phase"
+    def require_phase(self, permit, clock_bytes, outdir):
+        self.events.append(("require", permit, Path(outdir), clock_bytes))
+    def canonical_json(self, value): return (json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)+"\n").encode()
+    def _write_once(self, path, data): self.writes[Path(path)] = data
+
+
+def state(tmp):
+    output = Path(tmp) / "stage"
+    output.mkdir()
+    admission = FakeAdmission()
+    clock_obj = {"schema": "exp078-stage-clock/1", "stage": "development"}
+    clock_raw = admission.canonical_json(clock_obj)
+    bundle = Path(tmp) / "bundle"
+    health = bundle / "exp084" / "capture" / "portable-capture-wire" / "health-identity.json"
+    health.parent.mkdir(parents=True)
+    health.write_text(json.dumps({"status":"ok", "configured_model":"free",
+                                  "observed_model":"free", "observed_revision":"a"*40}))
+    return SimpleNamespace(outdir=output, bundle_root=bundle, admission=admission, permit=object(),
+                           clock=(clock_obj, clock_raw, "a"*64))
+
+
+class ControllerTests(unittest.TestCase):
+    def test_health_uses_one_fake_request_and_writes_only_sanitized_identity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            current = state(tmp)
+            client = FakeClient(FakeResponse({"status":"ok", "runtime":{"model":"free", "revision":"a"*40},
+                                              "api_key":"must-not-be-persisted"}))
+            factory_calls = []
+            def factory(**kwargs):
+                factory_calls.append(kwargs)
+                return client
+            with patch.dict(os.environ, {"GROKTOCRAWL_API_URL":"https://candidate.example.invalid/v1"}, clear=True):
+                result = asyncio.run(CONTROLLER.health_check(current, client_factory=factory))
+            self.assertEqual(client.urls, ["https://candidate.example.invalid/health"])
+            self.assertTrue(client.closed)
+            self.assertEqual(len(factory_calls), 1)
+            self.assertEqual(factory_calls[0]["timeout"].read, 8.0)
+            self.assertFalse(factory_calls[0]["follow_redirects"])
+            self.assertFalse(factory_calls[0]["trust_env"])
+            self.assertEqual(result["model_identity"], "free")
+            self.assertNotIn("api_key", result)
+            raw = current.admission.writes[current.outdir / "health.json"]
+            self.assertNotIn(b"candidate.example", raw)
+            self.assertNotIn(b"must-not-be-persisted", raw)
+            self.assertEqual([event[0] for event in current.admission.events], ["claim", "require", "require"])
+
+    def test_health_requires_pinned_free_model_and_exact_revision(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            current = state(tmp)
+            client = FakeClient(FakeResponse({"status":"ok", "runtime":{"model":"free", "revision":"b"*40}}))
+            with patch.dict(os.environ, {"GROKTOCRAWL_API_URL":"http://candidate.invalid"}, clear=True):
+                with self.assertRaisesRegex(ValueError, "health_revision_mismatch"):
+                    asyncio.run(CONTROLLER.health_check(current, client_factory=lambda **kw: client))
+            receipt = json.loads(current.admission.writes[current.outdir / "health.json"])
+            self.assertEqual(receipt["status"], "incomplete")
+            self.assertEqual(receipt["physical_http_calls"], 1)
+
+    def test_non_free_health_model_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            current = state(tmp)
+            client = FakeClient(FakeResponse({"status":"ok", "runtime":{"model":"other", "revision":"a"*40}}))
+            with patch.dict(os.environ, {"GROKTOCRAWL_API_URL":"http://candidate.invalid"}, clear=True):
+                with self.assertRaisesRegex(ValueError, "health_identity_invalid"):
+                    asyncio.run(CONTROLLER.health_check(current, client_factory=lambda **kw: client))
+
+    def test_health_failure_is_not_recorded_as_success(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            current = state(tmp)
+            client = FakeClient(FakeResponse({"status":"starting"}))
+            with patch.dict(os.environ, {"GROKTOCRAWL_API_URL":"http://candidate.invalid"}, clear=True):
+                with self.assertRaisesRegex(ValueError, "health_status_invalid"):
+                    asyncio.run(CONTROLLER.health_check(current, client_factory=lambda **_: client))
+            self.assertIn(current.outdir / "health.json", current.admission.writes)
+            self.assertEqual(json.loads(current.admission.writes[current.outdir / "health.json"])["status"], "incomplete")
+            self.assertEqual(len(client.urls), 1)
+
+    def test_bound_runtime_configuration_mismatch_stops_before_stage_creation(self):
+        import hashlib, hmac
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"; (home / ".hermes").mkdir(parents=True)
+            (home / ".hermes" / ".env").write_text("GROKTOCRAWL_API_URL=http://changed.invalid\nGROKTOCRAWL_API_KEY=fixture-secret\n")
+            bundle = Path(tmp) / "bundle"; (bundle / "original").mkdir(parents=True)
+            output = Path(tmp) / "must-not-be-created"
+            nonce = b"offline-exp086-test-nonce"
+            tag = lambda value: hmac.new(nonce, value.encode(), hashlib.sha256).hexdigest()
+            binding = {"nonce": nonce.hex(), "server_tag": tag("http://expected.invalid"),
+                       "credential_tag": tag("fixture-secret")}
+            raw = json.dumps(binding, sort_keys=True, separators=(",", ":")).encode()
+            (bundle / "original" / "configuration-binding.json").write_bytes(raw)
+            integrity = {"runtime_config_receipt_sha256": hashlib.sha256(raw).hexdigest()}
+            with patch.object(CONTROLLER.Path, "home", return_value=home):
+                with self.assertRaisesRegex(ValueError, "existing-candidate-configuration-changed"):
+                    CONTROLLER._read_bound_capture_configuration(bundle, integrity)
+            self.assertFalse(output.exists())
+
+    def test_begin_checks_configuration_before_clock_and_output(self):
+        output = Path(tempfile.mkdtemp()) / "not-created"
+        fake_admission = SimpleNamespace(clock_calls=0, strict_json=json.loads)
+        fake_admission.create_stage_clock = lambda *a: setattr(fake_admission, "clock_calls", 1)
+        with patch.object(CONTROLLER, "preflight", return_value=(fake_admission, {}, b"{}", {})), \
+             patch.object(CONTROLLER, "_read_bound_capture_configuration",
+                          side_effect=ValueError("existing-candidate-configuration-changed")):
+            with self.assertRaisesRegex(ValueError, "existing-candidate-configuration-changed"):
+                CONTROLLER.begin(output, Path("unused"))
+        self.assertFalse(output.exists())
+        self.assertEqual(fake_admission.clock_calls, 0)
+
+    def test_actual_frozen_health_shape_is_nested_and_top_level_alias_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            current = state(tmp)
+            client = FakeClient(FakeResponse({"status":"ok", "model":"free", "revision":"a"*40}))
+            with patch.dict(os.environ, {"GROKTOCRAWL_API_URL":"http://candidate.invalid"}, clear=True):
+                with self.assertRaisesRegex(ValueError, "health_status_invalid"):
+                    asyncio.run(CONTROLLER.health_check(current, client_factory=lambda **kw: client))
+            receipt = json.loads(current.admission.writes[current.outdir / "health.json"])
+            self.assertEqual(receipt["status"], "incomplete")
+            self.assertEqual(receipt["physical_http_calls"], 1)
+
+    def test_no_endpoint_fails_before_client_creation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            current = state(tmp)
+            calls = []
+            with patch.dict(os.environ, {}, clear=True):
+                with self.assertRaisesRegex(ValueError, "endpoint_unavailable"):
+                    asyncio.run(CONTROLLER.health_check(current, client_factory=lambda **kw: calls.append(kw)))
+            self.assertEqual(calls, [])
+            self.assertEqual([event[0] for event in current.admission.events], ["claim", "require"])
+
+
+if __name__ == "__main__": unittest.main()
