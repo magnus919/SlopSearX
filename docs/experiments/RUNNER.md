@@ -15,7 +15,10 @@ prerequisite explicitly; do not claim it as product-quality uplift. Register a f
 hypothesis using TEMPLATE.md and commit the frozen plan before candidate work.
 Run one bounded experiment in an isolated worktree using the registered metric,
 minimum useful effect, guardrails, sample plan, and stopping rule. Default to
-45 minutes, offline inputs, and no paid calls. If valid measurement requires
+45 minutes and offline inputs where suitable. Live Jev API calls are explicitly
+authorized (2026-10-05) under registered call/token/cost bounds and stopping rules;
+do not ask again or block Jev work on the old zero-paid-call default. Other paid
+providers and rejected credential reads need their own authorization. If valid measurement requires
 unavailable data or infrastructure, record the blocker instead of inventing proof.
 
 Preserve reproducible evidence and a readout for every outcome in the repository
@@ -44,7 +47,8 @@ Use supplied operator evidence when available and label its origin. Report
 measured effect separately from merged delivery and unverified release status.
 The schedule stays daily; deduplicate using the Eastern calendar start date,
 never finish time or rolling 24-hour elapsed time. Default to one bounded
-experiment, 45 minutes, offline replay, zero paid calls.
+experiment, 45 minutes, offline replay where suitable, and no other paid calls.
+The standing live-Jev authorization above applies.
 
 ## Standing implementation merge rule — authorized 2026-10-03
 

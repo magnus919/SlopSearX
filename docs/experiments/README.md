@@ -130,7 +130,10 @@ infrastructure failures are `inconclusive` or `blocked`, not negative evidence.
 ## Execution limits
 
 Default to one active experiment and one candidate per cycle, offline replay,
-no paid API calls, and a 45-minute execution budget. Register tighter or justified
+a 45-minute execution budget, and no paid providers except authorized live Jev
+calls (maintainer, 2026-10-05). Register bounded Jev requests, token/cost accounting
+and stopping rules before invocation; credential access remains separately governed.
+Register tighter or justified
 alternative limits before running. Stop on guardrail breach or budget exhaustion,
 record partial evidence, and resume only under an explicit updated plan. Live
 traffic, production writes, new spend, or participant recruitment require scope
@@ -145,13 +148,17 @@ experiment PRs as described below; merge implementation PRs only under the stand
 
 ## Ledger
 
+[2026-10-06 daily process correction](evidence/DAILY-2026-10-06/readout.md)
+records the live-Jev authorization update and unfinished recovery prerequisites;
+no runtime improvement or quality measurement is claimed.
+
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
 | [EXP-082](EXP-082-operational-consumer-recovery.md) | Can unchanged inputs reach the fixed comparison after correcting consumer setup? | source checkpoint tested; live pending | 12 offline tests; all13 pools bound, zero new searches. Separate namespace/leases; process-only configuration correction. Inference credential permission pending. No quality/adoption credit. | #516; no runtime implementation |
 | [EXP-079](EXP-079-decomposed-query-planning.md) | Does decomposition improve fixed-budget paper discovery? | supported; fixed-corpus pilot | Recovery 5/24 → 18/24; +54.17 pp, adjusted interval +29.17 to +79.17 pp. Exposed caller-authored discovery pilot only; no adoption. | None |
 | [EXP-080](EXP-080-evidence-conditioned-query-planning.md) | Does evidence-conditioned follow-ups improve fixed-budget paper discovery? | supported; fixed-corpus pilot | Recovery 5/24 → 20/24; +62.50 pp, adjusted interval +41.67 to +83.33 pp. Two rate-limited requests retained; exposed discovery pilot only; no adoption. | None |
 | [EXP-081](EXP-081-terminology-expanded-query-planning.md) | Does terminology expansion improve fixed-budget paper discovery? | inconclusive; acquisition stopped | All four new requests rate-limited; availability stop, 20 uninvoked. No useful-effect estimate or negative quality claim. | None |
-| [EXP-078](evidence/EXP-078/proposal.md) | Can the approved acquisition amendment permit the fixed research-usefulness comparison? | registered; harness-qualified | [Qualification](evidence/EXP-078/qualification.md): 31 offline tests and actual committed-source/input preflight passed. One corrected GitHub query; eight research pools and four navigation pools reused unchanged, Wikipedia failures retained. No live quality or adoption credit; confirmation untouched. | #516; no runtime implementation |
+| [EXP-078](evidence/EXP-078/proposal.md) | Can the approved acquisition amendment permit the fixed research-usefulness comparison? | inconclusive; consumer setup failed | [Readout](evidence/EXP-078/completed/readout.md): corrected target acquired; all13 pools frozen. First capture health request failed due a differing process URL override. Existing candidate passed separate health/capability diagnostics. No source/model/assessment calls or quality credit. | #516; no runtime implementation |
 | [EXP-077](EXP-077-fixed-research-usefulness.md) | Does the frozen EXP-076 candidate improve fresh paired research completion? | inconclusive; acquisition stopped | [Readout](evidence/EXP-077/completed/readout.md): 13 queries / 37 keyless HTTP calls, eight natural 45–60-card pools. Wikipedia blocked; Sigstore target absent. Zero Brave/capture/model/evaluator calls; no comparison or adoption. | #516; no runtime implementation |
 | [EXP-076](EXP-076-shared-canonical-pool.md) | Do shared-context canonical complete-pool query and purpose Scores improve dual-reference ranking with stable identity? | complete; development rejected | [Original readout](evidence/EXP-076/completed/readout.md): 44 calls / 21 operations; A/B gains +.03046/+.04960 miss original +.05, identity and missing-target guards fail. Historical decision unchanged by prospective EXP-077 release bar. | #516; no runtime adoption |
 | [EXP-075](EXP-075-single-transaction-dual-score-fusion.md) | Single-transaction query/purpose dual-Score rank fusion | complete; development rejected | 44 known-usage calls. Original analysis failure retained; separately bound corrected analysis verifies receipts. A/B gains +.0312/+.0357 miss +.05; q4 rotation overlap .1 fails .8 and acquisition targets remain missing. No adoption. | #516; no runtime adoption |
