@@ -1,6 +1,6 @@
 # EXP-083 — capture transport recovery
 
-Status: source-qualified; live run pending. EXP-082 remains [terminal and setup-inconclusive](evidence/EXP-082/completed/readout.md).
+Status: terminal setup-inconclusive. [Retained outcome](evidence/EXP-083/completed/readout.md): the copied policy-pin path was absent; the run was stopped with no usable captures. EXP-082 remains [terminal and setup-inconclusive](evidence/EXP-082/completed/readout.md).
 
 This prospective recovery fixes only duplicated method/URL forwarding in the capture wrapper. It reuses the same thirteen saved search pools, fixed candidate, prompts, numerical requirements and budgets. It performs no new search and receives fresh source registration, qualification, clock and one-shot leases. The failed predecessor keeps its original receipts and zero quality credit.
 
