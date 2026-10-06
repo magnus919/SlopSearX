@@ -1,0 +1,15 @@
+Before assessing, read the entire assigned packet using the pinned EXP-093 packet viewer. The coordinator supplies the exact absolute `viewer_path`, absolute `input_path`, input SHA-256, page count, and preparation-manifest SHA-256 in your frozen source-slot metadata. Use those values verbatim; do not invent or alter them.
+
+Run the `--describe` command first. Page indices are one-based: the first page is index `1`, and the last page is the returned `last_page_index` (equal to `page_count`). Index `0` is always invalid. Request each integer from `1` through `page_count` exactly once, in the exact `page_request_schedule` printed in your frozen source-slot instructions. Use at most two indices per call and never shift a batch to zero-based numbering. For example, five pages require exactly `1,2`, then `3,4`, then `5`.
+
+For each viewer command, use exactly this execution wrapper, replacing only the JSON-quoted command string with the assigned `python3 <viewer_path> --input <input_path> --expected-sha <input_sha256> --describe` or each exact `--pages <batch>` command in the provided schedule:
+
+`const r=await tools.exec_command({cmd:"python3 <absolute-viewer-path> --input <absolute-input-path> --expected-sha <input-sha256> --describe",max_output_tokens:10000});text(r.exit_code);text(r.output);`
+
+The completed call returns three text blocks: completion metadata, the explicit process exit code, and combined stdout. Require exit code `0`, read the whole description and every returned page, and follow the one-based schedule without omissions, repetition, reordering, or extra page calls. Page bodies are exact original packet bytes; surrounding BEGIN/END lines provide page index, byte count, and digest. Do not use `cat`, another file reader, summaries, partial pages, or substituted content. Do not emit a grader result until every page has been returned. The coordinator independently checks the current task's actual tool transcript against the assigned packet bytes; your statement that you read it is not evidence of coverage.
+
+This changes only how the already-frozen packet is delivered. Apply the unchanged source-assessment instructions above to its complete reconstructed contents.
+
+
+Citation-ID mapping for this packet: each supplied `sources[*].passages[*].evidence_id` is already the fixed-width citation code expected in the output `evidence_ids` array. Copy the exact supplied string unchanged. Do not invent or transform codes, and do not place a source_id in `evidence_ids`.
+Only the prescribed `functions.exec` viewer commands are permitted in this source assignment. Do not send clarification messages, use collaboration tools, browse, or invoke any other tool.
