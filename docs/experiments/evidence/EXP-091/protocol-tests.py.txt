@@ -49,7 +49,7 @@ class ProtocolTests(unittest.TestCase):
         self.assertIn("starts at 1 and ends at page_count", protocol["input_view"]["pages"])
         self.assertIn("exactly once and in order", protocol["source_delivery"]["source_prompt"])
         self.assertEqual(protocol["external_source_pins"]["final_text_reader"]["sha256"],
-                         "47a771492359f90c7dce4b3b5814f1d5bdd28f36ae19abdc0aee7dcc21413cc4")
+                         "68add33868d891b8e9411bf7ce094bb8a26d43f5232bd4f0d649e60c4142ff6e")
 
     def test_receiver_keeps_exact_unmodified_response(self):
         protocol = json.loads(CURRENT.read_text())
