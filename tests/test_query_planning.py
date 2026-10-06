@@ -329,3 +329,30 @@ async def test_nullable_legacy_planning_lists_load_as_empty(state):
     assert restored.queries[0].evidence_result_ids == []
     assert restored.queries[0].evidence_engines == []
     assert t._research_dispatch_error(state, restored.queries[0], check_evidence=True) is None
+
+
+@pytest.mark.parametrize("mode", ["decomposition", "variants"])
+async def test_edited_initial_plan_duplicates_rejected_before_persistence(state, mode):
+    if mode == "decomposition":
+        preview = await p.slopsearx_plan_research("original", [{"id": "a", "question": "facet"}], engines=["wikipedia"])
+    else:
+        preview = await p.slopsearx_plan_query_variants("original", ["variant"], engines=["wikipedia"])
+    args = preview["execution"]["arguments"]
+    args["initial_plan"][1]["query"] = " ORIGINAL "
+    before = copy.deepcopy(state.job_store._store._data)
+    rejected = await t.slopsearx_start_research(**args)
+    assert rejected["error"]["code"] == "duplicate_query"
+    assert state.job_store._store._data == before
+    assert state.ctx.active_engines["wikipedia"].calls == 0
+
+
+async def test_tagged_duplicate_continuation_rejected_but_legacy_retained(state):
+    first = await first_job(state)
+    rejected = await t.slopsearx_extend_research(
+        first["job_id"], " MAINTENANCE ", engines=["wikipedia"], planning_method="terminology_expansion"
+    )
+    assert rejected["error"]["code"] == "duplicate_query"
+    assert state.ctx.active_engines["wikipedia"].calls == 1
+    legacy = await t.slopsearx_extend_research(first["job_id"], "maintenance", engines=["wikipedia"])
+    assert "error" not in legacy, legacy
+    assert len(legacy["queries"]) == 2

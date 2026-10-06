@@ -1810,8 +1810,12 @@ def _validate_research_associations(
             raise ResearchMutationError("policy_rejected", rejection)
         query.evidence_engines = list(parent_query.engines)
         query.evidence_intent = parent_query.intent if parent_query.requires_intent_grant else None
-    if query.planning_method == "evidence_followup" and not replay:
-        if query.subquestion_id is not None and job.subquestions[query.subquestion_id]["state"] == "resolved":
+    if query.planning_method is not None and not replay:
+        if (
+            query.planning_method == "evidence_followup"
+            and query.subquestion_id is not None
+            and job.subquestions[query.subquestion_id]["state"] == "resolved"
+        ):
             raise ResearchMutationError("invalid_job_state", "subquestion is already caller-resolved")
         if any(query_identity(query.query, query.engines) == query_identity(q.query, q.engines) for q in job.queries):
             raise ResearchMutationError("duplicate_query", "query already searched or planned in this scope")
@@ -1957,6 +1961,12 @@ async def slopsearx_start_research(
                 raise ResearchMutationError("invalid_input", "initial_plan must fit the positive query budget")
             queries = [_prepare_research_query(state, entry, limits["engines_per_query"]) for entry in initial_plan]
             warnings: list[str] = []
+            # Preview arguments are caller-editable. Revalidate new planning
+            # invariants before any persistence or dispatch; retain legacy plans.
+            if any(query.planning_method is not None for query in queries):
+                identities = [query_identity(query.query, query.engines) for query in queries]
+                if len(set(identities)) != len(identities):
+                    raise ResearchMutationError("duplicate_query", "plan repeats the same query and source scope")
             for index, query in enumerate(queries):
                 query.index = index
                 if query.planning_method == "terminology_expansion":
