@@ -39,6 +39,21 @@ def _fixture():
 
 
 class AnswerInputBridgeTests(unittest.TestCase):
+    def test_answer_manifest_rejects_duplicate_and_malformed_rows(self):
+        expected = {(f"d{i}", arm) for i in range(1, 9) for arm in ("w0", "candidate")}
+        rows = [{"task_id": f"d{task}", "arm": arm, "answer_sha256": "a" * 64,
+                 "receipt_sha256": "b" * 64, "bytes": 123}
+                for task in range(1, 9) for arm in ("w0", "candidate")]
+        manifest = {"schema": "exp095-answer-output-manifest/1", "status": "complete",
+                    "answers": rows}
+        self.assertEqual(set(B._validated_answer_manifest(manifest, expected)), expected)
+        duplicate = dict(manifest, answers=[*rows[:-1], rows[0]])
+        with self.assertRaises(B.AnswerInputError):
+            B._validated_answer_manifest(duplicate, expected)
+        malformed = dict(manifest, answers=[*rows[:-1], {**rows[-1], "bytes": True}])
+        with self.assertRaises(B.AnswerInputError):
+            B._validated_answer_manifest(malformed, expected)
+
     def test_fixed_orders_preserve_openings_and_answerer_bytes_ignore_grades(self):
         acquisition, cases, captures, proof, orders = _fixture()
         signature = inspect.signature(B.build_answerer_assignments)

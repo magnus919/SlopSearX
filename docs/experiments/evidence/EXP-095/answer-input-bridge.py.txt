@@ -39,6 +39,33 @@ def _sha(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+def _validated_answer_manifest(manifest: dict, expected_keys: set[tuple[str, str]]) -> dict:
+    """Validate the complete frozen receiver manifest before consuming any answer."""
+    if (type(manifest) is not dict or set(manifest) != {"schema", "status", "answers"}
+            or manifest.get("schema") != "exp095-answer-output-manifest/1"
+            or manifest.get("status") != "complete" or type(manifest.get("answers")) is not list
+            or len(manifest["answers"]) != 16):
+        raise AnswerInputError("complete-answer-output-manifest-required")
+    rows = {}
+    for row in manifest["answers"]:
+        if (type(row) is not dict or set(row) != {"task_id", "arm", "answer_sha256",
+                "receipt_sha256", "bytes"}):
+            raise AnswerInputError("answer-output-manifest-row")
+        if type(row["task_id"]) is not str or type(row["arm"]) is not str:
+            raise AnswerInputError("answer-output-manifest-row")
+        key = (row["task_id"], row["arm"])
+        if (key not in expected_keys or key in rows
+                or any(type(row[name]) is not str or len(row[name]) != 64
+                       or any(char not in "0123456789abcdef" for char in row[name])
+                       for name in ("answer_sha256", "receipt_sha256"))
+                or type(row["bytes"]) is not int or not 1 <= row["bytes"] <= 2_000_000):
+            raise AnswerInputError("answer-output-manifest-row")
+        rows[key] = row
+    if set(rows) != expected_keys:
+        raise AnswerInputError("complete-answer-output-manifest-required")
+    return rows
+
+
 def load_verified_capture(*, snapshot: Path, acquisition: dict, cases: list[dict]):
     """Return source rows only after the frozen EXP-084 terminal proof passes."""
     prepare = _load("exp086_capture_integrity", HERE.parent / "EXP-086" / "prepare-assessments.py.txt")
@@ -151,13 +178,9 @@ def build_answer_assessor_packets(*, answer_bridge: dict, cases: list[dict], ans
             or type(citation_tables) is not dict):
         raise AnswerInputError("answer-assessment-inputs-incomplete")
     expected_keys = {(f"d{i}", arm) for i in range(1, 9) for arm in ("w0", "candidate")}
-    manifest_rows = answer_output_manifest.get("answers") if type(answer_output_manifest) is dict else None
-    if (answer_output_manifest.get("schema") != "exp095-answer-output-manifest/1"
-            or answer_output_manifest.get("status") != "complete"
-            or type(manifest_rows) is not list
-            or {(row.get("task_id"), row.get("arm")) for row in manifest_rows if type(row) is dict} != expected_keys
-            or set(answer_payloads) != expected_keys):
+    if set(answer_payloads) != expected_keys:
         raise AnswerInputError("complete-answer-output-manifest-required")
+    manifest_by_key = _validated_answer_manifest(answer_output_manifest, expected_keys)
     arm_map = anonymous_arm_map or {"w0": "arm1", "candidate": "arm2"}
     if arm_map != {"w0": "arm1", "candidate": "arm2"}:
         raise AnswerInputError("frozen-anonymous-arm-map")
@@ -166,7 +189,7 @@ def build_answer_assessor_packets(*, answer_bridge: dict, cases: list[dict], ans
         raise AnswerInputError("answer-assessor-output-must-be-new")
     output_root.mkdir(mode=0o700, parents=True, exist_ok=False)
     entries = []
-    refs_by_key = {(row["task_id"], row["arm"]): row for row in manifest_rows}
+    refs_by_key = manifest_by_key
     for task_num in range(1, 9):
         task_id = f"d{task_num}"
         task = next((row for row in cases if row.get("id") == task_id), None)
@@ -201,10 +224,11 @@ def build_answer_assessor_packets(*, answer_bridge: dict, cases: list[dict], ans
                         or type(answer_record["raw_bytes"]) is not bytes
                         or type(answer_record["parsed"]) is not dict):
                     raise AnswerInputError("answer-payload-receipt-shape")
+                answer_receipt = manifest_by_key[(task_id, source_arm)]
+                if (len(answer_record["raw_bytes"]) != answer_receipt["bytes"]
+                        or _sha(answer_record["raw_bytes"]) != answer_receipt["answer_sha256"]):
+                    raise AnswerInputError("answer-payload-output-binding")
                 answer = answer_record["parsed"]
-                answer_receipt = refs_by_key[(task_id, source_arm)]
-                if _sha(answer_record["raw_bytes"]) != answer_receipt.get("answer_sha256"):
-                    raise AnswerInputError("answer-payload-receipt-hash")
                 answer_runner = _load("exp095_answer_payload_validator", EXP077 / "answer-runner.py.txt")
                 if answer_runner.strict_json(answer_record["raw_bytes"]) != answer:
                     raise AnswerInputError("answer-payload-parse-binding")
